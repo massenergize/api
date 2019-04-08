@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['*'] #TODO: restrict this when ready to deploy
 
 INSTALLED_APPS = [
     'authentication',
+    'database',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
