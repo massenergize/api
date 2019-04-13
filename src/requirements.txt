@@ -1,1 +1,2 @@
 Django==2.2
+django-neomodel==0.0.4
