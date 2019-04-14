@@ -6,23 +6,112 @@ from authentication.models import *
 
 # Create your models here.
 class RealEstateUnit(models.Model):
-  pass 
+    REAL_ESTATE_TYPES = {
+      'C': 'Commercial', 
+      'R': 'Residential'
+    }
+
+    unit_type =  models.CharField(
+      max_length=SHORT_STR_LEN, 
+      choices=list(REAL_ESTATE_TYPES.items())
+    )
+    street = models.CharField(max_length=SHORT_STR_LEN)
+    unit_number = models.CharField(max_length=SHORT_STR_LEN)
+    zipcode = models.CharField(max_length=SHORT_STR_LEN)
+    city = models.CharField(max_length=SHORT_STR_LEN) 
+    state = models.CharField(
+      max_length=SHORT_STR_LEN, 
+      choices = list(USA_STATES.items())
+    )
+
+    def is_commercial(self):
+      return self.unit_type == 'C'
+
+    def is_residential(self):
+      return self.unit_type == 'R'
+
+    def __str__(self):
+      return '%s: %s, %s, %s, %s' % (
+        self.unit_type, self.street, self.city, self.zipcode, self.state
+      )
+
+    class Meta:
+      db_table = 'real_estate_units'
+
+
+class Person(User):
+  """
+  Note: It is a child class of User, hence it already has username, password and
+  email fields
+  """
+  address = models.ForeignKey(RealEstateUnit)
+  goals = models.ManyToManyField(Goal)
+  teams = models.ManyToManyField(Team)
+  community = models.ForeignKey(Community)
+  age_acknowledgment = models.BooleanField()
+  other_info = JSONField()
+
+def __str__(self):
+  return self.get_full_name()
+
+class Meta:
+  db_table = 'people'
 
 
 class Team(models.Model):
-  pass 
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  description = models.TextField(max_length=LONG_STR_LEN)
+  admins = models.ManyToManyField(Person) 
+  members = models.ManyToManyField(Person) 
+  goals = models.ManyToManyField(Goal) 
+
+  def is_admin(self, person):
+    return self.members.filter(id=person.id)
+
+  def is_member(self, person):
+    return self.members.filter(id=person.id)
+
+  def __str__(self):
+    return self.name
+
+  class Meta:
+    ordering = ('name',)
+    db_table = 'teams'
 
 
 class Goal(models.Model):
-  pass 
+  GOAL_STATUS = {
+    'I': 'In Progress',
+    'N': 'Not Started',
+    'C': 'Completed'
+  }
 
+  title = models.CharField(max_length=SHORT_STR_LEN)
+  status = models.CharField(
+    max_length=SHORT_STR_LEN, choices=list(GOAL_STATUS.items())
+  )
 
-class Neighbourhood(models.Model):
-  pass 
+  def get_status(self):
+    return GOAL_STATUS[self.status]
+
+  def __str__(self):
+    return self.title
+
+  class Meta:
+    db_table = 'goals'
 
 
 class Partner(models.Model):
-  pass 
+  name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
+  description = HTMLField(max_length=LONG_STR_LEN, blank = True)
+  community = models.ManyToManyField(Community)
+  info = JSONField()
+
+  def __str__(self):             
+    return self.name
+
+  class Meta:
+    db_table = 'partners'
 
 
 class Community(models.Model):
@@ -37,17 +126,18 @@ class Community(models.Model):
 
 
 class ActionProperty(models.Model):
-	title = models.CharField(max_length=SHORT_STR_LEN, blank = True, unique=True)
-	short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-	community = models.ManyToManyField(Community)
-	order_position = models.PositiveSmallIntegerField(default=0)
+  title = models.CharField(max_length=SHORT_STR_LEN, blank = True, unique=True)
+  short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
+  community = models.ManyToManyField(Community)
+  order_position = models.PositiveSmallIntegerField(default=0)
 
-	def __str__(self):      
-		return "%s: %s" % (self.order_position, self.name)
+  def __str__(self): 
+    return "%s: %s" % (self.order_position, self.name)
 
-	class Meta:
-		verbose_name_plural = "Properties"
-		ordering = ('order_position',)
+  class Meta:
+    verbose_name_plural = "Properties"
+    ordering = ('order_position',)
+    db_table = 'action_properties'
 
 
 class ActionCategory(models.Model):
