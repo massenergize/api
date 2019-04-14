@@ -76,10 +76,10 @@ class Permission(models.Model):
 
 
   def __str__(self):
-    return 'Can: %s' % TYPES[self.permission_type] 
+    return 'Can: %s' %  PERMISSION_TYPES[self.permission_type] 
 
   class Meta:
-    ordering = ('permtype',)
+    ordering = ('permission_type',)
     db_table = "permissions"
 
     
