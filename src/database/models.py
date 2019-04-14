@@ -72,7 +72,8 @@ class Goal(models.Model):
     db_table = 'goals'
 
 
-class Person(auth_models.User):
+class UserProfile(models.Model):
+  user_account = models.ForeignKey(auth_models.User, on_delete=models.CASCADE, null=True)
   address = models.ForeignKey(RealEstateUnit, on_delete=models.SET_NULL, null=True)
   goals = models.ManyToManyField(Goal)
   community = models.ForeignKey(Community,on_delete=models.SET_NULL, null=True)
@@ -89,15 +90,15 @@ class Meta:
 class Team(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   description = models.TextField(max_length=LONG_STR_LEN)
-  admins = models.ManyToManyField(Person, related_name='team_admins') 
-  members = models.ManyToManyField(Person, related_name='team_members') 
+  admins = models.ManyToManyField(UserProfile, related_name='team_admins') 
+  members = models.ManyToManyField(UserProfile, related_name='team_members') 
   goals = models.ManyToManyField(Goal) 
 
-  def is_admin(self, person):
-    return self.members.filter(id=person.id)
+  def is_admin(self, UserProfile):
+    return self.members.filter(id=UserProfile.id)
 
-  def is_member(self, person):
-    return self.members.filter(id=person.id)
+  def is_member(self, UserProfile):
+    return self.members.filter(id=UserProfile.id)
 
   def __str__(self):
     return self.name
@@ -213,7 +214,7 @@ class EventUserRel(models.Model):
     max_length=SHORT_STR_LEN, 
     choices=list(EVENT_CHOICES.items())
   )
-  user =  models.ForeignKey(Person,on_delete=models.CASCADE)
+  user =  models.ForeignKey(UserProfile,on_delete=models.CASCADE)
   event =  models.ForeignKey(Event,on_delete=models.CASCADE)
 
   def __str__(self):
