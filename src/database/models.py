@@ -116,8 +116,9 @@ class EventUserRel(models.Model):
     'S': 'Save for Later'
   }
 
-  event = models.CharField(choices=list(EVENT_CHOICES.items()))
-  user =  models.ForeignKey(Event)
+  choice = models.CharField(choices=list(EVENT_CHOICES.items()))
+  user =  models.ForeignKey(UserProfile)
+  event =  models.ForeignKey(Event)
 
   def __str__(self):
     return '%s - %s' % (self.user, self.event)
