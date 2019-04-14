@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from massenergize_portal_backend.utils.constants import *
+from datetime import date, datetime
+from authentication.models import *
 
 # Create your models here.
 class RealEstateUnit(models.Model):
@@ -32,7 +34,33 @@ class Tag(models.Model):
 
 
 class Event(models.Model):
-  pass 
+  name  = models.CharField(max_length = SHORT_STR_LEN)
+  description = models.TextField(max_length = LONG_STR_LEN)
+  start_date_and_time  = models.DateTimeField(default=datetime.now)
+  end_date_and_time  = models.DateTimeField(default=datetime.now)
+  location = models.CharField(max_length = SHORT_STR_LEN)
+  archive =  models.BooleanField(default=False)
+
+  def __str__(self):             
+    return self.name
+
+  class Meta:
+    ordering = ('-start_date_and_time',)
+    db_table = 'events'
+
+
+class EventUserRel(models.Model):
+  EVENT_CHOICES = {
+    'I': 'Interested',
+    'R': 'RSVP',
+    'S': 'Save for Later'
+  }
+
+  event = models.CharField(choices=list(EVENT_CHOICES.items()))
+  user =  models.ForeignKey(Event)
+
+  def __str__(self):
+    return '%s - %s' % (self.user, self.event)
 
 
 class Permission(models.Model):
