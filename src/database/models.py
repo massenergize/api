@@ -26,11 +26,18 @@ class Partner(models.Model):
 
 
 class Community(models.Model):
-  pass
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+
+  def __str__(self):      
+    return self.name
+
+  class Meta:
+    verbose_name_plural = "Communities"
+    db_table = "communities"
 
 
 class ActionProperty(models.Model):
-	title = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+	title = models.CharField(max_length=SHORT_STR_LEN, blank = True, unique=True)
 	short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
 	community = models.ManyToManyField(Community)
 	order_position = models.PositiveSmallIntegerField(default=0)
@@ -44,7 +51,7 @@ class ActionProperty(models.Model):
 
 
 class ActionCategory(models.Model):
-  title = models.CharField(max_length = SHORT_STR_LEN)
+  title = models.CharField(max_length = SHORT_STR_LEN, unique=True)
   icon = models.models.CharField(max_length = SHORT_STR_LEN, blank = True)
   community = models.ManyToManyField(Community)
   order_position = models.PositiveSmallIntegerField(default = 0)
@@ -61,7 +68,7 @@ class ActionCategory(models.Model):
 
 
 class Action(models.Model):
-  title = models.CharField(max_length = SHORT_STR_LEN)
+  title = models.CharField(max_length = SHORT_STR_LEN, unique=True)
   full_description_and_next_steps = models.TextField(
     max_length = LONG_STR_LEN, 
     blank=True
