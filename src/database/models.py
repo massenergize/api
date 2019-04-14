@@ -31,10 +31,6 @@ class Tag(models.Model):
   pass 
 
 
-class Items(models.Model):
-  pass 
-
-
 class Event(models.Model):
   pass 
 
