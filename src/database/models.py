@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
+from massenergize_portal_backend.utils.constants import *
 
 # Create your models here.
 class RealEstateUnit(models.Model):
@@ -81,7 +82,7 @@ class Permission(models.Model):
 
   class Meta:
     ordering = ('permission_type',)
-    db_table = "permissions"
+    db_table = 'permissions'
 
     
 
@@ -129,7 +130,7 @@ class Role(models.Model):
 
   class Meta:
     ordering = ('role_type',)
-    db_table = "roles"
+    db_table = 'roles'
 
 
 class Policy(models.Model):
@@ -138,9 +139,20 @@ class Policy(models.Model):
   #TODO: add with_what field?
 
   def __str__(self):
-    return "(%s) can (%s)" % (self.who, self.can_do)
+    return '(%s) can (%s)' % (self.who, self.can_do)
 
+  class Meta:
+    ordering = ('who',)
+    db_table = 'policies'
 
 
 class Notification(models.Model):
-  pass
+  title = models.CharField(max_lenth=SHORT_STR_LEN)
+  body = models.CharField(max_length=LONG_STR_LEN, blank=True)
+
+  def __str__(self):
+    return self.title
+
+  class Meta:
+    ordering = ('title',)
+    db_table = 'notifications'
