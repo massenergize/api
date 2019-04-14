@@ -80,12 +80,55 @@ class Permission(models.Model):
 
   class Meta:
     ordering = ('permtype',)
-    db_table = "permissions_for_users"
+    db_table = "permissions"
 
     
 
 class Role(models.Model):
-  pass 
+  ROLE_TYPES = {
+    'D': 'Default User',
+    'P': 'Partner Admin',
+    'N': 'Neighborhood Admin', 
+    'R': 'Unit Admin', 
+    'S': 'SuperAdmin', 
+    'T': 'Team Admin',
+  }
+
+  role_type = models.CharField(
+    choices=list(TYPES.items()), 
+    primary_key=True
+  ) 
+
+
+  def is_default_user(self):
+    return self.role_type == 'D'
+
+
+  def is_super_admin(self):
+    return self.role_type == 'S'
+
+
+  def is_neighbourhood_admin(self):
+    return self.role_type == 'N'
+
+  
+  def is_team_admin(self):
+    return self.role_type == 'T'
+
+  
+  def is_unit_admin(self):
+    return self.role_type == 'R'
+
+  
+  def is_partner_admin(self):
+    return self.role_type == 'P'
+
+  def __str__(self):
+    return 'Can: %s' % ROLE_TYPES[self.role_type] 
+
+  class Meta:
+    ordering = ('role_type',)
+    db_table = "roles"
 
 
 class Policy(models.Model):
