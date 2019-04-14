@@ -25,8 +25,61 @@ class Partner(models.Model):
   pass 
 
 
+class Community(models.Model):
+  pass
+
+
+class ActionProperty(models.Model):
+	title = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+	short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
+	community = models.ManyToManyField(Community)
+	order_position = models.PositiveSmallIntegerField(default=0)
+
+	def __str__(self):      
+		return "%s: %s" % (self.order_position, self.name)
+
+	class Meta:
+		verbose_name_plural = "Properties"
+		ordering = ('order_position',)
+
+
+class ActionCategory(models.Model):
+  title = models.CharField(max_length = SHORT_STR_LEN)
+  icon = models.models.CharField(max_length = SHORT_STR_LEN, blank = True)
+  community = models.ManyToManyField(Community)
+  order_position = models.PositiveSmallIntegerField(default = 0)
+
+
+  def __str__(self):              # __unicode__ on Python 2
+    return "%d: %s" % (self.order_position, self.name)
+
+  
+  class Meta:
+    verbose_name_plural = "Action Categories"
+    ordering = ('order_position',)
+    db_table = ('action_categories')
+
+
 class Action(models.Model):
-  pass 
+  title = models.CharField(max_length = SHORT_STR_LEN)
+  full_description_and_next_steps = models.TextField(
+    max_length = LONG_STR_LEN, 
+    blank=True
+  )
+  partnership_information = HTMLField(max_length = LONG_STR_LEN, blank=True)
+  category = models.ManyToManyField(ActionCategory)
+  properties = models.ManyToManyField(ActionProperty)
+  partners = models.ManyToManyField(Partner)
+  community = models.ManyToManyField(Community)
+  order_position = models.PositiveSmallIntegerField(default = 0)
+
+
+  def __str__(self): 
+    return self.title
+
+  class Meta:
+    ordering = ('order_position','title') 
+    db_table = 'actions'
 
 
 class Tag(models.Model):

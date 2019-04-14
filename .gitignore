@@ -2,3 +2,4 @@ src/massenergize_portal_backend/config.json
 **/**/__pycache__
 **/__pycache__
 *.pyc
+timelog.csv
