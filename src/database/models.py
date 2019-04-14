@@ -124,7 +124,7 @@ class Role(models.Model):
     return self.role_type == 'P'
 
   def __str__(self):
-    return 'Can: %s' % ROLE_TYPES[self.role_type] 
+    return 'Is: %s' % ROLE_TYPES[self.role_type] 
 
   class Meta:
     ordering = ('role_type',)
