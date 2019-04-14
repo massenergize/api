@@ -3,3 +3,4 @@ src/massenergize_portal_backend/config.json
 **/__pycache__
 *.pyc
 timelog.csv
+**/.DS_Store

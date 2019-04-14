@@ -33,7 +33,6 @@ ALLOWED_HOSTS = ['*'] #TODO: restrict this when ready to deploy
 
 INSTALLED_APPS = [
     'admin_portal',
-    'authentication',
     'carbon_calculator',
     'database',
     'user_portal',

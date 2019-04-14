@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from massenergize_portal_backend.utils.constants import *
 from datetime import date, datetime
-from authentication.models import *
 
 # Create your models here.
 class RealEstateUnit(models.Model):
@@ -214,7 +213,7 @@ class EventUserRel(models.Model):
   }
 
   choice = models.CharField(choices=list(EVENT_CHOICES.items()))
-  user =  models.ForeignKey(UserProfile)
+  user =  models.ForeignKey(Person)
   event =  models.ForeignKey(Event)
 
   def __str__(self):
