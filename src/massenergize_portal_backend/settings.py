@@ -16,6 +16,13 @@ from .utils.utils import load_json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# os.environ["DATABASE_ENGINE"] = CONFIG_DATA["DATABASE_ENGINE"]
+# os.environ["DATABASE_NAME"] =  CONFIG_DATA["DATABASE_NAME"]
+# os.environ["DATABASE_USER"] = CONFIG_DATA["DATABASE_USER"]
+# os.environ["DATABASE_PASSWORD"] = CONFIG_DATA["DATABASE_PASSWORD"]
+# os.environ["DATABASE_HOST"] =  CONFIG_DATA["DATABASE_HOST"]
+# os.environ["DATABASE_PORT"] = CONFIG_DATA["DATABASE_PORT"]
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -77,12 +84,19 @@ WSGI_APPLICATION = 'massenergize_portal_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
+        'ENGINE': os.environ.get('DATABASE_ENGINE'),
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT')
+    },
+    'test': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3')
+    },
 }
 
 

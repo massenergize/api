@@ -2,7 +2,6 @@ import json
 import django.db.models.base as Base
 import inspect
 
-
 def load_json(path):
   """
   Loads the json file in the given path.  
@@ -20,5 +19,5 @@ def get_all_registered_models(module):
   them
   """
   all_models = [m[1] for m in inspect.getmembers(module, inspect.isclass)
-    if isinstance(m[1], Base.ModelBase)]
+    if (isinstance(m[1], Base.ModelBase))]
   return all_models

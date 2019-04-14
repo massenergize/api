@@ -2,8 +2,20 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from massenergize_portal_backend.utils.constants import *
 from datetime import date, datetime
+import django.contrib.auth.models as auth_models
 
 # Create your models here.
+class Community(models.Model):
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+
+  def __str__(self):      
+    return self.name
+
+  class Meta:
+    verbose_name_plural = "Communities"
+    db_table = "communities"
+
+  
 class RealEstateUnit(models.Model):
     REAL_ESTATE_TYPES = {
       'C': 'Commercial', 
@@ -38,46 +50,6 @@ class RealEstateUnit(models.Model):
       db_table = 'real_estate_units'
 
 
-class Person(User):
-  """
-  Note: It is a child class of User, hence it already has username, password and
-  email fields
-  """
-  address = models.ForeignKey(RealEstateUnit)
-  goals = models.ManyToManyField(Goal)
-  teams = models.ManyToManyField(Team)
-  community = models.ForeignKey(Community)
-  age_acknowledgment = models.BooleanField()
-  other_info = JSONField()
-
-def __str__(self):
-  return self.get_full_name()
-
-class Meta:
-  db_table = 'people'
-
-
-class Team(models.Model):
-  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-  description = models.TextField(max_length=LONG_STR_LEN)
-  admins = models.ManyToManyField(Person) 
-  members = models.ManyToManyField(Person) 
-  goals = models.ManyToManyField(Goal) 
-
-  def is_admin(self, person):
-    return self.members.filter(id=person.id)
-
-  def is_member(self, person):
-    return self.members.filter(id=person.id)
-
-  def __str__(self):
-    return self.name
-
-  class Meta:
-    ordering = ('name',)
-    db_table = 'teams'
-
-
 class Goal(models.Model):
   GOAL_STATUS = {
     'I': 'In Progress',
@@ -100,9 +72,44 @@ class Goal(models.Model):
     db_table = 'goals'
 
 
+class Person(auth_models.User):
+  address = models.ForeignKey(RealEstateUnit, on_delete=models.SET_NULL, null=True)
+  goals = models.ManyToManyField(Goal)
+  community = models.ForeignKey(Community,on_delete=models.SET_NULL, null=True)
+  age_acknowledgment = models.BooleanField()
+  other_info = JSONField()
+
+def __str__(self):
+  return self.get_full_name()
+
+class Meta:
+  db_table = 'people'
+
+
+class Team(models.Model):
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  description = models.TextField(max_length=LONG_STR_LEN)
+  admins = models.ManyToManyField(Person, related_name='team_admins') 
+  members = models.ManyToManyField(Person, related_name='team_members') 
+  goals = models.ManyToManyField(Goal) 
+
+  def is_admin(self, person):
+    return self.members.filter(id=person.id)
+
+  def is_member(self, person):
+    return self.members.filter(id=person.id)
+
+  def __str__(self):
+    return self.name
+
+  class Meta:
+    ordering = ('name',)
+    db_table = 'teams'
+
+
 class Partner(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
-  description = HTMLField(max_length=LONG_STR_LEN, blank = True)
+  description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   community = models.ManyToManyField(Community)
   info = JSONField()
 
@@ -111,17 +118,6 @@ class Partner(models.Model):
 
   class Meta:
     db_table = 'partners'
-
-
-class Community(models.Model):
-  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-
-  def __str__(self):      
-    return self.name
-
-  class Meta:
-    verbose_name_plural = "Communities"
-    db_table = "communities"
 
 
 class ActionProperty(models.Model):
@@ -141,10 +137,9 @@ class ActionProperty(models.Model):
 
 class ActionCategory(models.Model):
   title = models.CharField(max_length = SHORT_STR_LEN, unique=True)
-  icon = models.models.CharField(max_length = SHORT_STR_LEN, blank = True)
+  icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
   community = models.ManyToManyField(Community)
   order_position = models.PositiveSmallIntegerField(default = 0)
-
 
   def __str__(self):        
     return "%d: %s" % (self.order_position, self.name)
@@ -159,10 +154,12 @@ class ActionCategory(models.Model):
 class Action(models.Model):
   title = models.CharField(max_length = SHORT_STR_LEN, unique=True)
   full_description_and_next_steps = models.TextField(
-    max_length = LONG_STR_LEN, 
+    max_length = LONG_STR_LEN,
     blank=True
   )
-  partnership_information = HTMLField(max_length = LONG_STR_LEN, blank=True)
+  partnership_information = models.TextField(
+    max_length = LONG_STR_LEN, blank=True
+    )
   category = models.ManyToManyField(ActionCategory)
   properties = models.ManyToManyField(ActionProperty)
   partners = models.ManyToManyField(Partner)
@@ -212,9 +209,12 @@ class EventUserRel(models.Model):
     'S': 'Save for Later'
   }
 
-  choice = models.CharField(choices=list(EVENT_CHOICES.items()))
-  user =  models.ForeignKey(Person)
-  event =  models.ForeignKey(Event)
+  choice = models.CharField(
+    max_length=SHORT_STR_LEN, 
+    choices=list(EVENT_CHOICES.items())
+  )
+  user =  models.ForeignKey(Person,on_delete=models.CASCADE)
+  event =  models.ForeignKey(Event,on_delete=models.CASCADE)
 
   def __str__(self):
     return '%s - %s' % (self.user, self.event)
@@ -234,7 +234,8 @@ class Permission(models.Model):
   }
 
   permission_type = models.CharField(
-    choices=list(TYPES.items()), 
+    max_length=SHORT_STR_LEN, 
+    choices=list(PERMISSION_TYPES.items()), 
     primary_key=True
   ) 
 
@@ -278,7 +279,8 @@ class Role(models.Model):
   }
 
   role_type = models.CharField(
-    choices=list(TYPES.items()), 
+    max_length=SHORT_STR_LEN, 
+    choices=list(ROLE_TYPES.items()), 
     primary_key=True
   ) 
 
@@ -315,8 +317,8 @@ class Role(models.Model):
 
 
 class Policy(models.Model):
-  who = models.ForeignKey(Role)
-  can_do = models.ForeignKey(Permission)
+  who = models.ForeignKey(Role,on_delete=models.CASCADE)
+  can_do = models.ForeignKey(Permission, on_delete=models.CASCADE)
   #TODO: add with_what field?
 
   def __str__(self):
@@ -328,7 +330,7 @@ class Policy(models.Model):
 
 
 class Notification(models.Model):
-  title = models.CharField(max_lenth=SHORT_STR_LEN)
+  title = models.CharField(max_length=SHORT_STR_LEN)
   body = models.CharField(max_length=LONG_STR_LEN, blank=True)
 
   def __str__(self):
