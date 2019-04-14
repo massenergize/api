@@ -73,8 +73,12 @@ class Goal(models.Model):
 
 
 class UserProfile(models.Model):
-  user_account = models.ForeignKey(auth_models.User, on_delete=models.CASCADE, null=True)
-  address = models.ForeignKey(RealEstateUnit, on_delete=models.SET_NULL, null=True)
+  user_account = models.ForeignKey(
+    auth_models.User, on_delete=models.CASCADE, null=True
+  )
+  address = models.ForeignKey(
+    RealEstateUnit, on_delete=models.SET_NULL, null=True
+  )
   goals = models.ManyToManyField(Goal)
   community = models.ForeignKey(Community,on_delete=models.SET_NULL, null=True)
   age_acknowledgment = models.BooleanField()
