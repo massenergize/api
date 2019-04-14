@@ -30,19 +30,26 @@ class Action(models.Model):
 
 
 class Tag(models.Model):
-  pass 
+  value = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
 
+  def __str__(self):
+    return self.value
+
+  class Meta:
+    ordering = ('value',)
+    db_table = 'tags'
 
 class Event(models.Model):
-  name  = models.CharField(max_length = SHORT_STR_LEN)
+  title  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
   start_date_and_time  = models.DateTimeField(default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
   location = models.CharField(max_length = SHORT_STR_LEN)
+  tags = models.ManyToManyField(Tag)
   archive =  models.BooleanField(default=False)
 
   def __str__(self):             
-    return self.name
+    return self.title
 
   class Meta:
     ordering = ('-start_date_and_time',)
