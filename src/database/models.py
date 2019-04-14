@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 
 # Create your models here.
 class RealEstateUnit(models.Model):
@@ -132,7 +133,13 @@ class Role(models.Model):
 
 
 class Policy(models.Model):
-  pass 
+  who = models.ForeignKey(Role)
+  can_do = models.ForeignKey(Permission)
+  #TODO: add with_what field?
+
+  def __str__(self):
+    return "(%s) can (%s)" % (self.who, self.can_do)
+
 
 
 class Notification(models.Model):
