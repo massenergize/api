@@ -146,7 +146,7 @@ class ActionCategory(models.Model):
   order_position = models.PositiveSmallIntegerField(default = 0)
 
 
-  def __str__(self):              # __unicode__ on Python 2
+  def __str__(self):        
     return "%d: %s" % (self.order_position, self.name)
 
   
