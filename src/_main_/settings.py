@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'carbon_calculator',
     'database',
     'user_portal',
+    'website',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
