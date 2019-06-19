@@ -1,6 +1,6 @@
 from django.contrib import admin
 import database.models as module
-from massenergize_portal_backend.utils.utils import get_all_registered_models
+from _main_.utils.utils import get_all_registered_models
 
 admin.site.site_header = 'MassEnergize SuperAdmin Portal'
 

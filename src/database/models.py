@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from massenergize_portal_backend.utils.constants import *
+from _main_.utils.constants import *
 from datetime import date, datetime
 import django.contrib.auth.models as auth_models
 

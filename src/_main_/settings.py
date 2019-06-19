@@ -15,7 +15,7 @@ from .utils.utils import load_json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_DATA = load_json(BASE_DIR + '/massenergize_portal_backend/config.json')
+CONFIG_DATA = load_json(BASE_DIR + '/_main_/config.json')
 
 
 os.environ["DATABASE_ENGINE"] = CONFIG_DATA["DATABASE_ENGINE"]
@@ -62,7 +62,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'massenergize_portal_backend.urls'
+ROOT_URLCONF = '_main_.urls'
 
 TEMPLATES = [
     {
@@ -80,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'massenergize_portal_backend.wsgi.application'
+WSGI_APPLICATION = '_main_.wsgi.application'
 
 
 # Database

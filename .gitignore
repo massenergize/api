@@ -1,4 +1,4 @@
-src/massenergize_portal_backend/config.json
+src/_main_/config.json
 **/**/__pycache__
 **/__pycache__
 *.pyc
