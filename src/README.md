@@ -5,4 +5,12 @@ Maintained by:
 * Samuel Opoku-Agyemang
 * Satrajit Ghosh
 * Brad Hubbard-Nelson
+* Kieran O'Day
+
+
+## NOTES
+* Zip Command: 
+```
+  zip ../myapp.zip -r * .[^.]*
+```
 
