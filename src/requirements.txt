@@ -6,3 +6,4 @@ whitenoise==4.1
 Pillow==5.2.0
 django-storages==1.7.1
 boto==2.48.0
+django-cors-headers==3.0.2
