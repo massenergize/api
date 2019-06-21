@@ -1,0 +1,38 @@
+{
+    "description": "Local volunteers created this menu of opportunities to act. Click MORE INFO to see each action's details. Already done an action? Click DONE IT to add it to our Impact. Yes, it counts! ",
+    "actions": [
+        {
+            "id": 1,
+            "title": "I want to learn more about heat pumps",
+            "description": "very very very very long description about everything you can do and whatnot very very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnot",
+            "steps": "these are some steps you can take to do this action",
+            "links": {},
+            "image": "",
+            "impact": "low",
+            "category": "Home Energy",
+            "cost": "high",
+            "tags": ["cool","fun","sustainable","..."]
+        }
+    ],
+    "sidebar": {
+        "impacts": [
+            "low", "medium", "high"
+        ],
+        "costs": [
+            "low", "medium", "high"
+        ],
+        "categories": [
+            "Home Energy",
+            "Clean Transportation",
+            "Lighting",
+            "Solar",
+            "Food",
+            "Water",
+            "Trash and Recycling",
+            "Activism and Education"
+        ],
+        "tags": [
+
+        ]
+    }
+}
