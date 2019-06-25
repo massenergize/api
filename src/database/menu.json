@@ -1,35 +1,35 @@
 {
     "navLinks": [
         {
-            "link": "home",
+            "link": "/home",
             "name": "Home"
         },
         {
-            "link": "actions",
+            "link": "/actions",
             "name": "Actions"
         },
         {
-            "link": "service",
+            "link": "/service",
             "name": "Service Providers"
         },
         {
-            "link": "events",
+            "link": "/events",
             "name": "Events"
         },
         {
-            "link": "teams",
+            "link": "/teams",
             "name": "Teams"
         },
         {
-            "link": "impact",
+            "link": "/impact",
             "name": "Impact"
         },
         {
-            "link": "aboutus",
+            "link": "/aboutus",
             "name": "About Us"
         },
         {
-            "link": "donate",
+            "link": "/donate",
             "name": "Donate"
         }
     ],
