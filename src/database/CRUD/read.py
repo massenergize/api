@@ -31,3 +31,6 @@ def super_admin_sidebar():
 
 def super_admin_navbar():
   return common.json_loader('./database/raw_data/super-admin/navbar.json')
+
+def get_states_in_the_US():
+  return common.json_loader('./database/raw_data/other/states.json')

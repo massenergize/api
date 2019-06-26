@@ -7,9 +7,9 @@ from database.CRUD import read
 
 # Create your views here.
 def test(request):
-  return JsonResponse(common.json_loader('./database/raw_data/other/states.json'))
+  return JsonResponse(read.get_states_in_the_US())
 
-@require_http_methods(["POST", "GET"])
+@require_http_methods(["POST"])
 def login(request):
   #TODO: connect to database
   return JsonResponse(
@@ -21,7 +21,6 @@ def login(request):
       }
     }
   )
-
 
 def get_super_admin_sidebar_menu(request):
   return JsonResponse(read.super_admin_sidebar(), safe=False)
