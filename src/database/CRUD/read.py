@@ -23,3 +23,11 @@ def community_portal_actions(community_id='default'):
   Returns all the possible actions for a community actions 
   """
   return common.json_loader('./database/raw_data/portal/actionsPageData.json')
+
+
+def super_admin_sidebar():
+  return common.json_loader('./database/raw_data/super-admin/sidebar.json')
+
+
+def super_admin_navbar():
+  return common.json_loader('./database/raw_data/super-admin/navbar.json')

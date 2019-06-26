@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from database.utils import common
+from database.CRUD import read
+
 
 # Create your views here.
 def test(request):
@@ -22,8 +24,8 @@ def login(request):
 
 
 def get_super_admin_sidebar_menu(request):
-  return JsonResponse({"1":1,"2":3})
+  return JsonResponse(read.super_admin_sidebar(), safe=False)
 
 def get_super_admin_navbar_menu(request):
-  return JsonResponse({"2":2, "3":4})
+  return JsonResponse(read.super_admin_navbar(), safe=False)
 
