@@ -11,12 +11,10 @@ def home(request):
 
 
 def actions(request):
-    pageData = read.community_portal_home_page_data()
+    pageData = read.community_portal_actions_page_data()
     menuData = read.community_portal_website_menu()
-    actions = read.community_portal_actions()
     return JsonResponse({
         "pageData": pageData, 
         "menuData": menuData, 
-        "actions": actions
         }
     )

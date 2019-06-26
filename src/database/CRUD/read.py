@@ -18,7 +18,7 @@ def community_portal_website_menu():
   return common.json_loader('./database/raw_data/portal/menu.json')
 
 
-def community_portal_actions(community_id='default'):
+def community_portal_actions_page_data(community_id='default'):
   """
   Returns all the possible actions for a community actions 
   """
