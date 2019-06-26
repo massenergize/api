@@ -1,0 +1,249 @@
+[
+  {
+    "key": "dashboard",
+    "name": "Dashboard",
+    "icon": "ios-stats",
+    "link": "/admin/dashboard"
+  },
+  {
+    "key": "communities",
+    "name": "Communities",
+    "icon": "ios-people",
+    "child": [
+      {
+        "key": "about-communities",
+        "name": "Communities",
+        "title": true
+      },
+      {
+        "key": "onboard-community",
+        "name": "Add New Community",
+        "link": "/admin/add/community"
+      },
+      {
+        "key": "all-communities",
+        "name": "All Communities",
+        "link": "/admin/read/communities"
+      }
+    ]
+  },
+  {
+    "key": "vendors",
+    "name": "Vendors",
+    "icon": "md-hammer",
+    "child": [
+      {
+        "key": "about-vendors",
+        "name": "Contractors/Vendors",
+        "title": true
+      },
+      {
+        "key": "add-vendor",
+        "name": "Add New Vendor",
+        "link": "/admin/add/vendor"
+      },
+      {
+        "key": "all-vendors",
+        "name": "All Vendors",
+        "link": "/admin/read/vendors"
+      }
+    ]
+  },
+  {
+    "key": "actions",
+    "name": "Actions",
+    "icon": "ios-bulb",
+    "child": [
+      {
+        "key": "about-actions",
+        "name": "Actions",
+        "title": true
+      },
+      {
+        "key": "add-actions",
+        "name": "Add New Action",
+        "link": "/admin/add/action"
+      },
+      {
+        "key": "all-actions",
+        "name": "All Actions",
+        "link": "/admin/read/actions"
+      }
+    ]
+  },
+  {
+    "key": "events",
+    "name": "Events",
+    "icon": "md-wifi",
+    "child": [
+      {
+        "key": "about-events",
+        "name": "Events",
+        "title": true
+      },
+      {
+        "key": "add-event",
+        "name": "Add Event",
+        "link": "/admin/add/event"
+      },
+      {
+        "key": "all-events",
+        "name": "All Events",
+        "link": "/admin/read/events"
+      }
+    ]
+  },
+  {
+    "key": "categories",
+    "name": "Categories",
+    "icon": "md-reorder",
+    "child": [
+      {
+        "key": "about-categories",
+        "name": "Categories",
+        "title": true
+      },
+      {
+        "key": "add-vendor",
+        "name": "Add New Category",
+        "link": "/admin/add/category"
+      },
+      {
+        "key": "all-categories",
+        "name": "All Categories",
+        "link": "/admin/read/categories"
+      }
+    ]
+  },
+  {
+    "key": "teams",
+    "name": "Teams",
+    "icon": "ios-people",
+    "child": [
+      {
+        "key": "about-teams",
+        "name": "Teams",
+        "title": true
+      },
+      {
+        "key": "add-team",
+        "name": "Add New Team",
+        "link": "/admin/add/team"
+      },
+      {
+        "key": "all-teams",
+        "name": "All Teams",
+        "link": "/admin/read/teams"
+      }
+    ]
+  },
+  {
+    "key": "goals",
+    "name": "Goals",
+    "icon": "ios-checkmark-circle",
+    "child": [
+      {
+        "key": "about-goals",
+        "name": "Goals",
+        "title": true
+      },
+      {
+        "key": "add-goal",
+        "name": "Add New Goal",
+        "link": "/admin/add/goal"
+      },
+      {
+        "key": "all-goals",
+        "name": "All Goals",
+        "link": "/admin/read/goals"
+      }
+    ]
+  },
+  {
+    "key": "testimonials",
+    "name": "Testimonials",
+    "icon": "ios-analytics",
+    "child": [
+      {
+        "key": "about-testimonials",
+        "name": "testimonials",
+        "title": true
+      },
+      {
+        "key": "add-testimonial",
+        "name": "Add New Testimonial",
+        "link": "/admin/add/testimonial"
+      },
+      {
+        "key": "all-testimonials",
+        "name": "All Testimonials",
+        "link": "/admin/read/testimonials"
+      }
+    ]
+  },
+  {
+    "key": "export",
+    "name": "Export",
+    "icon": "ios-cloud-download",
+    "link": "/admin/export"
+  },
+  {
+    "key": "policies",
+    "name": "Policies",
+    "icon": "ios-alert",
+    "child": [
+      {
+        "key": "about-policies",
+        "name": "policies",
+        "title": true
+      },
+      {
+        "key": "add-policy",
+        "name": "Add New Policy",
+        "link": "/admin/add/policy"
+      },
+      {
+        "key": "all-policies",
+        "name": "All Policies",
+        "link": "/admin/read/policies"
+      }
+    ]
+  },
+  {
+    "key": "page-customization",
+    "name": "Pages",
+    "icon": "ios-apps",
+    "child": [
+      {
+        "key": "about-pages",
+        "name": "Website Pages",
+        "title": true
+      },
+      {
+        "key": "home",
+        "name": "Home",
+        "link": "/admin/add/home"
+      },
+      {
+        "key": "all-actions",
+        "name": "All Actions",
+        "link": "/admin/read/all-actions"
+      },
+      {
+        "key": "donate",
+        "name": "Donate",
+        "link": "/admin/read/donate"
+      },
+      {
+        "key": "contact",
+        "name": "Contact Us",
+        "link": "/admin/read/contact-us"
+      },
+      {
+        "key": "about-us",
+        "name": "About Us",
+        "link": "/admin/read/about-us"
+      }
+    ]
+  }
+]

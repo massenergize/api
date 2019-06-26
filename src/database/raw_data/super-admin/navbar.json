@@ -1,0 +1,53 @@
+[
+  {
+    "key": "dashboard",
+    "name": "Dashboard",
+    "icon": "ios-stats",
+    "link": "/admin/dashboard"
+  },
+  {
+    "key": "communities",
+    "name": "Communities",
+    "icon": "ios-people",
+    "child": [
+      {
+        "key": "about-communities",
+        "name": "Communities",
+        "title": true
+      },
+      {
+        "key": "onboard-community",
+        "name": "Add New Community",
+        "link": "/admin/add/community"
+      },
+      {
+        "key": "all-communities",
+        "name": "All Communities",
+        "link": "/admin/read/communities"
+      }
+    ]
+  },
+  
+  {
+    "key": "events",
+    "name": "Events",
+    "icon": "md-wifi",
+    "child": [
+      {
+        "key": "about-events",
+        "name": "Events",
+        "title": true
+      },
+      {
+        "key": "add-event",
+        "name": "Add Event",
+        "link": "/admin/add/event"
+      },
+      {
+        "key": "all-events",
+        "name": "All Events",
+        "link": "/admin/read/events"
+      }
+    ]
+  }
+]
