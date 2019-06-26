@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from _main_.utils.constants import *
+from .utils.constants import *
 from datetime import date, datetime
 import django.contrib.auth.models as auth_models
+from .utils import common
 
-# Create your models here.
+
 class Community(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
 
@@ -32,7 +33,7 @@ class RealEstateUnit(models.Model):
     city = models.CharField(max_length=SHORT_STR_LEN) 
     state = models.CharField(
       max_length=SHORT_STR_LEN, 
-      choices = list(USA_STATES.items())
+      choices = list(common.json_loader('./database/raw_data/other/states.json').items())
     )
 
     def is_commercial(self):
