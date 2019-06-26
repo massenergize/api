@@ -10,11 +10,13 @@ def community_portal_home_page_data():
   """
   return common.json_loader('./database/demo-data/portal/homePageData.json')
 
+
 def community_portal_website_menu():
   """
   Returns the menu for communty portal 
   """
   return common.json_loader('./database/demo-data/portal/menu.json')
+
 
 def community_portal_actions(community_id='default'):
   """
