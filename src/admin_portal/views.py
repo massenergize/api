@@ -21,8 +21,9 @@ def login(request):
 
 
 def get_super_admin_sidebar_menu(request):
-  return JsonResponse({})
+  print(123)
+  return JsonResponse({"1":1,"2":3})
 
 def get_super_admin_navbar_menu(request):
-  return JsonResponse({})
+  return JsonResponse({"2":2, "3":4})
 

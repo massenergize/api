@@ -1,20 +1,22 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 import json
-
-def json_loader(file):
-    with open(file) as myfile:
-        data = myfile.read()
-    return json.loads(data)
+from database.CRUD import read
 
 
-# Create your views here.
 def home(request):
-    pageData = json_loader('./database/homePageData.json')
-    menuData = json_loader('./database/menu.json')
+    pageData = read.community_portal_home_page_data()
+    menuData = read.community_portal_website_menu()
     return JsonResponse({"pageData": pageData, "menuData": menuData})
-# Create your views here.
+
+
 def actions(request):
-    pageData = json_loader('./database/actionsPageData.json')
-    menuData = json_loader('./database/menu.json')
-    return JsonResponse({"pageData": pageData, "menuData": menuData})
+    pageData = read.community_portal_home_page_data()
+    menuData = read.community_portal_website_menu()
+    actions = read.community_portal_actions()
+    return JsonResponse({
+        "pageData": pageData, 
+        "menuData": menuData, 
+        "actions": actions
+        }
+    )
