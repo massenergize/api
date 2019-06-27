@@ -18,3 +18,9 @@ def actions(request):
         "menuData": menuData, 
         }
     )
+
+def menu(request):
+    menuData = read.community_portal_website_menu()
+    return JsonResponse({
+        "menuData": menuData, 
+    })
