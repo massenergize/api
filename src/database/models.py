@@ -37,14 +37,13 @@ class Location(models.Model):
   more_info: JSON
     any another dynamic information we would like to store about this location 
 
-
   Methods
   -------
   describe()
     Returns a good summary/description of the location.
   """
   name = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  type = models.CharField(max_length=TINY_STR_LEN, 
+  location_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["LOCATION_TYPES"].items())
   street = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   unit_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -73,12 +72,12 @@ class Media(models.Model):
     hypens and underscores.  No spaces allowed.
   file : File
     the file that is to be stored.
-  type: str
+  media_type: str
     the type of this media file whether it is an image, video, pdf etc.
   """
   name = models.SlugField(max_length=SHORT_STR_LEN) #can't have spaces
   file = models.FileField(upload_to='files/')
-  type = models.CharField(max_length=SHORT_STR_LEN, 
+  media_type = models.CharField(max_length=SHORT_STR_LEN, 
     choices=CHOICES["FILE_TYPES_ALLOWED"].items(), default='UNKNOWN')
   def get_url(self):
     return '%s/files/%s' (API_URL, self.name)
@@ -100,7 +99,7 @@ class Community(models.Model):
   ----------
   name : str
     The short name for this Community
-  subdomain : str
+  subdomain : str (can only contain alphabets, numbers, hyphen and underscores)
     a primary unique identifier for this Community.  They would need the same 
     to access their website.  For instance if the subdomain is wayland they 
     would access their portal through wayland.massenergize.org
@@ -126,7 +125,7 @@ class Community(models.Model):
     any another dynamic information we would like to store about this location 
   """
   name = models.CharField(max_length=SHORT_STR_LEN)
-  subdomain = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner = JSONField() 
   about_you = models.TextField(max_length=LONG_STR_LEN)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name='community_logo')
@@ -148,9 +147,24 @@ class Community(models.Model):
 
 
 class RealEstateUnit(models.Model):
+  """
+  A class used to represent a Real Estate Unit. 
+
+  Attributes
+  ----------
+  unit_type : str
+    The type of this unit eg. Residential, Commercial, etc
+  location: Location
+    the geographic address or location of this real estate unit
+  created_at: DateTime
+    The date and time that this real estate unity was added 
+  created_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this real estate unit
+  """
   unit_type =  models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=list(CHOICES["REAL_ESTATE_TYPES"].items())
+    choices=CHOICES["REAL_ESTATE_TYPES"].items()
   )
   location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -172,9 +186,26 @@ class RealEstateUnit(models.Model):
 
 
 class Goal(models.Model):
+  """
+  A class used to represent a Goal 
+
+  Attributes
+  ----------
+  title : str
+    A short title for this goal
+  status: str
+    the status of this goal whether it has been achieved or not.
+  description:
+    More details about this goal 
+  created_at: DateTime
+    The date and time that this goal was added 
+  created_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this goal
+  """
   title = models.CharField(max_length=SHORT_STR_LEN)
   status = models.CharField(
-    max_length=TINY_STR_LEN, choices=list(CHOICES["GOAL_STATUS"].items()))
+    max_length=TINY_STR_LEN, choices=CHOICES["GOAL_STATUS"].items())
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -191,21 +222,51 @@ class Goal(models.Model):
 
 
 class UserProfile(models.Model):
+  """
+  A class used to represent a MassEnergize User
+
+  Attributes
+  ----------
+  user_account : int [User]
+    Foreign Key that represents a user
+  address: int [Location]
+    Foregin Key that represents the Location for this user
+  bio:
+    A short biography of this user
+  is_super_admin: boolean
+    True if this user is an admin False otherwise
+  is_community_admin: boolean
+    True if this user is an admin for a community False otherwise
+  is_vendor: boolean
+    True if this user is a vendor False otherwise
+  other_info: JSON
+    any another dynamic information we would like to store about this location 
+  created_at: DateTime
+    The date and time that this goal was added 
+  created_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this goal
+  """
+
   user_account = models.ForeignKey(auth_models.User, 
     on_delete=models.CASCADE, null=True)
-  address = models.ForeignKey(RealEstateUnit, on_delete=models.SET_NULL, 
+  bio = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+  address = models.ForeignKey(RealEstateUnit, blank=True, 
+    on_delete=models.SET_NULL, 
     null=True) #TODO: delete
   real_estate_units = models.ManyToManyField(RealEstateUnit, 
     related_name='user_real_estate_units')
   goals = models.ManyToManyField(Goal)
   communities = models.ManyToManyField(Community)
-  is_super_admin = models.BooleanField()
-  is_community_admin = models.BooleanField()
+  is_super_admin = models.BooleanField(default=False)
+  is_community_admin = models.BooleanField(default=False)
+  is_vendor = models.BooleanField(default=False)
   age_acknowledgment = models.BooleanField() #TODO: delete
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   other_info = JSONField()
-
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
 
 def __str__(self):
   return self.user_account.get_full_name()
@@ -213,8 +274,6 @@ def __str__(self):
 
 class Meta:
   db_table = 'people' #TODO: change to user_profiles
-
-
 
 
 class Team(models.Model):
@@ -327,42 +386,61 @@ class Tag(models.Model):
     db_table = 'tags'
 
 
-class SuperTag(models.Model):
-  value = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
-  tags = models.ManyToManyField(Tag, related_name='supertags_to_tags')
+class TagCategory(models.Model):
+  name = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
+  tags = models.ManyToManyField(Tag)
   def __str__(self):
     return self.value
 
   class Meta:
-    ordering = ('value',)
-    db_table = 'supertags'
+    ordering = ('name',)
+    db_table = 'tag_categories'
 
 
 class Action(models.Model):
+  """
+  A class used to represent an Action that can be taken by a user on this 
+  website. 
+
+  Attributes
+  ----------
+  title : str
+    A short title for this Action.
+  is_template_action: boolean
+    True if this action is a core action that every community should see or not.
+    False otherwise.
+  about: str
+    More descriptive information about this action.
+  steps_to_take: str
+    Describes the steps that can be taken by an a user for this action;
+  icon: str
+    a string description of the icon class for this action if any
+  image: int Media
+    a Foreign key to an uploaded media file
+  geographic_area: str
+    the Location where this action can be taken
+  created_at: DateTime
+    The date and time that this real estate unity was added 
+  created_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this real estate unit
+  """
   title = models.CharField(max_length = SHORT_STR_LEN)
   is_template_action = models.BooleanField(default=False)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
-  partnership_information = models.TextField(max_length = LONG_STR_LEN, 
+  about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
-  #TODO: needed?  Don't the tags rather have super tags
-  super_tags = models.ManyToManyField(SuperTag, related_name='action_supertags')  
   tags = models.ManyToManyField(Tag, related_name='action_tags')
-
-  #some actions are constrained to only a specific geographic area.
-  geographic_focus = models.ForeignKey(Location, null=True, blank=True, 
+  geographic_area = models.ForeignKey(Location, 
+    null=True, blank=True, 
     on_delete=models.SET_NULL)
-
   icon = models.CharField(max_length = SHORT_STR_LEN)
-  image = models.ImageField(upload_to='photos/actions')
-  
+  image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   properties = models.ManyToManyField(ActionProperty)
   vendors = models.ManyToManyField(Vendor)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   category = models.ManyToManyField(ActionCategory) 
-
-  #the order in which it should appear relative to its peers
   rank = models.PositiveSmallIntegerField(default = 0) 
-
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -385,7 +463,7 @@ class Event(models.Model):
   #TODO: make this a Location foreign key field?
   location = models.CharField(max_length = SHORT_STR_LEN, blank=True) 
   tags = models.ManyToManyField(Tag)
-  image = models.ImageField(upload_to='images/events', blank=True)
+  image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   archive =  models.BooleanField(default=False)
 
   #TODO: make sure any one who retrieves events only retrieves those that are 
@@ -402,7 +480,7 @@ class Event(models.Model):
 class EventUserRel(models.Model):
   choice = models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=list(CHOICES["EVENT_CHOICES"].items())
+    choices=CHOICES["EVENT_CHOICES"].items()
   )
   user =  models.ForeignKey(UserProfile,on_delete=models.CASCADE)
   event =  models.ForeignKey(Event,on_delete=models.CASCADE)
@@ -418,7 +496,7 @@ class Permission(models.Model):
   """
   permission_type = models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=list(CHOICES["PERMISSION_TYPES"].items()), 
+    choices=CHOICES["PERMISSION_TYPES"].items(), 
     primary_key=True
   ) 
 
@@ -454,7 +532,7 @@ class Permission(models.Model):
 class Role(models.Model):
   role_type = models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=list(CHOICES["ROLE_TYPES"].items()), 
+    choices=CHOICES["ROLE_TYPES"].items(), 
     primary_key=True
   ) 
 
@@ -636,7 +714,7 @@ class SliderImage(models.Model):
   """
 	title = models.CharField(max_length = LONG_STR_LEN, blank=True)
 	description = models.CharField(max_length = LONG_STR_LEN, blank=True)
-	image = models.ImageField(upload_to='database/gallery/')
+	image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
 	hyperlink = models.CharField(max_length = LONG_STR_LEN, blank=True)
 
 	def __str__(self):             
@@ -671,8 +749,7 @@ class Menu(models.Model):
 class PageSection(models.Model):
 	name = models.CharField(max_length=LONG_STR_LEN)
 	content = models.TextField(max_length=LONG_STR_LEN, blank = True)
-	image = models.ImageField(upload_to='database/pages/',
-    max_length=LONG_STR_LEN, blank=True)
+	image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
 	town = models.ManyToManyField(Community)
 	page_associated = models.ForeignKey(Menu, on_delete=models.SET_NULL, null=True)
 
