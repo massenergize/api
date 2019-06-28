@@ -482,7 +482,7 @@ class Role(models.Model):
     return self.role_type == 'V'
 
   def __str__(self):
-    return 'Is: %s' % ROLE_TYPES[self.role_type] 
+    return 'Is: %s' % CHOICES["ROLE_TYPES"][self.role_type] 
 
   class Meta:
     ordering = ('role_type',)
