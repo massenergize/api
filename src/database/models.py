@@ -13,24 +13,21 @@ from .utils import common
 #TODO: add indexes to some models
 #TODO: change some text field to html field?
 
+CHOICES = common.json_loader('./database/raw_data/other/database.json')
+ZIP_CODE_AND_STATES = common.json_loader('./database/raw_data/other/states.json')
+API_URL = 'https://api.massenergize.org'
+
+
 class Location(models.Model):
-  LOCATION_TYPES = [
-    ('S', 'STATE ONLY'),
-    ('Z', 'ZIP CODE ONLY'),
-    ('C', 'CITY ONLY'),
-    ('F', 'FULL ADDRESS')
-  ]
   name = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  type = models.CharField(max_length=TINY_STR_LEN, choices=LOCATION_TYPES)
+  type = models.CharField(max_length=TINY_STR_LEN, 
+    choices=CHOICES["LOCATION_TYPES"].items())
   street = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   unit_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   zipcode = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   city = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
-  state = models.CharField(
-    max_length=SHORT_STR_LEN, 
-    choices = common.json_loader('./database/raw_data/other/states.json').items(),
-    blank=True
-  )
+  state = models.CharField(max_length=SHORT_STR_LEN, 
+    choices = ZIP_CODE_AND_STATES.items(), blank=True)
   more_info = JSONField()
 
   def __str__(self):
@@ -66,7 +63,7 @@ class File(models.Model):
   file = models.FileField(upload_to='files/')
 
   def get_url(self):
-    return 'https://api.massenergize.org/files/%s' % self.name
+    return '%s/files/%s' (API_URL, self.name)
 
 
   def __str__(self):      
@@ -78,14 +75,9 @@ class File(models.Model):
 
 
 class RealEstateUnit(models.Model):
-  REAL_ESTATE_TYPES = {
-    'C': 'Commercial', 
-    'R': 'Residential'
-  }
-
   unit_type =  models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=list(REAL_ESTATE_TYPES.items())
+    choices=list(CHOICES["REAL_ESTATE_TYPES"].items())
   )
   location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -107,23 +99,16 @@ class RealEstateUnit(models.Model):
 
 
 class Goal(models.Model):
-  GOAL_STATUS = {
-    'I': 'In Progress',
-    'N': 'Not Started',
-    'C': 'Completed'
-  }
-
   title = models.CharField(max_length=SHORT_STR_LEN)
   status = models.CharField(
-    max_length=TINY_STR_LEN, choices=list(GOAL_STATUS.items())
-  )
+    max_length=TINY_STR_LEN, choices=list(CHOICES["GOAL_STATUS"].items()))
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
 
   def get_status(self):
-    return GOAL_STATUS[self.status]
+    return CHOICES["GOAL_STATUS"][self.status]
 
   def __str__(self):
     return self.title
@@ -133,20 +118,25 @@ class Goal(models.Model):
 
 
 class UserProfile(models.Model):
-  user_account = models.ForeignKey(auth_models.User, on_delete=models.CASCADE, null=True)
-  address = models.ForeignKey(RealEstateUnit, on_delete=models.SET_NULL, null=True) #TODO: delete
-  real_estate_units = models.ManyToManyField(RealEstateUnit, related_name='user_real_estate_units')
+  user_account = models.ForeignKey(auth_models.User, 
+    on_delete=models.CASCADE, null=True)
+  address = models.ForeignKey(RealEstateUnit, on_delete=models.SET_NULL, 
+    null=True) #TODO: delete
+  real_estate_units = models.ManyToManyField(RealEstateUnit, 
+    related_name='user_real_estate_units')
   goals = models.ManyToManyField(Goal)
   communities = models.ManyToManyField(Community)
   is_super_admin = models.BooleanField()
   is_community_admin = models.BooleanField()
-  other_info = JSONField()
   age_acknowledgment = models.BooleanField() #TODO: delete
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
+  other_info = JSONField()
+
 
 def __str__(self):
   return self.user_account.get_full_name()
+
 
 class Meta:
   db_table = 'people' #TODO: change to user_profiles
@@ -181,7 +171,8 @@ class Team(models.Model):
 class Service(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  service_location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True)
+  service_location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
+    null=True, blank=True)
   info = JSONField()
 
 
@@ -194,24 +185,19 @@ class Service(models.Model):
 
 
 class Vendor(models.Model):
-  SERVICE_AREAS = [
-    ('N', 'National'),
-    ('S', 'StateWide'),
-    ('C', 'County'),
-    ('T', 'Town')
-  ]
-  PROPERTIES_SERVICED = [
-    ('R', 'Residential'),
-    ('C', 'Commercial')
-  ]
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
-  address = models.ForeignKey(Location, blank=True, null=True, on_delete=models.SET_NULL)
-  key_contact = models.ForeignKey(UserProfile, blank=True, null=True, on_delete=models.SET_NULL, related_name='key_contact')
-  service_area = models.CharField(max_length=TINY_STR_LEN, choices=SERVICE_AREAS)
+  address = models.ForeignKey(Location, blank=True, null=True, 
+    on_delete=models.SET_NULL)
+  key_contact = models.ForeignKey(UserProfile, blank=True, null=True, 
+    on_delete=models.SET_NULL, related_name='key_contact')
+  service_area = models.CharField(max_length=TINY_STR_LEN, 
+    choices=CHOICES["SERVICE_AREAS"].items())
   services = models.ManyToManyField(Service)
-  properties_serviced = models.CharField(max_length=TINY_STR_LEN, choices=PROPERTIES_SERVICED)
+  properties_serviced = models.CharField(max_length=TINY_STR_LEN, 
+    choices=CHOICES["PROPERTIES_SERVICED"].items())
   onboarding_date = models.DateTimeField(default=datetime.now)
-  onboarding_contact = models.ForeignKey(UserProfile, blank=True, null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
+  onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
+    null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   verification_checklist = JSONField() #include Vendor MOU, Reesearch
   is_verified = models.BooleanField(default=False)
@@ -283,14 +269,15 @@ class Action(models.Model):
   title = models.CharField(max_length = SHORT_STR_LEN)
   is_template_action = models.BooleanField(default=False)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
-  partnership_information = models.TextField(max_length = LONG_STR_LEN, blank=True)
-
+  partnership_information = models.TextField(max_length = LONG_STR_LEN, 
+    blank=True)
   #TODO: needed?  Don't the tags rather have super tags
   super_tags = models.ManyToManyField(SuperTag, related_name='action_supertags')  
   tags = models.ManyToManyField(Tag, related_name='action_tags')
 
   #some actions are constrained to only a specific geographic area.
-  geographic_focus = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
+  geographic_focus = models.ForeignKey(Location, null=True, blank=True, 
+    on_delete=models.SET_NULL)
 
   icon = models.CharField(max_length = SHORT_STR_LEN)
   image = models.ImageField(upload_to='photos/actions')
@@ -322,7 +309,8 @@ class Event(models.Model):
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   start_date_and_time  = models.DateTimeField(default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
-  location = models.CharField(max_length = SHORT_STR_LEN, blank=True) #TODO: make this a Location foreign key field?
+  #TODO: make this a Location foreign key field?
+  location = models.CharField(max_length = SHORT_STR_LEN, blank=True) 
   tags = models.ManyToManyField(Tag)
   image = models.ImageField(upload_to='images/events', blank=True)
   archive =  models.BooleanField(default=False)
@@ -339,15 +327,9 @@ class Event(models.Model):
 
 
 class EventUserRel(models.Model):
-  EVENT_CHOICES = {
-    'I': 'Interested',
-    'R': 'RSVP',
-    'S': 'Save for Later'
-  }
-
   choice = models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=list(EVENT_CHOICES.items())
+    choices=list(CHOICES["EVENT_CHOICES"].items())
   )
   user =  models.ForeignKey(UserProfile,on_delete=models.CASCADE)
   event =  models.ForeignKey(Event,on_delete=models.CASCADE)
@@ -361,17 +343,9 @@ class Permission(models.Model):
   Represents the Permissions that are required by users to perform any tasks 
   on this platform.
   """
-  PERMISSION_TYPES = {
-    'A': 'Approve', 
-    'C': 'Create', 
-    'E': 'Edit',
-    'F': 'Fork',
-    'V': 'View'
-  }
-
   permission_type = models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=list(PERMISSION_TYPES.items()), 
+    choices=list(CHOICES["PERMISSION_TYPES"].items()), 
     primary_key=True
   ) 
 
@@ -396,7 +370,7 @@ class Permission(models.Model):
 
 
   def __str__(self):
-    return 'Can: %s' %  PERMISSION_TYPES[self.permission_type] 
+    return 'Can: %s' %  CHOICES["PERMISSION_TYPES"][self.permission_type] 
 
   class Meta:
     ordering = ('permission_type',)
@@ -405,17 +379,9 @@ class Permission(models.Model):
     
 
 class Role(models.Model):
-  ROLE_TYPES = {
-    'C': 'Community Admin', 
-    'S': 'SuperAdmin', 
-    'T': 'Team Admin',
-    'U': 'Default User',
-    'V': 'Vendor Admin',
-  }
-
   role_type = models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=list(ROLE_TYPES.items()), 
+    choices=list(CHOICES["ROLE_TYPES"].items()), 
     primary_key=True
   ) 
 
@@ -450,7 +416,7 @@ class Role(models.Model):
     db_table = 'roles'
 
 
-class Policy(models.Model):
+class UserPolicy(models.Model):
   who = models.ForeignKey(Role,on_delete=models.CASCADE)
   can_do = models.ForeignKey(Permission, on_delete=models.CASCADE)
   #TODO: add with_what field?
@@ -460,7 +426,7 @@ class Policy(models.Model):
 
   class Meta:
     ordering = ('who',)
-    db_table = 'policies'
+    db_table = 'user_policies'
 
 
 class Notification(models.Model):
@@ -495,8 +461,10 @@ class ActionTaken(models.Model):
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
   real_estate_unit = models.ForeignKey(RealEstateUnit, on_delete=models.CASCADE)
   action = models.ForeignKey(Action, on_delete=models.CASCADE)
-  vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True, blank=True)
-  testimonial = models.ForeignKey(Testimonial, on_delete=models.SET_NULL, null=True, blank=True)
+  vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, 
+    null=True, blank=True)
+  testimonial = models.ForeignKey(Testimonial, on_delete=models.SET_NULL, 
+    null=True, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   info = JSONField()
 
@@ -545,8 +513,9 @@ class UserGroup(models.Model):
 class Data(models.Model):
 	"""Instances keep track of a statistic from the admin"""
 	description = models.CharField(max_length = LONG_STR_LEN)
-	count =  models.PositiveSmallIntegerField(default=1)
-	community = models.ForeignKey(Community, blank=False, on_delete=models.SET_NULL, null=True)
+	count =  models.PositiveSmallIntegerField(default=0)
+	community = models.ForeignKey(Community, blank=False, 
+    on_delete=models.SET_NULL, null=True)
 
 	def __str__(self): 
 		            
@@ -561,11 +530,12 @@ class Data(models.Model):
 class Statistic(models.Model):
 	"""Instances keep track of a statistic from the admin"""
 	description = models.CharField(max_length = LONG_STR_LEN)
-	value =  models.PositiveSmallIntegerField(default=1)
+	value =  models.PositiveSmallIntegerField(default=0)
 	show_this_on_the_impact_page =  models.BooleanField(default=False)
-	tag = models.CharField(max_length = LONG_STR_LEN, default='', blank=True)
-	symbol = models.CharField(max_length = LONG_STR_LEN, default='', blank=True)
-	community = models.ForeignKey(Community, blank=True,  on_delete=models.SET_NULL, null=True)
+	tag = models.CharField(max_length = LONG_STR_LEN, blank=True)
+	symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
+	community = models.ForeignKey(Community, blank=True,  
+    on_delete=models.SET_NULL, null=True)
 
 	def __str__(self):         
 		return "%s (%d)" % (self.description, self.value)
@@ -588,7 +558,9 @@ class Graph(models.Model):
 		ordering = ('title',)
 
 class SliderImage(models.Model):
-	"""Model the represents the database for Images that will be inserted into slide shows"""
+	"""Model the represents the database for Images that will be 
+  inserted into slide shows
+  """
 	title = models.CharField(max_length = LONG_STR_LEN, blank=True)
 	description = models.CharField(max_length = LONG_STR_LEN, blank=True)
 	image = models.ImageField(upload_to='database/gallery/')
@@ -612,7 +584,7 @@ class Slider(models.Model):
 
 class Menu(models.Model):
 	"""Represents items on the menu bar (top-most bar on the webpage)"""
-	position = models.PositiveSmallIntegerField(default=1)
+	position = models.PositiveSmallIntegerField(default=0)
 	name = models.CharField(max_length=LONG_STR_LEN, blank = True)
 	href = models.CharField(max_length=LONG_STR_LEN, blank = True)
 
@@ -626,9 +598,10 @@ class Menu(models.Model):
 class PageSection(models.Model):
 	name = models.CharField(max_length=LONG_STR_LEN)
 	content = models.TextField(max_length=LONG_STR_LEN, blank = True)
-	image = models.ImageField(upload_to='database/pages/',max_length=LONG_STR_LEN, blank=True)
+	image = models.ImageField(upload_to='database/pages/',
+    max_length=LONG_STR_LEN, blank=True)
 	town = models.ManyToManyField(Community)
-	page_associated = models.ForeignKey(Menu, default=None, on_delete=models.SET_NULL, null=True)
+	page_associated = models.ForeignKey(Menu, on_delete=models.SET_NULL, null=True)
 
 	def __str__(self):             
 		return self.name
@@ -647,7 +620,7 @@ class Page(models.Model):
     unique_together = ['name', 'community']
 
 
-class MassEnergizePolicy(models.Model):
+class Policy(models.Model):
   name = models.CharField(max_length=LONG_STR_LEN)
   content = models.TextField(max_length=LONG_STR_LEN, blank = True)
   communities = models.ManyToManyField(Community)

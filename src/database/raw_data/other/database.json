@@ -1,0 +1,53 @@
+{
+  "LOCATION_TYPES" : {
+    "S":"STATE ONLY",
+    "Z":"ZIP CODE ONLY",
+    "C":"CITY ONLY",
+    "F":"FULL ADDRESS"
+  },
+
+  "GOAL_STATUS" : {
+    "I": "In Progress",
+    "N": "Not Started",
+    "C": "Completed"
+  },
+
+  "SERVICE_AREAS" : {
+    "N":"National",
+    "S":"StateWide",
+    "C":"County",
+    "T":"Town"
+  },
+
+  "PROPERTIES_SERVICED" : {
+    "R":"Residential",
+    "C":"Commercial"
+  },
+
+  "EVENT_CHOICES" : {
+    "I": "Interested",
+    "R": "RSVP",
+    "S": "Save for Later"
+  },
+
+  "PERMISSION_TYPES" : {
+    "A": "Approve", 
+    "C": "Create", 
+    "E": "Edit",
+    "F": "Fork",
+    "V": "View"
+  },
+
+  "ROLE_TYPES" : {
+    "C": "Community Admin", 
+    "S": "SuperAdmin", 
+    "T": "Team Admin",
+    "U": "Default User",
+    "V": "Vendor Admin"
+  },
+
+  "REAL_ESTATE_TYPES" : {
+    "C": "Commercial", 
+    "R": "Residential"
+  }
+}
