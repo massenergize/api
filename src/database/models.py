@@ -19,6 +19,30 @@ API_URL = 'https://api.massenergize.org'
 
 
 class Location(models.Model):
+  """
+  A class used to represent the notion of a geographical Location: be it a 
+  proper full address or city name or even just a zipcode.
+
+  Attributes
+  ----------
+  name : str
+    The name of this Location
+  type : str
+    the type of the location, whether it is a full address, zipcode only, etc
+  street : str
+    The street number if it is available
+  city : str
+    the name of the city if available
+  state: str
+  more_info: JSON
+    any another dynamic information we would like to store about this location 
+
+
+  Methods
+  -------
+  describe()
+    Returns a good summary/description of the location.
+  """
   name = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["LOCATION_TYPES"].items())
@@ -35,13 +59,78 @@ class Location(models.Model):
     return "%s, %s" % (self.type, self.name)
 
 
+  def describe(self):
+    return str(self)
+
+class Media(models.Model):
+  """
+  A class used to represent any Media that is uploaded to this website
+
+  Attributes
+  ----------
+  name : SludField
+    The short name for this media.  It cannot only contain letters, numbers,
+    hypens and underscores.  No spaces allowed.
+  file : File
+    the file that is to be stored.
+  type: str
+    the type of this media file whether it is an image, video, pdf etc.
+  """
+  name = models.SlugField(max_length=SHORT_STR_LEN) #can't have spaces
+  file = models.FileField(upload_to='files/')
+  type = models.CharField(max_length=SHORT_STR_LEN, 
+    choices=CHOICES["FILE_TYPES_ALLOWED"].items(), default='UNKNOWN')
+  def get_url(self):
+    return '%s/files/%s' (API_URL, self.name)
+
+
+  def __str__(self):      
+    return self.name
+
+  class Meta:
+    db_table = "files"
+    ordering = ('name',)
+
+
 class Community(models.Model):
+  """
+  A class used to represent the notion of a Community. 
+
+  Attributes
+  ----------
+  name : str
+    The short name for this Community
+  subdomain : str
+    a primary unique identifier for this Community.  They would need the same 
+    to access their website.  For instance if the subdomain is wayland they 
+    would access their portal through wayland.massenergize.org
+  owner: JSON
+    information about the name, email and phone of the person who is supposed 
+    to be owner and main administrator when this Community account is opened.
+  logo : int
+    Foreign Key to Media that holds logo of community
+  banner : int
+    Foreign Key to Media that holds logo of community
+  is_geographically_focused: boolean
+    Information about whether this community is geographically focused or 
+    dispersed
+  is_approved: boolean
+    This field is set to True if the all due diligence has been done by the 
+    Super Admins and the community is not allowed to operate.
+  created_at: DateTime
+    The date and time that this community was created 
+  created_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this community
+  more_info: JSON
+    any another dynamic information we would like to store about this location 
+  """
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-  community_admin_info = JSONField() #name, email, phone
+  owner = JSONField() 
   about_you = models.TextField(max_length=LONG_STR_LEN)
-  logo = models.FileField(upload_to='community/logos', blank=True)
-  banner = models.FileField(upload_to='community/banners', blank=True)
+  logo = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name='community_logo')
+  banner = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name='community_banner')
   is_geographically_focused = models.BooleanField(default=False)
   location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
   is_approved = models.BooleanField(default=False)
@@ -56,22 +145,6 @@ class Community(models.Model):
   class Meta:
     verbose_name_plural = "Communities"
     db_table = "communities"
-
-
-class File(models.Model):
-  name = models.SlugField(max_length=SHORT_STR_LEN) #can't have spaces
-  file = models.FileField(upload_to='files/')
-
-  def get_url(self):
-    return '%s/files/%s' (API_URL, self.name)
-
-
-  def __str__(self):      
-    return self.name
-
-  class Meta:
-    db_table = "files"
-    ordering = ('name',)
 
 
 class RealEstateUnit(models.Model):
@@ -447,7 +520,7 @@ class Testimonial(models.Model):
   text = models.TextField(max_length=LONG_STR_LEN)
   is_approved = models.BooleanField(default=False)
   date = models.DateTimeField(default=datetime.now)
-  file = models.FileField(upload_to='testimonials/', blank=True)
+  file = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True)
 
   def __str__(self):        
     return "%d: %s" % (self.rank, self.name)

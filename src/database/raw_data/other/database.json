@@ -6,6 +6,13 @@
     "F":"FULL ADDRESS"
   },
 
+  "FILE_TYPES_ALLOWED": {
+    "PDF": "PDF",
+    "IMG": "Image",
+    "VIDEO": "Video",
+    "UNKNOWN": "Other"
+  },
+
   "GOAL_STATUS" : {
     "I": "In Progress",
     "N": "Not Started",
