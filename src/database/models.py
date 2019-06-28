@@ -11,6 +11,7 @@ from .utils import common
 #TODO: Documentation
 #TODO: add verbose name plural to some fields
 #TODO: add indexes to some models
+#TODO: change some text field to html field?
 
 class Location(models.Model):
   LOCATION_TYPES = [
@@ -33,6 +34,7 @@ class Location(models.Model):
   more_info = JSONField()
 
   def __str__(self):
+    #TODO: rewrite to account for all possible missing data
     return "%s, %s" % (self.type, self.name)
 
 
@@ -59,6 +61,20 @@ class Community(models.Model):
     db_table = "communities"
 
 
+class File(models.Model):
+  name = models.SlugField(max_length=SHORT_STR_LEN) #can't have spaces
+  file = models.FileField(upload_to='files/')
+
+  def get_url(self):
+    return 'https://api.massenergize.org/files/%s' % self.name
+
+
+  def __str__(self):      
+    return self.name
+
+  class Meta:
+    db_table = "files"
+    ordering = ('name',)
 
 
 class RealEstateUnit(models.Model):
@@ -101,6 +117,7 @@ class Goal(models.Model):
   status = models.CharField(
     max_length=TINY_STR_LEN, choices=list(GOAL_STATUS.items())
   )
+  description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -280,7 +297,7 @@ class Action(models.Model):
   
   properties = models.ManyToManyField(ActionProperty)
   vendors = models.ManyToManyField(Vendor)
-  community = models.ForeignKey(Community, on_delete=models.SET_NULL)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   category = models.ManyToManyField(ActionCategory) 
 
   #the order in which it should appear relative to its peers
@@ -294,7 +311,7 @@ class Action(models.Model):
 
 
   class Meta:
-    ordering = ('rank', 'order_position','title') 
+    ordering = ['rank', 'title']
     db_table = 'actions'
     unique_together = [['title', 'community']]
 
@@ -302,12 +319,16 @@ class Action(models.Model):
 class Event(models.Model):
   title  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   start_date_and_time  = models.DateTimeField(default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
-  location = models.CharField(max_length = SHORT_STR_LEN, blank=True)
+  location = models.CharField(max_length = SHORT_STR_LEN, blank=True) #TODO: make this a Location foreign key field?
   tags = models.ManyToManyField(Tag)
   image = models.ImageField(upload_to='images/events', blank=True)
   archive =  models.BooleanField(default=False)
+
+  #TODO: make sure any one who retrieves events only retrieves those that are 
+  #not past
 
   def __str__(self):             
     return self.title
@@ -518,3 +539,137 @@ class UserGroup(models.Model):
   class Meta:
     ordering = ('name',)
     db_table = 'user_groups'
+
+
+
+class Data(models.Model):
+	"""Instances keep track of a statistic from the admin"""
+	description = models.CharField(max_length = LONG_STR_LEN)
+	count =  models.PositiveSmallIntegerField(default=1)
+	community = models.ForeignKey(Community, blank=False, on_delete=models.SET_NULL, null=True)
+
+	def __str__(self): 
+		            
+		return "%s: %s (Count: %d)" % (self.community, self.description, self.count)
+
+	class Meta:
+		verbose_name_plural = "Data"
+		ordering = ('description','community')
+
+
+
+class Statistic(models.Model):
+	"""Instances keep track of a statistic from the admin"""
+	description = models.CharField(max_length = LONG_STR_LEN)
+	value =  models.PositiveSmallIntegerField(default=1)
+	show_this_on_the_impact_page =  models.BooleanField(default=False)
+	tag = models.CharField(max_length = LONG_STR_LEN, default='', blank=True)
+	symbol = models.CharField(max_length = LONG_STR_LEN, default='', blank=True)
+	community = models.ForeignKey(Community, blank=True,  on_delete=models.SET_NULL, null=True)
+
+	def __str__(self):         
+		return "%s (%d)" % (self.description, self.value)
+
+	class Meta:
+		verbose_name_plural = "Graph Statistics"
+		ordering = ('tag', 'description','value')
+
+
+class Graph(models.Model):
+	"""Instances keep track of a statistic from the admin"""
+	title = models.CharField(max_length = LONG_STR_LEN)
+	statistic = models.ManyToManyField(Statistic)
+
+	def __str__(self):   
+		return self.title
+
+	class Meta:
+		verbose_name_plural = "Graphs"
+		ordering = ('title',)
+
+class SliderImage(models.Model):
+	"""Model the represents the database for Images that will be inserted into slide shows"""
+	title = models.CharField(max_length = LONG_STR_LEN, blank=True)
+	description = models.CharField(max_length = LONG_STR_LEN, blank=True)
+	image = models.ImageField(upload_to='database/gallery/')
+	hyperlink = models.CharField(max_length = LONG_STR_LEN, blank=True)
+
+	def __str__(self):             
+		return self.title
+
+	class Meta:
+		verbose_name_plural = "Slider Images"
+
+class Slider(models.Model):
+	"""Model the represents the database for slide shows"""
+	title = models.CharField(max_length = LONG_STR_LEN, blank=True)
+	description = models.CharField(max_length = LONG_STR_LEN, blank=True)
+	images = models.ManyToManyField(SliderImage)
+
+	def __str__(self):             
+		return self.title
+
+
+class Menu(models.Model):
+	"""Represents items on the menu bar (top-most bar on the webpage)"""
+	position = models.PositiveSmallIntegerField(default=1)
+	name = models.CharField(max_length=LONG_STR_LEN, blank = True)
+	href = models.CharField(max_length=LONG_STR_LEN, blank = True)
+
+	def __str__(self):              
+		return "%d: %s" % (self.position, self.name)
+
+	class Meta:
+		ordering = ('position',)
+
+
+class PageSection(models.Model):
+	name = models.CharField(max_length=LONG_STR_LEN)
+	content = models.TextField(max_length=LONG_STR_LEN, blank = True)
+	image = models.ImageField(upload_to='database/pages/',max_length=LONG_STR_LEN, blank=True)
+	town = models.ManyToManyField(Community)
+	page_associated = models.ForeignKey(Menu, default=None, on_delete=models.SET_NULL, null=True)
+
+	def __str__(self):             
+		return self.name
+
+
+class Page(models.Model):
+  name = models.CharField(max_length=LONG_STR_LEN)
+  content = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  more_info = JSONField()
+
+  def __str__(self):             
+    return self.name
+
+  class Meta:
+    unique_together = ['name', 'community']
+
+
+class MassEnergizePolicy(models.Model):
+  name = models.CharField(max_length=LONG_STR_LEN)
+  content = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  communities = models.ManyToManyField(Community)
+  more_info = JSONField()
+
+  def __str__(self):
+    return self.name
+
+  class Meta:
+    ordering = ('name',)
+    db_table = 'massenergize_policies'
+
+
+class Billing(models.Model):
+  name = models.CharField(max_length=LONG_STR_LEN)
+  content = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  more_info = JSONField()
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+
+  def __str__(self):
+    return self.name
+
+  class Meta:
+    ordering = ('name',)
+    db_table = 'billings'
