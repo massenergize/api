@@ -5,17 +5,13 @@ from datetime import date, datetime
 import django.contrib.auth.models as auth_models
 from .utils import common
 
-#TODO: check typos
 #TODO: enforce optional fields with blank=True
-#TODO: ensure adding json field to collect more info
-#TODO: Documentation
-#TODO: add verbose name plural to some fields
 #TODO: add indexes to some models
 #TODO: change some text field to html field?
 
 CHOICES = common.json_loader('./database/raw_data/other/database.json')
 ZIP_CODE_AND_STATES = common.json_loader('./database/raw_data/other/states.json')
-API_URL = 'https://api.massenergize.org'
+API_URL = 'http://api.massenergize.org'
 
 
 class Location(models.Model):
@@ -67,7 +63,7 @@ class Media(models.Model):
 
   Attributes
   ----------
-  name : SludField
+  name : SlugField
     The short name for this media.  It cannot only contain letters, numbers,
     hypens and underscores.  No spaces allowed.
   file : File
@@ -845,137 +841,134 @@ class UserGroup(models.Model):
     db_table = 'user_groups'
 
 
-
-class Data(models.Model):
-	"""Instances keep track of a statistic from the admin
-  
-  Attributes
-  ----------
-  name : str
-    name of the page section
-  info: JSON
-    dynamic information goes in here
-  """
-	description = models.CharField(max_length = LONG_STR_LEN)
-	count =  models.PositiveSmallIntegerField(default=0)
-	community = models.ForeignKey(Community, blank=False, 
-    on_delete=models.SET_NULL, null=True)
-
-	def __str__(self): 
-		            
-		return "%s: %s (Count: %d)" % (self.community, self.description, self.count)
-
-	class Meta:
-		verbose_name_plural = "Data"
-		ordering = ('description','community')
-
-
-
 class Statistic(models.Model):
-	"""Instances keep track of a statistic from the admin
-  
+  """Instances keep track of a statistic from the admin
+
   Attributes
   ----------
   name : str
-    name of the page section
+    name of the statistic
+  value: decimal
+    The value of the statistic goes here
   info: JSON
-    dynamic information goes in here
+    dynamic information goes in here.  The symbol and other info goes here
+  community: int
+    foreign key linking a community to this statistic
   """
-	description = models.CharField(max_length = LONG_STR_LEN)
-	value =  models.PositiveSmallIntegerField(default=0)
-	show_this_on_the_impact_page =  models.BooleanField(default=False)
-	tag = models.CharField(max_length = LONG_STR_LEN, blank=True)
-	symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
-	community = models.ForeignKey(Community, blank=True,  
+  name = models.CharField(max_length = SHORT_STR_LEN)
+  value =  models.DecimalField(default=0.0, max_digits=10,decimal_places=10)
+  symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
+
+  community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True)
+  info = JSONField()
 
-	def __str__(self):         
-		return "%s (%d)" % (self.description, self.value)
+  def __str__(self):         
+    return "%s (%d)" % (self.name, self.value)
 
-	class Meta:
-		verbose_name_plural = "Graph Statistics"
-		ordering = ('tag', 'description','value')
+  class Meta:
+    verbose_name_plural = "Graph Statistics"
+    ordering = ('name','value')
+    db_table = 'statistics'
 
 
 class Graph(models.Model):
-	"""Instances keep track of a statistic from the admin
+  """Instances keep track of a statistic from the admin
 
   Attributes
   ----------
-  name : str
-    name of the page section
-  info: JSON
-    dynamic information goes in here
+  title : str
+    the title of this graph
+  type: str
+    the type of graph to be plotted eg. pie chart, bar chart etc
+  data: JSON
+    data to be plotted on this graph
   """
-	title = models.CharField(max_length = LONG_STR_LEN)
-	statistic = models.ManyToManyField(Statistic)
+  title = models.CharField(max_length = LONG_STR_LEN)
+  graph_type = models.CharField(max_length=TINY_STR_LEN, 
+    choices=CHOICES["GRAPH_TYPES"].items())
+  data = JSONField()
 
-	def __str__(self):   
-		return self.title
 
-	class Meta:
-		verbose_name_plural = "Graphs"
-		ordering = ('title',)
+  def __str__(self):   
+    return self.title
+
+  class Meta:
+    verbose_name_plural = "Graphs"
+    ordering = ('title',)
+
+
 
 class SliderImage(models.Model):
-	"""Model the represents the database for Images that will be 
+  """Model the represents the database for Images that will be 
   inserted into slide shows
+  
+  Attributes
+  ----------
+  title : str
+    title of the page section
+  subtitle: str
+    sub title for this image as should appear on the slider
+  buttons: JSON
+    a json list of buttons with each containing text, link, icon, color etc
   """
-	title = models.CharField(max_length = LONG_STR_LEN, blank=True)
-	description = models.CharField(max_length = LONG_STR_LEN, blank=True)
-	image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
-	hyperlink = models.CharField(max_length = LONG_STR_LEN, blank=True)
+  title = models.CharField(max_length = LONG_STR_LEN, blank=True)
+  subtitle = models.CharField(max_length = LONG_STR_LEN, blank=True)
+  image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
+  buttons = JSONField()
 
-	def __str__(self):             
-		return self.title
+  def __str__(self):             
+    return self.title
 
-	class Meta:
-		verbose_name_plural = "Slider Images"
+  class Meta:
+    verbose_name_plural = "Slider Images"
+    db_table = "slider_images"
+
 
 class Slider(models.Model):
-	"""Model the represents the database for slide shows
+	"""Model the represents a model for a slider/carousel on the website
   
-
   Attributes
   ----------
   name : str
     name of the page section
+  description: str
+    a description of this slider
   info: JSON
     dynamic information goes in here
   """
-	title = models.CharField(max_length = LONG_STR_LEN, blank=True)
+	name = models.CharField(max_length = LONG_STR_LEN, blank=True)
 	description = models.CharField(max_length = LONG_STR_LEN, blank=True)
-	images = models.ManyToManyField(SliderImage)
+	slides = models.ManyToManyField(SliderImage)
 
 	def __str__(self):             
-		return self.title
+		return self.name
 
 
 class Menu(models.Model):
-	"""Represents items on the menu bar (top-most bar on the webpage)
-  
+  """Represents items on the menu/navigation bar (top-most bar on the webpage)
   Attributes
   ----------
   name : str
     name of the page section
-  info: JSON
-    dynamic information goes in here
+  content: JSON
+    the content is represented as a json
   """
-	position = models.PositiveSmallIntegerField(default=0)
-	name = models.CharField(max_length=LONG_STR_LEN, blank = True)
-	href = models.CharField(max_length=LONG_STR_LEN, blank = True)
+  name = models.CharField(max_length=LONG_STR_LEN, blank = True)
+  content = JSONField()
 
-	def __str__(self):              
-		return "%d: %s" % (self.position, self.name)
+  def __str__(self):              
+    return self.name
 
-	class Meta:
-		ordering = ('position',)
+  class Meta:
+    ordering = ('name',)
+
 
 
 class PageSection(models.Model):
   """
    A class used to represent a PageSection
-
+   #TODO: what about page sections like a gallery, slideshow, etc?
 
   Attributes
   ----------
@@ -994,15 +987,21 @@ class PageSection(models.Model):
 
 class Page(models.Model):
   """
-   A class used to represent a Page
-
+   A class used to represent a Page on a community portal
+   eg. The home page, about-us page, etc
 
   Attributes
   ----------
-  name : str
-    name of the page
-  info: JSON
-    dynamic information goes in here
+  title : str
+    title of the page
+  description: str
+    the description of the page
+  community: int
+    Foreign key for which community this page is linked to
+  sections: ManyToMany
+    all the different parts/sections that go on this page
+  content: JSON
+    dynamic info for this page goes here.
   """
   name = models.CharField(max_length=LONG_STR_LEN)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
@@ -1020,18 +1019,23 @@ class Page(models.Model):
 
 class Policy(models.Model):
   """
-   A class used to represent a Legal Policy
+   A class used to represent a Legal Policy.  For instance the 
+   Terms and Agreement Statement that users have to agree to during signup.
 
 
   Attributes
   ----------
   name : str
-    name of the testimony
+    name of the Legal Policy
+  description: str
+    the details of this policy
+  communities_applied:
+    how many communities this policy applies to.
   info: JSON
     dynamic information goes in here
   """
   name = models.CharField(max_length=LONG_STR_LEN)
-  content = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   communities_applied = models.ManyToManyField(Community)
   more_info = JSONField()
 
@@ -1043,15 +1047,24 @@ class Policy(models.Model):
     db_table = 'massenergize_policies'
 
 
-class Billing(models.Model):
+class BillingStatement(models.Model):
   """
    A class used to represent a Billing Statement
-
 
   Attributes
   ----------
   name : str
-    name of the testimony
+    name of the statement.
+  amount: decimal
+    the amount of money owed
+  description:
+    the breakdown of the bill for this community
+  community: int
+    Foreign Key to the community to whom this bill is associated.
+  start_date: Datetime
+    the start date from which the charges were incurred
+  end_date:
+    the end date up to which this charge was incurred.
   more_info: JSON
     dynamic information goes in here
   """
@@ -1068,4 +1081,4 @@ class Billing(models.Model):
 
   class Meta:
     ordering = ('name',)
-    db_table = 'billings'
+    db_table = 'billing_statements'

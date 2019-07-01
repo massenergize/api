@@ -1,9 +1,9 @@
 {
   "LOCATION_TYPES" : {
-    "S":"STATE ONLY",
-    "Z":"ZIP CODE ONLY",
-    "C":"CITY ONLY",
-    "F":"FULL ADDRESS"
+    "STATE_ONLY":"STATE ONLY",
+    "ZIP_ONLY":"ZIP CODE ONLY",
+    "CITY_ONLY":"CITY ONLY",
+    "FULL":"FULL ADDRESS"
   },
 
   "FILE_TYPES_ALLOWED": {
@@ -14,47 +14,54 @@
   },
 
   "GOAL_STATUS" : {
-    "I": "In Progress",
-    "N": "Not Started",
-    "C": "Completed"
+    "IN_PROGRESS": "In Progress",
+    "NOT_STARTED": "Not Started",
+    "COMPLETE": "Complete"
   },
 
   "SERVICE_AREAS" : {
-    "N":"National",
-    "S":"StateWide",
-    "C":"County",
-    "T":"Town"
+    "NATIONAL":"National",
+    "STATEWIDE":"StateWide",
+    "COUNTY":"County",
+    "TOWN":"Town"
   },
 
   "PROPERTIES_SERVICED" : {
-    "R":"Residential",
-    "C":"Commercial"
+    "RESIDENTIAL":"Residential",
+    "COMMERCIAL":"Commercial"
   },
 
   "EVENT_CHOICES" : {
-    "I": "Interested",
-    "R": "RSVP",
-    "S": "Save for Later"
+    "INTERESTED": "Interested",
+    "RSVP": "RSVP",
+    "SAVE": "Save for Later"
   },
 
   "PERMISSION_TYPES" : {
-    "A": "Approve", 
-    "C": "Create", 
-    "E": "Edit",
-    "F": "Fork",
-    "V": "View"
+    "APPROVE": "Approve", 
+    "CREATE": "Create", 
+    "EDIT": "Edit",
+    "FORK": "Fork",
+    "VIEW": "View"
   },
 
   "ROLE_TYPES" : {
-    "C": "Community Admin", 
-    "S": "SuperAdmin", 
-    "T": "Team Admin",
-    "U": "Default User",
-    "V": "Vendor Admin"
+    "COMMUNITY_ADMIN": "Community Admin", 
+    "SUPER_ADMIN": "SuperAdmin", 
+    "TEAM_ADMIN": "Team Admin",
+    "DEFAULT_USER": "Default User",
+    "VENDOR_ADMIN": "Vendor Admin",
+    "SUBSCRIBER": "Subscriber"
   },
 
   "REAL_ESTATE_TYPES" : {
-    "C": "Commercial", 
-    "R": "Residential"
+    "COMMERCIAL": "Commercial", 
+    "RESIDENTIAL": "Residential"
+  },
+
+  "GRAPH_TYPES": {
+    "LINE_CHART": "Line Chart",
+    "PIE_CHART": "Pie Chart",
+    "BAR_CHART": "Bar Chart"
   }
 }
