@@ -1,9 +1,10 @@
 {
   "LOCATION_TYPES" : {
-    "STATE_ONLY":"STATE ONLY",
-    "ZIP_ONLY":"ZIP CODE ONLY",
-    "CITY_ONLY":"CITY ONLY",
-    "FULL":"FULL ADDRESS"
+    "STATE_ONLY":"State Only",
+    "ZIP_CODE_ONLY":"Zip Code Only",
+    "CITY_ONLY":"City Only",
+    "COUNTY_ONLY": "County Only",
+    "FULL_ADDRESS":"FULL ADDRESS"
   },
 
   "FILE_TYPES_ALLOWED": {
@@ -47,7 +48,7 @@
 
   "ROLE_TYPES" : {
     "COMMUNITY_ADMIN": "Community Admin", 
-    "SUPER_ADMIN": "SuperAdmin", 
+    "SUPER_ADMIN": "Super Admin", 
     "TEAM_ADMIN": "Team Admin",
     "DEFAULT_USER": "Default User",
     "VENDOR_ADMIN": "Vendor Admin",

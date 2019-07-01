@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from .utils.constants import *
 from datetime import date, datetime
-import django.contrib.auth.models as auth_models
 from .utils import common
 
 #TODO: enforce optional fields with blank=True
@@ -16,46 +15,55 @@ API_URL = 'http://api.massenergize.org'
 
 class Location(models.Model):
   """
-  A class used to represent the notion of a geographical Location: be it a 
-  proper full address or city name or even just a zipcode.
+  A class used to represent a geographical region.  It could be a complete and
+  proper address or just a city name, zipcode, county etc
 
   Attributes
   ----------
-  name : str
-    The name of this Location
   type : str
     the type of the location, whether it is a full address, zipcode only, etc
   street : str
     The street number if it is available
   city : str
     the name of the city if available
+  county : str
+    the name of the county if available
   state: str
+    the name of the state if available
   more_info: JSON
     any another dynamic information we would like to store about this location 
-
-  Methods
-  -------
-  describe()
-    Returns a good summary/description of the location.
   """
-  name = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   location_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["LOCATION_TYPES"].items())
   street = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   unit_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   zipcode = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   city = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
+  county = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
   state = models.CharField(max_length=SHORT_STR_LEN, 
     choices = ZIP_CODE_AND_STATES.items(), blank=True)
   more_info = JSONField()
 
   def __str__(self):
     #TODO: rewrite to account for all possible missing data
-    return "%s, %s" % (self.type, self.name)
+    if self.location_type == 'STATE_ONLY':
+      return self.state
+    elif self.location_type == 'ZIP_CODE_ONLY':
+      return self.zipcode
+    elif self.location_type == 'CITY_ONLY':
+      return self.city
+    elif self.location_type == 'COUNTY_ONLY':
+      return self.county 
+    elif self.location_type == 'FULL_ADDRESS':
+      return '%s, %s, %s, %s' % (
+        self.street, self.unit_number, self.city, self.county, self.state
+      )
+    
+    return self.location_type
 
+  class Meta:
+    db_table = 'locations'
 
-  def describe(self):
-    return str(self)
 
 class Media(models.Model):
   """
@@ -71,25 +79,25 @@ class Media(models.Model):
   media_type: str
     the type of this media file whether it is an image, video, pdf etc.
   """
-  name = models.SlugField(max_length=SHORT_STR_LEN) #can't have spaces
-  file = models.FileField(upload_to='files/')
+  name = models.SlugField(max_length=SHORT_STR_LEN) 
+  file = models.FileField(upload_to='media/')
   media_type = models.CharField(max_length=SHORT_STR_LEN, 
     choices=CHOICES["FILE_TYPES_ALLOWED"].items(), default='UNKNOWN')
-  def get_url(self):
-    return '%s/files/%s' (API_URL, self.name)
 
+  def get_url(self):
+    return '%s/media/%s' (API_URL, self.name)
 
   def __str__(self):      
     return self.name
 
   class Meta:
-    db_table = "files"
+    db_table = "media"
     ordering = ('name',)
 
 
 class Community(models.Model):
   """
-  A class used to represent the notion of a Community. 
+  A class used to represent a Community on this platform.
 
   Attributes
   ----------
@@ -123,11 +131,14 @@ class Community(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner = JSONField() 
-  about_you = models.TextField(max_length=LONG_STR_LEN)
-  logo = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name='community_logo')
-  banner = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name='community_banner')
+  about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
+  logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True, related_name='community_logo')
+  banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True, related_name='community_banner')
   is_geographically_focused = models.BooleanField(default=False)
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
+  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
+    null=True, blank=True)
   is_approved = models.BooleanField(default=False)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -162,7 +173,8 @@ class RealEstateUnit(models.Model):
     max_length=TINY_STR_LEN, 
     choices=CHOICES["REAL_ESTATE_TYPES"].items()
   )
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
+  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
+    null=True, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -201,7 +213,9 @@ class Goal(models.Model):
   """
   name = models.CharField(max_length=SHORT_STR_LEN)
   status = models.CharField(
-    max_length=TINY_STR_LEN, choices=CHOICES["GOAL_STATUS"].items())
+    max_length=TINY_STR_LEN, 
+    choices=CHOICES["GOAL_STATUS"].items(), 
+    default='NOT_STARTED')
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -246,12 +260,14 @@ class UserProfile(models.Model):
   """
   A class used to represent a MassEnergize User
 
+  Note: Authentication is handled by firebase so we just need emails
+
   Attributes
   ----------
-  user_account : int [User]
-    Foreign Key that represents a user
-  address: int [Location]
-    Foregin Key that represents the Location for this user
+  email : str
+    email of the user.  Should be unique.
+  user_info: JSON
+    a JSON representing the name, bio, etc for this user.
   bio:
     A short biography of this user
   is_super_admin: boolean
@@ -267,33 +283,32 @@ class UserProfile(models.Model):
   created_at: DateTime
     The date and time of the last time any updates were made to the information
     about this goal
+
+  #TODO: roles field: if we have this do we need is_superadmin etc? also why
+  #  not just one?  why many to many
   """
 
-  user_account = models.ForeignKey(auth_models.User, 
-    on_delete=models.CASCADE, null=True)
-  bio = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  address = models.ForeignKey(RealEstateUnit, blank=True, 
-    on_delete=models.SET_NULL, 
-    null=True) #TODO: delete
+  email = models.EmailField(max_length=SHORT_STR_LEN, 
+    unique=True, db_index=True)
+  user_info = JSONField()
   real_estate_units = models.ManyToManyField(RealEstateUnit, 
     related_name='user_real_estate_units')
   goals = models.ManyToManyField(Goal)
   communities = models.ManyToManyField(Community)
-  roles = models.ManyToManyField(Role) #TODO: if we have this do we need is_superadmin etc? also why not just one?  why many to many
+  roles = models.ManyToManyField(Role) 
   is_super_admin = models.BooleanField(default=False)
   is_community_admin = models.BooleanField(default=False)
   is_vendor = models.BooleanField(default=False)
-  age_acknowledgment = models.BooleanField() #TODO: delete
   other_info = JSONField()
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
 def __str__(self):
-  return self.user_account.get_full_name()
+  return self.email
 
 
 class Meta:
-  db_table = 'people' #TODO: change to user_profiles
+  db_table = 'user_profiles' 
 
 
 class Team(models.Model):
@@ -306,8 +321,12 @@ class Team(models.Model):
     name of the team
   description: str
     description of this team 
-  admins:
+  admins: ManyToMany
     administrators for this team
+  members: ManyToMany
+    the team members
+  community:
+    which community this team is a part of
   logo:
     Foreign Key to Media file represtenting the logo for this team    
   banner:
@@ -319,12 +338,15 @@ class Team(models.Model):
     about this goal
   """
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-  description = models.TextField(max_length=LONG_STR_LEN)
+  description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   admins = models.ManyToManyField(UserProfile, related_name='team_admins') 
   members = models.ManyToManyField(UserProfile, related_name='team_members') 
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
   goals = models.ManyToManyField(Goal) 
-  logo = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name='team_logo')
-  banner = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name='team_banner')
+  logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True, related_name='team_logo')
+  banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True, related_name='team_banner')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -369,7 +391,8 @@ class Service(models.Model):
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   service_location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
     null=True, blank=True)
-  image = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL)
+  image = models.ForeignKey(Media, blank=True, null=True, 
+    on_delete=models.SET_NULL)
   icon = models.CharField(max_length=SHORT_STR_LEN,blank=True)
   info = JSONField()
   created_at = models.DateTimeField(auto_now_add=True)
@@ -408,11 +431,12 @@ class Vendor(models.Model):
   properties_services: str
     Whether this vendor services Residential or Commercial units only
   onboarding_date: DateTime
-    When this vendor was onboarded on the MassEnergize Platform for this community
+    When this vendor was onboard-ed on the MassEnergize Platform for this 
+      community
   onboarding_contact:
-    Which MassEnergize Staff/User onboarded this vendor
+    Which MassEnergize Staff/User onboard-ed this vendor
   verification_checklist:
-    contains information about some steps and checks needed for due deligence 
+    contains information about some steps and checks needed for due diligence 
     to be done on this vendor eg. Vendor MOU, Reesearch
   is_verified: boolean
     When the checklist items are all done and verified then set this as True
@@ -427,8 +451,10 @@ class Vendor(models.Model):
   """
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  logo = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL, related_name='vender_logo')
-  banner = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL, related_name='vendor_banner')
+  logo = models.ForeignKey(Media, blank=True, null=True, 
+    on_delete=models.SET_NULL, related_name='vender_logo')
+  banner = models.ForeignKey(Media, blank=True, null=True, 
+    on_delete=models.SET_NULL, related_name='vendor_banner')
   address = models.ForeignKey(Location, blank=True, null=True, 
     on_delete=models.SET_NULL)
   key_contact = models.ForeignKey(UserProfile, blank=True, null=True, 
@@ -477,30 +503,6 @@ class ActionProperty(models.Model):
     db_table = 'action_properties'
 
 
-class ActionCategory(models.Model):
-  """
-  A class used to represent an Action Category.
-
-  Attributes
-  ----------
-  name : str
-    name of the Category
-  """
-  name = models.CharField(max_length = SHORT_STR_LEN, unique=True)
-  icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
-  community = models.ManyToManyField(Community)
-  order_position = models.PositiveSmallIntegerField(default = 0)
-
-  def __str__(self):        
-    return "%d: %s" % (self.order_position, self.name)
-
-  
-  class Meta:
-    verbose_name_plural = "Action Categories"
-    ordering = ('order_position',)
-    db_table = ('action_categories')
-
-
 class Tag(models.Model):
   """
   A class used to represent an Tag.  It is essentially a string that can be 
@@ -509,9 +511,10 @@ class Tag(models.Model):
   Attributes
   ----------
   name : str
-    name of the Vendor
+    name of the Tag
   """
   name = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
+  icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
 
   def __str__(self):
     return self.name
@@ -532,6 +535,9 @@ class TagCollection(models.Model):
   """
   name = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
   tags = models.ManyToManyField(Tag)
+  is_global = models.BooleanField(default=False)
+
+
   def __str__(self):
     return self.name
 
@@ -549,7 +555,7 @@ class Action(models.Model):
   ----------
   title : str
     A short title for this Action.
-  is_template_action: boolean
+  is_global: boolean
     True if this action is a core action that every community should see or not.
     False otherwise.
   about: str
@@ -560,6 +566,8 @@ class Action(models.Model):
     a string description of the icon class for this action if any
   image: int Media
     a Foreign key to an uploaded media file
+  average_carbon_score:
+    the average carbon score for this action as given by the carbon calculator
   geographic_area: str
     the Location where this action can be taken
   created_at: DateTime
@@ -569,7 +577,7 @@ class Action(models.Model):
     about this real estate unit
   """
   title = models.CharField(max_length = SHORT_STR_LEN)
-  is_template_action = models.BooleanField(default=False)
+  is_global = models.BooleanField(default=False)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
@@ -581,8 +589,8 @@ class Action(models.Model):
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   properties = models.ManyToManyField(ActionProperty)
   vendors = models.ManyToManyField(Vendor)
+  average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, blank=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
-  category = models.ManyToManyField(ActionCategory) 
   rank = models.PositiveSmallIntegerField(default = 0) 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -609,7 +617,7 @@ class Event(models.Model):
   name  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
-  start_date_and_time  = models.DateTimeField(default=datetime.now)
+  start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
   #TODO: make this a Location foreign key field?
   location = models.CharField(max_length = SHORT_STR_LEN, blank=True) 
@@ -774,7 +782,7 @@ class UserActionRel(models.Model):
   vendor:
     which vendor they choose to contact/connect with 
   testimonial:
-    what they had to say about this action.  #TODO: do we need to create a secondary table
+    what they had to say about this action.  
   """
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
   real_estate_unit = models.ForeignKey(RealEstateUnit, on_delete=models.CASCADE)
@@ -803,8 +811,8 @@ class CommunityAdminGroup(models.Model):
     dynamic information goes in here
   """
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-  description = models.TextField(max_length=LONG_STR_LEN)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  description = models.TextField(max_length=LONG_STR_LEN, blank=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
   members = models.ManyToManyField(UserProfile)
 
   def __str__(self):
@@ -828,8 +836,8 @@ class UserGroup(models.Model):
     dynamic information goes in here
   """
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-  description = models.TextField(max_length=LONG_STR_LEN)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  description = models.TextField(max_length=LONG_STR_LEN, blank=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
   members = models.ManyToManyField(UserProfile)
   permissions = models.ManyToManyField(Permission)
 
@@ -1082,3 +1090,61 @@ class BillingStatement(models.Model):
   class Meta:
     ordering = ('name',)
     db_table = 'billing_statements'
+
+class Subscriber(models.Model):
+  """
+   A class used to represent a subscriber / someone who wants to join the 
+   massenergize mailist
+
+  Attributes
+  ----------
+  name : str
+    name of the statement.
+  """
+  name = models.CharField(max_length = SHORT_STR_LEN)
+  email = models.EmailField(blank=False)
+  community = models.ForeignKey(Community,on_delete=models.SET_NULL, null=True)
+
+  def __str__(self):             
+    return self.name
+
+  class Meta:
+    db_table = 'subscribers'
+    unique_together = ['email', 'community']
+
+
+class EmailCategory(models.Model):
+  """
+  A class tha represents an email preference that a user or subscriber can
+  subscribe to
+
+  Attributes
+  ----------
+  name : str
+    the name for this preference
+  """
+  name = models.CharField(max_length = SHORT_STR_LEN)
+
+  def __str__(self):             
+    return self.name
+
+  class Meta:
+    db_table = 'email_categories'
+
+
+
+class SubscriberEmailPreferences(models.Model):
+  """
+  Represents the email preferences of each subscriber.
+  For example they might want marketing emails but not promotion emails etc
+
+
+  Attributes
+  ----------
+  subscriber: int
+    Foreign Key to a subscriber 
+  email_category: int
+    Foreign key to an email category
+  """
+  subscriber = models.ForeignKey(Subscriber,on_delete=models.CASCADE)
+  subscribed_to = models.ForeignKey(EmailCategory,on_delete=models.CASCADE)
