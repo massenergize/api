@@ -417,7 +417,7 @@ class Vendor(models.Model):
     Which MassEnergize Staff/User onboarded this vendor
   verification_checklist:
     contains information about some steps and checks needed for due deligence 
-    to be done on this vendor
+    to be done on this vendor eg. Vendor MOU, Reesearch
   is_verified: boolean
     When the checklist items are all done and verified then set this as True
     to confirm this vendor
@@ -431,8 +431,8 @@ class Vendor(models.Model):
   """
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  logo = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL)
-  banner = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL)
+  logo = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL, related_name='vender_logo')
+  banner = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL, related_name='vendor_banner')
   address = models.ForeignKey(Location, blank=True, null=True, 
     on_delete=models.SET_NULL)
   key_contact = models.ForeignKey(UserProfile, blank=True, null=True, 
@@ -445,7 +445,7 @@ class Vendor(models.Model):
   onboarding_date = models.DateTimeField(default=datetime.now)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
-  verification_checklist = JSONField() #include Vendor MOU, Reesearch
+  verification_checklist = JSONField() 
   is_verified = models.BooleanField(default=False)
   more_info = JSONField()
   created_at = models.DateTimeField(auto_now_add=True)
@@ -798,6 +798,13 @@ class CommunityAdminGroup(models.Model):
   """
   This represents a binding of a group of users and a community for which they
   are admin for.
+
+  Attributes
+  ----------
+  name : str
+    name of the page section
+  info: JSON
+    dynamic information goes in here
   """
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   description = models.TextField(max_length=LONG_STR_LEN)
@@ -816,6 +823,13 @@ class UserGroup(models.Model):
   """
   This represents a binding of a group of users and a community for which they
   are admin for.
+
+  Attributes
+  ----------
+  name : str
+    name of the page section
+  info: JSON
+    dynamic information goes in here
   """
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   description = models.TextField(max_length=LONG_STR_LEN)
@@ -833,7 +847,15 @@ class UserGroup(models.Model):
 
 
 class Data(models.Model):
-	"""Instances keep track of a statistic from the admin"""
+	"""Instances keep track of a statistic from the admin
+  
+  Attributes
+  ----------
+  name : str
+    name of the page section
+  info: JSON
+    dynamic information goes in here
+  """
 	description = models.CharField(max_length = LONG_STR_LEN)
 	count =  models.PositiveSmallIntegerField(default=0)
 	community = models.ForeignKey(Community, blank=False, 
@@ -850,7 +872,15 @@ class Data(models.Model):
 
 
 class Statistic(models.Model):
-	"""Instances keep track of a statistic from the admin"""
+	"""Instances keep track of a statistic from the admin
+  
+  Attributes
+  ----------
+  name : str
+    name of the page section
+  info: JSON
+    dynamic information goes in here
+  """
 	description = models.CharField(max_length = LONG_STR_LEN)
 	value =  models.PositiveSmallIntegerField(default=0)
 	show_this_on_the_impact_page =  models.BooleanField(default=False)
@@ -868,7 +898,15 @@ class Statistic(models.Model):
 
 
 class Graph(models.Model):
-	"""Instances keep track of a statistic from the admin"""
+	"""Instances keep track of a statistic from the admin
+
+  Attributes
+  ----------
+  name : str
+    name of the page section
+  info: JSON
+    dynamic information goes in here
+  """
 	title = models.CharField(max_length = LONG_STR_LEN)
 	statistic = models.ManyToManyField(Statistic)
 
@@ -895,7 +933,16 @@ class SliderImage(models.Model):
 		verbose_name_plural = "Slider Images"
 
 class Slider(models.Model):
-	"""Model the represents the database for slide shows"""
+	"""Model the represents the database for slide shows
+  
+
+  Attributes
+  ----------
+  name : str
+    name of the page section
+  info: JSON
+    dynamic information goes in here
+  """
 	title = models.CharField(max_length = LONG_STR_LEN, blank=True)
 	description = models.CharField(max_length = LONG_STR_LEN, blank=True)
 	images = models.ManyToManyField(SliderImage)
@@ -905,7 +952,15 @@ class Slider(models.Model):
 
 
 class Menu(models.Model):
-	"""Represents items on the menu bar (top-most bar on the webpage)"""
+	"""Represents items on the menu bar (top-most bar on the webpage)
+  
+  Attributes
+  ----------
+  name : str
+    name of the page section
+  info: JSON
+    dynamic information goes in here
+  """
 	position = models.PositiveSmallIntegerField(default=0)
 	name = models.CharField(max_length=LONG_STR_LEN, blank = True)
 	href = models.CharField(max_length=LONG_STR_LEN, blank = True)
@@ -918,8 +973,18 @@ class Menu(models.Model):
 
 
 class PageSection(models.Model):
+  """
+   A class used to represent a PageSection
+
+
+  Attributes
+  ----------
+  name : str
+    name of the page section
+  info: JSON
+    dynamic information goes in here
+  """
   name = models.CharField(max_length=LONG_STR_LEN)
-  content = models.TextField(max_length=LONG_STR_LEN, blank = True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   info = JSONField()
 
@@ -928,6 +993,17 @@ class PageSection(models.Model):
 
 
 class Page(models.Model):
+  """
+   A class used to represent a Page
+
+
+  Attributes
+  ----------
+  name : str
+    name of the page
+  info: JSON
+    dynamic information goes in here
+  """
   name = models.CharField(max_length=LONG_STR_LEN)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE)
@@ -943,6 +1019,17 @@ class Page(models.Model):
 
 
 class Policy(models.Model):
+  """
+   A class used to represent a Legal Policy
+
+
+  Attributes
+  ----------
+  name : str
+    name of the testimony
+  info: JSON
+    dynamic information goes in here
+  """
   name = models.CharField(max_length=LONG_STR_LEN)
   content = models.TextField(max_length=LONG_STR_LEN, blank = True)
   communities_applied = models.ManyToManyField(Community)
@@ -957,6 +1044,17 @@ class Policy(models.Model):
 
 
 class Billing(models.Model):
+  """
+   A class used to represent a Billing Statement
+
+
+  Attributes
+  ----------
+  name : str
+    name of the testimony
+  more_info: JSON
+    dynamic information goes in here
+  """
   name = models.CharField(max_length=LONG_STR_LEN)
   amount = models.DecimalField(default=0.0, decimal_places=4, max_digits = 10)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
