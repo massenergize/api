@@ -9,7 +9,7 @@ from .utils import common
 #TODO: add indexes to some models
 #TODO: change some text field to html field?
 
-CHOICES = common.json_loader('./database/raw_data/other/database.json')
+CHOICES = common.json_loader('./database/raw_data/other/databaseFieldChoices.json')
 ZIP_CODE_AND_STATES = common.json_loader('./database/raw_data/other/states.json')
 API_URL = 'http://api.massenergize.org'
 
