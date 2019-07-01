@@ -10,6 +10,11 @@ def community_portal_home_page_data():
   """
   return common.json_loader('./database/raw_data/portal/homePageData.json')
 
+def community_portal_user_data():
+  """
+  Returns the user data for the communty portal 
+  """
+  return common.json_loader('./database/raw_data/portal/user.json')
 
 def community_portal_website_menu():
   """

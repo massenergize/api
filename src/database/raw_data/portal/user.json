@@ -1,0 +1,11 @@
+{
+    "loggedIn": false,
+    "name":"Kieran O'Day",
+    "email":"kieran.oday@gmail.com",
+    "todo":[
+        1,2,3
+    ],
+    "done":[
+        5,6,7
+    ]
+}
