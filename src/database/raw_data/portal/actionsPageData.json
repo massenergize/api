@@ -1,17 +1,28 @@
 {
     "description": "Local volunteers created this menu of opportunities to act. Click MORE INFO to see each action's details. Already done an action? Click DONE IT to add it to our Impact. Yes, it counts! ",
-    "actions": [
-        {
+    "actions": [{
             "id": 1,
             "title": "I'd like to learn more about heating and cooling with heat pumps",
             "description": "very very very very long description about everything you can do and whatnot very very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnotvery very very very long description about everything you can do and whatnot",
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1497211419994-14ae40a3c7a3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-            "impact": "medium",
-            "categories": ["Home Energy"],
-            "difficulty": "easy",
-            "tags": ["heat"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 2,
@@ -20,10 +31,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "medium",
-            "categories": ["Home Energy"],
-            "difficulty": "hard",
-            "tags": ["solar"]
+            "tags": [{
+                    "id": 2,
+                    "name": "Clean Transportation",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 3,
@@ -32,10 +55,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1497211419994-14ae40a3c7a3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-            "impact": "high",
-            "categories": ["Home Energy"],
-            "difficulty": "medium",
-            "tags": ["solar"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 4,
@@ -44,10 +79,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "high",
-            "categories": ["Home Energy"],
-            "difficulty": "easy",
-            "tags": ["solar","heat","sustainable"]
+            "tags": [{
+                    "id": 2,
+                    "name": "Clean Transportation",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 5,
@@ -56,10 +103,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1497211419994-14ae40a3c7a3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-            "impact": "low",
-            "categories": ["Home Energy"],
-            "difficulty": "low",
-            "tags": ["green"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 6,
@@ -68,10 +127,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "low",
-            "categories": ["Home Energy"],
-            "difficulty": "medium",
-            "tags": ["heat"]
+            "tags": [{
+                    "id": 2,
+                    "name": "Clean Transportation",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 7,
@@ -80,10 +151,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1497211419994-14ae40a3c7a3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-            "impact": "medium",
-            "categories": ["Clean Transportation"],
-            "difficulty": "easy",
-            "tags": ["green"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 8,
@@ -92,10 +175,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "low",
-            "categories": ["Clean Transportion"],
-            "difficulty": "hard",
-            "tags": ["student"]
+            "tags": [{
+                    "id": 2,
+                    "name": "Clean Transportation",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 9,
@@ -104,10 +199,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "medium",
-            "categories": ["Home Energy","Lighting"],
-            "difficulty": "medium",
-            "tags": ["sustainable","green"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 10,
@@ -116,10 +223,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "low",
-            "categories": ["Home Energy","Lighting"],
-            "difficulty": "easy",
-            "tags": ["quick"]
+            "tags": [{
+                    "id": 2,
+                    "name": "Clean Transportation",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 11,
@@ -128,10 +247,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "low",
-            "categories": ["Food","Trash and Recycling"],
-            "difficulty": "hard",
-            "tags": ["green","sustainable"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 11,
+                    "name": "High",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 14,
+                    "name": "High",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 12,
@@ -140,10 +271,22 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "low",
-            "categories": ["Food"],
-            "difficulty": "medium",
-            "tags": ["fun","green"]
+            "tags": [{
+                    "id": 2,
+                    "name": "Clean Transportation",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         },
         {
             "id": 13,
@@ -152,10 +295,27 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "medium",
-            "categories": ["Food"],
-            "difficulty": "easy",
-            "tags": ["quick", "fun","green"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 11,
+                    "name": "High",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
         },
         {
             "id": 14,
@@ -164,10 +324,27 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "high",
-            "categories": ["Activism and Education"],
-            "difficulty": "hard",
-            "tags": ["fun"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
         },
         {
             "id": 15,
@@ -176,10 +353,27 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "high",
-            "categories": ["Clean Transportation"],
-            "difficulty": "hard",
-            "tags": ["green","quick"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
         },
         {
             "id": 26,
@@ -188,31 +382,106 @@
             "steps": "these are some steps you can take to do this action",
             "links": {},
             "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-            "impact": "low",
-            "categories": ["Clean Transportation"],
-            "difficulty": "easy",
-            "tags": ["quick","fun","student"]
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                }
+            ]
         }
     ],
-    "sidebar": {
-        "impacts": [
-            "low", "medium", "high"
-        ],
-        "difficulties": [
-            "easy", "medium", "hard"
-        ],
-        "categories": [
-            "Home Energy",
-            "Clean Transportation",
-            "Lighting",
-            "Solar",
-            "Food",
-            "Water",
-            "Trash and Recycling",
-            "Activism and Education"
-        ],
-        "tags": [
-            "green", "quick", "fun", "solar", "heat", "sustainable"
-        ]
-    }
+    "sidebar": [{
+            "collection": "categories",
+            "tags": [{
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 2,
+                    "name": "Clean Transportation",
+                    "collection": "categories"
+                },
+                {
+                    "id": 3,
+                    "name": "Lighting",
+                    "collection": "categories"
+                },
+                {
+                    "id": 4,
+                    "name": "Solar",
+                    "collection": "categories"
+                },
+                {
+                    "id": 5,
+                    "name": "Food",
+                    "collection": "categories"
+                },
+
+                {
+                    "id": 6,
+                    "name": "Water",
+                    "collection": "categories"
+                },
+                {
+                    "id": 7,
+                    "name": "Trash and Recycling",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        },
+        {
+            "collection": "impact",
+            "tags": [{
+                    "id": 9,
+                    "name": "Low",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 10,
+                    "name": "Medium",
+                    "collection": "impacts"
+                },
+                {
+                    "id": 11,
+                    "name": "High",
+                    "collection": "impacts"
+                }
+            ]
+        },
+        {
+            "collection": "difficulties",
+            "tags": [{
+                    "id": 12,
+                    "name": "Low",
+                    "collection": "difficulties"
+                },
+                {
+                    "id": 13,
+                    "name": "Medium",
+                    "collection": "difficulties"
+                },
+                {
+                    "id": 14,
+                    "name": "High",
+                    "collection": "difficulties"
+                }
+            ]
+        }
+    ]
 }
