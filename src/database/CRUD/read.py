@@ -29,6 +29,13 @@ def community_portal_actions_page_data(community_id='default'):
   """
   return common.json_loader('./database/raw_data/portal/actionsPageData.json')
 
+def community_portal_about_us_page_data():
+  """
+  This function pulls and returns all data required for the community 
+  portal about us page and returns a json of this information
+  """
+  return common.json_loader('./database/raw_data/portal/aboutUsData.json')
+
 
 def super_admin_sidebar():
   return common.json_loader('./database/raw_data/super-admin/sidebar.json')

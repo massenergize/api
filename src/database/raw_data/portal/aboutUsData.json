@@ -1,0 +1,74 @@
+{
+    "welcomeImagesData": {
+        "images": [
+            "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
+            "https://images.unsplash.com/photo-1420593248178-d88870618ca0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "https://images.unsplash.com/photo-1496769336828-c522a3a7e33c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60"
+        ]
+    },
+    "videoLink": "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
+    "paragraphContent": "<p>This is a paragraph</p><br/><b>This is something bold</b>",
+    "teamMembersData": [
+        {
+            "imageLink": "https://via.placeholder.com/250x150",
+            "name": "Ellen Tohn",
+            "role": "President",
+            "description": "Ellen co-leads our Wayland activities and oversees new collaborations.",
+            "socialMedia": {
+
+            }
+
+        },
+        {
+            "imageLink": "https://via.placeholder.com/250x150",
+            "name": "Ellen Tohn",
+            "role": "President",
+            "description": "Ellen co-leads our Wayland activities and oversees new collaborations.",
+            "socialMedia": {
+
+            }
+
+        },
+        {
+            "imageLink": "https://via.placeholder.com/250x150",
+            "name": "Ellen Tohn",
+            "role": "President",
+            "description": "Ellen co-leads our Wayland activities and oversees new collaborations.",
+            "socialMedia": {
+
+            }
+
+        },
+        {
+            "imageLink": "https://via.placeholder.com/250x150",
+            "name": "Ellen Tohn",
+            "role": "President",
+            "description": "Ellen co-leads our Wayland activities and oversees new collaborations.",
+            "socialMedia": {
+
+            }
+
+        },
+        {
+            "imageLink": "https://via.placeholder.com/250x150",
+            "name": "Ellen Tohn",
+            "role": "President",
+            "description": "Ellen co-leads our Wayland activities and oversees new collaborations.",
+            "socialMedia": {
+
+            }
+
+        },
+        {
+            "imageLink": "https://via.placeholder.com/250x150",
+            "name": "Ellen Tohn",
+            "role": "President",
+            "description": "Ellen co-leads our Wayland activities and oversees new collaborations.",
+            "socialMedia": {
+
+            }
+
+        }
+    ],
+    "donateMessage": "Donate now to support us!"
+}

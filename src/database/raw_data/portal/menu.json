@@ -1,38 +1,57 @@
 {
     "navLinks": [
         {
-            "link": "/home",
+            "link": "/",
             "name": "Home"
         },
         {
-            "link": "/actions",
-            "name": "Actions"
+            "name": "Actions",
+            "children": [
+                {
+                    "link": "/all-actions",
+                    "name": "All Actions"
+                },
+                {
+                    "link": "#",
+                    "name": "Placeholder"
+                }
+            ]
         },
         {
-            "link": "/service",
-            "name": "Service Providers"
+            "name": "Our Company",
+            "children": [
+                {
+                    "link": "/aboutus",
+                    "name": "About Us"
+                },
+                {
+                    "link": "/teams",
+                    "name": "Teams"
+                },
+                {
+                    "link": "/impact",
+                    "name": "Impact"
+                },
+                {
+                    "link": "/subscribe",
+                    "name": "Subscribe Newsletter"
+                },
+                {
+                    "link": "/donate",
+                    "name": "Donate"
+                }
+            ]
         },
         {
             "link": "/events",
             "name": "Events"
         },
         {
-            "link": "/teams",
-            "name": "Teams"
-        },
-        {
-            "link": "/impact",
-            "name": "Impact"
-        },
-        {
-            "link": "/aboutus",
-            "name": "About Us"
-        },
-        {
-            "link": "/donate",
-            "name": "Donate"
+            "link": "/register",
+            "name": "Register"
         }
     ],
+    "navBarSticky": false,
     "footerData": {
         "footerInfo": {
             "text": "",

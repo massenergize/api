@@ -33,3 +33,13 @@ def menu(request):
         "menuData": menuData,
         "userData": userData
     })
+
+def aboutUs(request):
+    menuData = read.community_portal_website_menu()
+    userData = read.community_portal_user_data()
+    aboutUsData = read.community_portal_about_us_page_data()
+    return JsonResponse({
+        "menuData": menuData,
+        "userData": userData,
+        "aboutUsData": aboutUsData
+    })
