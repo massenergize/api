@@ -4,14 +4,11 @@ from .utils.constants import *
 from datetime import date, datetime
 from .utils import common
 
-#TODO: enforce optional fields with blank=True
-#TODO: add indexes to some models
-#TODO: change some text field to html field?
-
 CHOICES = common.json_loader('./database/raw_data/other/databaseFieldChoices.json')
 ZIP_CODE_AND_STATES = common.json_loader('./database/raw_data/other/states.json')
 API_URL = 'http://api.massenergize.org'
 
+#TODO: add get_json method to all classes
 
 class Location(models.Model):
   """
@@ -45,7 +42,6 @@ class Location(models.Model):
   more_info = JSONField()
 
   def __str__(self):
-    #TODO: rewrite to account for all possible missing data
     if self.location_type == 'STATE_ONLY':
       return self.state
     elif self.location_type == 'ZIP_CODE_ONLY':
@@ -94,6 +90,37 @@ class Media(models.Model):
     db_table = "media"
     ordering = ('name',)
 
+class Policy(models.Model):
+  """
+   A class used to represent a Legal Policy.  For instance the 
+   Terms and Agreement Statement that users have to agree to during sign up.
+
+
+  Attributes
+  ----------
+  name : str
+    name of the Legal Policy
+  description: str
+    the details of this policy
+  communities_applied:
+    how many communities this policy applies to.
+  is_global: boolean
+    True if this policy should apply to all the communities
+  info: JSON
+    dynamic information goes in here
+  """
+  name = models.CharField(max_length=LONG_STR_LEN, db_index = True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  is_global = models.BooleanField(default=False)
+  more_info = JSONField()
+
+  def __str__(self):
+    return self.name
+
+  class Meta:
+    ordering = ('name',)
+    db_table = 'legal_policies'
+
 
 class Community(models.Model):
   """
@@ -122,6 +149,8 @@ class Community(models.Model):
     Super Admins and the community is not allowed to operate.
   created_at: DateTime
     The date and time that this community was created 
+  policies: ManyToMany
+    policies created by community admins for this community
   created_at: DateTime
     The date and time of the last time any updates were made to the information
     about this community
@@ -139,11 +168,11 @@ class Community(models.Model):
   is_geographically_focused = models.BooleanField(default=False)
   location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
     null=True, blank=True)
+  policies = models.ManyToManyField(Policy)
   is_approved = models.BooleanField(default=False)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   more_info = JSONField()
-
 
   def __str__(self):      
     return self.name
@@ -576,7 +605,7 @@ class Action(models.Model):
     The date and time of the last time any updates were made to the information
     about this real estate unit
   """
-  title = models.CharField(max_length = SHORT_STR_LEN)
+  title = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   is_global = models.BooleanField(default=False)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
@@ -602,7 +631,7 @@ class Action(models.Model):
   class Meta:
     ordering = ['rank', 'title']
     db_table = 'actions'
-    unique_together = [['title', 'community']]
+    unique_together = ['title', 'community']
 
 
 class Event(models.Model):
@@ -613,20 +642,36 @@ class Event(models.Model):
   ----------
   name : str
     name of the event
+  description: str
+    more details about this event
+  start_date_and_time: Datetime
+    when the event starts (both the day and time)
+  end_date_and_time: Datetime
+    when the event ends
+  location: Location
+    where the event is taking place
+  tags: ManyToMany
+    tags on this event to help in easily filtering
+  image: Media
+    Foreign key linking to the image attached to this event.
+  archive: boolean
+    True if this event should be archived
+  is_global: boolean
+    True if this action is an event that every community should see or not.
+    False otherwise.
   """
   name  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
-  #TODO: make this a Location foreign key field?
-  location = models.CharField(max_length = SHORT_STR_LEN, blank=True) 
+  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
+    null=True, blank=True)
   tags = models.ManyToManyField(Tag)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   archive =  models.BooleanField(default=False)
+  is_global = models.BooleanField(default=False)
 
-  #TODO: make sure any one who retrieves events only retrieves those that are 
-  #not past
 
   def __str__(self):             
     return self.name
@@ -645,11 +690,12 @@ class EventAttendees(models.Model):
   attendee : str
     name of the Vendor
   status: str
-    Tells if the attendee is just interested, RSVP'd or saved for later.
+    Tells if the attendee is just interested, RSVP-ed or saved for later.
   event: int
     Foreign Key to event that the attendee is going to.
   """
-  attendee =  models.ForeignKey(UserProfile,on_delete=models.CASCADE)
+  attendee =  models.ForeignKey(UserProfile,on_delete=models.CASCADE, 
+    db_index=True)
   event =  models.ForeignKey(Event,on_delete=models.CASCADE)
   status = models.CharField(
     max_length=TINY_STR_LEN, 
@@ -676,8 +722,10 @@ class Permission(models.Model):
   name = models.CharField(
     max_length=TINY_STR_LEN, 
     choices=CHOICES["PERMISSION_TYPES"].items(), 
-    primary_key=True
-  ) 
+    primary_key=True,
+    db_index=True
+  )
+  description = models.TextField(max_length=LONG_STR_LEN, blank=True)
 
 
   def __str__(self):
@@ -688,8 +736,6 @@ class Permission(models.Model):
     db_table = 'permissions'
 
     
-
-
 class UserPermissions(models.Model):
   """
   A class used to represent Users and what they can do.
@@ -703,7 +749,6 @@ class UserPermissions(models.Model):
   """
   who = models.ForeignKey(Role,on_delete=models.CASCADE)
   can_do = models.ForeignKey(Permission, on_delete=models.CASCADE)
-  #TODO: add with_what field?
 
   def __str__(self):
     return '(%s) can (%s)' % (self.who, self.can_do)
@@ -711,29 +756,6 @@ class UserPermissions(models.Model):
   class Meta:
     ordering = ('who',)
     db_table = 'user_permissions'
-
-
-class Notification(models.Model):
-  """
-   A class used to represent Notifications served to user on MassEnergize
-
-
-  Attributes
-  ----------
-  title : str
-    title of the notification
-  body: str
-    body of the notification
-  """
-  title = models.CharField(max_length=SHORT_STR_LEN)
-  body = models.CharField(max_length=LONG_STR_LEN, blank=True)
-
-  def __str__(self):
-    return self.title
-
-  class Meta:
-    ordering = ('title',)
-    db_table = 'notifications'
 
 
 class Testimonial(models.Model):
@@ -750,11 +772,12 @@ class Testimonial(models.Model):
   is_approved: boolean
     after the community admin reviews this, he can check the box
   """
-  title = models.CharField(max_length=SHORT_STR_LEN)
+  title = models.CharField(max_length=SHORT_STR_LEN, db_index=True)
   body = models.TextField(max_length=LONG_STR_LEN)
   is_approved = models.BooleanField(default=False)
   date = models.DateTimeField(default=datetime.now)
-  file = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True)
+  file = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True)
   rank = models.PositiveSmallIntegerField(default=0)
 
   def __str__(self):        
@@ -784,7 +807,7 @@ class UserActionRel(models.Model):
   testimonial:
     what they had to say about this action.  
   """
-  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
   real_estate_unit = models.ForeignKey(RealEstateUnit, on_delete=models.CASCADE)
   action = models.ForeignKey(Action, on_delete=models.CASCADE)
   vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, 
@@ -810,7 +833,7 @@ class CommunityAdminGroup(models.Model):
   info: JSON
     dynamic information goes in here
   """
-  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
   members = models.ManyToManyField(UserProfile)
@@ -835,9 +858,10 @@ class UserGroup(models.Model):
   info: JSON
     dynamic information goes in here
   """
-  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, 
+    blank=True, db_index=True)
   members = models.ManyToManyField(UserProfile)
   permissions = models.ManyToManyField(Permission)
 
@@ -863,12 +887,12 @@ class Statistic(models.Model):
   community: int
     foreign key linking a community to this statistic
   """
-  name = models.CharField(max_length = SHORT_STR_LEN)
+  name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   value =  models.DecimalField(default=0.0, max_digits=10,decimal_places=10)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
 
   community = models.ForeignKey(Community, blank=True,  
-    on_delete=models.SET_NULL, null=True)
+    on_delete=models.SET_NULL, null=True, db_index=True)
   info = JSONField()
 
   def __str__(self):         
@@ -892,7 +916,7 @@ class Graph(models.Model):
   data: JSON
     data to be plotted on this graph
   """
-  title = models.CharField(max_length = LONG_STR_LEN)
+  title = models.CharField(max_length = LONG_STR_LEN, db_index=True)
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["GRAPH_TYPES"].items())
   data = JSONField()
@@ -920,7 +944,7 @@ class SliderImage(models.Model):
   buttons: JSON
     a json list of buttons with each containing text, link, icon, color etc
   """
-  title = models.CharField(max_length = LONG_STR_LEN, blank=True)
+  title = models.CharField(max_length = LONG_STR_LEN, blank=True, db_index=True)
   subtitle = models.CharField(max_length = LONG_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   buttons = JSONField()
@@ -934,8 +958,9 @@ class SliderImage(models.Model):
 
 
 class Slider(models.Model):
-	"""Model the represents a model for a slider/carousel on the website
-  
+  """
+  Model that represents a model for a slider/carousel on the website
+
   Attributes
   ----------
   name : str
@@ -945,12 +970,14 @@ class Slider(models.Model):
   info: JSON
     dynamic information goes in here
   """
-	name = models.CharField(max_length = LONG_STR_LEN, blank=True)
-	description = models.CharField(max_length = LONG_STR_LEN, blank=True)
-	slides = models.ManyToManyField(SliderImage)
+  name = models.CharField(max_length = LONG_STR_LEN, blank=True, db_index=True)
+  description = models.CharField(max_length = LONG_STR_LEN, blank=True)
+  slides = models.ManyToManyField(SliderImage)
+  is_global = models.BooleanField(default=False)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
 
-	def __str__(self):             
-		return self.name
+  def __str__(self):             
+    return self.name
 
 
 class Menu(models.Model):
@@ -962,7 +989,7 @@ class Menu(models.Model):
   content: JSON
     the content is represented as a json
   """
-  name = models.CharField(max_length=LONG_STR_LEN, blank = True)
+  name = models.CharField(max_length=LONG_STR_LEN, unique=True)
   content = JSONField()
 
   def __str__(self):              
@@ -986,7 +1013,9 @@ class PageSection(models.Model):
     dynamic information goes in here
   """
   name = models.CharField(max_length=LONG_STR_LEN)
-  image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
+  image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True)
+  slider = models.ForeignKey(Slider, on_delete=models.SET_NULL, null=True, blank=True)
   info = JSONField()
 
   def __str__(self):             
@@ -1011,9 +1040,9 @@ class Page(models.Model):
   content: JSON
     dynamic info for this page goes here.
   """
-  name = models.CharField(max_length=LONG_STR_LEN)
+  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   sections = models.ManyToManyField(PageSection)
   info = JSONField()
 
@@ -1024,35 +1053,6 @@ class Page(models.Model):
   class Meta:
     unique_together = ['name', 'community']
 
-
-class Policy(models.Model):
-  """
-   A class used to represent a Legal Policy.  For instance the 
-   Terms and Agreement Statement that users have to agree to during signup.
-
-
-  Attributes
-  ----------
-  name : str
-    name of the Legal Policy
-  description: str
-    the details of this policy
-  communities_applied:
-    how many communities this policy applies to.
-  info: JSON
-    dynamic information goes in here
-  """
-  name = models.CharField(max_length=LONG_STR_LEN)
-  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  communities_applied = models.ManyToManyField(Community)
-  more_info = JSONField()
-
-  def __str__(self):
-    return self.name
-
-  class Meta:
-    ordering = ('name',)
-    db_table = 'massenergize_policies'
 
 
 class BillingStatement(models.Model):
@@ -1076,13 +1076,13 @@ class BillingStatement(models.Model):
   more_info: JSON
     dynamic information goes in here
   """
-  name = models.CharField(max_length=LONG_STR_LEN)
+  name = models.CharField(max_length=SHORT_STR_LEN)
   amount = models.DecimalField(default=0.0, decimal_places=4, max_digits = 10)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  start_date = models.DateTimeField(blank=True)
+  start_date = models.DateTimeField(blank=True, db_index=True)
   end_date = models.DateTimeField(blank=True)
   more_info = JSONField()
-  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
 
   def __str__(self):
     return self.name
@@ -1102,8 +1102,9 @@ class Subscriber(models.Model):
     name of the statement.
   """
   name = models.CharField(max_length = SHORT_STR_LEN)
-  email = models.EmailField(blank=False)
-  community = models.ForeignKey(Community,on_delete=models.SET_NULL, null=True)
+  email = models.EmailField(blank=False, db_index=True)
+  community = models.ForeignKey(Community,on_delete=models.SET_NULL, 
+    null=True, db_index=True)
 
   def __str__(self):             
     return self.name
@@ -1116,28 +1117,34 @@ class Subscriber(models.Model):
 class EmailCategory(models.Model):
   """
   A class tha represents an email preference that a user or subscriber can
-  subscribe to
+  subscribe to.
 
   Attributes
   ----------
   name : str
-    the name for this preference
+    the name for this email preference
+  community: int
+    Foreign Key to the community this email category is associated with
+  is_global: boolean
+    True if this email category should appear in all the communities
   """
-  name = models.CharField(max_length = SHORT_STR_LEN)
+  name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
+  community = models.ForeignKey(Community, db_index=True, 
+    on_delete=models.CASCADE)
+  is_global = models.BooleanField(default=False)
 
   def __str__(self):             
     return self.name
 
   class Meta:
     db_table = 'email_categories'
-
+    unique_together = ['name', 'community']
 
 
 class SubscriberEmailPreferences(models.Model):
   """
   Represents the email preferences of each subscriber.
-  For example they might want marketing emails but not promotion emails etc
-
+  For a subscriber might want marketing emails but not promotion emails etc
 
   Attributes
   ----------
@@ -1146,5 +1153,12 @@ class SubscriberEmailPreferences(models.Model):
   email_category: int
     Foreign key to an email category
   """
-  subscriber = models.ForeignKey(Subscriber,on_delete=models.CASCADE)
+  subscriber = models.ForeignKey(Subscriber,
+    on_delete=models.CASCADE, db_index=True)
   subscribed_to = models.ForeignKey(EmailCategory,on_delete=models.CASCADE)
+
+  def __str__(self):             
+    return "%s - %s" % (self.subscriber, self.subscribed_to)
+
+  class Meta:
+    db_table = 'subscriber_email_preferences'

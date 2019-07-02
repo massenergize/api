@@ -15,7 +15,7 @@ from .utils.utils import load_json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_DATA = load_json(BASE_DIR + '/_main_/config.json')
+CONFIG_DATA = load_json(BASE_DIR + '/_main_/config2.json')
 
 
 os.environ["DATABASE_ENGINE"] = CONFIG_DATA["DATABASE_ENGINE"]
@@ -24,7 +24,6 @@ os.environ["DATABASE_USER"] = CONFIG_DATA["DATABASE_USER"]
 os.environ["DATABASE_PASSWORD"] = CONFIG_DATA["DATABASE_PASSWORD"]
 os.environ["DATABASE_HOST"] =  CONFIG_DATA["DATABASE_HOST"]
 os.environ["DATABASE_PORT"] = CONFIG_DATA["DATABASE_PORT"]
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -67,10 +66,8 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-
 ROOT_URLCONF = '_main_.urls'
 
-CORS_ORIGIN_ALLOW_ALL = True
 
 TEMPLATES = [
     {
