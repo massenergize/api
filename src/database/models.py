@@ -9,6 +9,7 @@ ZIP_CODE_AND_STATES = common.json_loader('./database/raw_data/other/states.json'
 API_URL = 'http://api.massenergize.org'
 
 #TODO: add get_json method to all classes
+#TODO: Resolve File upload to S3 bucket
 
 class Location(models.Model):
   """
@@ -39,7 +40,7 @@ class Location(models.Model):
   county = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
   state = models.CharField(max_length=SHORT_STR_LEN, 
     choices = ZIP_CODE_AND_STATES.items(), blank=True)
-  more_info = JSONField()
+  more_info = JSONField(blank=True, null=True)
 
   def __str__(self):
     if self.location_type == 'STATE_ONLY':
@@ -112,7 +113,7 @@ class Policy(models.Model):
   name = models.CharField(max_length=LONG_STR_LEN, db_index = True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   is_global = models.BooleanField(default=False)
-  more_info = JSONField()
+  more_info = JSONField(blank=True, null=True)
 
   def __str__(self):
     return self.name
@@ -120,6 +121,7 @@ class Policy(models.Model):
   class Meta:
     ordering = ('name',)
     db_table = 'legal_policies'
+    verbose_name_plural = "Legal Policies"
 
 
 class Community(models.Model):
@@ -159,7 +161,7 @@ class Community(models.Model):
   """
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
-  owner = JSONField() 
+  owner = JSONField(blank=True, null=True) 
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
@@ -168,11 +170,11 @@ class Community(models.Model):
   is_geographically_focused = models.BooleanField(default=False)
   location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
     null=True, blank=True)
-  policies = models.ManyToManyField(Policy)
+  policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
-  more_info = JSONField()
+  more_info = JSONField(blank=True, null=True)
 
   def __str__(self):      
     return self.name
@@ -319,16 +321,16 @@ class UserProfile(models.Model):
 
   email = models.EmailField(max_length=SHORT_STR_LEN, 
     unique=True, db_index=True)
-  user_info = JSONField()
+  user_info = JSONField(blank=True, null=True)
   real_estate_units = models.ManyToManyField(RealEstateUnit, 
-    related_name='user_real_estate_units')
-  goals = models.ManyToManyField(Goal)
-  communities = models.ManyToManyField(Community)
-  roles = models.ManyToManyField(Role) 
+    related_name='user_real_estate_units', blank=True)
+  goals = models.ManyToManyField(Goal, blank=True)
+  communities = models.ManyToManyField(Community, blank=True)
+  roles = models.ManyToManyField(Role, blank=True) 
   is_super_admin = models.BooleanField(default=False)
   is_community_admin = models.BooleanField(default=False)
   is_vendor = models.BooleanField(default=False)
-  other_info = JSONField()
+  other_info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -368,10 +370,12 @@ class Team(models.Model):
   """
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
-  admins = models.ManyToManyField(UserProfile, related_name='team_admins') 
-  members = models.ManyToManyField(UserProfile, related_name='team_members') 
+  admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
+    blank=True) 
+  members = models.ManyToManyField(UserProfile, related_name='team_members', 
+    blank=True) 
   community = models.ForeignKey(Community, on_delete=models.CASCADE)
-  goals = models.ManyToManyField(Goal) 
+  goals = models.ManyToManyField(Goal, blank=True) 
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='team_logo')
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
@@ -423,7 +427,7 @@ class Service(models.Model):
   image = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL)
   icon = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-  info = JSONField()
+  info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -490,15 +494,15 @@ class Vendor(models.Model):
     on_delete=models.SET_NULL, related_name='key_contact')
   service_area = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["SERVICE_AREAS"].items())
-  services = models.ManyToManyField(Service)
+  services = models.ManyToManyField(Service, blank=True)
   properties_serviced = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["PROPERTIES_SERVICED"].items())
   onboarding_date = models.DateTimeField(default=datetime.now)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
-  verification_checklist = JSONField() 
+  verification_checklist = JSONField(blank=True, null=True) 
   is_verified = models.BooleanField(default=False)
-  more_info = JSONField()
+  more_info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -520,7 +524,7 @@ class ActionProperty(models.Model):
   """
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  community = models.ManyToManyField(Community)
+  community = models.ManyToManyField(Community, blank=True)
   order_position = models.PositiveSmallIntegerField(default=0)
 
   def __str__(self): 
@@ -530,6 +534,27 @@ class ActionProperty(models.Model):
     verbose_name_plural = "Properties"
     ordering = ('order_position',)
     db_table = 'action_properties'
+
+
+class TagCollection(models.Model):
+  """
+  A class used to represent a collection of Tags.
+
+  Attributes
+  ----------
+  name : str
+    name of the Tag Collection
+  """
+  name = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
+  is_global = models.BooleanField(default=False)
+
+
+  def __str__(self):
+    return self.name
+
+  class Meta:
+    ordering = ('name',)
+    db_table = 'tag_collections'
 
 
 class Tag(models.Model):
@@ -544,35 +569,15 @@ class Tag(models.Model):
   """
   name = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
+  tag_collection = models.ForeignKey(TagCollection, null=True, 
+    on_delete=models.SET_NULL, blank=True)
 
   def __str__(self):
-    return self.name
+    return "%s - %s" % (self.name, self.tag_collection)
 
   class Meta:
     ordering = ('name',)
     db_table = 'tags'
-
-
-class TagCollection(models.Model):
-  """
-  A class used to represent a collection of Tags.
-
-  Attributes
-  ----------
-  name : str
-    name of the Tag Collection
-  """
-  name = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
-  tags = models.ManyToManyField(Tag)
-  is_global = models.BooleanField(default=False)
-
-
-  def __str__(self):
-    return self.name
-
-  class Meta:
-    ordering = ('name',)
-    db_table = 'tag_collections'
 
 
 class Action(models.Model):
@@ -610,14 +615,14 @@ class Action(models.Model):
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
-  tags = models.ManyToManyField(Tag, related_name='action_tags')
+  tags = models.ManyToManyField(Tag, related_name='action_tags', blank=True)
   geographic_area = models.ForeignKey(Location, 
     null=True, blank=True, 
     on_delete=models.SET_NULL)
-  icon = models.CharField(max_length = SHORT_STR_LEN)
+  icon = models.CharField(max_length = SHORT_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
-  properties = models.ManyToManyField(ActionProperty)
-  vendors = models.ManyToManyField(Vendor)
+  properties = models.ManyToManyField(ActionProperty, blank=True)
+  vendors = models.ManyToManyField(Vendor, blank=True)
   average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, blank=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   rank = models.PositiveSmallIntegerField(default = 0) 
@@ -667,7 +672,7 @@ class Event(models.Model):
   end_date_and_time  = models.DateTimeField(default=datetime.now)
   location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
     null=True, blank=True)
-  tags = models.ManyToManyField(Tag)
+  tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   archive =  models.BooleanField(default=False)
   is_global = models.BooleanField(default=False)
@@ -705,6 +710,10 @@ class EventAttendees(models.Model):
   def __str__(self):
     return '%s | %s | %s' % (
       self.attendee, CHOICES["EVENT_CHOICES"][self.status], self.event)
+  
+  class Meta:
+    verbose_name_plural = "Event Attendees"
+
 
 
 class Permission(models.Model):
@@ -836,7 +845,7 @@ class CommunityAdminGroup(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
-  members = models.ManyToManyField(UserProfile)
+  members = models.ManyToManyField(UserProfile, blank=True)
 
   def __str__(self):
     return self.name
@@ -862,8 +871,8 @@ class UserGroup(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, 
     blank=True, db_index=True)
-  members = models.ManyToManyField(UserProfile)
-  permissions = models.ManyToManyField(Permission)
+  members = models.ManyToManyField(UserProfile, blank=True)
+  permissions = models.ManyToManyField(Permission, blank=True)
 
   def __str__(self):
     return self.name
@@ -893,7 +902,7 @@ class Statistic(models.Model):
 
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
-  info = JSONField()
+  info = JSONField(blank=True, null=True)
 
   def __str__(self):         
     return "%s (%d)" % (self.name, self.value)
@@ -919,7 +928,7 @@ class Graph(models.Model):
   title = models.CharField(max_length = LONG_STR_LEN, db_index=True)
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["GRAPH_TYPES"].items())
-  data = JSONField()
+  data = JSONField(blank=True, null=True)
 
 
   def __str__(self):   
@@ -947,7 +956,7 @@ class SliderImage(models.Model):
   title = models.CharField(max_length = LONG_STR_LEN, blank=True, db_index=True)
   subtitle = models.CharField(max_length = LONG_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
-  buttons = JSONField()
+  buttons = JSONField(blank=True, null=True)
 
   def __str__(self):             
     return self.title
@@ -972,7 +981,7 @@ class Slider(models.Model):
   """
   name = models.CharField(max_length = LONG_STR_LEN, blank=True, db_index=True)
   description = models.CharField(max_length = LONG_STR_LEN, blank=True)
-  slides = models.ManyToManyField(SliderImage)
+  slides = models.ManyToManyField(SliderImage, blank=True)
   is_global = models.BooleanField(default=False)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
 
@@ -990,7 +999,7 @@ class Menu(models.Model):
     the content is represented as a json
   """
   name = models.CharField(max_length=LONG_STR_LEN, unique=True)
-  content = JSONField()
+  content = JSONField(blank=True, null=True)
 
   def __str__(self):              
     return self.name
@@ -1016,7 +1025,7 @@ class PageSection(models.Model):
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True)
   slider = models.ForeignKey(Slider, on_delete=models.SET_NULL, null=True, blank=True)
-  info = JSONField()
+  info = JSONField(blank=True, null=True)
 
   def __str__(self):             
     return self.name
@@ -1043,8 +1052,8 @@ class Page(models.Model):
   name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
-  sections = models.ManyToManyField(PageSection)
-  info = JSONField()
+  sections = models.ManyToManyField(PageSection, blank=True)
+  info = JSONField(blank=True, null=True)
 
 
   def __str__(self):             
@@ -1081,7 +1090,7 @@ class BillingStatement(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   start_date = models.DateTimeField(blank=True, db_index=True)
   end_date = models.DateTimeField(blank=True)
-  more_info = JSONField()
+  more_info = JSONField(blank=True, null=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
 
   def __str__(self):
@@ -1139,6 +1148,7 @@ class EmailCategory(models.Model):
   class Meta:
     db_table = 'email_categories'
     unique_together = ['name', 'community']
+    verbose_name_plural = "Email Categories"
 
 
 class SubscriberEmailPreferences(models.Model):
