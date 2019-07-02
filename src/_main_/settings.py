@@ -65,6 +65,12 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_ACCESS_KEY_ID = CONFIG_DATA['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = CONFIG_DATA['AWS_SECRET_ACCESS_KEY']
+AWS_STORAGE_BUCKET_NAME = CONFIG_DATA['AWS_STORAGE_BUCKET_NAME']
+
 
 ROOT_URLCONF = '_main_.urls'
 
@@ -143,3 +149,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+
+
+# Simplified static file serving.
+STATICFILES_LOCATION = 'static'
+MEDIAFILES_LOCATION = 'media'
