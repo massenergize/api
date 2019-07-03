@@ -28,3 +28,5 @@ def get_super_admin_sidebar_menu(request):
 def get_super_admin_navbar_menu(request):
   return JsonResponse(read.super_admin_navbar(), safe=False)
 
+def create_action(request):
+  return JsonResponse({})

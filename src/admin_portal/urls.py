@@ -13,5 +13,6 @@ urlpatterns = [
     'menu/navbar',
     views.get_super_admin_navbar_menu,
     name='super-admin-sidebar-menu'
-  )
+  ),
+  path('create/action', views.create_action, name='create_action')
 ]
