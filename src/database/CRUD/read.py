@@ -29,6 +29,12 @@ def community_portal_actions_page_data(community_id='default'):
   """
   return common.json_loader('./database/raw_data/portal/actionsPageData.json')
 
+def community_portal_events_page_data(community_id='default'):
+  """
+  Returns all the events for a community 
+  """
+  return common.json_loader('./database/raw_data/portal/eventsPageData.json')
+
 def community_portal_about_us_page_data():
   """
   This function pulls and returns all data required for the community 

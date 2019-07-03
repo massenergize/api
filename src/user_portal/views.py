@@ -43,3 +43,14 @@ def aboutUs(request):
         "userData": userData,
         "aboutUsData": aboutUsData
     })
+
+def events(request):
+    pageData = read.community_portal_events_page_data()
+    menuData = read.community_portal_website_menu()
+    userData = read.community_portal_user_data()
+    return JsonResponse({
+        "pageData": pageData, 
+        "menuData": menuData,
+        "userData": userData,
+        }
+    )
