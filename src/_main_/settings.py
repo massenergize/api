@@ -56,16 +56,39 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+# -------- CORS CONFIGURATION ---------------#
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = [
+    "https://massenergize.org",
+    "http://massenergize.org",
+    "https://energizewayland.org",
+    "https://energizewayland.org",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001"
+]
+CORS_ORIGIN_REGEX_WHITELIST = [
+    r"^https://\w+\.massenergize\.org$",
+    r"^https://\w+\.massenergize\.com$",
+    r"^https://\w+\.energizewayland\.org$",
+    r"^http://\w+\.massenergize\.org$",
+    r"^http://\w+\.massenergize\.com$",
+    r"^http://\w+\.energizewayland\.org$",
+]
+# -------- END CORS CONFIGURATION ---------------#
 
+
+#-------- AWS CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 AWS_ACCESS_KEY_ID = CONFIG_DATA['AWS_ACCESS_KEY_ID']
@@ -75,6 +98,7 @@ S3_USE_SIGV4 = True
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_REGION_NAME = 'us-east-2'
 AWS_DEFAULT_ACL  = None
+#--------END AWS CONFIGURATION ---------------------#
 
 
 ROOT_URLCONF = '_main_.urls'
