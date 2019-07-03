@@ -1,0 +1,68 @@
+{
+  "LOCATION_TYPES" : {
+    "STATE_ONLY":"State Only",
+    "ZIP_CODE_ONLY":"Zip Code Only",
+    "CITY_ONLY":"City Only",
+    "COUNTY_ONLY": "County Only",
+    "FULL_ADDRESS":"FULL ADDRESS"
+  },
+
+  "FILE_TYPES_ALLOWED": {
+    "PDF": "PDF",
+    "IMG": "Image",
+    "VIDEO": "Video",
+    "UNKNOWN": "Other"
+  },
+
+  "GOAL_STATUS" : {
+    "IN_PROGRESS": "In Progress",
+    "NOT_STARTED": "Not Started",
+    "COMPLETE": "Complete"
+  },
+
+  "SERVICE_AREAS" : {
+    "NATIONAL":"National",
+    "STATEWIDE":"StateWide",
+    "COUNTY":"County",
+    "TOWN":"Town"
+  },
+
+  "PROPERTIES_SERVICED" : {
+    "RESIDENTIAL":"Residential",
+    "COMMERCIAL":"Commercial"
+  },
+
+  "EVENT_CHOICES" : {
+    "INTERESTED": "Interested",
+    "RSVP": "RSVP",
+    "SAVE": "Save for Later"
+  },
+
+  "PERMISSION_TYPES" : {
+    "APPROVE": "Approve", 
+    "CREATE": "Create", 
+    "EDIT": "Edit",
+    "FORK": "Fork",
+    "VIEW": "View"
+  },
+
+  "ROLE_TYPES" : {
+    "COMMUNITY_ADMIN": "Community Admin", 
+    "SUPER_ADMIN": "Super Admin", 
+    "TEAM_ADMIN": "Team Admin",
+    "DEFAULT_USER": "Default User",
+    "VENDOR_ADMIN": "Vendor Admin",
+    "SUBSCRIBER": "Subscriber"
+  },
+
+  "REAL_ESTATE_TYPES" : {
+    "COMMERCIAL": "Commercial", 
+    "RESIDENTIAL": "Residential"
+  },
+
+  "GRAPH_TYPES": {
+    "LINE_CHART": "Line Chart",
+    "PIE_CHART": "Pie Chart",
+    "BAR_CHART": "Bar Chart"
+  }
+}

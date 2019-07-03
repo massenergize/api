@@ -5,3 +5,5 @@ Maintained by:
 * Samuel Opoku-Agyemang
 * Satrajit Ghosh
 * Brad Hubbard-Nelson
+* Kieran O'Day
+
