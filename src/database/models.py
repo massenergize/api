@@ -636,7 +636,7 @@ class Action(models.Model):
   class Meta:
     ordering = ['rank', 'title']
     db_table = 'actions'
-    unique_together = ['title', 'community']
+    unique_together = [['title', 'community']]
 
 
 class Event(models.Model):
@@ -1004,6 +1004,12 @@ class Menu(models.Model):
   def __str__(self):              
     return self.name
 
+  def get_json(self):
+    return {
+      "id": self.name,
+      "content": self.content
+    }
+
   class Meta:
     ordering = ('name',)
 
@@ -1060,7 +1066,7 @@ class Page(models.Model):
     return self.name
 
   class Meta:
-    unique_together = ['name', 'community']
+    unique_together = [['name', 'community']]
 
 
 
@@ -1120,7 +1126,7 @@ class Subscriber(models.Model):
 
   class Meta:
     db_table = 'subscribers'
-    unique_together = ['email', 'community']
+    unique_together = [['email', 'community']]
 
 
 class EmailCategory(models.Model):
@@ -1147,7 +1153,7 @@ class EmailCategory(models.Model):
 
   class Meta:
     db_table = 'email_categories'
-    unique_together = ['name', 'community']
+    unique_together = [['name', 'community']]
     verbose_name_plural = "Email Categories"
 
 

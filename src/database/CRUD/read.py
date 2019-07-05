@@ -2,6 +2,10 @@
 This file contains code to read data from the database.
 """
 from database.utils import common
+import  database.models as db
+from django.core import serializers
+
+IS_PROD = True
 
 def community_portal_home_page_data():
   """
@@ -38,11 +42,17 @@ def community_portal_about_us_page_data():
 
 
 def super_admin_sidebar():
-  return common.json_loader('./database/raw_data/super-admin/sidebar.json')
+  if IS_PROD:
+    return common.retrieve_object(db.Menu, {"name":"SuperAdmin-MainSideBar"})
+  else:
+    return common.json_loader('./database/raw_data/super-admin/sidebar.json')
 
 
 def super_admin_navbar():
-  return common.json_loader('./database/raw_data/super-admin/navbar.json')
+  if IS_PROD:
+    return common.retrieve_object(db.Menu, {"name":"SuperAdmin-MainNavBar"})
+  else:
+    return common.json_loader('./database/raw_data/super-admin/navbar.json')
 
 def get_states_in_the_US():
   return common.json_loader('./database/raw_data/other/states.json')

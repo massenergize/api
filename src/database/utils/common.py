@@ -16,3 +16,18 @@ def json_loader(file):
     print(e) #TODO: remove this
     return {}
 
+def error_msg(msg=None):
+  return {
+    "success": False,
+    "msg": msg if msg else 'The data you were looking for does not exist'
+  }
+
+
+def retrieve_object(model, args):
+  """
+  Retrieves an object of a model given the filter categories
+  """
+  obj = model.objects.get(**args)
+  if obj:
+    return obj.get_json()
+  return error_msg()
