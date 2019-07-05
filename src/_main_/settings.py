@@ -65,7 +65,11 @@ MIDDLEWARE = [
 ]
 
 # -------- CORS CONFIGURATION ---------------#
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+
 CORS_ORIGIN_WHITELIST = [
     "https://massenergize.org",
     "http://massenergize.org",
@@ -86,6 +90,13 @@ CORS_ORIGIN_REGEX_WHITELIST = [
     r"^http://\w+\.energizewayland\.org$",
 ]
 # -------- END CORS CONFIGURATION ---------------#
+
+CSRF_TRUSTED_ORIGINS = [
+    '.massenergize.org',
+    '.energizewayland.org'
+    'http://localhost:3001',
+    'http://localhost:3000'
+]
 
 
 #-------- AWS CONFIGURATION ---------------------#
@@ -122,6 +133,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = '_main_.wsgi.application'
 
+CSRF_COOKIE_NAME = 'csrfToken'
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
