@@ -7,17 +7,16 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 
 
-def json_loader(file):
+def json_loader(file) -> dict:
   """
   Returns json data given a valid filepath.  Returns {} if error occurs
   """
   try:
-    with open(file) as myfile:
-      data = myfile.read()
+    with open(file) as my_file:
+      data = my_file.read()
     return json.loads(data)
   except Exception as e:
-    print(e) #TODO: remove this
-    return {}
+    return error_msg("The JSON file you specified does not exist")
 
 def error_msg(msg=None):
   return {
@@ -26,7 +25,7 @@ def error_msg(msg=None):
   }
 
 
-def get_json_if_not_none(obj):
+def get_json_if_not_none(obj) -> dict:
   """
   Takes an object and returns the json/serialized form of the obj if it is 
   not None.
@@ -36,11 +35,12 @@ def get_json_if_not_none(obj):
   return None
 
 
-def retrieve_object(model, args):
+def retrieve_object(model, args) -> dict:
   """
   Retrieves an object of a model given the filter categories
   """
   obj = model.objects.get(**args)
+  print(type(obj))
   if obj:
     return model_to_dict(obj)
     return json.loads(serializers.serialize("json", [obj]))
@@ -49,7 +49,7 @@ def retrieve_object(model, args):
 
 
 
-def retrieve_all_objects(model, args):
+def retrieve_all_objects(model, args) -> list:
   """
   Retrieves an object of a model given the filter categories
   """
