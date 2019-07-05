@@ -624,7 +624,7 @@ class Action(models.Model):
   properties = models.ManyToManyField(ActionProperty, blank=True)
   vendors = models.ManyToManyField(Vendor, blank=True)
   average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, blank=True)
-  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
   rank = models.PositiveSmallIntegerField(default = 0) 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
