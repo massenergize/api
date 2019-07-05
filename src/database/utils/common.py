@@ -60,3 +60,5 @@ def retrieve_all_objects(model, args):
     return [i.get_json() for i in objects]
   return error_msg()
 
+def get_json(obj):
+  return model_to_dict(obj)["fields"]
