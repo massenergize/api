@@ -1,18 +1,18 @@
 from django.urls import path
-from .views import views
+from .views import get, post
 
 urlpatterns = [
-  path('', views.test, name='test'),
-  path('login', views.login, name='login'),
+  path('', get.test, name='test'),
+  path('test', get.test, name='test'),
   path(
     'menu/sidebar', 
-    views.get_super_admin_sidebar_menu, 
+    get.get_super_admin_sidebar_menu, 
     name='super-admin-sidebar-menu'
   ),
   path(
     'menu/navbar',
-    views.get_super_admin_navbar_menu,
+    get.get_super_admin_navbar_menu,
     name='super-admin-sidebar-menu'
   ),
-  path('create/action', views.create_action, name='create_action')
+  path('create/action', post.action, name='create_action')
 ]
