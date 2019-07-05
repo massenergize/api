@@ -56,3 +56,10 @@ def super_admin_navbar():
 
 def get_states_in_the_US():
   return common.json_loader('./database/raw_data/other/states.json')
+
+
+def community_actions(community_id=None):
+  if community_id:
+    return common.retrieve_all_objects(db.Action, {"community": community_id})
+    # return list(db.Action.objects.filter(**{"community": community_id}))
+  return []

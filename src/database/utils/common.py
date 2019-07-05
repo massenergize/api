@@ -3,6 +3,9 @@ This file contains utility functions that come in handy for processing and
 retrieving data
 """
 import json
+from django.core import serializers
+from django.forms.models import model_to_dict
+
 
 def json_loader(file):
   """
@@ -23,11 +26,37 @@ def error_msg(msg=None):
   }
 
 
+def get_json_if_not_none(obj):
+  """
+  Takes an object and returns the json/serialized form of the obj if it is 
+  not None.
+  """
+  if obj:
+    return obj.get_json()
+  return None
+
+
 def retrieve_object(model, args):
   """
   Retrieves an object of a model given the filter categories
   """
   obj = model.objects.get(**args)
   if obj:
+    return model_to_dict(obj)
+    return json.loads(serializers.serialize("json", [obj]))
     return obj.get_json()
   return error_msg()
+
+
+
+def retrieve_all_objects(model, args):
+  """
+  Retrieves an object of a model given the filter categories
+  """
+  objects = model.objects.filter(**args)
+  if objects:
+    # return model_to_dict(obj)
+    # return json.loads(serializers.serialize("json", objects))
+    return [i.get_json() for i in objects]
+  return error_msg()
+

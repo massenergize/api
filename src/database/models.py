@@ -58,6 +58,19 @@ class Location(models.Model):
     
     return self.location_type
 
+  def get_json(self):
+    return {
+      "location_type": self.location_type,
+      "street": self.street,
+      "unit_number": self.unit_number,
+      "zipcode": self.zipcode,
+      "city": self.city,
+      "county": self.county,
+      "state": self.state,
+      "more_info": self.more_info
+    }
+
+
   class Meta:
     db_table = 'locations'
 
@@ -86,6 +99,14 @@ class Media(models.Model):
 
   def __str__(self):      
     return self.name
+
+  def get_json(self):
+    return {
+      "name": self.name,
+      "file": self.file,
+      "media_type": self.media_type
+    }
+
 
   class Meta:
     db_table = "media"
@@ -117,6 +138,16 @@ class Policy(models.Model):
 
   def __str__(self):
     return self.name
+
+  def get_json(self):
+    return {
+      "name": self.name,
+      "description": self.description,
+      "is_global": self.is_global,
+      "more_info": self.more_info,
+      "community": str(self.community)
+    }
+
 
   class Meta:
     ordering = ('name',)
@@ -179,6 +210,24 @@ class Community(models.Model):
   def __str__(self):      
     return self.name
 
+
+  def get_json(self):
+    return {
+      "name": self.name,
+      "subdomain": self.subdomain,
+      "owner": self.owner,
+      "about_community": self.about_community,
+      "logo": common.get_json_if_not_none(self.logo),
+      "location": common.get_json_if_not_none(self.location),
+      "is_approved": self.is_approved,
+      "is_geographically_focused": self.is_geographically_focused,
+      "banner": common.get_json_if_not_none(self.banner),
+      "created_at": self.created_at,
+      "updated_at": self.updated_at,
+      "more_info": self.more_info
+    }
+
+
   class Meta:
     verbose_name_plural = "Communities"
     db_table = "communities"
@@ -220,6 +269,14 @@ class RealEstateUnit(models.Model):
       self.unit_type, self.street, self.city, self.zipcode, self.state
     )
 
+  def get_json(self):
+    return {
+      "unit_type": self.unit_type,
+      "location": self.location.get_json(),
+      "created_at": self.created_at,
+      "updated_at": self.updated_at
+    }
+
   class Meta:
     db_table = 'real_estate_units'
 
@@ -258,6 +315,14 @@ class Goal(models.Model):
   def __str__(self):
     return self.name
 
+  def get_json(self):
+    return {
+      "name": self.name,
+      "status": self.status,
+      "description": self.description,
+      "created_at": self.created_at,
+      "updated_at": self.updated_at
+    }
   class Meta:
     db_table = 'goals'
 
@@ -632,6 +697,24 @@ class Action(models.Model):
   def __str__(self): 
     return self.title
 
+  def get_json(self):
+    return {
+      "title": self.title, 
+      "is_global": self.is_global, 
+      "steps_to_take": self.steps_to_take, 
+      "about": self.about, 
+      "geographic_area": common.get_json_if_not_none(self.geographic_area), 
+      "icon": self.icon, 
+      "image": common.get_json_if_not_none(self.image), 
+      "average_carbon_score": self.average_carbon_score, 
+      "community": str(self.community), 
+      "rank": self.rank, 
+      "created_at": self.created_at, 
+      "updated_at": self.updated_at, 
+      "tags": [str(t) for t in self.tags.all()], 
+      "properties": [str(p) for p in self.properties.all()], 
+      "vendors": [str(v) for v in self.vendors.all()]
+  }
 
   class Meta:
     ordering = ['rank', 'title']
@@ -1006,7 +1089,8 @@ class Menu(models.Model):
 
   def get_json(self):
     return {
-      "id": self.name,
+      "pk": self.pk,
+      "name": self.name,
       "content": self.content
     }
 

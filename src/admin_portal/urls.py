@@ -3,6 +3,7 @@ from .views import get, post
 
 urlpatterns = [
   path('', get.test, name='test'),
+  path('actions', get.community_actions, name='community_actions'),
   path('test', get.test, name='test'),
   path(
     'menu/sidebar', 
