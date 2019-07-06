@@ -2,11 +2,12 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from .utils.constants import *
 from datetime import date, datetime
-from .utils import common
+from .utils.common import convert_to_json, json_loader,get_json_if_not_none
+from django.forms.models import model_to_dict
 
 
-CHOICES = common.json_loader('./database/raw_data/other/databaseFieldChoices.json')
-ZIP_CODE_AND_STATES = common.json_loader('./database/raw_data/other/states.json')
+CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
+ZIP_CODE_AND_STATES = json_loader('./database/raw_data/other/states.json')
 API_URL = 'http://api.massenergize.org'
 
 #TODO: add get_json method to all classes
@@ -53,17 +54,17 @@ class Location(models.Model):
     elif self.location_type == 'COUNTY_ONLY':
       return self.county 
     elif self.location_type == 'FULL_ADDRESS':
-      return '%s, %s, %s, %s' % (
+      return '%s, %s, %s, %s, %s' % (
         self.street, self.unit_number, self.city, self.county, self.state
       )
     
     return self.location_type
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     db_table = 'locations'
@@ -96,10 +97,10 @@ class Media(models.Model):
 
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     db_table = "media"
@@ -133,10 +134,10 @@ class Policy(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def get_full_json(self):
     return {
@@ -210,10 +211,10 @@ class Community(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def get_json(self):
     return {
@@ -221,11 +222,11 @@ class Community(models.Model):
       "subdomain": self.subdomain,
       "owner": self.owner,
       "about_community": self.about_community,
-      "logo": common.get_json_if_not_none(self.logo),
-      "location": common.get_json_if_not_none(self.location),
+      "logo":get_json_if_not_none(self.logo),
+      "location":get_json_if_not_none(self.location),
       "is_approved": self.is_approved,
       "is_geographically_focused": self.is_geographically_focused,
-      "banner": common.get_json_if_not_none(self.banner),
+      "banner":get_json_if_not_none(self.banner),
       "created_at": self.created_at,
       "updated_at": self.updated_at,
       "more_info": self.more_info
@@ -274,10 +275,10 @@ class RealEstateUnit(models.Model):
     )
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def get_json(self):
     return {
@@ -326,10 +327,10 @@ class Goal(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   def get_json(self):
@@ -364,10 +365,10 @@ class Role(models.Model):
     return CHOICES["ROLE_TYPES"][self.name] 
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   class Meta:
@@ -427,10 +428,10 @@ class UserProfile(models.Model):
     return self.email
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     db_table = 'user_profiles' 
@@ -487,10 +488,10 @@ class Team(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -534,10 +535,10 @@ class Service(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   class Meta:
@@ -616,10 +617,10 @@ class Vendor(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     db_table = 'vendors'
@@ -643,10 +644,10 @@ class ActionProperty(models.Model):
     return "%s: %s" % (self.order_position, self.name)
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     verbose_name_plural = "Properties"
@@ -672,10 +673,11 @@ class TagCollection(models.Model):
 
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
+
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   class Meta:
@@ -702,10 +704,10 @@ class Tag(models.Model):
     return "%s - %s" % (self.name, self.tag_collection)
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -752,11 +754,14 @@ class Action(models.Model):
     null=True, blank=True, 
     on_delete=models.SET_NULL)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank=True)
-  image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
+  image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True,blank=True)
   properties = models.ManyToManyField(ActionProperty, blank=True)
   vendors = models.ManyToManyField(Vendor, blank=True)
-  average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, blank=True)
-  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+  average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, 
+    blank=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, 
+    null=True, blank=True, db_index=True)
   rank = models.PositiveSmallIntegerField(default = 0) 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -765,29 +770,26 @@ class Action(models.Model):
     return self.title
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
-
-
-  def get_json(self):
     return {
+      "id": self.id,
       "title": self.title, 
       "is_global": self.is_global, 
       "steps_to_take": self.steps_to_take, 
       "about": self.about, 
-      "geographic_area": common.get_json_if_not_none(self.geographic_area), 
+      "geographic_area": get_json_if_not_none(self.geographic_area), 
       "icon": self.icon, 
-      "image": common.get_json_if_not_none(self.image), 
+      "image": get_json_if_not_none(self.image), 
       "average_carbon_score": self.average_carbon_score, 
-      "community": str(self.community), 
+      "community": self.community.simple_json(), 
       "rank": self.rank, 
       "created_at": self.created_at, 
       "updated_at": self.updated_at, 
-      "tags": [str(t) for t in self.tags.all()], 
-      "properties": [str(p) for p in self.properties.all()], 
-      "vendors": [str(v) for v in self.vendors.all()]
+      "tags": [t.simple_json() for t in self.tags.all()], 
+      "properties": [p.simple_json() for p in self.properties.all()], 
+      "vendors": [v.simple_json() for v in self.vendors.all()]
   }
 
   class Meta:
@@ -839,10 +841,10 @@ class Event(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   class Meta:
@@ -876,10 +878,10 @@ class EventAttendees(models.Model):
       self.attendee, CHOICES["EVENT_CHOICES"][self.status], self.event)
   
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   class Meta:
@@ -912,10 +914,10 @@ class Permission(models.Model):
     return CHOICES["PERMISSION_TYPES"][self.name] 
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -940,10 +942,10 @@ class UserPermissions(models.Model):
     return '(%s) can (%s)' % (self.who, self.can_do)
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('who',)
@@ -976,10 +978,10 @@ class Testimonial(models.Model):
     return "%d: %s" % (self.rank, self.name)
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   class Meta:
@@ -1017,10 +1019,10 @@ class UserActionRel(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def __str__(self):
     return  "%s: %s" % (self.user, self.action)
@@ -1047,10 +1049,10 @@ class CommunityAdminGroup(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -1080,10 +1082,10 @@ class UserGroup(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -1116,10 +1118,10 @@ class Statistic(models.Model):
     return "%s (%d)" % (self.name, self.value)
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     verbose_name_plural = "Graph Statistics"
@@ -1145,10 +1147,10 @@ class Graph(models.Model):
   data = JSONField(blank=True, null=True)
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   def __str__(self):   
@@ -1182,10 +1184,10 @@ class SliderImage(models.Model):
     return self.title
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     verbose_name_plural = "Slider Images"
@@ -1215,10 +1217,10 @@ class Slider(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 class Menu(models.Model):
   """Represents items on the menu/navigation bar (top-most bar on the webpage)
@@ -1236,10 +1238,10 @@ class Menu(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   def get_json(self):
@@ -1276,10 +1278,10 @@ class PageSection(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 class Page(models.Model):
   """
@@ -1309,10 +1311,10 @@ class Page(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     unique_together = [['name', 'community']]
@@ -1352,10 +1354,10 @@ class BillingStatement(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -1380,10 +1382,10 @@ class Subscriber(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   class Meta:
@@ -1414,10 +1416,10 @@ class EmailCategory(models.Model):
     return self.name
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
 
   class Meta:
@@ -1446,10 +1448,10 @@ class SubscriberEmailPreferences(models.Model):
     return "%s - %s" % (self.subscriber, self.subscribed_to)
 
   def simple_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   def full_json(self):
-    return common.get_json(self)
+    return convert_to_json(self)
 
   class Meta:
     db_table = 'subscriber_email_preferences'

@@ -25,40 +25,56 @@ def error_msg(msg=None):
   }
 
 
+def retrieve_object(model, args, full_json=False) -> dict:
+  """
+  Retrieves one object of a database model/table given the filter categories.
+
+  Arguments
+  -----------
+  model: models.Model
+    The database model/table to retrieve from
+  args: dict
+    A dictionary with the filter arguments/params
+  full_json: boolean
+    True if we want to retrieve the full json for each object or not
+  """
+  obj = model.objects.filter(**args).first()
+  if obj:
+    return obj.full_json() if full_json else obj.simple_json()
+  return error_msg('No object found matching the criteria given')
+
+
+
+def retrieve_all_objects(model, args, full_json=False) -> list:
+  """
+  Filters for all objects in a database model that fits a criterion
+
+  Arguments
+  -----------
+  model: models.Model
+    The database model/table to retrieve from
+  args: dict
+    A dictionary with the filter arguments/params
+  full_json: boolean
+    True if we want to retrieve the full json for each object or not
+  """
+  objects = model.objects.filter(**args)
+  return [
+    (i.full_json() if full_json else i.simple_json()) for i in objects
+  ]
+
+def convert_to_json(obj):
+  """
+  Serializes an object into a json to be sent over-the-wire 
+  """
+  serialized_object = serializers.serialize("json", [obj], indent=10)
+  return json.loads(serialized_object)[0]["fields"]
+
 def get_json_if_not_none(obj) -> dict:
   """
   Takes an object and returns the json/serialized form of the obj if it is 
   not None.
   """
   if obj:
-    return obj.get_json()
+    return obj.simple_json()
   return None
-
-
-def retrieve_object(model, args) -> dict:
-  """
-  Retrieves an object of a model given the filter categories
-  """
-  obj = model.objects.get(**args)
-  print(type(obj))
-  if obj:
-    return model_to_dict(obj)
-    return json.loads(serializers.serialize("json", [obj]))
-    return obj.get_json()
-  return error_msg()
-
-
-
-def retrieve_all_objects(model, args) -> list:
-  """
-  Retrieves an object of a model given the filter categories
-  """
-  objects = model.objects.filter(**args)
-  if objects:
-    # return model_to_dict(obj)
-    # return json.loads(serializers.serialize("json", objects))
-    return [i.get_json() for i in objects]
-  return error_msg()
-
-def get_json(obj):
-  return model_to_dict(obj)["fields"]
