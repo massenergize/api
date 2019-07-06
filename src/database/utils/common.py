@@ -69,7 +69,7 @@ def convert_to_json(data, full_json=False):
   Serializes an object into a json to be sent over-the-wire 
   """
   if not data:
-    return data
+    return None
 
   if isinstance(data, Iterable):
     return  [
@@ -89,3 +89,12 @@ def get_json_if_not_none(obj) -> dict:
   if obj:
     return obj.simple_json()
   return None
+
+
+def fetch_from_db(model, filter_args={}, 
+  prefetch_related_args=[], select_related_args=[]):
+  return (model.objects
+    .select_related(*select_related_args)
+    .filter(**filter_args)
+    .prefetch_related(*prefetch_related_args))
+

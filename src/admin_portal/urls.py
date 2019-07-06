@@ -1,19 +1,20 @@
 from django.urls import path
-from .views import get, post
+from .views import *
 
 urlpatterns = [
-  path('', get.test, name='test'),
-  path('actions', get.community_actions, name='community_actions'),
-  path('test', get.test, name='test'),
+  path('', home, name='super_admin_home'),
+  path('actions', actions, name='super_admin_actions'),
+  path('test', test, name='super_admin_test'),
   path(
     'menu/sidebar', 
-    get.get_super_admin_sidebar_menu, 
-    name='super-admin-sidebar-menu'
+    get_super_admin_sidebar_menu, 
+    name='super_admin_sidebar-menu'
   ),
   path(
     'menu/navbar',
-    get.get_super_admin_navbar_menu,
-    name='super-admin-sidebar-menu'
+    get_super_admin_navbar_menu,
+    name='super_admin_sidebar-menu'
   ),
-  path('create/action', post.action, name='create_action')
+  path('events', events, name='super_admin_events'),
+  path('communities', communities, name='super_admin_communities'),
 ]

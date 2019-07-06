@@ -1,5 +1,8 @@
 """
-This is a wrapper for a JSON http response specific to the massenergize API
+This is a wrapper for a JSON http response specific to the massenergize API.
+It ensures that the data retrieved is in a json format and adds all possible 
+erros to the caller of a particular route
+
 """
 from django.http import JsonResponse
 from database.utils.common import convert_to_json
