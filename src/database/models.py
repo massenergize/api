@@ -1241,15 +1241,7 @@ class Menu(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
-
-
-  def get_json(self):
-    return {
-      "pk": self.pk,
-      "name": self.name,
-      "content": self.content
-    }
+    return self.simple_json()
 
   class Meta:
     ordering = ('name',)

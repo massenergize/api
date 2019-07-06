@@ -5,6 +5,7 @@ retrieving data
 import json
 from django.core import serializers
 from django.forms.models import model_to_dict
+from collections.abc import Iterable
 
 
 def json_loader(file) -> dict:
@@ -63,12 +64,22 @@ def retrieve_all_objects(model, args, full_json=False) -> list:
     (i.full_json() if full_json else i.simple_json()) for i in objects
   ]
 
-def convert_to_json(obj):
+def convert_to_json(data, full_json=False):
   """
   Serializes an object into a json to be sent over-the-wire 
   """
-  serialized_object = serializers.serialize("json", [obj], indent=10)
-  return json.loads(serialized_object)[0]["fields"]
+  if not data:
+    return data
+
+  if isinstance(data, Iterable):
+    return  [
+      (i.full_json() if full_json else i.simple_json()) for i in data
+    ]
+  else:
+    objects = [data]
+    serialized_object = serializers.serialize("json", objects)
+    return json.loads(serialized_object)[0]["fields"]
+
 
 def get_json_if_not_none(obj) -> dict:
   """
