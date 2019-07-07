@@ -39,6 +39,7 @@ ALLOWED_HOSTS = ['*'] #TODO: restrict this when ready to deploy
 # Application definition
 
 INSTALLED_APPS = [
+    'authentication',
     'admin_portal',
     'carbon_calculator',
     'database',
@@ -140,7 +141,7 @@ SESSION_COOKIE_SECURE = False
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'default': {
+    'test': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': os.environ.get('DATABASE_NAME'),
         'USER': os.environ.get('DATABASE_USER'),
@@ -148,7 +149,7 @@ DATABASES = {
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT')
     },
-    'test': {
+    'default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': 'postgres',
         'USER': 'postgres',
@@ -158,6 +159,15 @@ DATABASES = {
     },
 }
 
+FIREBASE_API = {
+    'apiKey': os.environ.get('FIREBASE_API_KEY'),
+    'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN'),
+    'projectId': os.environ.get('FIREBASE_PROJECT_ID'),
+    "databaseURL": os.environ.get('FIREBASE_DATABASE_URL'),
+    "storageBucket": os.environ.get('FIREBASE_STORAGE_URL'),
+    "messagingSenderId": os.environ.get('FIREBASE_MESSAGE_SENDER_ID'),
+    "appId": os.environ.get('FIREBASE_APP_ID'),
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
