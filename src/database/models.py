@@ -2,10 +2,12 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from .utils.constants import *
 from datetime import date, datetime
-from .utils import common
+from .utils.common import convert_to_json, json_loader,get_json_if_not_none
+from django.forms.models import model_to_dict
 
-CHOICES = common.json_loader('./database/raw_data/other/databaseFieldChoices.json')
-ZIP_CODE_AND_STATES = common.json_loader('./database/raw_data/other/states.json')
+
+CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
+ZIP_CODE_AND_STATES = json_loader('./database/raw_data/other/states.json')
 API_URL = 'http://api.massenergize.org'
 
 #TODO: add get_json method to all classes
@@ -52,11 +54,17 @@ class Location(models.Model):
     elif self.location_type == 'COUNTY_ONLY':
       return self.county 
     elif self.location_type == 'FULL_ADDRESS':
-      return '%s, %s, %s, %s' % (
+      return '%s, %s, %s, %s, %s' % (
         self.street, self.unit_number, self.city, self.county, self.state
       )
     
     return self.location_type
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     db_table = 'locations'
@@ -86,6 +94,13 @@ class Media(models.Model):
 
   def __str__(self):      
     return self.name
+
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     db_table = "media"
@@ -117,6 +132,22 @@ class Policy(models.Model):
 
   def __str__(self):
     return self.name
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
+  def get_full_json(self):
+    return {
+      "name": self.name,
+      "description": self.description,
+      "is_global": self.is_global,
+      "more_info": self.more_info,
+      "community": str(self.community)
+    }
+
 
   class Meta:
     ordering = ('name',)
@@ -179,6 +210,29 @@ class Community(models.Model):
   def __str__(self):      
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
+  def get_json(self):
+    return {
+      "name": self.name,
+      "subdomain": self.subdomain,
+      "owner": self.owner,
+      "about_community": self.about_community,
+      "logo":get_json_if_not_none(self.logo),
+      "location":get_json_if_not_none(self.location),
+      "is_approved": self.is_approved,
+      "is_geographically_focused": self.is_geographically_focused,
+      "banner":get_json_if_not_none(self.banner),
+      "created_at": self.created_at,
+      "updated_at": self.updated_at,
+      "more_info": self.more_info
+    }
+
+
   class Meta:
     verbose_name_plural = "Communities"
     db_table = "communities"
@@ -220,6 +274,20 @@ class RealEstateUnit(models.Model):
       self.unit_type, self.street, self.city, self.zipcode, self.state
     )
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
+  def get_json(self):
+    return {
+      "unit_type": self.unit_type,
+      "location": self.location.get_json(),
+      "created_at": self.created_at,
+      "updated_at": self.updated_at
+    }
+
   class Meta:
     db_table = 'real_estate_units'
 
@@ -258,6 +326,21 @@ class Goal(models.Model):
   def __str__(self):
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
+
+  def get_json(self):
+    return {
+      "name": self.name,
+      "status": self.status,
+      "description": self.description,
+      "created_at": self.created_at,
+      "updated_at": self.updated_at
+    }
   class Meta:
     db_table = 'goals'
 
@@ -280,6 +363,13 @@ class Role(models.Model):
 
   def __str__(self):
     return CHOICES["ROLE_TYPES"][self.name] 
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
 
   class Meta:
     ordering = ('name',)
@@ -334,12 +424,17 @@ class UserProfile(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
-def __str__(self):
-  return self.email
+  def __str__(self):
+    return self.email
 
+  def simple_json(self):
+    return convert_to_json(self)
 
-class Meta:
-  db_table = 'user_profiles' 
+  def full_json(self):
+    return convert_to_json(self)
+
+  class Meta:
+    db_table = 'user_profiles' 
 
 
 class Team(models.Model):
@@ -383,7 +478,6 @@ class Team(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
-
   def is_admin(self, UserProfile):
     return self.admins.filter(id=UserProfile.id)
 
@@ -392,6 +486,12 @@ class Team(models.Model):
 
   def __str__(self):
     return self.name
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -433,6 +533,13 @@ class Service(models.Model):
 
   def __str__(self):             
     return self.name
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
 
   class Meta:
     db_table = 'services'
@@ -509,6 +616,12 @@ class Vendor(models.Model):
   def __str__(self):             
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
   class Meta:
     db_table = 'vendors'
 
@@ -529,6 +642,12 @@ class ActionProperty(models.Model):
 
   def __str__(self): 
     return "%s: %s" % (self.order_position, self.name)
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     verbose_name_plural = "Properties"
@@ -552,6 +671,15 @@ class TagCollection(models.Model):
   def __str__(self):
     return self.name
 
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+
+  def full_json(self):
+    return convert_to_json(self)
+
+
   class Meta:
     ordering = ('name',)
     db_table = 'tag_collections'
@@ -574,6 +702,12 @@ class Tag(models.Model):
 
   def __str__(self):
     return "%s - %s" % (self.name, self.tag_collection)
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -620,11 +754,14 @@ class Action(models.Model):
     null=True, blank=True, 
     on_delete=models.SET_NULL)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank=True)
-  image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
+  image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True,blank=True)
   properties = models.ManyToManyField(ActionProperty, blank=True)
   vendors = models.ManyToManyField(Vendor, blank=True)
-  average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, blank=True)
-  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
+  average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, 
+    blank=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, 
+    null=True, blank=True, db_index=True)
   rank = models.PositiveSmallIntegerField(default = 0) 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -632,11 +769,33 @@ class Action(models.Model):
   def __str__(self): 
     return self.title
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return {
+      "id": self.id,
+      "title": self.title, 
+      "is_global": self.is_global, 
+      "steps_to_take": self.steps_to_take, 
+      "about": self.about, 
+      "geographic_area": get_json_if_not_none(self.geographic_area), 
+      "icon": self.icon, 
+      "image": get_json_if_not_none(self.image), 
+      "average_carbon_score": self.average_carbon_score, 
+      "community": self.community.simple_json(), 
+      "rank": self.rank, 
+      "created_at": self.created_at, 
+      "updated_at": self.updated_at, 
+      "tags": [t.simple_json() for t in self.tags.all()], 
+      "properties": [p.simple_json() for p in self.properties.all()], 
+      "vendors": [v.simple_json() for v in self.vendors.all()]
+  }
 
   class Meta:
     ordering = ['rank', 'title']
     db_table = 'actions'
-    unique_together = ['title', 'community']
+    unique_together = [['title', 'community']]
 
 
 class Event(models.Model):
@@ -681,6 +840,13 @@ class Event(models.Model):
   def __str__(self):             
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
+
   class Meta:
     ordering = ('-start_date_and_time',)
     db_table = 'events'
@@ -711,6 +877,13 @@ class EventAttendees(models.Model):
     return '%s | %s | %s' % (
       self.attendee, CHOICES["EVENT_CHOICES"][self.status], self.event)
   
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
+
   class Meta:
     verbose_name_plural = "Event Attendees"
 
@@ -740,6 +913,12 @@ class Permission(models.Model):
   def __str__(self):
     return CHOICES["PERMISSION_TYPES"][self.name] 
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
   class Meta:
     ordering = ('name',)
     db_table = 'permissions'
@@ -761,6 +940,12 @@ class UserPermissions(models.Model):
 
   def __str__(self):
     return '(%s) can (%s)' % (self.who, self.can_do)
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('who',)
@@ -791,6 +976,13 @@ class Testimonial(models.Model):
 
   def __str__(self):        
     return "%d: %s" % (self.rank, self.name)
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
 
   class Meta:
     ordering = ('rank',)
@@ -826,6 +1018,12 @@ class UserActionRel(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
   def __str__(self):
     return  "%s: %s" % (self.user, self.action)
 
@@ -849,6 +1047,12 @@ class CommunityAdminGroup(models.Model):
 
   def __str__(self):
     return self.name
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -876,6 +1080,12 @@ class UserGroup(models.Model):
 
   def __str__(self):
     return self.name
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     ordering = ('name',)
@@ -907,6 +1117,12 @@ class Statistic(models.Model):
   def __str__(self):         
     return "%s (%d)" % (self.name, self.value)
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
   class Meta:
     verbose_name_plural = "Graph Statistics"
     ordering = ('name','value')
@@ -929,6 +1145,12 @@ class Graph(models.Model):
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["GRAPH_TYPES"].items())
   data = JSONField(blank=True, null=True)
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
 
   def __str__(self):   
@@ -961,6 +1183,12 @@ class SliderImage(models.Model):
   def __str__(self):             
     return self.title
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
   class Meta:
     verbose_name_plural = "Slider Images"
     db_table = "slider_images"
@@ -988,6 +1216,11 @@ class Slider(models.Model):
   def __str__(self):             
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
 class Menu(models.Model):
   """Represents items on the menu/navigation bar (top-most bar on the webpage)
@@ -1003,6 +1236,12 @@ class Menu(models.Model):
 
   def __str__(self):              
     return self.name
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return self.simple_json()
 
   class Meta:
     ordering = ('name',)
@@ -1030,6 +1269,11 @@ class PageSection(models.Model):
   def __str__(self):             
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
 class Page(models.Model):
   """
@@ -1055,12 +1299,17 @@ class Page(models.Model):
   sections = models.ManyToManyField(PageSection, blank=True)
   info = JSONField(blank=True, null=True)
 
-
   def __str__(self):             
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
   class Meta:
-    unique_together = ['name', 'community']
+    unique_together = [['name', 'community']]
 
 
 
@@ -1096,6 +1345,12 @@ class BillingStatement(models.Model):
   def __str__(self):
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
   class Meta:
     ordering = ('name',)
     db_table = 'billing_statements'
@@ -1118,9 +1373,16 @@ class Subscriber(models.Model):
   def __str__(self):             
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
+
   class Meta:
     db_table = 'subscribers'
-    unique_together = ['email', 'community']
+    unique_together = [['email', 'community']]
 
 
 class EmailCategory(models.Model):
@@ -1145,9 +1407,16 @@ class EmailCategory(models.Model):
   def __str__(self):             
     return self.name
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
+
+
   class Meta:
     db_table = 'email_categories'
-    unique_together = ['name', 'community']
+    unique_together = [['name', 'community']]
     verbose_name_plural = "Email Categories"
 
 
@@ -1169,6 +1438,12 @@ class SubscriberEmailPreferences(models.Model):
 
   def __str__(self):             
     return "%s - %s" % (self.subscriber, self.subscribed_to)
+
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return convert_to_json(self)
 
   class Meta:
     db_table = 'subscriber_email_preferences'

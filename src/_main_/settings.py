@@ -56,16 +56,50 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  
 ]
 
+# -------- CORS CONFIGURATION ---------------#
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 
+CORS_ORIGIN_WHITELIST = [
+    "https://massenergize.org",
+    "http://massenergize.org",
+    "https://energizewayland.org",
+    "https://energizewayland.org",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001"
+]
+CORS_ORIGIN_REGEX_WHITELIST = [
+    r"^https://\w+\.massenergize\.org$",
+    r"^https://\w+\.massenergize\.com$",
+    r"^https://\w+\.energizewayland\.org$",
+    r"^http://\w+\.massenergize\.org$",
+    r"^http://\w+\.massenergize\.com$",
+    r"^http://\w+\.energizewayland\.org$",
+]
+# -------- END CORS CONFIGURATION ---------------#
+
+CSRF_TRUSTED_ORIGINS = [
+    '.massenergize.org',
+    '.energizewayland.org'
+    'http://localhost:3001',
+    'http://localhost:3000'
+]
+
+
+#-------- AWS CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 AWS_ACCESS_KEY_ID = CONFIG_DATA['AWS_ACCESS_KEY_ID']
@@ -75,6 +109,7 @@ S3_USE_SIGV4 = True
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_REGION_NAME = 'us-east-2'
 AWS_DEFAULT_ACL  = None
+#--------END AWS CONFIGURATION ---------------------#
 
 
 ROOT_URLCONF = '_main_.urls'
@@ -98,11 +133,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = '_main_.wsgi.application'
 
+CSRF_COOKIE_NAME = 'csrfToken'
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'default': {
+    'prod': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': os.environ.get('DATABASE_NAME'),
         'USER': os.environ.get('DATABASE_USER'),
@@ -110,9 +148,13 @@ DATABASES = {
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT')
     },
-    'test': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3')
+    'default': {
+        'ENGINE': os.environ.get('DATABASE_ENGINE'),
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': ''
     },
 }
 

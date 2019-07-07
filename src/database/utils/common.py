@@ -3,16 +3,104 @@ This file contains utility functions that come in handy for processing and
 retrieving data
 """
 import json
+from django.core import serializers
+from django.forms.models import model_to_dict
+from collections.abc import Iterable
 
-def json_loader(file):
+
+def json_loader(file) -> dict:
   """
   Returns json data given a valid filepath.  Returns {} if error occurs
   """
   try:
-    with open(file) as myfile:
-      data = myfile.read()
+    with open(file) as my_file:
+      data = my_file.read()
     return json.loads(data)
   except Exception as e:
-    print(e) #TODO: remove this
-    return {}
+    return error_msg("The JSON file you specified does not exist")
 
+def error_msg(msg=None):
+  return {
+    "success": False,
+    "msg": msg if msg else 'The data you were looking for does not exist'
+  }
+
+
+def retrieve_object(model, args, full_json=False) -> dict:
+  """
+  Retrieves one object of a database model/table given the filter categories.
+
+  Arguments
+  -----------
+  model: models.Model
+    The database model/table to retrieve from
+  args: dict
+    A dictionary with the filter arguments/params
+  full_json: boolean
+    True if we want to retrieve the full json for each object or not
+  """
+  obj = model.objects.filter(**args).first()
+  if obj:
+    return obj.full_json() if full_json else obj.simple_json()
+  return error_msg('No object found matching the criteria given')
+
+
+
+def retrieve_all_objects(model, args, full_json=False) -> list:
+  """
+  Filters for all objects in a database model that fits a criterion
+
+  Arguments
+  -----------
+  model: models.Model
+    The database model/table to retrieve from
+  args: dict
+    A dictionary with the filter arguments/params
+  full_json: boolean
+    True if we want to retrieve the full json for each object or not
+  """
+  objects = model.objects.filter(**args)
+  return [
+    (i.full_json() if full_json else i.simple_json()) for i in objects
+  ]
+
+def convert_to_json(data, full_json=False):
+  """
+  Serializes an object into a json to be sent over-the-wire 
+  """
+  if not data:
+    return None
+
+  if isinstance(data, Iterable):
+    return  [
+      (i.full_json() if full_json else i.simple_json()) for i in data
+    ]
+  else:
+    objects = [data]
+    serialized_object = serializers.serialize("json", objects)
+    return json.loads(serialized_object)[0]["fields"]
+
+
+def get_json_if_not_none(obj) -> dict:
+  """
+  Takes an object and returns the json/serialized form of the obj if it is 
+  not None.
+  """
+  if obj:
+    return obj.simple_json()
+  return None
+
+
+def fetch_from_db(model, filter_args={}, 
+  prefetch_related_args=[], select_related_args=[]):
+  return (model.objects
+    .select_related(*select_related_args)
+    .filter(**filter_args)
+    .prefetch_related(*prefetch_related_args))
+
+def ensure_required_fields(required_fields, args):
+  errors = []
+  for f in required_fields:
+    if f not in args:
+      errors.append(f"You are missing a required field: {f}")
+  return errors
