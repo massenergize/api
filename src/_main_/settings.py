@@ -15,28 +15,33 @@ from .utils.utils import load_json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# ********  LOAD CONFIG DATA ***********#
 CONFIG_DATA = load_json(BASE_DIR + '/_main_/config2.json')
+os.environ.update(CONFIG_DATA)
+# ********  END LOAD CONFIG DATA ***********#
 
 
-os.environ["DATABASE_ENGINE"] = CONFIG_DATA["DATABASE_ENGINE"]
-os.environ["DATABASE_NAME"] =  CONFIG_DATA["DATABASE_NAME"]
-os.environ["DATABASE_USER"] = CONFIG_DATA["DATABASE_USER"]
-os.environ["DATABASE_PASSWORD"] = CONFIG_DATA["DATABASE_PASSWORD"]
-os.environ["DATABASE_HOST"] =  CONFIG_DATA["DATABASE_HOST"]
-os.environ["DATABASE_PORT"] = CONFIG_DATA["DATABASE_PORT"]
+# os.environ["DATABASE_ENGINE"] = CONFIG_DATA["DATABASE_ENGINE"]
+# os.environ["DATABASE_NAME"] =  CONFIG_DATA["DATABASE_NAME"]
+# os.environ["DATABASE_USER"] = CONFIG_DATA["DATABASE_USER"]
+# os.environ["DATABASE_PASSWORD"] = CONFIG_DATA["DATABASE_PASSWORD"]
+# os.environ["DATABASE_HOST"] =  CONFIG_DATA["DATABASE_HOST"]
+# os.environ["DATABASE_PORT"] = CONFIG_DATA["DATABASE_PORT"]
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*'] #TODO: restrict this when ready to deploy
-
-# Application definition
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'massenergize.org',
+    'massenergize.com',
+    'energizewayland.org',
+]
 
 INSTALLED_APPS = [
     'authentication',
@@ -99,16 +104,18 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000'
 ]
 
-
-#-------- AWS CONFIGURATION ---------------------#
+#-------- FILE STORAGE CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-AWS_ACCESS_KEY_ID = CONFIG_DATA['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = CONFIG_DATA['AWS_SECRET_ACCESS_KEY']
-AWS_STORAGE_BUCKET_NAME = CONFIG_DATA['AWS_STORAGE_BUCKET_NAME']
-S3_USE_SIGV4 = True
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_S3_REGION_NAME = 'us-east-2'
+#-------- FILE STORAGE CONFIGURATION ---------------------#
+
+
+#-------- AWS CONFIGURATION ---------------------#
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
 #--------END AWS CONFIGURATION ---------------------#
 
