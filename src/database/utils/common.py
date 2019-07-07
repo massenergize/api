@@ -98,3 +98,9 @@ def fetch_from_db(model, filter_args={},
     .filter(**filter_args)
     .prefetch_related(*prefetch_related_args))
 
+def ensure_required_fields(required_fields, args):
+  errors = []
+  for f in required_fields:
+    if f not in args:
+      errors.append(f"You are missing a required field: {f}")
+  return errors

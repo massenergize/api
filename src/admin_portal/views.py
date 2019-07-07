@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from database.CRUD import read as fetch
+from database.CRUD import create 
 from database.utils.json_response_wrapper import Json
 from database.models import *
 from database.utils.common import fetch_from_db
-
+import json
 
 def home(request):
   return render(request, 'index.html', {"page_name": "Super Admin page"})
@@ -31,7 +32,9 @@ def actions(request):
     actions = fetch.actions(filter_args)
     return Json(actions)
   elif request.method == 'POST':
-    return Json(None)
+    args = json.loads(request.body.decode('utf-8'))
+    response = create.new_action(args)
+    return Json(response["new_action"], response["errors"])
   return Json(None)
 
 
@@ -54,6 +57,7 @@ def events(request):
   elif request.method == 'POST':
     return Json(None)
   return Json(None)
+
 
 def test(request):
   return Json(None)
