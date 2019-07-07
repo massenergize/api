@@ -166,7 +166,7 @@ DATABASES = {
     },
 }
 
-FIREBASE_API = {
+FIREBASE_CREDENTIALS = {
     'apiKey': os.environ.get('FIREBASE_API_KEY'),
     'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN'),
     'projectId': os.environ.get('FIREBASE_PROJECT_ID'),
