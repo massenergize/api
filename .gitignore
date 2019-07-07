@@ -1,5 +1,4 @@
-src/_main_/config.json
-src/_main_/config2.json
+src/_main_/config/*json
 **/**/__pycache__
 **/__pycache__
 *.pyc

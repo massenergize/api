@@ -11,13 +11,15 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import firebase_admin
+from firebase_admin import credentials
 from .utils.utils import load_json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-CONFIG_DATA = load_json(BASE_DIR + '/_main_/config2.json')
+CONFIG_DATA = load_json(BASE_DIR + '/_main_/config/massenergizeProjectConfig.json')
 os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
@@ -141,7 +143,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = '_main_.wsgi.application'
 
-CSRF_COOKIE_NAME = 'csrfToken'
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
@@ -166,7 +167,9 @@ DATABASES = {
     },
 }
 
-FIREBASE_CREDENTIALS = {
+
+FIREBASE_CREDENTIALS = credentials.Certificate(BASE_DIR + '/_main_/config/massenergizeFirebaseServiceAccount.json')
+FIREBASE_CONFIG = {
     'apiKey': os.environ.get('FIREBASE_API_KEY'),
     'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN'),
     'projectId': os.environ.get('FIREBASE_PROJECT_ID'),
@@ -175,6 +178,7 @@ FIREBASE_CREDENTIALS = {
     "messagingSenderId": os.environ.get('FIREBASE_MESSAGE_SENDER_ID'),
     "appId": os.environ.get('FIREBASE_APP_ID'),
 }
+firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
