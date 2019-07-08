@@ -10,11 +10,10 @@ def login(request):
   # cookie = request.COOKIES.get('login')
   # auth.verify_session_cookie('cookie')
   # print(auth.list_users())
-  # decoded_token = auth.verify_id_token('id_token')
   # uid = decoded_token['uid']
   # print(uid)
   print(request.body.decode('utf-8'))
-  return Json(None)
+  return Json({"login": "successful"})
 
 def logout(request):
   return Json(None) 
