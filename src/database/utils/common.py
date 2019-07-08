@@ -70,8 +70,10 @@ def convert_to_json(data, full_json=False):
   """
   if not data:
     return None
-
-  if isinstance(data, Iterable):
+  
+  if isinstance(data, dict):
+    return data
+  elif isinstance(data, Iterable):
     return  [
       (i.full_json() if full_json else i.simple_json()) for i in data
     ]

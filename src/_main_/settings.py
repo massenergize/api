@@ -24,14 +24,6 @@ os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
 
-# os.environ["DATABASE_ENGINE"] = CONFIG_DATA["DATABASE_ENGINE"]
-# os.environ["DATABASE_NAME"] =  CONFIG_DATA["DATABASE_NAME"]
-# os.environ["DATABASE_USER"] = CONFIG_DATA["DATABASE_USER"]
-# os.environ["DATABASE_PASSWORD"] = CONFIG_DATA["DATABASE_PASSWORD"]
-# os.environ["DATABASE_HOST"] =  CONFIG_DATA["DATABASE_HOST"]
-# os.environ["DATABASE_PORT"] = CONFIG_DATA["DATABASE_PORT"]
-
-
 SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -149,7 +141,7 @@ SESSION_COOKIE_SECURE = False
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'test': {
+    'default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': os.environ.get('DATABASE_NAME'),
         'USER': os.environ.get('DATABASE_USER'),
@@ -157,7 +149,7 @@ DATABASES = {
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT')
     },
-    'default': {
+    'test': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': 'postgres',
         'USER': 'postgres',

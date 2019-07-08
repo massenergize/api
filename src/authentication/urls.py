@@ -8,4 +8,6 @@ urlpatterns = [
   path('signout/', logout),
   path('login/', login),
   path('signin/', login),
+  path('ping', ping),
+  path('csrf', csrf)
 ]
