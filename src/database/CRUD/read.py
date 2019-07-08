@@ -53,6 +53,13 @@ def community_portal_about_us_page_data():
   """
   return json_loader('./database/raw_data/portal/aboutUsData.json')
 
+def community_portal_stories_page_data():
+  """
+  This function pulls and returns all data required for the community 
+  portal stories page and returns a json of this information
+  """
+  return json_loader('./database/raw_data/portal/storiesPageData.json')
+
 
 def super_admin_sidebar():
   return Menu.objects.filter(name="SuperAdmin-MainSideBar").first()

@@ -1,0 +1,67 @@
+{
+    "welcomeImagesData": {
+        "images": [
+            "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
+            "https://images.unsplash.com/photo-1420593248178-d88870618ca0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "https://images.unsplash.com/photo-1496769336828-c522a3a7e33c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60"
+        ]
+    },
+    "stories": [
+        {
+            "title": "I've had an incredibly positive experience",
+            "description": "Gardenhub helped me transform my dated, patchwork front yard into inviting.",
+            "author": "Rosean Duckeat",
+            "location": "Boston, MA",
+            "actionId": "1"
+        },
+        {
+            "title": "I've had an incredibly positive experience",
+            "description": "Gardenhub helped me transform my dated, patchwork front yard into inviting.",
+            "author": "Rosean Duckeat",
+            "location": "Boston, MA",
+            "actionId": "1"
+        },
+        {
+            "title": "I've had an incredibly positive experience",
+            "description": "Gardenhub helped me transform my dated, patchwork front yard into inviting.",
+            "author": "Rosean Duckeat",
+            "location": "Boston, MA",
+            "actionId": "1"
+        },
+        {
+            "title": "I've had an incredibly positive experience",
+            "description": "Gardenhub helped me transform my dated, patchwork front yard into inviting.",
+            "author": "Rosean Duckeat",
+            "location": "Boston, MA",
+            "actionId": "1"
+        },
+        {
+            "title": "I've had an incredibly positive experience",
+            "description": "Gardenhub helped me transform my dated, patchwork front yard into inviting.",
+            "author": "Rosean Duckeat",
+            "location": "Boston, MA",
+            "actionId": "1"
+        },
+        {
+            "title": "I've had an incredibly positive experience",
+            "description": "Gardenhub helped me transform my dated, patchwork front yard into inviting.",
+            "author": "Rosean Duckeat",
+            "location": "Boston, MA",
+            "actionId": "1"
+        },
+        {
+            "title": "I've had an incredibly positive experience",
+            "description": "Gardenhub helped me transform my dated, patchwork front yard into inviting.",
+            "author": "Rosean Duckeat",
+            "location": "Boston, MA",
+            "actionId": "1"
+        },
+        {
+            "title": "I've had an incredibly positive experience",
+            "description": "Gardenhub helped me transform my dated, patchwork front yard into inviting.",
+            "author": "Rosean Duckeat",
+            "location": "Boston, MA",
+            "actionId": "1"
+        }
+    ]
+}
