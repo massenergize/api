@@ -27,6 +27,13 @@ def community_portal_user_data():
   """
   return json_loader('./database/raw_data/portal/user.json')
 
+def community_portal_impact_data():
+  """
+  This function pulls and returns all impact data
+  and returns a json of this information
+  """
+  return json_loader('./database/raw_data/portal/impactData.json')
+
 def community_portal_website_menu():
   """
   Returns the menu for communty portal 
@@ -44,7 +51,7 @@ def community_portal_events_page_data(community_id='default'):
   """
   Returns all the events for a community 
   """
-  return common.json_loader('./database/raw_data/portal/eventsPageData.json')
+  return json_loader('./database/raw_data/portal/eventsPageData.json')
 
 def community_portal_about_us_page_data():
   """

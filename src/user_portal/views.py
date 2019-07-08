@@ -6,10 +6,14 @@ from database.CRUD import read
 
 def home(request):
     pageData = read.community_portal_home_page_data()
+    eventsData = read.community_portal_events_page_data()
+    impactData = read.community_portal_impact_data()
     menuData = read.community_portal_website_menu()
     userData = read.community_portal_user_data()
     return JsonResponse({
         "pageData": pageData,
+        "eventsData": eventsData,
+        "impactData": impactData,
         "menuData": menuData,
         "userData": userData,
         })
