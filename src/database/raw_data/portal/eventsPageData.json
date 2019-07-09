@@ -1,37 +1,321 @@
 {
-    "eventsData": [
+    "events": [
         {
-            "title": "Save energy using Elephants to generate renewable power",
-            "time": "10am",
-            "day": 19,
-            "month": "July",
-            "year": "2019",
-            "link": "/",
-            "image": "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-            "organizer": "Kieran O'Day",
-            "address": "5 Fields Lane"
+            "id":1,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 1,
+            "month": 1,
+            "year": 2020,
+            "hour": 11,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
         },
         {
-            "title": "Bike ride around the park",
-            "time": "10am",
-            "day": 11,
-            "month": "Aug",
-            "year": "2019",
-            "link": "/",
-            "image": "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-            "organizer": "Kieran O'Day",
-            "address": "5 Fields Lane"
+            "id":2,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 1,
+            "month": 1,
+            "year": 2020,
+            "hour": 12,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
         },
         {
-            "title": "Heat Pump iron all day long to get strong",
-            "time": "10am",
-            "day": 20,
-            "month": "May",
-            "year": "2020",
-            "link": "/",
-            "image": "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-            "organizer": "Kieran O'Day",
-            "address": "5 Fields Lane"
+            "id":3,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 5,
+            "month": 7,
+            "year": 2019,
+            "hour": 11,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        },
+        {
+            "id":4,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "unique The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 2,
+            "month": 7,
+            "year": 2019,
+            "hour": 11,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        },
+        {
+            "id":5,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 1,
+            "month": 1,
+            "year": 2018,
+            "hour": 11,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        },
+        {
+            "id":6,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 4,
+            "month": 7,
+            "year": 2019,
+            "hour": 11,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        },
+        {
+            "id":8,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 29,
+            "month": 6,
+            "year": 2019,
+            "hour": 11,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        },
+        {
+            "id":9,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 29,
+            "month": 6,
+            "year": 2019,
+            "hour": 12,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        },
+        {
+            "id":10,
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 3,
+            "month": 7,
+            "year": 2019,
+            "hour": 12,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        },
+        {
+            "id":11, 
+            "title": "Sustainable Landscaping Fair",
+            "organizer": "Concord Sustainability and Energy Committee",
+            "description": "The fair is being organized by Concord’s Sustainability and Energy Committee, and will feature organizations and workshops on several topics, including: Reducing a landscapes CO2 footprint. Creating gardens with drought tolerant native plants. Providing a hospitable environment for pollinators. Protecting water resources. Save the date! For further information about participating, please contact Janet Miller (janetcmiller@mac.com)",
+            "moreinfo":"",
+            "details":["","",""],
+            "address": "Willard Elementary School, 185 Powder Mill Rd, Concord, MA 01742",
+            "image": "https://images.unsplash.com/photo-1445264718234-a623be589d37?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+            "day": 3,
+            "month": 7,
+            "year": 2019,
+            "hour": 13,
+            "minute": 0,
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
+        }
+    ],
+    "sidebar": [
+        {
+            "collection": "categories",
+            "tags": [
+                {
+                    "id": 1,
+                    "name": "Home Energy",
+                    "collection": "categories"
+                },
+                {
+                    "id": 2,
+                    "name": "Clean Transportation",
+                    "collection": "categories"
+                },
+                {
+                    "id": 3,
+                    "name": "Lighting",
+                    "collection": "categories"
+                },
+                {
+                    "id": 4,
+                    "name": "Solar",
+                    "collection": "categories"
+                },
+                {
+                    "id": 5,
+                    "name": "Food",
+                    "collection": "categories"
+                },
+                {
+                    "id": 6,
+                    "name": "Water",
+                    "collection": "categories"
+                },
+                {
+                    "id": 7,
+                    "name": "Trash and Recycling",
+                    "collection": "categories"
+                },
+                {
+                    "id": 8,
+                    "name": "Activism and Education",
+                    "collection": "categories"
+                }
+            ]
         }
     ]
 }
