@@ -8,9 +8,20 @@ the *user portal api*
 ```
 /user/get/page?page_id={insertPageId}&page_name={insertPageName}
 ```
-This path requests a post request with one of the following
+This path requests a GET request with one of the following
 * page_id
 * page_name
+
+###### Get User TODO actions
+```
+/user/get/user/todo_actions
+```
+
+###### Get User's Completed Actions
+```
+/user/get/user/completed_actions
+```
+
 
 ###### Get All Events
 ```
@@ -104,6 +115,7 @@ This path requests a post request with the following information
 * default_household: JSON (name, address, community)
 * is_service_provider: bool
 
+
 ###### Creating New Goals
 ```
 /user/create/goal
@@ -138,11 +150,10 @@ This path requests a post request with the following information
 
 ###### Adding Team Members
 ```
-/user/subscribe
+/user/add/team_members
 ```
-This path requests a post request with one of the following fieldss
-* email: str
-* emails: list of emails as strings
+This path requests a post request with one of the following fields
+* emails: [str] list of emails as strings
 
 
 ###### Adding Actions to Cart
@@ -153,7 +164,7 @@ This path requests a post request with the following information
 * action: int
 * real_estate_unit: int
 * community_domain: str
-* status: str  (options are TODO, DONE, SAVE_FOR_LATER)
+* status: str  (options are TODO, DONE)
 
 
 ###### User Subscribing to MailList
@@ -186,3 +197,27 @@ This path requests a post request with the following information
 * status: str (options are: INTERESTED, RSVP, SAVE_FOR_LATER)
 
 
+###### UPDATE UserAction
+```
+/user/update/user_action
+```
+This path requests a POST request with the following information.
+For instance marking an item in the cart from todo to done uses this one
+* user_action_id: int
+* new_status: str
+
+
+###### UPDATE Profile
+```
+/user/update/profile
+```
+This path requests a POST request with the following information
+* full_name: str
+* email: str
+
+
+###### DELETE Requests
+```
+/user/delete/user_action?id={user_action_id}
+```
+This path requests a DELETE request with the following information
