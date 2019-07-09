@@ -1,6 +1,14 @@
 # User Portal API
 This is the official document that defines the GET, POST requests for 
 the *user portal api*
+> Remember to precede every request with either one of following API host urls
+```
+API_HOST 
+https://api.massenergize.org/
+https://api.massenergize.com/
+https://apis.massenergize.org/
+https://apis.massenergize.com/
+```
 
 ## GET Requests
 
@@ -29,7 +37,7 @@ user/get/events/all?community_domain={community_domain}
 user/get/events?community_domain={community_domain}
 ```
 
-###### Get  One Event
+###### Get One Event
 ```
 user/get/event?id={event_id}
 ```

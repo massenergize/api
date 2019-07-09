@@ -75,6 +75,7 @@ def stories(request):
 
 ####### GET REQUESTS #####################
 def create_new_user(request):
+    
     return Json(None)
 
 def get_page(request):
