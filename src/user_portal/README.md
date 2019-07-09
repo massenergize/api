@@ -10,8 +10,8 @@ This path requests a post request with the following information
 * full_name: str
 * email: str
 * firebase_user_info: JSON
-* preferred_name: : str
-* community: int
+* preferred_name: str
+* community_domain: str
 
 ###### Creating New Goals
 ```
@@ -20,7 +20,7 @@ This path requests a post request with the following information
 This path requests a post request with the following information
 * name: str
 * description: str
-* community: int
+* community_domain: str
 * real_estate_unit: int
 * team: int
 
@@ -32,7 +32,7 @@ This path requests a post request with the following information
 This path requests a post request with the following information
 * unit_type: str (options: RESIDENTIAL, COMMERCIAL)
 * location: JSON
-* community: int
+* community_domain: str
 
 ###### Creating Teams
 ```
@@ -60,7 +60,7 @@ This path requests a post request with one of the following fieldss
 This path requests a post request with the following information
 * action: int
 * real_estate_unit: int
-* community: int
+* community_domain: str
 * status: str  (options are TODO, DONE, SAVE_FOR_LATER)
 
 
@@ -90,7 +90,7 @@ This path requests a post request with the following information
 ```
 This path requests a post request with the following information
 * event: int
-* community: int
+* community_domain: str
 * status: str (options are: INTERESTED, RSVP, SAVE_FOR_LATER)
 
 
