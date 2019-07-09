@@ -14,6 +14,14 @@
                 {
                     "link": "#",
                     "name": "Placeholder"
+                },
+                {
+                    "link": "/stories",
+                    "name": "Stories"
+                },
+                {
+                    "link": "/teams",
+                    "name": "Teams"
                 }
             ]
         },
@@ -23,10 +31,6 @@
                 {
                     "link": "/aboutus",
                     "name": "About Us"
-                },
-                {
-                    "link": "/teams",
-                    "name": "Teams"
                 },
                 {
                     "link": "/impact",

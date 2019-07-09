@@ -8,8 +8,15 @@ def home(request):
     pageData = fetch.community_portal_home_page_data()
     menuData = fetch.community_portal_website_menu()
     userData = fetch.community_portal_user_data()
+    pageData = read.community_portal_home_page_data()
+    eventsData = read.community_portal_events_page_data()
+    impactData = read.community_portal_impact_data()
+    menuData = read.community_portal_website_menu()
+    userData = read.community_portal_user_data()
     return JsonResponse({
         "pageData": pageData,
+        "eventsData": eventsData,
+        "impactData": impactData,
         "menuData": menuData,
         "userData": userData,
         })
@@ -38,10 +45,13 @@ def aboutUs(request):
     menuData = fetch.community_portal_website_menu()
     userData = fetch.community_portal_user_data()
     aboutUsData = fetch.community_portal_about_us_page_data()
+    menuData = read.community_portal_website_menu()
+    userData = read.community_portal_user_data()
+    pageData = read.community_portal_about_us_page_data()
     return JsonResponse({
         "menuData": menuData,
         "userData": userData,
-        "aboutUsData": aboutUsData
+        "pageData": aboutUsData
     })
 
 def events(request):
@@ -57,3 +67,14 @@ def events(request):
 
 def create_user(request):
     pass
+
+def stories(request):
+    pageData = read.community_portal_stories_page_data()
+    menuData = read.community_portal_website_menu()
+    userData = read.community_portal_user_data()
+    return JsonResponse({
+        "pageData": pageData, 
+        "menuData": menuData,
+        "userData": userData,
+        }
+    )
