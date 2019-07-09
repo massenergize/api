@@ -1,6 +1,92 @@
 # User Portal API
+This is the official document that defines the GET, POST requests for 
+the *user portal api*
 
-### POST Requests
+## GET Requests
+
+###### Get Page Information
+```
+/user/get/page?page_id={insertPageId}&page_name={insertPageName}
+```
+This path requests a post request with one of the following
+* page_id
+* page_name
+
+###### Get All Events
+```
+/user/get/events/all
+```
+
+###### Get  One Event
+```
+/user/get/event?id={event_id}
+```
+
+
+###### Get All Actions
+```
+/user/get/actions/all
+```
+
+###### Get All Actions
+```
+/user/get/action?id={action_id}
+```
+
+###### Get My Profile
+```
+/user/get/profile
+```
+
+###### Get My Households
+```
+/user/get/households
+```
+
+###### Get One Household
+```
+/user/get/household?id={household_id}
+```
+
+###### Get All Teams
+```
+/user/get/teams/all?community_id={community_id}
+```
+
+
+###### Get One Team
+```
+/user/get/team?id={team_id}
+```
+
+
+###### Get All Communities
+```
+/user/get/communities/all
+/user/get/communities/all
+```
+
+###### Get One Community
+```
+/user/get/community?domain={community_domain}
+```
+
+###### Get All Graphs
+```
+/user/get/graphs/all
+/user/get/graphs
+```
+
+###### Get One Graph
+```
+/user/get/graph?id={graph_id}
+```
+
+
+
+## POST Requests
+Here are the approved routes to the user portal API
+
 
 ###### Creating New User Accounts
 ```
@@ -11,7 +97,9 @@ This path requests a post request with the following information
 * email: str
 * firebase_user_info: JSON
 * preferred_name: str
-* community_domain: str
+* communities: [str] a list of domain names
+* default_household: JSON (name, address, community)
+* is_service_provider: bool
 
 ###### Creating New Goals
 ```
