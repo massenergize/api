@@ -23,3 +23,29 @@ auth/login
 ```
 auth/csrf
 ```
+When making a post request to the backend, you need to call this route first
+Here is an example:
+```javascript
+fetch(`${API_HOST}/auth/csrf`, {
+      method: 'GET',
+      credentials: 'include',
+    }).then(response => response.json()).then(jsonResponse => {
+      const { csrfToken } = jsonResponse.data;
+      return fetch(`${API_HOST}/user/myactualdestinationurl`, {
+        credentials: 'include',
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        },
+        body: dataToSend
+      })
+        .then(response => {
+          console.log(response);
+          return response.json();
+        }).then(data => {
+          console.log(data);
+        });
+    });
+```
