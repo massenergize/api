@@ -15,6 +15,7 @@ This path requests a post request with one of the following
 ###### Get All Events
 ```
 /user/get/events/all
+/user/get/events
 ```
 
 ###### Get  One Event
@@ -26,6 +27,7 @@ This path requests a post request with one of the following
 ###### Get All Actions
 ```
 /user/get/actions/all
+/user/get/actions
 ```
 
 ###### Get All Actions
@@ -40,6 +42,7 @@ This path requests a post request with one of the following
 
 ###### Get My Households
 ```
+/user/get/households/all
 /user/get/households
 ```
 
@@ -63,7 +66,7 @@ This path requests a post request with one of the following
 ###### Get All Communities
 ```
 /user/get/communities/all
-/user/get/communities/all
+/user/get/communities
 ```
 
 ###### Get One Community
@@ -116,6 +119,7 @@ This path requests a post request with the following information
 ###### Adding Real Estate Units to Account
 ```
 /user/create/real_estate_unit
+/user/create/household
 ```
 This path requests a post request with the following information
 * unit_type: str (options: RESIDENTIAL, COMMERCIAL)
@@ -124,7 +128,7 @@ This path requests a post request with the following information
 
 ###### Creating Teams
 ```
-/user/create/real_estate_unit
+/user/create/team
 ```
 This path requests a post request with the following information
 * name: str
