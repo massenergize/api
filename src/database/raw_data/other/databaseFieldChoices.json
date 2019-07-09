@@ -14,6 +14,12 @@
     "UNKNOWN": "Other"
   },
 
+  "USER_ACTION_STATUS": {
+    "TODO":"TODO",
+    "DONE": "DONE",
+    "SAVE FOR LATER": "SAVE_FOR_LATER"
+  },
+
   "GOAL_STATUS" : {
     "IN_PROGRESS": "In Progress",
     "NOT_STARTED": "Not Started",

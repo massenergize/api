@@ -11,34 +11,36 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import firebase_admin
+from firebase_admin import credentials
 from .utils.utils import load_json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_DATA = load_json(BASE_DIR + '/_main_/config2.json')
+
+# ********  LOAD CONFIG DATA ***********#
+CONFIG_DATA = load_json(BASE_DIR + '/_main_/config/massenergizeProjectConfig.json')
+os.environ.update(CONFIG_DATA)
+# ********  END LOAD CONFIG DATA ***********#
 
 
-os.environ["DATABASE_ENGINE"] = CONFIG_DATA["DATABASE_ENGINE"]
-os.environ["DATABASE_NAME"] =  CONFIG_DATA["DATABASE_NAME"]
-os.environ["DATABASE_USER"] = CONFIG_DATA["DATABASE_USER"]
-os.environ["DATABASE_PASSWORD"] = CONFIG_DATA["DATABASE_PASSWORD"]
-os.environ["DATABASE_HOST"] =  CONFIG_DATA["DATABASE_HOST"]
-os.environ["DATABASE_PORT"] = CONFIG_DATA["DATABASE_PORT"]
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*'] #TODO: restrict this when ready to deploy
-
-# Application definition
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'api.massenergize.org',
+    'apis.massenergize.org',
+    'api.massenergize.com',
+    'apis.massenergize.com',
+    'energizewayland.org',
+]
 
 INSTALLED_APPS = [
+    'authentication',
     'admin_portal',
     'carbon_calculator',
     'database',
@@ -98,16 +100,18 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000'
 ]
 
-
-#-------- AWS CONFIGURATION ---------------------#
+#-------- FILE STORAGE CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-AWS_ACCESS_KEY_ID = CONFIG_DATA['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = CONFIG_DATA['AWS_SECRET_ACCESS_KEY']
-AWS_STORAGE_BUCKET_NAME = CONFIG_DATA['AWS_STORAGE_BUCKET_NAME']
-S3_USE_SIGV4 = True
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_S3_REGION_NAME = 'us-east-2'
+#-------- FILE STORAGE CONFIGURATION ---------------------#
+
+
+#-------- AWS CONFIGURATION ---------------------#
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
 #--------END AWS CONFIGURATION ---------------------#
 
@@ -133,14 +137,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = '_main_.wsgi.application'
 
-CSRF_COOKIE_NAME = 'csrfToken'
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'default': {
+    'production': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': os.environ.get('DATABASE_NAME'),
         'USER': os.environ.get('DATABASE_USER'),
@@ -148,7 +151,7 @@ DATABASES = {
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT')
     },
-    'test': {
+    'default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': 'postgres',
         'USER': 'postgres',
@@ -158,6 +161,18 @@ DATABASES = {
     },
 }
 
+
+FIREBASE_CREDENTIALS = credentials.Certificate(BASE_DIR + '/_main_/config/massenergizeFirebaseServiceAccount.json')
+FIREBASE_CONFIG = {
+    'apiKey': os.environ.get('FIREBASE_API_KEY'),
+    'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN'),
+    'projectId': os.environ.get('FIREBASE_PROJECT_ID'),
+    "databaseURL": os.environ.get('FIREBASE_DATABASE_URL'),
+    "storageBucket": os.environ.get('FIREBASE_STORAGE_URL'),
+    "messagingSenderId": os.environ.get('FIREBASE_MESSAGE_SENDER_ID'),
+    "appId": os.environ.get('FIREBASE_APP_ID'),
+}
+firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators

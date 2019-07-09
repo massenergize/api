@@ -5,7 +5,7 @@ erros to the caller of a particular route
 
 """
 from django.http import JsonResponse
-from database.utils.common import convert_to_json
+from .common import convert_to_json
 
 class Json(JsonResponse):
   def __init__(self, raw_data=None, errors=None):

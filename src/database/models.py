@@ -1006,7 +1006,9 @@ class UserActionRel(models.Model):
   vendor:
     which vendor they choose to contact/connect with 
   testimonial:
-    what they had to say about this action.  
+    what they had to say about this action.
+  status: 
+    Whether they marked it as todo, done or save for later  
   """
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
   real_estate_unit = models.ForeignKey(RealEstateUnit, on_delete=models.CASCADE)
@@ -1015,6 +1017,9 @@ class UserActionRel(models.Model):
     null=True, blank=True)
   testimonial = models.ForeignKey(Testimonial, on_delete=models.SET_NULL, 
     null=True, blank=True)
+  status  = models.CharField(max_length=SHORT_STR_LEN, 
+    choices = CHOICES["USER_ACTION_STATUS"].items(), 
+    db_index=True, default='TODO')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
