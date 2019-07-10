@@ -835,6 +835,7 @@ class Event(models.Model):
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   archive =  models.BooleanField(default=False)
   is_global = models.BooleanField(default=False)
+  # external_link = models.CharField(max_length = SHORT_STR_LEN, blank=True)
 
 
   def __str__(self):             

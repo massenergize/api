@@ -4,6 +4,7 @@ import json
 from database.CRUD import create, read as fetch
 from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 def home(request):
     pageData = fetch.community_portal_home_page_data()
@@ -75,7 +76,7 @@ def stories(request):
     )
 
 ####### GET REQUESTS #####################
-@csrf_exempt
+# @csrf_exempt
 def create_new_user(request):
     print(request.body.decode('utf-8'))
     return Json(None)
