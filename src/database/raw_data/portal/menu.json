@@ -8,7 +8,7 @@
             "name": "Actions",
             "children": [
                 {
-                    "link": "/all-actions",
+                    "link": "actions",
                     "name": "All Actions"
                 },
                 {
@@ -16,29 +16,25 @@
                     "name": "Placeholder"
                 },
                 {
-                    "link": "/stories",
-                    "name": "Stories"
+                    "link": "testimonials",
+                    "name": "Testimonials"
                 },
                 {
-                    "link": "/teams",
+                    "link": "teams",
                     "name": "Teams"
                 }
             ]
         },
         {
-            "name": "Our Company",
+            "name": "About Us",
             "children": [
                 {
                     "link": "/aboutus",
-                    "name": "About Us"
+                    "name": "Our Story"
                 },
                 {
                     "link": "/impact",
                     "name": "Impact"
-                },
-                {
-                    "link": "/subscribe",
-                    "name": "Subscribe Newsletter"
                 },
                 {
                     "link": "/donate",
@@ -49,22 +45,15 @@
         {
             "link": "/events",
             "name": "Events"
-        },
-        {
-            "link": "/register",
-            "name": "Register"
         }
     ],
     "navBarSticky": false,
     "footerData": {
         "footerInfo": {
-            "text": "",
-            "address": "13 Rice Spring Lane",
-            "city": "Wayland",
-            "state": "MA",
-            "zipcode": "01778",
             "phone": "617-617-6176",
-            "email": "info@massenergize.com"
+            "email": "info@massenergize.com",
+            "contactPerson": "Ellen Tohn",
+            "contactPersonLink": "#"
         },
         "footerLinks": {
             "title": "Quick Links",
@@ -82,10 +71,6 @@
                     "name": "Service Providers"
                 },
                 {
-                    "link": "events",
-                    "name": "Events"
-                },
-                {
                     "link": "teams",
                     "name": "Teams"
                 },
@@ -94,49 +79,22 @@
                     "name": "Impact"
                 },
                 {
+                    "link": "events",
+                    "name": "Events"
+                },
+                {
+                    "link": "students",
+                    "name": "For Students"
+                },
+                {
                     "link": "aboutus",
                     "name": "About Us"
                 },
                 {
-                    "link": "donate",
-                    "name": "Donate"
+                    "link": "policies",
+                    "name": "Policies"
                 }
             ]
-        },
-        "events": [
-            {
-                "title": "Save energy using Elephants to generate renewable power",
-                "time": "10am",
-                "day": 19,
-                "month": "July",
-                "year": "2019",
-                "link": "/",
-                "image": "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-                "organizer": "Kieran O'Day",
-                "address": "5 Fields Lane"
-            },
-            {
-                "title": "Bike ride around the park",
-                "time": "10am",
-                "day": 11,
-                "month": "Aug",
-                "year": "2019",
-                "link": "/",
-                "image": "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-                "organizer": "Kieran O'Day",
-                "address": "5 Fields Lane"
-            },
-            {
-                "title": "Heat Pump iron all day long to get strong",
-                "time": "10am",
-                "day": 20,
-                "month": "May",
-                "year": "2020",
-                "link": "/",
-                "image": "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-                "organizer": "Kieran O'Day",
-                "address": "5 Fields Lane"
-            }
-        ]
+        }
     }
 }
