@@ -1,0 +1,15 @@
+{
+  "SECRET_KEY":"2i4p84adrhh-fcrtm63fbr+ehqmv3zy^-=w%10k!p3_drpv-)d",
+  "AWS_ACCESS_KEY_ID":"AKIAS6NKUZRIOCQTOUMX",
+  "AWS_SECRET_ACCESS_KEY":"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",
+  "AWS_STORAGE_BUCKET_NAME":"massenergize-files",
+  "DATABASE_ENGINE":"django.db.backends.postgresql",
+  "DATABASE_NAME":"massenergize_db",
+  "DATABASE_USER":"postgres",
+  "DATABASE_PASSWORD":"6n4mcHgdhMoEYvHe1Z9x",
+  "DATABASE_HOST":"massenergize-dev.cohbutqzbivu.us-east-2.rds.amazonaws.com",
+  "DATABASE_PORT":"5432",
+  "EMAIL":"massachusettsenergize@gmail.com",
+  "EMAIL_PASSWORD":"321ezigrenessam",
+  "EMAIL_PORT":"527"
+}

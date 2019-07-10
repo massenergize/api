@@ -46,8 +46,7 @@ def aboutUs(request):
     return JsonResponse({
         "menuData": menuData,
         "userData": userData,
-        "pageData": aboutUsData,
-        "aboutUsData": aboutUsData
+        "pageData": pageData
     })
 
 def events(request):
