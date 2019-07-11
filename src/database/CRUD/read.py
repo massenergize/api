@@ -120,11 +120,12 @@ def communities(args):
 
 def portal_page(args):
   """
+  This retrieves a page from the database for the community portal
   """
   page = None
   if "id" in args:
     page = fetch_one_from_db(Page, {"id": args["id"]})
   elif "name" in args:
-    page = fetch_one_from_db(Page, {"name": args["id"]})
+    page = fetch_one_from_db(Page, {"name": args["name"]})
   return page
 
