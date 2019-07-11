@@ -14,11 +14,11 @@ https://apis.massenergize.com/
 
 ###### Get Page Information
 ```
-user/get/page?page_id={insertPageId}&page_name={insertPageName}
+user/get/page?id={insertPageId}&name={insertPageName}
 ```
 This path requests a GET request with one of the following
-* page_id
-* page_name
+* id
+* name
 
 ###### Get User TODO actions
 ```
