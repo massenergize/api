@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import json
 from database.CRUD import create, read as fetch
-
+from database.utils.json_response_wrapper import Json
 
 def home(request):
     pageData = fetch.community_portal_home_page_data()
@@ -72,5 +72,101 @@ def stories(request):
         }
     )
 
-def create_user(request):
-    pass
+####### GET REQUESTS #####################
+def create_new_user(request):
+    return Json(None)
+
+def get_page(request):
+    return Json(None)
+
+def get_user_todo_actions(request):
+    return Json(None)
+
+def get_user_completed_actions(request):
+    return Json(None)
+
+def get_all_community_events(request):
+    return Json(None)
+
+def get_one_event(request):
+    return Json(None)
+
+def get_community_actions(request):
+    return Json(None)
+
+def get_one_action(request):
+    return Json(None)
+
+def get_my_profile(request):
+    return Json(None)
+
+def get_user_households(request):
+    return Json(None)
+
+def get_one_household(request):
+    return Json(None)
+
+def get_community_teams(request):
+    return Json(None)
+
+def get_one_team(request):
+    return Json(None)
+
+def get_all_communities(request):
+    return Json(None)
+
+def get_one_community(request):
+    return Json(None)
+
+def get_community_graphs(request):
+    return Json(None)
+
+def get_one_community_graph(request):
+    return Json(None)
+####### END OF GET REQUESTS #####################
+
+
+
+####### POST REQUESTS #####################
+def create_user_account(request):
+    return Json(None)
+
+def create_goal(request):
+    return Json(None)
+
+def create_household(request):
+    return Json(None)
+
+def create_team(request):
+    return Json(None)
+
+def add_team_members(request):
+    return Json(None)
+
+def create_user_action(request):
+    return Json(None)
+
+def create_subscriber(request):
+    return Json(None)
+
+def add_testimonial(request):
+    return Json(None)
+
+def register_user_for_event(request):
+    return Json(None)
+
+def update_user_action(request):
+    return Json(None)
+
+def update_profile(request):
+    return Json(None)
+####### END OF POST REQUESTS #####################
+
+
+####### DELETE REQUESTS #####################
+def delete_user_action(request):
+    return Json(None)
+
+def delete_user_account(request):
+    return Json(None)
+####### END OF DELETE REQUESTS #####################
