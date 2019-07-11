@@ -92,13 +92,6 @@ def get_json_if_not_none(obj) -> dict:
   return None
 
 
-def fetch_from_db(model, filter_args={}, 
-  prefetch_related_args=[], select_related_args=[]):
-  return (model.objects
-    .select_related(*select_related_args)
-    .filter(**filter_args)
-    .prefetch_related(*prefetch_related_args))
-
 def ensure_required_fields(required_fields, args):
   errors = []
   for f in required_fields:
