@@ -836,6 +836,7 @@ class Event(models.Model):
   archive =  models.BooleanField(default=False)
   is_global = models.BooleanField(default=False)
   # external_link = models.CharField(max_length = SHORT_STR_LEN, blank=True)
+  # is_external_event = models.BooleanField(default=False)
 
 
   def __str__(self):             
