@@ -4,6 +4,8 @@ import json
 from database.CRUD import create, read as fetch
 from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
+
 
 def home(request):
     pageData = fetch.community_portal_home_page_data()
@@ -80,10 +82,12 @@ def create_new_user(request):
     print(request.body.decode('utf-8'))
     return Json(None)
 
-
+@require_GET
 def get_page(request):
-    print(request.META)
-    return Json(None)
+    #retrieving the arguments from the request
+    filter_args = request.GET 
+    page = fetch.portal_page(filter_args)
+    return Json(page)
 
 def get_user_todo_actions(request):
     return Json(None)

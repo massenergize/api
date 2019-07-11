@@ -13,6 +13,14 @@ def fetch_from_db(model, filter_args={},
     .filter(**filter_args)
     .prefetch_related(*prefetch_related_args))
 
+def fetch_one_from_db(model, filter_args={}, 
+  prefetch_related_args=[], select_related_args=[]):
+  data = fetch_from_db(model, filter_args, 
+    prefetch_related_args, select_related_args)
+  if data:
+    return data.first()
+  return None 
+
 
 def community_portal_home_page_data():
   """
@@ -109,3 +117,14 @@ def communities(args):
     filter_args["community"] = args["community_id"]
   communities =  fetch_from_db(Community, filter_args)
   return communities
+
+def portal_page(args):
+  """
+  """
+  page = None
+  if "id" in args:
+    page = fetch_one_from_db(Page, {"id": args["id"]})
+  elif "name" in args:
+    page = fetch_one_from_db(Page, {"name": args["id"]})
+  return page
+
