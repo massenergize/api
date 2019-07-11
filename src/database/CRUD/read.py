@@ -153,7 +153,7 @@ def portal_page3(args):
       return None
   elif "name" in args:
     try:
-      return Page.objects.get(id=args["id"])
+      return Page.objects.get(name=args["name"])
     except Exception as e:
       return None
   return page
