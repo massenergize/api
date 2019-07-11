@@ -21,7 +21,6 @@ def fetch_one_from_db(model, filter_args={},
     return data.first()
   return None 
 
-
 def community_portal_home_page_data():
   """
   This function pulls and returns all data required for the community 
@@ -47,7 +46,6 @@ def community_portal_website_menu():
   Returns the menu for communty portal 
   """
   return json_loader('./database/raw_data/portal/menu.json')
-
 
 def community_portal_actions_page_data(community_id='default'):
   """
@@ -85,38 +83,63 @@ def super_admin_navbar():
 def get_states_in_the_US():
   return json_loader('./database/raw_data/other/states.json')
 
-
+#get by either community id or domain or is_global
 def actions(args):
   filter_args = {}
   if "community_id" in args:
     filter_args["community"] = args["community_id"]
-  if "action_id" in args:
-    filter_args["id"] = args["action_id"]
+  elif "community_domain" in args: 
+    filter_args["community"] = args["community_domain"]
   if "is_global" in args:
     filter_args["is_global"] = args["is_global"]
-  actions =  fetch_from_db(Action, filter_args, ['tags'], ['community'])
+  actions = fetch_from_db(Action, filter_args, ['tags'], ['community'])
   return actions
 
 
 def events(args):
   filter_args = {}
+  #we need to just decide whether we are going to call it id or domain in the url
   if "community_id" in args:
     filter_args["community"] = args["community_id"]
-  if "event_id" in args:
-    filter_args["id"] = args["action_id"]
+  elif "community_domain" in args: 
+    filter_args["community"] = args["community_domain"]
   if "is_global" in args:
     filter_args["is_global"] = args["is_global"]
   events =  fetch_from_db(Event, filter_args, ['tags'], ['community'])
   return events
 
+def event(args):
+  filter_args={}
+  # I don't think we need a community id for this one, unless event ids are unique in each community but not globally unique
+  # if "community_id" in args:
+  #   filter_args["community"] = args["community_id"]
+  # elif "community_domain" in args:
+  #   filter_args["community"] = args["community_domain"]
+  if "id" in args:
+    filter_args["id"] = args["event_id"]
+  event =  fetch_one_from_db(Event, filter_args, ['tags'], ['community'])
+  return event;
+  
 
+# def communities(args):
+#   filter_args = {}
+#   if "community_id" in args: #shouldnt check id if we want all of the communities
+#     filter_args["community"] = args["community_id"]
+#   communities =  fetch_from_db(Community, filter_args)
+#   return communities
 
-def communities(args):
+ #i think we dont need any args for this one
+def communities():
+  return fetch_from_db(Community)
+
+#this one needs to be put into the readme file
+def community(args):
   filter_args = {}
-  if "community_id" in args:
-    filter_args["community"] = args["community_id"]
-  communities =  fetch_from_db(Community, filter_args)
-  return communities
+  if("id" in args):
+    filter_args["subdomain"] = args["id"]
+  return fetch_one_from_db(filter_args)
+
+return fetch_from_argdb(Community)
 
 def portal_page(args):
   """

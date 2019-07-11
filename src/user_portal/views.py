@@ -91,15 +91,18 @@ def get_page(request):
 
 def get_user_todo_actions(request):
     return Json(None)
-
 def get_user_completed_actions(request):
     return Json(None)
 
 def get_all_community_events(request):
-    return Json(None)
+    filter_args = request.GET
+    events = fetch.events(filter_args)
+    return Json(events)
 
 def get_one_event(request):
-    return Json(None)
+    filter_args = request.GET
+    event = fetch.event(filter_args)
+    return Json(event)
 
 def get_community_actions(request):
     return Json(None)
