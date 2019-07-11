@@ -4,7 +4,6 @@ from database.CRUD import read as fetch
 from database.CRUD import create 
 from database.utils.json_response_wrapper import Json
 from database.models import *
-from database.utils.common import fetch_from_db
 import json
 
 def home(request):

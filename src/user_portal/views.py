@@ -86,7 +86,7 @@ def create_new_user(request):
 def get_page(request):
     #retrieving the arguments from the request
     filter_args = request.GET 
-    page = fetch.portal_page(filter_args)
+    page = fetch.portal_page2(filter_args)
     return Json(page)
 
 def get_user_todo_actions(request):

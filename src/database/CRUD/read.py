@@ -129,3 +129,31 @@ def portal_page(args):
     page = fetch_one_from_db(Page, {"name": args["name"]})
   return page
 
+def portal_page2(args):
+  """
+  This also retrieves a page by name or id
+  """
+  if "id" in args:
+    return Page.objects.filter(id=args["id"]).first()
+  elif "name" in args:
+    return Page.objects.filter(name=args["name"]).first()
+  return page
+
+
+def portal_page3(args):
+  """
+  This also retrieves a page by name or id.
+
+  Warning.  only use this method if you know the page id or name exists
+  """
+  if "id" in args:
+    try:
+      return Page.objects.get(id=args["id"])
+    except Exception as e:
+      return None
+  elif "name" in args:
+    try:
+      return Page.objects.get(id=args["id"])
+    except Exception as e:
+      return None
+  return page
