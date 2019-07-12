@@ -86,13 +86,18 @@ def create_new_user(request):
 def get_page(request):
     #retrieving the arguments from the request
     filter_args = request.GET 
-    page = fetch.portal_page2(filter_args)
+    page = fetch.portal_page(filter_args)
     return Json(page)
 
 def get_user_todo_actions(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.todo_actions(filter_args)
+    return Json(page)
+
 def get_user_completed_actions(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.completed_actions(filter_args)
+    return Json(page)
 
 def get_all_community_events(request):
     filter_args = request.GET
@@ -105,37 +110,58 @@ def get_one_event(request):
     return Json(event)
 
 def get_community_actions(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.actions(filter_args)
+    return Json(page)
 
 def get_one_action(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.action(filter_args)
+    return Json(page)
 
 def get_my_profile(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.user_profile(filter_args)
+    return Json(page)
 
 def get_user_households(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.user_households(filter_args)
+    return Json(page)
 
 def get_one_household(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.household(filter_args)
+    return Json(page)
 
 def get_community_teams(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.teams(filter_args)
+    return Json(page)
 
 def get_one_team(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.team(filter_args)
+    return Json(page)
 
 def get_all_communities(request):
-    return Json(None)
+    page = fetch.communities()
+    return Json(page)
 
 def get_one_community(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.community(filter_args)
+    return Json(page)
 
 def get_community_graphs(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.graphs(filter_args)
+    return Json(page)
 
 def get_one_community_graph(request):
-    return Json(None)
+    filter_args = request.GET 
+    page = fetch.graph(filter_args)
+    return Json(page)
 ####### END OF GET REQUESTS #####################
 
 
