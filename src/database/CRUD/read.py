@@ -171,13 +171,14 @@ def user_profile(args):
     filter_args["email"] = args["email"]
   elif "id" in args:
     filter_args["id"] = args["id"]
-  return fetch_one_from_db(UserProfile, filter_args, ['communities','goals','real_estate_units'])
+  return fetch_one_from_db(UserProfile, filter_args, ["real_estate_units"])
 
-#broken huh
+#THIS IS THE BROKEN ONE, NOT TAKING THE REAL ESTATES FROM THE USER CORRECTLY
 def user_households(args):
-  user = user_profile(args)
-  print ('AHHHHH%s' %(user.real_estate_units));
-  return user.real_estate_units
+  if "user_id" in args:
+    user = user_profile({"id":args["user_id"]})
+    return user.real_estate_units
+  return None
 
 def household(args):
   filter_args = {}

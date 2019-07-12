@@ -18,6 +18,7 @@ urlpatterns = [
   path('get/community_actions', views.get_community_actions),
   path('get/community_actions/all', views.get_community_actions),
   path('get/action', views.get_one_action),
+  path('get/profile', views.get_my_profile),
   path('get/households', views.get_user_households),
   path('get/household', views.get_one_household),
   path('get/teams/all', views.get_community_teams),
