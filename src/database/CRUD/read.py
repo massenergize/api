@@ -139,7 +139,6 @@ def community(args):
     filter_args["subdomain"] = args["id"]
   return fetch_one_from_db(filter_args)
 
-return fetch_from_argdb(Community)
 
 def portal_page(args):
   """

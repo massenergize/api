@@ -45,3 +45,31 @@ def new_community(args):
     return {"success": True, "new_action":new_action, "errors":None}
   except Exception as e:
     return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
+
+def new_event(args):
+  pass 
+
+def new_user_profule(args):
+  pass
+
+def new_location(args):
+  pass
+
+def new_subscriber(args):
+  pass
+
+def new_billing_statement(args):
+  pass
+
+def new_slider(args):
+  pass 
+
+def new_menu(args):
+  pass 
+
+def new_page_section(args):
+  pass 
+
+def new_page(args):
+  pass
+
