@@ -30,6 +30,13 @@ def actions(request):
         }
     )
 
+def services(request):
+    pageData = fetch.community_portal_services_page_data()
+    return JsonResponse({
+        "pageData": pageData, 
+        }
+    )
+
 def menu(request):
     menuData = fetch.community_portal_website_menu()
     userData = fetch.community_portal_user_data()
@@ -57,6 +64,13 @@ def events(request):
         "pageData": pageData, 
         "menuData": menuData,
         "userData": userData,
+        }
+    )
+
+def teams(request):
+    pageData = fetch.community_portal_teams_page_data()
+    return JsonResponse({
+        "pageData": pageData, 
         }
     )
 

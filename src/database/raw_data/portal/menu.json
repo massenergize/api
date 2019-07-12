@@ -12,8 +12,8 @@
                     "name": "All Actions"
                 },
                 {
-                    "link": "#",
-                    "name": "Placeholder"
+                    "link": "services",
+                    "name": "Service Providers"
                 },
                 {
                     "link": "testimonials",
@@ -67,7 +67,7 @@
                     "name": "Actions"
                 },
                 {
-                    "link": "service",
+                    "link": "services",
                     "name": "Service Providers"
                 },
                 {
