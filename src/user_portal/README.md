@@ -284,7 +284,8 @@ For instance changing from INTERESTED->RSVP
 * new_status: str (options are: INTERESTED, RSVP, SAVE_FOR_LATER)
 
 
-*If we want these to be DELETE requests instead of UPDATE need to change how we store the data by making TeamMember and CommunityMember models*
+> If we want these to be DELETE requests instead of UPDATE need to change how we store the data by making TeamMember and CommunityMember models
+
 ###### UPDATE Leave Community
 ```
 user/leave/community
