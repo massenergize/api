@@ -10,76 +10,105 @@ https://apis.massenergize.org/
 https://apis.massenergize.com/
 ```
 
+_for all requests put the args after the url with a *"?"* at the front and a *&* between each arg_
+_ie user/get/page?id={insertPageId}&name={insertPageName}_
+
 ## GET Requests
 
 ###### Get Page Information
 ```
-user/get/page?id={insertPageId}&name={insertPageName}
+user/get/page
 ```
 This path requests a GET request with one of the following
-* id
-* name
+* id: int
+* name: int
 
 ###### Get User TODO actions
 ```
 user/get/todo_actions
 ```
+This path requests a GET request with one of the following
+* user_id: int
+* real_estate_id: int
 
 ###### Get User's Completed Actions
 ```
 user/get/completed_actions
 ```
+This path requests a GET request with one of the following
+* user_id: int
+* real_estate_id: int
 
 
 ###### Get All Events
 ```
-user/get/events/all?community_id={community_id}
-user/get/events?community_id={community_id}
+user/get/events/all
+user/get/events
 ```
+This path requests a GET request with one of the following
+* community_id: int
+* is_global: boolean
 
 ###### Get One Event
 ```
-user/get/event?id={event_id}
+user/get/event
 ```
-
+This path requests a GET request with one of the following
+* id: int
 
 ###### Get All Actions
 ```
-user/get/community_actions/all?community_id={community_id}
-user/get/community_actions?community_id={community_id}
+user/get/community_actions/all
+user/get/community_actions
 ```
+This path requests a GET request with one of the following
+* community_id: int
+* is_global: boolean
 
 ###### Get One Action
 ```
-user/get/action?id={action_id}
+user/get/action
 ```
+This path requests a GET request with one of the following
+* id: int
 
 ###### Get My Profile
 ```
 user/get/profile
 ```
+This path requests a GET request with one of the following
+* email: str
+* id: int
 
 ###### Get My Households
 ```
 user/get/households/all
 user/get/households
 ```
+This path requests a GET request with one of the following
+* user_id: int
 
 ###### Get One Household
 ```
 user/get/household?id={household_id}
 ```
+This path requests a GET request with one of the following
+* id: int
 
 ###### Get All Teams
 ```
-user/get/teams/all?community_id={community_id}
+user/get/teams/all
 ```
+This path requests a GET request with one of the following
+* community_id: int
 
 
 ###### Get One Team
 ```
-user/get/team?id={team_id}
+user/get/team
 ```
+This path requests a GET request with one of the following
+* id: int
 
 
 ###### Get All Communities
@@ -87,28 +116,38 @@ user/get/team?id={team_id}
 user/get/communities/all
 user/get/communities
 ```
+This path requests a GET request with no args
 
 ###### Get One Community
 ```
-user/get/community?domain={community_id}
+user/get/community
 ```
+This path requests a GET request with one of the following
+* id: int
+* domain: str
 
 ###### Get All Graphs
 ```
-user/get/graphs/all?community_id={community_id}
-user/get/graphs?community_id={community_id}
+user/get/graphs/all
+user/get/graphs
 ```
+This path requests a GET request with one of the following
+* community_id: int
 
 ###### Get One Graph
 ```
-user/get/graph?id={graph_id}
+user/get/graph
 ```
+This path requests a GET request with one of the following
+* id: int
 
 ###### Get testimonials
 ```
-user/get/testimonials?action_id={action_id}
-user/get/testimonials?community_id={community_id}
+user/get/testimonials
 ```
+This path requests a GET request with one of the following
+* community_id
+* action_id
 
 ## POST Requests
 Here are the approved routes to the user portal API
