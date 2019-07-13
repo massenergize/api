@@ -270,8 +270,8 @@ class RealEstateUnit(models.Model):
     return self.unit_type == 'R'
 
   def __str__(self):
-    return '%s: %s, %s, %s, %s' % (
-      self.unit_type, self.street, self.city, self.zipcode, self.state
+    return '%s: %s %s %s %s' % (
+      self.unit_type, self.location.street, self.location.city, self.location.zipcode, self.location.state
     )
 
   def simple_json(self):
@@ -835,8 +835,8 @@ class Event(models.Model):
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   archive =  models.BooleanField(default=False)
   is_global = models.BooleanField(default=False)
-  # external_link = models.CharField(max_length = SHORT_STR_LEN, blank=True)
-  # is_external_event = models.BooleanField(default=False)
+  external_link = models.CharField(max_length = SHORT_STR_LEN, blank=True)
+  is_external_event = models.BooleanField(default=False)
 
 
   def __str__(self):             
@@ -1114,9 +1114,8 @@ class Statistic(models.Model):
     foreign key linking a community to this statistic
   """
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
-  value =  models.DecimalField(default=0.0, max_digits=10,decimal_places=10)
+  value =  models.PositiveIntegerField(default=0)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
-
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
   info = JSONField(blank=True, null=True)
@@ -1131,7 +1130,7 @@ class Statistic(models.Model):
     return convert_to_json(self)
 
   class Meta:
-    verbose_name_plural = "Graph Statistics"
+    verbose_name_plural = "Data"
     ordering = ('name','value')
     db_table = 'statistics'
 
@@ -1151,7 +1150,9 @@ class Graph(models.Model):
   title = models.CharField(max_length = LONG_STR_LEN, db_index=True)
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["GRAPH_TYPES"].items())
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True,blank=True)
   data = JSONField(blank=True, null=True)
+
 
   def simple_json(self):
     return convert_to_json(self)
@@ -1342,7 +1343,7 @@ class BillingStatement(models.Model):
     dynamic information goes in here
   """
   name = models.CharField(max_length=SHORT_STR_LEN)
-  amount = models.DecimalField(default=0.0, decimal_places=4, max_digits = 10)
+  amount = models.CharField(max_length=SHORT_STR_LEN, default='0.0')
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   start_date = models.DateTimeField(blank=True, db_index=True)
   end_date = models.DateTimeField(blank=True)

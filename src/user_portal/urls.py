@@ -33,6 +33,7 @@ urlpatterns = [
   path('create/household', views.create_household),
   path('create/real_estate_unit', views.create_household),
   path('create/team', views.create_team),
+  path('create/event', views.create_event),
   path('add/team_members', views.add_team_members),
   path('add/user_action', views.create_user_action),
   path('subscribe', views.create_subscriber),

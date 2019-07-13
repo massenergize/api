@@ -6,6 +6,8 @@ and to prevent code redundancy.
 """
 from  database.models import *
 from database.utils.common import ensure_required_fields
+from database.utils.create_factory import CreateFactory
+
 
 CREATE_ERROR_MSG = "An error occurred during creation.  Please check your \
     information and try again"
@@ -47,7 +49,8 @@ def new_community(args):
     return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
 
 def new_event(args):
-  pass 
+  factory = CreateFactory(Event, args)
+  return factory.create()
 
 def new_user_profule(args):
   pass

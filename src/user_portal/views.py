@@ -110,6 +110,10 @@ def get_community_actions(request):
 def get_one_action(request):
     return Json(None)
 
+def create_event(request):
+    event = create.new_event(request.GET)
+    return Json(event)
+
 def get_my_profile(request):
     return Json(None)
 
