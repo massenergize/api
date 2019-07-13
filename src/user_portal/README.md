@@ -10,7 +10,7 @@ https://apis.massenergize.org/
 https://apis.massenergize.com/
 ```
 
-_for all requests put the args after the url with a **"?"** at the front and an **&** between each arg_ 
+> For all requests put the args after the url with a **"?"** at the front and an **&** between each arg
 
 _ie ```user/get/page?id={insertPageId}&name={insertPageName}```_
 
