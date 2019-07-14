@@ -188,6 +188,7 @@ user/create/real_estate_unit
 user/create/household
 ```
 This path requests a post request with the following information
+* user_id: int
 * unit_type: str (options: RESIDENTIAL, COMMERCIAL)
 * location: JSON
 * community_id: int
