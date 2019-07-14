@@ -90,13 +90,13 @@ def get_page(request):
 
 def get_user_todo_actions(request):
     filter_args = request.GET.dict() 
-    todo = fetch.todo_actions(filter_args)
-    return Json(todo)
+    user_actions = fetch.todo_actions(filter_args)
+    return Json(user_actions, use_full_json=True)
 
 def get_user_completed_actions(request):
     filter_args = request.GET.dict() 
-    page = fetch.completed_actions(filter_args)
-    return Json(page)
+    user_actions = fetch.completed_actions(filter_args)
+    return Json(user_actions, use_full_json=True)
 
 def get_all_community_events(request):
     filter_args = request.GET.dict()

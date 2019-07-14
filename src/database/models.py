@@ -254,6 +254,7 @@ class RealEstateUnit(models.Model):
     The date and time of the last time any updates were made to the information
     about this real estate unit
   """
+  name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
   unit_type =  models.CharField(
     max_length=TINY_STR_LEN, 
     choices=CHOICES["REAL_ESTATE_TYPES"].items()
@@ -278,15 +279,13 @@ class RealEstateUnit(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
-
-  def get_json(self):
     return {
       "unit_type": self.unit_type,
-      "location": self.location.get_json(),
+      "location": self.location.simple_json(),
       "created_at": self.created_at,
       "updated_at": self.updated_at
     }
+
 
   class Meta:
     db_table = 'real_estate_units'
@@ -327,20 +326,13 @@ class Goal(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
 
-  def get_json(self):
-    return {
-      "name": self.name,
-      "status": self.status,
-      "description": self.description,
-      "created_at": self.created_at,
-      "updated_at": self.updated_at
-    }
+
   class Meta:
     db_table = 'goals'
 
@@ -1046,6 +1038,7 @@ class UserActionRel(models.Model):
     res = convert_to_json(self)
     res["user"] = self.user.simple_json()
     res["action"] = self.action.simple_json()
+    res["real_estate_unit"] = self.real_estate_unit.name
     return res
 
   def __str__(self):

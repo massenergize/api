@@ -100,12 +100,6 @@ def ensure_required_fields(required_fields, args):
   return errors
 
 def rename_filter_args(args, pairs):
-  try:
-    args =  args.dict()
-  except Exception as e:
-    print(e)
-    pass
-
   for (old_key, new_key) in pairs:
     if old_key in args:
       args[new_key] = args.pop(old_key)
