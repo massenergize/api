@@ -214,9 +214,6 @@ class Community(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
-
-  def get_json(self):
     return {
       "name": self.name,
       "subdomain": self.subdomain,
@@ -271,8 +268,8 @@ class RealEstateUnit(models.Model):
     return self.unit_type == 'R'
 
   def __str__(self):
-    return '%s: %s %s %s %s' % (
-      self.unit_type, self.location.street, self.location.city, self.location.zipcode, self.location.state
+    return '%s - Location: %s ' % (
+      self.unit_type, str(self.location)
     )
 
   def simple_json(self):
