@@ -115,7 +115,7 @@ def completed_actions(args):
 
 # get all community or global events
 def events(args):
-  filter_args = rename_filter_args(args, [("community_id", "community")])
+  filter_args = rename_filter_args(args, [("community_id", "community"), ("community_domain", "community__subdomain__contains")])
   #we need to just decide whether we are going to call it id or domain in the url
   events =  fetch_from_db(Event, filter_args, ['tags'], ['community'])
   return events
@@ -132,7 +132,7 @@ def actions(args):
   if "community_id" in args:
     filter_args["community"] = args["community_id"]
   elif "community_domain" in args: 
-    filter_args["community"] = args["community_domain"]
+    filter_args["community__subdomain__contains"] = args["community_domain"]
   if "is_global" in args:
     filter_args["is_global"] = args["is_global"]
   actions = fetch_from_db(Action, filter_args, ['tags'], ['community'])
@@ -170,6 +170,8 @@ def teams(args):
   filter_args = {}
   if "community_id" in args:
     filter_args["community"] = args["community_id"]
+  elif "community_domain" in args: 
+    filter_args["community__subdomain__contains"] = args["community_domain"]
   return fetch_from_db(Team, filter_args)
 
 def team(args):
@@ -194,6 +196,8 @@ def graphs(args):
   filter_args = {}
   if "community_id" in args:
     filter_args["community"] = args["community_id"]
+  elif "community_domain" in args: 
+    filter_args["community__subdomain__contains"] = args["community_domain"]
   return fetch_from_db(Graph, filter_args)
 
 def graph(args):
