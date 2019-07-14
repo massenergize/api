@@ -96,7 +96,6 @@ def portal_page(args):
     page = fetch_one_from_db(Page, {"name": args["name"]})
   return page
 
-# have to figure out what to do about these
 def todo_actions(args):
   filter_args = rename_filter_args(args, [
     ("user_id", "user"),("real_estate_id", "real_estate_unit")
@@ -158,7 +157,7 @@ def user_profile(args):
 def user_households(args):
   if "user_id" in args:
     user = user_profile({"id":args["user_id"]})
-    return user.real_estate_units
+    return user.real_estate_units.all()
   return None
 
 def household(args):
@@ -191,7 +190,6 @@ def community(args):
     filter_args["subdomain"] = args["domain"]
   return fetch_one_from_db(Community,filter_args)
 
-##gotta figure this one out later
 def graphs(args):
   filter_args = {}
   if "community_id" in args:
