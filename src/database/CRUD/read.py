@@ -96,7 +96,6 @@ def portal_page(args):
     page = fetch_one_from_db(Page, {"name": args["name"]})
   return page
 
-# have to figure out what to do about these
 def todo_actions(args):
   filter_args = rename_filter_args(args, [
     ("user_id", "user"),("real_estate_id", "real_estate_unit")
@@ -116,7 +115,7 @@ def completed_actions(args):
 
 # get all community or global events
 def events(args):
-  filter_args = rename_filter_args(args, [("community_id", "community")])
+  filter_args = rename_filter_args(args, [("community_id", "community"), ("community_domain", "community__subdomain__contains")])
   #we need to just decide whether we are going to call it id or domain in the url
   events =  fetch_from_db(Event, filter_args, ['tags'], ['community'])
   return events
@@ -133,7 +132,7 @@ def actions(args):
   if "community_id" in args:
     filter_args["community"] = args["community_id"]
   elif "community_domain" in args: 
-    filter_args["community"] = args["community_domain"]
+    filter_args["community__subdomain__contains"] = args["community_domain"]
   if "is_global" in args:
     filter_args["is_global"] = args["is_global"]
   actions = fetch_from_db(Action, filter_args, ['tags'], ['community'])
@@ -158,7 +157,7 @@ def user_profile(args):
 def user_households(args):
   if "user_id" in args:
     user = user_profile({"id":args["user_id"]})
-    return user.real_estate_units
+    return user.real_estate_units.all()
   return None
 
 def household(args):
@@ -171,6 +170,8 @@ def teams(args):
   filter_args = {}
   if "community_id" in args:
     filter_args["community"] = args["community_id"]
+  elif "community_domain" in args: 
+    filter_args["community__subdomain__contains"] = args["community_domain"]
   return fetch_from_db(Team, filter_args)
 
 def team(args):
@@ -191,11 +192,12 @@ def community(args):
     filter_args["subdomain"] = args["domain"]
   return fetch_one_from_db(Community,filter_args)
 
-##gotta figure this one out later
 def graphs(args):
   filter_args = {}
   if "community_id" in args:
     filter_args["community"] = args["community_id"]
+  elif "community_domain" in args: 
+    filter_args["community__subdomain__contains"] = args["community_domain"]
   return fetch_from_db(Graph, filter_args)
 
 def graph(args):
