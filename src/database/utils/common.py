@@ -64,7 +64,7 @@ def retrieve_all_objects(model, args, full_json=False) -> list:
     (i.full_json() if full_json else i.simple_json()) for i in objects
   ]
 
-def convert_to_json(data, full_json=False):
+def convert_to_json(data, full_json=True):
   """
   Serializes an object into a json to be sent over-the-wire 
   """
@@ -98,3 +98,16 @@ def ensure_required_fields(required_fields, args):
     if f not in args:
       errors.append(f"You are missing a required field: {f}")
   return errors
+
+def rename_filter_args(args, pairs):
+  try:
+    args =  args.dict()
+  except Exception as e:
+    print(e)
+    pass
+
+  for (old_key, new_key) in pairs:
+    if old_key in args:
+      args[new_key] = args.pop(old_key)
+  return args
+

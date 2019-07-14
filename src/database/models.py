@@ -770,9 +770,23 @@ class Action(models.Model):
     return self.title
 
   def simple_json(self):
-    return convert_to_json(self)
+    fields_to_retrieve = [
+      'id', 'title','steps_to_take', 'about', 'icon', 'rank', 'geographic_area'
+    ]
+    return model_to_dict(self, fields=fields_to_retrieve)
 
   def full_json(self):
+    result = self.simple_json()
+    result.update({
+      "image": get_json_if_not_none(self.image), 
+      "tags": [t.simple_json() for t in self.tags.all()], 
+      "properties": [p.simple_json() for p in self.properties.all()], 
+      "vendors": [v.simple_json() for v in self.vendors.all()],
+      "created_at": self.created_at, 
+      "updated_at": self.updated_at, 
+      "community": self.community.simple_json()
+    })
+
     return {
       "id": self.id,
       "title": self.title, 
@@ -977,7 +991,7 @@ class Testimonial(models.Model):
   rank = models.PositiveSmallIntegerField(default=0)
 
   def __str__(self):        
-    return "%d: %s" % (self.rank, self.name)
+    return self.title
 
   def simple_json(self):
     return convert_to_json(self)
@@ -1029,10 +1043,16 @@ class UserActionRel(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    res = convert_to_json(self)
+    res["user"] = self.user.simple_json()
+    res["action"] = self.action.simple_json()
+    return res
 
   def __str__(self):
-    return  "%s: %s" % (self.user, self.action)
+    return  "%s | %s | (%s)" % (self.user, self.status, self.action)
+
+  class Meta:
+    ordering = ('status','user', 'action')
 
 
 class CommunityAdminGroup(models.Model):

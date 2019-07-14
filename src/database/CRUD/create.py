@@ -4,9 +4,9 @@ centralize the insertion of data into the database so that multiple apps can
 call on the methods in this file without having to define their own
 and to prevent code redundancy.
 """
-from  database.models import *
-from database.utils.common import ensure_required_fields
-from database.utils.create_factory import CreateFactory
+from  ..models import *
+from ..utils.common import ensure_required_fields
+from ..utils.create_factory import CreateFactory
 
 
 CREATE_ERROR_MSG = "An error occurred during creation.  Please check your \

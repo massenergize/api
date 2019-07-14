@@ -1,8 +1,8 @@
 """
 This file contains code to read data from the database.
 """
-from  database.models import *
-from database.utils.common import json_loader, retrieve_object, retrieve_all_objects
+from  ..models import *
+from ..utils.common import *
 
 IS_PROD = True
 
@@ -30,7 +30,7 @@ def community_portal_home_page_data():
 
 def community_portal_user_data():
   """
-  Returns the user data for the communty portal 
+  Returns the user data for the community portal 
   """
   return json_loader('./database/raw_data/portal/user.json')
 
@@ -43,7 +43,7 @@ def community_portal_impact_data():
 
 def community_portal_website_menu():
   """
-  Returns the menu for communty portal 
+  Returns the menu for community portal 
   """
   return json_loader('./database/raw_data/portal/menu.json')
 
@@ -85,7 +85,6 @@ def get_states_in_the_US():
 
 
 ###### GET FUNCTIONS
-
 def portal_page(args):
   """
   This retrieves a page from the database for the community portal
@@ -99,50 +98,32 @@ def portal_page(args):
 
 # have to figure out what to do about these
 def todo_actions(args):
-  filter_args = {}
-  if "user_id" in args:
-    filter_args["user"] = args["user_id"]
-  if "real_estate_id" in args:
-    filter_args["real_estate_unit"] = args["real_estate_id"]
+  filter_args = rename_filter_args(args, [
+    ("user_id", "user"),("real_estate_id", "real_estate_unit")
+  ])
   filter_args["status"] = "TODO"
-  actionRels = fetch_from_db(UserActionRel, filter_args, [], ['action'])
-  actions = [actionRel.action for actionRel in actionRels]
-  return actions;
+  user_actions = fetch_from_db(UserActionRel, filter_args, [], ['action'])
+  return user_actions
 
 def completed_actions(args):
-  filter_args = {}
-  if "user_id" in args:
-    filter_args["user"] = args["user_id"]
-  if "real_estate_id" in args:
-    filter_args["real_estate_unit"] = args["real_estate_id"]
+  filter_args = rename_filter_args(args, [
+    ("user_id", "user"),("real_estate_id", "real_estate_unit")
+  ])
   filter_args["status"] = "DONE"
-  actionRels = fetch_from_db(UserActionRel, filter_args, [], ['action'])
-  actions = [actionRel.action for actionRel in actionRels]
-  return actions;
+  user_actions = fetch_from_db(UserActionRel, filter_args, [], ['action'])
+  return user_actions
+
 
 # get all community or global events
 def events(args):
-  filter_args = {}
+  filter_args = rename_filter_args(args, [("community_id", "community")])
   #we need to just decide whether we are going to call it id or domain in the url
-  if "community_id" in args:
-    filter_args["community"] = args["community_id"]
-  elif "community_domain" in args: 
-    filter_args["community"] = args["community_domain"]
-  if "is_global" in args:
-    filter_args["is_global"] = args["is_global"]
   events =  fetch_from_db(Event, filter_args, ['tags'], ['community'])
   return events
 
 #get one event by its id
 def event(args):
-  filter_args={}
-  # I don't think we need a community id for this one, unless event ids are unique in each community but not globally unique
-  # if "community_id" in args:
-  #   filter_args["community"] = args["community_id"]
-  # elif "community_domain" in args:
-  #   filter_args["community"] = args["community_domain"]
-  if "id" in args:
-    filter_args["id"] = args["id"]
+  filter_args=args
   event =  fetch_one_from_db(Event, filter_args, ['tags'], ['community'])
   return event;
 
@@ -197,14 +178,8 @@ def team(args):
   if "id" in args:
     filter_args["id"] = args["id"]
   return fetch_one_from_db(Team, filter_args)
-# def communities(args):
-#   filter_args = {}
-#   if "community_id" in args: #shouldnt check id if we want all of the communities
-#     filter_args["community"] = args["community_id"]
-#   communities =  fetch_from_db(Community, filter_args)
-#   return communities
 
- #i think we dont need any args for this one
+
 def communities():
   return fetch_from_db(Community)
 
@@ -229,41 +204,3 @@ def graph(args):
     filter_args["id"] = args["id"]
   return fetch_one_from_db(Graph, filter_args)
 
-# Not sure what this line is doing here
-# return fetch_from_argdb(Community)
-
-
-
-
-
-
-
-
-
-# def portal_page2(args):
-#   """
-#   This also retrieves a page by name or id
-#   """
-#   if "id" in args:
-#     return Page.objects.filter(id=args["id"]).first()
-#   elif "name" in args:
-#     return Page.objects.filter(name=args["name"]).first()
-#   return page
-
-
-# def portal_page3(args):
-#   """
-#   This also retrieves a page by name or id.
-
-#   Warning.  only use this method if you know the page id or name exists
-#   """
-#   if "id" in args:
-#     try:
-#       return Page.objects.get(id=args["id"])
-#     except Exception as e:
-#       return None
-#   elif "name" in args:
-#     try:
-#       return Page.objects.get(name=args["name"])
-#     except Exception as e:
-#       return None

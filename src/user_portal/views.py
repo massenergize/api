@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-import json
 from database.CRUD import create, read as fetch
 from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
@@ -85,66 +84,66 @@ def create_new_user(request):
 @require_GET
 def get_page(request):
     #retrieving the arguments from the request
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.portal_page(filter_args)
     return Json(page)
 
 def get_user_todo_actions(request):
-    filter_args = request.GET 
-    page = fetch.todo_actions(filter_args)
-    return Json(page)
+    filter_args = request.GET.dict() 
+    todo = fetch.todo_actions(filter_args)
+    return Json(todo)
 
 def get_user_completed_actions(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.completed_actions(filter_args)
     return Json(page)
 
 def get_all_community_events(request):
-    filter_args = request.GET
+    filter_args = request.GET.dict()
     events = fetch.events(filter_args)
     return Json(events)
 
 def get_one_event(request):
-    filter_args = request.GET
+    filter_args = request.GET.dict()
     event = fetch.event(filter_args)
     return Json(event)
 
 def get_community_actions(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.actions(filter_args)
     return Json(page)
 
 def get_one_action(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.action(filter_args)
     return Json(page)
 
 def create_event(request):
-    event = create.new_event(request.GET)
+    event = create.new_event(request.GET.dict())
     return Json(event)
 
 def get_my_profile(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.user_profile(filter_args)
     return Json(page)
 
 def get_user_households(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.user_households(filter_args)
     return Json(page)
 
 def get_one_household(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.household(filter_args)
     return Json(page)
 
 def get_community_teams(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.teams(filter_args)
     return Json(page)
 
 def get_one_team(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.team(filter_args)
     return Json(page)
 
@@ -153,17 +152,17 @@ def get_all_communities(request):
     return Json(page)
 
 def get_one_community(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.community(filter_args)
     return Json(page)
 
 def get_community_graphs(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.graphs(filter_args)
     return Json(page)
 
 def get_one_community_graph(request):
-    filter_args = request.GET 
+    filter_args = request.GET.dict() 
     page = fetch.graph(filter_args)
     return Json(page)
 ####### END OF GET REQUESTS #####################

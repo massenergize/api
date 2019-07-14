@@ -18,8 +18,6 @@ class CreateFactory:
     # self.foreign_key_fields = foreign_key_fields
     # self.many_to_many_fields = many_to_many_fields
 
-
-
   def verify_required_fields(self):
     errors = []
     for f in self.required_fields:
