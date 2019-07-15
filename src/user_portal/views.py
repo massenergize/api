@@ -4,7 +4,9 @@ from database.CRUD import create, read as fetch
 from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
-
+from database.utils.create_factory import CreateFactory
+from  database.models import *
+from database.utils.common import get_request_contents
 
 def home(request):
     pageData = fetch.community_portal_home_page_data()
@@ -76,10 +78,7 @@ def stories(request):
     )
 
 ####### GET REQUESTS #####################
-# @csrf_exempt
-def create_new_user(request):
-    print(request.body.decode('utf-8'))
-    return Json(None)
+
 
 @require_GET
 def get_page(request):
@@ -117,10 +116,6 @@ def get_one_action(request):
     filter_args = request.GET.dict() 
     page = fetch.action(filter_args)
     return Json(page)
-
-def create_event(request):
-    event = create.new_event(request.GET.dict())
-    return Json(event)
 
 def get_my_profile(request):
     filter_args = request.GET.dict() 
@@ -170,38 +165,86 @@ def get_one_community_graph(request):
 
 
 ####### POST REQUESTS #####################
-def create_user_account(request):
-    return Json(None)
+@csrf_exempt
+def create_new_user(request):
+    args = get_request_contents(request)
+    factory = CreateFactory(UserProfile, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
+@csrf_exempt
+def create_event(request):
+    args = get_request_contents(request)
+    factory = CreateFactory(Event, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
+
+@csrf_exempt
 def create_goal(request):
-    return Json(None)
+    args = get_request_contents(request)
+    factory = CreateFactory(Goal, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
+@csrf_exempt
 def create_location(request):
-    new_location, errors = create.new_location(request.GET.dict())
-    return Json(new_location, errors=errors)
+    args = get_request_contents(request)
+    factory = CreateFactory(Location, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
+@csrf_exempt
 def create_household(request):
-    return Json(None)
+    args = get_request_contents(request)
+    factory = CreateFactory(RealEstateUnit, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
-
+@csrf_exempt
 def create_team(request):
-    return Json(None)
+    args = get_request_contents(request)
+    factory = CreateFactory(Team, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
+@csrf_exempt
 def add_team_members(request):
-    return Json(None)
+    args = get_request_contents(request)
+    factory = CreateFactory(UserProfile, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
+@csrf_exempt
 def create_user_action(request):
-    return Json(None)
+    args = get_request_contents(request)
+    factory = CreateFactory(UserActionRel, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
+@csrf_exempt
 def create_subscriber(request):
-    return Json(None)
+    args = get_request_contents(request)
+    factory = CreateFactory(Subscriber, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
+@csrf_exempt
 def add_testimonial(request):
-    return Json(None)
+    args = get_request_contents(request)
+    factory = CreateFactory(Testimonial, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
 
+@csrf_exempt
 def register_user_for_event(request):
-    return Json(None)
+    args = get_request_contents(request)
+    factory = CreateFactory(EventAttendees, args)
+    user_account, errors =  factory.create()
+    return Json(user_account, errors=errors)
+####### END OF POST REQUESTS #####################
 
+
+####### UPDATING OBJECTS USING POST REQUESTS #####################
 def update_user_action(request):
     return Json(None)
 

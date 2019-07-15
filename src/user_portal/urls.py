@@ -40,6 +40,7 @@ urlpatterns = [
   path('add/user_action', views.create_user_action),
   path('subscribe', views.create_subscriber),
   path('add/subscriber', views.create_subscriber),
+  path('create/subscriber', views.create_subscriber),
   path('add/testimonial', views.add_testimonial),
   path('register_for_event', views.register_user_for_event),
   path('update/user_action', views.update_user_action),

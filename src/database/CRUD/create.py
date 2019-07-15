@@ -9,44 +9,11 @@ from ..utils.common import ensure_required_fields
 from ..utils.create_factory import CreateFactory
 
 
-CREATE_ERROR_MSG = "An error occurred during creation.  Please check your \
-    information and try again"
-
-def create_one_object(model, fields, required_fields):
-  pass
-
-
-def create_multiple_objects(model, data_list):
-  pass
-
-
 def new_action(args):
-  required_fields = ['title']
-  errors = ensure_required_fields(required_fields, args)
-  if errors:
-    return {"success": False, "errors":errors}
-
-  #if code gets here we have everything we need
-  try:
-    new_action = Action.objects.create()
-    new_action.title = args["title"]
-    new_action.save()
-    return {"success": True, "action":new_action, "errors":None}
-  except Exception as e:
-    return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
+  factory = CreateFactory(Action, args)
+  return factory.create(Action, args)
 
 def new_community(args):
-  # required_fields = ['name', 'domain']
-  # errors = ensure_required_fields(required_fields, args)
-  # if errors:
-  #   return {"success": False, "errors":errors}
-
-  # #if code gets here we have everything we need
-  # try:
-  #   new_action = Community.objects.create()
-  #   return {"success": True, "new_action":new_action, "errors":None}
-  # except Exception as e:
-  #   return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
   factory = CreateFactory(Community, args)
   return factory.create()
 
@@ -56,7 +23,9 @@ def new_event(args):
 
 
 def new_user_profile(args):
-  pass
+  factory = CreateFactory(UserProfile, args)
+  return factory.create(UserProfile, args)
+
 
 def new_location(args):
   factory = CreateFactory(Location, args)
@@ -64,20 +33,28 @@ def new_location(args):
 
 
 def new_subscriber(args):
-  pass
+  factory = CreateFactory(Subscriber, args)
+  return factory.create(Subscriber, args)
 
 def new_billing_statement(args):
-  pass
+  factory = CreateFactory(BillingStatement, args)
+  return factory.create(BillingStatement, args)
+
 
 def new_slider(args):
-  pass 
+  factory = CreateFactory(Slider, args)
+  return factory.create(Slider, args)
+
 
 def new_menu(args):
-  pass 
+  factory = CreateFactory(Menu, args)
+  return factory.create(Menu, args)
 
 def new_page_section(args):
-  pass 
+  factory = CreateFactory(PageSection, args)
+  return factory.create(PageSection, args)
+
 
 def new_page(args):
-  pass
-
+  factory = CreateFactory(Page, args)
+  return factory.create(Page, args)
