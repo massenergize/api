@@ -183,6 +183,7 @@ def create_location(request):
 def create_household(request):
     return Json(None)
 
+
 def create_team(request):
     return Json(None)
 

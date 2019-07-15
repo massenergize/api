@@ -36,22 +36,23 @@ def new_action(args):
     return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
 
 def new_community(args):
-  required_fields = ['name', 'domain']
-  errors = ensure_required_fields(required_fields, args)
-  if errors:
-    return {"success": False, "errors":errors}
+  # required_fields = ['name', 'domain']
+  # errors = ensure_required_fields(required_fields, args)
+  # if errors:
+  #   return {"success": False, "errors":errors}
 
-  #if code gets here we have everything we need
-  try:
-    new_action = Community.objects.create()
-    return {"success": True, "new_action":new_action, "errors":None}
-  except Exception as e:
-    return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
+  # #if code gets here we have everything we need
+  # try:
+  #   new_action = Community.objects.create()
+  #   return {"success": True, "new_action":new_action, "errors":None}
+  # except Exception as e:
+  #   return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
+  factory = CreateFactory(Community, args)
+  return factory.create()
 
 def new_event(args):
   factory = CreateFactory(Event, args)
   return factory.create()
-
 
 
 def new_user_profile(args):

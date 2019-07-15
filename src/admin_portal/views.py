@@ -60,3 +60,7 @@ def events(request):
 
 def test(request):
   return Json(None)
+
+def create_community(request):
+    community, errors = create.new_community(request.GET.dict())
+    return Json(community, errors=errors)

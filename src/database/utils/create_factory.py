@@ -27,13 +27,13 @@ class CreateFactory:
     return errors    
 
   def create(self):
-    #if code gets here we have everything we need
     errors = self.verify_required_fields()
     new_object = None 
 
     if errors:
-      return {"success": False, "errors":errors, "object": None}
+      return None, errors
 
+    #if code gets here we have everything all required fields
     try:
       many_to_many_fields =  MODELS_AND_FIELDS[self.model]['m2m']
       field_values = {}
@@ -42,6 +42,7 @@ class CreateFactory:
           field_values[field_name] = value
 
       new_object = self.model.objects.create(**field_values)
+      new_object.full_clean()
       new_object.save()
 
       # for f in many_to_many_fields:
