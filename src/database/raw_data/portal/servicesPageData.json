@@ -27,7 +27,7 @@
             "contactEmail": "example@gmail.com"
         },
         {
-            "vendor": "Test Vendor",
+            "vendor": "Test Vendor2",
             "logo": "http://via.placeholder.com/300x150",
             "categories": ["Home Energy", "Solar Lighting"],
             "services": [
@@ -46,7 +46,7 @@
             "contactEmail": "example@gmail.com"
         },
         {
-            "vendor": "Test Vendor",
+            "vendor": "Test Vendor3",
             "logo": "http://via.placeholder.com/300x150",
             "categories": ["Home Energy", "Solar Lighting"],
             "services": [
@@ -65,7 +65,7 @@
             "contactEmail": "example@gmail.com"
         },
         {
-            "vendor": "Test Vendor",
+            "vendor": "Test Vendor4",
             "logo": "http://via.placeholder.com/300x150",
             "categories": ["Home Energy", "Solar Lighting"],
             "services": [
@@ -84,7 +84,7 @@
             "contactEmail": "example@gmail.com"
         },
         {
-            "vendor": "Test Vendor",
+            "vendor": "Test Vendor5",
             "logo": "http://via.placeholder.com/300x150",
             "categories": ["Home Energy", "Solar Lighting"],
             "services": [
@@ -103,7 +103,7 @@
             "contactEmail": "example@gmail.com"
         },
         {
-            "vendor": "Test Vendor",
+            "vendor": "Test Vendor6",
             "logo": "http://via.placeholder.com/300x150",
             "categories": ["Home Energy", "Solar Lighting"],
             "services": [
@@ -122,7 +122,7 @@
             "contactEmail": "example@gmail.com"
         },
         {
-            "vendor": "Test Vendor",
+            "vendor": "Test Vendor7",
             "logo": "http://via.placeholder.com/300x150",
             "categories": ["Home Energy", "Solar Lighting"],
             "services": [
@@ -141,7 +141,7 @@
             "contactEmail": "example@gmail.com"
         },
         {
-            "vendor": "Test Vendor",
+            "vendor": "Test Vendor8",
             "logo": "http://via.placeholder.com/300x150",
             "categories": ["Home Energy", "Solar Lighting"],
             "services": [
