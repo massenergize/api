@@ -177,8 +177,8 @@ def create_goal(request):
     return Json(None)
 
 def create_location(request):
-    new_location = create.new_location(request.GET.dict())
-    return Json(new_location)
+    new_location, errors = create.new_location(request.GET.dict())
+    return Json(new_location, errors=errors)
 
 def create_household(request):
     return Json(None)

@@ -29,6 +29,8 @@ class CreateFactory:
   def create(self):
     #if code gets here we have everything we need
     errors = self.verify_required_fields()
+    new_object = None 
+
     if errors:
       return {"success": False, "errors":errors, "object": None}
 
@@ -46,6 +48,6 @@ class CreateFactory:
         # if f in self.args:
         #   pass
 
-      return new_object
     except Exception as e:
-      return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
+      errors =  [CREATE_ERROR_MSG, str(e)]
+    return new_object, errors
