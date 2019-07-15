@@ -86,6 +86,13 @@ def stories(request):
         }
     )
 
+def policies(request):
+    pageData = fetch.community_portal_policies_page_data()
+    return JsonResponse({
+        "pageData": pageData, 
+        }
+    )
+
 ####### GET REQUESTS #####################
 def create_new_user(request):
     return Json(None)

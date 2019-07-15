@@ -71,6 +71,10 @@
                     "name": "Service Providers"
                 },
                 {
+                    "link": "testimonials",
+                    "name": "Testimonials"
+                },
+                {
                     "link": "teams",
                     "name": "Teams"
                 },
