@@ -61,7 +61,7 @@ class Location(models.Model):
     return self.location_type
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
     return convert_to_json(self)

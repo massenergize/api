@@ -6,21 +6,22 @@ the Massenergize Database
 CREATE_ERROR_MSG = "An error occurred during creation.  Please check your \
     information and try again"
 
+from _main_.utils.utils import get_models_and_field_types
+from database import models
+
+MODELS_AND_FIELDS = get_models_and_field_types(models)
+
 class CreateFactory:
-  def __init__(self, model, args, direct_fields=None, foreign_key_fields=None,
-    many_to_many_fields=None, required_fields=[], field_arg_pairs=None):
+  def __init__(self, model, args={}, field_arg_pairs=[]):
     self.model = model
     self.args = args
-    self.required_fields = required_fields
     self.field_arg_pairs = field_arg_pairs
 
-    # self.direct_fields =  direct_fields
-    # self.foreign_key_fields = foreign_key_fields
-    # self.many_to_many_fields = many_to_many_fields
 
   def verify_required_fields(self):
     errors = []
-    for f in self.required_fields:
+    required_fields = MODELS_AND_FIELDS[self.model]['required_fields']
+    for f in required_fields:
       if f not in self.args:
         errors.append(f"You are missing a required field: {f}")
     return errors    
@@ -31,14 +32,20 @@ class CreateFactory:
     if errors:
       return {"success": False, "errors":errors, "object": None}
 
-    print(self.model._meta)
-    return {"success": False, "errors": None, "object": None}
-    # try:
-    #   new_action = self.model.objects.create()
-    #   for f in self.direct_fields:
+    try:
+      many_to_many_fields =  MODELS_AND_FIELDS[self.model]['m2m']
+      field_values = {}
+      for field_name, value in self.args.items():
+        if field_name not in many_to_many_fields:
+          field_values[field_name] = value
 
-    #     new_action.title = args["title"]
-    #   new_action.save()
-    #   return {"success": True, "object":new_action, "errors":None}
-    # except Exception as e:
-    #   return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
+      new_object = self.model.objects.create(**field_values)
+      new_object.save()
+
+      # for f in many_to_many_fields:
+        # if f in self.args:
+        #   pass
+
+      return new_object
+    except Exception as e:
+      return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}

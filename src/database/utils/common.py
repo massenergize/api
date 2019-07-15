@@ -71,12 +71,14 @@ def convert_to_json(data, full_json=True):
   if not data:
     return None
   elif isinstance(data, dict):
-    return data
+    return data 
   elif isinstance(data, Iterable):
+    print(00000)
     return  [
       (i.full_json() if full_json else i.simple_json()) for i in data
     ]
   else:
+    print(1111)
     objects = [data]
     serialized_object = serializers.serialize("json", objects)
     return json.loads(serialized_object)[0]["fields"]
@@ -104,4 +106,5 @@ def rename_filter_args(args, pairs):
     if old_key in args:
       args[new_key] = args.pop(old_key)
   return args
+
 

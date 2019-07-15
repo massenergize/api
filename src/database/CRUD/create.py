@@ -52,11 +52,14 @@ def new_event(args):
   factory = CreateFactory(Event, args)
   return factory.create()
 
-def new_user_profule(args):
+
+def new_user_profile(args):
   pass
 
 def new_location(args):
-  pass
+  factory = CreateFactory(Location, args)
+  return factory.create()
+
 
 def new_subscriber(args):
   pass

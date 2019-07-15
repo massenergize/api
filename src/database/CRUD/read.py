@@ -192,6 +192,7 @@ def community(args):
     filter_args["subdomain"] = args["domain"]
   return fetch_one_from_db(Community,filter_args)
 
+
 def graphs(args):
   filter_args = {}
   if "community_id" in args:
