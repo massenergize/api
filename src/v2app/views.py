@@ -13,9 +13,15 @@ FACTORY = CreateFactory("Data Creator")
 FETCH = DatabaseReader("Database Reader")
 
 def ping(request):
-	"This view is just for test purposes"
+	"""
+	This view returns a dummy json.  It is meant to be used to check whether
+	the server is alive or not
+	"""
 	return Json(None)
 
+def userview(request, id):
+	print(id)
+	return Json()
 def home(request):
 	pageData = fetch.community_portal_home_page_data()
 	menuData = fetch.community_portal_website_menu()
