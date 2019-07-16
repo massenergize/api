@@ -5,6 +5,9 @@ from database.CRUD import create
 from database.utils.json_response_wrapper import Json
 from database.models import *
 import json
+from database.utils.common import get_request_contents
+from database.utils.database_reader import DatabaseReader
+
 
 def home(request):
   return render(request, 'index.html', {"page_name": "Super Admin page"})
@@ -26,6 +29,8 @@ def get_super_admin_navbar_menu(request):
 
 @csrf_exempt
 def actions(request):
+  args = get_request_contents(request)
+
   if request.method == 'GET':
     filter_args = request.GET
     actions = fetch.actions(filter_args)
@@ -40,9 +45,10 @@ def actions(request):
 @csrf_exempt
 def communities(request):
   if request.method == 'GET':
-    filter_args = request.GET
-    communities = fetch.communities(request.GET)
-    return Json(communities)
+    args = get_request_contents(request)
+    db = DatabaseReader(Community, args)
+    data, errors = db.get_all()
+    return Json(data, errors=errors)
   elif request.method == 'POST':
     return Json(None)
 

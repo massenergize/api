@@ -3,11 +3,9 @@ This is a factory class dedicated to creating new instances of objects in
 the Massenergize Database
 """
 
-CREATE_ERROR_MSG = "An error occurred during creation.  Please check your \
-    information and try again"
-
 from _main_.utils.utils import get_models_and_field_types
 from database import models
+from _main_.utils.constants import CREATE_ERROR_MSG
 
 MODELS_AND_FIELDS = get_models_and_field_types(models)
 

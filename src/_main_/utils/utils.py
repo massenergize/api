@@ -41,8 +41,12 @@ def get_models_and_field_types(models):
   all_models = get_all_models(models)
   result = {}
   for m in all_models:
-    result[m]={"m2m": set(),"fk":set(), "other": set(), "required_fields": set()}
+    result[m]={
+      "m2m": set(),"fk":set(), "other": set(), 
+      "required_fields": set(), "all_fields": set()
+    }
     for f in m._meta.get_fields():
+      result[m]["all_fields"].add(f.name)
       if isinstance(f, ManyToManyField):
         result[m]["m2m"].add(f.name)
       elif isinstance(f, ForeignKey):

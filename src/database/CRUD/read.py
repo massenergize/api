@@ -182,6 +182,7 @@ def team(args):
 
 
 def communities():
+  
   return fetch_from_db(Community)
 
 def community(args):
