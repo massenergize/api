@@ -4,9 +4,9 @@ from database.CRUD import read as fetch
 from database.CRUD import create 
 from database.utils.json_response_wrapper import Json
 from database.models import *
-import json
 from database.utils.common import get_request_contents
 from database.utils.database_reader import DatabaseReader
+from database.utils.create_factory import CreateFactory
 
 
 def home(request):
@@ -44,13 +44,17 @@ def actions(request):
 
 @csrf_exempt
 def communities(request):
-  if request.method == 'GET':
-    args = get_request_contents(request)
-    db = DatabaseReader(Community, args)
-    data, errors = db.get_all()
-    return Json(data, errors=errors)
-  elif request.method == 'POST':
-    return Json(None)
+  args = get_request_contents(request)
+  db = DatabaseReader(Community, args)
+  data, errors = db.get_all()
+  return Json(data, errors=errors)
+
+
+def create_community(request):
+  args = get_request_contents(request)
+  communityFactory = CreateFactory(Community, args)
+  new_community, errors = communityFactory.create()
+  return Json(new_community, errors)
 
 
 @csrf_exempt
