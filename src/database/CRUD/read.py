@@ -53,6 +53,12 @@ def community_portal_actions_page_data(community_id='default'):
   """
   return json_loader('./database/raw_data/portal/actionsPageData.json')
 
+def community_portal_services_page_data():
+  """
+  Returns all the possible actions for a community actions 
+  """
+  return json_loader('./database/raw_data/portal/servicesPageData.json')
+
 def community_portal_events_page_data(community_id='default'):
   """
   Returns all the events for a community 
@@ -66,12 +72,26 @@ def community_portal_about_us_page_data():
   """
   return json_loader('./database/raw_data/portal/aboutUsData.json')
 
+def community_portal_teams_page_data():
+  """
+  This function pulls and returns all impact data
+  and returns a json of this information
+  """
+  return json_loader('./database/raw_data/portal/teamsPageData.json')
+
 def community_portal_stories_page_data():
   """
   This function pulls and returns all data required for the community 
   portal stories page and returns a json of this information
   """
   return json_loader('./database/raw_data/portal/storiesPageData.json')
+
+def community_portal_policies_page_data():
+  """
+  This function pulls and returns all data required for the community 
+  portal stories page and returns a json of this information
+  """
+  return json_loader('./database/raw_data/portal/policiesPageData.json')
 
 
 def super_admin_sidebar():

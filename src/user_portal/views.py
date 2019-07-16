@@ -42,6 +42,13 @@ def actions(request):
 			}
 	)
 
+def services(request):
+    pageData = fetch.community_portal_services_page_data()
+    return JsonResponse({
+        "pageData": pageData, 
+        }
+    )
+
 def menu(request):
 	menuData = fetch.community_portal_website_menu()
 	userData = fetch.community_portal_user_data()
@@ -62,6 +69,7 @@ def aboutUs(request):
 			"aboutUsData": aboutUsData
 	})
 
+
 def events(request):
 	pageData = fetch.community_portal_events_page_data()
 	menuData = fetch.community_portal_website_menu()
@@ -72,6 +80,13 @@ def events(request):
 			"userData": userData,
 			}
 	)
+
+def teams(request):
+    pageData = fetch.community_portal_teams_page_data()
+    return JsonResponse({
+        "pageData": pageData, 
+        }
+    )
 
 
 def stories(request):
@@ -98,6 +113,13 @@ def get_super_admin_sidebar_menu(request):
 
 def get_super_admin_navbar_menu(request):
   return Json(fetch.super_admin_navbar())
+
+def policies(request):
+    pageData = fetch.community_portal_policies_page_data()
+    return JsonResponse({
+        "pageData": pageData, 
+        }
+    )
 
 ####### GET REQUESTS #####################
 
