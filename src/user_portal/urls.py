@@ -36,6 +36,7 @@ urlpatterns = [
   path('create/team', views.create_team),
   path('create/event', views.create_event),
   path('create/location', views.create_location),
+  path('create/community', views.create_community),
   path('add/team_members', views.add_team_members),
   path('add/user_action', views.create_user_action),
   path('subscribe', views.create_subscriber),
@@ -46,5 +47,12 @@ urlpatterns = [
   path('update/user_action', views.update_user_action),
   path('update/profile', views.update_profile),
   path('delete/user_action', views.delete_user_action),
-  path('delete/user', views.delete_user_account)
+  path('delete/user', views.delete_user_account),
+  path('actions', views.actions),
+  path('test', views.ping),
+  path('ping', views.ping),
+  path('menu/sidebar', views.get_super_admin_sidebar_menu),
+  path('menu/navbar',views.get_super_admin_navbar_menu),
+  path('events', views.events, name='super_admin_events'),
+  path('communities', views.communities),
 ]
