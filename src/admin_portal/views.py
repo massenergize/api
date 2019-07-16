@@ -36,7 +36,6 @@ def actions(request):
     actions = fetch.actions(filter_args)
     return Json(actions)
   elif request.method == 'POST':
-    args = json.loads(request.body.decode('utf-8'))
     response = create.new_action(args)
     return Json(response["new_action"], response["errors"])
   return Json(None)

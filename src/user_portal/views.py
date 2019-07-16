@@ -7,10 +7,10 @@ from django.views.decorators.http import require_GET, require_POST
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
 from  database.models import *
-from database.utils.common import get_request_contents
+from database.utils.common import get_request_contents, rename_filter_args
 
 FACTORY = CreateFactory("Data Creator")
-# FETCH = DatabaseReader()
+FETCH = DatabaseReader("Database Reader")
 
 def ping(request):
 	"This view is just for test purposes"
@@ -98,89 +98,103 @@ def get_super_admin_sidebar_menu(request):
 
 def get_super_admin_navbar_menu(request):
   return Json(fetch.super_admin_navbar())
+
 ####### GET REQUESTS #####################
 
 
 @require_GET
 def get_page(request):
 	#retrieving the arguments from the request
-	filter_args = request.GET.dict() 
-	page = fetch.portal_page(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	page, errors = FETCH.one(Page, filter_args)
+	return Json(page, errors)
 
 def get_user_todo_actions(request):
-	filter_args = request.GET.dict() 
-	user_actions = fetch.todo_actions(filter_args)
-	return Json(user_actions, use_full_json=True)
+	filter_args = get_request_contents(request)
+	filter_args = rename_filter_args(filter_args, [
+		("user_id", "user"),("real_estate_id", "real_estate_unit")
+	])
+	filter_args["status"] = "TODO"
+	user_actions, errors = FETCH.all(UserActionRel, filter_args)
+	return Json(user_actions, errors)
 
 def get_user_completed_actions(request):
-	filter_args = request.GET.dict() 
-	user_actions = fetch.completed_actions(filter_args)
-	return Json(user_actions, use_full_json=True)
+	filter_args = get_request_contents(request)
+	filter_args = rename_filter_args(filter_args, [
+    ("user_id", "user"),("real_estate_id", "real_estate_unit")
+  ])
+	filter_args["status"] = "DONE"
+	user_actions, errors = FETCH.all(UserActionRel, filter_args)
+	return Json(user_actions, errors)
 
 def get_all_community_events(request):
-	filter_args = request.GET.dict()
-	events = fetch.events(filter_args)
-	return Json(events)
+	filter_args = get_request_contents(request)
+	filter_args = rename_filter_args(filter_args, [("community_id", "community"), 
+		("community_domain", "community__subdomain__contains")])
+	events, errors = FETCH.all(Event, filter_args)
+	return Json(events, errors)
 
 def get_one_event(request):
-	filter_args = request.GET.dict()
-	event = fetch.event(filter_args)
-	return Json(event)
+	filter_args = get_request_contents(request)
+	event, errors = FETCH.one(Event ,filter_args, 
+		many_to_many_fields_to_prefetch=['tags'], 
+		foreign_keys_to_select=['community'])
+	return Json(event, errors)
 
 def get_community_actions(request):
-	filter_args = request.GET.dict() 
-	page = fetch.actions(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	actions, errors = FETCH.all(Action, filter_args)
+	return Json(actions, errors)
 
 def get_one_action(request):
-	filter_args = request.GET.dict() 
-	page = fetch.action(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	action, errors = FETCH.one(Action, filter_args)
+	return Json(action, errors)
 
 def get_my_profile(request):
-	filter_args = request.GET.dict() 
-	page = fetch.user_profile(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	user, errors = FETCH.one(UserProfile, filter_args)
+	return Json(user, errors)
 
 def get_user_households(request):
-	filter_args = request.GET.dict() 
-	page = fetch.user_households(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	rename_filter_args(filter_args, [('user_id', 'id')])
+	households, errors = FETCH.all(RealEstateUnit ,filter_args)
+	return Json(households, errors)
 
 def get_one_household(request):
-	filter_args = request.GET.dict() 
-	page = fetch.household(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	household, errors = FETCH.one(RealEstateUnit ,filter_args)
+	return Json(household, errors)
 
 def get_community_teams(request):
-	filter_args = request.GET.dict() 
-	page = fetch.teams(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	teams, errors = FETCH.all(Team ,filter_args)
+	return Json(teams, errors)
 
 def get_one_team(request):
-	filter_args = request.GET.dict() 
-	page = fetch.team(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	team, errors = FETCH.one(Team, filter_args)
+	return Json(team, errors)
 
 def get_all_communities(request):
-	page = fetch.communities()
-	return Json(page)
+	communities, errors = FETCH.all(Community)
+	return Json(communities, errors)
 
 def get_one_community(request):
-	filter_args = request.GET.dict() 
-	page = fetch.community(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	community, errors = FETCH.one(Community ,filter_args)
+	return Json(community, errors)
 
 def get_community_graphs(request):
-	filter_args = request.GET.dict() 
-	page = fetch.graphs(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	graphs, errors = FETCH.all(Graph, filter_args)
+	return Json(graphs, errors)
 
 def get_one_community_graph(request):
-	filter_args = request.GET.dict() 
-	page = fetch.graph(filter_args)
-	return Json(page)
+	filter_args = get_request_contents(request)
+	graph, errors = FETCH.one(filter_args)
+	return Json(graph, errors)
 ####### END OF GET REQUESTS #####################
 
 
@@ -256,25 +270,20 @@ def register_user_for_event(request):
 @csrf_exempt
 def actions(request):
   args = get_request_contents(request)
-
   if request.method == 'GET':
-    filter_args = request.GET
-    actions = fetch.actions(filter_args)
+    actions = FETCH.all(Action, args)
     return Json(actions)
   elif request.method == 'POST':
-    args = get_request_contents(request)
-		
-    response = create.new_action(args)
-    return Json(response["new_action"], response["errors"])
+    action, errors = FACTORY.create(Action, args)
+    return Json(Action, errors)
   return Json(None)
 
 
 @csrf_exempt
 def communities(request):
   args = get_request_contents(request)
-  db = DatabaseReader(Community, args)
-  data, errors = db.get_all()
-  return Json(data, errors=errors)
+  communities, errors = FETCH.all(Community, args)
+  return Json(communities, errors)
 
 
 def create_community(request):
@@ -286,9 +295,9 @@ def create_community(request):
 @csrf_exempt
 def events(request):
   if request.method == 'GET':
-    filter_args = request.GET
-    events = fetch.events(request.GET)
-    return Json(events)
+    filter_args = get_request_contents(request)
+    events, errors = FETCH.all(Event, filter_args)
+    return Json(events, errors)
   elif request.method == 'POST':
     return Json(None)
   return Json(None)
