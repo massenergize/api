@@ -30,6 +30,8 @@ SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    '*', #TODO: remove later
+    '10.0.0.187:8000',
     'localhost',
     '127.0.0.1',
     'api.massenergize.org',
@@ -69,8 +71,8 @@ MIDDLEWARE = [
 # -------- CORS CONFIGURATION ---------------#
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+# CSRF_COOKIE_SECURE = False
+# SESSION_COOKIE_SECURE = False
 
 CORS_ORIGIN_WHITELIST = [
     "https://massenergize.org",

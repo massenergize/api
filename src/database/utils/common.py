@@ -64,14 +64,14 @@ def retrieve_all_objects(model, args, full_json=False) -> list:
     (i.full_json() if full_json else i.simple_json()) for i in objects
   ]
 
-def convert_to_json(data, full_json=False):
+def convert_to_json(data, full_json=True):
   """
   Serializes an object into a json to be sent over-the-wire 
   """
   if not data:
     return None
   elif isinstance(data, dict):
-    return data
+    return data 
   elif isinstance(data, Iterable):
     return  [
       (i.full_json() if full_json else i.simple_json()) for i in data
@@ -92,16 +92,23 @@ def get_json_if_not_none(obj) -> dict:
   return None
 
 
-def fetch_from_db(model, filter_args={}, 
-  prefetch_related_args=[], select_related_args=[]):
-  return (model.objects
-    .select_related(*select_related_args)
-    .filter(**filter_args)
-    .prefetch_related(*prefetch_related_args))
-
 def ensure_required_fields(required_fields, args):
   errors = []
   for f in required_fields:
     if f not in args:
       errors.append(f"You are missing a required field: {f}")
   return errors
+
+def rename_filter_args(args, pairs):
+  for (old_key, new_key) in pairs:
+    if old_key in args:
+      args[new_key] = args.pop(old_key)
+  return args
+
+def get_request_contents(request):
+  if request.method == 'POST':
+    # return request.POST.dict()
+    return request.body.decode('utf-8')
+  elif request.method == 'GET':
+    return request.GET.dict()
+

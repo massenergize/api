@@ -61,7 +61,7 @@ class Location(models.Model):
     return self.location_type
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
     return convert_to_json(self)
@@ -214,9 +214,6 @@ class Community(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
-
-  def get_json(self):
     return {
       "name": self.name,
       "subdomain": self.subdomain,
@@ -254,6 +251,7 @@ class RealEstateUnit(models.Model):
     The date and time of the last time any updates were made to the information
     about this real estate unit
   """
+  name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
   unit_type =  models.CharField(
     max_length=TINY_STR_LEN, 
     choices=CHOICES["REAL_ESTATE_TYPES"].items()
@@ -270,23 +268,21 @@ class RealEstateUnit(models.Model):
     return self.unit_type == 'R'
 
   def __str__(self):
-    return '%s: %s, %s, %s, %s' % (
-      self.unit_type, self.street, self.city, self.zipcode, self.state
+    return '%s - Location: %s ' % (
+      self.unit_type, str(self.location)
     )
 
   def simple_json(self):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
-
-  def get_json(self):
     return {
       "unit_type": self.unit_type,
-      "location": self.location.get_json(),
+      "location": self.location.simple_json(),
       "created_at": self.created_at,
       "updated_at": self.updated_at
     }
+
 
   class Meta:
     db_table = 'real_estate_units'
@@ -327,20 +323,13 @@ class Goal(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
 
-  def get_json(self):
-    return {
-      "name": self.name,
-      "status": self.status,
-      "description": self.description,
-      "created_at": self.created_at,
-      "updated_at": self.updated_at
-    }
+
   class Meta:
     db_table = 'goals'
 
@@ -770,9 +759,23 @@ class Action(models.Model):
     return self.title
 
   def simple_json(self):
-    return convert_to_json(self)
+    fields_to_retrieve = [
+      'id', 'title','steps_to_take', 'about', 'icon', 'rank', 'geographic_area'
+    ]
+    return model_to_dict(self, fields=fields_to_retrieve)
 
   def full_json(self):
+    result = self.simple_json()
+    result.update({
+      "image": get_json_if_not_none(self.image), 
+      "tags": [t.simple_json() for t in self.tags.all()], 
+      "properties": [p.simple_json() for p in self.properties.all()], 
+      "vendors": [v.simple_json() for v in self.vendors.all()],
+      "created_at": self.created_at, 
+      "updated_at": self.updated_at, 
+      "community": self.community.simple_json()
+    })
+
     return {
       "id": self.id,
       "title": self.title, 
@@ -835,6 +838,8 @@ class Event(models.Model):
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   archive =  models.BooleanField(default=False)
   is_global = models.BooleanField(default=False)
+  external_link = models.CharField(max_length = SHORT_STR_LEN, blank=True)
+  is_external_event = models.BooleanField(default=False)
 
 
   def __str__(self):             
@@ -975,7 +980,7 @@ class Testimonial(models.Model):
   rank = models.PositiveSmallIntegerField(default=0)
 
   def __str__(self):        
-    return "%d: %s" % (self.rank, self.name)
+    return self.title
 
   def simple_json(self):
     return convert_to_json(self)
@@ -1027,10 +1032,17 @@ class UserActionRel(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    res = convert_to_json(self)
+    res["user"] = self.user.simple_json()
+    res["action"] = self.action.simple_json()
+    res["real_estate_unit"] = self.real_estate_unit.name
+    return res
 
   def __str__(self):
-    return  "%s: %s" % (self.user, self.action)
+    return  "%s | %s | (%s)" % (self.user, self.status, self.action)
+
+  class Meta:
+    ordering = ('status','user', 'action')
 
 
 class CommunityAdminGroup(models.Model):
@@ -1112,9 +1124,8 @@ class Statistic(models.Model):
     foreign key linking a community to this statistic
   """
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
-  value =  models.DecimalField(default=0.0, max_digits=10,decimal_places=10)
+  value =  models.PositiveIntegerField(default=0)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
-
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
   info = JSONField(blank=True, null=True)
@@ -1129,7 +1140,7 @@ class Statistic(models.Model):
     return convert_to_json(self)
 
   class Meta:
-    verbose_name_plural = "Graph Statistics"
+    verbose_name_plural = "Data"
     ordering = ('name','value')
     db_table = 'statistics'
 
@@ -1149,7 +1160,9 @@ class Graph(models.Model):
   title = models.CharField(max_length = LONG_STR_LEN, db_index=True)
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["GRAPH_TYPES"].items())
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True,blank=True)
   data = JSONField(blank=True, null=True)
+
 
   def simple_json(self):
     return convert_to_json(self)
@@ -1340,7 +1353,7 @@ class BillingStatement(models.Model):
     dynamic information goes in here
   """
   name = models.CharField(max_length=SHORT_STR_LEN)
-  amount = models.DecimalField(default=0.0, decimal_places=4, max_digits = 10)
+  amount = models.CharField(max_length=SHORT_STR_LEN, default='0.0')
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   start_date = models.DateTimeField(blank=True, db_index=True)
   end_date = models.DateTimeField(blank=True)
