@@ -43,7 +43,6 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'authentication',
-    'admin_portal',
     'carbon_calculator',
     'database',
     'user_portal',
