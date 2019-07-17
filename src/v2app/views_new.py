@@ -19,8 +19,26 @@ def ping(request):
 	"""
 	return Json(None)
 
+@csrf_exempt
 def actions(request):
+  args = get_request_contents(request)
+  if request.method == "GET":
+    actions, errors = FETCH.all(Action, args)
+    return Json(actions, errors)
+  elif request.method == "POST":
+    action, errors = FACTORY.create(Action, args)
+    return Json(action, errors)
   return Json()
 
+@csrf_exempt
 def action(request, id):
-  return Json({"id": id})
+  args = get_request_contents(request)
+  if request.method == "GET":
+    action, errors = FETCH.one(Action, args)
+    return Json(action, errors)
+  elif request.method == "POST":
+    #this means they want to update the action resource with this <id>
+    action, errors = FACTORY.update(Action, args)
+    return Json(action, errors)
+  return Json()
+

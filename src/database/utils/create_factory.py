@@ -48,3 +48,30 @@ class CreateFactory:
     except Exception as e:
       errors =  [CREATE_ERROR_MSG, str(e)]
     return new_object, errors
+
+
+  def update(self, model, args={}):
+    errors = self.verify_required_fields(model, args)
+    new_object = None 
+
+    if errors:
+      return None, errors
+
+    #if code gets here we have everything all required fields
+    try:
+      many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']
+      field_values = {}
+      for field_name, value in args.items():
+        if field_name not in many_to_many_fields:
+          field_values[field_name] = value
+
+      obj, _ = model.objects.update_or_create(**field_values)
+
+
+      # for f in many_to_many_fields:
+        # if f in self.args:
+        #   pass
+
+    except Exception as e:
+      errors =  [CREATE_ERROR_MSG, str(e)]
+    return obj, errors

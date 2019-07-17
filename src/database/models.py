@@ -751,7 +751,7 @@ class Action(models.Model):
     blank=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, 
     null=True, blank=True, db_index=True)
-  rank = models.PositiveSmallIntegerField(default = 0) 
+  rank = models.PositiveSmallIntegerField(default = 0, blank=True) 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -1078,8 +1078,8 @@ class CommunityAdminGroup(models.Model):
 
 class UserGroup(models.Model):
   """
-  This represents a binding of a group of users and a community for which they
-  are admin for.
+  This represents a binding of a group of users and a community 
+  and the permissions they have.
 
   Attributes
   ----------

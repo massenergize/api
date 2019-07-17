@@ -107,8 +107,8 @@ def rename_filter_args(args, pairs):
 
 def get_request_contents(request):
   if request.method == 'POST':
-    # return request.POST.dict()
-    return request.body.decode('utf-8')
+    return request.POST.dict()
+    # return request.body.decode('utf-8')
   elif request.method == 'GET':
     return request.GET.dict()
 
