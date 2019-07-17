@@ -532,7 +532,7 @@ def media(request):
 
 
 @csrf_exempt
-def media(request, id):
+def media_with_id(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
@@ -544,7 +544,18 @@ def media(request, id):
     return Json(media, errors)
   return Json(None)
 
-
+@csrf_exempt
+def media_with_slug(request, id):
+  args = get_request_contents(request)
+  args['id'] = id
+  if request.method == 'GET':
+    media, errors = FETCH.one(Media, args)
+    return Json(media, errors)
+  elif request.method == 'POST':
+    #updating the Media resource with this <id>
+    media, errors = FACTORY.update(Media, args)
+    return Json(media, errors)
+  return Json(None)
 
 @csrf_exempt
 def menu(request):
