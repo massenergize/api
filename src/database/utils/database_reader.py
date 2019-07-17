@@ -17,7 +17,7 @@ class DatabaseReader:
     all_fields = MODELS_AND_FIELDS[model]["all_fields"]
     for f in  fields_provided:
       if f not in all_fields:
-        return [f"{f} is not a valid field in {model.name}"]
+        return [f"{f} is not a valid field in {model._meta.model_name}"]
     return None
 
 

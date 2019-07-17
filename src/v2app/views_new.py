@@ -153,7 +153,7 @@ def community_actions(request, cid):
 @csrf_exempt
 def community_members(request, cid):
   args = get_request_contents(request)
-  args['community'] = cid
+  args['communities'] = cid
   if request.method == 'GET':
     community, errors = FETCH.all(UserProfile, args)
     return Json(community, errors)

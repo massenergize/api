@@ -79,7 +79,9 @@ def convert_to_json(data, full_json=True):
   else:
     objects = [data]
     serialized_object = serializers.serialize("json", objects)
-    return json.loads(serialized_object)[0]["fields"]
+    result = json.loads(serialized_object)[0]["fields"]
+    result["id"] = json.loads(serialized_object)[0]["pk"]
+    return result
 
 
 def get_json_if_not_none(obj) -> dict:
