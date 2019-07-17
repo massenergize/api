@@ -522,6 +522,9 @@ def media(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     medias, errors = FETCH.all(Media, args)
+    if medias:
+      for media in medias:
+        media.file = media.file.url
     return Json(medias, errors)
   elif request.method == 'POST':
     #about to create a new Media instance
@@ -537,6 +540,8 @@ def media_with_id(request, id):
   args['id'] = id
   if request.method == 'GET':
     media, errors = FETCH.one(Media, args)
+    if media:
+      media.file = media.file.url
     return Json(media, errors)
   elif request.method == 'POST':
     #updating the Media resource with this <id>
