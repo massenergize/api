@@ -893,7 +893,7 @@ def subscriber_email_preference(request, id):
 
 
 
-@csrf_exempt
+# @csrf_exempt
 def tags(request):
   args = get_request_contents(request)
   if request.method == 'GET':

@@ -10,7 +10,7 @@ from .common import convert_to_json
 class Json(JsonResponse):
   def __init__(self, raw_data=None, errors=None, use_full_json=False):
     cleaned_data = {
-      "success": errors is None,
+      "success": not bool(errors),
       "errors": errors,
       "data": convert_to_json(raw_data, use_full_json)
     }
