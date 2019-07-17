@@ -1318,7 +1318,7 @@ class Page(models.Model):
   info = JSONField(blank=True, null=True)
 
   def __str__(self):             
-    return self.name
+    return f"{self.name} - {self.community.name}"
 
   def simple_json(self):
     return convert_to_json(self)
