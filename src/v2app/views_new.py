@@ -1,12 +1,11 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from database.CRUD import create, read as fetch
 from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
-from  database.models import *
+from database.models import *
 from database.utils.common import get_request_contents, rename_filter_args
 
 FACTORY = CreateFactory("Data Creator")
@@ -23,34 +22,9 @@ def ping(request):
 @csrf_exempt
 def actions(request):
   args = get_request_contents(request)
-  if request.method == "GET":
-    actions, errors = FETCH.all(Action, args)
-    return Json(actions, errors)
-  elif request.method == "POST":
-    action, errors = FACTORY.create(Action, args)
-    return Json(action, errors)
-  return Json()
-
-
-@csrf_exempt
-def action(request, id):
-  args = get_request_contents(request)
-  if request.method == "GET":
-    action, errors = FETCH.one(Action, args)
-    return Json(action, errors)
-  elif request.method == "POST":
-    #this means they want to update the action resource with this <id>
-    action, errors = FACTORY.update(Action, args)
-    return Json(action, errors)
-  return Json()
-
-
-@csrf_exempt
-def actions(request):
-  args = get_request_contents(request)
   if request.method == 'GET':
     actions, errors = FETCH.all(Action, args)
-    return Json(Action, errors)
+    return Json(actions, errors)
   elif request.method == 'POST':
     #about to create a new Action instance
     action, errors = FACTORY.create(Action, args)
@@ -64,7 +38,7 @@ def action(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    action, errors = FETCH.all(Action, args)
+    action, errors = FETCH.one(Action, args)
     return Json(action, errors)
   elif request.method == 'POST':
     #updating the Action resource with this <id>
@@ -79,11 +53,11 @@ def action_properties(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     actionproperties, errors = FETCH.all(ActionProperty, args)
-    return Json(ActionProperty, errors)
+    return Json(actionproperties, errors)
   elif request.method == 'POST':
     #about to create a new ActionPropertie instance
-    actionpropertie, errors = FACTORY.create(ActionProperty, args)
-    return Json(actionpropertie, errors)
+    actionproperty, errors = FACTORY.create(ActionProperty, args)
+    return Json(actionproperty, errors)
   return Json(None)
 
 
@@ -93,12 +67,12 @@ def action_property(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    actionproperty, errors = FETCH.all(ActionProperty, args)
+    actionproperty, errors = FETCH.one(ActionProperty, args)
     return Json(actionproperty, errors)
   elif request.method == 'POST':
     #updating the ActionProperty resource with this <id>
     actionproperty, errors = FACTORY.create(ActionProperty, args)
-    return Json(action, errors)
+    return Json(actionproperty, errors)
   return Json(None)
 
 
@@ -108,7 +82,7 @@ def billing_statements(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     billingstatements, errors = FETCH.all(BillingStatement, args)
-    return Json(BillingStatement, errors)
+    return Json(billingstatements, errors)
   elif request.method == 'POST':
     #about to create a new BillingStatement instance
     billingstatement, errors = FACTORY.create(BillingStatement, args)
@@ -122,12 +96,12 @@ def billing_statement(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    billingstatement, errors = FETCH.all(BillingStatement, args)
+    billingstatement, errors = FETCH.one(BillingStatement, args)
     return Json(billingstatement, errors)
   elif request.method == 'POST':
     #updating the BillingStatement resource with this <id>
     billingstatement, errors = FACTORY.create(BillingStatement, args)
-    return Json(action, errors)
+    return Json(billingstatement, errors)
   return Json(None)
 
 
@@ -137,7 +111,7 @@ def communities(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     communities, errors = FETCH.all(Community, args)
-    return Json(Community, errors)
+    return Json(communities, errors)
   elif request.method == 'POST':
     #about to create a new Communitie instance
     communities, errors = FACTORY.create(Community, args)
@@ -147,16 +121,166 @@ def communities(request):
 
 
 @csrf_exempt
-def community(request, id):
+def community(request, cid):
   args = get_request_contents(request)
-  args['id'] = id
+  args['id'] = cid
   if request.method == 'GET':
-    community, errors = FETCH.all(Community, args)
+    community, errors = FETCH.one(Community, args)
     return Json(community, errors)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
+    #TODO: create pages for this community, etc
     community, errors = FACTORY.create(Community, args)
-    return Json(action, errors)
+    return Json(community, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def community_actions(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(Action, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_actions, errors = FACTORY.create(Action, args)
+    return Json(community_actions, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_members(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(UserProfile, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    member, errors = FACTORY.create(UserProfile, args)
+    return Json(member, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_impact(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(Graph, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_impact, errors = FACTORY.create(Graph, args)
+    return Json(community_impact, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_pages(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(Page, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_page, errors = FACTORY.create(Page, args)
+    return Json(community_page, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_events(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(Event, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_event, errors = FACTORY.create(Event, args)
+    return Json(community_event, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_households(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(RealEstateUnit, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_household, errors = FACTORY.create(RealEstateUnit, args)
+    return Json(community_household, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_goals(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(Goal, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_goals, errors = FACTORY.create(Goal, args)
+    return Json(community_goals, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_teams(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(Team, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_teams, errors = FACTORY.create(Community, args)
+    return Json(community_teams, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_data(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(Statistic, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_data, errors = FACTORY.create(Community, args)
+    return Json(community_data, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def community_testimonials(request, cid):
+  args = get_request_contents(request)
+  args['community'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.all(Testimonial, args)
+    return Json(community, errors)
+  elif request.method == 'POST':
+    #updating the Community resource with this <id>
+    community_testimonial, errors = FACTORY.create(Community, args)
+    return Json(community_testimonial, errors)
   return Json(None)
 
 
@@ -166,7 +290,7 @@ def community_admins(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     communityadmins, errors = FETCH.all(CommunityAdminGroup, args)
-    return Json(CommunityAdminGroup, errors)
+    return Json(communityadmins, errors)
   elif request.method == 'POST':
     #about to create a new CommunityAdmin instance
     communityadmin, errors = FACTORY.create(CommunityAdminGroup, args)
@@ -180,12 +304,12 @@ def community_admin(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    communityadmin, errors = FETCH.all(CommunityAdminGroup, args)
+    communityadmin, errors = FETCH.one(CommunityAdminGroup, args)
     return Json(communityadmin, errors)
   elif request.method == 'POST':
     #updating the CommunityAdminGroup resource with this <id>
     communityadmin, errors = FACTORY.create(CommunityAdminGroup, args)
-    return Json(action, errors)
+    return Json(communityadmin, errors)
   return Json(None)
 
 
@@ -195,9 +319,9 @@ def email_categories(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     emailcategories, errors = FETCH.all(EmailCategory, args)
-    return Json(EmailCategory, errors)
+    return Json(emailcategories, errors)
   elif request.method == 'POST':
-    #about to create a new EmailCategorie instance
+    #about to create a new EmailCategory instance
     emailcategory, errors = FACTORY.create(EmailCategory, args)
     return Json(emailcategory, errors)
   return Json(None)
@@ -209,12 +333,12 @@ def email_category(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    emailcategory, errors = FETCH.all(EmailCategory, args)
+    emailcategory, errors = FETCH.one(EmailCategory, args)
     return Json(emailcategory, errors)
   elif request.method == 'POST':
     #updating the EmailCategory resource with this <id>
     emailcategory, errors = FACTORY.create(EmailCategory, args)
-    return Json(action, errors)
+    return Json(emailcategory, errors)
   return Json(None)
 
 
@@ -224,7 +348,7 @@ def events(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     events, errors = FETCH.all(Event, args)
-    return Json(Event, errors)
+    return Json(events, errors)
   elif request.method == 'POST':
     #about to create a new Event instance
     event, errors = FACTORY.create(Event, args)
@@ -238,12 +362,12 @@ def event(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    event, errors = FETCH.all(Event, args)
+    event, errors = FETCH.one(Event, args)
     return Json(event, errors)
   elif request.method == 'POST':
     #updating the Event resource with this <id>
     event, errors = FACTORY.create(Event, args)
-    return Json(action, errors)
+    return Json(event, errors)
   return Json(None)
 
 
@@ -253,7 +377,7 @@ def event_attendees(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     eventattendees, errors = FETCH.all(EventAttendees, args)
-    return Json(EventAttendees, errors)
+    return Json(eventattendees, errors)
   elif request.method == 'POST':
     #about to create a new EventAttendee instance
     eventattendee, errors = FACTORY.create(EventAttendees, args)
@@ -267,12 +391,12 @@ def event_attendee(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    eventattendee, errors = FETCH.all(EventAttendees, args)
+    eventattendee, errors = FETCH.one(EventAttendees, args)
     return Json(eventattendee, errors)
   elif request.method == 'POST':
     #updating the EventAttendee resource with this <id>
     eventattendee, errors = FACTORY.create(EventAttendees, args)
-    return Json(action, errors)
+    return Json(eventattendee, errors)
   return Json(None)
 
 
@@ -282,7 +406,7 @@ def goals(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     goals, errors = FETCH.all(Goal, args)
-    return Json(Goal, errors)
+    return Json(goals, errors)
   elif request.method == 'POST':
     #about to create a new Goal instance
     goal, errors = FACTORY.create(Goal, args)
@@ -296,12 +420,12 @@ def goal(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    goal, errors = FETCH.all(Goal, args)
+    goal, errors = FETCH.one(Goal, args)
     return Json(goal, errors)
   elif request.method == 'POST':
     #updating the Goal resource with this <id>
     goal, errors = FACTORY.create(Goal, args)
-    return Json(action, errors)
+    return Json(goal, errors)
   return Json(None)
 
 
@@ -311,7 +435,7 @@ def graphs(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     graphs, errors = FETCH.all(Graph, args)
-    return Json(Graph, errors)
+    return Json(graphs, errors)
   elif request.method == 'POST':
     #about to create a new Graph instance
     graph, errors = FACTORY.create(Graph, args)
@@ -325,12 +449,12 @@ def graph(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    graph, errors = FETCH.all(Graph, args)
+    graph, errors = FETCH.one(Graph, args)
     return Json(graph, errors)
   elif request.method == 'POST':
     #updating the Graph resource with this <id>
     graph, errors = FACTORY.create(Graph, args)
-    return Json(action, errors)
+    return Json(graph, errors)
   return Json(None)
 
 
@@ -340,7 +464,7 @@ def households(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     households, errors = FETCH.all(RealEstateUnit, args)
-    return Json(RealEstateUnit, errors)
+    return Json(households, errors)
   elif request.method == 'POST':
     #about to create a new Household instance
     household, errors = FACTORY.create(RealEstateUnit, args)
@@ -354,12 +478,12 @@ def household(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    household, errors = FETCH.all(RealEstateUnit, args)
+    household, errors = FETCH.one(RealEstateUnit, args)
     return Json(household, errors)
   elif request.method == 'POST':
     #updating the Household resource with this <id>
     household, errors = FACTORY.create(RealEstateUnit, args)
-    return Json(action, errors)
+    return Json(household, errors)
   return Json(None)
 
 
@@ -369,7 +493,7 @@ def locations(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     locations, errors = FETCH.all(Location, args)
-    return Json(Location, errors)
+    return Json(locations, errors)
   elif request.method == 'POST':
     #about to create a new Location instance
     location, errors = FACTORY.create(Location, args)
@@ -383,12 +507,12 @@ def location(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    location, errors = FETCH.all(Location, args)
+    location, errors = FETCH.one(Location, args)
     return Json(location, errors)
   elif request.method == 'POST':
     #updating the Location resource with this <id>
     location, errors = FACTORY.create(Location, args)
-    return Json(action, errors)
+    return Json(location, errors)
   return Json(None)
 
 
@@ -398,7 +522,7 @@ def media(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     medias, errors = FETCH.all(Media, args)
-    return Json(Media, errors)
+    return Json(medias, errors)
   elif request.method == 'POST':
     #about to create a new Media instance
     media, errors = FACTORY.create(Media, args)
@@ -412,12 +536,12 @@ def media(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    media, errors = FETCH.all(Media, args)
+    media, errors = FETCH.one(Media, args)
     return Json(media, errors)
   elif request.method == 'POST':
     #updating the Media resource with this <id>
     media, errors = FACTORY.create(Media, args)
-    return Json(action, errors)
+    return Json(media, errors)
   return Json(None)
 
 
@@ -427,12 +551,12 @@ def media(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    media, errors = FETCH.all(Media, args)
+    media, errors = FETCH.one(Media, args)
     return Json(media, errors)
   elif request.method == 'POST':
     #updating the Media resource with this <id>
     media, errors = FACTORY.create(Media, args)
-    return Json(action, errors)
+    return Json(media, errors)
   return Json(None)
 
 
@@ -442,7 +566,7 @@ def menu(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     menus, errors = FETCH.all(Menu, args)
-    return Json(Menu, errors)
+    return Json(menus, errors)
   elif request.method == 'POST':
     #about to create a new Menu instance
     menu, errors = FACTORY.create(Menu, args)
@@ -456,12 +580,12 @@ def menu(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    menu, errors = FETCH.all(Menu, args)
+    menu, errors = FETCH.one(Menu, args)
     return Json(menu, errors)
   elif request.method == 'POST':
     #updating the Menu resource with this <id>
     menu, errors = FACTORY.create(Menu, args)
-    return Json(action, errors)
+    return Json(menu, errors)
   return Json(None)
 
 
@@ -471,7 +595,7 @@ def pages(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     pages, errors = FETCH.all(Page, args)
-    return Json(Page, errors)
+    return Json(pages, errors)
   elif request.method == 'POST':
     #about to create a new Page instance
     page, errors = FACTORY.create(Page, args)
@@ -485,12 +609,12 @@ def page(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    page, errors = FETCH.all(Page, args)
+    page, errors = FETCH.one(Page, args)
     return Json(page, errors)
   elif request.method == 'POST':
     #updating the Page resource with this <id>
     page, errors = FACTORY.create(Page, args)
-    return Json(action, errors)
+    return Json(page, errors)
   return Json(None)
 
 
@@ -500,7 +624,7 @@ def page_sections(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     pagesections, errors = FETCH.all(PageSection, args)
-    return Json(PageSection, errors)
+    return Json(pagesections, errors)
   elif request.method == 'POST':
     #about to create a new PageSection instance
     pagesection, errors = FACTORY.create(PageSection, args)
@@ -514,12 +638,12 @@ def page_section(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    pagesection, errors = FETCH.all(PageSection, args)
+    pagesection, errors = FETCH.one(PageSection, args)
     return Json(pagesection, errors)
   elif request.method == 'POST':
     #updating the PageSection resource with this <id>
     pagesection, errors = FACTORY.create(PageSection, args)
-    return Json(action, errors)
+    return Json(pagesection, errors)
   return Json(None)
 
 
@@ -529,7 +653,7 @@ def permissions(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     permissions, errors = FETCH.all(Permission, args)
-    return Json(Permission, errors)
+    return Json(permissions, errors)
   elif request.method == 'POST':
     #about to create a new Permission instance
     permission, errors = FACTORY.create(Permission, args)
@@ -543,12 +667,12 @@ def permission(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    permission, errors = FETCH.all(Permission, args)
+    permission, errors = FETCH.one(Permission, args)
     return Json(permission, errors)
   elif request.method == 'POST':
     #updating the Permission resource with this <id>
     permission, errors = FACTORY.create(Permission, args)
-    return Json(action, errors)
+    return Json(permission, errors)
   return Json(None)
 
 
@@ -558,7 +682,7 @@ def policies(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     policies, errors = FETCH.all(Policy, args)
-    return Json(Policy, errors)
+    return Json(policies, errors)
   elif request.method == 'POST':
     #about to create a new Policy instance
     policy, errors = FACTORY.create(Policy, args)
@@ -572,12 +696,12 @@ def policy(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    policies, errors = FETCH.all(Policy, args)
+    policies, errors = FETCH.one(Policy, args)
     return Json(policies, errors)
   elif request.method == 'POST':
     #updating the Policy resource with this <id>
     policy, errors = FACTORY.create(Policy, args)
-    return Json(action, errors)
+    return Json(policy, errors)
   return Json(None)
 
 
@@ -587,7 +711,7 @@ def roles(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     roles, errors = FETCH.all(Role, args)
-    return Json(Role, errors)
+    return Json(roles, errors)
   elif request.method == 'POST':
     #about to create a new Role instance
     role, errors = FACTORY.create(Role, args)
@@ -601,12 +725,12 @@ def role(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    role, errors = FETCH.all(Role, args)
+    role, errors = FETCH.one(Role, args)
     return Json(role, errors)
   elif request.method == 'POST':
     #updating the Role resource with this <id>
     role, errors = FACTORY.create(Role, args)
-    return Json(action, errors)
+    return Json(role, errors)
   return Json(None)
 
 
@@ -616,7 +740,7 @@ def services(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     services, errors = FETCH.all(Service, args)
-    return Json(Service, errors)
+    return Json(services, errors)
   elif request.method == 'POST':
     #about to create a new Service instance
     service, errors = FACTORY.create(Service, args)
@@ -630,12 +754,12 @@ def service(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    service, errors = FETCH.all(Service, args)
+    service, errors = FETCH.one(Service, args)
     return Json(service, errors)
   elif request.method == 'POST':
     #updating the Service resource with this <id>
     service, errors = FACTORY.create(Service, args)
-    return Json(action, errors)
+    return Json(service, errors)
   return Json(None)
 
 
@@ -645,7 +769,7 @@ def sliders(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     sliders, errors = FETCH.all(Slider, args)
-    return Json(Slider, errors)
+    return Json(sliders, errors)
   elif request.method == 'POST':
     #about to create a new Slider instance
     slider, errors = FACTORY.create(Slider, args)
@@ -659,12 +783,12 @@ def slider(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    sliders, errors = FETCH.all(Slider, args)
+    sliders, errors = FETCH.one(Slider, args)
     return Json(sliders, errors)
   elif request.method == 'POST':
     #updating the Slider resource with this <id>
     slider, errors = FACTORY.create(Slider, args)
-    return Json(action, errors)
+    return Json(slider, errors)
   return Json(None)
 
 
@@ -674,7 +798,7 @@ def slider_images(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     sliderimages, errors = FETCH.all(SliderImage, args)
-    return Json(SliderImage, errors)
+    return Json(sliderimages, errors)
   elif request.method == 'POST':
     #about to create a new SliderImage instance
     sliderimage, errors = FACTORY.create(SliderImage, args)
@@ -688,12 +812,12 @@ def slider_image(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    sliderimage, errors = FETCH.all(SliderImage, args)
+    sliderimage, errors = FETCH.one(SliderImage, args)
     return Json(sliderimage, errors)
   elif request.method == 'POST':
     #updating the SliderImage resource with this <id>
     sliderimage, errors = FACTORY.create(SliderImage, args)
-    return Json(action, errors)
+    return Json(sliderimage, errors)
   return Json(None)
 
 
@@ -703,7 +827,7 @@ def statistics(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     statistics, errors = FETCH.all(Statistic, args)
-    return Json(Statistic, errors)
+    return Json(statistics, errors)
   elif request.method == 'POST':
     #about to create a new Statistic instance
     statistic, errors = FACTORY.create(Statistic, args)
@@ -722,7 +846,7 @@ def statistic(request, id):
   elif request.method == 'POST':
     #updating the Statistic resource with this <id>
     statistic, errors = FACTORY.create(Statistic, args)
-    return Json(action, errors)
+    return Json(statistic, errors)
   return Json(None)
 
 
@@ -731,7 +855,7 @@ def subscribers(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     subscribers, errors = FETCH.all(Subscriber, args)
-    return Json(Subscriber, errors)
+    return Json(subscribers, errors)
   elif request.method == 'POST':
     #about to create a new Subscriber instance
     subscriber, errors = FACTORY.create(Subscriber, args)
@@ -750,7 +874,7 @@ def subscriber(request, id):
   elif request.method == 'POST':
     #updating the Subscriber resource with this <id>
     subscriber, errors = FACTORY.create(Subscriber, args)
-    return Json(action, errors)
+    return Json(subscriber, errors)
   return Json(None)
 
 
@@ -759,12 +883,12 @@ def subscriber(request, id):
 def subscriber_email_preferences(request):
   args = get_request_contents(request)
   if request.method == 'GET':
-    subscriberemailpreferences, errors = FETCH.all(SubscriberEmailPreferences, args)
-    return Json(SubscriberEmailPreferences, errors)
+    preferences, errors = FETCH.all(SubscriberEmailPreferences, args)
+    return Json(preferences, errors)
   elif request.method == 'POST':
     #about to create a new SubscriberEmailPreferences instance
-    subscriberemailpreference, errors = FACTORY.create(SubscriberEmailPreferences, args)
-    return Json(subscriberemailpreference, errors)
+    pref, errors = FACTORY.create(SubscriberEmailPreferences, args)
+    return Json(pref, errors)
   return Json(None)
 
 
@@ -774,12 +898,12 @@ def subscriber_email_preference(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    subscriberemailpreference, errors = FETCH.all(SubscriberEmailPreferences, args)
-    return Json(subscriberemailpreference, errors)
+    pref, errors = FETCH.one(SubscriberEmailPreferences, args)
+    return Json(pref, errors)
   elif request.method == 'POST':
     #updating the SubscriberEmailPreference resource with this <id>
-    subscriberemailpreference, errors = FACTORY.create(SubscriberEmailPreferences, args)
-    return Json(action, errors)
+    pref, errors = FACTORY.create(SubscriberEmailPreferences, args)
+    return Json(pref, errors)
   return Json(None)
 
 
@@ -789,7 +913,7 @@ def tags(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     tags, errors = FETCH.all(Tag, args)
-    return Json(Tag, errors)
+    return Json(tags, errors)
   elif request.method == 'POST':
     #about to create a new Tag instance
     tag, errors = FACTORY.create(Tag, args)
@@ -803,12 +927,12 @@ def tag(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    tag, errors = FETCH.all(Tag, args)
+    tag, errors = FETCH.one(Tag, args)
     return Json(tag, errors)
   elif request.method == 'POST':
     #updating the Tag resource with this <id>
     tag, errors = FACTORY.create(Tag, args)
-    return Json(action, errors)
+    return Json(tag, errors)
   return Json(None)
 
 
@@ -818,7 +942,7 @@ def tag_collections(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     tagcollections, errors = FETCH.all(TagCollection, args)
-    return Json(TagCollection, errors)
+    return Json(tagcollections, errors)
   elif request.method == 'POST':
     #about to create a new TagCollection instance
     tagcollection, errors = FACTORY.create(TagCollection, args)
@@ -832,12 +956,12 @@ def tag_collection(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    tagcollection, errors = FETCH.all(TagCollection, args)
+    tagcollection, errors = FETCH.one(TagCollection, args)
     return Json(tagcollection, errors)
   elif request.method == 'POST':
     #updating the TagCollection resource with this <id>
     tagcollection, errors = FACTORY.create(TagCollection, args)
-    return Json(action, errors)
+    return Json(tagcollection, errors)
   return Json(None)
 
 
@@ -847,7 +971,7 @@ def teams(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     teams, errors = FETCH.all(Team, args)
-    return Json(Team, errors)
+    return Json(teams, errors)
   elif request.method == 'POST':
     #about to create a new Team instance
     team, errors = FACTORY.create(Team, args)
@@ -861,12 +985,12 @@ def team(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    team, errors = FETCH.all(Team, args)
+    team, errors = FETCH.one(Team, args)
     return Json(team, errors)
   elif request.method == 'POST':
     #updating the Team resource with this <id>
     team, errors = FACTORY.create(Team, args)
-    return Json(action, errors)
+    return Json(team, errors)
   return Json(None)
 
 
@@ -876,7 +1000,7 @@ def testimonials(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     testimonials, errors = FETCH.all(Testimonial, args)
-    return Json(Testimonial, errors)
+    return Json(testimonials, errors)
   elif request.method == 'POST':
     #about to create a new Testimonial instance
     testimonial, errors = FACTORY.create(Testimonial, args)
@@ -890,12 +1014,12 @@ def testimonial(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    testimonial, errors = FETCH.all(Testimonial, args)
+    testimonial, errors = FETCH.one(Testimonial, args)
     return Json(testimonial, errors)
   elif request.method == 'POST':
     #updating the Testimonial resource with this <id>
     testimonial, errors = FACTORY.create(Testimonial, args)
-    return Json(action, errors)
+    return Json(testimonial, errors)
   return Json(None)
 
 
@@ -905,7 +1029,7 @@ def users(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     users, errors = FETCH.all(UserProfile, args)
-    return Json(UserProfile, errors)
+    return Json(users, errors)
   elif request.method == 'POST':
     #about to create a new User instance
     user, errors = FACTORY.create(UserProfile, args)
@@ -919,12 +1043,12 @@ def user(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(UserProfile, args)
+    user, errors = FETCH.one(UserProfile, args)
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(UserProfile, args)
-    return Json(action, errors)
+    return Json(user, errors)
   return Json(None)
 
 
@@ -939,23 +1063,23 @@ def user_households(request, id):
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(UserProfile, args)
-    return Json(action, errors)
+    return Json(user, errors)
   return Json(None)
 
 
 
 @csrf_exempt
-def user_household_actions(request, id, household_id):
+def user_household_actions(request, id, hid):
   args = get_request_contents(request)
   args['id'] = id
-  args['real_estate_unit'] = household_id
+  args['real_estate_unit'] = hid
   if request.method == 'GET':
     user, errors = FETCH.all(UserProfile, args)
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(UserProfile, args)
-    return Json(action, errors)
+    return Json(user, errors)
   return Json(None)
 
 
@@ -969,8 +1093,8 @@ def user_actions(request, id):
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user, errors = FACTORY.create(UserProfile, args)
-    return Json(action, errors)
+    user_action, errors = FACTORY.create(UserProfile, args)
+    return Json(user_action, errors)
   return Json(None)
 
 
@@ -984,8 +1108,8 @@ def user_teams(request, id):
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user, errors = FACTORY.create(UserProfile, args)
-    return Json(action, errors)
+    user_team, errors = FACTORY.create(UserProfile, args)
+    return Json(user_team, errors)
   return Json(None)
 
 
@@ -995,12 +1119,12 @@ def user_testimonials(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(UserProfile, args)
-    return Json(user, errors)
+    user_testimonial, errors = FETCH.all(UserProfile, args)
+    return Json(user_testimonial, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user, errors = FACTORY.create(UserProfile, args)
-    return Json(action, errors)
+    user_testimonial, errors = FACTORY.create(UserProfile, args)
+    return Json(user_testimonial, errors)
   return Json(None)
 
 
@@ -1024,12 +1148,12 @@ def user_group(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    usergroup, errors = FETCH.all(UserGroup, args)
+    usergroup, errors = FETCH.one(UserGroup, args)
     return Json(usergroup, errors)
   elif request.method == 'POST':
     #updating the UserGroup resource with this <id>
     usergroup, errors = FACTORY.create(UserGroup, args)
-    return Json(action, errors)
+    return Json(usergroup, errors)
   return Json(None)
 
 
@@ -1039,7 +1163,7 @@ def vendors(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     vendors, errors = FETCH.all(Vendor, args)
-    return Json(Vendor, errors)
+    return Json(vendors, errors)
   elif request.method == 'POST':
     #about to create a new Vendor instance
     vendor, errors = FACTORY.create(Vendor, args)
@@ -1053,10 +1177,10 @@ def vendor(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    vendor, errors = FETCH.all(Vendor, args)
+    vendor, errors = FETCH.one(Vendor, args)
     return Json(vendor, errors)
   elif request.method == 'POST':
     #updating the Vendor resource with this <id>
     vendor, errors = FACTORY.create(Vendor, args)
-    return Json(action, errors)
+    return Json(vendor, errors)
   return Json(None)

@@ -68,7 +68,7 @@ def convert_to_json(data, full_json=True):
   """
   Serializes an object into a json to be sent over-the-wire 
   """
-  if not data:
+  if not data and not isinstance(data, Iterable):
     return None
   elif isinstance(data, dict):
     return data 
