@@ -3,7 +3,12 @@ from django.conf.urls import url
 from .views import *
 
 urlpatterns = [
-  url(r'^$', home),
+  path('', home),
+  path('actions',actions),
+  path('menu', menu),
+  path('aboutus', aboutUs),
+  path('events', events),
+  path('stories', stories),
   path('get/page',get_page),
   path('get/todo_actions', get_user_todo_actions),
   path('get/completed_actions', get_user_completed_actions),
