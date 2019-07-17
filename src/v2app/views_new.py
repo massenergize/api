@@ -948,6 +948,7 @@ def user_households(request, id):
 def user_household_actions(request, id, household_id):
   args = get_request_contents(request)
   args['id'] = id
+  args['real_estate_unit'] = household_id
   if request.method == 'GET':
     user, errors = FETCH.all(UserProfile, args)
     return Json(user, errors)
