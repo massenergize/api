@@ -20,8 +20,6 @@ def ping(request):
 	return Json(None)
 
 
-
-
 def home(request):
 	pageData = fetch.community_portal_home_page_data()
 	menuData = fetch.community_portal_website_menu()
