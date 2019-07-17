@@ -42,7 +42,7 @@ def action(request, id):
     return Json(action, errors)
   elif request.method == 'POST':
     #updating the Action resource with this <id>
-    action, errors = FACTORY.create(Action, args)
+    action, errors = FACTORY.update(Action, args)
     return Json(action, errors)
   return Json(None)
 
@@ -71,7 +71,7 @@ def action_property(request, id):
     return Json(actionproperty, errors)
   elif request.method == 'POST':
     #updating the ActionProperty resource with this <id>
-    actionproperty, errors = FACTORY.create(ActionProperty, args)
+    actionproperty, errors = FACTORY.update(ActionProperty, args)
     return Json(actionproperty, errors)
   return Json(None)
 
@@ -100,7 +100,7 @@ def billing_statement(request, id):
     return Json(billingstatement, errors)
   elif request.method == 'POST':
     #updating the BillingStatement resource with this <id>
-    billingstatement, errors = FACTORY.create(BillingStatement, args)
+    billingstatement, errors = FACTORY.update(BillingStatement, args)
     return Json(billingstatement, errors)
   return Json(None)
 
@@ -130,7 +130,7 @@ def community(request, cid):
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     #TODO: create pages for this community, etc
-    community, errors = FACTORY.create(Community, args)
+    community, errors = FACTORY.update(Community, args)
     return Json(community, errors)
   return Json(None)
 
@@ -308,7 +308,7 @@ def community_admin(request, id):
     return Json(communityadmin, errors)
   elif request.method == 'POST':
     #updating the CommunityAdminGroup resource with this <id>
-    communityadmin, errors = FACTORY.create(CommunityAdminGroup, args)
+    communityadmin, errors = FACTORY.update(CommunityAdminGroup, args)
     return Json(communityadmin, errors)
   return Json(None)
 
@@ -337,7 +337,7 @@ def email_category(request, id):
     return Json(emailcategory, errors)
   elif request.method == 'POST':
     #updating the EmailCategory resource with this <id>
-    emailcategory, errors = FACTORY.create(EmailCategory, args)
+    emailcategory, errors = FACTORY.update(EmailCategory, args)
     return Json(emailcategory, errors)
   return Json(None)
 
@@ -366,7 +366,7 @@ def event(request, id):
     return Json(event, errors)
   elif request.method == 'POST':
     #updating the Event resource with this <id>
-    event, errors = FACTORY.create(Event, args)
+    event, errors = FACTORY.update(Event, args)
     return Json(event, errors)
   return Json(None)
 
@@ -395,7 +395,7 @@ def event_attendee(request, id):
     return Json(eventattendee, errors)
   elif request.method == 'POST':
     #updating the EventAttendee resource with this <id>
-    eventattendee, errors = FACTORY.create(EventAttendees, args)
+    eventattendee, errors = FACTORY.update(EventAttendees, args)
     return Json(eventattendee, errors)
   return Json(None)
 
@@ -424,7 +424,7 @@ def goal(request, id):
     return Json(goal, errors)
   elif request.method == 'POST':
     #updating the Goal resource with this <id>
-    goal, errors = FACTORY.create(Goal, args)
+    goal, errors = FACTORY.update(Goal, args)
     return Json(goal, errors)
   return Json(None)
 
@@ -453,7 +453,7 @@ def graph(request, id):
     return Json(graph, errors)
   elif request.method == 'POST':
     #updating the Graph resource with this <id>
-    graph, errors = FACTORY.create(Graph, args)
+    graph, errors = FACTORY.update(Graph, args)
     return Json(graph, errors)
   return Json(None)
 
@@ -482,7 +482,7 @@ def household(request, id):
     return Json(household, errors)
   elif request.method == 'POST':
     #updating the Household resource with this <id>
-    household, errors = FACTORY.create(RealEstateUnit, args)
+    household, errors = FACTORY.update(RealEstateUnit, args)
     return Json(household, errors)
   return Json(None)
 
@@ -511,7 +511,7 @@ def location(request, id):
     return Json(location, errors)
   elif request.method == 'POST':
     #updating the Location resource with this <id>
-    location, errors = FACTORY.create(Location, args)
+    location, errors = FACTORY.update(Location, args)
     return Json(location, errors)
   return Json(None)
 
@@ -540,22 +540,7 @@ def media(request, id):
     return Json(media, errors)
   elif request.method == 'POST':
     #updating the Media resource with this <id>
-    media, errors = FACTORY.create(Media, args)
-    return Json(media, errors)
-  return Json(None)
-
-
-
-@csrf_exempt
-def media(request, id):
-  args = get_request_contents(request)
-  args['id'] = id
-  if request.method == 'GET':
-    media, errors = FETCH.one(Media, args)
-    return Json(media, errors)
-  elif request.method == 'POST':
-    #updating the Media resource with this <id>
-    media, errors = FACTORY.create(Media, args)
+    media, errors = FACTORY.update(Media, args)
     return Json(media, errors)
   return Json(None)
 
@@ -584,7 +569,7 @@ def menu(request, id):
     return Json(menu, errors)
   elif request.method == 'POST':
     #updating the Menu resource with this <id>
-    menu, errors = FACTORY.create(Menu, args)
+    menu, errors = FACTORY.update(Menu, args)
     return Json(menu, errors)
   return Json(None)
 
@@ -613,7 +598,7 @@ def page(request, id):
     return Json(page, errors)
   elif request.method == 'POST':
     #updating the Page resource with this <id>
-    page, errors = FACTORY.create(Page, args)
+    page, errors = FACTORY.update(Page, args)
     return Json(page, errors)
   return Json(None)
 
@@ -642,7 +627,7 @@ def page_section(request, id):
     return Json(pagesection, errors)
   elif request.method == 'POST':
     #updating the PageSection resource with this <id>
-    pagesection, errors = FACTORY.create(PageSection, args)
+    pagesection, errors = FACTORY.update(PageSection, args)
     return Json(pagesection, errors)
   return Json(None)
 
@@ -671,7 +656,7 @@ def permission(request, id):
     return Json(permission, errors)
   elif request.method == 'POST':
     #updating the Permission resource with this <id>
-    permission, errors = FACTORY.create(Permission, args)
+    permission, errors = FACTORY.update(Permission, args)
     return Json(permission, errors)
   return Json(None)
 
@@ -700,7 +685,7 @@ def policy(request, id):
     return Json(policies, errors)
   elif request.method == 'POST':
     #updating the Policy resource with this <id>
-    policy, errors = FACTORY.create(Policy, args)
+    policy, errors = FACTORY.update(Policy, args)
     return Json(policy, errors)
   return Json(None)
 
@@ -729,7 +714,7 @@ def role(request, id):
     return Json(role, errors)
   elif request.method == 'POST':
     #updating the Role resource with this <id>
-    role, errors = FACTORY.create(Role, args)
+    role, errors = FACTORY.update(Role, args)
     return Json(role, errors)
   return Json(None)
 
@@ -758,7 +743,7 @@ def service(request, id):
     return Json(service, errors)
   elif request.method == 'POST':
     #updating the Service resource with this <id>
-    service, errors = FACTORY.create(Service, args)
+    service, errors = FACTORY.update(Service, args)
     return Json(service, errors)
   return Json(None)
 
@@ -787,7 +772,7 @@ def slider(request, id):
     return Json(sliders, errors)
   elif request.method == 'POST':
     #updating the Slider resource with this <id>
-    slider, errors = FACTORY.create(Slider, args)
+    slider, errors = FACTORY.update(Slider, args)
     return Json(slider, errors)
   return Json(None)
 
@@ -816,7 +801,7 @@ def slider_image(request, id):
     return Json(sliderimage, errors)
   elif request.method == 'POST':
     #updating the SliderImage resource with this <id>
-    sliderimage, errors = FACTORY.create(SliderImage, args)
+    sliderimage, errors = FACTORY.update(SliderImage, args)
     return Json(sliderimage, errors)
   return Json(None)
 
@@ -845,7 +830,7 @@ def statistic(request, id):
     return Json(statistic, errors)
   elif request.method == 'POST':
     #updating the Statistic resource with this <id>
-    statistic, errors = FACTORY.create(Statistic, args)
+    statistic, errors = FACTORY.update(Statistic, args)
     return Json(statistic, errors)
   return Json(None)
 
@@ -873,7 +858,7 @@ def subscriber(request, id):
     return Json(subscriber, errors)
   elif request.method == 'POST':
     #updating the Subscriber resource with this <id>
-    subscriber, errors = FACTORY.create(Subscriber, args)
+    subscriber, errors = FACTORY.update(Subscriber, args)
     return Json(subscriber, errors)
   return Json(None)
 
@@ -902,7 +887,7 @@ def subscriber_email_preference(request, id):
     return Json(pref, errors)
   elif request.method == 'POST':
     #updating the SubscriberEmailPreference resource with this <id>
-    pref, errors = FACTORY.create(SubscriberEmailPreferences, args)
+    pref, errors = FACTORY.update(SubscriberEmailPreferences, args)
     return Json(pref, errors)
   return Json(None)
 
@@ -931,7 +916,7 @@ def tag(request, id):
     return Json(tag, errors)
   elif request.method == 'POST':
     #updating the Tag resource with this <id>
-    tag, errors = FACTORY.create(Tag, args)
+    tag, errors = FACTORY.update(Tag, args)
     return Json(tag, errors)
   return Json(None)
 
@@ -960,7 +945,7 @@ def tag_collection(request, id):
     return Json(tagcollection, errors)
   elif request.method == 'POST':
     #updating the TagCollection resource with this <id>
-    tagcollection, errors = FACTORY.create(TagCollection, args)
+    tagcollection, errors = FACTORY.update(TagCollection, args)
     return Json(tagcollection, errors)
   return Json(None)
 
@@ -989,7 +974,7 @@ def team(request, id):
     return Json(team, errors)
   elif request.method == 'POST':
     #updating the Team resource with this <id>
-    team, errors = FACTORY.create(Team, args)
+    team, errors = FACTORY.update(Team, args)
     return Json(team, errors)
   return Json(None)
 
@@ -1018,7 +1003,7 @@ def testimonial(request, id):
     return Json(testimonial, errors)
   elif request.method == 'POST':
     #updating the Testimonial resource with this <id>
-    testimonial, errors = FACTORY.create(Testimonial, args)
+    testimonial, errors = FACTORY.update(Testimonial, args)
     return Json(testimonial, errors)
   return Json(None)
 
@@ -1047,7 +1032,7 @@ def user(request, id):
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user, errors = FACTORY.create(UserProfile, args)
+    user, errors = FACTORY.update(UserProfile, args)
     return Json(user, errors)
   return Json(None)
 
@@ -1058,11 +1043,11 @@ def user_households(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(UserProfile, args)
+    user, errors = FETCH.all(RealEstateUnit, args)
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user, errors = FACTORY.create(UserProfile, args)
+    user, errors = FACTORY.create(RealEstateUnit, args)
     return Json(user, errors)
   return Json(None)
 
@@ -1074,11 +1059,11 @@ def user_household_actions(request, id, hid):
   args['id'] = id
   args['real_estate_unit'] = hid
   if request.method == 'GET':
-    user, errors = FETCH.all(UserProfile, args)
+    user, errors = FETCH.all(Action, args)
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user, errors = FACTORY.create(UserProfile, args)
+    user, errors = FACTORY.create(Action, args)
     return Json(user, errors)
   return Json(None)
 
@@ -1089,11 +1074,11 @@ def user_actions(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(UserProfile, args)
+    user, errors = FETCH.all(Action, args)
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user_action, errors = FACTORY.create(UserProfile, args)
+    user_action, errors = FACTORY.create(Action, args)
     return Json(user_action, errors)
   return Json(None)
 
@@ -1104,11 +1089,11 @@ def user_teams(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(UserProfile, args)
+    user, errors = FETCH.all(Team, args)
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user_team, errors = FACTORY.create(UserProfile, args)
+    user_team, errors = FACTORY.create(Team, args)
     return Json(user_team, errors)
   return Json(None)
 
@@ -1119,11 +1104,11 @@ def user_testimonials(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user_testimonial, errors = FETCH.all(UserProfile, args)
+    user_testimonial, errors = FETCH.all(Testimonial, args)
     return Json(user_testimonial, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user_testimonial, errors = FACTORY.create(UserProfile, args)
+    user_testimonial, errors = FACTORY.create(Testimonial, args)
     return Json(user_testimonial, errors)
   return Json(None)
 
@@ -1152,7 +1137,7 @@ def user_group(request, id):
     return Json(usergroup, errors)
   elif request.method == 'POST':
     #updating the UserGroup resource with this <id>
-    usergroup, errors = FACTORY.create(UserGroup, args)
+    usergroup, errors = FACTORY.update(UserGroup, args)
     return Json(usergroup, errors)
   return Json(None)
 
@@ -1181,6 +1166,6 @@ def vendor(request, id):
     return Json(vendor, errors)
   elif request.method == 'POST':
     #updating the Vendor resource with this <id>
-    vendor, errors = FACTORY.create(Vendor, args)
+    vendor, errors = FACTORY.update(Vendor, args)
     return Json(vendor, errors)
   return Json(None)
