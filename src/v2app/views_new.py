@@ -260,7 +260,7 @@ def community_data(request, cid):
   args = get_request_contents(request)
   args['community'] = cid
   if request.method == 'GET':
-    community, errors = FETCH.all(Statistic, args)
+    community, errors = FETCH.all(Data, args)
     return Json(community, errors)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
@@ -376,11 +376,11 @@ def event(request, id):
 def event_attendees(request):
   args = get_request_contents(request)
   if request.method == 'GET':
-    eventattendees, errors = FETCH.all(EventAttendees, args)
+    eventattendees, errors = FETCH.all(EventAttendee, args)
     return Json(eventattendees, errors)
   elif request.method == 'POST':
     #about to create a new EventAttendee instance
-    eventattendee, errors = FACTORY.create(EventAttendees, args)
+    eventattendee, errors = FACTORY.create(EventAttendee, args)
     return Json(eventattendee, errors)
   return Json(None)
 
@@ -391,11 +391,11 @@ def event_attendee(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    eventattendee, errors = FETCH.one(EventAttendees, args)
+    eventattendee, errors = FETCH.one(EventAttendee, args)
     return Json(eventattendee, errors)
   elif request.method == 'POST':
     #updating the EventAttendee resource with this <id>
-    eventattendee, errors = FACTORY.update(EventAttendees, args)
+    eventattendee, errors = FACTORY.update(EventAttendee, args)
     return Json(eventattendee, errors)
   return Json(None)
 
@@ -824,30 +824,30 @@ def slider_image(request, id):
 
 
 @csrf_exempt
-def statistics(request):
+def data(request):
   args = get_request_contents(request)
   if request.method == 'GET':
-    statistics, errors = FETCH.all(Statistic, args)
+    statistics, errors = FETCH.all(Data, args)
     return Json(statistics, errors)
   elif request.method == 'POST':
-    #about to create a new Statistic instance
-    statistic, errors = FACTORY.create(Statistic, args)
-    return Json(statistic, errors)
+    #about to create a new Data instance
+    data, errors = FACTORY.create(Data, args)
+    return Json(data, errors)
   return Json(None)
 
 
 
 @csrf_exempt
-def statistic(request, id):
+def data_by_id(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    statistic, errors = FETCH.all(Statistic, args)
-    return Json(statistic, errors)
+    data, errors = FETCH.all(Data, args)
+    return Json(data, errors)
   elif request.method == 'POST':
-    #updating the Statistic resource with this <id>
-    statistic, errors = FACTORY.update(Statistic, args)
-    return Json(statistic, errors)
+    #updating the Data resource with this <id>
+    data, errors = FACTORY.update(Data, args)
+    return Json(data, errors)
   return Json(None)
 
 
@@ -884,11 +884,11 @@ def subscriber(request, id):
 def subscriber_email_preferences(request):
   args = get_request_contents(request)
   if request.method == 'GET':
-    preferences, errors = FETCH.all(SubscriberEmailPreferences, args)
+    preferences, errors = FETCH.all(SubscriberEmailPreference, args)
     return Json(preferences, errors)
   elif request.method == 'POST':
-    #about to create a new SubscriberEmailPreferences instance
-    pref, errors = FACTORY.create(SubscriberEmailPreferences, args)
+    #about to create a new SubscriberEmailPreference instance
+    pref, errors = FACTORY.create(SubscriberEmailPreference, args)
     return Json(pref, errors)
   return Json(None)
 
@@ -899,11 +899,11 @@ def subscriber_email_preference(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    pref, errors = FETCH.one(SubscriberEmailPreferences, args)
+    pref, errors = FETCH.one(SubscriberEmailPreference, args)
     return Json(pref, errors)
   elif request.method == 'POST':
     #updating the SubscriberEmailPreference resource with this <id>
-    pref, errors = FACTORY.update(SubscriberEmailPreferences, args)
+    pref, errors = FACTORY.update(SubscriberEmailPreference, args)
     return Json(pref, errors)
   return Json(None)
 
