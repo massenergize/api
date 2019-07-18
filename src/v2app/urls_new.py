@@ -44,7 +44,7 @@ urlpatterns = [
   path('media', media),
   path('media/<int:id>', media_by_id),
   path('media/<slug:id>', media_with_slug),
-  path('menu', menu),
+  path('menus', menus),
   path('menu/<int:id>', menu),
   path('pages', pages),
   path('page/<int:id>', page),

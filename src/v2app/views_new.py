@@ -563,7 +563,7 @@ def media_with_slug(request, id):
   return Json(None)
 
 @csrf_exempt
-def menu(request):
+def menus(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     menus, errors = FETCH.all(Menu, args)
