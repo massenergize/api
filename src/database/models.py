@@ -82,7 +82,7 @@ class Media(models.Model):
     the type of this media file whether it is an image, video, pdf etc.
   """
   id = models.AutoField(primary_key=True)
-  name = models.SlugField(max_length=SHORT_STR_LEN) 
+  name = models.SlugField(max_length=SHORT_STR_LEN, blank=True) 
   file = models.FileField(upload_to='media/')
   media_type = models.CharField(max_length=SHORT_STR_LEN, 
     choices=CHOICES["FILE_TYPES_ALLOWED"].items(), default='UNKNOWN')
@@ -1140,7 +1140,10 @@ class Data(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   value =  models.PositiveIntegerField(default=0)
+  denominator =  models.CharField(max_length = SHORT_STR_LEN, blank=True)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
+  tag = models.ForeignKey(Tag, blank=True, on_delete=models.SET_NULL, 
+    null=True, db_index=True )
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
   info = JSONField(blank=True, null=True)
@@ -1177,7 +1180,7 @@ class Graph(models.Model):
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["GRAPH_TYPES"].items())
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True,blank=True)
-  data = models.ForeignKey(Data, on_delete=models.SET_NULL, null=True)
+  data = models.ManyToManyField(Data,  blank=True)
 
 
   def simple_json(self):
@@ -1283,7 +1286,28 @@ class Menu(models.Model):
   class Meta:
     ordering = ('name',)
 
+class Button(models.Model):
+  """Buttons on the pages"""
+  text = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  icon = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  url = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  color = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  info = JSONField(blank=True, null=True)
 
+  def __str__(self):        
+    return self.text
+
+class Card(models.Model):
+  """Buttons on the pages"""
+  title = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  icon = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  media = models.ForeignKey(Media, blank=True, 
+    on_delete=models.SET_NULL, null=True)
+
+  def __str__(self):
+    self.title
 
 class PageSection(models.Model):
   """
@@ -1298,10 +1322,17 @@ class PageSection(models.Model):
     dynamic information goes in here
   """
   id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length=LONG_STR_LEN)
+  name = models.CharField(max_length=SHORT_STR_LEN)
+  title = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True)
-  slider = models.ForeignKey(Slider, on_delete=models.SET_NULL, null=True, blank=True)
+  cards = models.ManyToManyField(Card, blank=True)
+  buttons = models.ManyToManyField(Button, blank=True)
+  slider = models.ForeignKey(Slider, on_delete=models.SET_NULL, 
+    null=True, blank=True)
+  graph = models.ForeignKey(Graph, on_delete=models.SET_NULL, 
+    null=True, blank=True)
   info = JSONField(blank=True, null=True)
 
   def __str__(self):             
