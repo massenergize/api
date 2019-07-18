@@ -402,8 +402,8 @@ class UserProfile(models.Model):
   #  not just one?  why many to many
   """
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-  full_name=models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
-  preferred_name=models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+  full_name=models.CharField(max_length=SHORT_STR_LEN, null=True)
+  preferred_name=models.CharField(max_length=SHORT_STR_LEN, null=True)
   email = models.EmailField(max_length=SHORT_STR_LEN, 
     unique=True, db_index=True)
   user_info = JSONField(blank=True, null=True)
@@ -412,9 +412,9 @@ class UserProfile(models.Model):
   goals = models.ManyToManyField(Goal, blank=True)
   communities = models.ManyToManyField(Community, blank=True)
   roles = models.ManyToManyField(Role, blank=True) 
-  is_super_admin = models.BooleanField(default=False)
-  is_community_admin = models.BooleanField(default=False)
-  is_vendor = models.BooleanField(default=False)
+  is_super_admin = models.BooleanField(default=False, blank=True)
+  is_community_admin = models.BooleanField(default=False, blank=True)
+  is_vendor = models.BooleanField(default=False, blank=True)
   other_info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)

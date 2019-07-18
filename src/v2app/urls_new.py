@@ -87,6 +87,7 @@ urlpatterns = [
   path('user/<int:id>/testimonials', user_testimonials),
   path('user-groups', user_groups),
   path('user-group/<int:id>', user_group),
+  path('uuid/new', new_uuid),
   path('vendors', vendors),
   path('vendor/<int:id>', vendor),
 ]

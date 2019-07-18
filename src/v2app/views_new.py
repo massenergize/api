@@ -7,6 +7,8 @@ from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
 from database.models import *
 from database.utils.common import get_request_contents, rename_filter_args
+import uuid
+
 
 FACTORY = CreateFactory("Data Creator")
 FETCH = DatabaseReader("Database Reader")
@@ -1181,3 +1183,8 @@ def vendor(request, id):
     vendor, errors = FACTORY.update(Vendor, args)
     return Json(vendor, errors)
   return Json(None)
+
+
+@csrf_exempt
+def new_uuid(request):
+  return Json({'id': uuid.uuid4()})
