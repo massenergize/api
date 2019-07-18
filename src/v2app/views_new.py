@@ -452,7 +452,7 @@ def graph(request, id):
   args['id'] = id
   if request.method == 'GET':
     graph, errors = FETCH.one(Graph, args)
-    return Json(graph, errors)
+    return Json([graph], errors)
   elif request.method == 'POST':
     #updating the Graph resource with this <id>
     graph, errors = FACTORY.update(Graph, args)

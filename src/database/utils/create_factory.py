@@ -18,11 +18,12 @@ class CreateFactory:
     errors = []
     required_fields = MODELS_AND_FIELDS[model]['required_fields']
     for f in required_fields:
-      if f not in args:
+      if f not in args and f !='id':
         errors.append(f"You are missing a required field: {f}")
     return errors    
 
   def create(self, model, args={}):
+    args.pop('id', None) #remove id provided.  We want db to assign its own
     errors = self.verify_required_fields(model, args)
     new_object = None 
 

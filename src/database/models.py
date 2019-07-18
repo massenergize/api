@@ -1160,7 +1160,15 @@ class Data(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "name": self.value,
+      "denominator": self.denominator,
+      "symbol": self.symbol,
+      "tag": get_json_if_not_none(self.tag),
+      "community": str(self.community),
+      "info": self.info
+    }
 
   class Meta:
     verbose_name_plural = "Data"
@@ -1189,10 +1197,17 @@ class Graph(models.Model):
 
 
   def simple_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "title": self.title,
+      "graph_type": self.graph_type,
+      "community": str(self.community),
+      "data": [d.full_json() for d in self.data.all()]
+    }
+
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
 
   def __str__(self):   
@@ -1364,9 +1379,9 @@ class PageSection(models.Model):
       "description": self.description,
       "image": get_json_if_not_none(self.image),
       "cards": [c.simple_json() for c in self.cards.all()],
-      "buttons": [b.simple_json() for c in self.buttons.all()],
+      "buttons": [b.simple_json() for b in self.buttons.all()],
       "slider": None if not self.slider else self.slider.full_json(),
-      "graph": get_json_if_not_none(self.graph),
+      "graph": self.graph.full_json() if self.graph else None,
       "info": self.info
     }
 
