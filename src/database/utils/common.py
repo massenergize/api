@@ -7,7 +7,6 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 from collections.abc import Iterable
 
-
 def json_loader(file) -> dict:
   """
   Returns json data given a valid filepath.  Returns {} if error occurs

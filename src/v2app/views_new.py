@@ -535,7 +535,7 @@ def media(request):
 
 
 @csrf_exempt
-def media_with_id(request, id):
+def media_by_id(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':

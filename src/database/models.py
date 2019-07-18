@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from .utils.constants import *
+from database.utils.constants import *
 from datetime import date, datetime
 from .utils.common import convert_to_json, json_loader,get_json_if_not_none
 from django.forms.models import model_to_dict
@@ -197,8 +197,7 @@ class Community(models.Model):
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
   is_geographically_focused = models.BooleanField(default=False)
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  location = JSONField(blank=True, null=True)
   policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -250,13 +249,12 @@ class RealEstateUnit(models.Model):
     about this real estate unit
   """
   id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+  name = models.CharField(max_length=SHORT_STR_LEN)
   unit_type =  models.CharField(
     max_length=TINY_STR_LEN, 
     choices=CHOICES["REAL_ESTATE_TYPES"].items()
   )
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  location = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -518,8 +516,7 @@ class Service(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  service_location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  service_location = JSONField(blank=True, null=True)
   image = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL)
   icon = models.CharField(max_length=SHORT_STR_LEN,blank=True)
@@ -592,8 +589,7 @@ class Vendor(models.Model):
     on_delete=models.SET_NULL, related_name='vender_logo')
   banner = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='vendor_banner')
-  address = models.ForeignKey(Location, blank=True, null=True, 
-    on_delete=models.SET_NULL)
+  address = JSONField(blank=True, null=True)
   key_contact = models.ForeignKey(UserProfile, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='key_contact')
   service_area = models.CharField(max_length=TINY_STR_LEN, 
@@ -752,9 +748,7 @@ class Action(models.Model):
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
   tags = models.ManyToManyField(Tag, related_name='action_tags', blank=True)
-  geographic_area = models.ForeignKey(Location, 
-    null=True, blank=True, 
-    on_delete=models.SET_NULL)
+  geographic_area = JSONField(blank=True, null=True)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True,blank=True)
@@ -846,8 +840,7 @@ class Event(models.Model):
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   archive =  models.BooleanField(default=False)
@@ -1131,7 +1124,7 @@ class UserGroup(models.Model):
 
 
 class Data(models.Model):
-  """Instances keep track of a statistic from the admin
+  """Instances of data points
 
   Attributes
   ----------
@@ -1184,7 +1177,7 @@ class Graph(models.Model):
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["GRAPH_TYPES"].items())
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True,blank=True)
-  data = JSONField(blank=True, null=True)
+  data = models.ForeignKey(Data, on_delete=models.SET_NULL, null=True)
 
 
   def simple_json(self):
