@@ -17,12 +17,17 @@ class DatabaseReader:
     all_fields = MODELS_AND_FIELDS[model]["all_fields"]
     for f in  fields_provided:
       if f not in all_fields:
-        return [f"{f} is not a valid field in {model.name}"]
+        return [f"{f} is not a valid field in {model._meta.model_name}"]
     return None
 
 
   def all(self, model, filter_args={}, many_to_many_fields_to_prefetch=[], 
     foreign_keys_to_select=[]):
+
+    #get the limit argument if it exists
+    temp_limit = filter_args.pop("limit", None)
+    limit = int(temp_limit) if temp_limit else None
+
     fields_provided = (list(filter_args.keys()) + foreign_keys_to_select + 
       many_to_many_fields_to_prefetch)
     errors = self.verify_all_fields(model, fields_provided)
@@ -34,7 +39,7 @@ class DatabaseReader:
       data = (model.objects
         .select_related(*foreign_keys_to_select)
         .filter(**filter_args)
-        .prefetch_related(*many_to_many_fields_to_prefetch))
+        .prefetch_related(*many_to_many_fields_to_prefetch)[:limit])
       return data, errors
     except Exception as e:
       print(e)

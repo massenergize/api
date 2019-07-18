@@ -43,10 +43,9 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'authentication',
-    'admin_portal',
     'carbon_calculator',
     'database',
-    'user_portal',
+    'v2app',
     'website',
     'corsheaders',
     'django.contrib.admin',

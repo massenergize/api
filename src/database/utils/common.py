@@ -7,7 +7,6 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 from collections.abc import Iterable
 
-
 def json_loader(file) -> dict:
   """
   Returns json data given a valid filepath.  Returns {} if error occurs
@@ -68,7 +67,7 @@ def convert_to_json(data, full_json=True):
   """
   Serializes an object into a json to be sent over-the-wire 
   """
-  if not data:
+  if not data and not isinstance(data, Iterable):
     return None
   elif isinstance(data, dict):
     return data 
@@ -79,7 +78,9 @@ def convert_to_json(data, full_json=True):
   else:
     objects = [data]
     serialized_object = serializers.serialize("json", objects)
-    return json.loads(serialized_object)[0]["fields"]
+    result = json.loads(serialized_object)[0]["fields"]
+    result["id"] = json.loads(serialized_object)[0]["pk"]
+    return result
 
 
 def get_json_if_not_none(obj) -> dict:
@@ -107,8 +108,10 @@ def rename_filter_args(args, pairs):
 
 def get_request_contents(request):
   if request.method == 'POST':
-    # return request.POST.dict()
-    return request.body.decode('utf-8')
+    try:
+      return json.loads(request.body.decode('utf-8'))
+    except:
+      return request.POST.dict()
   elif request.method == 'GET':
     return request.GET.dict()
 

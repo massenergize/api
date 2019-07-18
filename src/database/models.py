@@ -1,17 +1,13 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from .utils.constants import *
+from database.utils.constants import *
 from datetime import date, datetime
 from .utils.common import convert_to_json, json_loader,get_json_if_not_none
 from django.forms.models import model_to_dict
-
+import uuid
 
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 ZIP_CODE_AND_STATES = json_loader('./database/raw_data/other/states.json')
-API_URL = 'http://api.massenergize.org'
-
-#TODO: add get_json method to all classes
-#TODO: Resolve File upload to S3 bucket
 
 class Location(models.Model):
   """
@@ -33,6 +29,7 @@ class Location(models.Model):
   more_info: JSON
     any another dynamic information we would like to store about this location 
   """
+  id = models.AutoField(primary_key=True)
   location_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["LOCATION_TYPES"].items())
   street = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -84,13 +81,12 @@ class Media(models.Model):
   media_type: str
     the type of this media file whether it is an image, video, pdf etc.
   """
+  id = models.AutoField(primary_key=True)
   name = models.SlugField(max_length=SHORT_STR_LEN) 
   file = models.FileField(upload_to='media/')
   media_type = models.CharField(max_length=SHORT_STR_LEN, 
     choices=CHOICES["FILE_TYPES_ALLOWED"].items(), default='UNKNOWN')
 
-  def get_url(self):
-    return '%s/media/%s' (API_URL, self.name)
 
   def __str__(self):      
     return self.name
@@ -125,6 +121,7 @@ class Policy(models.Model):
   info: JSON
     dynamic information goes in here
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=LONG_STR_LEN, db_index = True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   is_global = models.BooleanField(default=False)
@@ -190,6 +187,7 @@ class Community(models.Model):
   more_info: JSON
     any another dynamic information we would like to store about this location 
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner = JSONField(blank=True, null=True) 
@@ -199,8 +197,7 @@ class Community(models.Model):
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
   is_geographically_focused = models.BooleanField(default=False)
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  location = JSONField(blank=True, null=True)
   policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -251,13 +248,13 @@ class RealEstateUnit(models.Model):
     The date and time of the last time any updates were made to the information
     about this real estate unit
   """
-  name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=SHORT_STR_LEN)
   unit_type =  models.CharField(
     max_length=TINY_STR_LEN, 
     choices=CHOICES["REAL_ESTATE_TYPES"].items()
   )
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  location = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -306,6 +303,7 @@ class Goal(models.Model):
     The date and time of the last time any updates were made to the information
     about this goal
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
   status = models.CharField(
     max_length=TINY_STR_LEN, 
@@ -343,9 +341,10 @@ class Role(models.Model):
   name : str
     name of the role
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["ROLE_TYPES"].items(), 
-    primary_key=True
+    unique=True
   ) 
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
 
@@ -397,7 +396,9 @@ class UserProfile(models.Model):
   #TODO: roles field: if we have this do we need is_superadmin etc? also why
   #  not just one?  why many to many
   """
-
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+  full_name=models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+  preferred_name=models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
   email = models.EmailField(max_length=SHORT_STR_LEN, 
     unique=True, db_index=True)
   user_info = JSONField(blank=True, null=True)
@@ -418,6 +419,8 @@ class UserProfile(models.Model):
 
   def simple_json(self):
     return convert_to_json(self)
+    # return model_to_dict(self, fields=['id', 
+    # 'full_name', "preferred_name", "email"])
 
   def full_json(self):
     return convert_to_json(self)
@@ -452,6 +455,7 @@ class Team(models.Model):
     The date and time of the last time any updates were made to the information
     about this goal
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
@@ -509,10 +513,10 @@ class Service(models.Model):
     The date and time of the last time any updates were made to the information
     about this goal
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  service_location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  service_location = JSONField(blank=True, null=True)
   image = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL)
   icon = models.CharField(max_length=SHORT_STR_LEN,blank=True)
@@ -578,14 +582,14 @@ class Vendor(models.Model):
     The date and time of the last time any updates were made to the information
     about this Vendor
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   logo = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='vender_logo')
   banner = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='vendor_banner')
-  address = models.ForeignKey(Location, blank=True, null=True, 
-    on_delete=models.SET_NULL)
+  address = JSONField(blank=True, null=True)
   key_contact = models.ForeignKey(UserProfile, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='key_contact')
   service_area = models.CharField(max_length=TINY_STR_LEN, 
@@ -624,6 +628,7 @@ class ActionProperty(models.Model):
   name : str
     name of the Vendor
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   community = models.ManyToManyField(Community, blank=True)
@@ -653,7 +658,8 @@ class TagCollection(models.Model):
   name : str
     name of the Tag Collection
   """
-  name = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length = SHORT_STR_LEN, unique=True)
   is_global = models.BooleanField(default=False)
 
 
@@ -684,7 +690,8 @@ class Tag(models.Model):
   name : str
     name of the Tag
   """
-  name = models.CharField(max_length = SHORT_STR_LEN, primary_key=True)
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length = SHORT_STR_LEN)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
   tag_collection = models.ForeignKey(TagCollection, null=True, 
     on_delete=models.SET_NULL, blank=True)
@@ -701,6 +708,7 @@ class Tag(models.Model):
   class Meta:
     ordering = ('name',)
     db_table = 'tags'
+    unique_together = [['name', 'tag_collection']]
 
 
 class Action(models.Model):
@@ -733,15 +741,14 @@ class Action(models.Model):
     The date and time of the last time any updates were made to the information
     about this real estate unit
   """
+  id = models.AutoField(primary_key=True)
   title = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   is_global = models.BooleanField(default=False)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
   tags = models.ManyToManyField(Tag, related_name='action_tags', blank=True)
-  geographic_area = models.ForeignKey(Location, 
-    null=True, blank=True, 
-    on_delete=models.SET_NULL)
+  geographic_area = JSONField(blank=True, null=True)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True,blank=True)
@@ -751,7 +758,7 @@ class Action(models.Model):
     blank=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, 
     null=True, blank=True, db_index=True)
-  rank = models.PositiveSmallIntegerField(default = 0) 
+  rank = models.PositiveSmallIntegerField(default = 0, blank=True) 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -827,13 +834,13 @@ class Event(models.Model):
     True if this action is an event that every community should see or not.
     False otherwise.
   """
+  id = models.AutoField(primary_key=True)
   name  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
   archive =  models.BooleanField(default=False)
@@ -857,7 +864,7 @@ class Event(models.Model):
     db_table = 'events'
 
 
-class EventAttendees(models.Model):
+class EventAttendee(models.Model):
   """
   A class used to represent events and attendees
 
@@ -870,6 +877,7 @@ class EventAttendees(models.Model):
   event: int
     Foreign Key to event that the attendee is going to.
   """
+  id = models.AutoField(primary_key=True)
   attendee =  models.ForeignKey(UserProfile,on_delete=models.CASCADE, 
     db_index=True)
   event =  models.ForeignKey(Event,on_delete=models.CASCADE)
@@ -891,6 +899,7 @@ class EventAttendees(models.Model):
 
   class Meta:
     verbose_name_plural = "Event Attendees"
+    db_table = 'event_attendees'
 
 
 
@@ -906,10 +915,10 @@ class Permission(models.Model):
   name : str
     name of the Vendor
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(
     max_length=TINY_STR_LEN, 
     choices=CHOICES["PERMISSION_TYPES"].items(), 
-    primary_key=True,
     db_index=True
   )
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
@@ -940,6 +949,7 @@ class UserPermissions(models.Model):
   can_do: int
     Foreign Key desscribing the policy that they can perform
   """
+  id = models.AutoField(primary_key=True)
   who = models.ForeignKey(Role,on_delete=models.CASCADE)
   can_do = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
@@ -971,6 +981,7 @@ class Testimonial(models.Model):
   is_approved: boolean
     after the community admin reviews this, he can check the box
   """
+  id = models.AutoField(primary_key=True)
   title = models.CharField(max_length=SHORT_STR_LEN, db_index=True)
   body = models.TextField(max_length=LONG_STR_LEN)
   is_approved = models.BooleanField(default=False)
@@ -1015,6 +1026,7 @@ class UserActionRel(models.Model):
   status: 
     Whether they marked it as todo, done or save for later  
   """
+  id = models.AutoField(primary_key=True)
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
   real_estate_unit = models.ForeignKey(RealEstateUnit, on_delete=models.CASCADE)
   action = models.ForeignKey(Action, on_delete=models.CASCADE)
@@ -1057,6 +1069,7 @@ class CommunityAdminGroup(models.Model):
   info: JSON
     dynamic information goes in here
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
@@ -1078,8 +1091,8 @@ class CommunityAdminGroup(models.Model):
 
 class UserGroup(models.Model):
   """
-  This represents a binding of a group of users and a community for which they
-  are admin for.
+  This represents a binding of a group of users and a community 
+  and the permissions they have.
 
   Attributes
   ----------
@@ -1088,6 +1101,7 @@ class UserGroup(models.Model):
   info: JSON
     dynamic information goes in here
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, 
@@ -1109,8 +1123,8 @@ class UserGroup(models.Model):
     db_table = 'user_groups'
 
 
-class Statistic(models.Model):
-  """Instances keep track of a statistic from the admin
+class Data(models.Model):
+  """Instances of data points
 
   Attributes
   ----------
@@ -1123,6 +1137,7 @@ class Statistic(models.Model):
   community: int
     foreign key linking a community to this statistic
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   value =  models.PositiveIntegerField(default=0)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
@@ -1142,7 +1157,7 @@ class Statistic(models.Model):
   class Meta:
     verbose_name_plural = "Data"
     ordering = ('name','value')
-    db_table = 'statistics'
+    db_table = 'data'
 
 
 class Graph(models.Model):
@@ -1157,11 +1172,12 @@ class Graph(models.Model):
   data: JSON
     data to be plotted on this graph
   """
+  id = models.AutoField(primary_key=True)
   title = models.CharField(max_length = LONG_STR_LEN, db_index=True)
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["GRAPH_TYPES"].items())
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True,blank=True)
-  data = JSONField(blank=True, null=True)
+  data = models.ForeignKey(Data, on_delete=models.SET_NULL, null=True)
 
 
   def simple_json(self):
@@ -1193,6 +1209,7 @@ class SliderImage(models.Model):
   buttons: JSON
     a json list of buttons with each containing text, link, icon, color etc
   """
+  id = models.AutoField(primary_key=True)
   title = models.CharField(max_length = LONG_STR_LEN, blank=True, db_index=True)
   subtitle = models.CharField(max_length = LONG_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
@@ -1225,6 +1242,7 @@ class Slider(models.Model):
   info: JSON
     dynamic information goes in here
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = LONG_STR_LEN, blank=True, db_index=True)
   description = models.CharField(max_length = LONG_STR_LEN, blank=True)
   slides = models.ManyToManyField(SliderImage, blank=True)
@@ -1249,6 +1267,7 @@ class Menu(models.Model):
   content: JSON
     the content is represented as a json
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=LONG_STR_LEN, unique=True)
   content = JSONField(blank=True, null=True)
 
@@ -1278,6 +1297,7 @@ class PageSection(models.Model):
   info: JSON
     dynamic information goes in here
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=LONG_STR_LEN)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True)
@@ -1311,6 +1331,7 @@ class Page(models.Model):
   content: JSON
     dynamic info for this page goes here.
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
@@ -1318,7 +1339,7 @@ class Page(models.Model):
   info = JSONField(blank=True, null=True)
 
   def __str__(self):             
-    return self.name
+    return f"{self.name} - {self.community.name}"
 
   def simple_json(self):
     return convert_to_json(self)
@@ -1352,6 +1373,7 @@ class BillingStatement(models.Model):
   more_info: JSON
     dynamic information goes in here
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
   amount = models.CharField(max_length=SHORT_STR_LEN, default='0.0')
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
@@ -1383,6 +1405,7 @@ class Subscriber(models.Model):
   name : str
     name of the statement.
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN)
   email = models.EmailField(blank=False, db_index=True)
   community = models.ForeignKey(Community,on_delete=models.SET_NULL, 
@@ -1417,6 +1440,7 @@ class EmailCategory(models.Model):
   is_global: boolean
     True if this email category should appear in all the communities
   """
+  id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   community = models.ForeignKey(Community, db_index=True, 
     on_delete=models.CASCADE)
@@ -1438,7 +1462,7 @@ class EmailCategory(models.Model):
     verbose_name_plural = "Email Categories"
 
 
-class SubscriberEmailPreferences(models.Model):
+class SubscriberEmailPreference(models.Model):
   """
   Represents the email preferences of each subscriber.
   For a subscriber might want marketing emails but not promotion emails etc
@@ -1450,6 +1474,7 @@ class SubscriberEmailPreferences(models.Model):
   email_category: int
     Foreign key to an email category
   """
+  id = models.AutoField(primary_key=True)
   subscriber = models.ForeignKey(Subscriber,
     on_delete=models.CASCADE, db_index=True)
   subscribed_to = models.ForeignKey(EmailCategory,on_delete=models.CASCADE)
