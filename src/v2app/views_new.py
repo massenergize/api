@@ -1086,13 +1086,13 @@ def user_household_actions(request, id, hid):
 @csrf_exempt
 def user_actions(request, id):
   args = get_request_contents(request)
-  args['id'] = id
+  args['user'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(Action, args)
+    user, errors = FETCH.all(UserActionRel, args)
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user_action, errors = FACTORY.create(Action, args)
+    user_action, errors = FACTORY.create(UserActionRel, args)
     return Json(user_action, errors)
   return Json(None)
 
