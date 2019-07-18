@@ -7,6 +7,7 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 from collections.abc import Iterable
 
+
 def json_loader(file) -> dict:
   """
   Returns json data given a valid filepath.  Returns {} if error occurs
@@ -63,7 +64,7 @@ def retrieve_all_objects(model, args, full_json=False) -> list:
     (i.full_json() if full_json else i.simple_json()) for i in objects
   ]
 
-def convert_to_json(data, full_json=True):
+def convert_to_json(data, full_json=False):
   """
   Serializes an object into a json to be sent over-the-wire 
   """

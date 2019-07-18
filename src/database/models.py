@@ -93,10 +93,15 @@ class Media(models.Model):
 
 
   def simple_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "name": self.name,
+      "file": self.file.url,
+      "media_type": self.media_type
+    }
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
   class Meta:
     db_table = "media"
@@ -1222,10 +1227,15 @@ class SliderImage(models.Model):
     return self.title
 
   def simple_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "title": self.title,
+      "image": get_json_if_not_none(self.image),
+      "buttons": self.buttons
+    }
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
   class Meta:
     verbose_name_plural = "Slider Images"
@@ -1256,10 +1266,15 @@ class Slider(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "name": self.name,
+      "description": self.description,
+      "slides": [s.full_json() for s in self.slides.all()]
+    }
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
 class Menu(models.Model):
   """Represents items on the menu/navigation bar (top-most bar on the webpage)
@@ -1342,7 +1357,18 @@ class PageSection(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "name": self.name,
+      "title": self.title, 
+      "description": self.description,
+      "image": get_json_if_not_none(self.image),
+      "cards": [c.simple_json() for c in self.cards.all()],
+      "buttons": [b.simple_json() for c in self.buttons.all()],
+      "slider": None if not self.slider else self.slider.full_json(),
+      "graph": get_json_if_not_none(self.graph),
+      "info": self.info
+    }
 
 class Page(models.Model):
   """
@@ -1376,7 +1402,14 @@ class Page(models.Model):
     return convert_to_json(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "name": self.name,
+      "description": self.description,
+      "community": str(self.community),
+      "sections": [s.full_json() for s in self.sections.all()],
+      "info": self.info
+    }
 
   class Meta:
     unique_together = [['name', 'community']]

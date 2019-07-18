@@ -186,7 +186,7 @@ def community_pages(request, cid):
   args['community'] = cid
   if request.method == 'GET':
     community, errors = FETCH.all(Page, args)
-    return Json(community, errors)
+    return Json(community, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     community_page, errors = FACTORY.create(Page, args)
@@ -522,9 +522,6 @@ def media(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     medias, errors = FETCH.all(Media, args)
-    if medias:
-      for media in medias:
-        media.file = media.file.url
     return Json(medias, errors)
   elif request.method == 'POST':
     #about to create a new Media instance
@@ -540,8 +537,6 @@ def media_by_id(request, id):
   args['id'] = id
   if request.method == 'GET':
     media, errors = FETCH.one(Media, args)
-    if media:
-      media.file = media.file.url
     return Json(media, errors)
   elif request.method == 'POST':
     #updating the Media resource with this <id>
@@ -549,10 +544,11 @@ def media_by_id(request, id):
     return Json(media, errors)
   return Json(None)
 
+
 @csrf_exempt
-def media_with_slug(request, id):
+def media_with_slug(request, slug):
   args = get_request_contents(request)
-  args['id'] = id
+  args['name'] = slug
   if request.method == 'GET':
     media, errors = FETCH.one(Media, args)
     return Json(media, errors)
@@ -596,7 +592,7 @@ def pages(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     pages, errors = FETCH.all(Page, args)
-    return Json(pages, errors)
+    return Json(pages, errors, use_full_json=True)
   elif request.method == 'POST':
     #about to create a new Page instance
     page, errors = FACTORY.create(Page, args)
@@ -611,7 +607,7 @@ def page(request, id):
   args['id'] = id
   if request.method == 'GET':
     page, errors = FETCH.one(Page, args)
-    return Json(page, errors)
+    return Json(page, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the Page resource with this <id>
     page, errors = FACTORY.update(Page, args)
