@@ -1093,6 +1093,7 @@ def user_actions(request, id):
     return Json(user, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the User resource with this <id>
+    print(args)
     user_action, errors = FACTORY.create(UserActionRel, args)
     return Json(user_action, errors)
   return Json(None)
@@ -1107,6 +1108,7 @@ def user_action(request, id, aid):
     return Json(user, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the User resource with this <id>
+    print(args)
     user_action, errors = FACTORY.update(UserActionRel, args)
     return Json(user_action, errors)
   return Json(None)

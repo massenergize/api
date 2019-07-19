@@ -66,18 +66,27 @@ class CreateFactory:
     #if code gets here we have everything all required fields
     try:
       many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']
+      fk_fields = MODELS_AND_FIELDS[model]['fk']
+
       field_values = {}
       for field_name, value in args.items():
-        if field_name not in many_to_many_fields:
+        if field_name in fk_fields:
+          fkModel = model._meta.get_field(field_name).remote_field.model
+          field_values[field_name] = fkModel.objects.filter(pk=value).first()
+        elif field_name not in many_to_many_fields:
           field_values[field_name] = value
-
-      obj, _ = model.objects.update_or_create(**field_values)
-
+      
+      id = args.pop('id', None)
+      obj = model.objects.filter(pk=id)
+      if obj:
+        obj.update(**args)
+      errors=[f"Resource with {id} does not exist"]
 
       # for f in many_to_many_fields:
         # if f in self.args:
         #   pass
 
     except Exception as e:
-      errors =  [CREATE_ERROR_MSG, str(e)]
+      obj, errors =  None, [CREATE_ERROR_MSG, str(e)]
+      
     return obj, errors
