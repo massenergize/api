@@ -1097,6 +1097,20 @@ def user_actions(request, id):
     return Json(user_action, errors)
   return Json(None)
 
+@csrf_exempt
+def user_action(request, id, aid):
+  args = get_request_contents(request)
+  args['user'] = id
+  args['id'] = aid
+  if request.method == 'GET':
+    user, errors = FETCH.one(UserActionRel, args)
+    return Json(user, errors, use_full_json=True)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user_action, errors = FACTORY.update(UserActionRel, args)
+    return Json(user_action, errors)
+  return Json(None)
+
 
 
 @csrf_exempt

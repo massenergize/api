@@ -1057,7 +1057,7 @@ class UserActionRel(models.Model):
       "id": self.id,
       "user": get_json_if_not_none(self.user),
       "action": get_json_if_not_none(self.action),
-      "household": get_json_if_not_none(self.real_estate_unit),
+      "real_estate_unit": get_json_if_not_none(self.real_estate_unit),
       "status": self.status
     }
 
