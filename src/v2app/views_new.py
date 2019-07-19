@@ -111,6 +111,7 @@ def billing_statement(request, id):
 @csrf_exempt
 def communities(request):
   args = get_request_contents(request)
+  print(args)
   if request.method == 'GET':
     communities, errors = FETCH.all(Community, args)
     return Json(communities, errors)

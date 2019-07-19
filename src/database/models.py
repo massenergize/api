@@ -129,7 +129,7 @@ class Policy(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=LONG_STR_LEN, db_index = True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  is_global = models.BooleanField(default=False)
+  is_global = models.BooleanField(default=False, blank=True)
   more_info = JSONField(blank=True, null=True)
 
   def __str__(self):
@@ -195,16 +195,19 @@ class Community(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
-  owner = JSONField(blank=True, null=True) 
+  owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
+  owner_email = models.EmailField(max_length=SHORT_STR_LEN, 
+    default='etohn@massenergize.org')
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
-  is_geographically_focused = models.BooleanField(default=False)
+  is_geographically_focused = models.BooleanField(default=False, blank=True)
   location = JSONField(blank=True, null=True)
   policies = models.ManyToManyField(Policy, blank=True)
-  is_approved = models.BooleanField(default=False)
+  is_approved = models.BooleanField(default=False, blank=True)
+  accepted_terms_and_conditions = models.BooleanField(default=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   more_info = JSONField(blank=True, null=True)
@@ -606,7 +609,7 @@ class Vendor(models.Model):
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
   verification_checklist = JSONField(blank=True, null=True) 
-  is_verified = models.BooleanField(default=False)
+  is_verified = models.BooleanField(default=False, blank=True)
   more_info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -665,7 +668,7 @@ class TagCollection(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN, unique=True)
-  is_global = models.BooleanField(default=False)
+  is_global = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):
@@ -748,7 +751,7 @@ class Action(models.Model):
   """
   id = models.AutoField(primary_key=True)
   title = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
-  is_global = models.BooleanField(default=False)
+  is_global = models.BooleanField(default=False, blank=True)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
@@ -848,10 +851,10 @@ class Event(models.Model):
   location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
-  archive =  models.BooleanField(default=False)
-  is_global = models.BooleanField(default=False)
+  archive =  models.BooleanField(default=False, blank=True)
+  is_global = models.BooleanField(default=False, blank=True)
   external_link = models.CharField(max_length = SHORT_STR_LEN, blank=True)
-  is_external_event = models.BooleanField(default=False)
+  is_external_event = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):             
@@ -989,7 +992,7 @@ class Testimonial(models.Model):
   id = models.AutoField(primary_key=True)
   title = models.CharField(max_length=SHORT_STR_LEN, db_index=True)
   body = models.TextField(max_length=LONG_STR_LEN)
-  is_approved = models.BooleanField(default=False)
+  is_approved = models.BooleanField(default=False, blank=True)
   date = models.DateTimeField(default=datetime.now)
   file = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True)
@@ -1274,7 +1277,7 @@ class Slider(models.Model):
   name = models.CharField(max_length = LONG_STR_LEN, blank=True, db_index=True)
   description = models.CharField(max_length = LONG_STR_LEN, blank=True)
   slides = models.ManyToManyField(SliderImage, blank=True)
-  is_global = models.BooleanField(default=False)
+  is_global = models.BooleanField(default=False, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
 
   def __str__(self):             
@@ -1523,7 +1526,7 @@ class EmailCategory(models.Model):
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   community = models.ForeignKey(Community, db_index=True, 
     on_delete=models.CASCADE)
-  is_global = models.BooleanField(default=False)
+  is_global = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
