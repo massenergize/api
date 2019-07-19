@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
 from datetime import date, datetime
-from .utils.common import convert_to_json, json_loader,get_json_if_not_none
+from .utils.common import  json_loader,get_json_if_not_none
 from django.forms.models import model_to_dict
 import uuid
 
@@ -61,7 +61,7 @@ class Location(models.Model):
     return model_to_dict(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
   class Meta:
     db_table = 'locations'
@@ -136,19 +136,10 @@ class Policy(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return convert_to_json(self)
-
-  def get_full_json(self):
-    return {
-      "name": self.name,
-      "description": self.description,
-      "is_global": self.is_global,
-      "more_info": self.more_info,
-      "community": str(self.community)
-    }
+    return model_to_dict(self)
 
 
   class Meta:
@@ -216,16 +207,17 @@ class Community(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved'])
 
   def full_json(self):
     return {
       "name": self.name,
       "subdomain": self.subdomain,
-      "owner": self.owner,
+      "owner_name": self.owner_name,
+      "owner_email": self.owner_email,
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
-      "location":get_json_if_not_none(self.location),
+      "location":self.location,
       "is_approved": self.is_approved,
       "is_geographically_focused": self.is_geographically_focused,
       "banner":get_json_if_not_none(self.banner),
@@ -278,15 +270,10 @@ class RealEstateUnit(models.Model):
     )
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return {
-      "unit_type": self.unit_type,
-      "location": self.location.simple_json(),
-      "created_at": self.created_at,
-      "updated_at": self.updated_at
-    }
+    return self.simple_json()
 
 
   class Meta:
@@ -332,7 +319,7 @@ class Goal(models.Model):
     return model_to_dict(self)
 
   def full_json(self):
-    return model_to_dict(self)
+    return self.simple_json()
 
 
 
@@ -361,10 +348,10 @@ class Role(models.Model):
     return CHOICES["ROLE_TYPES"][self.name] 
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
 
   class Meta:
@@ -426,12 +413,17 @@ class UserProfile(models.Model):
     return self.email
 
   def simple_json(self):
-    return convert_to_json(self)
-    # return model_to_dict(self, fields=['id', 
-    # 'full_name', "preferred_name", "email"])
+    return model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email'])
+
 
   def full_json(self):
-    return convert_to_json(self)
+    data = model_to_dict(self, exclude=['real_estate_units', 'goals', 
+      'communities', 'roles'])
+    data['user_info'] = self.user_info
+    data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
+    data['goals'] = [g.simple_json() for g in self.goals.all()]
+    data['communities'] = [c.simple_json() for c in self.communities.all()]
+    return data
 
   class Meta:
     db_table = 'user_profiles' 
@@ -464,6 +456,7 @@ class Team(models.Model):
     about this goal
   """
   id = models.AutoField(primary_key=True)
+  #Team names should be unique globally
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
@@ -489,10 +482,17 @@ class Team(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, ['id', 'name', 'description'])
 
   def full_json(self):
-    return convert_to_json(self)
+    data = self.simple_json()
+    data['admins'] = [a.simple_json() for a in self.admins.all()]
+    data['members'] = [m.simple_json() for m in self.members.all()]
+    data['community'] =self.community.simple_json()
+    data['goals'] = [g.simple_json() for g in self.goals.all()]
+    data['logo'] = get_json_if_not_none(self.logo)
+    data['banner'] = get_json_if_not_none(self.banner)
+    return data
 
   class Meta:
     ordering = ('name',)
@@ -605,7 +605,7 @@ class Vendor(models.Model):
   services = models.ManyToManyField(Service, blank=True)
   properties_serviced = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["PROPERTIES_SERVICED"].items())
-  onboarding_date = models.DateTimeField(default=datetime.now)
+  onboarding_date = models.DateTimeField(auto_now_add=True)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
   verification_checklist = JSONField(blank=True, null=True) 
@@ -618,10 +618,16 @@ class Vendor(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, ['id', 'name', 'description','service_area', 'properties_serviced'])
 
   def full_json(self):
-    return convert_to_json(self)
+    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact'])
+    data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
+    data['logo'] = get_json_if_not_none(self.logo)
+    data['banner']  = get_json_if_not_none(self.banner)
+    data['key_contact'] = get_json_if_not_none(self.key_contact, True)
+    data['services'] = [s.simple_json() for s in self.services.all()]
+    return data
 
   class Meta:
     db_table = 'vendors'
@@ -639,21 +645,20 @@ class ActionProperty(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  community = models.ManyToManyField(Community, blank=True)
-  order_position = models.PositiveSmallIntegerField(default=0)
+
 
   def __str__(self): 
-    return "%s: %s" % (self.order_position, self.name)
+    return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.full_json()
 
   class Meta:
     verbose_name_plural = "Properties"
-    ordering = ('order_position',)
+    ordering = ('id',)
     db_table = 'action_properties'
 
 
@@ -676,11 +681,11 @@ class TagCollection(models.Model):
 
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
 
   class Meta:
@@ -708,10 +713,13 @@ class Tag(models.Model):
     return "%s - %s" % (self.name, self.tag_collection)
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
+
 
   def full_json(self):
-    return convert_to_json(self)
+    data = self.simple_json()
+    data['tag_collection'] = get_json_if_not_none(self.tag_collection)
+    return data
 
   class Meta:
     ordering = ('name',)
@@ -774,41 +782,23 @@ class Action(models.Model):
     return self.title
 
   def simple_json(self):
-    fields_to_retrieve = [
-      'id', 'title','steps_to_take', 'about', 'icon', 'rank', 'geographic_area'
-    ]
-    return model_to_dict(self, fields=fields_to_retrieve)
+    data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
+      'average_carbon_score', 'community'])
+    data['image'] = get_json_if_not_none(self.image)
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
+    return data
 
   def full_json(self):
-    result = self.simple_json()
-    result.update({
-      "image": get_json_if_not_none(self.image), 
-      "tags": [t.simple_json() for t in self.tags.all()], 
-      "properties": [p.simple_json() for p in self.properties.all()], 
-      "vendors": [v.simple_json() for v in self.vendors.all()],
-      "created_at": self.created_at, 
-      "updated_at": self.updated_at, 
-      "community": self.community.simple_json()
-    })
+    data  = self.simple_json()
+    data['is_global'] = self.is_global
+    data['community'] = get_json_if_not_none(self.community)
+    data['steps_to_take'] = self.steps_to_take
+    data['about'] = self.about
+    data['geographic_area'] = self.geographic_area
+    data['properties'] = [p.simple_json() for p in self.properties.all()]
+    data['vendors'] = [v.simple_json() for v in self.vendors.all()]
+    return data
 
-    return {
-      "id": self.id,
-      "title": self.title, 
-      "is_global": self.is_global, 
-      "steps_to_take": self.steps_to_take, 
-      "about": self.about, 
-      "geographic_area": get_json_if_not_none(self.geographic_area), 
-      "icon": self.icon, 
-      "image": get_json_if_not_none(self.image), 
-      "average_carbon_score": self.average_carbon_score, 
-      "community": self.community.simple_json(), 
-      "rank": self.rank, 
-      "created_at": self.created_at, 
-      "updated_at": self.updated_at, 
-      "tags": [t.simple_json() for t in self.tags.all()], 
-      "properties": [p.simple_json() for p in self.properties.all()], 
-      "vendors": [v.simple_json() for v in self.vendors.all()]
-  }
 
   class Meta:
     ordering = ['rank', 'title']
@@ -861,10 +851,15 @@ class Event(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    data = model_to_dict(self, exclude=['tags', 'image', 'community'])
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
+    data['community'] = get_json_if_not_none(self.community)
+    data['image'] = None if not self.image else self.image.full_json();
+    return data
+
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
 
   class Meta:
@@ -899,10 +894,13 @@ class EventAttendee(models.Model):
       self.attendee, CHOICES["EVENT_CHOICES"][self.status], self.event)
   
   def simple_json(self):
-    return convert_to_json(self)
+    data =  model_to_dict(self, ['id', 'status'])
+    data['attendee'] = get_json_if_not_none(self.attendee)
+    data['event'] = get_json_if_not_none(self.event)
+    return data
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
 
   class Meta:
@@ -936,10 +934,10 @@ class Permission(models.Model):
     return CHOICES["PERMISSION_TYPES"][self.name] 
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
   class Meta:
     ordering = ('name',)
@@ -965,10 +963,14 @@ class UserPermissions(models.Model):
     return '(%s) can (%s)' % (self.who, self.can_do)
 
   def simple_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "who": get_json_if_not_none(self.who),
+      "can_do": get_json_if_not_none(self.can_do)
+    }
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
   class Meta:
     ordering = ('who',)
@@ -1002,10 +1004,12 @@ class Testimonial(models.Model):
     return self.title
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, exclude=['file'])
 
   def full_json(self):
-    return convert_to_json(self)
+    data = self.simple_json() 
+    data['file'] = get_json_if_not_none(self.file)
+    return data
 
 
   class Meta:
@@ -1049,13 +1053,18 @@ class UserActionRel(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
 
   def simple_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "user": get_json_if_not_none(self.user),
+      "action": get_json_if_not_none(self.action),
+      "household": get_json_if_not_none(self.real_estate_unit),
+      "status": self.status
+    }
 
   def full_json(self):
-    res = convert_to_json(self)
-    res["user"] = self.user.simple_json()
-    res["action"] = self.action.full_json()
-    res["real_estate_unit"] = self.real_estate_unit.name
+    res = self.simple_json()
+    res["vendor"] = get_json_if_not_none(self.vendor)
+    res["testimonial"] = get_json_if_not_none(self.testimonial)
     return res
 
   def __str__(self):
@@ -1087,10 +1096,12 @@ class CommunityAdminGroup(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, exclude=['members'])
 
   def full_json(self):
-    return convert_to_json(self)
+    data = self.simple_json()
+    data['members'] = [m.simple_json() for m in self.members.all()]
+    return data
 
   class Meta:
     ordering = ('name',)
@@ -1121,10 +1132,15 @@ class UserGroup(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, exclude=['members', 'permissions'])
 
   def full_json(self):
-    return convert_to_json(self)
+    data = self.simple_json()
+    data['community'] = get_json_if_not_none(self.community)
+    data['members'] = [m.simple_json() for m in self.members.all()]
+    data['permissions'] = [p.simple_json() for p in self.permissions.all()]
+    return data
+
 
   class Meta:
     ordering = ('name',)
@@ -1160,19 +1176,13 @@ class Data(models.Model):
     return "%s (%d)" % (self.name, self.value)
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return {
-      "id": self.id,
-      "name": self.name,
-      "value": self.value,
-      "denominator": self.denominator,
-      "symbol": self.symbol,
-      "tag": get_json_if_not_none(self.tag),
-      "community": str(self.community),
-      "info": self.info
-    }
+    data = self.simple_json()
+    data["tag"] = get_json_if_not_none(self.tag)
+    data["community"] =  get_json_if_not_none(self.community)
+    return data
 
   class Meta:
     verbose_name_plural = "Data"
@@ -1205,13 +1215,14 @@ class Graph(models.Model):
       "id": self.id,
       "title": self.title,
       "graph_type": self.graph_type,
-      "community": str(self.community),
-      "data": [d.full_json() for d in self.data.all()]
+      "community": get_json_if_not_none(self.community)
     }
 
 
   def full_json(self):
-    return self.simple_json()
+    res =  self.simple_json()
+    res["data"] = [d.full_json() for d in self.data.all()]
+    return res
 
 
   def __str__(self):   
@@ -1221,6 +1232,26 @@ class Graph(models.Model):
     verbose_name_plural = "Graphs"
     ordering = ('title',)
 
+
+class Button(models.Model):
+  """Buttons on the pages"""
+  text = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  icon = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  url = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  color = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  info = JSONField(blank=True, null=True)
+
+  def __str__(self):        
+    return self.text
+
+  def simple_json(self):
+    return model_to_dict(self)
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    ordering = ('text',)
 
 
 class SliderImage(models.Model):
@@ -1240,7 +1271,7 @@ class SliderImage(models.Model):
   title = models.CharField(max_length = LONG_STR_LEN, blank=True, db_index=True)
   subtitle = models.CharField(max_length = LONG_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
-  buttons = JSONField(blank=True, null=True)
+  buttons = models.ManyToManyField(Button, blank=True)
 
   def __str__(self):             
     return self.title
@@ -1250,11 +1281,12 @@ class SliderImage(models.Model):
       "id": self.id,
       "title": self.title,
       "image": get_json_if_not_none(self.image),
-      "buttons": self.buttons
     }
 
   def full_json(self):
-    return self.simple_json()
+    res =  self.simple_json()
+    res['buttons'] = [b.simple_json() for b in self.buttons.all()]
+    return res
 
   class Meta:
     verbose_name_plural = "Slider Images"
@@ -1289,11 +1321,13 @@ class Slider(models.Model):
       "id": self.id,
       "name": self.name,
       "description": self.description,
-      "slides": [s.full_json() for s in self.slides.all()]
     }
 
   def full_json(self):
-    return self.simple_json()
+    res =  self.simple_json()
+    res['slides'] = [s.full_json() for s in self.slides.all()]
+    return res
+
 
 class Menu(models.Model):
   """Represents items on the menu/navigation bar (top-most bar on the webpage)
@@ -1312,33 +1346,13 @@ class Menu(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
     return self.simple_json()
 
   class Meta:
     ordering = ('name',)
-
-class Button(models.Model):
-  """Buttons on the pages"""
-  text = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  icon = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  url = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  color = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  info = JSONField(blank=True, null=True)
-
-  def __str__(self):        
-    return self.text
-
-  def simple_json(self):
-    return convert_to_json(self)
-
-  def full_json(self):
-    return self.simple_json()
-
-  class Meta:
-    ordering = ('text',)
 
 
 class Card(models.Model):
@@ -1397,21 +1411,17 @@ class PageSection(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, ['id', 'name', 'title', 'description'])
 
   def full_json(self):
-    return {
-      "id": self.id,
-      "name": self.name,
-      "title": self.title, 
-      "description": self.description,
-      "image": get_json_if_not_none(self.image),
-      "cards": [c.simple_json() for c in self.cards.all()],
-      "buttons": [b.simple_json() for b in self.buttons.all()],
-      "slider": None if not self.slider else self.slider.full_json(),
-      "graphs": [g.full_json() for g in self.graphs.all()],
-      "info": self.info
-    }
+    res = self.simple_json()
+    res['image'] = get_json_if_not_none(self.image)
+    res["cards"]= [c.simple_json() for c in self.cards.all()]
+    res["buttons"]= [b.simple_json() for b in self.buttons.all()],
+    res["slider"] = get_json_if_not_none(self.slider, True),
+    res["graphs"] = [g.full_json() for g in self.graphs.all()],
+    res["info"] = self.info
+    return res
 
 class Page(models.Model):
   """
@@ -1442,17 +1452,14 @@ class Page(models.Model):
     return f"{self.name} - {self.community.name}"
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, ['id', 'name', 'description'])
 
   def full_json(self):
-    return {
-      "id": self.id,
-      "name": self.name,
-      "description": self.description,
-      "community": str(self.community),
-      "sections": [s.full_json() for s in self.sections.all()],
-      "info": self.info
-    }
+    res = self.simple_json()
+    res["community"] = get_json_if_not_none(self.community),
+    res["sections"] =  [s.full_json() for s in self.sections.all()]
+    res["info"] =  self.info
+    return res
 
   class Meta:
     unique_together = [['name', 'community']]
@@ -1493,10 +1500,13 @@ class BillingStatement(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    res = model_to_dict(self, exclude=['community'])
+    res['community'] = get_json_if_not_none(self.community)
+    return res
+
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
   class Meta:
     ordering = ('name',)
@@ -1522,10 +1532,11 @@ class Subscriber(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    res = model_to_dict(self)
+    res['community'] = get_json_if_not_none(self.community)
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
 
   class Meta:
@@ -1557,11 +1568,12 @@ class EmailCategory(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self)
 
   def full_json(self):
-    return convert_to_json(self)
-
+    res = self.simple_json()
+    res['community'] = get_json_if_not_none(self.community)
+    return res
 
   class Meta:
     db_table = 'email_categories'
@@ -1590,10 +1602,14 @@ class SubscriberEmailPreference(models.Model):
     return "%s - %s" % (self.subscriber, self.subscribed_to)
 
   def simple_json(self):
-    return convert_to_json(self)
+    return {
+      "id": self.id,
+      "subscriber": get_json_if_not_none(self.subscriber),
+      "subscribed_to": get_json_if_not_none(self.subscribed_to)
+    }
 
   def full_json(self):
-    return convert_to_json(self)
+    return self.simple_json()
 
   class Meta:
     db_table = 'subscriber_email_preferences'

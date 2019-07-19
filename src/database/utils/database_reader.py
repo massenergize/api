@@ -40,16 +40,18 @@ class DatabaseReader:
         .select_related(*foreign_keys_to_select)
         .filter(**filter_args)
         .prefetch_related(*many_to_many_fields_to_prefetch)[:limit])
-      return data, errors
+      if data:
+        return (data, errors)
+      return [], errors
     except Exception as e:
-      print(e)
       return  None, [READ_ERROR_MSG, str(e)]
     
 
   def one(self,model, filter_args={}, many_to_many_fields_to_prefetch=[], 
     foreign_keys_to_select=[]):
-    data, errors = self.get_all(model, filter_args, 
+    data, errors = self.all(model, filter_args, 
       many_to_many_fields_to_prefetch, foreign_keys_to_select)
+
     if data:
       return  data.first(), errors
     return None, errors

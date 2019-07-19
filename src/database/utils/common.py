@@ -77,20 +77,20 @@ def convert_to_json(data, full_json=False):
       (i.full_json() if full_json else i.simple_json()) for i in data
     ]
   else:
-    objects = [data]
-    serialized_object = serializers.serialize("json", objects)
-    result = json.loads(serialized_object)[0]["fields"]
-    result["id"] = json.loads(serialized_object)[0]["pk"]
-    return result
+    return data.full_json()
+    # serialized_object = serializers.serialize("json", objects)
+    # result = json.loads(serialized_object)[0]["fields"]
+    # result["id"] = json.loads(serialized_object)[0]["pk"]
+    # return result
 
 
-def get_json_if_not_none(obj) -> dict:
+def get_json_if_not_none(obj, full_json=False) -> dict:
   """
   Takes an object and returns the json/serialized form of the obj if it is 
   not None.
   """
   if obj:
-    return obj.simple_json()
+    return obj.simple_json() if not full_json else obj.full_json()
   return None
 
 

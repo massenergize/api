@@ -33,9 +33,14 @@ class CreateFactory:
     #if code gets here we have everything all required fields
     try:
       many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']
+      fk_fields = MODELS_AND_FIELDS[model]['fk']
       field_values = {}
       for field_name, value in args.items():
-        if field_name not in many_to_many_fields:
+
+        if field_name in fk_fields:
+          fkModel = model._meta.get_field(field_name).remote_field.model
+          field_values[field_name] = fkModel.objects.filter(pk=value).first()
+        elif field_name not in many_to_many_fields:
           field_values[field_name] = value
 
       new_object = model.objects.create(**field_values)

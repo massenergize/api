@@ -26,11 +26,11 @@ def actions(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     actions, errors = FETCH.all(Action, args)
-    return Json(actions, errors, use_full_json=True)
+    return Json(actions, errors)
   elif request.method == 'POST':
     #about to create a new Action instance
     action, errors = FACTORY.create(Action, args)
-    return Json(action, errors, use_full_json=True)
+    return Json(action, errors)
   return Json(None)
 
 
@@ -453,7 +453,7 @@ def graph(request, id):
   args['id'] = id
   if request.method == 'GET':
     graph, errors = FETCH.one(Graph, args)
-    return Json([graph], errors)
+    return Json(graph, errors)
   elif request.method == 'POST':
     #updating the Graph resource with this <id>
     graph, errors = FACTORY.update(Graph, args)
