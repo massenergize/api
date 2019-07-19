@@ -1341,7 +1341,7 @@ class Card(models.Model):
     on_delete=models.SET_NULL, null=True)
 
   def __str__(self):
-    self.title
+    return self.title
 
 class PageSection(models.Model):
   """
