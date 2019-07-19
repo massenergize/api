@@ -1165,7 +1165,8 @@ class Data(models.Model):
   def full_json(self):
     return {
       "id": self.id,
-      "name": self.value,
+      "name": self.name,
+      "value": self.value,
       "denominator": self.denominator,
       "symbol": self.symbol,
       "tag": get_json_if_not_none(self.tag),
@@ -1364,8 +1365,7 @@ class PageSection(models.Model):
   buttons = models.ManyToManyField(Button, blank=True)
   slider = models.ForeignKey(Slider, on_delete=models.SET_NULL, 
     null=True, blank=True)
-  graph = models.ForeignKey(Graph, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+  graphs = models.ManyToManyField(Graph, blank=True, related_name='graphs')
   info = JSONField(blank=True, null=True)
 
   def __str__(self):             
@@ -1384,7 +1384,7 @@ class PageSection(models.Model):
       "cards": [c.simple_json() for c in self.cards.all()],
       "buttons": [b.simple_json() for b in self.buttons.all()],
       "slider": None if not self.slider else self.slider.full_json(),
-      "graph": self.graph.full_json() if self.graph else None,
+      "graphs": [g.full_json() for g in self.graphs.all()],
       "info": self.info
     }
 
