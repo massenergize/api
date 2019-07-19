@@ -1331,6 +1331,16 @@ class Button(models.Model):
   def __str__(self):        
     return self.text
 
+  def simple_json(self):
+    return convert_to_json(self)
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    ordering = ('text',)
+
+
 class Card(models.Model):
   """Buttons on the pages"""
   title = models.CharField(max_length=SHORT_STR_LEN, blank = True)
@@ -1342,6 +1352,21 @@ class Card(models.Model):
 
   def __str__(self):
     return self.title
+
+  def simple_json(self):
+    return {
+      "title": self.title,
+      "description": self.description,
+      "icon": self.icon,
+      "link": self.link,
+      "media": get_json_if_not_none(self.media)
+    }
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    ordering = ('title',)
 
 class PageSection(models.Model):
   """
