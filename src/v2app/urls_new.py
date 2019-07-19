@@ -83,6 +83,7 @@ urlpatterns = [
   path('user/<str:id>/households', user_households),
   path('user/<str:id>/household/<int:hid>/actions', user_household_actions),
   path('user/<str:id>/actions', user_actions),
+  path('user/<str:id>/action/<int:aid>', user_action),
   path('user/<str:id>/teams', user_teams),
   path('user/<str:id>/testimonials', user_testimonials),
   path('user-groups', user_groups),

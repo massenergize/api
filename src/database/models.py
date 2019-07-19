@@ -1055,7 +1055,7 @@ class UserActionRel(models.Model):
     res = convert_to_json(self)
     res["user"] = self.user.simple_json()
     res["action"] = self.action.full_json()
-    res["real_estate_unit"] = self.real_estate_unit.name
+    res["real_estate_unit"] = self.real_estate_unit.id
     return res
 
   def __str__(self):
