@@ -595,7 +595,7 @@ def pages(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     pages, errors = FETCH.all(Page, args)
-    return Json(pages, errors, use_full_json=True)
+    return Json(pages, errors)
   elif request.method == 'POST':
     #about to create a new Page instance
     page, errors = FACTORY.create(Page, args)
@@ -610,7 +610,7 @@ def page(request, id):
   args['id'] = id
   if request.method == 'GET':
     page, errors = FETCH.one(Page, args)
-    return Json(page, errors, use_full_json=True)
+    return Json(page, errors)
   elif request.method == 'POST':
     #updating the Page resource with this <id>
     page, errors = FACTORY.update(Page, args)

@@ -1452,11 +1452,12 @@ class Page(models.Model):
     return f"{self.name} - {self.community.name}"
 
   def simple_json(self):
-    return model_to_dict(self, ['id', 'name', 'description'])
+    res = model_to_dict(self, ['id', 'name', 'description'])
+    res["community"] = get_json_if_not_none(self.community)
+    return res
 
   def full_json(self):
     res = self.simple_json()
-    res["community"] = get_json_if_not_none(self.community),
     res["sections"] =  [s.full_json() for s in self.sections.all()]
     res["info"] =  self.info
     return res
