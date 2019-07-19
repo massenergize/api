@@ -26,11 +26,11 @@ def actions(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     actions, errors = FETCH.all(Action, args)
-    return Json(actions, errors)
+    return Json(actions, errors, use_full_json=True)
   elif request.method == 'POST':
     #about to create a new Action instance
     action, errors = FACTORY.create(Action, args)
-    return Json(action, errors)
+    return Json(action, errors, use_full_json=True)
   return Json(None)
 
 
@@ -41,11 +41,11 @@ def action(request, id):
   args['id'] = id
   if request.method == 'GET':
     action, errors = FETCH.one(Action, args)
-    return Json(action, errors)
+    return Json(action, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the Action resource with this <id>
     action, errors = FACTORY.update(Action, args)
-    return Json(action, errors)
+    return Json(action, errors, use_full_json=True)
   return Json(None)
 
 
@@ -1075,7 +1075,7 @@ def user_household_actions(request, id, hid):
   args['real_estate_unit'] = hid
   if request.method == 'GET':
     user, errors = FETCH.all(Action, args)
-    return Json(user, errors)
+    return Json(user, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(Action, args)
@@ -1090,7 +1090,7 @@ def user_actions(request, id):
   args['user'] = id
   if request.method == 'GET':
     user, errors = FETCH.all(UserActionRel, args)
-    return Json(user, errors)
+    return Json(user, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user_action, errors = FACTORY.create(UserActionRel, args)
