@@ -539,10 +539,10 @@ class Service(models.Model):
     return self.name
 
   def simple_json(self):
-    return convert_to_json(self)
+    return model_to_dict(self, ['id', 'name', 'description', 'service_location', 'icon'])
 
   def full_json(self):
-    return convert_to_json(self)
+    res =  self.simple_json()
 
 
   class Meta:
@@ -850,6 +850,7 @@ class Event(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   external_link = models.CharField(max_length = SHORT_STR_LEN, blank=True)
   is_external_event = models.BooleanField(default=False, blank=True)
+  more_info = JSONField(blank=True, null=True)
 
 
   def __str__(self):             
@@ -860,6 +861,7 @@ class Event(models.Model):
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['community'] = get_json_if_not_none(self.community)
     data['image'] = None if not self.image else self.image.full_json();
+    data['more_info'] = self.more_info
     return data
 
 
