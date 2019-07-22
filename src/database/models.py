@@ -1079,6 +1079,7 @@ class UserActionRel(models.Model):
 
   class Meta:
     ordering = ('status','user', 'action')
+    unique_together = [['user', 'action']]
 
 
 class CommunityAdminGroup(models.Model):

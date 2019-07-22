@@ -80,7 +80,8 @@ class CreateFactory:
       obj = model.objects.filter(pk=id)
       if obj:
         obj.update(**args)
-      errors=[f"Resource with {id} does not exist"]
+      else:
+        errors=[f"Resource with id: {id} does not exist"]
 
       # for f in many_to_many_fields:
         # if f in self.args:
