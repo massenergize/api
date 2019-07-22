@@ -16,7 +16,7 @@ class DatabaseReader:
   def verify_all_fields(self, model, fields_provided):
     all_fields = MODELS_AND_FIELDS[model]["all_fields"]
     for f in  fields_provided:
-      if f not in all_fields:
+      if f not in all_fields and '__' not in f:
         return [f"{f} is not a valid field in {model._meta.model_name}"]
     return None
 

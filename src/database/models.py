@@ -207,7 +207,10 @@ class Community(models.Model):
     return self.name
 
   def simple_json(self):
-    return model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved'])
+    res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 
+      'owner_name', 'owner_email', 'is_geographically_focused'])
+    res['logo'] = get_json_if_not_none(self.logo)
+    return res
 
   def full_json(self):
     return {
@@ -681,7 +684,9 @@ class TagCollection(models.Model):
 
 
   def simple_json(self):
-    return model_to_dict(self)
+    res =  model_to_dict(self)
+    res['tags'] = [t.simple_json() for t in self.tag_set.all()]
+    return res
 
 
   def full_json(self):

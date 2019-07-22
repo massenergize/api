@@ -111,7 +111,6 @@ def billing_statement(request, id):
 @csrf_exempt
 def communities(request):
   args = get_request_contents(request)
-  print(args)
   if request.method == 'GET':
     communities, errors = FETCH.all(Community, args)
     return Json(communities, errors)
@@ -595,7 +594,10 @@ def pages(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     pages, errors = FETCH.all(Page, args)
-    return Json(pages, errors)
+    if len(pages) == 1:
+      return Json(pages, errors, use_full_json=True)
+    else:
+      return Json(pages, errors)
   elif request.method == 'POST':
     #about to create a new Page instance
     page, errors = FACTORY.create(Page, args)

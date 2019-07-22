@@ -31,7 +31,7 @@ class Json(JsonResponse):
         cleaned_data['data'] =  data.full_json()
     except Exception as e:
       print(e)
-      cleanend_data['errors'] = [e]
+      cleaned_data['errors'] = [e]
     return cleaned_data
 
     #use model to dict
