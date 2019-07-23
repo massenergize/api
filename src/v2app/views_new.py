@@ -123,9 +123,12 @@ def communities(request):
 
 
 @csrf_exempt
-def community(request, cid):
+def community(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['id'] = cid
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain 
   if request.method == 'GET':
     community, errors = FETCH.one(Community, args)
     return Json(community, errors)
