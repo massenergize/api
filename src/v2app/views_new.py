@@ -1077,8 +1077,11 @@ def user_households(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(RealEstateUnit, args)
-    return Json(user, errors)
+    user, errors = FETCH.all(UserProfile, args, 
+      many_to_many_fields_to_prefetch=['real_estate_units'])
+    if user:
+      households = user.first().real_estate_units.all()
+    return Json(households, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(RealEstateUnit, args)
