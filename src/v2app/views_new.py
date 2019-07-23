@@ -1090,10 +1090,13 @@ def user_households(request, id):
 def user_households_by_email(request, email):
   #TODO: not working yet
   args = get_request_contents(request)
-  args['user__email'] = email
+  args['email'] = email
   if request.method == 'GET':
-    user, errors = FETCH.all(RealEstateUnit, args)
-    return Json(user, errors)
+    user, errors = FETCH.all(UserProfile, args, 
+      many_to_many_fields_to_prefetch=['real_estate_units'])
+    if user:
+      households = user.first().real_estate_units.all()
+    return Json(households, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(RealEstateUnit, args)
@@ -1108,8 +1111,8 @@ def user_household_actions(request, id, hid):
   args['id'] = id
   args['real_estate_unit'] = hid
   if request.method == 'GET':
-    user, errors = FETCH.all(Action, args)
-    return Json(user, errors, use_full_json=True)
+    user_households, errors = FETCH.all(Action, args)
+    return Json(user_households, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(Action, args)
@@ -1234,8 +1237,8 @@ def user_testimonials(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user_testimonial, errors = FETCH.all(Testimonial, args)
-    return Json(user_testimonial, errors)
+    user_testimonials, errors = FETCH.all(UserTestimonialRel, args)
+    return Json(user_testimonials, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user_testimonial, errors = FACTORY.create(Testimonial, args)
