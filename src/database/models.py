@@ -214,6 +214,7 @@ class Community(models.Model):
 
   def full_json(self):
     return {
+      "id": self.id,
       "name": self.name,
       "subdomain": self.subdomain,
       "owner_name": self.owner_name,

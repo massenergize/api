@@ -60,9 +60,6 @@ class CreateFactory:
     errors = self.verify_required_fields(model, args)
     new_object = None 
 
-    if errors:
-      return None, errors
-
     #if code gets here we have everything all required fields
     try:
       many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']

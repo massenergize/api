@@ -132,7 +132,10 @@ def community(request, cid):
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     #TODO: create pages for this community, etc
+    print(args)
     community, errors = FACTORY.update(Community, args)
+    print(errors)
+    # print(community.simple_json())
     return Json(community, errors)
   return Json(None)
 
