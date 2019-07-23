@@ -141,9 +141,12 @@ def community(request, cid):
 
 
 @csrf_exempt
-def community_actions(request, cid):
+def community_actions(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain 
   if request.method == 'GET':
     community, errors = FETCH.all(Action, args)
     return Json(community, errors)
@@ -156,12 +159,17 @@ def community_actions(request, cid):
 
 
 @csrf_exempt
-def community_members(request, cid):
+def community_members(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['communities'] = cid
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain 
   if request.method == 'GET':
-    community, errors = FETCH.all(UserProfile, args)
-    return Json(community, errors)
+    community, errors = FETCH.one(Community, args)
+    if community:
+      res = community.userprofile_set.all()
+    return Json(res, errors)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     member, errors = FACTORY.create(UserProfile, args)
@@ -171,9 +179,12 @@ def community_members(request, cid):
 
 
 @csrf_exempt
-def community_impact(request, cid):
+def community_impact(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Graph, args)
     return Json(community, errors)
@@ -186,9 +197,12 @@ def community_impact(request, cid):
 
 
 @csrf_exempt
-def community_pages(request, cid):
+def community_pages(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Page, args)
     return Json(community, errors, use_full_json=True)
@@ -201,9 +215,12 @@ def community_pages(request, cid):
 
 
 @csrf_exempt
-def community_events(request, cid):
+def community_events(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Event, args)
     return Json(community, errors)
@@ -216,12 +233,17 @@ def community_events(request, cid):
 
 
 @csrf_exempt
-def community_households(request, cid):
+def community_households(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain  
   if request.method == 'GET':
-    community, errors = FETCH.all(RealEstateUnit, args)
-    return Json(community, errors)
+    community, errors = FETCH.one(Community, args)
+    if community:
+      res = community.userprofile_set.all()
+      return Json(res, errors)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     community_household, errors = FACTORY.create(RealEstateUnit, args)
@@ -231,24 +253,12 @@ def community_households(request, cid):
 
 
 @csrf_exempt
-def community_goals(request, cid):
+def community_teams(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
-  if request.method == 'GET':
-    community, errors = FETCH.all(Goal, args)
-    return Json(community, errors)
-  elif request.method == 'POST':
-    #updating the Community resource with this <id>
-    community_goals, errors = FACTORY.create(Goal, args)
-    return Json(community_goals, errors)
-  return Json(None)
-
-
-
-@csrf_exempt
-def community_teams(request, cid):
-  args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Team, args)
     return Json(community, errors)
@@ -261,9 +271,12 @@ def community_teams(request, cid):
 
 
 @csrf_exempt
-def community_data(request, cid):
+def community_data(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Data, args)
     return Json(community, errors)
@@ -276,11 +289,14 @@ def community_data(request, cid):
 
 
 @csrf_exempt
-def community_testimonials(request, cid):
+def community_testimonials(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['action__community__subdomain'] = subdomain 
   if request.method == 'GET':
-    community, errors = FETCH.all(Testimonial, args)
+    community, errors = FETCH.all(UserTestimonialRel, args)
     return Json(community, errors)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
@@ -293,6 +309,23 @@ def community_testimonials(request, cid):
 @csrf_exempt
 def community_admins(request):
   args = get_request_contents(request)
+  if request.method == 'GET':
+    communityadmins, errors = FETCH.all(CommunityAdminGroup, args)
+    return Json(communityadmins, errors)
+  elif request.method == 'POST':
+    #about to create a new CommunityAdmin instance
+    communityadmin, errors = FACTORY.create(CommunityAdminGroup, args)
+    return Json(communityadmin, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def community_admins_by_id_or_subdomain(request,cid=None, subdomain=None):
+  args = get_request_contents(request)
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain 
   if request.method == 'GET':
     communityadmins, errors = FETCH.all(CommunityAdminGroup, args)
     return Json(communityadmins, errors)
