@@ -91,6 +91,7 @@ urlpatterns = [
   path('user/e/<str:email>/actions', user_actions_by_email),
   path('user/e/<str:email>/action/<int:aid>', user_action_by_email),
   path('user/e/<str:email>/teams', user_teams_by_email),
+  path('user/e/<str:email>/testimonials', user_testimonials_by_email),
   path('user-groups', user_groups),
   path('user-group/<int:id>', user_group),
   path('uuid/new', new_uuid),
