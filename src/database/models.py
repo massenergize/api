@@ -1105,12 +1105,14 @@ class CommunityAdminGroup(models.Model):
     return self.name
 
   def simple_json(self):
-    return model_to_dict(self, exclude=['members'])
+    res = model_to_dict(self, exclude=['members'])
+    res['community'] = get_json_if_not_none(self.community)
+    res['members'] = [m.simple_json() for m in self.members.all()]
+    return res
+
 
   def full_json(self):
-    data = self.simple_json()
-    data['members'] = [m.simple_json() for m in self.members.all()]
-    return data
+   return self.simple_json()
 
   class Meta:
     ordering = ('name',)

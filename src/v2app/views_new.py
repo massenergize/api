@@ -1057,11 +1057,40 @@ def user(request, id):
   return Json(None)
 
 
+@csrf_exempt
+def user_by_email(request, email):
+  args = get_request_contents(request)
+  args['email'] = email
+  if request.method == 'GET':
+    user, errors = FETCH.one(UserProfile, args)
+    return Json(user, errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user, errors = FACTORY.update(UserProfile, args)
+    return Json(user, errors)
+  return Json(None)
+
+
 
 @csrf_exempt
 def user_households(request, id):
   args = get_request_contents(request)
   args['id'] = id
+  if request.method == 'GET':
+    user, errors = FETCH.all(RealEstateUnit, args)
+    return Json(user, errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user, errors = FACTORY.create(RealEstateUnit, args)
+    return Json(user, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_households_by_email(request, email):
+  #TODO: not working yet
+  args = get_request_contents(request)
+  args['user__email'] = email
   if request.method == 'GET':
     user, errors = FETCH.all(RealEstateUnit, args)
     return Json(user, errors)
@@ -1088,11 +1117,41 @@ def user_household_actions(request, id, hid):
   return Json(None)
 
 
+@csrf_exempt
+def user_household_actions_by_email(request, email, hid):
+  args = get_request_contents(request)
+  args['email'] = email
+  args['real_estate_unit'] = hid
+  if request.method == 'GET':
+    user, errors = FETCH.all(Action, args)
+    return Json(user, errors, use_full_json=True)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user, errors = FACTORY.create(Action, args)
+    return Json(user, errors)
+  return Json(None)
+
+
 
 @csrf_exempt
 def user_actions(request, id):
   args = get_request_contents(request)
   args['user'] = id
+  if request.method == 'GET':
+    user, errors = FETCH.all(UserActionRel, args)
+    return Json(user, errors, use_full_json=True)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    print(args)
+    user_action, errors = FACTORY.create(UserActionRel, args)
+    return Json(user_action, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_actions_by_email(request, email):
+  args = get_request_contents(request)
+  args['user__email'] = email
   if request.method == 'GET':
     user, errors = FETCH.all(UserActionRel, args)
     return Json(user, errors, use_full_json=True)
@@ -1121,9 +1180,40 @@ def user_action(request, id, aid):
 
 
 @csrf_exempt
+def user_action_by_email(request, email, aid):
+  args = get_request_contents(request)
+  args['user__email'] = email
+  args['id'] = aid
+  if request.method == 'GET':
+    user, errors = FETCH.one(UserActionRel, args)
+    return Json(user, errors, use_full_json=True)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    print(args)
+    user_action, errors = FACTORY.update(UserActionRel, args)
+    return Json(user_action, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
 def user_teams(request, id):
   args = get_request_contents(request)
   args['id'] = id
+  if request.method == 'GET':
+    user, errors = FETCH.all(Team, args)
+    return Json(user, errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user_team, errors = FACTORY.create(Team, args)
+    return Json(user_team, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_teams_by_email(request, email):
+  args = get_request_contents(request)
+  args['email'] = email
   if request.method == 'GET':
     user, errors = FETCH.all(Team, args)
     return Json(user, errors)
@@ -1149,6 +1239,19 @@ def user_testimonials(request, id):
   return Json(None)
 
 
+@csrf_exempt
+def user_testimonials_by_email(request, email):
+  args = get_request_contents(request)
+  args['user__email'] = email
+  if request.method == 'GET':
+    user_testimonial, errors = FETCH.all(Testimonial, args)
+    return Json(user_testimonial, errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user_testimonial, errors = FACTORY.create(Testimonial, args)
+    return Json(user_testimonial, errors)
+  return Json(None)
+
 
 @csrf_exempt
 def user_groups(request):
@@ -1168,6 +1271,20 @@ def user_groups(request):
 def user_group(request, id):
   args = get_request_contents(request)
   args['id'] = id
+  if request.method == 'GET':
+    usergroup, errors = FETCH.one(UserGroup, args)
+    return Json(usergroup, errors)
+  elif request.method == 'POST':
+    #updating the UserGroup resource with this <id>
+    usergroup, errors = FACTORY.update(UserGroup, args)
+    return Json(usergroup, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_group_by_email(request, email):
+  args = get_request_contents(request)
+  args['email'] = email
   if request.method == 'GET':
     usergroup, errors = FETCH.one(UserGroup, args)
     return Json(usergroup, errors)
