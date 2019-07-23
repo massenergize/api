@@ -23,6 +23,8 @@ urlpatterns = [
   path('community/<int:cid>/data', community_data),
   path('community/<int:cid>/testimonials', community_testimonials),
   path('community/<int:cid>/stories', community_testimonials),
+  path('community/<int:cid>/services', community_testimonials),
+  path('community/<int:cid>/vendors', community_testimonials),
   path('community-admins', community_admins),
   path('community-admin-group/<int:id>', community_admin_group),
   path('data', data),

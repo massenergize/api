@@ -310,7 +310,7 @@ def community_admin_group(request, id):
   args['id'] = id
   if request.method == 'GET':
     communityadmin, errors = FETCH.one(CommunityAdminGroup, args)
-    return Json(communityadmin, errors)
+    return Json(communityadmin, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the CommunityAdminGroup resource with this <id>
     communityadmin, errors = FACTORY.update(CommunityAdminGroup, args)
