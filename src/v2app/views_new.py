@@ -1201,8 +1201,10 @@ def user_teams(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(Team, args)
-    return Json(user, errors)
+    user, errors = FETCH.all(UserProfile, args)
+    if user:
+      user = user.first()
+      return Json(user.team_members.all(), errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user_team, errors = FACTORY.create(Team, args)
@@ -1215,8 +1217,10 @@ def user_teams_by_email(request, email):
   args = get_request_contents(request)
   args['email'] = email
   if request.method == 'GET':
-    user, errors = FETCH.all(Team, args)
-    return Json(user, errors)
+    user, errors = FETCH.all(UserProfile, args)
+    if user:
+      user = user.first()
+      return Json(user.team_members.all(), errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user_team, errors = FACTORY.create(Team, args)
@@ -1244,8 +1248,8 @@ def user_testimonials_by_email(request, email):
   args = get_request_contents(request)
   args['user__email'] = email
   if request.method == 'GET':
-    user_testimonial, errors = FETCH.all(Testimonial, args)
-    return Json(user_testimonial, errors)
+    user_testimonials, errors = FETCH.all(UserTestimonialRel, args)
+    return Json(user_testimonials, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user_testimonial, errors = FACTORY.create(Testimonial, args)
