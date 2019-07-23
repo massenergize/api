@@ -305,7 +305,7 @@ def community_admins(request):
 
 
 @csrf_exempt
-def community_admin(request, id):
+def community_admin_group(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':

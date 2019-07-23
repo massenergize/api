@@ -36,7 +36,7 @@ urlpatterns = [
   path('community/<int:cid>/testimonials', community_testimonials),
   path('community/<int:cid>/stories', community_testimonials),
   path('community-admins', community_admins),
-  path('community-admins/<int:id>', community_admins),
+  path('community-admin-group/<int:id>', community_admin_group),
   path('data', data),
   path('data/<int:id>', data_by_id),
   path('email-categories', email_categories),
