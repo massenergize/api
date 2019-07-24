@@ -1070,6 +1070,7 @@ class UserTestimonialRel(models.Model):
       "id": self.id,
       "user": get_json_if_not_none(self.user),
       "testimonial": get_json_if_not_none(self.testimonial),
+      "action": get_json_if_not_none(self.action),
       "community": get_json_if_not_none(self.community),
     }
 
