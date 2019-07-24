@@ -419,13 +419,15 @@ class UserProfile(models.Model):
     return self.email
 
   def simple_json(self):
-    return model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email'])
+    res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email'])
+    res['user_info'] = self.user_info
+    res['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    return res
 
 
   def full_json(self):
     data = model_to_dict(self, exclude=['real_estate_units', 'goals', 
       'communities', 'roles'])
-    data['user_info'] = self.user_info
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goals'] = [g.simple_json() for g in self.goals.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
