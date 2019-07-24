@@ -95,14 +95,16 @@ class Media(models.Model):
   def simple_json(self):
     return {
       "id": self.id,
-      "name": self.name,
-      "file": self.file.url,
-      "media_type": self.media_type
+      "url": self.file.url,
     }
 
   def full_json(self):
-    return self.simple_json()
-
+    return {
+      "id": self.id,
+      "name": self.name,
+      "url": self.file.url,
+      "media_type": self.media_type
+    }
   class Meta:
     db_table = "media"
     ordering = ('name',)
