@@ -624,6 +624,7 @@ class Vendor(models.Model):
   more_info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
+  communities = models.ManyToManyField(Community, blank=True)
 
   def __str__(self):             
     return self.name
@@ -638,6 +639,7 @@ class Vendor(models.Model):
     data['banner']  = get_json_if_not_none(self.banner)
     data['key_contact'] = get_json_if_not_none(self.key_contact, True)
     data['services'] = [s.simple_json() for s in self.services.all()]
+    data['communities'] = [c.simple_json() for c in self.communities.all()]
     return data
 
   class Meta:
@@ -1055,10 +1057,10 @@ class UserTestimonialRel(models.Model):
   """
   id = models.AutoField(primary_key=True)
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
-  action = models.ForeignKey(Action, on_delete=models.CASCADE)
+  action = models.ForeignKey(Action, on_delete=models.SET_NULL, null=True)
   vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, 
     null=True, blank=True)
-  testimonial = models.ForeignKey(Testimonial, on_delete=models.SET_NULL, 
+  testimonial = models.ForeignKey(Testimonial, on_delete=models.CASCADE, 
     null=True, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, 
     blank=True, null=True)

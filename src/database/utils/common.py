@@ -120,6 +120,5 @@ def get_request_contents(request):
     try:
       return json.loads(request.body.decode('utf-8'))
     except Exception as e:
-      print(e)
       return {}
 
