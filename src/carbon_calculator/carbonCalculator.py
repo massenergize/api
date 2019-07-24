@@ -3,8 +3,11 @@
 
 from .homeHeating import HeatingLoad
 
-YES_NO = ['Yes','No']
-OPEN = []
+# constants
+YES = "Yes"
+NO = "No"
+YES_NO = [YES,NO]
+OPEN = []   
 VALID_QUERY = 0
 INVALID_QUERY = -1
 
@@ -54,7 +57,6 @@ class CarbonCalculator:
                         'rake_elec_blower':RakeOrElecBlower,
                         }
 
-
     def Query(self,action):
         if action in self.allActions:
             return self.allActions[action].Query()
@@ -98,7 +100,8 @@ class CarbonCalculator:
         return outputs
 
 class CalculatorQuestion():
-    def __init__(self,questionText=None,responses=[]):
+    def __init__(self, questionTag=None, questionText=None,responses=[]):
+        self.questionTag = questionTag
         self.questionText = questionText
         self.responses = responses
 
@@ -107,45 +110,51 @@ class CalculatorAction():
         self.name = name
         self.helptext = "This text explains what the action is about, in 20 words or less."
         self.questions = list(CalculatorQuestion())    # question with list of valid responses.
+        self.average_points = 0
         self.points = 0
         self.cost = 0
         self.savings = 0
 
     def Query(self):
-        return {'status':VALID_QUERY, 'name':self.name, 'helptext':self.helptext, 'questions':self.questions}
+        return {'status':VALID_QUERY, 'name':self.name, 'average_carbon_points':self.average_points, 'helptext':self.helptext, 'questions':self.questions}
 
     def Eval(self, inputs):
         return {'status':VALID_QUERY, 'carbon_points':self.points, 'cost':self.cost, 'savings':self.savings}
 
+ENERGY_FAIR_POINTS = 50
 class EnergyFair(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
+        self.average_points = ENERGY_FAIR_POINTS
         # todo - get energy fair name from database
         # inputs:   MEid (MassEnergize profile ID) if available.  If not no record keeping
         #           Community for energy fair
-        #           Date for energy fair  
-
-        self.questions = [  CalculatorQuestion('Did you attend the recent energy fair?', YES_NO),
-                            CalculatorQuestion('Year home built or renovated?', OPEN ),
-                            CalculatorQuestion('Do you rent or own your home', ['Rent','Own'])  ]
+        #           Date for energy fair
+        energy_fair_name = "Cooler Communities"  
+        self.questions = [  CalculatorQuestion(name, 'Did you attend the ' + energy_fair_name + ' energy fair?', YES_NO),
+                            CalculatorQuestion('energy_fair_loc', 'Community of energy fair?', OPEN),
+                            CalculatorQuestion('energy_fair_date','Date of energy fair?', OPEN)
+                            #CalculatorQuestion('Year home built or renovated?', OPEN ),
+                            #CalculatorQuestion('Do you rent or own your home', ['Rent','Own'])  
+                            ]
     def Eval(self, inputs):
         self.points = 0
-        if inputs.get(self.name,"No") == "Yes":
+        if inputs.get(self.name,NO) == YES:
             # a bonus points action
-            self.points = 50
+            self.points = ENERGY_FAIR_POINTS
             # TODO: save action to ME profile
-
         return super.Eval(self, inputs)
 
+ENERGY_AUDIT_POINTS = 250
 class EnergyAudit(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "An energy audit can tell you the condition of your home and its heating and other systems, and help you address the issues found."
-        # todo - get energy fair name from database
-        self.questions = [  CalculatorQuestion('Will you sign up for an energy audit?',['Yes','No']),
-                            CalculatorQuestion('Have you had a home energy audit in the last 3 years'),['Yes','No'],
-                            ]
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [  CalculatorQuestion(name,'Will you sign up for an energy audit?',YES_NO),
+                            CalculatorQuestion('elec_utility','What is the name of your electric utility?', OPEN),
+                            CalculatorQuestion('','Have you had a home energy audit in the last 3 years',YES_NO)  ]
 
     def Eval(self, inputs):
         # inputs: MEid (MassEnergize user)
@@ -155,28 +164,28 @@ class EnergyAudit(CalculatorAction):
         #         already_had_audit YesNo
         #
         #         query for last audit, and min years for audit
-        self.points = 0
         audit_years_repeat = 3
         current_year = 2019
         year_of_audit = inputs.get("last_audit_year",0)
         years_since_audit = current_year - year_of_audit
-        signup_energy_audit = inputs.get("signup_energy_audit", "Yes")
+        signup_energy_audit = inputs.get(self.name, YES)
         already_had_audit = inputs.get("already_had_audit", "Yes") # get default from db if user entered
         if (years_since_audit > audit_years_repeat) or  (signup_energy_audit == "Yes" and already_had_audit != "Yes"):
 
             # permissible to sign up for audit
             # points may depend on community
-            self.points = 250
+            self.points = ENERGY_AUDIT_POINTS
         return super.Eval(self, inputs)
 
 class ProgrammableThermostats(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Installing and using a programmable thermostat can save 15% from your heating bill."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Installing and using a programmable thermostat typically saves 15% from your heating bill."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you install a programmable thermostat?',YES_NO) ]
+
     def Eval(self, inputs):
-        install_pstats = inputs.get("install_prog_thermostats","Yes")
+        install_pstats = inputs.get(self.name,"Yes")
         have_pstats = inputs.get("have_prog_thermostats","No")
         heating_fuel = inputs.get("heating_fuel","Oil")
         if install_pstats == "Yes" and have_pstats == "No" :
@@ -191,9 +200,9 @@ class ProgrammableThermostats(CalculatorAction):
 class Weatherize(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Weatherizing (insulating and air-sealing) your home typically saves 15% from your heating bill."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
 
     def Eval(self, inputs):
         weatherize_home = inputs.get("insulate_or_airseal","Yes")
@@ -212,9 +221,9 @@ class Weatherize(CalculatorAction):
 class CommunitySolar(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Joining a community solar project can save on your your electric bill and lower greenhouse gas emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         join_community_solar = inputs.get("join_community_solar","Yes")
         monthly_elec_bill = inputs.get("monthly_elec_bill", 150.)
@@ -228,18 +237,18 @@ class CommunitySolar(CalculatorAction):
 class RenewableElectricity(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Choosing renewable electricity reduces or eliminates greenhouse gas emissions from the power you use."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class LEDLighting(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Swapping out incandescent bulbs for LEDs reduces their electricity consumption by 88%."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         num_old_bulbs = inputs.get("number_nonefficient_bulbs",10)
         replace_fraction = inputs.get("numeric_fraction_led_replacement",0.)
@@ -271,297 +280,297 @@ class LEDLighting(CalculatorAction):
 class HeatingAssessment(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Getting a heating system assessment can help find the best path for saving energy and reducing emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class EfficientBoilerFurnace(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Replacing an old boiler or furnace with efficient models can save 10-15% of your heating bill."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class AirSourceHeatPump(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Heating and cooling with air-source heat pumps reduces emissions greatly, and can improve comfort and save energy costs."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class GroundSourceHeatPump(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Heating and cooling with a ground-source heat pump reduces emissions greatly, and can improve comfort and save energy costs."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class SolarAssessment(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Getting a solar assessment can help you plan for a solar PV or solar hot water system to reduce emissions and lower cost."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
          return super.Eval(self, inputs)
 
 class InstallSolarPV(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Installing a solar PV array  can reduce your carbon footprint dramatically, and save considerable money over time."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class InstallSolarHW(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "A solar hot water system saves considerable money and emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class HotWaterAssessment(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "A hot water assessment can help find out the best options for replacing a water heater to save money and reduce emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class HeatPumpWaterHeater(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "A heat pump water heater uses about 1/3 the energy of an electric or fossil water heater, reducing emissions and saving money."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class EnergystarRefrigerator(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Replacing a refrigerator with an EnergyStar model can save a lot of energy and money over time."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class EnergystarWasher(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Replacing a washer with an EnergyStar model can save a lot of energy and money over time."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class HeatPumpDryer(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "A heat pump dryer uses much less energy than a gas or electric dryer."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ColdWaterWash(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Washing clothes in warm or cold water saves energy and money, and works as well as hot."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class LineDry(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Drying clothes on the line saves energy and money compared with a clothes dryer."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class UnusedAppliances(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Unplugging appliances which aren't being used can save a lot of wasted energy over time."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class RefrigeratorPickup(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Having an old, inefficient refrigerator taken away and disposed of properly saves space and keeps it from being used."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class SmartPowerStrip(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "A smart power strip can save on parasitic loads by shutting off devices when they aren't being used."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ElectricityMonitor(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Using an electricity monitor to find out where power is used is a good first step to conserving it."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ReplaceCar(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Replacing an inefficient car with electric or hybrid can greatly lower your carbon footprint."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ReduceMilesDriven(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Reducing the amount you drive in favor of ridesharing or public transport saves money and reduces emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ReplaceCar2(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Replacing an inefficient car with electric or hybrid can greatly lower your carbon footprint."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ReduceMilesDriven2(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Reducing the amount you drive in favor of ridesharing or public transport saves money and reduces emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class EliminateCar(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Getting rid of a car in favor of ridesharing or public transport saves money and reduces emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ReduceFlights(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Reducing the amount you fly has a big impact towards lowering emissions, and saves you money."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class OffsetFlights(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Purchasing flight offsets can reduce your carbon footprint and support efforts to restore the climate."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class LowCarbonDiet(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Adopting a diet with less or no meat lowers emissions and can improve your health."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ReduceWaste(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Reducing packaging and unnecessary consumption saves money and lowers your impact."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class Compost(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Composting food waste reduces emissions, turning garbage into valuable organic matter."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class LawnAssessment(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Having a lawn assessment can help make a plan to save money and tie and reduce emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ReduceLawnSize(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Reducing your lawn size can save money and reduce emissions and time."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ReduceLawnCare(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Mowing and or fertilizing your lawn less reduces emissions and saves money."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class ElectricMower(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Switching from gasoline to electric mower reduces pollution, noise and emissions."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
 class RakeOrElecBlower(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
-        self.helptext = "Attending an energy fair is a great way to get started lowering energy use."
-        # todo - get energy fair name from database
-        self.questions = [ CalculatorQuestion('Did you attend the recent energy fair?',['Yes','No']) ]
+        self.helptext = "Raking or using an electric instead of gasoline blower reduces pollution and noise."
+        self.average_points = ENERGY_AUDIT_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
         
