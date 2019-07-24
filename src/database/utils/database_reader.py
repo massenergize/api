@@ -66,3 +66,16 @@ class DatabaseReader:
     return self.one(model, filter_args, many_to_many_fields_to_prefetch, 
       foreign_keys_to_select)
 
+
+  def delete(self, model, filter_args):
+    items, errors = self.get_all(model, filter_args) 
+    if errors:
+      return None, errors
+    
+    if items:
+      res = items.delete()
+      print(res)
+      pass
+      return res[1], None
+    return items, errors
+    
