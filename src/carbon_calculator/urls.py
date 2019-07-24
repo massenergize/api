@@ -1,11 +1,10 @@
 from django.urls import path
-from . import views
+from .views import *
 
 app_name = 'carbon_calculator'
 
 urlpatterns = [
-    path('', views.index),
-    path('test', views.ping),
-    path('info/<action>', views.info),
-    path('estimate/<action>', views.estimate),
-  ]
+    path('', index),
+    path('test', ping),
+    path('info/<action>', info ),
+    path('estimate/<action>', estimate )  ]

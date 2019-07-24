@@ -1,6 +1,7 @@
 
 #imports
-from .homeHeating import *
+
+from .homeHeating import HeatingLoad
 
 YES_NO = ['Yes','No']
 OPEN = []
