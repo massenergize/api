@@ -1060,6 +1060,8 @@ class UserTestimonialRel(models.Model):
     null=True, blank=True)
   testimonial = models.ForeignKey(Testimonial, on_delete=models.SET_NULL, 
     null=True, blank=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, 
+    blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -1068,6 +1070,7 @@ class UserTestimonialRel(models.Model):
       "id": self.id,
       "user": get_json_if_not_none(self.user),
       "testimonial": get_json_if_not_none(self.testimonial),
+      "community": get_json_if_not_none(self.community),
     }
 
   def full_json(self):
