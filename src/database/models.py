@@ -1039,7 +1039,7 @@ class Testimonial(models.Model):
     res["user"] = get_json_if_not_none(self.user)
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = get_json_if_not_none(self.vendor)
-    # res["created_at"] = self.created_at
+    res["created_at"] = self.created_at
     return res
 
   def full_json(self):
