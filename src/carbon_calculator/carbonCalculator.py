@@ -1,15 +1,18 @@
 
 #imports
-
+from datetime import date
 from .homeHeating import HeatingLoad
 
 # constants
 YES = "Yes"
 NO = "No"
 YES_NO = [YES,NO]
-OPEN = []   
+OPEN = ""
+DATE = date.today()
+NUM = 0   
 VALID_QUERY = 0
 INVALID_QUERY = -1
+BOGUS_POINTS = 666
 
 class CarbonCalculator:
 
@@ -134,7 +137,7 @@ class EnergyFair(CalculatorAction):
         energy_fair_name = "Cooler Communities"  
         self.questions = [  CalculatorQuestion(name, 'Did you attend the ' + energy_fair_name + ' energy fair?', YES_NO),
                             CalculatorQuestion('energy_fair_loc', 'Community of energy fair?', OPEN),
-                            CalculatorQuestion('energy_fair_date','Date of energy fair?', OPEN)
+                            CalculatorQuestion('energy_fair_date','Date of energy fair?', DATE)
                             #CalculatorQuestion('Year home built or renovated?', OPEN ),
                             #CalculatorQuestion('Do you rent or own your home', ['Rent','Own'])  
                             ]
@@ -154,7 +157,7 @@ class EnergyAudit(CalculatorAction):
         self.average_points = ENERGY_AUDIT_POINTS
         self.questions = [  CalculatorQuestion(name,'Will you sign up for an energy audit?',YES_NO),
                             CalculatorQuestion('elec_utility','What is the name of your electric utility?', OPEN),
-                            CalculatorQuestion('','Have you had a home energy audit in the last 3 years',YES_NO)  ]
+                            CalculatorQuestion('already_had_audit','Have you had a home energy audit in the last 3 years',YES_NO)  ]
 
     def Eval(self, inputs):
         # inputs: MEid (MassEnergize user)
@@ -166,29 +169,36 @@ class EnergyAudit(CalculatorAction):
         #         query for last audit, and min years for audit
         audit_years_repeat = 3
         current_year = 2019
-        year_of_audit = inputs.get("last_audit_year",0)
+        year_of_audit = inputs.get("last_audit_year",9999)  # get from db for ME user
         years_since_audit = current_year - year_of_audit
         signup_energy_audit = inputs.get(self.name, YES)
-        already_had_audit = inputs.get("already_had_audit", "Yes") # get default from db if user entered
-        if (years_since_audit > audit_years_repeat) or  (signup_energy_audit == "Yes" and already_had_audit != "Yes"):
+        already_had_audit = inputs.get("already_had_audit", YES) # get default from db if user entered
+        if signup_energy_audit == YES and (years_since_audit > audit_years_repeat or  already_had_audit != YES):
 
             # permissible to sign up for audit
             # points may depend on community
             self.points = ENERGY_AUDIT_POINTS
         return super.Eval(self, inputs)
 
+HEATING_FUEL = "Heating Fuel"
+FUELS = ["Fuel Oil","Natural Gas","Propane","Electric Resistance","Electric Heat Pump","Wood","Other"]
+HAVE_PSTATS = "have_prog_thermostats"
+PSTAT_PROGRAMMING = "prog_thermostat_programming"
 class ProgrammableThermostats(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Installing and using a programmable thermostat typically saves 15% from your heating bill."
         self.average_points = ENERGY_AUDIT_POINTS
-        self.questions = [ CalculatorQuestion(self.name,'Will you install a programmable thermostat?',YES_NO) ]
+        self.questions = [ CalculatorQuestion(self.name,'Will you install a programmable thermostat?',YES_NO),
+                            CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
+                            CalculatorQuestion(HAVE_PSTATS, "Do you already have programmable thermostats?",YES_NO),
+                            CalculatorQuestion(PSTAT_PROGRAMMING, "If you have programmable thermostats, do you need help programming them?",YES_NO) ]
 
     def Eval(self, inputs):
-        install_pstats = inputs.get(self.name,"Yes")
-        have_pstats = inputs.get("have_prog_thermostats","No")
-        heating_fuel = inputs.get("heating_fuel","Oil")
-        if install_pstats == "Yes" and have_pstats == "No" :
+        install_pstats = inputs.get(self.name,YES)
+        have_pstats = inputs.get(HAVE_PSTATS,NO)
+        heating_fuel = inputs.get(HEATING_FUEL,FUELS[0])
+        if install_pstats == YES and have_pstats == NO :
             # need to know total fuel consumption
             heatingCO2, heatingCost = HeatingLoad(heating_fuel)     # to gross approximation
             pstat_load_reduction = 0.15
@@ -205,7 +215,7 @@ class Weatherize(CalculatorAction):
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
 
     def Eval(self, inputs):
-        weatherize_home = inputs.get("insulate_or_airseal","Yes")
+        weatherize_home = inputs.get(self.name,YES)
         # could get this from fuel usage ...
         home_weatherized = inputs.get("home_weatherized","Yes")
         heating_fuel = inputs.get("heating_fuel","Oil")
@@ -515,34 +525,37 @@ class ReduceWaste(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Reducing packaging and unnecessary consumption saves money and lowers your impact."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = BOGUS_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
+COMPOST_POINTS = 100
 class Compost(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Composting food waste reduces emissions, turning garbage into valuable organic matter."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = COMPOST_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
+LAWN_ASSESSMENT_POINTS = 100
 class LawnAssessment(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Having a lawn assessment can help make a plan to save money and tie and reduce emissions."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = LAWN_ASSESSMENT_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
 
+LAWN_SIZE_POINTS = BOGUS_POINTS
 class ReduceLawnSize(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Reducing your lawn size can save money and reduce emissions and time."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = LAWN_SIZE_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
@@ -551,7 +564,7 @@ class ReduceLawnCare(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Mowing and or fertilizing your lawn less reduces emissions and saves money."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = BOGUS_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
@@ -560,7 +573,7 @@ class ElectricMower(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Switching from gasoline to electric mower reduces pollution, noise and emissions."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = BOGUS_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
@@ -569,7 +582,7 @@ class RakeOrElecBlower(CalculatorAction):
     def __init__(self,name):
         super.__init__(self,name)
         self.helptext = "Raking or using an electric instead of gasoline blower reduces pollution and noise."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = BOGUS_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super.Eval(self, inputs)
