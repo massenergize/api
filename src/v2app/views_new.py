@@ -57,11 +57,11 @@ def action_testimonials(request, id):
   args = get_request_contents(request)
   args["action__id"] = id
   if request.method == 'GET':
-    actions, errors = FETCH.all(UserTestimonialRel, args)
+    actions, errors = FETCH.all(Testimonial, args)
     return Json(actions, errors)
   elif request.method == 'POST':
     #about to create a new Action instance
-    action, errors = FACTORY.create(UserTestimonialRel, args)
+    action, errors = FACTORY.create(Testimonial, args)
     return Json(action, errors)
   return Json(None)
 
@@ -342,7 +342,7 @@ def community_testimonials(request, cid=None, subdomain=None):
   if subdomain:
     args['action__community__subdomain'] = subdomain 
   if request.method == 'GET':
-    community, errors = FETCH.all(UserTestimonialRel, args)
+    community, errors = FETCH.all(Testimonial, args)
     return Json(community, errors)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
@@ -1410,7 +1410,7 @@ def user_testimonials(request, id):
   args = get_request_contents(request)
   args['user__id'] = id
   if request.method == 'GET':
-    user_testimonials, errors = FETCH.all(UserTestimonialRel, args)
+    user_testimonials, errors = FETCH.all(Testimonial, args)
     return Json(user_testimonials, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
@@ -1424,7 +1424,7 @@ def user_testimonials_by_email(request, email):
   args = get_request_contents(request)
   args['user__email'] = email
   if request.method == 'GET':
-    user_testimonials, errors = FETCH.all(UserTestimonialRel, args)
+    user_testimonials, errors = FETCH.all(Testimonial, args)
     return Json(user_testimonials, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>

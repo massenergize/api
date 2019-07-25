@@ -1013,82 +1013,38 @@ class Testimonial(models.Model):
   body = models.TextField(max_length=LONG_STR_LEN)
   is_approved = models.BooleanField(default=False, blank=True)
   date = models.DateTimeField(default=datetime.now)
-  file = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+  image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
+  action = models.ForeignKey(Action, on_delete=models.CASCADE)
+  vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, 
+    null=True, blank=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, 
+    blank=True, null=True)
+  
   rank = models.PositiveSmallIntegerField(default=0)
 
   def __str__(self):        
     return self.title
 
   def simple_json(self):
-    return model_to_dict(self, exclude=['file'])
+    res = model_to_dict(self, exclude=['file'])
+    res["user"] = get_json_if_not_none(self.user)
+    res["action"] = get_json_if_not_none(self.action)
+    res["vendor"] = get_json_if_not_none(self.vendor)
+    return res
 
   def full_json(self):
     data = self.simple_json() 
     data['file'] = get_json_if_not_none(self.file)
     return data
 
-
   class Meta:
     ordering = ('rank',)
+    unique_together = [['user', 'action']]
     db_table = 'testimonials'
 
-  
-class UserTestimonialRel(models.Model):
-  """
-   A class used to represent a user and his/her relationship with an action.
-   Whether they marked an action as todo, done, etc
 
-
-  Attributes
-  ----------
-  user : int
-    Foreign Key for user
-  real_estate_unit:
-    Foreign key for the real estate unit this action is related to.
-  action: int
-    which action they marked 
-  vendor:
-    which vendor they choose to contact/connect with 
-  testimonial:
-    what they had to say about this action.
-  status: 
-    Whether they marked it as todo, done or save for later  
-  """
-  id = models.AutoField(primary_key=True)
-  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
-  action = models.ForeignKey(Action, on_delete=models.SET_NULL, null=True)
-  vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, 
-    null=True, blank=True)
-  testimonial = models.ForeignKey(Testimonial, on_delete=models.CASCADE, 
-    null=True, blank=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, 
-    blank=True, null=True)
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
-
-  def simple_json(self):
-    return {
-      "id": self.id,
-      "user": get_json_if_not_none(self.user),
-      "testimonial": get_json_if_not_none(self.testimonial),
-      "action": get_json_if_not_none(self.action),
-      "community": get_json_if_not_none(self.community),
-    }
-
-  def full_json(self):
-    res = self.simple_json()
-    res["vendor"] = get_json_if_not_none(self.vendor)
-    res["action"] = get_json_if_not_none(self.action)
-    return res
-
-  def __str__(self):
-    return  "%s | %s " % (self.user, self.testimonial)
-
-  class Meta:
-    ordering = ('user','testimonial', 'action')
-    unique_together = [['user', 'testimonial', 'action', 'vendor']]
-  
 class UserActionRel(models.Model):
   """
    A class used to represent a user and his/her relationship with an action.
