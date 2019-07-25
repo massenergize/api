@@ -505,6 +505,7 @@ class Team(models.Model):
     data['banner'] = get_json_if_not_none(self.banner)
     return data
 
+
   class Meta:
     ordering = ('name',)
     db_table = 'teams'
@@ -633,7 +634,7 @@ class Vendor(models.Model):
     return model_to_dict(self, ['id', 'name', 'description','service_area', 'properties_serviced'])
 
   def full_json(self):
-    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact'])
+    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
     data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
     data['logo'] = get_json_if_not_none(self.logo)
     data['banner']  = get_json_if_not_none(self.banner)
@@ -1012,17 +1013,17 @@ class Testimonial(models.Model):
   title = models.CharField(max_length=SHORT_STR_LEN, db_index=True)
   body = models.TextField(max_length=LONG_STR_LEN)
   is_approved = models.BooleanField(default=False, blank=True)
-  date = models.DateTimeField(default=datetime.now)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True)
-  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
-  action = models.ForeignKey(Action, on_delete=models.CASCADE)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True, null=True)
+  action = models.ForeignKey(Action, on_delete=models.CASCADE, null=True, db_index=True)
   vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, 
-    null=True, blank=True)
+    null=True, blank=True, db_index=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, 
-    blank=True, null=True)
-  
+    blank=True, null=True, db_index=True)
   rank = models.PositiveSmallIntegerField(default=0)
+  created_at = models.DateTimeField(auto_now_add=True, blank=True)
+  updated_at = models.DateTimeField(auto_now=True, blank=True)
 
   def __str__(self):        
     return self.title

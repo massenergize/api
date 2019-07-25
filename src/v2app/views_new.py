@@ -287,7 +287,7 @@ def community_households(request, cid=None, subdomain=None):
 def community_teams(request, cid=None, subdomain=None):
   args = get_request_contents(request)
   if cid:
-    args['id'] = cid
+    args['community__id'] = cid
   if subdomain:
     args['community__subdomain'] = subdomain  
   if request.method == 'GET':
@@ -1147,6 +1147,46 @@ def team(request, id):
   elif request.method == 'DELETE':
     items_deleted, errors = FETCH.delete(Team, args)
     return Json(items_deleted, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def team_stats(request, id):
+  args = get_request_contents(request)
+  args['id'] = id
+  if request.method == 'GET':
+    team, errors = FETCH.one(Team, args)
+    if team:
+      res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+      res["team"] = team.simple_json()
+      for m in team.members.all():
+        res["households"] = len(m.real_estate_units.all())
+        actions = m.useractionrel_set.all()
+        res["actions"] = len(actions)
+        res["actions_completed"] = len(actions.filter(**{"status":"TODO"}))
+        res["actions_todo"] = len(actions.filter(**{"status":"TODO"}))
+      return Json(res, errors)
+
+  return Json(None)
+
+
+@csrf_exempt
+def teams_stats(request):
+  args = get_request_contents(request)
+  if request.method == 'GET':
+    teams, errors = FETCH.all(Team, args)
+    ans = []
+    for team in teams:
+      res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+      for m in team.members.all():
+        res["households"] += len(m.real_estate_units.all())
+        actions = m.useractionrel_set.all()
+        res["actions"] += len(actions)
+        res["actions_completed"] += len(actions.filter(**{"status":"TODO"}))
+        res["actions_todo"] += len(actions.filter(**{"status":"TODO"}))
+      ans.append(res)
+    return Json(ans, errors,do_not_serialize=True)
+
   return Json(None)
 
 
