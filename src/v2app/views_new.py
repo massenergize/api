@@ -1163,7 +1163,7 @@ def team_stats(request, id):
         res["households"] = len(m.real_estate_units.all())
         actions = m.useractionrel_set.all()
         res["actions"] = len(actions)
-        res["actions_completed"] = len(actions.filter(**{"status":"TODO"}))
+        res["actions_completed"] = len(actions.filter(**{"status":"DONE"}))
         res["actions_todo"] = len(actions.filter(**{"status":"TODO"}))
       return Json(res, errors)
 
@@ -1178,11 +1178,12 @@ def teams_stats(request):
     ans = []
     for team in teams:
       res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+      res["team"] = team.simple_json()
       for m in team.members.all():
         res["households"] += len(m.real_estate_units.all())
         actions = m.useractionrel_set.all()
         res["actions"] += len(actions)
-        res["actions_completed"] += len(actions.filter(**{"status":"TODO"}))
+        res["actions_completed"] += len(actions.filter(**{"status":"DONE"}))
         res["actions_todo"] += len(actions.filter(**{"status":"TODO"}))
       ans.append(res)
     return Json(ans, errors,do_not_serialize=True)
