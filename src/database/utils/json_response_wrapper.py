@@ -9,11 +9,11 @@ from django.http import JsonResponse
 from collections.abc import Iterable
 
 class Json(JsonResponse):
-  def __init__(self, raw_data=None, errors=None, use_full_json=False):    
-    cleaned_data =  self.serialize(raw_data, errors, use_full_json)
+  def __init__(self, raw_data=None, errors=None, use_full_json=False, do_not_serialize=False):    
+    cleaned_data =  self.serialize(raw_data, errors, use_full_json, do_not_serialize)
     super().__init__(cleaned_data, safe=True, json_dumps_params={'indent': 2})
 
-  def serialize(self, data, errors, use_full_json=False):  
+  def serialize(self, data, errors, use_full_json=False, do_not_serialize=False):  
     cleaned_data = {
       "success": not bool(errors),
       "errors": errors,
@@ -21,7 +21,7 @@ class Json(JsonResponse):
     try:
       if not data and not isinstance(data, Iterable):
         cleaned_data['data'] =  None
-      elif isinstance(data, dict):
+      elif isinstance(data, dict) or do_not_serialize:
         cleaned_data['data'] =  data 
       elif isinstance(data, Iterable):
         cleaned_data['data'] =   [

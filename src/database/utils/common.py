@@ -116,3 +116,9 @@ def get_request_contents(request):
   elif request.method == 'GET':
     return request.GET.dict()
 
+  elif request.method == 'DELETE':
+    try:
+      return json.loads(request.body.decode('utf-8'))
+    except Exception as e:
+      return {}
+
