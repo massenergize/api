@@ -160,9 +160,7 @@ def community(request, cid=None, subdomain=None):
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     #TODO: create pages for this community, etc
-    print(args)
     community, errors = FACTORY.update(Community, args)
-    print(errors)
     # print(community.simple_json())
     return Json(community, errors)
   elif request.method == 'DELETE':
@@ -1349,7 +1347,6 @@ def user_actions(request, id):
     return Json(user, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    print(args)
     user_action, errors = FACTORY.create(UserActionRel, args)
     return Json(user_action, errors)
   elif request.method == 'DELETE':
@@ -1367,7 +1364,6 @@ def user_actions_by_email(request, email):
     return Json(user, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    print(args)
     user_action, errors = FACTORY.create(UserActionRel, args)
     return Json(user_action, errors)
   elif request.method == 'DELETE':
