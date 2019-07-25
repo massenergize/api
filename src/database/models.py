@@ -434,6 +434,7 @@ class UserProfile(models.Model):
     data['goals'] = [g.simple_json() for g in self.goals.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['teams'] = [t.simple_json() for t in self.team_members.all()]
+    data['profile_picture'] = get_json_if_not_none(self.profile_picture)
     return data
 
   class Meta:
@@ -631,7 +632,12 @@ class Vendor(models.Model):
     return self.name
 
   def simple_json(self):
-    return model_to_dict(self, ['id', 'name', 'description','service_area', 'properties_serviced'])
+    data = model_to_dict(self, ['id', 'name', 'description','service_area', 'properties_serviced', 'more_info', 'address'])
+    data['key_contact'] = get_json_if_not_none(self.key_contact)
+    data['services'] = [s.simple_json() for s in self.services.all()]
+    data['logo'] = get_json_if_not_none(self.logo)
+    return data
+
 
   def full_json(self):
     data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
@@ -1029,15 +1035,16 @@ class Testimonial(models.Model):
     return self.title
 
   def simple_json(self):
-    res = model_to_dict(self, exclude=['file'])
+    res = model_to_dict(self, exclude=['image'])
     res["user"] = get_json_if_not_none(self.user)
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = get_json_if_not_none(self.vendor)
+    # res["created_at"] = self.created_at
     return res
 
   def full_json(self):
     data = self.simple_json() 
-    data['file'] = get_json_if_not_none(self.file)
+    data['image'] = get_json_if_not_none(self.image)
     return data
 
   class Meta:
