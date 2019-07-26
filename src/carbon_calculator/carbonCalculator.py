@@ -15,6 +15,7 @@ VALID_QUERY = 0
 INVALID_QUERY = -1
 BOGUS_POINTS = 666
 
+#allActions = [EnergyFair, EnergyAudit, ProgrammableThermostats,Weatherize,CommunitySolar,RenewableElectricity]
 class CarbonCalculator:
 
     def __init__(self) :
@@ -65,7 +66,7 @@ class CarbonCalculator:
             theClass = self.allActions[key]
             print("DEBUG: The class is " + str(theClass))
             # this next line causes it to blow up, I don't know why
-            theInstance = theClass()
+            theInstance = theClass(key)
             print("DEBUG: The instance is " + str(theInstance))
             self.allActions[key] = theInstance
         
