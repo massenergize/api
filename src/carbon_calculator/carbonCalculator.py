@@ -19,7 +19,7 @@ class CarbonCalculator:
 
     def __init__(self) :
         self.allActions = {  
-                        'energy_fair':  EnergyFair,
+                        'energy_fair':EnergyFair,
                         'energy_audit':EnergyAudit,
                         'prog_thermostats':ProgrammableThermostats,
                         'weatherization':Weatherize,
@@ -60,7 +60,15 @@ class CarbonCalculator:
                         'electric_mower':ElectricMower,
                         'rake_elec_blower':RakeOrElecBlower,
                         }
-
+        for key in self.allActions.keys():
+            print("DEBUG: The key is " + key)
+            theClass = self.allActions[key]
+            print("DEBUG: The class is " + str(theClass))
+            # this next line causes it to blow up, I don't know why
+            theInstance = theClass(key)
+            print("DEBUG: The instance is " + str(theInstance))
+            self.allActions[key] = theInstance
+        
     def Query(self,action):
         if action in self.allActions:
             return self.allActions[action].Query()

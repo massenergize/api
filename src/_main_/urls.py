@@ -24,5 +24,6 @@ urlpatterns = [
     path('v2/', include('v2app.urls_new')),
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
+    path('cc/',include('carbon_calculator.urls')),
     path('', include('website.urls')),
 ]

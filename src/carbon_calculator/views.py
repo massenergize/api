@@ -4,7 +4,7 @@ from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
 from database.utils.common import get_request_contents
 
-from .carbonCalculator import *
+from .carbonCalculator import CarbonCalculator
 
 # Create your views here.
 CALC = CarbonCalculator()
