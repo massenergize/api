@@ -4,3 +4,5 @@ src/_main_/config/*json
 *.pyc
 timelog.csv
 **/.DS_Store
+
+\.vscode/

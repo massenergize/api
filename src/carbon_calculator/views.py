@@ -19,8 +19,10 @@ def ping(request):
 def index(request):
     return JsonResponse(CALC.AllActionsList())
 
+
 def info(request, action):
     return JsonResponse(CALC.Query(action))
+
 
 def estimate(request, action):
     inputs = get_request_contents(request)
