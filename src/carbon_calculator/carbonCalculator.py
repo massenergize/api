@@ -65,11 +65,11 @@ class CarbonCalculator:
             theClass = self.allActions[key]
             print("DEBUG: The class is " + str(theClass))
             # this next line causes it to blow up, I don't know why
-            theInstance = theClass(key)
+            theInstance = theClass()
             print("DEBUG: The instance is " + str(theInstance))
             self.allActions[key] = theInstance
         
-    def Query(self,action):
+    def Query(self,action=None):
         if action in self.allActions:
             return self.allActions[action].Query()
         else:
@@ -111,13 +111,13 @@ class CarbonCalculator:
         outputs["annual_savings"] = savings
         return outputs
 
-class CalculatorQuestion():
+class CalculatorQuestion:
     def __init__(self, questionTag=None, questionText=None,responses=[]):
         self.questionTag = questionTag
         self.questionText = questionText
         self.responses = responses
 
-class CalculatorAction():
+class CalculatorAction:
     def __init__(self,name):
         self.name = name
         self.helptext = "This text explains what the action is about, in 20 words or less."
