@@ -2,6 +2,7 @@
 #imports
 from datetime import date
 from .homeHeating import HeatingLoad
+import jsons
 
 # constants
 YES = "Yes"
@@ -9,7 +10,7 @@ NO = "No"
 YES_NO = [YES,NO]
 FRACTIONS = ["None","Some","Half","Most","All"]
 OPEN = ""
-DATE = date.today()
+DATE = str(date.today())
 NUM = 0   
 VALID_QUERY = 0
 INVALID_QUERY = -1
@@ -78,7 +79,7 @@ class CarbonCalculator:
         for action in self.allActions:
             name = self.allActions[action].name
             description = self.allActions[action].description
-            actionList.append( {'tag':name, 'description':description} )
+            actionList.append( {'name':name, 'description':description} )
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
@@ -95,18 +96,19 @@ class CarbonCalculator:
             #community = inputs.get("community", "unknown")
 
             theAction = self.allActions[action]
-            if theAction.Eval(inputs) == VALID_QUERY:
-                points = theAction.points
-                cost = theAction.cost
-                savings = theAction.savings
-            status = VALID_QUERY
-
-        outputs = {}
-        outputs["status"] = status
-        outputs["carbon_points"] = points
-        outputs["action_cost"] = cost
-        outputs["annual_savings"] = savings
-        return outputs
+            #if theAction.Eval(inputs) == VALID_QUERY:
+            #    points = theAction.points
+            #    cost = theAction.cost
+            #    savings = theAction.savings
+            #status = VALID_QUERY
+            return theAction.Eval(inputs)
+        else:    
+            outputs = {}
+            outputs["status"] = status
+        #outputs["carbon_points"] = points
+        #outputs["action_cost"] = cost
+        #outputs["annual_savings"] = savings
+            return outputs
 
 class CalculatorQuestion:
     def __init__(self, questionTag=None, questionText=None,responses=[]):
@@ -124,9 +126,9 @@ class CalculatorAction:
         self.points = 0
         self.cost = 0
         self.savings = 0
-
+    
     def Query(self):
-        return {'status':VALID_QUERY, 'name':self.name, 'average_carbon_points':self.average_points, 'helptext':self.helptext, 'questions':self.questions}
+        return {'status':VALID_QUERY, 'name':self.name, 'description':self.description, 'average_carbon_points':self.average_points, 'helptext':self.helptext, 'questions':jsons.dump(self.questions)}
 
     def Eval(self, inputs):
         return {'status':VALID_QUERY, 'carbon_points':self.points, 'cost':self.cost, 'savings':self.savings}
