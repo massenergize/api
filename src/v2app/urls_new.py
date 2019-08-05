@@ -13,6 +13,7 @@ urlpatterns = [
   path('billing-statement/<int:id>', billing_statement),
   path('communities', communities),
   path('community/<int:cid>', community),
+  path('community/<int:cid>/full', community_profile_full),
   path('community/<int:cid>/actions', community_actions),
   path('community/<int:cid>/members', community_members),
   path('community/<int:cid>/impact', community_impact),
