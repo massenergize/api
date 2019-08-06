@@ -414,6 +414,7 @@ class UserProfile(models.Model):
   is_community_admin = models.BooleanField(default=False, blank=True)
   is_vendor = models.BooleanField(default=False, blank=True)
   other_info = JSONField(blank=True, null=True)
+  accepts_terms_and_conditions = models.BooleanField(default=False)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
