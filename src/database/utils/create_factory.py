@@ -6,6 +6,7 @@ the Massenergize Database
 from _main_.utils.utils import get_models_and_field_types
 from database import models
 from _main_.utils.constants import CREATE_ERROR_MSG
+from collections.abc import Iterable
 
 MODELS_AND_FIELDS = get_models_and_field_types(models)
 
@@ -65,24 +66,29 @@ class CreateFactory:
       many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']
       fk_fields = MODELS_AND_FIELDS[model]['fk']
 
-      field_values = {}
+      id = args.pop('id', None)
+      obj = model.objects.filter(pk=id).first()
+      if not obj:
+        return None, [f"Resource with id: {id} does not exist"]
+
       for field_name, value in args.items():
         if field_name in fk_fields:
           fkModel = model._meta.get_field(field_name).remote_field.model
-          field_values[field_name] = fkModel.objects.filter(pk=value).first()
+          setattr(obj, field_name, fkModel.objects.filter(pk=value).first())
         elif field_name not in many_to_many_fields:
-          field_values[field_name] = value
-      
-      id = args.pop('id', None)
-      obj = model.objects.filter(pk=id)
-      if obj:
-        obj.update(**args)
-      else:
-        errors=[f"Resource with id: {id} does not exist"]
+          setattr(obj, field_name, value)
+        elif field_name in many_to_many_fields:
+          print(value)
+          m2mModel = model._meta.get_field(field_name).remote_field.model          
+          if isinstance(value, Iterable):
+            addManyFunction = getattr(getattr(obj, field_name), "set")
+            addManyFunction(m2mModel.objects.filter(pk__in=value))
+          else:
+            addManyFunction = getattr(getattr(obj, field_name), "set")
+            addManyFunction(m2mModel.objects.filter(pk=value))
 
-      # for f in many_to_many_fields:
-        # if f in self.args:
-        #   pass
+      obj.save()
+     
 
     except Exception as e:
       obj, errors =  None, [CREATE_ERROR_MSG, str(e)]
