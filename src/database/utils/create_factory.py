@@ -47,10 +47,17 @@ class CreateFactory:
       new_object = model.objects.create(**field_values)
       new_object.full_clean()
       new_object.save()
+      for field_name, value in args.items():
+        if field_name in many_to_many_fields:
+          m2mModel = model._meta.get_field(field_name).remote_field.model          
+          if isinstance(value, Iterable):
+            addManyFunction = getattr(getattr(new_object, field_name), "set")
+            addManyFunction(m2mModel.objects.filter(pk__in=value))
+          else:
+            addManyFunction = getattr(getattr(new_object, field_name), "set")
+            addManyFunction(m2mModel.objects.filter(pk=value))
 
-      # for f in many_to_many_fields:
-        # if f in self.args:
-        #   pass
+      new_object.save()
 
     except Exception as e:
       errors =  [CREATE_ERROR_MSG, str(e)]
@@ -78,7 +85,6 @@ class CreateFactory:
         elif field_name not in many_to_many_fields:
           setattr(obj, field_name, value)
         elif field_name in many_to_many_fields:
-          print(value)
           m2mModel = model._meta.get_field(field_name).remote_field.model          
           if isinstance(value, Iterable):
             addManyFunction = getattr(getattr(obj, field_name), "set")

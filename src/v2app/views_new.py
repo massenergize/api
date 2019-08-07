@@ -1565,6 +1565,4 @@ def vendor(request, id):
   return Json(None)
 
 
-@csrf_exempt
-def new_uuid(request):
-  return Json({'id': uuid.uuid4()})
+
