@@ -859,6 +859,8 @@ class Event(models.Model):
   name  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
+  invited_communities = models.ManyToManyField(Community, 
+    related_name="invited_communites", blank=True)
   start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
   location = JSONField(blank=True, null=True)

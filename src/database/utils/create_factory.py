@@ -58,7 +58,7 @@ class CreateFactory:
 
 
   def update(self, model, args={}):
-    errors = self.verify_required_fields(model, args)
+    errors = []
     new_object = None 
 
     #if code gets here we have everything all required fields
