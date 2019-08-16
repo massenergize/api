@@ -933,6 +933,7 @@ class EventAttendee(models.Model):
   class Meta:
     verbose_name_plural = "Event Attendees"
     db_table = 'event_attendees'
+    unique_together=[['attendee', 'event']]
 
 
 
