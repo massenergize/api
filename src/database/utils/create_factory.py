@@ -33,6 +33,8 @@ class CreateFactory:
 
     #if code gets here we have everything all required fields
     try:
+      print(args)
+
       many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']
       fk_fields = MODELS_AND_FIELDS[model]['fk']
       field_values = {}
@@ -50,7 +52,7 @@ class CreateFactory:
       for field_name, value in args.items():
         if field_name in many_to_many_fields:
           m2mModel = model._meta.get_field(field_name).remote_field.model          
-          if isinstance(value, Iterable):
+          if not isinstance(value, str) and isinstance(value, Iterable):
             addManyFunction = getattr(getattr(new_object, field_name), "set")
             addManyFunction(m2mModel.objects.filter(pk__in=value))
           else:
@@ -60,11 +62,13 @@ class CreateFactory:
       new_object.save()
 
     except Exception as e:
+      # print(e)
       errors =  [CREATE_ERROR_MSG, str(e)]
     return new_object, errors
 
 
   def update(self, model, args={}):
+    print(args)
     errors = []
     new_object = None 
 
@@ -77,7 +81,6 @@ class CreateFactory:
       obj = model.objects.filter(pk=id).first()
       if not obj:
         return None, [f"Resource with id: {id} does not exist"]
-
       for field_name, value in args.items():
         if field_name in fk_fields:
           fkModel = model._meta.get_field(field_name).remote_field.model
@@ -85,18 +88,21 @@ class CreateFactory:
         elif field_name not in many_to_many_fields:
           setattr(obj, field_name, value)
         elif field_name in many_to_many_fields:
-          m2mModel = model._meta.get_field(field_name).remote_field.model          
-          if isinstance(value, Iterable):
+          m2mModel = model._meta.get_field(field_name).remote_field.model 
+          if not isinstance(value, str) and isinstance(value, Iterable):
             addManyFunction = getattr(getattr(obj, field_name), "set")
             addManyFunction(m2mModel.objects.filter(pk__in=value))
           else:
             addManyFunction = getattr(getattr(obj, field_name), "set")
-            addManyFunction(m2mModel.objects.filter(pk=value))
+            oldList = list(getattr(obj, field_name).all())
+            res = oldList + list(m2mModel.objects.filter(pk=value))
+            addManyFunction(res)
 
       obj.save()
      
 
     except Exception as e:
+      print(e)
       obj, errors =  None, [CREATE_ERROR_MSG, str(e)]
       
     return obj, errors

@@ -1259,7 +1259,6 @@ def user(request, id):
     return Json(user, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    print(args)
     user, errors = FACTORY.update(UserProfile, args)
     return Json(user, errors)
   elif request.method == 'DELETE':

@@ -113,7 +113,7 @@ urlpatterns = [
   path('user/e/<str:email>/testimonials', user_testimonials_by_email),
   path('user-groups', user_groups),
   path('user-group/<int:id>', user_group),
-  path('uuid/new', new_uuid),
+  # path('uuid/new', new_uuid),
   path('vendors', vendors),
   path('vendor/<int:id>', vendor),
 ]
