@@ -12,6 +12,8 @@ urlpatterns = [
   path('billing-statements', billing_statements),
   path('billing-statement/<int:id>', billing_statement),
   path('communities', communities),
+  path('communities/stats', communities_stats),
+  path('community/<int:cid>/stats', community_stats),
   path('community/<int:cid>', community),
   path('community/<int:cid>/full', community_profile_full),
   path('community/<int:cid>/actions', community_actions),
