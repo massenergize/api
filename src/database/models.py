@@ -808,7 +808,11 @@ class Action(models.Model):
     data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
       'average_carbon_score', 'community'])
     data['image'] = get_json_if_not_none(self.image)
-    data['tags'] = [t.simple_json() for t in self.tags.all()]
+    data['tags'] = [t.full_json() for t in self.tags.all()]
+    data['steps_to_take'] = self.steps_to_take
+    data['about'] = self.about
+    data['vendors'] = [v.simple_json() for v in self.vendors.all()]
+
     return data
 
   def full_json(self):
