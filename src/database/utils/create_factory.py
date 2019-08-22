@@ -6,6 +6,7 @@ the Massenergize Database
 from _main_.utils.utils import get_models_and_field_types
 from database import models
 from _main_.utils.constants import CREATE_ERROR_MSG
+from collections.abc import Iterable
 
 MODELS_AND_FIELDS = get_models_and_field_types(models)
 
@@ -32,6 +33,8 @@ class CreateFactory:
 
     #if code gets here we have everything all required fields
     try:
+      print(args)
+
       many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']
       fk_fields = MODELS_AND_FIELDS[model]['fk']
       field_values = {}
@@ -46,18 +49,27 @@ class CreateFactory:
       new_object = model.objects.create(**field_values)
       new_object.full_clean()
       new_object.save()
+      for field_name, value in args.items():
+        if field_name in many_to_many_fields:
+          m2mModel = model._meta.get_field(field_name).remote_field.model          
+          if not isinstance(value, str) and isinstance(value, Iterable):
+            addManyFunction = getattr(getattr(new_object, field_name), "set")
+            addManyFunction(m2mModel.objects.filter(pk__in=value))
+          else:
+            addManyFunction = getattr(getattr(new_object, field_name), "set")
+            addManyFunction(m2mModel.objects.filter(pk=value))
 
-      # for f in many_to_many_fields:
-        # if f in self.args:
-        #   pass
+      new_object.save()
 
     except Exception as e:
+      # print(e)
       errors =  [CREATE_ERROR_MSG, str(e)]
     return new_object, errors
 
 
   def update(self, model, args={}):
-    errors = self.verify_required_fields(model, args)
+    print(args)
+    errors = []
     new_object = None 
 
     #if code gets here we have everything all required fields
@@ -65,26 +77,32 @@ class CreateFactory:
       many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']
       fk_fields = MODELS_AND_FIELDS[model]['fk']
 
-      field_values = {}
+      id = args.pop('id', None)
+      obj = model.objects.filter(pk=id).first()
+      if not obj:
+        return None, [f"Resource with id: {id} does not exist"]
       for field_name, value in args.items():
         if field_name in fk_fields:
           fkModel = model._meta.get_field(field_name).remote_field.model
-          field_values[field_name] = fkModel.objects.filter(pk=value).first()
+          setattr(obj, field_name, fkModel.objects.filter(pk=value).first())
         elif field_name not in many_to_many_fields:
-          field_values[field_name] = value
-      
-      id = args.pop('id', None)
-      obj = model.objects.filter(pk=id)
-      if obj:
-        obj.update(**args)
-      else:
-        errors=[f"Resource with id: {id} does not exist"]
+          setattr(obj, field_name, value)
+        elif field_name in many_to_many_fields:
+          m2mModel = model._meta.get_field(field_name).remote_field.model 
+          if not isinstance(value, str) and isinstance(value, Iterable):
+            addManyFunction = getattr(getattr(obj, field_name), "set")
+            addManyFunction(m2mModel.objects.filter(pk__in=value))
+          else:
+            addManyFunction = getattr(getattr(obj, field_name), "set")
+            oldList = list(getattr(obj, field_name).all())
+            res = oldList + list(m2mModel.objects.filter(pk=value))
+            addManyFunction(res)
 
-      # for f in many_to_many_fields:
-        # if f in self.args:
-        #   pass
+      obj.save()
+     
 
     except Exception as e:
+      print(e)
       obj, errors =  None, [CREATE_ERROR_MSG, str(e)]
       
     return obj, errors

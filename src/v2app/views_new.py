@@ -1202,7 +1202,41 @@ def teams_stats(request):
 
   return Json(None)
 
+@csrf_exempt
+def communities_stats(request):
+  args = get_request_contents(request)
+  if request.method == 'GET':
+    communities, errors = FETCH.all(Community, args)
+    ans = []
+    for community in communities:
+      res = {"households_engaged": 0, "actions_completed": 0, "users_engaged":0}
+      res["community"] = community.simple_json();
+      users, errors = FETCH.all(UserProfile, {"communities": community.id})
+      res["users_engaged"] = len(users);
+      for user in users:
+        actions_completed, errors = FETCH.all(UserActionRel, {"user": user.id, "status": "DONE"})
+        res["actions_completed"] += len(actions_completed)
+        res["households_engaged"] += len(user.real_estate_units.all())
+      ans.append(res)
+  return Json(ans, errors, do_not_serialize=True)
 
+@csrf_exempt
+def community_stats(request, cid):
+  args = get_request_contents(request)
+  args["id"] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.one(Community, args)
+    if community:
+      res = {"households_engaged": 0, "actions_completed": 0, "users_engaged":0}
+      res["community"] = community.simple_json();
+      users, errors = FETCH.all(UserProfile, {"communities": community.id})
+      res["users_engaged"] = len(users);
+      for user in users:
+        actions_completed, errors = FETCH.all(UserActionRel, {"user": user.id, "status": "DONE"})
+        res["actions_completed"] += len(actions_completed)
+        res["households_engaged"] += len(user.real_estate_units.all())
+      return Json(res, errors, do_not_serialize=True)
+  return Json(None)
 
 @csrf_exempt
 def testimonials(request):
@@ -1564,6 +1598,4 @@ def vendor(request, id):
   return Json(None)
 
 
-@csrf_exempt
-def new_uuid(request):
-  return Json({'id': uuid.uuid4()})
+

@@ -414,7 +414,7 @@ class UserProfile(models.Model):
   is_community_admin = models.BooleanField(default=False, blank=True)
   is_vendor = models.BooleanField(default=False, blank=True)
   other_info = JSONField(blank=True, null=True)
-  accepts_terms_and_conditions = models.BooleanField(default=False)
+  accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
@@ -808,7 +808,11 @@ class Action(models.Model):
     data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
       'average_carbon_score', 'community'])
     data['image'] = get_json_if_not_none(self.image)
-    data['tags'] = [t.simple_json() for t in self.tags.all()]
+    data['tags'] = [t.full_json() for t in self.tags.all()]
+    data['steps_to_take'] = self.steps_to_take
+    data['about'] = self.about
+    data['vendors'] = [v.simple_json() for v in self.vendors.all()]
+
     return data
 
   def full_json(self):
@@ -859,6 +863,8 @@ class Event(models.Model):
   name  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
+  invited_communities = models.ManyToManyField(Community, 
+    related_name="invited_communites", blank=True)
   start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
   end_date_and_time  = models.DateTimeField(default=datetime.now)
   location = JSONField(blank=True, null=True)
@@ -931,6 +937,7 @@ class EventAttendee(models.Model):
   class Meta:
     verbose_name_plural = "Event Attendees"
     db_table = 'event_attendees'
+    unique_together=[['attendee', 'event']]
 
 
 
@@ -1106,7 +1113,7 @@ class UserActionRel(models.Model):
 
   class Meta:
     ordering = ('status','user', 'action')
-    unique_together = [['user', 'action']]
+    unique_together = [['user', 'action', 'real_estate_unit']]
 
 
 class CommunityAdminGroup(models.Model):
