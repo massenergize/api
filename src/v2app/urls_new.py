@@ -41,6 +41,7 @@ urlpatterns = [
   path('community/<str:subdomain>/stories', community_testimonials),
   path('community/<str:subdomain>/vendors', community_vendors),
   path('community/<str:subdomain>/admins', community_admins_by_id_or_subdomain),
+  path('community/<str:subdomain>/startup', startup_data),
   path('community-admins', community_admins),
   path('community-admin-group/<int:id>', community_admin_group),
   path('data', data),
@@ -115,7 +116,6 @@ urlpatterns = [
   path('user/e/<str:email>/testimonials', user_testimonials_by_email),
   path('user-groups', user_groups),
   path('user-group/<int:id>', user_group),
-  # path('uuid/new', new_uuid),
   path('vendors', vendors),
   path('vendor/<int:id>', vendor),
 ]

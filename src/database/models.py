@@ -720,7 +720,7 @@ class Tag(models.Model):
   """
   A class used to represent an Tag.  It is essentially a string that can be 
   used to describe or group items, actions, etc
-
+  
   Attributes
   ----------
   name : str

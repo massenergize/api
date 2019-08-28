@@ -1599,3 +1599,34 @@ def vendor(request, id):
 
 
 
+@csrf_exempt
+def startup_data(request, cid=None, subdomain=None):
+  args = get_request_contents(request)
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain 
+  if request.method == 'GET':
+    c, err = FETCH.one(Community, args)
+    result = { 
+      'community': c.simple_json(),
+      'pages' : [p.full_json() for p in c.page_set.all()],
+      'events' : [e.full_json() for e in c.event_set.all()],
+      'actions' : [a.simple_json() for a in c.action_set.all()],
+      'service_providers' : [e.full_json() for e in FETCH.all(Vendor, {})[0]],
+      'testimonials' :[e.full_json() for e in c.testimonial_set.all()],
+      'communityData': [e.full_json() for e in c.data_set.all()],
+    }
+    args = {'community__subdomain': subdomain}
+    menu, err = FETCH.all(Menu, {})
+    policies, err = FETCH.all(Policy, {})
+    rsvps, err = FETCH.all(EventAttendee, args)
+    communities, err = FETCH.all(Community, {})
+    tag_collections, err = FETCH.all(TagCollection, {})
+    result['menu'] = [m.simple_json() for m in menu]
+    result['policies'] = [p.simple_json() for p in policies]
+    # result['rsvps'] = [r.simple_json() for r in rsvps]
+    result['communities'] = [c.simple_json() for c in communities]
+    result['tag_collections'] = [t.full_json() for t in tag_collections]
+    return Json(result)
+  return Json(None)
