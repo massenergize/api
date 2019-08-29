@@ -97,6 +97,7 @@ urlpatterns = [
   path('teams/stats', teams_stats),
   path('team/<int:id>', team),
   path('team/<int:id>/stats', team_stats),
+  path('team/<int:team_id>/member/<str:member_id>', team_member),
   path('testimonials', testimonials),
   path('testimonial/<int:id>', testimonial),
   path('users', users),

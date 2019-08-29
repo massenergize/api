@@ -1163,6 +1163,18 @@ def team(request, id):
 
 
 @csrf_exempt
+def team_member(request, team_id, member_id):
+  if request.method == 'DELETE':
+    team, errors = FETCH.get_one(Team, {'id': team_id})
+    team_member, errors = FETCH.get_one(UserProfile, {'id': member_id})
+    if(team and team_member):
+      team.members.remove(team_member)
+      team.save()
+      return Json(team, errors)
+  return Json(None)
+
+
+@csrf_exempt
 def team_stats(request, id):
   args = get_request_contents(request)
   args['id'] = id
