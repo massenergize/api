@@ -15,6 +15,9 @@ NUM = 0
 VALID_QUERY = 0
 INVALID_QUERY = -1
 BOGUS_POINTS = 666
+HEATING_SYSTEM_POINTS = 10000
+SOLAR_POINTS = 6000
+ELECTRICITY_POINTS = 5000
 
 #allActions = [EnergyFair, EnergyAudit, ProgrammableThermostats,Weatherize,CommunitySolar,RenewableElectricity]
 class CarbonCalculator:
@@ -201,7 +204,7 @@ class ProgrammableThermostats(CalculatorAction):
         super().__init__(name)
         self.description = "Install programmable thermostats"
         self.helptext = "Installing and using a programmable thermostat typically saves 15% from your heating bill."
-        self.average_points = BOGUS_POINTS
+        self.average_points = 0.1*HEATING_SYSTEM_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you install a programmable thermostat?',YES_NO),
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HAVE_PSTATS, "Do you already have programmable thermostats?",YES_NO),
@@ -226,7 +229,7 @@ class Weatherize(CalculatorAction):
         super().__init__(name)
         self.description = "Insulate or air-seal a home"
         self.helptext = "Weatherizing (insulating and air-sealing) your home typically saves 15% from your heating bill."
-        self.average_points = BOGUS_POINTS
+        self.average_points = 0.15*HEATING_SYSTEM_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you weatherize (air-seal or insulate) your home?',YES_NO),
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS), 
                             CalculatorQuestion(HOME_WEATHERIZED, 'Is your home already weatherized (well insulated, not drafty)?',YES_NO)]
@@ -251,7 +254,7 @@ class CommunitySolar(CalculatorAction):
         super().__init__(name)
         self.description = "Sign up for community solar"
         self.helptext = "Joining a community solar project can save on your your electric bill and lower greenhouse gas emissions."
-        self.average_points = BOGUS_POINTS
+        self.average_points = 0.5*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you sign up for a community solar project?',YES_NO),
                         CalculatorQuestion(MONTHLY_ELEC,"What is your average monthly electricity bill?", NUM) ]
     def Eval(self, inputs):
@@ -270,7 +273,7 @@ class RenewableElectricity(CalculatorAction):
         super().__init__(name)
         self.description = "Switch to renewable electricity"
         self.helptext = "Choosing renewable electricity reduces or eliminates greenhouse gas emissions from the power you use."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = ELECTRICITY_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you sign up for renewable electricity?',YES_NO),
                             CalculatorQuestion(RENEWABLE_FRACTION, 'Percentage of renewable power?', NUM),
                             CalculatorQuestion(ELEC_UTILITY,'What is the name of your electric utility?', OPEN)
@@ -285,7 +288,7 @@ class LEDLighting(CalculatorAction):
         super().__init__(name)
         self.description = "Install LED light bulbs"
         self.helptext = "Swapping out incandescent bulbs for LEDs reduces their electricity consumption by 88%."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.1*ELECTRICITY_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you replace old bulbs with LEDs?',YES_NO),
                             CalculatorQuestion(NUM_OLD_BULBS,'How many old inefficient bulbs do you have?',NUM),
                             CalculatorQuestion(LED_SWAP_FRACTION, 'How many would you change?', FRACTIONS)]
@@ -329,7 +332,7 @@ class HeatingAssessment(CalculatorAction):
         super().__init__(name)
         self.description = "Request a heating system assessment"
         self.helptext = "Getting a heating system assessment can help find the best path for saving energy and reducing emissions."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.1*HEATING_SYSTEM_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you sign up for a heating system assessment?',YES_NO),
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HEATING_SYSTEM, 'What is your heating system type?',HEATING_SYSTEMS),
@@ -348,7 +351,7 @@ class EfficientBoilerFurnace(CalculatorAction):
         super().__init__(name)
         self.description = "Replace boiler or furnace with a high efficiency system"
         self.helptext = "Replacing an old boiler or furnace with efficient models can save 10-15% of your heating bill."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.2*HEATING_SYSTEM_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you replace your existing furnace or boiler with high efficiency model?',YES_NO),
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HEATING_SYSTEM, 'What is your heating system type?',HEATING_SYSTEMS),
@@ -363,7 +366,7 @@ class AirSourceHeatPump(CalculatorAction):
         super().__init__(name)
         self.description = "Install an air-source heat pump"
         self.helptext = "Heating and cooling with air-source heat pumps reduces emissions greatly, and can improve comfort and save energy costs."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = .7*HEATING_SYSTEM_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you install an air-source heat pump?',YES_NO),
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HEATING_SYSTEM, 'What is your heating system type?',HEATING_SYSTEMS),
@@ -380,7 +383,7 @@ class GroundSourceHeatPump(CalculatorAction):
         super().__init__(name)
         self.description = "Install a ground-source heat pump"
         self.helptext = "Heating and cooling with a ground-source heat pump reduces emissions greatly, and can improve comfort and save energy costs."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = HEATING_SYSTEM_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you install a ground-source heat pump?',YES_NO),
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HEATING_SYSTEM, 'What is your heating system type?',HEATING_SYSTEMS),
@@ -397,7 +400,7 @@ class HotWaterAssessment(CalculatorAction):
         super().__init__(name)
         self.description = "Request a hot water assessment"
         self.helptext = "A hot water assessment can help find out the best options for replacing a water heater to save money and reduce emissions."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.05*HEATING_SYSTEM_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you sign up for a hot water assessment?',YES_NO),
                             CalculatorQuestion(HEATING_FUEL, 'What is your current hot water fuel?',FUELS),
 
@@ -410,7 +413,7 @@ class HeatPumpWaterHeater(CalculatorAction):
         super().__init__(name)
         self.description = "Install a heat pump water heater"
         self.helptext = "A heat pump water heater uses about 1/3 the energy of an electric or fossil water heater, reducing emissions and saving money."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.15*HEATING_SYSTEM_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -422,7 +425,7 @@ class SolarAssessment(CalculatorAction):
         super().__init__(name)
         self.description = "Request a solar assessment"
         self.helptext = "Getting a solar assessment can help you plan for a solar PV or solar hot water system to reduce emissions and lower cost."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.2*SOLAR_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you sign up for a solar assessment?',YES_NO),
                             CalculatorQuestion(SOLAR_POTENTIAL,'Does your home has good solar potential?',POTENTIALS) ]
     def Eval(self, inputs):
@@ -434,7 +437,7 @@ class InstallSolarPV(CalculatorAction):
         super().__init__(name)
         self.description = "Install a solar PV array"
         self.helptext = "Installing a solar PV array  can reduce your carbon footprint dramatically, and save considerable money over time."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = SOLAR_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you install a Solar PV array?',YES_NO),
                             CalculatorQuestion(SOLAR_POTENTIAL,'Does your home has good solar potential?',POTENTIALS),
                             CalculatorQuestion(ARRAY_SIZE, 'Size of solar PV array, in KW?',NUM)]
@@ -446,7 +449,7 @@ class InstallSolarHW(CalculatorAction):
         super().__init__(name)
         self.description = "Install a solar hot water system"
         self.helptext = "A solar hot water system saves considerable money and emissions."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.2*HEATING_SYSTEM_POINTS
         self.questions = [  CalculatorQuestion(self.name,'Will you install a Solar Hot Water system?',YES_NO),
                             CalculatorQuestion(HEATING_FUEL, 'What is your current hot water fuel?',FUELS),
                             CalculatorQuestion(SOLAR_POTENTIAL,'Does your home has good solar potential?',POTENTIALS) ]
@@ -458,7 +461,7 @@ class EnergystarRefrigerator(CalculatorAction):
         super().__init__(name)
         self.description = "Replace refrigerator with an EnergyStar model"
         self.helptext = "Replacing a refrigerator with an EnergyStar model can save a lot of energy and money over time."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.1*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -468,7 +471,7 @@ class EnergystarWasher(CalculatorAction):
         super().__init__(name)
         self.description = "Replace washing machine with an EnergyStar model"
         self.helptext = "Replacing a washer with an EnergyStar model can save a lot of energy and money over time."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.05*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -478,7 +481,7 @@ class HeatPumpDryer(CalculatorAction):
         super().__init__(name)
         self.description = "Replace clothes dryer with a heat pump dryer"
         self.helptext = "A heat pump dryer uses much less energy than a gas or electric dryer."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.05*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -488,7 +491,7 @@ class ColdWaterWash(CalculatorAction):
         super().__init__(name)
         self.description = "Wash clothes using cold or warm water"
         self.helptext = "Washing clothes in warm or cold water saves energy and money, and works as well as hot."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.05*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -498,7 +501,7 @@ class LineDry(CalculatorAction):
         super().__init__(name)
         self.description = "Dry laundry on rack or clothes line"
         self.helptext = "Drying laundry on the line saves energy and money compared with a clothes dryer."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.1*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -508,7 +511,7 @@ class UnusedAppliances(CalculatorAction):
         super().__init__(name)
         self.description = "Unplug unused appliances"
         self.helptext = "Unplugging appliances which aren't being used can save a lot of wasted energy over time."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.05*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -518,7 +521,7 @@ class RefrigeratorPickup(CalculatorAction):
         super().__init__(name)
         self.description = "Request a pickup for unused refrigerator"
         self.helptext = "Having an old, inefficient refrigerator taken away and disposed of properly saves space and keeps it from being used."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.1*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -528,7 +531,7 @@ class SmartPowerStrip(CalculatorAction):
         super().__init__(name)
         self.description = "Install and use a smart power strip"
         self.helptext = "A smart power strip can save on parasitic loads by shutting off devices when they aren't being used."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.025*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -538,17 +541,18 @@ class ElectricityMonitor(CalculatorAction):
         super().__init__(name)
         self.description = "Make use of an electricity monitor"
         self.helptext = "Using an electricity monitor to find out where power is used is a good first step to conserving it."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.05*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
 
+CAR_POINTS = 8000
 class ReplaceCar(CalculatorAction):
     def __init__(self,name):
         super().__init__(name)
         self.description = "Replace your primary vehicle"
         self.helptext = "Replacing an inefficient car with electric or hybrid can greatly lower your carbon footprint."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = CAR_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -558,7 +562,7 @@ class ReduceMilesDriven(CalculatorAction):
         super().__init__(name)
         self.description = "Reduce miles driven for your primary vehicle"
         self.helptext = "Reducing the amount you drive in favor of ridesharing or public transport saves money and reduces emissions."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.1*CAR_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -568,7 +572,7 @@ class ReplaceCar2(CalculatorAction):
         super().__init__(name)
         self.description = "Replace a secondary vehicle"
         self.helptext = "Replacing an inefficient car with electric or hybrid can greatly lower your carbon footprint."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = CAR_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -578,7 +582,7 @@ class ReduceMilesDriven2(CalculatorAction):
         super().__init__(name)
         self.description = "Reduce miles driven for a secondary vehicle"
         self.helptext = "Reducing the amount you drive in favor of ridesharing or public transport saves money and reduces emissions."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = 0.1*CAR_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -588,17 +592,18 @@ class EliminateCar(CalculatorAction):
         super().__init__(name)
         self.description = "Eliminate a vehicle"
         self.helptext = "Getting rid of a car in favor of ridesharing or public transport saves money and reduces emissions."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = CAR_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
 
+FLIGHT_POINTS = 2000
 class ReduceFlights(CalculatorAction):
     def __init__(self,name):
         super().__init__(name)
         self.description = "Reduce the amount you fly"
         self.helptext = "Reducing the amount you fly has a big impact towards lowering emissions, and saves you money."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = FLIGHT_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -608,17 +613,18 @@ class OffsetFlights(CalculatorAction):
         super().__init__(name)
         self.description = "Purchase carbon offsets for flights taken"
         self.helptext = "Purchasing flight offsets can reduce your carbon footprint and support efforts to restore the climate."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = FLIGHT_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
 
+DIET_POINTS = 1000
 class LowCarbonDiet(CalculatorAction):
     def __init__(self,name):
         super().__init__(name)
         self.description = "Adopt a lower carbon diet"
         self.helptext = "Adopting a diet with less or no meat lowers emissions and can improve your health."
-        self.average_points = ENERGY_AUDIT_POINTS
+        self.average_points = DIET_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
@@ -628,7 +634,7 @@ class ReduceWaste(CalculatorAction):
         super().__init__(name)
         self.description = "Reduce waste in consumption and packaging"
         self.helptext = "Reducing packaging and unnecessary consumption saves money and lowers your impact."
-        self.average_points = BOGUS_POINTS
+        self.average_points = 100
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
     def Eval(self, inputs):
         return super().Eval(inputs)
