@@ -793,6 +793,9 @@ class Action(models.Model):
     null=True,blank=True)
   properties = models.ManyToManyField(ActionProperty, blank=True)
   vendors = models.ManyToManyField(Vendor, blank=True)
+  # should come from the carbon calculator when available
+  # need correspondence between these actions and calculator actions:
+  # calculator_action = models.TextField(max_length=SHORT_STR_LEN, blank=True)
   average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, 
     blank=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, 
