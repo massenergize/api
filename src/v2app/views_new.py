@@ -7,6 +7,8 @@ from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
 from database.models import *
 from database.utils.common import get_request_contents, rename_filter_args
+import requests
+import os
 import uuid
 
 
@@ -1642,3 +1644,19 @@ def startup_data(request, cid=None, subdomain=None):
     result['tag_collections'] = [t.full_json() for t in tag_collections]
     return Json(result)
   return Json(None)
+
+@csrf_exempt
+def verify_captcha(request):
+  args = get_request_contents(request)
+  if 'captchaString' in args:
+    data = {
+      'secret': os.environ.get('RECAPTCHA_SECRET_KEY'),
+      'response': args['captchaString']
+    }
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+    result = r.json()
+    if result['success']:
+      return(Json(result))
+    else:
+      return Json(None, ['Invalid reCAPTCHA. Please try again.'])
+  return Json(None, ['You are missing required field: "captchaString"'])

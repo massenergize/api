@@ -119,4 +119,5 @@ urlpatterns = [
   path('user-group/<int:id>', user_group),
   path('vendors', vendors),
   path('vendor/<int:id>', vendor),
+  path('verify', verify_captcha)
 ]
