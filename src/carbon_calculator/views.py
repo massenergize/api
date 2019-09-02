@@ -27,3 +27,8 @@ def info(request, action):
 def estimate(request, action):
     inputs = get_request_contents(request)
     return JsonResponse(CALC.Estimate(action, inputs))
+
+def reset(request):
+	inputs = get_request_contents(request)
+	return JsonResponse(CALC.Reset(inputs))
+

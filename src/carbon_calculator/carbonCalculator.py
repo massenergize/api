@@ -43,6 +43,7 @@ class CarbonCalculator:
                         'install_solarPV':InstallSolarHW,
                         'energystar_frige':EnergystarRefrigerator,
                         'energystar_washer':EnergystarWasher,
+                        'induction_stove':InductionStove,
                         'hp_dryer':HeatPumpDryer,
                         'coldwater_wash':ColdWaterWash,
                         'line_dry':LineDry,
@@ -113,7 +114,14 @@ class CarbonCalculator:
         #outputs["action_cost"] = cost
         #outputs["annual_savings"] = savings
             return outputs
-
+    
+    def Reset(self,inputs):
+        if inputs.get('Confirm',NO) == YES:
+            nd = CCAction.objects.all().delete()
+            return {"status":True}
+        else:
+            return {"status":False}
+            
 class CalculatorQuestion:
     def __init__(self, questionTag=None, questionText=None,responses=[]):
         self.questionTag = questionTag
@@ -575,6 +583,21 @@ class EnergystarWasher(CalculatorAction):
 
         self.description = "Replace washing machine with an EnergyStar model"
         self.helptext = "Replacing a washer with an EnergyStar model can save a lot of energy and money over time."
+        self.average_points = 0.05*ELECTRICITY_POINTS
+        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
+        super().create()
+
+    def Eval(self, inputs):
+        return super().Eval(inputs)
+
+class InductionStove(CalculatorAction):
+    def __init__(self,name):
+        super().__init__(name)
+        if super().load(name):
+            return
+
+        self.description = "Install an induction stove in place of electric or gas"
+        self.helptext = "An induction stove is both efficiency and great for cooking."
         self.average_points = 0.05*ELECTRICITY_POINTS
         self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
         super().create()
