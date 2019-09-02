@@ -85,7 +85,7 @@ class Media(models.Model):
   name = models.SlugField(max_length=SHORT_STR_LEN, blank=True) 
   file = models.FileField(upload_to='media/')
   media_type = models.CharField(max_length=SHORT_STR_LEN, 
-    choices=CHOICES["FILE_TYPES_ALLOWED"].items(), default='UNKNOWN')
+    choices=CHOICES["FILE_TYPES_ALLOWED"].items(), default='Other')
 
 
   def __str__(self):      
