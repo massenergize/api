@@ -98,6 +98,7 @@ urlpatterns = [
   path('teams/stats', teams_stats),
   path('team/<int:id>', team),
   path('team/<int:id>/stats', team_stats),
+  path('team/<int:team_id>/member/<str:member_id>', team_member),
   path('testimonials', testimonials),
   path('testimonial/<int:id>', testimonial),
   path('users', users),
@@ -117,7 +118,7 @@ urlpatterns = [
   path('user/e/<str:email>/testimonials', user_testimonials_by_email),
   path('user-groups', user_groups),
   path('user-group/<int:id>', user_group),
-  # path('uuid/new', new_uuid),
   path('vendors', vendors),
   path('vendor/<int:id>', vendor),
+  path('verify', verify_captcha)
 ]

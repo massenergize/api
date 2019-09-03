@@ -606,6 +606,9 @@ class Vendor(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
+  phone_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+  email = models.EmailField(max_length=SHORT_STR_LEN,blank=True)
+
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   logo = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='vender_logo')
@@ -633,7 +636,7 @@ class Vendor(models.Model):
     return self.name
 
   def simple_json(self):
-    data = model_to_dict(self, ['id', 'name', 'description','service_area', 'properties_serviced', 'more_info', 'address'])
+    data = model_to_dict(self, ['id', 'name','email', 'phone_number' 'description','service_area', 'properties_serviced', 'more_info', 'address'])
     data['key_contact'] = get_json_if_not_none(self.key_contact)
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['logo'] = get_json_if_not_none(self.logo)
@@ -720,7 +723,7 @@ class Tag(models.Model):
   """
   A class used to represent an Tag.  It is essentially a string that can be 
   used to describe or group items, actions, etc
-
+  
   Attributes
   ----------
   name : str
@@ -731,6 +734,7 @@ class Tag(models.Model):
   icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
   tag_collection = models.ForeignKey(TagCollection, null=True, 
     on_delete=models.SET_NULL, blank=True)
+  order = models.PositiveIntegerField(default=0)
 
   def __str__(self):
     return "%s - %s" % (self.name, self.tag_collection)
@@ -747,7 +751,7 @@ class Tag(models.Model):
   class Meta:
     ordering = ('name',)
     db_table = 'tags'
-    unique_together = [['name', 'tag_collection']]
+    unique_together = [['order', 'name', 'tag_collection']]
 
 
 class Action(models.Model):
@@ -1060,7 +1064,7 @@ class Testimonial(models.Model):
 
   class Meta:
     ordering = ('rank',)
-    unique_together = [['user', 'action']]
+    # unique_together = [['user', 'action']]
     db_table = 'testimonials'
 
 
