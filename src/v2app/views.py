@@ -259,7 +259,7 @@ def create_household(request):
 @csrf_exempt
 def create_team(request):
 	args = get_request_contents(request)
-	new_team, errors =  FACTORY.create()
+	new_team, errors =  FACTORY.create(Team, args)
 	return Json(new_team, errors=errors)
 
 @csrf_exempt
@@ -289,12 +289,12 @@ def add_testimonial(request):
 @csrf_exempt
 def register_user_for_event(request):
 	args = get_request_contents(request)
-	new_user_event_registration, errors =  FACTORY.create(EventAttendees, args)
+	new_user_event_registration, errors =  FACTORY.create(EventAttendee, args)
 	return Json(new_user_event_registration, errors=errors)
 
 
 @csrf_exempt
-def actions(request):
+def duplicate_actions(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     actions = FETCH.all(Action, args)
@@ -319,7 +319,7 @@ def create_community(request):
 
 
 @csrf_exempt
-def events(request):
+def duplicate_events(request):
   if request.method == 'GET':
     filter_args = get_request_contents(request)
     events, errors = FETCH.all(Event, filter_args)

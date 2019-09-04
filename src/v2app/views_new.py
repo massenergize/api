@@ -24,6 +24,42 @@ def ping(request):
 
 
 @csrf_exempt
+def startup_data(request, cid=None, subdomain=None):
+  args = get_request_contents(request)
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain 
+  if request.method == 'GET':
+    page = {}
+    errors = {}
+    pages, errors['pages'] = FETCH.all(Page, args)
+    page['homePage'] = pages.filter(name = 'Home')[0]
+    page['aboutUsPage'] = pages.filter(name = 'AboutUs')[0]
+    page['donatePage'] = pages.filter(name = 'Donate')[0]
+    # teamsPage = teams_stats() will just load this in if i need to when you visit that page the first time
+    page['events'], errors['events'] = FETCH.all(Event, args)
+    page['actions'], errors['actions'] = FETCH.all(Action, args)
+    page['serviceProviders'], errors['serviceProviders'] = FETCH.all(Vendor, args)
+    page['testimonials'], errors['testimonials'] = FETCH.all(Testimonial, args)
+    page['communityData'], errors['communityData'] = FETCH.all(Data, args)
+    page['community'], errors['community'] = FETCH.one(Community, args)
+
+    args.pop('community__id', None)
+    args.pop('community__subdomain', None)
+
+    page['menus'], errors['menus'] = FETCH.all(Menu, args)
+    page['policies'], errors['policies'] = FETCH.all(Policy, args)
+    page['rsvps'], errors['rsvps'] = FETCH.all(EventAttendee, args)
+    page['communities'], errors['communities'] = FETCH.all(Community, args)
+    page['tagCols'], errors['tagCols'] = FETCH.all(TagCollection, args)
+    return Json(page, errors)
+  return Json(None)
+
+
+
+
+@csrf_exempt
 def actions(request):
   args = get_request_contents(request)
   if request.method == 'GET':

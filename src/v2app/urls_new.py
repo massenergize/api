@@ -28,6 +28,7 @@ urlpatterns = [
   path('community/<int:cid>/stories', community_testimonials),
   path('community/<int:cid>/vendors', community_vendors),
   path('community/<int:cid>/admins', community_admins_by_id_or_subdomain),
+  path('community/<int:cid>/startup', startup_data),
   path('community/<str:subdomain>', community),
   path('community/<str:subdomain>/actions', community_actions),
   path('community/<str:subdomain>/members', community_members),
