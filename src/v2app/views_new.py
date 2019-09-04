@@ -7,6 +7,10 @@ from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
 from database.models import *
 from database.utils.common import get_request_contents, rename_filter_args
+import requests
+import os
+import uuid
+
 
 FACTORY = CreateFactory("Data Creator")
 FETCH = DatabaseReader("Database Reader")
@@ -27,6 +31,23 @@ def actions(request):
     return Json(actions, errors)
   elif request.method == 'POST':
     #about to create a new Action instance
+    print(args)
+    if 'tags' in args and isinstance(args['tags'], str):
+      args['tags'] = [int(k) for k in args['tags'].split(',')]
+    if 'vendors' in args and isinstance(args['vendors'], str):
+      args['vendors'] = [int(k) for k in args['vendors'].split(',') if k != '']
+    if 'community' in args and isinstance(args['community'], str):
+      args['community'] = int(args['community'])      
+
+    if 'image' in args and args['image']:
+      img = args['image']
+      media, errors = FACTORY.create(Media, {'file': img, 'media_type': "Image"})
+      if media:
+        media.save()
+      if errors:
+        print(errors)
+      args['image'] = media.pk
+
     action, errors = FACTORY.create(Action, args)
     return Json(action, errors)
   return Json(None)
@@ -36,16 +57,51 @@ def actions(request):
 @csrf_exempt
 def action(request, id):
   args = get_request_contents(request)
-  args['id'] = id
+  args['id'] = int(id)
   if request.method == 'GET':
     action, errors = FETCH.one(Action, args)
-    return Json(action, errors)
+    return Json(action, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the Action resource with this <id>
+    if 'tags' in args and isinstance(args['tags'], str):
+      args['tags'] = [int(k) for k in args['tags'].split(',')]
+    if 'vendors' in args and isinstance(args['vendors'], str):
+      args['vendors'] = [int(k) for k in args['vendors'].split(',') if k != '']
+    if 'community' in args and isinstance(args['community'], str):
+      args['community'] = int(args['community'])      
+
+    if 'image' in args and args['image']:
+      img = args['image']
+      media, errors = FACTORY.create(Media, {'file': img, 'media_type': 'Image'})
+      if media:
+        media.save()
+      if errors:
+        print(errors)
+        del args['image']
+      else:
+        args['image'] = media.pk
+        print(args)
     action, errors = FACTORY.update(Action, args)
-    return Json(action, errors)
+    return Json(action, errors, use_full_json=True)
+
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Action, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
+
+@csrf_exempt
+def action_testimonials(request, id):
+  args = get_request_contents(request)
+  args["action__id"] = id
+  if request.method == 'GET':
+    actions, errors = FETCH.all(Testimonial, args)
+    return Json(actions, errors)
+  elif request.method == 'POST':
+    #about to create a new Action instance
+    action, errors = FACTORY.create(Testimonial, args)
+    return Json(action, errors)
+  return Json(None)
 
 
 @csrf_exempt
@@ -73,6 +129,9 @@ def action_property(request, id):
     #updating the ActionProperty resource with this <id>
     actionproperty, errors = FACTORY.update(ActionProperty, args)
     return Json(actionproperty, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(ActionProperty, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -102,6 +161,9 @@ def billing_statement(request, id):
     #updating the BillingStatement resource with this <id>
     billingstatement, errors = FACTORY.update(BillingStatement, args)
     return Json(billingstatement, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(BillingStatement, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -116,14 +178,20 @@ def communities(request):
     #about to create a new Communitie instance
     communities, errors = FACTORY.create(Community, args)
     return Json(communities, errors)
+  # elif request.method == 'DELETE':
+  #   items_deleted, errors = FETCH.delete(Community, args)
+  #   return Json(items_deleted, errors)
   return Json(None)
 
 
 
 @csrf_exempt
-def community(request, cid):
+def community(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['id'] = cid
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain 
   if request.method == 'GET':
     community, errors = FETCH.one(Community, args)
     return Json(community, errors)
@@ -131,14 +199,21 @@ def community(request, cid):
     #updating the Community resource with this <id>
     #TODO: create pages for this community, etc
     community, errors = FACTORY.update(Community, args)
+    # print(community.simple_json())
     return Json(community, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Community, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
 @csrf_exempt
-def community_actions(request, cid):
+def community_actions(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain 
   if request.method == 'GET':
     community, errors = FETCH.all(Action, args)
     return Json(community, errors)
@@ -151,12 +226,17 @@ def community_actions(request, cid):
 
 
 @csrf_exempt
-def community_members(request, cid):
+def community_members(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['communities'] = cid
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain 
   if request.method == 'GET':
-    community, errors = FETCH.all(UserProfile, args)
-    return Json(community, errors)
+    community, errors = FETCH.one(Community, args)
+    if community:
+      res = community.userprofile_set.all()
+    return Json(res, errors)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     member, errors = FACTORY.create(UserProfile, args)
@@ -166,9 +246,12 @@ def community_members(request, cid):
 
 
 @csrf_exempt
-def community_impact(request, cid):
+def community_impact(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Graph, args)
     return Json(community, errors)
@@ -181,12 +264,15 @@ def community_impact(request, cid):
 
 
 @csrf_exempt
-def community_pages(request, cid):
+def community_pages(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Page, args)
-    return Json(community, errors)
+    return Json(community, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     community_page, errors = FACTORY.create(Page, args)
@@ -196,9 +282,12 @@ def community_pages(request, cid):
 
 
 @csrf_exempt
-def community_events(request, cid):
+def community_events(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Event, args)
     return Json(community, errors)
@@ -211,12 +300,17 @@ def community_events(request, cid):
 
 
 @csrf_exempt
-def community_households(request, cid):
+def community_households(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain  
   if request.method == 'GET':
-    community, errors = FETCH.all(RealEstateUnit, args)
-    return Json(community, errors)
+    community, errors = FETCH.one(Community, args)
+    if community:
+      res = community.userprofile_set.all()
+      return Json(res, errors)
   elif request.method == 'POST':
     #updating the Community resource with this <id>
     community_household, errors = FACTORY.create(RealEstateUnit, args)
@@ -226,24 +320,12 @@ def community_households(request, cid):
 
 
 @csrf_exempt
-def community_goals(request, cid):
+def community_teams(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
-  if request.method == 'GET':
-    community, errors = FETCH.all(Goal, args)
-    return Json(community, errors)
-  elif request.method == 'POST':
-    #updating the Community resource with this <id>
-    community_goals, errors = FACTORY.create(Goal, args)
-    return Json(community_goals, errors)
-  return Json(None)
-
-
-
-@csrf_exempt
-def community_teams(request, cid):
-  args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Team, args)
     return Json(community, errors)
@@ -256,9 +338,12 @@ def community_teams(request, cid):
 
 
 @csrf_exempt
-def community_data(request, cid):
+def community_data(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain  
   if request.method == 'GET':
     community, errors = FETCH.all(Data, args)
     return Json(community, errors)
@@ -271,9 +356,27 @@ def community_data(request, cid):
 
 
 @csrf_exempt
-def community_testimonials(request, cid):
+def community_vendors(request, cid=None, subdomain=None):
   args = get_request_contents(request)
-  args['community'] = cid
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain 
+  if request.method == 'GET':
+    community, errors = FETCH.one(Community, args)
+    if community:
+      return Json(community.vendor_set.all(), errors)
+
+  return Json(None)
+
+
+@csrf_exempt
+def community_testimonials(request, cid=None, subdomain=None):
+  args = get_request_contents(request)
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['action__community__subdomain'] = subdomain 
   if request.method == 'GET':
     community, errors = FETCH.all(Testimonial, args)
     return Json(community, errors)
@@ -298,20 +401,54 @@ def community_admins(request):
   return Json(None)
 
 
+@csrf_exempt
+def community_admins_by_id_or_subdomain(request,cid=None, subdomain=None):
+  args = get_request_contents(request)
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain 
+  if request.method == 'GET':
+    communityadmins, errors = FETCH.all(CommunityAdminGroup, args)
+    return Json(communityadmins, errors)
+  elif request.method == 'POST':
+    #about to create a new CommunityAdmin instance
+    communityadmin, errors = FACTORY.create(CommunityAdminGroup, args)
+    return Json(communityadmin, errors)
+  return Json(None)
+
+
 
 @csrf_exempt
-def community_admin(request, id):
+def community_admin_group(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
     communityadmin, errors = FETCH.one(CommunityAdminGroup, args)
-    return Json(communityadmin, errors)
+    return Json(communityadmin, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the CommunityAdminGroup resource with this <id>
     communityadmin, errors = FACTORY.update(CommunityAdminGroup, args)
     return Json(communityadmin, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(CommunityAdminGroup, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
+def community_profile_full(request, cid):
+  args = get_request_contents(request)
+  args['id'] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.one(Community, args)
+    if community:
+      res = community.full_json()
+      res['users'] = [u.simple_json() for u in community.userprofile_set.all()]
+      res['testimonials'] = [t.simple_json() for t in community.testimonial_set.all()]
+      res['events'] = [e.simple_json() for e in community.event_set.all()]
+      res['actions'] = [a.simple_json() for a in community.action_set.all()]
+      res['graphs'] = [g.simple_json() for g in community.graph_set.all()]
+      return Json(res, errors, use_full_json=True)
+  return Json(None)
 
 
 @csrf_exempt
@@ -339,6 +476,9 @@ def email_category(request, id):
     #updating the EmailCategory resource with this <id>
     emailcategory, errors = FACTORY.update(EmailCategory, args)
     return Json(emailcategory, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(EmailCategory, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -368,6 +508,9 @@ def event(request, id):
     #updating the Event resource with this <id>
     event, errors = FACTORY.update(Event, args)
     return Json(event, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Event, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -397,6 +540,9 @@ def event_attendee(request, id):
     #updating the EventAttendee resource with this <id>
     eventattendee, errors = FACTORY.update(EventAttendee, args)
     return Json(eventattendee, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(EventAttendee, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -426,6 +572,9 @@ def goal(request, id):
     #updating the Goal resource with this <id>
     goal, errors = FACTORY.update(Goal, args)
     return Json(goal, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Goal, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -455,6 +604,9 @@ def graph(request, id):
     #updating the Graph resource with this <id>
     graph, errors = FACTORY.update(Graph, args)
     return Json(graph, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Graph, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -484,6 +636,9 @@ def household(request, id):
     #updating the Household resource with this <id>
     household, errors = FACTORY.update(RealEstateUnit, args)
     return Json(household, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(RealEstateUnit, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -513,6 +668,9 @@ def location(request, id):
     #updating the Location resource with this <id>
     location, errors = FACTORY.update(Location, args)
     return Json(location, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Location, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -522,9 +680,6 @@ def media(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     medias, errors = FETCH.all(Media, args)
-    if medias:
-      for media in medias:
-        media.file = media.file.url
     return Json(medias, errors)
   elif request.method == 'POST':
     #about to create a new Media instance
@@ -540,19 +695,21 @@ def media_by_id(request, id):
   args['id'] = id
   if request.method == 'GET':
     media, errors = FETCH.one(Media, args)
-    if media:
-      media.file = media.file.url
     return Json(media, errors)
   elif request.method == 'POST':
     #updating the Media resource with this <id>
     media, errors = FACTORY.update(Media, args)
     return Json(media, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Media, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
+
 @csrf_exempt
-def media_with_slug(request, id):
+def media_with_slug(request, slug):
   args = get_request_contents(request)
-  args['id'] = id
+  args['name'] = slug
   if request.method == 'GET':
     media, errors = FETCH.one(Media, args)
     return Json(media, errors)
@@ -560,10 +717,13 @@ def media_with_slug(request, id):
     #updating the Media resource with this <id>
     media, errors = FACTORY.update(Media, args)
     return Json(media, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Media, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 @csrf_exempt
-def menu(request):
+def menus(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     menus, errors = FETCH.all(Menu, args)
@@ -587,6 +747,9 @@ def menu(request, id):
     #updating the Menu resource with this <id>
     menu, errors = FACTORY.update(Menu, args)
     return Json(menu, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Menu, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -596,7 +759,10 @@ def pages(request):
   args = get_request_contents(request)
   if request.method == 'GET':
     pages, errors = FETCH.all(Page, args)
-    return Json(pages, errors)
+    if len(pages) == 1:
+      return Json(pages, errors, use_full_json=True)
+    else:
+      return Json(pages, errors)
   elif request.method == 'POST':
     #about to create a new Page instance
     page, errors = FACTORY.create(Page, args)
@@ -616,6 +782,9 @@ def page(request, id):
     #updating the Page resource with this <id>
     page, errors = FACTORY.update(Page, args)
     return Json(page, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Page, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -645,6 +814,9 @@ def page_section(request, id):
     #updating the PageSection resource with this <id>
     pagesection, errors = FACTORY.update(PageSection, args)
     return Json(pagesection, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(PageSection, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -674,6 +846,9 @@ def permission(request, id):
     #updating the Permission resource with this <id>
     permission, errors = FACTORY.update(Permission, args)
     return Json(permission, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Permission, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -703,6 +878,9 @@ def policy(request, id):
     #updating the Policy resource with this <id>
     policy, errors = FACTORY.update(Policy, args)
     return Json(policy, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Policy, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -732,6 +910,9 @@ def role(request, id):
     #updating the Role resource with this <id>
     role, errors = FACTORY.update(Role, args)
     return Json(role, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Role, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -761,6 +942,9 @@ def service(request, id):
     #updating the Service resource with this <id>
     service, errors = FACTORY.update(Service, args)
     return Json(service, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Service, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -790,6 +974,9 @@ def slider(request, id):
     #updating the Slider resource with this <id>
     slider, errors = FACTORY.update(Slider, args)
     return Json(slider, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Slider, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -819,6 +1006,9 @@ def slider_image(request, id):
     #updating the SliderImage resource with this <id>
     sliderimage, errors = FACTORY.update(SliderImage, args)
     return Json(sliderimage, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(SliderImage, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -848,6 +1038,9 @@ def data_by_id(request, id):
     #updating the Data resource with this <id>
     data, errors = FACTORY.update(Data, args)
     return Json(data, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Data, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -876,6 +1069,9 @@ def subscriber(request, id):
     #updating the Subscriber resource with this <id>
     subscriber, errors = FACTORY.update(Subscriber, args)
     return Json(subscriber, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Subscriber, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -934,6 +1130,9 @@ def tag(request, id):
     #updating the Tag resource with this <id>
     tag, errors = FACTORY.update(Tag, args)
     return Json(tag, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Tag, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -963,6 +1162,9 @@ def tag_collection(request, id):
     #updating the TagCollection resource with this <id>
     tagcollection, errors = FACTORY.update(TagCollection, args)
     return Json(tagcollection, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(TagCollection, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -992,9 +1194,99 @@ def team(request, id):
     #updating the Team resource with this <id>
     team, errors = FACTORY.update(Team, args)
     return Json(team, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Team, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
+@csrf_exempt
+def team_member(request, team_id, member_id):
+  if request.method == 'DELETE':
+    team, errors = FETCH.get_one(Team, {'id': team_id})
+    team_member, errors = FETCH.get_one(UserProfile, {'id': member_id})
+    if(team and team_member):
+      team.members.remove(team_member)
+      team.save()
+      return Json(team, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def team_stats(request, id):
+  args = get_request_contents(request)
+  args['id'] = id
+  if request.method == 'GET':
+    team, errors = FETCH.one(Team, args)
+    if team:
+      res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+      res["team"] = team.simple_json()
+      for m in team.members.all():
+        res["households"] = len(m.real_estate_units.all())
+        actions = m.useractionrel_set.all()
+        res["actions"] = len(actions)
+        res["actions_completed"] = len(actions.filter(**{"status":"DONE"}))
+        res["actions_todo"] = len(actions.filter(**{"status":"TODO"}))
+      return Json(res, errors)
+
+  return Json(None)
+
+
+@csrf_exempt
+def teams_stats(request):
+  args = get_request_contents(request)
+  if request.method == 'GET':
+    teams, errors = FETCH.all(Team, args)
+    ans = []
+    for team in teams:
+      res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+      res["team"] = team.simple_json()
+      for m in team.members.all():
+        res["households"] += len(m.real_estate_units.all())
+        actions = m.useractionrel_set.all()
+        res["actions"] += len(actions)
+        res["actions_completed"] += len(actions.filter(**{"status":"DONE"}))
+        res["actions_todo"] += len(actions.filter(**{"status":"TODO"}))
+      ans.append(res)
+    return Json(ans, errors,do_not_serialize=True)
+
+  return Json(None)
+
+@csrf_exempt
+def communities_stats(request):
+  args = get_request_contents(request)
+  if request.method == 'GET':
+    communities, errors = FETCH.all(Community, args)
+    ans = []
+    for community in communities:
+      res = {"households_engaged": 0, "actions_completed": 0, "users_engaged":0}
+      res["community"] = community.simple_json();
+      users, errors = FETCH.all(UserProfile, {"communities": community.id})
+      res["users_engaged"] = len(users);
+      for user in users:
+        actions_completed, errors = FETCH.all(UserActionRel, {"user": user.id, "status": "DONE"})
+        res["actions_completed"] += len(actions_completed)
+        res["households_engaged"] += len(user.real_estate_units.all())
+      ans.append(res)
+  return Json(ans, errors, do_not_serialize=True)
+
+@csrf_exempt
+def community_stats(request, cid):
+  args = get_request_contents(request)
+  args["id"] = cid
+  if request.method == 'GET':
+    community, errors = FETCH.one(Community, args)
+    if community:
+      res = {"households_engaged": 0, "actions_completed": 0, "users_engaged":0}
+      res["community"] = community.simple_json();
+      users, errors = FETCH.all(UserProfile, {"communities": community.id})
+      res["users_engaged"] = len(users);
+      for user in users:
+        actions_completed, errors = FETCH.all(UserActionRel, {"user": user.id, "status": "DONE"})
+        res["actions_completed"] += len(actions_completed)
+        res["households_engaged"] += len(user.real_estate_units.all())
+      return Json(res, errors, do_not_serialize=True)
+  return Json(None)
 
 @csrf_exempt
 def testimonials(request):
@@ -1021,6 +1313,9 @@ def testimonial(request, id):
     #updating the Testimonial resource with this <id>
     testimonial, errors = FACTORY.update(Testimonial, args)
     return Json(testimonial, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Testimonial, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -1050,6 +1345,26 @@ def user(request, id):
     #updating the User resource with this <id>
     user, errors = FACTORY.update(UserProfile, args)
     return Json(user, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(UserProfile, args)
+    return Json(items_deleted, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_by_email(request, email):
+  args = get_request_contents(request)
+  args['email'] = email
+  if request.method == 'GET':
+    user, errors = FETCH.one(UserProfile, args)
+    return Json(user, errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user, errors = FACTORY.update(UserProfile, args)
+    return Json(user, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(UserProfile, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -1059,8 +1374,29 @@ def user_households(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(RealEstateUnit, args)
+    user, errors = FETCH.all(UserProfile, args, 
+      many_to_many_fields_to_prefetch=['real_estate_units'])
+    if user:
+      households = user.first().real_estate_units.all()
+    return Json(households, errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user, errors = FACTORY.create(RealEstateUnit, args)
     return Json(user, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_households_by_email(request, email):
+  #TODO: not working yet
+  args = get_request_contents(request)
+  args['email'] = email
+  if request.method == 'GET':
+    user, errors = FETCH.all(UserProfile, args, 
+      many_to_many_fields_to_prefetch=['real_estate_units'])
+    if user:
+      households = user.first().real_estate_units.all()
+    return Json(households, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(RealEstateUnit, args)
@@ -1075,8 +1411,23 @@ def user_household_actions(request, id, hid):
   args['id'] = id
   args['real_estate_unit'] = hid
   if request.method == 'GET':
-    user, errors = FETCH.all(Action, args)
+    user_households, errors = FETCH.all(Action, args)
+    return Json(user_households, errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user, errors = FACTORY.create(Action, args)
     return Json(user, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_household_actions_by_email(request, email, hid):
+  args = get_request_contents(request)
+  args['email'] = email
+  args['real_estate_unit'] = hid
+  if request.method == 'GET':
+    user, errors = FETCH.all(Action, args)
+    return Json(user, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user, errors = FACTORY.create(Action, args)
@@ -1088,14 +1439,70 @@ def user_household_actions(request, id, hid):
 @csrf_exempt
 def user_actions(request, id):
   args = get_request_contents(request)
-  args['id'] = id
+  args['user'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(Action, args)
-    return Json(user, errors)
+    user, errors = FETCH.all(UserActionRel, args)
+    return Json(user, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the User resource with this <id>
-    user_action, errors = FACTORY.create(Action, args)
+    user_action, errors = FACTORY.create(UserActionRel, args)
     return Json(user_action, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(UserActionRel, args)
+    return Json(items_deleted, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_actions_by_email(request, email):
+  args = get_request_contents(request)
+  args['user__email'] = email
+  if request.method == 'GET':
+    user, errors = FETCH.all(UserActionRel, args)
+    return Json(user, errors, use_full_json=True)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user_action, errors = FACTORY.create(UserActionRel, args)
+    return Json(user_action, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(UserActionRel, args)
+    return Json(items_deleted, errors)
+  return Json(None)
+
+@csrf_exempt
+def user_action(request, id, aid):
+  args = get_request_contents(request)
+  args['user'] = id
+  args['id'] = aid
+  if request.method == 'GET':
+    user, errors = FETCH.one(UserActionRel, args)
+    return Json(user, errors, use_full_json=True)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user_action, errors = FACTORY.update(UserActionRel, args)
+    return Json(user_action, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(UserActionRel, args)
+    return Json(items_deleted, errors)
+  return Json(None)
+
+
+
+@csrf_exempt
+def user_action_by_email(request, email, aid):
+  args = get_request_contents(request)
+  args['user__email'] = email
+  args['id'] = aid
+  if request.method == 'GET':
+    user, errors = FETCH.one(UserActionRel, args)
+    return Json(user, errors, use_full_json=True)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user_action, errors = FACTORY.update(UserActionRel, args)
+    return Json(user_action, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(UserActionRel, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -1105,8 +1512,26 @@ def user_teams(request, id):
   args = get_request_contents(request)
   args['id'] = id
   if request.method == 'GET':
-    user, errors = FETCH.all(Team, args)
-    return Json(user, errors)
+    user, errors = FETCH.all(UserProfile, args)
+    if user:
+      user = user.first()
+      return Json(user.team_members.all(), errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user_team, errors = FACTORY.create(Team, args)
+    return Json(user_team, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_teams_by_email(request, email):
+  args = get_request_contents(request)
+  args['email'] = email
+  if request.method == 'GET':
+    user, errors = FETCH.all(UserProfile, args)
+    if user:
+      user = user.first()
+      return Json(user.team_members.all(), errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user_team, errors = FACTORY.create(Team, args)
@@ -1118,16 +1543,29 @@ def user_teams(request, id):
 @csrf_exempt
 def user_testimonials(request, id):
   args = get_request_contents(request)
-  args['id'] = id
+  args['user__id'] = id
   if request.method == 'GET':
-    user_testimonial, errors = FETCH.all(Testimonial, args)
-    return Json(user_testimonial, errors)
+    user_testimonials, errors = FETCH.all(Testimonial, args)
+    return Json(user_testimonials, errors)
   elif request.method == 'POST':
     #updating the User resource with this <id>
     user_testimonial, errors = FACTORY.create(Testimonial, args)
     return Json(user_testimonial, errors)
   return Json(None)
 
+
+@csrf_exempt
+def user_testimonials_by_email(request, email):
+  args = get_request_contents(request)
+  args['user__email'] = email
+  if request.method == 'GET':
+    user_testimonials, errors = FETCH.all(Testimonial, args)
+    return Json(user_testimonials, errors)
+  elif request.method == 'POST':
+    #updating the User resource with this <id>
+    user_testimonial, errors = FACTORY.create(Testimonial, args)
+    return Json(user_testimonial, errors)
+  return Json(None)
 
 
 @csrf_exempt
@@ -1155,6 +1593,26 @@ def user_group(request, id):
     #updating the UserGroup resource with this <id>
     usergroup, errors = FACTORY.update(UserGroup, args)
     return Json(usergroup, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(UserGroup, args)
+    return Json(items_deleted, errors)
+  return Json(None)
+
+
+@csrf_exempt
+def user_group_by_email(request, email):
+  args = get_request_contents(request)
+  args['email'] = email
+  if request.method == 'GET':
+    usergroup, errors = FETCH.one(UserGroup, args)
+    return Json(usergroup, errors)
+  elif request.method == 'POST':
+    #updating the UserGroup resource with this <id>
+    usergroup, errors = FACTORY.update(UserGroup, args)
+    return Json(usergroup, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(UserGroup, args)
+    return Json(items_deleted, errors)
   return Json(None)
 
 
@@ -1184,4 +1642,57 @@ def vendor(request, id):
     #updating the Vendor resource with this <id>
     vendor, errors = FACTORY.update(Vendor, args)
     return Json(vendor, errors)
+  elif request.method == 'DELETE':
+    items_deleted, errors = FETCH.delete(Vendor, args)
+    return Json(items_deleted, errors)
   return Json(None)
+
+
+
+@csrf_exempt
+def startup_data(request, cid=None, subdomain=None):
+  args = get_request_contents(request)
+  if cid:
+    args['id'] = cid
+  if subdomain:
+    args['subdomain'] = subdomain 
+  if request.method == 'GET':
+    c, err = FETCH.one(Community, args)
+    result = { 
+      'community': c.simple_json(),
+      'pages' : [p.full_json() for p in c.page_set.all()],
+      'events' : [e.full_json() for e in c.event_set.all()],
+      'actions' : [a.simple_json() for a in c.action_set.all()],
+      'service_providers' : [e.full_json() for e in FETCH.all(Vendor, {})[0]],
+      'testimonials' :[e.full_json() for e in c.testimonial_set.all()],
+      'communityData': [e.full_json() for e in c.data_set.all()],
+    }
+    args = {'community__subdomain': subdomain}
+    menu, err = FETCH.all(Menu, {})
+    policies, err = FETCH.all(Policy, {})
+    rsvps, err = FETCH.all(EventAttendee, args)
+    communities, err = FETCH.all(Community, {})
+    tag_collections, err = FETCH.all(TagCollection, {})
+    result['menu'] = [m.simple_json() for m in menu]
+    result['policies'] = [p.simple_json() for p in policies]
+    # result['rsvps'] = [r.simple_json() for r in rsvps]
+    result['communities'] = [c.simple_json() for c in communities]
+    result['tag_collections'] = [t.full_json() for t in tag_collections]
+    return Json(result)
+  return Json(None)
+
+@csrf_exempt
+def verify_captcha(request):
+  args = get_request_contents(request)
+  if 'captchaString' in args:
+    data = {
+      'secret': os.environ.get('RECAPTCHA_SECRET_KEY'),
+      'response': args['captchaString']
+    }
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+    result = r.json()
+    if result['success']:
+      return(Json(result))
+    else:
+      return Json(None, ['Invalid reCAPTCHA. Please try again.'])
+  return Json(None, ['You are missing required field: "captchaString"'])

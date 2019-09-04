@@ -7,6 +7,7 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 from collections.abc import Iterable
 
+
 def json_loader(file) -> dict:
   """
   Returns json data given a valid filepath.  Returns {} if error occurs
@@ -63,7 +64,7 @@ def retrieve_all_objects(model, args, full_json=False) -> list:
     (i.full_json() if full_json else i.simple_json()) for i in objects
   ]
 
-def convert_to_json(data, full_json=True):
+def convert_to_json(data, full_json=False):
   """
   Serializes an object into a json to be sent over-the-wire 
   """
@@ -76,20 +77,20 @@ def convert_to_json(data, full_json=True):
       (i.full_json() if full_json else i.simple_json()) for i in data
     ]
   else:
-    objects = [data]
-    serialized_object = serializers.serialize("json", objects)
-    result = json.loads(serialized_object)[0]["fields"]
-    result["id"] = json.loads(serialized_object)[0]["pk"]
-    return result
+    return data.full_json()
+    # serialized_object = serializers.serialize("json", objects)
+    # result = json.loads(serialized_object)[0]["fields"]
+    # result["id"] = json.loads(serialized_object)[0]["pk"]
+    # return result
 
 
-def get_json_if_not_none(obj) -> dict:
+def get_json_if_not_none(obj, full_json=False) -> dict:
   """
   Takes an object and returns the json/serialized form of the obj if it is 
   not None.
   """
   if obj:
-    return obj.simple_json()
+    return obj.simple_json() if not full_json else obj.full_json()
   return None
 
 
@@ -109,9 +110,22 @@ def rename_filter_args(args, pairs):
 def get_request_contents(request):
   if request.method == 'POST':
     try:
-      return json.loads(request.body.decode('utf-8'))
+      if not request.POST:
+        return json.loads(request.body.decode('utf-8'))
+      else:
+        tmp = request.POST.dict()
+        if(request.FILES):
+          for i in request.FILES.dict():
+            tmp[i] = request.FILES[i]
+        return tmp
     except:
       return request.POST.dict()
   elif request.method == 'GET':
     return request.GET.dict()
+
+  elif request.method == 'DELETE':
+    try:
+      return json.loads(request.body.decode('utf-8'))
+    except Exception as e:
+      return {}
 

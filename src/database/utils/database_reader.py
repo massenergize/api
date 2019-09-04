@@ -16,7 +16,7 @@ class DatabaseReader:
   def verify_all_fields(self, model, fields_provided):
     all_fields = MODELS_AND_FIELDS[model]["all_fields"]
     for f in  fields_provided:
-      if f not in all_fields:
+      if f not in all_fields and '__' not in f:
         return [f"{f} is not a valid field in {model._meta.model_name}"]
     return None
 
@@ -40,16 +40,18 @@ class DatabaseReader:
         .select_related(*foreign_keys_to_select)
         .filter(**filter_args)
         .prefetch_related(*many_to_many_fields_to_prefetch)[:limit])
-      return data, errors
+      if data:
+        return (data, errors)
+      return [], errors
     except Exception as e:
-      print(e)
       return  None, [READ_ERROR_MSG, str(e)]
     
 
   def one(self,model, filter_args={}, many_to_many_fields_to_prefetch=[], 
     foreign_keys_to_select=[]):
-    data, errors = self.get_all(model, filter_args, 
+    data, errors = self.all(model, filter_args, 
       many_to_many_fields_to_prefetch, foreign_keys_to_select)
+
     if data:
       return  data.first(), errors
     return None, errors
@@ -64,3 +66,16 @@ class DatabaseReader:
     return self.one(model, filter_args, many_to_many_fields_to_prefetch, 
       foreign_keys_to_select)
 
+
+  def delete(self, model, filter_args):
+    items, errors = self.get_all(model, filter_args) 
+    if errors:
+      return None, errors
+    
+    if items:
+      res = items.delete()
+      print(res)
+      pass
+      return res[1], None
+    return items, errors
+    
