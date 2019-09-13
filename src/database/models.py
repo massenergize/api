@@ -84,8 +84,7 @@ class Media(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.SlugField(max_length=SHORT_STR_LEN, blank=True) 
   file = models.FileField(upload_to='media/')
-  media_type = models.CharField(max_length=SHORT_STR_LEN, 
-    choices=CHOICES["FILE_TYPES_ALLOWED"].items(), default='UNKNOWN')
+  media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
 
 
   def __str__(self):      
@@ -698,6 +697,7 @@ class TagCollection(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN, unique=True)
   is_global = models.BooleanField(default=False, blank=True)
+  allow_multiple = models.BooleanField(default=False)
 
 
   def __str__(self):
@@ -818,8 +818,6 @@ class Action(models.Model):
     data['tags'] = [t.full_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
-    data['vendors'] = [v.simple_json() for v in self.vendors.all()]
-
     return data
 
   def full_json(self):

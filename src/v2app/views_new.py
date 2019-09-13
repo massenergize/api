@@ -67,6 +67,24 @@ def actions(request):
     return Json(actions, errors)
   elif request.method == 'POST':
     #about to create a new Action instance
+    print(args)
+    if 'tags' in args and isinstance(args['tags'], str):
+      args['tags'] = [int(k) for k in args['tags'].split(',')]
+    if 'vendors' in args and isinstance(args['vendors'], str):
+      args['vendors'] = [int(k) for k in args['vendors'].split(',') if k != '']
+    if 'community' in args and isinstance(args['community'], str):
+      args['community'] = int(args['community'])      
+    if 'is_global' in args and isinstance(args['is_global'], str):
+      args['is_global'] = args['is_global'] == 'true';   
+    if 'image' in args and args['image']:
+      img = args['image']
+      media, errors = FACTORY.create(Media, {'file': img, 'media_type': "Image"})
+      if media:
+        media.save()
+      if errors:
+        print(errors)
+      args['image'] = media.pk
+
     action, errors = FACTORY.create(Action, args)
     return Json(action, errors)
   return Json(None)
@@ -76,18 +94,58 @@ def actions(request):
 @csrf_exempt
 def action(request, id):
   args = get_request_contents(request)
-  args['id'] = id
+  args['id'] = int(id)
   if request.method == 'GET':
     action, errors = FETCH.one(Action, args)
     return Json(action, errors, use_full_json=True)
   elif request.method == 'POST':
     #updating the Action resource with this <id>
+    if 'tags' in args and isinstance(args['tags'], str):
+      args['tags'] = [int(k) for k in args['tags'].split(',')]
+    if 'vendors' in args and isinstance(args['vendors'], str):
+      args['vendors'] = [int(k) for k in args['vendors'].split(',') if k != '']
+    if 'community' in args and isinstance(args['community'], str):
+      args['community'] = int(args['community'])      
+    if 'is_global' in args and isinstance(args['is_global'], str):
+      args['is_global'] = args['is_global'] == 'true';   
+      if args['is_global']:
+        args['community'] = None
+    
+    if 'image' in args and args['image']:
+      img = args['image']
+      media, errors = FACTORY.create(Media, {'file': img})
+      if media:
+        media.save()
+      if errors:
+        print(errors)
+        del args['image']
+      else:
+        args['image'] = media.pk
+        print(args)
     action, errors = FACTORY.update(Action, args)
     return Json(action, errors, use_full_json=True)
+
   elif request.method == 'DELETE':
     items_deleted, errors = FETCH.delete(Action, args)
     return Json(items_deleted, errors)
   return Json(None)
+
+
+@csrf_exempt
+def action_copy(request, id):
+  """
+  This is method will be used to handle the copying of an action
+  """
+
+  args = get_request_contents(request)
+  args['id'] = int(id)
+  action, errors = FETCH.one(Action, args)
+  if action:
+    action.pk = None
+    action.title = str(action.title) +' Copy'
+    action.save()
+    return Json(action, errors)
+  return Json()
 
 
 @csrf_exempt

@@ -6,6 +6,7 @@ urlpatterns = [
   url(r'^$', ping),
   path('actions', actions),
   path('action/<int:id>', action),
+  path('action/<int:id>/copy', action_copy),
   path('action/<int:id>/testimonials', action_testimonials),
   path('action-properties', action_properties),
   path('action-property/<int:id>', action_property),
