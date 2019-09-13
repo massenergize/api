@@ -30,6 +30,8 @@ SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    '*', #TODO: remove later
+    '10.0.0.187:8000',
     'localhost',
     '127.0.0.1',
     'api.massenergize.org',
@@ -41,10 +43,9 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'authentication',
-    'admin_portal',
     'carbon_calculator',
     'database',
-    'user_portal',
+    'v2app',
     'website',
     'corsheaders',
     'django.contrib.admin',
@@ -69,8 +70,8 @@ MIDDLEWARE = [
 # -------- CORS CONFIGURATION ---------------#
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+# CSRF_COOKIE_SECURE = False
+# SESSION_COOKIE_SECURE = False
 
 CORS_ORIGIN_WHITELIST = [
     "https://massenergize.org",
@@ -114,7 +115,7 @@ AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
 #--------END AWS CONFIGURATION ---------------------#
-
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
 
 ROOT_URLCONF = '_main_.urls'
 
@@ -143,7 +144,7 @@ SESSION_COOKIE_SECURE = False
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'production': {
+    'default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': os.environ.get('DATABASE_NAME'),
         'USER': os.environ.get('DATABASE_USER'),
@@ -151,7 +152,7 @@ DATABASES = {
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT')
     },
-    'default': {
+    'test': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': 'postgres',
         'USER': 'postgres',

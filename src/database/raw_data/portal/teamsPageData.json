@@ -1,0 +1,44 @@
+{
+    "teams": [
+        {
+            "teamName": "Test Team",
+            "teamDescription": "We are a team doing something",
+            "numHouseholds": "3",
+            "numActionsCompleted": "62",
+            "avrgNumActions": "35",
+            "ghgSaved": "15923 tons"
+        },
+        {
+            "teamName": "Test Team",
+            "teamDescription": "We are a team doing something",
+            "numHouseholds": "3",
+            "numActionsCompleted": "62",
+            "avrgNumActions": "35",
+            "ghgSaved": "15923 tons"
+        },
+        {
+            "teamName": "Test Team",
+            "teamDescription": "We are a team doing something",
+            "numHouseholds": "3",
+            "numActionsCompleted": "62",
+            "avrgNumActions": "35",
+            "ghgSaved": "15923 tons"
+        },
+        {
+            "teamName": "Test Team",
+            "teamDescription": "We are a team doing something",
+            "numHouseholds": "3",
+            "numActionsCompleted": "62",
+            "avrgNumActions": "35",
+            "ghgSaved": "15923 tons"
+        },
+        {
+            "teamName": "Test Team",
+            "teamDescription": "We are a team doing something",
+            "numHouseholds": "3",
+            "numActionsCompleted": "62",
+            "avrgNumActions": "35",
+            "ghgSaved": "15923 tons"
+        }
+    ]
+}

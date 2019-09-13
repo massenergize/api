@@ -68,36 +68,31 @@ def convert_to_json(data, full_json=False):
   """
   Serializes an object into a json to be sent over-the-wire 
   """
-  if not data:
+  if not data and not isinstance(data, Iterable):
     return None
   elif isinstance(data, dict):
-    return data
+    return data 
   elif isinstance(data, Iterable):
     return  [
       (i.full_json() if full_json else i.simple_json()) for i in data
     ]
   else:
-    objects = [data]
-    serialized_object = serializers.serialize("json", objects)
-    return json.loads(serialized_object)[0]["fields"]
+    return data.full_json()
+    # serialized_object = serializers.serialize("json", objects)
+    # result = json.loads(serialized_object)[0]["fields"]
+    # result["id"] = json.loads(serialized_object)[0]["pk"]
+    # return result
 
 
-def get_json_if_not_none(obj) -> dict:
+def get_json_if_not_none(obj, full_json=False) -> dict:
   """
   Takes an object and returns the json/serialized form of the obj if it is 
   not None.
   """
   if obj:
-    return obj.simple_json()
+    return obj.simple_json() if not full_json else obj.full_json()
   return None
 
-
-def fetch_from_db(model, filter_args={}, 
-  prefetch_related_args=[], select_related_args=[]):
-  return (model.objects
-    .select_related(*select_related_args)
-    .filter(**filter_args)
-    .prefetch_related(*prefetch_related_args))
 
 def ensure_required_fields(required_fields, args):
   errors = []
@@ -105,3 +100,32 @@ def ensure_required_fields(required_fields, args):
     if f not in args:
       errors.append(f"You are missing a required field: {f}")
   return errors
+
+def rename_filter_args(args, pairs):
+  for (old_key, new_key) in pairs:
+    if old_key in args:
+      args[new_key] = args.pop(old_key)
+  return args
+
+def get_request_contents(request):
+  if request.method == 'POST':
+    try:
+      if not request.POST:
+        return json.loads(request.body.decode('utf-8'))
+      else:
+        tmp = request.POST.dict()
+        if(request.FILES):
+          for i in request.FILES.dict():
+            tmp[i] = request.FILES[i]
+        return tmp
+    except:
+      return request.POST.dict()
+  elif request.method == 'GET':
+    return request.GET.dict()
+
+  elif request.method == 'DELETE':
+    try:
+      return json.loads(request.body.decode('utf-8'))
+    except Exception as e:
+      return {}
+

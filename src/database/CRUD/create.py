@@ -4,25 +4,57 @@ centralize the insertion of data into the database so that multiple apps can
 call on the methods in this file without having to define their own
 and to prevent code redundancy.
 """
-from  database.models import *
-from database.utils.common import ensure_required_fields
+from  ..models import *
+from ..utils.common import ensure_required_fields
+from ..utils.create_factory import CreateFactory
 
-CREATE_ERROR_MSG = "An error occured during creation.  Please check your \
-    information and try again"
 
 def new_action(args):
-  required_fields = ['title']
-  errors = ensure_required_fields(required_fields, args)
-  if errors:
-    return {"success": False, "errors":errors}
+  factory = CreateFactory(Action, args)
+  return factory.create(Action, args)
 
-  #if code gets here we have everything we need
-  try:
-    new_action = Action.objects.create()
-    new_action.title = args["title"]
-    new_action.save()
-    return {"success": True, "new_action":new_action, "errors":None}
-  except Exception as e:
-    return {"success": False, "errors": [CREATE_ERROR_MSG, str(e)]}
+def new_community(args):
+  factory = CreateFactory(Community, args)
+  return factory.create()
 
-  
+def new_event(args):
+  factory = CreateFactory(Event, args)
+  return factory.create()
+
+
+def new_user_profile(args):
+  factory = CreateFactory(UserProfile, args)
+  return factory.create(UserProfile, args)
+
+
+def new_location(args):
+  factory = CreateFactory(Location, args)
+  return factory.create()
+
+
+def new_subscriber(args):
+  factory = CreateFactory(Subscriber, args)
+  return factory.create(Subscriber, args)
+
+def new_billing_statement(args):
+  factory = CreateFactory(BillingStatement, args)
+  return factory.create(BillingStatement, args)
+
+
+def new_slider(args):
+  factory = CreateFactory(Slider, args)
+  return factory.create(Slider, args)
+
+
+def new_menu(args):
+  factory = CreateFactory(Menu, args)
+  return factory.create(Menu, args)
+
+def new_page_section(args):
+  factory = CreateFactory(PageSection, args)
+  return factory.create(PageSection, args)
+
+
+def new_page(args):
+  factory = CreateFactory(Page, args)
+  return factory.create(Page, args)
