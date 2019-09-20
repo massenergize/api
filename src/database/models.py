@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
 from datetime import date, datetime
-from django.utils import timezone 
 from .utils.common import  json_loader,get_json_if_not_none
 from django.forms.models import model_to_dict
 import uuid
@@ -622,7 +621,7 @@ class Vendor(models.Model):
   services = models.ManyToManyField(Service, blank=True)
   properties_serviced = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["PROPERTIES_SERVICED"].items())
-  onboarding_date = models.DateTimeField(default=timezone.now)
+  onboarding_date = models.DateTimeField(default=datetime.now)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
   verification_checklist = JSONField(blank=True, null=True) 
@@ -871,8 +870,8 @@ class Event(models.Model):
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
   invited_communities = models.ManyToManyField(Community, 
     related_name="invited_communites", blank=True)
-  start_date_and_time  = models.DateTimeField(db_index=True, default=timezone.now)
-  end_date_and_time  = models.DateTimeField(default=timezone.now)
+  start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
+  end_date_and_time  = models.DateTimeField(default=datetime.now)
   location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
