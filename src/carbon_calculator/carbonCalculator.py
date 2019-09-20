@@ -149,7 +149,7 @@ class CalculatorAction:
             self.average_points = q.average_points
             return True
         else:
-            print("CCAction "+name+" was not found")
+            # print("CCAction "+name+" was not found")
             return False
 
      
