@@ -32,3 +32,8 @@ def reset(request):
 	inputs = get_request_contents(request)
 	return JsonResponse(CALC.Reset(inputs))
 
+def importcsv(request):
+	inputs = get_request_contents(request)
+	return JsonResponse(CALC.Import(inputs))
+
+	

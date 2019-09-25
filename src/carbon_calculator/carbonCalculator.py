@@ -1,9 +1,11 @@
 
 #imports
 from datetime import date
-from .models import CCAction, CCActionPoints
+from .models import CCAction, CCQuestion, CCEvent, CCStation, CCActionPoints
+from database.models import Media
 from .homeHeating import HeatingLoad
 import jsons
+import csv
 
 # constants
 YES = "Yes"
@@ -47,21 +49,21 @@ class CarbonCalculator:
                         'hp_dryer':HeatPumpDryer,
                         'coldwater_wash':ColdWaterWash,
                         'line_dry':LineDry,
-                        'unplug_appliances':UnusedAppliances,
+                        #'unplug_appliances':UnusedAppliances,
                         'fridge_pickup':RefrigeratorPickup,
                         'smart_power_strip':SmartPowerStrip,
                         'electricity_monitor':ElectricityMonitor,
                         'replace_car':ReplaceCar,
                         'reduce_car_miles':ReduceMilesDriven,
-                        'replace_car2':ReplaceCar2,
-                        'reduce_car2_miles':ReduceMilesDriven2,
+                        #'replace_car2':ReplaceCar2,
+                        #'reduce_car2_miles':ReduceMilesDriven2,
                         'eliminate_car':EliminateCar,
                         'reduce_flights':ReduceFlights,
                         'offset_flights':OffsetFlights,
                         'low_carbon_diet':LowCarbonDiet,
                         'reduce_waste':ReduceWaste,
                         'compost':Compost,
-                        'lawn_assessment':LawnAssessment,
+                        #'lawn_assessment':LawnAssessment,
                         'reduce_lawn_size':ReduceLawnSize,
                         'reduce_lawn_care':ReduceLawnCare,
                         'electric_mower':ElectricMower,
@@ -92,9 +94,6 @@ class CarbonCalculator:
     def Estimate(self, action, inputs):
 # inputs is a dictionary of input parameters
 # outputs is a dictionary of results
-        points = 0
-        cost = 0
-        savings = 0
         status = INVALID_QUERY
         if action in self.allActions:
             # community context
@@ -118,10 +117,122 @@ class CarbonCalculator:
     def Reset(self,inputs):
         if inputs.get('Confirm',NO) == YES:
             nd = CCAction.objects.all().delete()
+            nd = CCQuestion.objects.all().delete()
+            nd = CCEvent.objects.all().delete()
+            nd = CCStation.objects.all().delete()
             return {"status":True}
         else:
             return {"status":False}
+
+    def Import(self,inputs):
+        if inputs.get('Confirm',NO) == YES:
+            status = False
+            actionsFile = inputs.get('Actions','') 
+            if actionsFile!='':
+                with open(actionsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    for item in inputlist:
+                        if first:
+                            header = item
+                            first = False
+                        else:
+                            #if action[5]!='':
+                            #    import this media filt
+                            #    actionPicture = Media()
+
+                            newItem = CCAction(name=item[0],
+                                description=item[1],
+                                helptext=item[2],
+                                average_points=int(item[3]),
+                                questions=item[4])
+                            print('Importing CCAction ',item[0],': ',item[1])
+                    status = True
+            questionsFile = inputs.get('Questions','') 
+            if questionsFile!='':
+                with open(questionsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    for item in inputlist:
+                        if first:
+                            header = item
+                            first = False
+                        else:
+                            #if action[5]!='':
+                            #    import this media filt
+                            #    actionPicture = Media()
+
+                            newQuestion = CCQuestion(name=item[0],
+                                category=item[1],
+                                question_text=item[2],
+                                question_type=item[3],
+                                response_1=item[4], skip_1=item[5],
+                                response_2=item[6], skip_2=item[7],
+                                response_3=item[8], skip_3=item[9],
+                                response_4=item[10], skip_4=item[11],
+                                response_5=item[12], skip_5=item[13],
+                                response_6=item[14], skip_6=item[15])
+                                
+                            print('Importing CCQuestion ',item[0],': ',item[2])
+                    status = True
+
+            stationsFile = inputs.get('Stations','') 
+            if stationsFile!='':
+                with open(stationsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    for item in inputlist:
+                        if first:
+                            header = item
+                            first = False
+                        else:
+                            #if action[5]!='':
+                            #    import this media filt
+                            #    actionPicture = Media()
+
+                            newStation = CCStation(name=item[0],
+                                description=item[1],
+                                actions=item[4])
+                                
+                            print('Importing CCStation ',item[0],': ',item[1])
+                    status = True
             
+            eventsFile = inputs.get('Events','') 
+            if eventsFile!='':
+                with open(eventsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    for item in inputlist:
+                        if first:
+                            header = item
+                            first = False
+                        else:
+                            #if action[5]!='':
+                            #    import this media filt
+                            #    actionPicture = Media()
+
+                            newStation = CCEvent(name=item[0],
+                                shortname=item[1],
+                                datetime = item[2],
+                                location = item[3],
+                                stations = item[4],
+                                host_org = item[5],
+                                host_contact = item[6],
+                                host_email = item[7],
+                                host_url = item[8],
+                                #host_logo = item[9],
+                                sponsor_org = item[10],
+                                sponsor_url = item[11],
+                                #sponsor_logo = item[12]
+                                )
+                                
+                            print('Importing CCEvent ',item[0],' at ',item[3],' on ',item[2])
+                    status = True
+                
+            return {"status":status}
+        else:
+            return {"status":False}
+
 class CalculatorQuestion:
     def __init__(self, questionTag=None, questionText=None,responses=[]):
         self.questionTag = questionTag
@@ -211,7 +322,7 @@ class EnergyAudit(CalculatorAction):
         self.average_points = ENERGY_AUDIT_POINTS
         self.questions = [  CalculatorQuestion(name,'Will you sign up for an energy audit?',YES_NO),
                             CalculatorQuestion(ELEC_UTILITY,'What is the name of your electric utility?', OPEN),
-                            CalculatorQuestion('already_had_audit','Have you had a home energy audit in the last 3 years',YES_NO)  ]
+                            CalculatorQuestion('energy_audit_recently','Have you had a home energy audit in the last 3 years',YES_NO)  ]
         super().create()
 
     def Eval(self, inputs):
@@ -227,7 +338,7 @@ class EnergyAudit(CalculatorAction):
         year_of_audit = inputs.get("last_audit_year",9999)  # get from db for ME user
         years_since_audit = current_year - year_of_audit
         signup_energy_audit = inputs.get(self.name, YES)
-        already_had_audit = inputs.get("already_had_audit", YES) # get default from db if user entered
+        already_had_audit = inputs.get("energy_audit_recently", YES) # get default from db if user entered
         if signup_energy_audit == YES and (years_since_audit > audit_years_repeat or  already_had_audit != YES):
 
             # permissible to sign up for audit
@@ -400,7 +511,6 @@ class HeatingAssessment(CalculatorAction):
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HEATING_SYSTEM, 'What is your heating system type?',HEATING_SYSTEMS),
                             CalculatorQuestion(HEATING_AGE, 'How old is your heating system?',AGE_OPTIONS),
-                            CalculatorQuestion(HEATING_EFF, 'Existing system % efficiency (enter 0 if not known)?',NUM),
                             CalculatorQuestion(AC_TYPE, 'Do you have air conditioning, and if so what type?',AC_TYPES),
                             CalculatorQuestion(AC_AGE, 'How old is your air conditioner?',AGE_OPTIONS) ]
         super().create()
@@ -424,8 +534,7 @@ class EfficientBoilerFurnace(CalculatorAction):
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HEATING_SYSTEM, 'What is your heating system type?',HEATING_SYSTEMS),
                             CalculatorQuestion(HEATING_AGE, 'How old is your heating system?',AGE_OPTIONS),
-                            CalculatorQuestion(HEATING_EFF, 'Existing system % efficiency (enter 0 if not known)?',NUM),
-                            CalculatorQuestion(NEW_SYSTEM, 'New system description (manufacturer, model', OPEN) ]
+                        ]
         super().create()
 
     def Eval(self, inputs):
@@ -444,7 +553,6 @@ class AirSourceHeatPump(CalculatorAction):
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HEATING_SYSTEM, 'What is your heating system type?',HEATING_SYSTEMS),
                             CalculatorQuestion(HEATING_AGE, 'How old is your heating system?',AGE_OPTIONS),
-                            CalculatorQuestion(HEATING_EFF, 'Existing system % efficiency (enter 0 if not known)?',NUM),
                             CalculatorQuestion(AC_TYPE, 'Do you have air conditioning, and if so what type?',AC_TYPES),
                             CalculatorQuestion(AC_AGE, 'How old is your air conditioner?',AGE_OPTIONS),
                             CalculatorQuestion(NEW_SYSTEM, 'New system description (manufacturer, model', OPEN)  ]
@@ -466,10 +574,9 @@ class GroundSourceHeatPump(CalculatorAction):
                             CalculatorQuestion(HEATING_FUEL, 'What is your primary heating fuel?',FUELS),
                             CalculatorQuestion(HEATING_SYSTEM, 'What is your heating system type?',HEATING_SYSTEMS),
                             CalculatorQuestion(HEATING_AGE, 'How old is your heating system?',AGE_OPTIONS),
-                            CalculatorQuestion(HEATING_EFF, 'Existing system % efficiency (enter 0 if not known)?',NUM),
                             CalculatorQuestion(AC_TYPE, 'Do you have air conditioning, and if so what type?',AC_TYPES),
-                            CalculatorQuestion(AC_AGE, 'How old is your air conditioner?',AGE_OPTIONS),
-                            CalculatorQuestion(NEW_SYSTEM, 'New system description (manufacturer, model', OPEN)  ]
+                            CalculatorQuestion(AC_AGE, 'How old is your air conditioner?',AGE_OPTIONS),]
+
         super().create()
 
     def Eval(self, inputs):
@@ -650,20 +757,20 @@ class LineDry(CalculatorAction):
     def Eval(self, inputs):
         return super().Eval(inputs)
 
-class UnusedAppliances(CalculatorAction):
-    def __init__(self,name):
-        super().__init__(name)
-        if super().load(name):
-            return
-
-        self.description = "Unplug unused appliances"
-        self.helptext = "Unplugging appliances which aren't being used can save a lot of wasted energy over time."
-        self.average_points = 0.05*ELECTRICITY_POINTS
-        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
-        super().create()
-
-    def Eval(self, inputs):
-        return super().Eval(inputs)
+#class UnusedAppliances(CalculatorAction):
+#    def __init__(self,name):
+#        super().__init__(name)
+#        if super().load(name):
+#            return
+#
+#        self.description = "Unplug unused appliances"
+#        self.helptext = "Unplugging appliances which aren't being used can save a lot of wasted energy over time."
+#        self.average_points = 0.05*ELECTRICITY_POINTS
+#        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
+#        super().create()
+#
+#    def Eval(self, inputs):
+#        return super().Eval(inputs)
 
 class RefrigeratorPickup(CalculatorAction):
     def __init__(self,name):
@@ -741,36 +848,36 @@ class ReduceMilesDriven(CalculatorAction):
     def Eval(self, inputs):
         return super().Eval(inputs)
 
-class ReplaceCar2(CalculatorAction):
-    def __init__(self,name):
-        super().__init__(name)
-        if super().load(name):
-            return
-
-        self.description = "Replace a secondary vehicle"
-        self.helptext = "Replacing an inefficient car with electric or hybrid can greatly lower your carbon footprint."
-        self.average_points = CAR_POINTS
-        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
-        super().create()
-
-    def Eval(self, inputs):
-        return super().Eval(inputs)
-
-class ReduceMilesDriven2(CalculatorAction):
-    def __init__(self,name):
-        super().__init__(name)
-        if super().load(name):
-            return
-
-        self.description = "Reduce miles driven for a secondary vehicle"
-        self.helptext = "Reducing the amount you drive in favor of ridesharing or public transport saves money and reduces emissions."
-        self.average_points = 0.1*CAR_POINTS
-        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
-        super().create()
-
-    def Eval(self, inputs):
-        return super().Eval(inputs)
-
+#lass ReplaceCar2(CalculatorAction):
+#   def __init__(self,name):
+#       super().__init__(name)
+#       if super().load(name):
+#           return
+#
+#       self.description = "Replace a secondary vehicle"
+#       self.helptext = "Replacing an inefficient car with electric or hybrid can greatly lower your carbon footprint."
+#       self.average_points = CAR_POINTS
+#       self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
+#       super().create()
+#
+#   def Eval(self, inputs):
+#       return super().Eval(inputs)
+#
+#class ReduceMilesDriven2(CalculatorAction):
+#    def __init__(self,name):
+#        super().__init__(name)
+#        if super().load(name):
+#            return
+#
+#        self.description = "Reduce miles driven for a secondary vehicle"
+#        self.helptext = "Reducing the amount you drive in favor of ridesharing or public transport saves money and reduces emissions."
+#        self.average_points = 0.1*CAR_POINTS
+#        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
+#        super().create()
+#
+#    def Eval(self, inputs):
+#        return super().Eval(inputs)
+#
 class EliminateCar(CalculatorAction):
     def __init__(self,name):
         super().__init__(name)
@@ -865,21 +972,23 @@ class Compost(CalculatorAction):
         return super().Eval(inputs)
 
 LAWN_ASSESSMENT_POINTS = 100
-class LawnAssessment(CalculatorAction):
-    def __init__(self,name):
-        super().__init__(name)
-        if super().load(name):
-            return
-
-        self.description = "Request a low-carbon lawn assessment"
-        self.helptext = "Having a lawn assessment can help make a plan to save money and tie and reduce emissions."
-        self.average_points = LAWN_ASSESSMENT_POINTS
-        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
-        super().create()
-
-    def Eval(self, inputs):
-        return super().Eval(inputs)
-
+LAWN_SIZES = ["Small (up to 2000 sq ft)", "Medium (2000-4000 sq ft)","Large (4000-6000 sq ft)","Very large (above 6000 sq ft)"]
+#class LawnAssessment(CalculatorAction):
+#    def __init__(self,name):
+#        super().__init__(name)
+#        if super().load(name):
+#            return
+#
+#        self.description = "Request a low-carbon lawn assessment"
+#        self.helptext = "Having a lawn assessment can help make a plan to save money and tie and reduce emissions."
+#        self.average_points = LAWN_ASSESSMENT_POINTS
+#        self.questions = [ CalculatorQuestion(self.name,'Will you request a low-carbon lawn assessment?',YES_NO),
+#         CalculatorQuestion(self.name,'How large is your lawn currently?',LAWN_SIZES)]
+#        super().create()
+#
+#    def Eval(self, inputs):
+#        return super().Eval(inputs)
+#
 LAWN_SIZE_POINTS = BOGUS_POINTS
 class ReduceLawnSize(CalculatorAction):
     def __init__(self,name):
@@ -935,7 +1044,8 @@ class RakeOrElecBlower(CalculatorAction):
         self.description = "Replace gasoline blower with rake or electric"
         self.helptext = "Raking or using an electric instead of gasoline blower reduces pollution and noise."
         self.average_points = BOGUS_POINTS
-        self.questions = [ CalculatorQuestion(self.name,'Will you ...?',YES_NO) ]
+        self.questions = [ CalculatorQuestion(self.name,'Will you switch to an an electric blower or rake?',YES_NO),
+                        CalculatorQuestion(self.name,'Do you currently use (or hire people who use) a gas-powered blower for lawn cleanup?',YES_NO)]
         super().create()
 
     def Eval(self, inputs):
