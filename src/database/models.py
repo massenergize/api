@@ -621,7 +621,7 @@ class Vendor(models.Model):
   services = models.ManyToManyField(Service, blank=True)
   properties_serviced = models.CharField(max_length=TINY_STR_LEN, 
     choices=CHOICES["PROPERTIES_SERVICED"].items())
-  onboarding_date = models.DateTimeField(auto_now_add=True)
+  onboarding_date = models.DateTimeField(default=datetime.now)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
   verification_checklist = JSONField(blank=True, null=True) 
@@ -1663,3 +1663,76 @@ class SubscriberEmailPreference(models.Model):
 
   class Meta:
     db_table = 'subscriber_email_preferences'
+
+class Contact(models.Model):
+  id = models.AutoField(primary_key=True)
+  primary_phone = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  primary_email = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  secondary_phone = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  secondary_email = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+
+
+class HomePage(models.Model):
+  "Represents the home Page of a community"
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, blank=True, on_delete=models.CASCADE)
+  title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  sub_title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  description = models.CharField(blank=True, max_length=LONG_STR_LEN)
+  video_link = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  images = models.ManyToManyField(Media, blank=True)
+  events = models.ManyToManyField(Event, blank=True)
+  graphs = models.ManyToManyField(Graph)
+  buttons = models.ManyToManyField(Button, blank=True)
+  info = JSONField(blank=True)
+
+class ActionsPage(models.Model):
+  "Represents the home Page of a community"
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, blank=True, on_delete=models.CASCADE)
+  title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  sub_title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  description = models.CharField(blank=True, max_length=LONG_STR_LEN)
+  video_link = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  images = models.ManyToManyField(Media, blank=True)
+  events = models.ManyToManyField(Event, blank=True)
+  graphs = models.ManyToManyField(Graph)
+  buttons = models.ManyToManyField(Button, blank=True)
+  info = JSONField(blank=True)
+
+
+class ContactUsPage(models.Model):
+  "Represents the home Page of a community"
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, blank=True, on_delete=models.CASCADE)
+  title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  sub_title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  description = models.CharField(blank=True, max_length=LONG_STR_LEN)
+  video_link = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+
+  images = models.ManyToManyField(Media, blank=True)
+  graphs = models.ManyToManyField(Graph)
+  info = JSONField(blank=True)
+
+class DonatePage(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, blank=True, on_delete=models.CASCADE)
+  title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  sub_title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  description = models.CharField(blank=True, max_length=LONG_STR_LEN)
+  video_link = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  images = models.ManyToManyField(Media, blank=True)
+  buttons = models.ManyToManyField(Button, blank=True)
+  info = JSONField(blank=True)
+
+
+class AboutUsPage(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, blank=True, on_delete=models.CASCADE)
+  title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  sub_title = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  description = models.CharField(blank=True, max_length=LONG_STR_LEN)
+  video_link = models.CharField(blank=True, max_length=SHORT_STR_LEN)
+  images = models.ManyToManyField(Media, blank=True)
+  buttons = models.ManyToManyField(Button, blank=True)
+  info = JSONField(blank=True)
