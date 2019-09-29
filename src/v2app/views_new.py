@@ -1754,3 +1754,21 @@ def verify_captcha(request):
     else:
       return Json(None, ['Invalid reCAPTCHA. Please try again.'])
   return Json(None, ['You are missing required field: "captchaString"'])
+
+
+def home_page(request, cid=None, subdomain=None):
+  args = get_request_contents(request)
+  if cid:
+    args['community__id'] = cid
+  if subdomain:
+    args['community__subdomain'] = subdomain 
+  args['name'] = 'Home'
+  
+  if request.method == 'GET':
+    home_page, err = FACTORY.create(Page, args)
+    if err:
+      return Json(None, err)
+    
+  elif request.method== 'POST':
+    c, err = FETCH.one(Page, args)
+  return Json(None)
