@@ -11,6 +11,7 @@ from database.models import Media
 from django.utils import timezone
 from .homeHeating import HeatingLoad
 import jsons
+import json
 import csv
 
 # constants
@@ -92,6 +93,45 @@ class CarbonCalculator:
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
+
+    def QueryEvents(self,event=None):
+        if event:
+            qs = Event.objects.filter(name=event)
+            if qs:
+                q = qs[0]
+                return {"status":True,"EventInfo":{"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":q.stationslist}}
+            else:
+                return {"status":False, "statusText":"Event ("+event+") not found"}
+        else:
+            qs = Event.objects.all()
+            if qs:
+
+                eventInfo = []
+                for q in qs:
+                    eventInfo.append(q.name)
+                return {"status":True,"eventList":eventInfo}
+            else:
+                return {"status":False,"statusText":"No events found"}
+
+    def QueryStations(self,station=None):
+        if station:
+            qs = Station.objects.filter(name=station)
+            if qs:
+                q = qs[0]
+                return {"status":True,"StationInfo":{"name":q.name, "displayname":q.displayname, "description":q.description, "actions":q.actions}}
+            else:
+                return {"status":False, "statusText":"Station ("+station+") not found"}
+        else:
+            qs = Station.objects.all()
+            if qs:
+
+                stationInfo = []
+                for q in qs:
+                    stationInfo.append(q.name)
+                return {"status":True,"stationList":stationInfo}
+            else:
+                return {"status":False,"statusText":"No stations found"}
+
 
     def Estimate(self, action, inputs):
 # inputs is a dictionary of input parameters
@@ -224,8 +264,9 @@ class CarbonCalculator:
                             #    actionPicture = Media()
 
                             station = Station(name=item[0],
-                                description=item[1],
-                                actions=item[4].split(","))
+                                displayname=item[1],
+                                description=item[2],
+                                actions=item[5].split(","))
                                 
                             print('Importing Station ',station.name,': ',station.description)
                             station.save()
@@ -259,7 +300,7 @@ class CarbonCalculator:
                             else:
                                 dt= ''
                             event = Event(name=item[0],
-                                shortname=item[1],
+                                displayname=item[1],
                                 datetime = dt,
                                 location = item[3],
                                 stationslist = item[4].split(","),

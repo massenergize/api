@@ -76,6 +76,7 @@ class Question(models.Model):
 class Station(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN, unique=True)
+    displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
     description = models.CharField(max_length=SHORT_STR_LEN)
     actions = JSONField(blank=True, null=True)
 
@@ -84,9 +85,9 @@ class Station(models.Model):
 
 class Event(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=NAME_STR_LEN, unique=True)
-    shortname = models.CharField(max_length=TINY_STR_LEN, null=True)
-    datetime = models.DateTimeField()
+    name = models.CharField(max_length=NAME_STR_LEN,unique=True)
+    displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
+    datetime = models.DateTimeField(blank=True)
     location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
 #    stations = models.ForeignKey(Station, on_delete=models.SET_NULL, 
 #        null=True, blank=True, related_name='cc_station_picture')
