@@ -411,7 +411,7 @@ class EnergyFair(CalculatorAction):
         if not self.initialized:
             return {'status':INVALID_QUERY}            
         self.points = 0
-        if inputs.get(self.name,NO) == YES:
+        if inputs.get('attend_fair',NO) == YES:
             # a bonus points action
             self.points = ENERGY_FAIR_POINTS
             # TODO: save action to ME profile
