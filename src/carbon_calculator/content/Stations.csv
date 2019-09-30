@@ -1,0 +1,11 @@
+﻿Name,Description,Attachments,Event,Actions (in reverse order in AirTable),Station admin
+Welcome,Visit the welcome table to register and find out how to get started,,Cooler Communities event 1,energy_fair,
+Heating & Cooling,Save on your heating and cooling bills while improving comfort,,Cooler Communities event 1,"energy_audit,heating_assessment,weatherization,prog_thermostats,air_source_hp",
+Water Heating,Water heating is a bigFind out about options to save energy and money on domestic water heating.,,Cooler Communities event 1,"hw_assessment,hp_water_heater",
+Solar,"Explore solar, renewables and ways to reduce electricity use",,Cooler Communities event 1,"solar_assessment,install_solarPV,install_solarHW,community_solar",
+Electricity Use,Efficient appliance can save considerable money over time,,Cooler Communities event 1,"renewable_elec,led_lighting,energystar_fridge,energystar_washer,coldwater_wash,line_dry,elec_monitor",
+Transportation,Car and plane travel have big carbon footprints - see what you can do to reduce them.,,Cooler Communities event 1,"replace_car,reduce_car_miles,reduce_flights,offset_flights",
+Eating,"A low carbon diet is also a healthy diet, both for you and the planet",,Cooler Communities event 1,low_carbon_diet,
+Reduce/Reuse,"Recycling is good, but reducing packaging and consumption has even more impact.",,Cooler Communities event 1,"reduce_waste,compost",
+Yard/Landscaping,Learn about what you can do for your lawn to have lower environmental impact.,,Cooler Communities event 1,"reduce_lawn_size,reduce_lawn_care,electric_mower,rake_elec_blower",
+,,,,,
