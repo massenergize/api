@@ -155,10 +155,10 @@ DATABASES = {
     'test': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': 'postgres',
-        'USER': 'postgres',
+        'USER': 'Brad',
         'PASSWORD': '',
-        'HOST': '',
-        'PORT': ''
+        'HOST': 'localhost',
+        'PORT': '5432'
     },
 }
 
