@@ -7,6 +7,7 @@ from .models import Action
 from .models import Question
 from .models import Event
 from .models import Station
+from .models import ActionPoints
 from database.models import Media
 from django.utils import timezone
 from .homeHeating import HeatingLoad
@@ -108,7 +109,8 @@ class CarbonCalculator:
 
                 eventInfo = []
                 for q in qs:
-                    eventInfo.append(q.name)
+                    info = {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location}
+                    eventInfo.append(info)
                 return {"status":True,"eventList":eventInfo}
             else:
                 return {"status":False,"statusText":"No events found"}
@@ -133,7 +135,7 @@ class CarbonCalculator:
                 return {"status":False,"statusText":"No stations found"}
 
 
-    def Estimate(self, action, inputs):
+    def Estimate(self, action, inputs, save=False):
 # inputs is a dictionary of input parameters
 # outputs is a dictionary of results
         status = INVALID_QUERY
@@ -147,7 +149,10 @@ class CarbonCalculator:
             #    cost = theAction.cost
             #    savings = theAction.savings
             #status = VALID_QUERY
-            return theAction.Eval(inputs)
+            results = theAction.Eval(inputs)
+            if save:
+                results = self.RecordActionPoints(action,inputs,results)
+            return results
         else:    
             outputs = {}
             outputs["status"] = status
@@ -155,7 +160,19 @@ class CarbonCalculator:
         #outputs["action_cost"] = cost
         #outputs["annual_savings"] = savings
             return outputs
-    
+
+    def RecordActionPoints(self,action, inputs,results):
+        user_id = inputs.pop("MEId",None)
+            
+        record = ActionPoints(  user_id=user_id,
+                                action=action,
+                                choices=inputs,
+                                points=carbon_points,
+                                cost= cost,
+                                savings = savings)
+        record.save()
+        return results
+
     def Reset(self,inputs):
         if inputs.get('Confirm',NO) == YES:
             print(Action.objects.all().delete())
@@ -393,7 +410,6 @@ class CalculatorAction:
                 self.questions.append(jsons.dump(CalculatorQuestion(question)))
             self.average_points = q.average_points
             self.initialized = True
-#            return True
         except:
             print("ERROR: Action "+name+" was not found")
             self.initialized = False
@@ -412,9 +428,10 @@ class EnergyFair(CalculatorAction):
             return {'status':INVALID_QUERY}            
         self.points = 0
         if inputs.get('attend_fair',NO) == YES:
-            # a bonus points action
+            # a trivial bonus points action
             self.points = ENERGY_FAIR_POINTS
             # TODO: save action to ME profile
+
         return super().Eval(inputs)
 
 ENERGY_AUDIT_POINTS = 250
@@ -428,10 +445,6 @@ class EnergyAudit(CalculatorAction):
         #         already_had_audit YesNo
         #
         #         query for last audit, and min years for audit
-        audit_years_repeat = 3
-        current_year = 2019
-        year_of_audit = inputs.get("last_audit_year",9999)  # get from db for ME user
-        years_since_audit = current_year - year_of_audit
         signup_energy_audit = inputs.get(self.name, YES)
         already_had_audit = inputs.get("energy_audit_recently", YES) # get default from db if user entered
         if signup_energy_audit == YES and (years_since_audit > audit_years_repeat or  already_had_audit != YES):
