@@ -30,3 +30,7 @@ def csrf(request):
    from this view to do so to do so
   """
   return Json({'csrfToken': get_token(request)})
+
+def who_am_i(request):
+  #TODO: returns user info if logged in else return error
+  pass
