@@ -310,6 +310,15 @@ class Goal(models.Model):
     choices=CHOICES["GOAL_STATUS"].items(), 
     default='NOT_STARTED')
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
+
+  target_number_of_households = models.PositiveIntegerField(default=0)
+  target_number_of_actions = models.PositiveIntegerField(default=0)
+  target_carbon_footprint_reduction = models.PositiveIntegerField(default=0)
+
+  attained_number_of_households = models.PositiveIntegerField(default=0)
+  attained_number_of_actions = models.PositiveIntegerField(default=0)
+  attained_carbon_footprint_reduction = models.PositiveIntegerField(default=0)
+
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
 
