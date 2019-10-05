@@ -1673,3 +1673,67 @@ class SubscriberEmailPreference(models.Model):
   class Meta:
     db_table = 'subscriber_email_preferences'
 
+class HomePageSettings(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
+  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  feature_links = JSONField(blank=True, null=True)
+  images = models.ManyToManyField(Media, blank=True)
+  featured_events = models.ManyToManyField(Event, blank=True)
+  featured_stats = models.ManyToManyField(Data, blank=True)
+
+
+class ActionsPageSettings(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
+  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  images = models.ManyToManyField(Media, blank=True)
+
+
+class ContactUsPageSettings(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
+  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  images = models.ManyToManyField(Media, blank=True)
+
+class DonatePageSettings(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
+  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  images = models.ManyToManyField(Media, blank=True)
+
+class AboutUsPageSettings(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
+  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  images = models.ManyToManyField(Media, blank=True)
+
+class ImpactPageSettings(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
+  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  images = models.ManyToManyField(Media, blank=True)
