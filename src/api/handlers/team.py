@@ -6,7 +6,7 @@ from api.services.team import TeamService
 from api.utils.massenergize_response import MassenergizeResponse
 
 #TODO: install middleware to catch authz violations
-
+#TODO: add logger
 
 class TeamHandler(RouteHandler):
 
@@ -21,8 +21,10 @@ class TeamHandler(RouteHandler):
     self.add("/teams.update", self.update())
     self.add("/teams.delete", self.delete())
     self.add("/teams.remove", self.delete())
-    self.add("/community_admin.teams.list", self.list())
-    self.add("/super_admin.teams.list", self.list())
+
+    #admin routes
+    self.add("/admin.community.teams.list", self.community_admin_list())
+    self.add("/admin.super.teams.list", self.super_admin_list())
 
 
   def info(self) -> function:
@@ -70,6 +72,7 @@ class TeamHandler(RouteHandler):
   def delete(self) -> function:
     def delete_team_view(request) -> None: 
       args = get_request_contents(request)
+      team_id = args[id]
       team_info, err = self.team.delete_team(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -91,8 +94,7 @@ class TeamHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args["community__id"]
-      team_info, err = self.team.list_teams_for_super_admin(community_id)
+      team_info, err = self.team.list_teams_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
