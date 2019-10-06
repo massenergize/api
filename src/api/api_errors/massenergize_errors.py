@@ -1,6 +1,7 @@
 class MassEnergizeAPIError(Error):
-  def __init__(self, msg="UNKNOWN ERROR"):
+  def __init__(self, msg="UNKNOWN ERROR", status=400):
     self.msg = ""
+    self.status = status
 
   def __str__(self) -> str:
     f"Error: {self.msg}"
@@ -8,16 +9,20 @@ class MassEnergizeAPIError(Error):
 
 class ResourceNotFoundError(MassEnergizeAPIError):
   def __init__(self):
-    super().__init__("RESOURCE NOT FOUND ERROR")
+    super().__init__("RESOURCE NOT FOUND ERROR", 400)
 
 
 class NotAuthorizedError(MassEnergizeAPIError):
   def __init__(self):
-    super().__init__("NOT AUTHORIZED TO ACCESS THIS RESOURCE")
+    super().__init__("NOT AUTHORIZED TO ACCESS THIS RESOURCE", 403)
 
 
 
 class InvalidResourceError(MassEnergizeAPIError):
   def __init__(self):
-    super().__init__("INVALID RESOURCE")
+    super().__init__("INVALID RESOURCE", 404)
 
+
+class ServerError(MassEnergizeAPIError):
+  def __init__(self):
+    super().__init__("SERVER ERROR", 500)
