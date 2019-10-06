@@ -1,3 +1,5 @@
+from api.utils.constants import API_VERSION
+
 class RouteHandler:
   """
   This class maps routes to views
@@ -6,7 +8,7 @@ class RouteHandler:
     self.routes = {}
 
   def add(self, route: str, view: function) -> bool:
-    self.routes[path] = view
+    self.routes[f"/{API_VERSION}/" + path] = view
 
   def get_routes_to_views(self):
     return self.routes.items()
