@@ -48,12 +48,10 @@ class TeamStore:
     return [t.simple_json() for t in teams], None
 
 
-  def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
+  def list_teams_for_super_admin(self):
     try:
       teams = Team.objects.all()
-      teams = [t.simple_json() for t in teams]
-      print(teams)
-      return teams, None
+      return [t.simple_json() for t in teams], None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

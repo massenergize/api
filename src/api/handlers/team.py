@@ -88,18 +88,18 @@ class TeamHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args["community__id"]
-      team_info, err = self.team.list_teams_for_community_admin(community_id)
+      teams, err = self.team.list_teams_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
+      return MassenergizeResponse(data=teams)
     return community_admin_list_view
 
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.team.list_teams_for_super_admin()
+      teams, err = self.team.list_teams_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
+      return MassenergizeResponse(data=teams)
     return super_admin_list_view
