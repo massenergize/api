@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'authentication',
     'carbon_calculator',
     'database',
-    'v2app',
+    'api',
     'website',
     'corsheaders',
     'django.contrib.admin',

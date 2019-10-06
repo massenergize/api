@@ -6,11 +6,11 @@ def validate(data) -> bool:
   return True 
 
 
-def get_community(Data) -> (dict, str):
+def get(id) -> (dict, str):
   pass 
 
 
-def create(data):
+def create(data) -> (dict, str):
   #TODO: create community object
   # create pages
   # create graphs
@@ -19,10 +19,10 @@ def create(data):
   pass
 
 
-def update(data):
+def update(data) -> (dict, str):
   pass
 
 
-def delete(data):
+def delete(data) -> (dict, str):
   pass
 
