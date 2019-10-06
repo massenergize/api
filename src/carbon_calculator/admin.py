@@ -6,7 +6,7 @@ from _main_.utils.constants import GLOBAL_SITE_SETTINGS
 from _main_.utils.utils import get_all_models
 
 #changing the default django site name
-admin.site.site_header = "Carbon Calculator Database Admin" #GLOBAL_SITE_SETTINGS["ADMIN_SITE_HEADER"]
+admin.site.site_header = "MassEnergize Database Admin" 
 
 
 def register_all_models():
@@ -23,7 +23,6 @@ def register_all_models():
     try:
       admin.site.register(model)
     except admin.sites.AlreadyRegistered:
-      print('%s: Already Registered' % model)
       success = False
   return success
 

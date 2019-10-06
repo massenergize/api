@@ -8,7 +8,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0032_aboutuspage_actionspage_contact_contactuspage_donatepage_homepage'),
+        ('database', '0030_auto_20190920_0424'),
         ('carbon_calculator', '0003_auto_20190925_2134'),
     ]
 
