@@ -26,3 +26,8 @@ class InvalidResourceError(MassEnergizeAPIError):
 class ServerError(MassEnergizeAPIError):
   def __init__(self):
     super().__init__("SERVER ERROR", 500)
+
+
+class CustomMassenergizeError(MassEnergizeAPIError):
+  def __init__(self, err_msg):
+    super().__init__(err_msg, 200)
