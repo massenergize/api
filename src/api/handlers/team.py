@@ -87,7 +87,7 @@ class TeamHandler(RouteHandler):
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args["community__id"]
+      community_id = args.get("community__id")
       teams, err = self.team.list_teams_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

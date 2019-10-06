@@ -13,38 +13,38 @@ class TeamService:
       return None, err
     return team
 
-
   def list_teams(self, team_id) -> (list, MassEnergizeAPIError):
     team, err = self.store.list_teams(team_id)
     if err:
       return None, err
-    return team
+    return team, None
 
 
   def create_team(self, args) -> (dict, MassEnergizeAPIError):
     team, err = self.store.create_team(args)
     if err:
       return None, err
-    return team
+    return team, None
 
 
   def update_team(self, args) -> (dict, MassEnergizeAPIError):
     team, err = self.store.update_team(args)
     if err:
       return None, err
-    return team
+    return team, None
 
   def delete_team(self, args) -> (dict, MassEnergizeAPIError):
     team, err = self.store.delete_team(args)
     if err:
       return None, err
-    return team
+    return team, None
+
 
   def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    team, err = self.store.list_teams_for_community_admin(community_id)
+    teams, err = self.store.list_teams_for_community_admin(community_id)
     if err:
       return None, err
-    return team
+    return teams, None
 
 
   def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
