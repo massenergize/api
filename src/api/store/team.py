@@ -1,5 +1,5 @@
 from database.models import Team, UserProfile
-from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError
+from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
 class TeamStore:
@@ -49,5 +49,11 @@ class TeamStore:
 
 
   def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.all()
-    return [t.simple_json() for t in teams], None
+    try:
+      teams = Team.objects.all()
+      teams = [t.simple_json() for t in teams]
+      print(teams)
+      return teams, None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(str(e))

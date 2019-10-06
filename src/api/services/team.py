@@ -8,27 +8,47 @@ class TeamService:
     self.store =  TeamStore()
 
   def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    pass
+    team, err = self.store.get_team_info(team_id)
+    if err:
+      return None, err
+    return team
+
 
   def list_teams(self, team_id) -> (list, MassEnergizeAPIError):
-    pass
+    team, err = self.store.list_teams(team_id)
+    if err:
+      return None, err
+    return team
+
 
   def create_team(self, args) -> (dict, MassEnergizeAPIError):
-    pass
+    team, err = self.store.create_team(args)
+    if err:
+      return None, err
+    return team
+
 
   def update_team(self, args) -> (dict, MassEnergizeAPIError):
-    #TODO
-    # retrieve old data
-    # compare to new args
-    # make send request to store layer to update
-    pass
+    team, err = self.store.update_team(args)
+    if err:
+      return None, err
+    return team
 
   def delete_team(self, args) -> (dict, MassEnergizeAPIError):
-    pass
-
+    team, err = self.store.delete_team(args)
+    if err:
+      return None, err
+    return team
 
   def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    pass
+    team, err = self.store.list_teams_for_community_admin(community_id)
+    if err:
+      return None, err
+    return team
+
 
   def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    pass
+    teams, err = self.store.list_teams_for_super_admin()
+    if err:
+      return None, err
+    return teams, None

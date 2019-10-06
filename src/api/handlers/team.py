@@ -4,6 +4,7 @@ from api.utils.route_handler import RouteHandler
 from api.utils.common import get_request_contents
 from api.services.team import TeamService
 from api.utils.massenergize_response import MassenergizeResponse
+from types import FunctionType as function
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -11,7 +12,9 @@ from api.utils.massenergize_response import MassenergizeResponse
 class TeamHandler(RouteHandler):
 
   def __init__(self):
+    super().__init__()
     self.team = TeamService()
+    self.registerRoutes()
 
   def registerRoutes(self) -> None:
     self.add("/teams.info", self.info()) 
@@ -49,6 +52,7 @@ class TeamHandler(RouteHandler):
 
   def list(self) -> function:
     def list_team_view(request) -> None: 
+      print("hello")
       args = get_request_contents(request)
       community_id = args["community__id"]
       user_id = args["user_id"]

@@ -1,4 +1,4 @@
-class MassEnergizeAPIError(Error):
+class MassEnergizeAPIError:
   def __init__(self, msg="UNKNOWN ERROR", status=400):
     self.msg = ""
     self.status = status

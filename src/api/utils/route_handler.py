@@ -1,4 +1,8 @@
 from api.utils.constants import API_VERSION
+from types import FunctionType as function
+from django.urls import path, re_path
+from django.conf.urls import url
+
 
 class RouteHandler:
   """
@@ -8,9 +12,14 @@ class RouteHandler:
     self.routes = {}
 
   def add(self, route: str, view: function) -> bool:
-    self.routes[f"/{API_VERSION}/" + path] = view
+    path = route[1:]
+    self.routes[path] = view
 
   def get_routes_to_views(self):
-    return self.routes.items()
+    res = []
+    for (p, v) in self.routes.items():
+      res.append(path(p, v))
+    return res
+
 
 
