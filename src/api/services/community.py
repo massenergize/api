@@ -1,16 +1,17 @@
 """
 Business Logic for how communities are managed
 """
+from api.api_errors.massenergize_errors import MassEnergizeAPIError
 
 def validate(data) -> bool:
   return True 
 
 
-def get(id) -> (dict, str):
+def get(id) -> (dict, MassEnergizeAPIError):
   pass 
 
 
-def create(data) -> (dict, str):
+def create(data) -> (dict, MassEnergizeAPIError):
   #TODO: create community object
   # create pages
   # create graphs
@@ -19,10 +20,10 @@ def create(data) -> (dict, str):
   pass
 
 
-def update(data) -> (dict, str):
+def update(data) -> (dict, MassEnergizeAPIError):
   pass
 
 
-def delete(data) -> (dict, str):
+def delete(data) -> (dict, MassEnergizeAPIError):
   pass
 
