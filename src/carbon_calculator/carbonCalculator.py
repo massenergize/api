@@ -63,7 +63,7 @@ def SavePic2Media(picURL):
             if errors:
                 print(errors)
                 return None
-            return media.id
+            return media
     except:
         print("Error encountered")
         return None
@@ -363,8 +363,6 @@ class CarbonCalculator:
                             else:
                                 dt= ''
                             host_logo = SavePic2Media(item[10])
-                            print("host logo")
-                            print("get sponsor logo")
                             sponsor_logo = SavePic2Media(item[13])
 
                             event = Event(name=item[0],
@@ -377,10 +375,10 @@ class CarbonCalculator:
                                 host_email = item[7],
                                 host_phone = item[8],
                                 host_url = item[9],
-                                #host_logo = host_logo,
+                                host_logo = host_logo,
                                 sponsor_org = item[11],
                                 sponsor_url = item[12],
-                                #sponsor_logo = sponsor_logo
+                                sponsor_logo = sponsor_logo
                                 )
                                 
                             print('Importing Event ',event.name,' at ',event.location,' on ',event.datetime)
