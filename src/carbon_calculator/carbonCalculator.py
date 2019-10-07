@@ -11,9 +11,17 @@ from .models import ActionPoints
 from database.models import Media
 from django.utils import timezone
 from .homeHeating import HeatingLoad
+from database.utils.create_factory import CreateFactory
+from database.utils.database_reader import DatabaseReader
 import jsons
 import json
 import csv
+from django.core import files
+from io import BytesIO
+import requests
+
+FACTORY = CreateFactory("Data Creator")
+FETCH = DatabaseReader("Database Reader")
 
 # constants
 YES = "Yes"
@@ -26,6 +34,39 @@ INVALID_QUERY = -1
 HEATING_SYSTEM_POINTS = 10000
 SOLAR_POINTS = 6000
 ELECTRICITY_POINTS = 5000
+
+def SavePic2Media(picURL):
+    if picURL == '':
+        return None
+    # in the import from AirTable, picture files have the url between ( ) after the original picture name
+    loc1 = picURL.find('(')
+    loc2 = picURL.find(')')
+    if loc1>0 and loc2>0:
+        picURL = picURL[loc1+1:loc2]
+    print("Importing picture from: "+picURL)
+    try:
+        resp = requests.get(picURL)
+        if resp.status_code != requests.codes.ok:
+            # Error handling here3
+            print("ERROR: Unable to import action photo from "+picURL)
+            return None
+        else:
+            file_name = picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
+            fp = open(file_name,"wb")
+            fp.write(resp.content)
+            fp.close()
+            media, errors = FACTORY.create(Media, {'file': file_name, 'media_type': "Image"})
+            if media:
+                print("Saving Media record")
+                media.save()
+
+            if errors:
+                print(errors)
+                return None
+            return media.id
+    except:
+        print("Error encountered")
+        return None
 
 class CarbonCalculator:
 
@@ -195,7 +236,7 @@ class CarbonCalculator:
                     first = True
                     for item in inputlist:
                         if first:
-                            header = item
+                            #header = item
                             first = False
                         else:
                             if item[0] == '':
@@ -208,13 +249,16 @@ class CarbonCalculator:
                             #if action[5]!='':
                             #    import this media filt
                             #    actionPicture = Media()
+                            picture = None
                             if len(item)>=4 and item[0]!='':
+                                picture = SavePic2Media(item[5])
 
                                 action = Action(name=item[0],
                                     description=item[1],
                                     helptext=item[2],
                                     average_points=int(eval(item[3])),
-                                    questions=item[4].split(","))
+                                    questions=item[4].split(","),
+                                    picture = picture)
                                 print('Importing Action ',action.name,': ',action.description)
                                 action.save()
 
@@ -227,7 +271,7 @@ class CarbonCalculator:
                     first = True
                     for item in inputlist:
                         if first:
-                            header = item
+                            #header = item
                             first = False
                         else:
                             if item[0] == '':
@@ -267,7 +311,7 @@ class CarbonCalculator:
                     first = True
                     for item in inputlist:
                         if first:
-                            header = item
+                            #header = item
                             first = False
                         else:
                             if item[0] == '':
@@ -297,12 +341,11 @@ class CarbonCalculator:
                     first = True
                     for item in inputlist:
                         if first:
-                            header = item
+                            #header = item
                             first = False
                         else:
                             if item[0] == '':
                                 continue
-
                             qs = Event.objects.filter(name=item[0])
                             if qs:
                                 qs[0].delete()
@@ -310,6 +353,8 @@ class CarbonCalculator:
                             #if action[5]!='':
                             #    import this media filt
                             #    actionPicture = Media()
+                            host_logo = None
+                            sponsor_logo = None
                             eventdate = item[2]
                             if eventdate != '':
                                 dt = datetime.strptime(item[2].upper(), '%m/%d/%Y %H:%M%p')
@@ -317,6 +362,11 @@ class CarbonCalculator:
                                 dt = current_tz.localize(dt)
                             else:
                                 dt= ''
+                            host_logo = SavePic2Media(item[10])
+                            print("host logo")
+                            print("get sponsor logo")
+                            sponsor_logo = SavePic2Media(item[13])
+
                             event = Event(name=item[0],
                                 displayname=item[1],
                                 datetime = dt,
@@ -327,10 +377,10 @@ class CarbonCalculator:
                                 host_email = item[7],
                                 host_phone = item[8],
                                 host_url = item[9],
-                                #host_logo = item[10],
+                                #host_logo = host_logo,
                                 sponsor_org = item[11],
                                 sponsor_url = item[12],
-                                #sponsor_logo = item[13]
+                                #sponsor_logo = sponsor_logo
                                 )
                                 
                             print('Importing Event ',event.name,' at ',event.location,' on ',event.datetime)
@@ -340,6 +390,7 @@ class CarbonCalculator:
             return {"status":status}
         else:
             return {"status":False}
+
 
 class CalculatorQuestion:
     def __init__(self, name):
@@ -408,7 +459,7 @@ class CalculatorAction:
             for question in q.questions:
                 qq = CalculatorQuestion(question)
                 #print(jsons.dump(CalculatorQuestion(question)))
-                self.questions.append(jsons.dump(CalculatorQuestion(question)))
+                self.questions.append(jsons.dump(qq))
             self.average_points = q.average_points
             self.initialized = True
         except:
