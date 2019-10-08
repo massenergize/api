@@ -1,57 +1,57 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
 from api.utils.massenergize_response import MassenergizeResponse
-from api.store.team import TeamStore
+from api.store.testimonial import TestimonialStore
 
-class TeamService:
+class TestimonialService:
   """
-  Service Layer for all the teams
+  Service Layer for all the testimonials
   """
 
   def __init__(self):
-    self.store =  TeamStore()
+    self.store =  TestimonialStore()
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.get_team_info(team_id)
+  def get_testimonial_info(self, testimonial_id) -> (dict, MassEnergizeAPIError):
+    testimonial, err = self.store.get_testimonial_info(testimonial_id)
     if err:
       return None, err
-    return team
+    return testimonial
 
-  def list_teams(self, team_id) -> (list, MassEnergizeAPIError):
-    team, err = self.store.list_teams(team_id)
+  def list_testimonials(self, testimonial_id) -> (list, MassEnergizeAPIError):
+    testimonial, err = self.store.list_testimonials(testimonial_id)
     if err:
       return None, err
-    return team, None
+    return testimonial, None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(args)
+  def create_testimonial(self, args) -> (dict, MassEnergizeAPIError):
+    testimonial, err = self.store.create_testimonial(args)
     if err:
       return None, err
-    return team, None
+    return testimonial, None
 
 
-  def update_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.update_team(args)
+  def update_testimonial(self, args) -> (dict, MassEnergizeAPIError):
+    testimonial, err = self.store.update_testimonial(args)
     if err:
       return None, err
-    return team, None
+    return testimonial, None
 
-  def delete_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.delete_team(args)
+  def delete_testimonial(self, args) -> (dict, MassEnergizeAPIError):
+    testimonial, err = self.store.delete_testimonial(args)
     if err:
       return None, err
-    return team, None
+    return testimonial, None
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_community_admin(community_id)
+  def list_testimonials_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    testimonials, err = self.store.list_testimonials_for_community_admin(community_id)
     if err:
       return None, err
-    return teams, None
+    return testimonials, None
 
 
-  def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_super_admin()
+  def list_testimonials_for_super_admin(self) -> (list, MassEnergizeAPIError):
+    testimonials, err = self.store.list_testimonials_for_super_admin()
     if err:
       return None, err
-    return teams, None
+    return testimonials, None

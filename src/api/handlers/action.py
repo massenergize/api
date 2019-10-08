@@ -52,7 +52,6 @@ class ActionHandler(RouteHandler):
 
   def list(self) -> function:
     def list_team_view(request) -> None: 
-      print("hello")
       args = get_request_contents(request)
       community_id = args["community__id"]
       user_id = args["user_id"]
