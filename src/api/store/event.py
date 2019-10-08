@@ -1,57 +1,57 @@
-from database.models import Team, UserProfile
+from database.models import Event, UserProfile
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
-class TeamStore:
+class EventStore:
   def __init__(self):
-    self.name = "Team Store/DB"
+    self.name = "Event Store/DB"
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
+  def get_event_info(self, event_id) -> (dict, MassEnergizeAPIError):
+    event = Event.objects.filter(id=event_id)
+    if not event:
       return None, InvalidResourceError()
-    return team.full_json(), None
+    return event.full_json(), None
 
 
-  def list_teams(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id=community_id)
-    if not teams:
+  def list_events(self, community_id) -> (list, MassEnergizeAPIError):
+    events = Event.objects.filter(community__id=community_id)
+    if not events:
       return [], None
-    return [t.simple_json() for t in teams], None
+    return [t.simple_json() for t in events], None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
+  def create_event(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_team = Team.create(**args)
-      new_team.save()
-      return new_team.full_json(), None
+      new_event = Event.create(**args)
+      new_event.save()
+      return new_event.full_json(), None
     except Exception:
       return None, ServerError()
 
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
+  def update_event(self, event_id, args) -> (dict, MassEnergizeAPIError):
+    event = Event.objects.filter(id=event_id)
+    if not event:
       return None, InvalidResourceError()
-    team.update(**args)
-    return team.full_json(), None
+    event.update(**args)
+    return event.full_json(), None
 
 
-  def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
-    teams = Team.objects.filter(id=team_id)
-    if not teams:
+  def delete_event(self, event_id) -> (dict, MassEnergizeAPIError):
+    events = Event.objects.filter(id=event_id)
+    if not events:
       return None, InvalidResourceError()
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in teams], None
+  def list_events_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    events = Event.objects.filter(community__id = community_id)
+    return [t.simple_json() for t in events], None
 
 
-  def list_teams_for_super_admin(self):
+  def list_events_for_super_admin(self):
     try:
-      teams = Team.objects.all()
-      return [t.simple_json() for t in teams], None
+      events = Event.objects.all()
+      return [t.simple_json() for t in events], None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))
