@@ -99,7 +99,6 @@ class ActionHandler(RouteHandler):
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       actions, err = self.action.list_actions_for_super_admin()
-      print(actions)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions)
