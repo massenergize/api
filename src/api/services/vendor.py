@@ -1,57 +1,57 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
 from api.utils.massenergize_response import MassenergizeResponse
-from api.store.team import TeamStore
+from api.store.vendor import VendorStore
 
-class TeamService:
+class VendorService:
   """
-  Service Layer for all the teams
+  Service Layer for all the vendors
   """
 
   def __init__(self):
-    self.store =  TeamStore()
+    self.store =  VendorStore()
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.get_team_info(team_id)
+  def get_vendor_info(self, vendor_id) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.get_vendor_info(vendor_id)
     if err:
       return None, err
-    return team
+    return vendor
 
-  def list_teams(self, team_id) -> (list, MassEnergizeAPIError):
-    team, err = self.store.list_teams(team_id)
+  def list_vendors(self, vendor_id) -> (list, MassEnergizeAPIError):
+    vendor, err = self.store.list_vendors(vendor_id)
     if err:
       return None, err
-    return team, None
+    return vendor, None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(args)
+  def create_vendor(self, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.create_vendor(args)
     if err:
       return None, err
-    return team, None
+    return vendor, None
 
 
-  def update_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.update_team(args)
+  def update_vendor(self, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.update_vendor(args)
     if err:
       return None, err
-    return team, None
+    return vendor, None
 
-  def delete_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.delete_team(args)
+  def delete_vendor(self, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.delete_vendor(args)
     if err:
       return None, err
-    return team, None
+    return vendor, None
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_community_admin(community_id)
+  def list_vendors_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    vendors, err = self.store.list_vendors_for_community_admin(community_id)
     if err:
       return None, err
-    return teams, None
+    return vendors, None
 
 
-  def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_super_admin()
+  def list_vendors_for_super_admin(self) -> (list, MassEnergizeAPIError):
+    vendors, err = self.store.list_vendors_for_super_admin()
     if err:
       return None, err
-    return teams, None
+    return vendors, None
