@@ -3,6 +3,9 @@ from api.utils.massenergize_response import MassenergizeResponse
 from api.store.team import TeamStore
 
 class TeamService:
+  """
+  Service Layer for all the teams
+  """
 
   def __init__(self):
     self.store =  TeamStore()

@@ -26,8 +26,8 @@ class TeamHandler(RouteHandler):
     self.add("/teams.remove", self.delete())
 
     #admin routes
-    self.add("/admin.community.teams.list", self.community_admin_list())
-    self.add("/admin.super.teams.list", self.super_admin_list())
+    self.add("/teams.listForCommunityAdmin", self.community_admin_list())
+    self.add("/teams.listForSuperAdmin", self.super_admin_list())
 
 
   def info(self) -> function:
