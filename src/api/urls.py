@@ -2,8 +2,10 @@ from django.urls import path, re_path
 from django.conf.urls import url
 from .views import *
 from api.handlers.team import TeamHandler
+from api.handlers.action import ActionHandler
 
 team_handler = TeamHandler()
+action_handler = ActionHandler()
 
 
 urlpatterns = [
@@ -129,3 +131,4 @@ urlpatterns = [
 ]
 
 urlpatterns.extend(team_handler.get_routes_to_views())
+urlpatterns.extend(action_handler.get_routes_to_views())
