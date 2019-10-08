@@ -1,6 +1,6 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
 from api.utils.massenergize_response import MassenergizeResponse
-from api.store.actions_page_setting import ActionsPageSettingsStore
+from api.store.page_settings__actions import ActionsPageSettingsStore
 
 class ActionsPageSettingsService:
   """
