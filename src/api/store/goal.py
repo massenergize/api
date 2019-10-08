@@ -1,57 +1,57 @@
-from database.models import Team, UserProfile
+from database.models import Goal, UserProfile
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
-class TeamStore:
+class GoalStore:
   def __init__(self):
-    self.name = "Team Store/DB"
+    self.name = "Goal Store/DB"
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
+  def get_goal_info(self, goal_id) -> (dict, MassEnergizeAPIError):
+    goal = Goal.objects.filter(id=goal_id)
+    if not goal:
       return None, InvalidResourceError()
-    return team.full_json(), None
+    return goal.full_json(), None
 
 
-  def list_teams(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id=community_id)
-    if not teams:
+  def list_goals(self, community_id) -> (list, MassEnergizeAPIError):
+    goals = Goal.objects.filter(community__id=community_id)
+    if not goals:
       return [], None
-    return [t.simple_json() for t in teams], None
+    return [t.simple_json() for t in goals], None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
+  def create_goal(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_team = Team.create(**args)
-      new_team.save()
-      return new_team.full_json(), None
+      new_goal = Goal.create(**args)
+      new_goal.save()
+      return new_goal.full_json(), None
     except Exception:
       return None, ServerError()
 
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
+  def update_goal(self, goal_id, args) -> (dict, MassEnergizeAPIError):
+    goal = Goal.objects.filter(id=goal_id)
+    if not goal:
       return None, InvalidResourceError()
-    team.update(**args)
-    return team.full_json(), None
+    goal.update(**args)
+    return goal.full_json(), None
 
 
-  def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
-    teams = Team.objects.filter(id=team_id)
-    if not teams:
+  def delete_goal(self, goal_id) -> (dict, MassEnergizeAPIError):
+    goals = Goal.objects.filter(id=goal_id)
+    if not goals:
       return None, InvalidResourceError()
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in teams], None
+  def list_goals_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    goals = Goal.objects.filter(community__id = community_id)
+    return [t.simple_json() for t in goals], None
 
 
-  def list_teams_for_super_admin(self):
+  def list_goals_for_super_admin(self):
     try:
-      teams = Team.objects.all()
-      return [t.simple_json() for t in teams], None
+      goals = Goal.objects.all()
+      return [t.simple_json() for t in goals], None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))
