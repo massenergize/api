@@ -1,57 +1,57 @@
-from database.models import Team, UserProfile
+from database.models import TagCollection, UserProfile
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
-class TeamStore:
+class TagCollectionStore:
   def __init__(self):
-    self.name = "Team Store/DB"
+    self.name = "TagCollection Store/DB"
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
+  def get_tag_collection_info(self, tag_collection_id) -> (dict, MassEnergizeAPIError):
+    tag_collection = TagCollection.objects.filter(id=tag_collection_id)
+    if not tag_collection:
       return None, InvalidResourceError()
-    return team.full_json(), None
+    return tag_collection.full_json(), None
 
 
-  def list_teams(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id=community_id)
-    if not teams:
+  def list_tag_collections(self, community_id) -> (list, MassEnergizeAPIError):
+    tag_collections = TagCollection.objects.filter(community__id=community_id)
+    if not tag_collections:
       return [], None
-    return [t.simple_json() for t in teams], None
+    return [t.simple_json() for t in tag_collections], None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
+  def create_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_team = Team.create(**args)
-      new_team.save()
-      return new_team.full_json(), None
+      new_tag_collection = TagCollection.create(**args)
+      new_tag_collection.save()
+      return new_tag_collection.full_json(), None
     except Exception:
       return None, ServerError()
 
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
+  def update_tag_collection(self, tag_collection_id, args) -> (dict, MassEnergizeAPIError):
+    tag_collection = TagCollection.objects.filter(id=tag_collection_id)
+    if not tag_collection:
       return None, InvalidResourceError()
-    team.update(**args)
-    return team.full_json(), None
+    tag_collection.update(**args)
+    return tag_collection.full_json(), None
 
 
-  def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
-    teams = Team.objects.filter(id=team_id)
-    if not teams:
+  def delete_tag_collection(self, tag_collection_id) -> (dict, MassEnergizeAPIError):
+    tag_collections = TagCollection.objects.filter(id=tag_collection_id)
+    if not tag_collections:
       return None, InvalidResourceError()
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in teams], None
+  def list_tag_collections_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    tag_collections = TagCollection.objects.filter(community__id = community_id)
+    return [t.simple_json() for t in tag_collections], None
 
 
-  def list_teams_for_super_admin(self):
+  def list_tag_collections_for_super_admin(self):
     try:
-      teams = Team.objects.all()
-      return [t.simple_json() for t in teams], None
+      tag_collections = TagCollection.objects.all()
+      return [t.simple_json() for t in tag_collections], None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

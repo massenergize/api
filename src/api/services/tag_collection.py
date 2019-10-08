@@ -1,57 +1,57 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
 from api.utils.massenergize_response import MassenergizeResponse
-from api.store.team import TeamStore
+from api.store.tag_collection import TagCollectionStore
 
-class TeamService:
+class TagCollectionService:
   """
-  Service Layer for all the teams
+  Service Layer for all the tag_collections
   """
 
   def __init__(self):
-    self.store =  TeamStore()
+    self.store =  TagCollectionStore()
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.get_team_info(team_id)
+  def get_tag_collection_info(self, tag_collection_id) -> (dict, MassEnergizeAPIError):
+    tag_collection, err = self.store.get_tag_collection_info(tag_collection_id)
     if err:
       return None, err
-    return team
+    return tag_collection
 
-  def list_teams(self, team_id) -> (list, MassEnergizeAPIError):
-    team, err = self.store.list_teams(team_id)
+  def list_tag_collections(self, tag_collection_id) -> (list, MassEnergizeAPIError):
+    tag_collection, err = self.store.list_tag_collections(tag_collection_id)
     if err:
       return None, err
-    return team, None
+    return tag_collection, None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(args)
+  def create_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
+    tag_collection, err = self.store.create_tag_collection(args)
     if err:
       return None, err
-    return team, None
+    return tag_collection, None
 
 
-  def update_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.update_team(args)
+  def update_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
+    tag_collection, err = self.store.update_tag_collection(args)
     if err:
       return None, err
-    return team, None
+    return tag_collection, None
 
-  def delete_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.delete_team(args)
+  def delete_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
+    tag_collection, err = self.store.delete_tag_collection(args)
     if err:
       return None, err
-    return team, None
+    return tag_collection, None
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_community_admin(community_id)
+  def list_tag_collections_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    tag_collections, err = self.store.list_tag_collections_for_community_admin(community_id)
     if err:
       return None, err
-    return teams, None
+    return tag_collections, None
 
 
-  def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_super_admin()
+  def list_tag_collections_for_super_admin(self) -> (list, MassEnergizeAPIError):
+    tag_collections, err = self.store.list_tag_collections_for_super_admin()
     if err:
       return None, err
-    return teams, None
+    return tag_collections, None
