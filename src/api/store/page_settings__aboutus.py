@@ -1,57 +1,57 @@
-from database.models import Team, UserProfile
+from database.models import AboutUsPageSettings, UserProfile
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
-class TeamStore:
+class AboutUsPageSettingsStore:
   def __init__(self):
-    self.name = "Team Store/DB"
+    self.name = "AboutUsPageSettings Store/DB"
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
+  def get_about_us_page_setting_info(self, about_us_page_setting_id) -> (dict, MassEnergizeAPIError):
+    about_us_page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_setting_id)
+    if not about_us_page_setting:
       return None, InvalidResourceError()
-    return team.full_json(), None
+    return about_us_page_setting.full_json(), None
 
 
-  def list_teams(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id=community_id)
-    if not teams:
+  def list_about_us_page_settings(self, community_id) -> (list, MassEnergizeAPIError):
+    about_us_page_settings = AboutUsPageSettings.objects.filter(community__id=community_id)
+    if not about_us_page_settings:
       return [], None
-    return [t.simple_json() for t in teams], None
+    return [t.simple_json() for t in about_us_page_settings], None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
+  def create_about_us_page_setting(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_team = Team.create(**args)
-      new_team.save()
-      return new_team.full_json(), None
+      new_about_us_page_setting = AboutUsPageSettings.create(**args)
+      new_about_us_page_setting.save()
+      return new_about_us_page_setting.full_json(), None
     except Exception:
       return None, ServerError()
 
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
+  def update_about_us_page_setting(self, about_us_page_setting_id, args) -> (dict, MassEnergizeAPIError):
+    about_us_page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_setting_id)
+    if not about_us_page_setting:
       return None, InvalidResourceError()
-    team.update(**args)
-    return team.full_json(), None
+    about_us_page_setting.update(**args)
+    return about_us_page_setting.full_json(), None
 
 
-  def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
-    teams = Team.objects.filter(id=team_id)
-    if not teams:
+  def delete_about_us_page_setting(self, about_us_page_setting_id) -> (dict, MassEnergizeAPIError):
+    about_us_page_settings = AboutUsPageSettings.objects.filter(id=about_us_page_setting_id)
+    if not about_us_page_settings:
       return None, InvalidResourceError()
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in teams], None
+  def list_about_us_page_settings_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    about_us_page_settings = AboutUsPageSettings.objects.filter(community__id = community_id)
+    return [t.simple_json() for t in about_us_page_settings], None
 
 
-  def list_teams_for_super_admin(self):
+  def list_about_us_page_settings_for_super_admin(self):
     try:
-      teams = Team.objects.all()
-      return [t.simple_json() for t in teams], None
+      about_us_page_settings = AboutUsPageSettings.objects.all()
+      return [t.simple_json() for t in about_us_page_settings], None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

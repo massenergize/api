@@ -1,57 +1,57 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
 from api.utils.massenergize_response import MassenergizeResponse
-from api.store.team import TeamStore
+from api.store.page_settings__aboutus import AboutUsPageSettingsStore
 
-class TeamService:
+class AboutUsPageSettingsService:
   """
-  Service Layer for all the teams
+  Service Layer for all the about_us_page_settings
   """
 
   def __init__(self):
-    self.store =  TeamStore()
+    self.store =  AboutUsPageSettingsStore()
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.get_team_info(team_id)
+  def get_about_us_page_setting_info(self, about_us_page_setting_id) -> (dict, MassEnergizeAPIError):
+    about_us_page_setting, err = self.store.get_about_us_page_setting_info(about_us_page_setting_id)
     if err:
       return None, err
-    return team
+    return about_us_page_setting
 
-  def list_teams(self, team_id) -> (list, MassEnergizeAPIError):
-    team, err = self.store.list_teams(team_id)
+  def list_about_us_page_settings(self, about_us_page_setting_id) -> (list, MassEnergizeAPIError):
+    about_us_page_setting, err = self.store.list_about_us_page_settings(about_us_page_setting_id)
     if err:
       return None, err
-    return team, None
+    return about_us_page_setting, None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(args)
+  def create_about_us_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+    about_us_page_setting, err = self.store.create_about_us_page_setting(args)
     if err:
       return None, err
-    return team, None
+    return about_us_page_setting, None
 
 
-  def update_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.update_team(args)
+  def update_about_us_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+    about_us_page_setting, err = self.store.update_about_us_page_setting(args)
     if err:
       return None, err
-    return team, None
+    return about_us_page_setting, None
 
-  def delete_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.delete_team(args)
+  def delete_about_us_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+    about_us_page_setting, err = self.store.delete_about_us_page_setting(args)
     if err:
       return None, err
-    return team, None
+    return about_us_page_setting, None
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_community_admin(community_id)
+  def list_about_us_page_settings_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    about_us_page_settings, err = self.store.list_about_us_page_settings_for_community_admin(community_id)
     if err:
       return None, err
-    return teams, None
+    return about_us_page_settings, None
 
 
-  def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_super_admin()
+  def list_about_us_page_settings_for_super_admin(self) -> (list, MassEnergizeAPIError):
+    about_us_page_settings, err = self.store.list_about_us_page_settings_for_super_admin()
     if err:
       return None, err
-    return teams, None
+    return about_us_page_settings, None
