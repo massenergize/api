@@ -1,57 +1,57 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
 from api.utils.massenergize_response import MassenergizeResponse
-from api.store.team import TeamStore
+from api.store.page_settings__home import HomePageSettingsStore
 
-class TeamService:
+class HomePageSettingsService:
   """
-  Service Layer for all the teams
+  Service Layer for all the home_page_settings
   """
 
   def __init__(self):
-    self.store =  TeamStore()
+    self.store =  HomePageSettingsStore()
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.get_team_info(team_id)
+  def get_home_page_setting_info(self, home_page_setting_id) -> (dict, MassEnergizeAPIError):
+    home_page_setting, err = self.store.get_home_page_setting_info(home_page_setting_id)
     if err:
       return None, err
-    return team
+    return home_page_setting
 
-  def list_teams(self, team_id) -> (list, MassEnergizeAPIError):
-    team, err = self.store.list_teams(team_id)
+  def list_home_page_settings(self, home_page_setting_id) -> (list, MassEnergizeAPIError):
+    home_page_setting, err = self.store.list_home_page_settings(home_page_setting_id)
     if err:
       return None, err
-    return team, None
+    return home_page_setting, None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(args)
+  def create_home_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+    home_page_setting, err = self.store.create_home_page_setting(args)
     if err:
       return None, err
-    return team, None
+    return home_page_setting, None
 
 
-  def update_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.update_team(args)
+  def update_home_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+    home_page_setting, err = self.store.update_home_page_setting(args)
     if err:
       return None, err
-    return team, None
+    return home_page_setting, None
 
-  def delete_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.delete_team(args)
+  def delete_home_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+    home_page_setting, err = self.store.delete_home_page_setting(args)
     if err:
       return None, err
-    return team, None
+    return home_page_setting, None
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_community_admin(community_id)
+  def list_home_page_settings_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+    home_page_settings, err = self.store.list_home_page_settings_for_community_admin(community_id)
     if err:
       return None, err
-    return teams, None
+    return home_page_settings, None
 
 
-  def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_super_admin()
+  def list_home_page_settings_for_super_admin(self) -> (list, MassEnergizeAPIError):
+    home_page_settings, err = self.store.list_home_page_settings_for_super_admin()
     if err:
       return None, err
-    return teams, None
+    return home_page_settings, None
