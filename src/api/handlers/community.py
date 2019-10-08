@@ -1,105 +1,105 @@
-"""Handler file for all routes pertaining to teams"""
+"""Handler file for all routes pertaining to communities"""
 
 from api.utils.route_handler import RouteHandler
 from api.utils.common import get_request_contents
-from api.services.team import TeamService
+from api.services.community import CommunityService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
 
-class TeamHandler(RouteHandler):
+class CommunityHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.team = TeamService()
+    self.community = CommunityService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
-    self.add("/teams.info", self.info()) 
-    self.add("/teams.create", self.create())
-    self.add("/teams.add", self.create())
-    self.add("/teams.list", self.list())
-    self.add("/teams.update", self.update())
-    self.add("/teams.delete", self.delete())
-    self.add("/teams.remove", self.delete())
+    self.add("/communities.info", self.info()) 
+    self.add("/communities.create", self.create())
+    self.add("/communities.add", self.create())
+    self.add("/communities.list", self.list())
+    self.add("/communities.update", self.update())
+    self.add("/communities.delete", self.delete())
+    self.add("/communities.remove", self.delete())
 
     #admin routes
-    self.add("/teams.listForCommunityAdmin", self.community_admin_list())
-    self.add("/teams.listForSuperAdmin", self.super_admin_list())
+    self.add("/communities.listForCommunityAdmin", self.community_admin_list())
+    self.add("/communities.listForSuperAdmin", self.super_admin_list())
 
 
   def info(self) -> function:
-    def team_info_view(request) -> None: 
+    def community_info_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.team.info(args)
+      community_info, err = self.community.info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return team_info_view
+      return MassenergizeResponse(data=community_info)
+    return community_info_view
 
 
   def create(self) -> function:
-    def create_team_view(request) -> None: 
+    def create_community_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.team.create(args)
+      community_info, err = self.community.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return create_team_view
+      return MassenergizeResponse(data=community_info)
+    return create_community_view
 
 
   def list(self) -> function:
-    def list_team_view(request) -> None: 
+    def list_community_view(request) -> None: 
       print("hello")
       args = get_request_contents(request)
       community_id = args["community__id"]
       user_id = args["user_id"]
-      team_info, err = self.team.list_teams(community_id, user_id)
+      community_info, err = self.community.list_communities(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return list_team_view
+      return MassenergizeResponse(data=community_info)
+    return list_community_view
 
 
   def update(self) -> function:
-    def update_team_view(request) -> None: 
+    def update_community_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.team.update_team(args[id], args)
+      community_info, err = self.community.update_community(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return update_team_view
+      return MassenergizeResponse(data=community_info)
+    return update_community_view
 
 
   def delete(self) -> function:
-    def delete_team_view(request) -> None: 
+    def delete_community_view(request) -> None: 
       args = get_request_contents(request)
-      team_id = args[id]
-      team_info, err = self.team.delete_team(args[id])
+      community_id = args[id]
+      community_info, err = self.community.delete_community(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return delete_team_view
+      return MassenergizeResponse(data=community_info)
+    return delete_community_view
 
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.get("community__id")
-      teams, err = self.team.list_teams_for_community_admin(community_id)
+      communities, err = self.community.list_communities_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=teams)
+      return MassenergizeResponse(data=communities)
     return community_admin_list_view
 
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      teams, err = self.team.list_teams_for_super_admin()
+      communities, err = self.community.list_communities_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=teams)
+      return MassenergizeResponse(data=communities)
     return super_admin_list_view
