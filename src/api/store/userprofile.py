@@ -2,7 +2,7 @@ from database.models import UserProfile, UserProfile
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
-class UserProfileStore:
+class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
 
