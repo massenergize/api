@@ -33,7 +33,8 @@ class GoalHandler(RouteHandler):
   def info(self) -> function:
     def goal_info_view(request) -> None: 
       args = get_request_contents(request)
-      goal_info, err = self.goal.info(args)
+      goal_id = args.get('goal_id')
+      goal_info, err = self.goal.get_goal_info(goal_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)

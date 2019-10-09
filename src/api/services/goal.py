@@ -14,7 +14,7 @@ class GoalService:
     goal, err = self.store.get_goal_info(goal_id)
     if err:
       return None, err
-    return goal
+    return goal, None
 
   def list_goals(self, goal_id) -> (list, MassEnergizeAPIError):
     goal, err = self.store.list_goals(goal_id)

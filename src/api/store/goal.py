@@ -7,10 +7,12 @@ class GoalStore:
     self.name = "Goal Store/DB"
 
   def get_goal_info(self, goal_id) -> (dict, MassEnergizeAPIError):
-    goal = Goal.objects.filter(id=goal_id)
-    if not goal:
+    try:
+      goal = Goal.objects.get(id=goal_id)
+      print(goal.full_json())
+      return goal.full_json(), None
+    except Exception as e:
       return None, InvalidResourceError()
-    return goal.full_json(), None
 
 
   def list_goals(self, community_id) -> (list, MassEnergizeAPIError):
