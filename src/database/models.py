@@ -316,7 +316,7 @@ class Goal(models.Model):
 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
-  more_info = JSONField(blank=True)
+  more_info = JSONField(blank=True, null=True)
 
 
   def get_status(self):
@@ -1712,7 +1712,7 @@ class ActionsPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
-  more_info = JSONField(blank=True)
+  more_info = JSONField(blank=True, null=True)
 
   def __str__(self):             
     return "ActionsPageSettings - %s" % (self.community)
@@ -1739,7 +1739,7 @@ class ContactUsPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
-  more_info = JSONField(blank=True)
+  more_info = JSONField(blank=True, null=True)
 
   def __str__(self):             
     return "ContactUsPageSettings - %s" % (self.community)
@@ -1767,7 +1767,7 @@ class DonatePageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
-  more_info = JSONField(blank=True)
+  more_info = JSONField(blank=True, null=True)
 
 
   def __str__(self):             
@@ -1796,7 +1796,7 @@ class AboutUsPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
-  more_info = JSONField(blank=True)
+  more_info = JSONField(blank=True, null=True)
 
 
   def __str__(self):             
@@ -1826,7 +1826,7 @@ class ImpactPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
-  more_info = JSONField(blank=True)
+  more_info = JSONField(blank=True, null=True)
 
   def __str__(self):             
     return "ImpactPageSettings - %s" % (self.community)
