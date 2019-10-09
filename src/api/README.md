@@ -10,6 +10,84 @@ https://apis.massenergize.org/
 https://apis.massenergize.com/
 ```
 
+
+
+# V3 Routes
+All requests have to be post requests
+
+#### Action
+#### Community
+#### Event
+#### Export
+#### Goal
+```
+/goals.info
+```
+Params
+* goal_id: int
+
+```
+/goals.create
+```
+Params
+* goal_id: int
+
+
+```
+/goals.add
+```
+Params
+* goal_id: int
+
+
+```
+/goals.list
+```
+Params
+* goal_id: int
+
+```
+/goals.update
+```
+Params
+* goal_id: int
+
+```
+/goals.delete
+```
+Params
+* goal_id: int
+
+```
+/goals.remove
+```
+Params
+* goal_id: int
+
+
+#### Policy
+#### Summary
+#### Tag
+#### TagCollection
+#### Team
+#### Testimonial
+#### UserProfile
+#### Vendor
+#### PageSettings-AboutUs
+#### PageSettings-Actions
+#### PageSettings-ContactUs
+#### PageSettings-Donate
+#### PageSettings-Home
+
+
+
+
+
+
+
+# V2 Routes
+
+
 > For all requests put the args after the url with a **"?"** at the front and an **&** between each arg
 
 _ie ```user/get/page?id={insertPageId}&name={insertPageName}```_
