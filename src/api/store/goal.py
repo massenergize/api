@@ -23,10 +23,11 @@ class GoalStore:
 
   def create_goal(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_goal = Goal.create(**args)
+      new_goal = Goal.objects.create(**args)
       new_goal.save()
       return new_goal.full_json(), None
-    except Exception:
+    except Exception as e:
+      print(e)
       return None, ServerError()
 
 
