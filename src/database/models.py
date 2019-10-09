@@ -1773,6 +1773,25 @@ class DonatePageSettings(models.Model):
   images = models.ManyToManyField(Media, blank=True)
   more_info = JSONField(blank=True)
 
+
+  def __str__(self):             
+    return "DonatePageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    return res
+
+  class Meta:
+    db_table = 'donate_page_settings'
+    verbose_name_plural = "DonatePageSettings"
+
+
 class AboutUsPageSettings(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE,  db_index=True)
