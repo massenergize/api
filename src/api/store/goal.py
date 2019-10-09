@@ -9,7 +9,6 @@ class GoalStore:
   def get_goal_info(self, goal_id) -> (dict, MassEnergizeAPIError):
     try:
       goal = Goal.objects.get(id=goal_id)
-      print(goal.full_json())
       return goal.full_json(), None
     except Exception as e:
       return None, InvalidResourceError()
@@ -55,5 +54,4 @@ class GoalStore:
       goals = Goal.objects.all()
       return [t.simple_json() for t in goals], None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(str(e))

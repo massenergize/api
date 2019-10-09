@@ -3,6 +3,11 @@ from api.utils.massenergize_response import MassenergizeResponse
 from api.store.goal import GoalStore
 from api.store.team import TeamStore
 from api.store.community import CommunityStore
+from database.models import Goal
+
+from _main_.utils.utils import get_models_and_field_types
+from database import models
+MODELS_AND_FIELDS = get_models_and_field_types(models)
 
 class GoalService:
   """
@@ -13,9 +18,21 @@ class GoalService:
     self.store =  GoalStore()
     self.team_store = TeamStore()
     self.community_store = CommunityStore()
+    self.required_fields = MODELS_AND_FIELDS[Goal]['required_fields']
+    self.all_fields = MODELS_AND_FIELDS[Goal]['all_fields']
 
   def validate(self, args):
-    return True 
+    errors = []
+    for f in self.required_fields:
+      if f not in args and f != 'id':
+        return False, f"Missing a required field: {f}"
+    
+    for f in args.keys():
+      if f not in self.all_fields:
+        return False, f"Invalid field: {f}"
+    
+    return True, None
+
 
   
   def get_goal_info(self, goal_id) -> (dict, MassEnergizeAPIError):
@@ -32,10 +49,13 @@ class GoalService:
 
 
   def create_goal(self, user_id, community_id, team_id, args) -> (dict, MassEnergizeAPIError):
+    #validate the args
+    ok, err = self.validate(args)
+    if not ok:
+      return None, CustomMassenergizeError(err)
+
     if community_id:
       #this is a community goal
-      #validate the args
-
       #find the community
       #create the goal
       #set the goal in community
@@ -48,7 +68,7 @@ class GoalService:
       pass 
 
     else:
-      return None, CustomMassenergizeError("You have to provide specify a community, team or user")
+      return None, CustomMassenergizeError("Provide a community, team or user")
     
     goal, err = self.store.create_goal(args)
     if err:

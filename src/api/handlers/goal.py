@@ -5,6 +5,7 @@ from api.utils.common import get_request_contents
 from api.services.goal import GoalService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
+from _main_.utils.utils import get_models_and_field_types
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -44,9 +45,13 @@ class GoalHandler(RouteHandler):
   def create(self) -> function:
     def create_goal_view(request) -> None: 
       args = get_request_contents(request)
-      goal_info, err = self.goal.create(args)
+      team_id = args.pop('team_id', None) 
+      community_id = args.pop('community_id', None)
+      user_id = request.user.id if request.user else None
+      goal_info, err = self.goal.create_goal(user_id, community_id, team_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
+      print(goal_info)
       return MassenergizeResponse(data=goal_info)
     return create_goal_view
 
