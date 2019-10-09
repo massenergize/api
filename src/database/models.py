@@ -1676,15 +1676,35 @@ class SubscriberEmailPreference(models.Model):
 class HomePageSettings(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
-  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
-  feature_links = JSONField(blank=True, null=True)
   images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  featured_links = JSONField(blank=True, null=True)
   featured_events = models.ManyToManyField(Event, blank=True)
   featured_stats = models.ManyToManyField(Data, blank=True)
+
+  def __str__(self):             
+    return "HomePageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=[
+      'images', 'featured_events', 'featured_stats'
+    ])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    res['featured_events'] = [i.simple_json() for i in self.featured_events]
+    res['featured_stats'] = [i.simple_json() for i in self.featured_stats]
+    return res
+
+  class Meta:
+    db_table = 'home_page_settings'
+    verbose_name_plural = "HomePageSettings"
 
 
 class ActionsPageSettings(models.Model):
