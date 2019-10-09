@@ -188,8 +188,7 @@ class Community(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
-  owner_email = models.EmailField(max_length=SHORT_STR_LEN, 
-    default='etohn@massenergize.org')
+  owner_email = models.EmailField(max_length=SHORT_STR_LEN)
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
@@ -305,10 +304,6 @@ class Goal(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
-  status = models.CharField(
-    max_length=TINY_STR_LEN, 
-    choices=CHOICES["GOAL_STATUS"].items(), 
-    default='NOT_STARTED')
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
 
   target_number_of_households = models.PositiveIntegerField(default=0)
@@ -321,6 +316,7 @@ class Goal(models.Model):
 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
+  more_info = JSONField(blank=True)
 
 
   def get_status(self):
@@ -478,7 +474,7 @@ class Team(models.Model):
   """
   id = models.AutoField(primary_key=True)
   #Team names should be unique globally
-  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  name = models.CharField(max_length=SHORT_STR_LEN)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
     blank=True) 
@@ -519,6 +515,7 @@ class Team(models.Model):
   class Meta:
     ordering = ('name',)
     db_table = 'teams'
+    unique_together = [['community', 'name']]
 
 
 class Service(models.Model):
