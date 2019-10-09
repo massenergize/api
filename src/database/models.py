@@ -188,8 +188,7 @@ class Community(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
-  owner_email = models.EmailField(max_length=SHORT_STR_LEN, 
-    default='etohn@massenergize.org')
+  owner_email = models.EmailField(max_length=SHORT_STR_LEN)
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
@@ -305,10 +304,6 @@ class Goal(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
-  status = models.CharField(
-    max_length=TINY_STR_LEN, 
-    choices=CHOICES["GOAL_STATUS"].items(), 
-    default='NOT_STARTED')
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
 
   target_number_of_households = models.PositiveIntegerField(default=0)
@@ -321,6 +316,7 @@ class Goal(models.Model):
 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
+  more_info = JSONField(blank=True, null=True)
 
 
   def get_status(self):
@@ -478,7 +474,7 @@ class Team(models.Model):
   """
   id = models.AutoField(primary_key=True)
   #Team names should be unique globally
-  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  name = models.CharField(max_length=SHORT_STR_LEN)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
     blank=True) 
@@ -519,6 +515,7 @@ class Team(models.Model):
   class Meta:
     ordering = ('name',)
     db_table = 'teams'
+    unique_together = [['community', 'name']]
 
 
 class Service(models.Model):
@@ -1675,65 +1672,175 @@ class SubscriberEmailPreference(models.Model):
 
 class HomePageSettings(models.Model):
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
-  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
-  feature_links = JSONField(blank=True, null=True)
   images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  featured_links = JSONField(blank=True, null=True)
   featured_events = models.ManyToManyField(Event, blank=True)
   featured_stats = models.ManyToManyField(Data, blank=True)
+
+  def __str__(self):             
+    return "HomePageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=[
+      'images', 'featured_events', 'featured_stats'
+    ])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    res['featured_events'] = [i.simple_json() for i in self.featured_events]
+    res['featured_stats'] = [i.simple_json() for i in self.featured_stats]
+    return res
+
+  class Meta:
+    db_table = 'home_page_settings'
+    verbose_name_plural = "HomePageSettings"
 
 
 class ActionsPageSettings(models.Model):
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
-  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  more_info = JSONField(blank=True, null=True)
 
+  def __str__(self):             
+    return "ActionsPageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    return res
+
+  class Meta:
+    db_table = 'actions_page_settings'
+    verbose_name_plural = "ActionsPageSettings"
 
 class ContactUsPageSettings(models.Model):
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
-  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  more_info = JSONField(blank=True, null=True)
+
+  def __str__(self):             
+    return "ContactUsPageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    return res
+
+  class Meta:
+    db_table = 'contact_us_page_settings'
+    verbose_name_plural = "ContactUsPageSettings"
+
 
 class DonatePageSettings(models.Model):
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
-  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE,  db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  more_info = JSONField(blank=True, null=True)
+
+
+  def __str__(self):             
+    return "DonatePageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    return res
+
+  class Meta:
+    db_table = 'donate_page_settings'
+    verbose_name_plural = "DonatePageSettings"
+
 
 class AboutUsPageSettings(models.Model):
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
-  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE,  db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  more_info = JSONField(blank=True, null=True)
+
+
+  def __str__(self):             
+    return "AboutUsPageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    return res
+
+  class Meta:
+    db_table = 'about_us_page_settings'
+    verbose_name_plural = "AboutUsPageSettings"
+
 
 class ImpactPageSettings(models.Model):
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
-  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, 
+   db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  more_info = JSONField(blank=True, null=True)
+
+  def __str__(self):             
+    return "ImpactPageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    return res
+
+  class Meta:
+    db_table = 'impact_page_settings'
+    verbose_name_plural = "ImpactPageSettings"
