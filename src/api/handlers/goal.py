@@ -51,7 +51,6 @@ class GoalHandler(RouteHandler):
       goal_info, err = self.goal.create_goal(user_id, community_id, team_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      print(goal_info)
       return MassenergizeResponse(data=goal_info)
     return create_goal_view
 
