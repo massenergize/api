@@ -13,11 +13,58 @@ https://apis.massenergize.com/
 
 
 # V3 Routes
+All requests have to be post requests
+
 #### Action
 #### Community
 #### Event
 #### Export
 #### Goal
+```
+/goals.info
+```
+Params
+* goal_id: int
+
+```
+/goals.create
+```
+Params
+* goal_id: int
+
+
+```
+/goals.add
+```
+Params
+* goal_id: int
+
+
+```
+/goals.list
+```
+Params
+* goal_id: int
+
+```
+/goals.update
+```
+Params
+* goal_id: int
+
+```
+/goals.delete
+```
+Params
+* goal_id: int
+
+```
+/goals.remove
+```
+Params
+* goal_id: int
+
+
 #### Policy
 #### Summary
 #### Tag
