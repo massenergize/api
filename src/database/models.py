@@ -1710,13 +1710,29 @@ class HomePageSettings(models.Model):
 class ActionsPageSettings(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, db_index=True)
-  name = models.CharField(max_length=LONG_STR_LEN, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  more_info = JSONField(blank=True)
 
+  def __str__(self):             
+    return "ActionsPageSettings - %s" % (self.community)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    return res
+
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images]
+    return res
+
+  class Meta:
+    db_table = 'actions_page_settings'
+    verbose_name_plural = "ActionsPageSettings"
 
 class ContactUsPageSettings(models.Model):
   id = models.AutoField(primary_key=True)
