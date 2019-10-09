@@ -306,13 +306,13 @@ class Goal(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
 
-  target_number_of_households = models.PositiveIntegerField(default=0)
-  target_number_of_actions = models.PositiveIntegerField(default=0)
-  target_carbon_footprint_reduction = models.PositiveIntegerField(default=0)
+  target_number_of_households = models.PositiveIntegerField(default=0, blank=True)
+  target_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
+  target_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
 
-  attained_number_of_households = models.PositiveIntegerField(default=0)
-  attained_number_of_actions = models.PositiveIntegerField(default=0)
-  attained_carbon_footprint_reduction = models.PositiveIntegerField(default=0)
+  attained_number_of_households = models.PositiveIntegerField(default=0, blank=True)
+  attained_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
+  attained_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)

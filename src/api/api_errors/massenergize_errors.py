@@ -1,10 +1,10 @@
 class MassEnergizeAPIError:
   def __init__(self, msg="UNKNOWN ERROR", status=400):
-    self.msg = ""
+    self.msg = msg
     self.status = status
 
-  def __str__(self) -> str:
-    f"Error: {self.msg}"
+  def __str__(self):
+    return f"Error: {self.msg}"
 
 
 class ResourceNotFoundError(MassEnergizeAPIError):
