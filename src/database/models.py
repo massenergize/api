@@ -420,7 +420,6 @@ class UserProfile(models.Model):
   user_info = JSONField(blank=True, null=True)
   real_estate_units = models.ManyToManyField(RealEstateUnit, 
     related_name='user_real_estate_units', blank=True)
-  # goals = models.ManyToManyField(Goal, blank=True)
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   communities = models.ManyToManyField(Community, blank=True)
   roles = models.ManyToManyField(Role, blank=True) 
@@ -447,7 +446,7 @@ class UserProfile(models.Model):
     data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles'])
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
-    data['goals'] = [g.simple_json() for g in self.goals.all()]
+    data['goal'] = get_json_if_not_none(self.goal)
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['teams'] = [t.simple_json() for t in self.team_members.all()]
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
@@ -519,7 +518,7 @@ class Team(models.Model):
     data['admins'] = [a.simple_json() for a in self.admins.all()]
     data['members'] = [m.simple_json() for m in self.members.all()]
     data['community'] =self.community.simple_json()
-    data['goals'] = [g.simple_json() for g in self.goals.all()]
+    data['goal'] = get_json_if_not_none(self.goal)
     data['logo'] = get_json_if_not_none(self.logo)
     data['banner'] = get_json_if_not_none(self.banner)
     return data
