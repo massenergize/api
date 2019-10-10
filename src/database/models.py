@@ -4,7 +4,7 @@ from database.utils.constants import *
 from datetime import date, datetime
 from .utils.common import  json_loader,get_json_if_not_none
 from django.forms.models import model_to_dict
-from carbon_calculator.models import Action as CCAction
+#from carbon_calculator.models import Action as CCAction
 import uuid
 
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
@@ -826,7 +826,7 @@ class Action(models.Model):
     null=True,blank=True)
   properties = models.ManyToManyField(ActionProperty, blank=True)
   vendors = models.ManyToManyField(Vendor, blank=True)
-  calculator_action = models.ForeignKey(CCAction, blank=True, null=True, on_delete=models.SET_NULL)
+  #calculator_action = models.ForeignKey(CCAction, blank=True, null=True, on_delete=models.SET_NULL)
   average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, 
     blank=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, 

@@ -211,9 +211,9 @@ class CarbonCalculator:
         record = ActionPoints(  user_id=user_id,
                                 action=action,
                                 choices=inputs,
-                                points=carbon_points,
-                                cost= cost,
-                                savings = savings)
+                                points=results.get("carbon_points",0),
+                                cost= results.get("cost",0),
+                                savings = results.get("savings",0))
         record.save()
         return results
 
