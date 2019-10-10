@@ -6,7 +6,6 @@ from .utils.common import  json_loader,get_json_if_not_none
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 import uuid
-from carbon_calculator.models import Action as CCAction
 
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 ZIP_CODE_AND_STATES = json_loader('./database/raw_data/other/states.json')
@@ -830,9 +829,6 @@ class Action(models.Model):
   calculator_action = models.ForeignKey(CCAction, blank=True, null=True, on_delete=models.SET_NULL)
   average_carbon_score = models.TextField(max_length = SHORT_STR_LEN, 
     blank=True)
- # correspondence between this action and carbon calculator action:
-  calculator_action = models.ForeignKey(CCAction, on_delete=models.SET_NULL, 
-    null=True, blank=True, db_index=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, 
     null=True, blank=True, db_index=True)
   rank = models.PositiveSmallIntegerField(default = 0, blank=True) 

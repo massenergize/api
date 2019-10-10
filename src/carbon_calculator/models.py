@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
 from database.utils.common import  json_loader
+from database.models import UserProfile
 # Create your models here.
 
 NAME_STR_LEN = 40
