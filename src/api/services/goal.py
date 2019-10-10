@@ -1,8 +1,6 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 from api.store.goal import GoalStore
-from api.store.team import TeamStore
-from api.store.community import CommunityStore
 from database.models import Goal
 
 from _main_.utils.utils import get_models_and_field_types
@@ -16,8 +14,6 @@ class GoalService:
 
   def __init__(self):
     self.store =  GoalStore()
-    self.team_store = TeamStore()
-    self.community_store = CommunityStore()
     self.required_fields = MODELS_AND_FIELDS[Goal]['required_fields']
     self.all_fields = MODELS_AND_FIELDS[Goal]['all_fields']
 
@@ -42,7 +38,7 @@ class GoalService:
     return goal, None
 
   def list_goals(self, community_id, team_id, user_id) -> (list, MassEnergizeAPIError):
-    goal, err = self.store.list_goals(user_id)
+    goal, err = self.store.list_goals(community_id, team_id, user_id)
     if err:
       return None, err
     return goal, None
@@ -54,22 +50,7 @@ class GoalService:
     if not ok:
       return None, CustomMassenergizeError(err)
 
-    if community_id:
-      #this is a community goal
-      #find the community
-      self.community_store.get_community_info()
-      #create the goal
-      #set the goal in community
-      pass
-    elif team_id:
-      #this is a team goal
-      pass 
-    elif user_id:
-      #this is a user goal
-      pass 
 
-    else:
-      return None, CustomMassenergizeError("Provide a community, team or user")
     
     goal, err = self.store.create_goal(args)
     if err:

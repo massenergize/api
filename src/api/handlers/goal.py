@@ -61,7 +61,7 @@ class GoalHandler(RouteHandler):
       team_id = args.pop('team_id', None) 
       community_id = args.pop("community_id", None)
       user_id = args.pop('user_id', None)
-      goal_info, err = self.goal.list_goals(community_id, user_id)
+      goal_info, err = self.goal.list_goals(community_id, team_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
