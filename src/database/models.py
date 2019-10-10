@@ -1733,10 +1733,17 @@ class HomePageSettings(models.Model):
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+
   featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   featured_links = JSONField(blank=True, null=True)
   featured_events = models.ManyToManyField(Event, blank=True)
   featured_stats = models.ManyToManyField(Data, blank=True)
+
+  show_featured_events =  models.BooleanField(default=True, blank=True)
+  show_featured_stats = models.BooleanField(default=True, blank=True)
+  show_featured_links = models.BooleanField(default=True, blank=True)
+  show_featured_video = models.BooleanField(default=False, blank=True)
+
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
 
