@@ -47,8 +47,8 @@ class GoalHandler(RouteHandler):
       args = get_request_contents(request)
       team_id = args.pop('team_id', None) 
       community_id = args.pop('community_id', None)
-      user_id = request.user.id if request.user else None
-      goal_info, err = self.goal.create_goal(user_id, community_id, team_id, args)
+      user_id = args.pop('user_id', None)
+      goal_info, err = self.goal.create_goal(community_id, team_id, user_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -58,8 +58,9 @@ class GoalHandler(RouteHandler):
   def list(self) -> function:
     def list_goal_view(request) -> None: 
       args = get_request_contents(request)
+      team_id = args.pop('team_id', None) 
       community_id = args.pop("community_id", None)
-      user_id = request.user.id if request.user else None
+      user_id = args.pop('user_id', None)
       goal_info, err = self.goal.list_goals(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

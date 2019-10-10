@@ -6,10 +6,10 @@ class GoalStore:
   def __init__(self):
     self.name = "Goal Store/DB"
 
-  def get_goal_info(self, goal_id) -> (dict, MassEnergizeAPIError):
+  def get_goal_info(self, goal_id) -> (Goal, MassEnergizeAPIError):
     try:
       goal = Goal.objects.get(id=goal_id)
-      return goal.full_json(), None
+      return goal, None
     except Exception as e:
       return None, InvalidResourceError()
 
@@ -21,17 +21,17 @@ class GoalStore:
     return [t.simple_json() for t in goals], None
 
 
-  def create_goal(self, args) -> (dict, MassEnergizeAPIError):
+  def create_goal(self, args) -> (Goal, MassEnergizeAPIError):
     try:
       new_goal = Goal.objects.create(**args)
       new_goal.save()
-      return new_goal.full_json(), None
+      return new_goal, None
     except Exception as e:
       print(e)
       return None, ServerError()
 
 
-  def update_goal(self, goal_id, args) -> (dict, MassEnergizeAPIError):
+  def update_goal(self, goal_id, args) -> (Goal, MassEnergizeAPIError):
     goal = Goal.objects.filter(id=goal_id)
     if not goal:
       return None, InvalidResourceError()
@@ -39,7 +39,7 @@ class GoalStore:
     return goal.full_json(), None
 
 
-  def delete_goal(self, goal_id) -> (dict, MassEnergizeAPIError):
+  def delete_goal(self, goal_id) -> (Goal, MassEnergizeAPIError):
     goals = Goal.objects.filter(id=goal_id)
     if not goals:
       return None, InvalidResourceError()

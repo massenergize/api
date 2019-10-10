@@ -41,14 +41,14 @@ class GoalService:
       return None, err
     return goal, None
 
-  def list_goals(self, user_id) -> (list, MassEnergizeAPIError):
+  def list_goals(self, community_id, team_id, user_id) -> (list, MassEnergizeAPIError):
     goal, err = self.store.list_goals(user_id)
     if err:
       return None, err
     return goal, None
 
 
-  def create_goal(self, user_id, community_id, team_id, args) -> (dict, MassEnergizeAPIError):
+  def create_goal(self, community_id, team_id, user_id, args) -> (dict, MassEnergizeAPIError):
     #validate the args
     ok, err = self.validate(args)
     if not ok:
@@ -57,6 +57,7 @@ class GoalService:
     if community_id:
       #this is a community goal
       #find the community
+      self.community_store.get_community_info()
       #create the goal
       #set the goal in community
       pass
