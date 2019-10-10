@@ -15,7 +15,9 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = False
+IS_PROD = True
+
+DEPLOY_VERSION = '0.0.1'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -221,3 +223,11 @@ MEDIA_URL = '/media/'
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
+
+
+
+handler400 = 'website.views.handler404'
+handler403 = 'website.views.handler404'
+handler404 = 'website.views.handler404'
+handler500 = 'website.views.handler500'
+
