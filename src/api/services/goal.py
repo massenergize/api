@@ -35,13 +35,13 @@ class GoalService:
     goal, err = self.store.get_goal_info(goal_id)
     if err:
       return None, err
-    return goal, None
+    return goal.full_json(), None
 
   def list_goals(self, community_id, team_id, user_id) -> (list, MassEnergizeAPIError):
-    goal, err = self.store.list_goals(community_id, team_id, user_id)
+    goals, err = self.store.list_goals(community_id, team_id, user_id)
     if err:
       return None, err
-    return goal, None
+    return [g.simple_json() for g in goals], None
 
 
   def create_goal(self, community_id, team_id, user_id, args) -> (dict, MassEnergizeAPIError):
@@ -50,25 +50,23 @@ class GoalService:
     if not ok:
       return None, CustomMassenergizeError(err)
 
-
-    
-    goal, err = self.store.create_goal(args)
+    goal, err = self.store.create_goal(community_id, team_id, user_id,  args)
     if err:
       return None, err
-    return goal, None
+    return goal.full_json(), None
 
 
-  def update_goal(self, args) -> (dict, MassEnergizeAPIError):
-    goal, err = self.store.update_goal(args)
+  def update_goal(self, goal_id, args) -> (dict, MassEnergizeAPIError):
+    goal, err = self.store.update_goal(goal_id, args)
     if err:
       return None, err
-    return goal, None
+    return goal.full_json(), None
 
-  def delete_goal(self, args) -> (dict, MassEnergizeAPIError):
-    goal, err = self.store.delete_goal(args)
+  def delete_goal(self, goal_id) -> (dict, MassEnergizeAPIError):
+    goal, err = self.store.delete_goal(goal_id)
     if err:
       return None, err
-    return goal, None
+    return goal.full_json(), None
 
 
   def list_goals_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
@@ -82,4 +80,16 @@ class GoalService:
     goals, err = self.store.list_goals_for_super_admin()
     if err:
       return None, err
-    return goals, None
+    return [g.full_json() for g in goals], None
+
+  def increase_value(self, goal_id, field_name):
+    goal, err = self.store.increase_value(goal_id, field_name)
+    if err:
+      return None, err
+    return goal.full_json(), None
+
+  def decrease_value(self, goal_id, field_name):
+    goal, err = self.store.decrease_value(goal_id, field_name)
+    if err:
+      return None, err
+    return goal.full_json(), None

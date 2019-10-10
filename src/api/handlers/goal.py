@@ -25,6 +25,8 @@ class GoalHandler(RouteHandler):
     self.add("/goals.update", self.update())
     self.add("/goals.delete", self.delete())
     self.add("/goals.remove", self.delete())
+    self.add("/goals.increase", self.increase())
+    self.add("/goals.decrease", self.decrease())
 
     #admin routes
     self.add("/goals.listForCommunityAdmin", self.community_admin_list())
@@ -71,7 +73,8 @@ class GoalHandler(RouteHandler):
   def update(self) -> function:
     def update_goal_view(request) -> None: 
       args = get_request_contents(request)
-      goal_info, err = self.goal.update_goal(args[id], args)
+      goal_id = args.pop('goal_id', None)
+      goal_info, err = self.goal.update_goal(goal_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -81,8 +84,8 @@ class GoalHandler(RouteHandler):
   def delete(self) -> function:
     def delete_goal_view(request) -> None: 
       args = get_request_contents(request)
-      goal_id = args[id]
-      goal_info, err = self.goal.delete_goal(args[id])
+      goal_id = args.pop('goal_id', None)
+      goal_info, err = self.goal.delete_goal(goal_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -108,3 +111,27 @@ class GoalHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goals)
     return super_admin_list_view
+
+
+  def increase(self) -> function:
+    def increase_field_value(request) -> None: 
+      args = get_request_contents(request)
+      goal_id = args.pop('goal_id', None)
+      field_name = args.pop('field_name', None)
+      goal, err = self.goal.increase_value(goal_id, field_name)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=goal)
+    return increase_field_value
+
+
+  def decrease(self) -> function:
+    def decrease_field_value(request) -> None: 
+      args = get_request_contents(request)
+      goal_id = args.pop('goal_id', None)
+      field_name = args.pop('field_name', None)
+      goal, err = self.goal.decrease_value(goal_id, field_name)      
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=goal)
+    return decrease_field_value
