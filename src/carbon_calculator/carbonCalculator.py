@@ -141,7 +141,9 @@ class CarbonCalculator:
             qs = Event.objects.filter(name=event)
             if qs:
                 q = qs[0]
-                return {"status":True,"EventInfo":{"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":q.stationslist}}
+                return {"status":True,"EventInfo":{"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":q.stationslist,
+                                "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":q.host_logo.pk,
+                                "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":q.sponsor_logo.pk}}
             else:
                 return {"status":False, "statusText":"Event ("+event+") not found"}
         else:
