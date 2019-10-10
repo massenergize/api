@@ -149,6 +149,57 @@ class Policy(models.Model):
     verbose_name_plural = "Legal Policies"
 
 
+class Goal(models.Model):
+  """
+  A class used to represent a Goal 
+
+  Attributes
+  ----------
+  name : str
+    A short title for this goal
+  status: str
+    the status of this goal whether it has been achieved or not.
+  description:
+    More details about this goal 
+  created_at: DateTime
+    The date and time that this goal was added 
+  created_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this goal
+  """
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=SHORT_STR_LEN)
+  description = models.TextField(max_length=LONG_STR_LEN, blank=True)
+
+  target_number_of_households = models.PositiveIntegerField(default=0, blank=True)
+  target_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
+  target_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
+
+  attained_number_of_households = models.PositiveIntegerField(default=0, blank=True)
+  attained_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
+  attained_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
+
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  more_info = JSONField(blank=True, null=True)
+
+
+  def get_status(self):
+    return CHOICES["GOAL_STATUS"][self.status]
+
+  def __str__(self):
+    return self.name
+
+  def simple_json(self):
+    return model_to_dict(self)
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'goals'
+
+
 class Community(models.Model):
   """
   A class used to represent a Community on this platform.
@@ -194,6 +245,7 @@ class Community(models.Model):
     null=True, blank=True, related_name='community_logo')
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
+  goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   is_geographically_focused = models.BooleanField(default=False, blank=True)
   location = JSONField(blank=True, null=True)
   policies = models.ManyToManyField(Policy, blank=True)
@@ -284,59 +336,6 @@ class RealEstateUnit(models.Model):
     db_table = 'real_estate_units'
 
 
-class Goal(models.Model):
-  """
-  A class used to represent a Goal 
-
-  Attributes
-  ----------
-  name : str
-    A short title for this goal
-  status: str
-    the status of this goal whether it has been achieved or not.
-  description:
-    More details about this goal 
-  created_at: DateTime
-    The date and time that this goal was added 
-  created_at: DateTime
-    The date and time of the last time any updates were made to the information
-    about this goal
-  """
-  id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length=SHORT_STR_LEN)
-  description = models.TextField(max_length=LONG_STR_LEN, blank=True)
-
-  target_number_of_households = models.PositiveIntegerField(default=0, blank=True)
-  target_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
-  target_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
-
-  attained_number_of_households = models.PositiveIntegerField(default=0, blank=True)
-  attained_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
-  attained_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
-
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
-  more_info = JSONField(blank=True, null=True)
-
-
-  def get_status(self):
-    return CHOICES["GOAL_STATUS"][self.status]
-
-  def __str__(self):
-    return self.name
-
-  def simple_json(self):
-    return model_to_dict(self)
-
-  def full_json(self):
-    return self.simple_json()
-
-
-
-  class Meta:
-    db_table = 'goals'
-
-
 class Role(models.Model):
   """
   A class used to represent  Role for users on the MassEnergize Platform
@@ -411,7 +410,8 @@ class UserProfile(models.Model):
   user_info = JSONField(blank=True, null=True)
   real_estate_units = models.ManyToManyField(RealEstateUnit, 
     related_name='user_real_estate_units', blank=True)
-  goals = models.ManyToManyField(Goal, blank=True)
+  # goals = models.ManyToManyField(Goal, blank=True)
+  goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   communities = models.ManyToManyField(Community, blank=True)
   roles = models.ManyToManyField(Role, blank=True) 
   is_super_admin = models.BooleanField(default=False, blank=True)
@@ -433,7 +433,7 @@ class UserProfile(models.Model):
 
 
   def full_json(self):
-    data = model_to_dict(self, exclude=['real_estate_units', 'goals', 
+    data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles'])
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goals'] = [g.simple_json() for g in self.goals.all()]
@@ -481,7 +481,7 @@ class Team(models.Model):
   members = models.ManyToManyField(UserProfile, related_name='team_members', 
     blank=True) 
   community = models.ForeignKey(Community, on_delete=models.CASCADE)
-  goals = models.ManyToManyField(Goal, blank=True) 
+  goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='team_logo')
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
