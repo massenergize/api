@@ -33,7 +33,7 @@ class TeamHandler(RouteHandler):
   def info(self) -> function:
     def team_info_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.team.info(args)
+      team_info, err = self.team.delete_team(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
