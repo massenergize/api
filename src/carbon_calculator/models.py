@@ -1,11 +1,35 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
-from database.models import Media, CHOICES
+from database.utils.common import  json_loader
 # Create your models here.
 
 NAME_STR_LEN = 40
 MED_STR_LEN = 200
+CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
+
+class Media(models.Model):
+  """
+  A class used to represent any Media that is uploaded to this website
+
+  Attributes
+  ----------
+  name : SlugField
+    The short name for this media.  It cannot only contain letters, numbers,
+    hypens and underscores.  No spaces allowed.
+  file : File
+    the file that is to be stored.
+  media_type: str
+    the type of this media file whether it is an image, video, pdf etc.
+  """
+  id = models.AutoField(primary_key=True)
+  file = models.FileField(upload_to='cc_media/')
+  is_deleted = models.BooleanField(default=False)
+
+
+  class Meta:
+    db_table = "cc_media"
+
 
 class Action(models.Model):
     """
@@ -32,10 +56,7 @@ class Action(models.Model):
     class Meta:
         db_table = 'cc_action'
 
-CHOICE = 'C'
-NUMBER = 'N'
-TEXT = 'T'
-RESPONSE_TYPES = [(CHOICE,'Choice'),(TEXT,'Text'),(NUMBER,'Number')]
+
 class Question(models.Model):
     """
     A class representing a Carbon Calculator question, which are to determine the parameters used for Action points estimations defined in the Carbon Calculator doc.
@@ -52,6 +73,11 @@ class Question(models.Model):
     response_1, response_2 etc : valid responses for Choice questions.  If less than 6 valid responses, subsequent fields will be null
     skip_1, skip_2, etc: if this response makes some questions irrelevant, list of question names not to ask
     """
+    CHOICE = 'C'
+    NUMBER = 'N'
+    TEXT = 'T'
+    RESPONSE_TYPES = [(CHOICE,'Choice'),(TEXT,'Text'),(NUMBER,'Number')]
+
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN, unique=True)
     category = models.CharField(max_length=SHORT_STR_LEN, blank=True)
