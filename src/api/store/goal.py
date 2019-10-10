@@ -28,17 +28,17 @@ class GoalStore:
 
       elif team_id:
         team = Team.objects.filter(id=team_id).first()
-        if not team and not community.goal.is_deleted:
+        if not team :
           return None, CustomMassenergizeError(f"There is no community with id {community_id}")
 
-        if team.goal:
+        if team.goal and not team.goal.is_deleted:
           goals.append(team.goal)
 
       elif user_id:
         user = UserProfile.objects.filter(id=user_id).first()
         if not user:
           return None, CustomMassenergizeError(f"There is no community with id {community_id}")
-        if user.goal and not community.goal.is_deleted:
+        if user.goal and not team.goal.is_deleted:
           goals.append(user.goal)
 
       else:
@@ -101,10 +101,11 @@ class GoalStore:
   def delete_goal(self, goal_id) -> (Goal, MassEnergizeAPIError):
     try:
       #find the goal
-      goal = Goal.objects.filter(id=goal_id).update(is_deleted=True)
-      if not goal:
+      goals_to_delete = Goal.objects.filter(id=goal_id)
+      goals_to_delete.update(is_deleted=True)
+      if not goals_to_delete:
         return None, InvalidResourceError()
-      return goal.first(), None
+      return goals_to_delete.first(), None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
