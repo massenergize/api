@@ -43,7 +43,6 @@ def reset(request):
 
 def importcsv(request):
 	inputs = get_request_contents(request)
-	print("ImportCSV")
 	return JsonResponse(CALC.Import(inputs))
 
 	

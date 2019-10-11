@@ -3,12 +3,7 @@
 #
 #imports
 from datetime import date,datetime
-from .models import Action
-from .models import Question
-from .models import Event
-from .models import Station
-from .models import ActionPoints
-from database.models import Media
+from .models import Action,Question,Event,Station,Group,ActionPoints,Media
 from django.utils import timezone
 from .homeHeating import HeatingLoad
 from database.utils.create_factory import CreateFactory
@@ -19,9 +14,6 @@ import csv
 from django.core import files
 from io import BytesIO
 import requests
-
-FACTORY = CreateFactory("Data Creator")
-FETCH = DatabaseReader("Database Reader")
 
 # constants
 YES = "Yes"
@@ -55,15 +47,12 @@ def SavePic2Media(picURL):
             fp = open(file_name,"wb")
             fp.write(resp.content)
             fp.close()
-            media, errors = FACTORY.create(Media, {'file': file_name, 'media_type': "Image"})
+            media=Media(file = file_name)
             if media:
-                print("Saving Media record")
                 media.save()
-
-            if errors:
-                print(errors)
+                return media
+            else:
                 return None
-            return media
     except:
         print("Error encountered")
         return None
@@ -141,9 +130,15 @@ class CarbonCalculator:
             qs = Event.objects.filter(name=event)
             if qs:
                 q = qs[0]
+                host_logo_url = sponsor_logo_url = ""
+                if q.host_logo:
+                    print(q.host_logo)
+                    if q.host_logo.pk:
+                    # locate Media, get file and get the URL
+                        pass
                 return {"status":True,"EventInfo":{"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":q.stationslist,
-                                "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":q.host_logo.pk,
-                                "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":q.sponsor_logo.pk}}
+                                "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":host_logo_url,
+                                "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":sponsor_logo_url}}
             else:
                 return {"status":False, "statusText":"Event ("+event+") not found"}
         else:
@@ -323,13 +318,12 @@ class CarbonCalculator:
                             if qs:
                                 qs[0].delete()
 
-                            #if action[5]!='':
-                            #    import this media filt
-                            #    actionPicture = Media()
+                            station_icon = SavePic2Media(item[3])
 
                             station = Station(name=item[0],
                                 displayname=item[1],
                                 description=item[2],
+                                icon = station_icon,
                                 actions=item[5].split(","))
                                 
                             print('Importing Station ',station.name,': ',station.description)
@@ -352,9 +346,6 @@ class CarbonCalculator:
                             if qs:
                                 qs[0].delete()
 
-                            #if action[5]!='':
-                            #    import this media filt
-                            #    actionPicture = Media()
                             host_logo = None
                             sponsor_logo = None
                             eventdate = item[2]
@@ -364,27 +355,66 @@ class CarbonCalculator:
                                 dt = current_tz.localize(dt)
                             else:
                                 dt= ''
-                            host_logo = SavePic2Media(item[10])
-                            sponsor_logo = SavePic2Media(item[13])
+                            host_logo = SavePic2Media(item[11])
+                            sponsor_logo = SavePic2Media(item[14])
+                            groupslist = None
+                            if item[5]!='':
+                                groupslist = item[5].split(",")
 
                             event = Event(name=item[0],
                                 displayname=item[1],
                                 datetime = dt,
                                 location = item[3],
                                 stationslist = item[4].split(","),
-                                host_org = item[5],
-                                host_contact = item[6],
-                                host_email = item[7],
-                                host_phone = item[8],
-                                host_url = item[9],
+                                host_org = item[6],
+                                host_contact = item[7],
+                                host_email = item[8],
+                                host_phone = item[9],
+                                host_url = item[10],
                                 host_logo = host_logo,
-                                sponsor_org = item[11],
-                                sponsor_url = item[12],
+                                sponsor_org = item[12],
+                                sponsor_url = item[13],
                                 sponsor_logo = sponsor_logo
                                 )
-                                
+                            event.save()
+                            if groupslist:
+                                for group in groupslist:
+                                    g = Group.objects.filter(name=group)
+                                    if g:
+                                        gg = g[0]
+                                        event.groups.add(gg)
                             print('Importing Event ',event.name,' at ',event.location,' on ',event.datetime)
                             event.save()
+                    status = True
+            groupsFile = inputs.get('Groups','') 
+            if groupsFile!='':
+                with open(groupsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    for item in inputlist:
+                        if first:
+                            #header = item
+                            first = False
+                        else:
+                            if item[0] == '':
+                                continue
+                            qs = Group.objects.filter(name=item[0])
+                            if qs:
+                                qs[0].delete()
+
+                            #if action[5]!='':
+                            #    import this media filt
+                            #    actionPicture = Media()
+                            group = Group(name=item[0],
+                                displayname=item[1],
+                                description = item[2],
+                                members = item[3],
+                                points = item[4],
+                                savings = item[5]
+                                )
+                                
+                            print('Importing Group ',group.displayname)
+                            group.save()
                     status = True
             self.__init__()    
             return {"status":status}
