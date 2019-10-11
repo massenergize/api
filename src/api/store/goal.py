@@ -115,7 +115,7 @@ class GoalStore:
 
   def list_goals_for_super_admin(self):
     try:
-      return Goal.objects.all(is_deleted=False)
+      return Goal.objects.filter(is_deleted=False), None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
