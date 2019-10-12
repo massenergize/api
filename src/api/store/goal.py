@@ -109,6 +109,21 @@ class GoalStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
+  def copy_goal(self, goal_id) -> (Goal, MassEnergizeAPIError):
+    try:
+      #find the goal
+      goal_to_copy = Goal.objects.filter(id=goal_id).first()
+      if not goal_to_copy:
+        return None, InvalidResourceError()
+      
+      new_goal = goal_to_copy
+      new_goal.pk = None
+      new_goal.name = goal_to_copy.name + ' Copy'
+      new_goal.save()
+      return new_goal, None
+    except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
   def list_goals_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     return self.list_goals(community_id, None, None)
 
