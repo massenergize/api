@@ -1,3 +1,4 @@
-﻿Name,DisplayName,DateTime,Location,Stations (in reverse order in AirTable),Host organization,Host contact,Host e-mail,Host phone,Host URL,Host logo,Sponsor organization,Sponsor URL,Sponsor logo
-CC_Event_1,Cooler Communities event 1,12/2/2019 1:00pm,High School somewhere,"Welcome_1,Heating_Cooling_1,Water_Heating_1,Solar_1,Electricity_Use_1,Transportation_1,Eating_1,Reduce_Reuse_1,Yard_Landscaping_1",Ener-G-Save,Uli Nagel,ulinagel@gmail.com,(413) 329-3514,http://ener-g-save.com/,EGS Logo Jpg.jpg (https://dl.airtable.com/.attachments/d19be59ed6b6afcd36540711a8f7a0e8/3841069c/EGSLogoJpg.jpg),,,
-,,,,,,,,,,,,,
+﻿Name,DisplayName,DateTime,Location,Stations (in reverse order in AirTable),Groups,Host organization,Host contact,Host e-mail,Host phone,Host URL,Host logo,Sponsor organization,Sponsor URL,Sponsor logo
+CC_Event_1,Cooler Communities event 1,12/2/2019 1:00pm,High School somewhere,"Welcome_1,Heating_Cooling_1,Water_Heating_1,Solar_1,Electricity_Use_1,Transportation_1,Eating_1,Reduce_Reuse_1,Yard_Landscaping_1","the_high_school,the_middle_school,one_elementary_school,another_elementary_school",Ener-G-Save,Uli Nagel,ulinagel@gmail.com,(413) 329-3514,http://ener-g-save.com/,EGS Logo Jpg.jpg (https://dl.airtable.com/.attachments/d19be59ed6b6afcd36540711a8f7a0e8/3841069c/EGSLogoJpg.jpg),Harold Grinspoon Foundation,https://hgf.org,HGCF.jpg (https://dl.airtable.com/.attachments/0125cba5d2a88574a7a0a0084d389178/9a87da54/HGCF.jpg)
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,

@@ -28,9 +28,14 @@ def eventinfo(request, event=None):
 def stationinfo(request, station=None):
     return JsonResponse(CALC.QueryStations(station))
 
+# these requests should be POSTs, not GETs
 def estimate(request, action):
-    inputs = get_request_contents(request)
-    return JsonResponse(CALC.Estimate(action, inputs))
+	inputs = get_request_contents(request)
+	if request.method == "POST":
+		save = True
+	else:
+		save = False
+	return JsonResponse(CALC.Estimate(action, inputs, save))
 
 def reset(request):
 	inputs = get_request_contents(request)
