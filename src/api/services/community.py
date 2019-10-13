@@ -1,11 +1,13 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
 from api.utils.massenergize_response import MassenergizeResponse
 from api.store.community import CommunityStore
+from api.utils.emailer import send_massenergize_email
 
 class CommunityService:
   """
   Service Layer for all the communities
   """
+  
 
   def __init__(self):
     self.store =  CommunityStore()
@@ -14,6 +16,8 @@ class CommunityService:
     community, err = self.store.get_community_info(community_id)
     if err:
       return None, err
+
+    #send an email to the community admin
     return community
 
   def list_communities(self, community_id) -> (list, MassEnergizeAPIError):
