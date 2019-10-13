@@ -197,7 +197,7 @@ class Goal(models.Model):
     return self.name
 
   def simple_json(self):
-    return model_to_dict(self)
+    return model_to_dict(self, exclude=['is_deleted'])
 
   def full_json(self):
     return self.simple_json()
@@ -841,17 +841,17 @@ class Action(models.Model):
 
   def simple_json(self):
     data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
-      'average_carbon_score', 'community'])
+      'average_carbon_score'])
     data['image'] = get_json_if_not_none(self.image)
     data['tags'] = [t.full_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
+    data['community'] = get_json_if_not_none(self.community)
     return data
 
   def full_json(self):
     data  = self.simple_json()
     data['is_global'] = self.is_global
-    data['community'] = get_json_if_not_none(self.community)
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
     data['geographic_area'] = self.geographic_area

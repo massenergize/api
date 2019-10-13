@@ -24,6 +24,7 @@ class ActionHandler(RouteHandler):
     self.add("/actions.update", self.update())
     self.add("/actions.delete", self.delete())
     self.add("/actions.remove", self.delete())
+    self.add("/actions.copy", self.copy())
 
     #admin routes
     self.add("/actions.listForCommunityAdmin", self.community_admin_list())
@@ -31,56 +32,66 @@ class ActionHandler(RouteHandler):
 
 
   def info(self) -> function:
-    def team_info_view(request) -> None: 
+    def action_info_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.action.info(args)
+      action_info, err = self.action.info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return team_info_view
+      return MassenergizeResponse(data=action_info)
+    return action_info_view
 
 
   def create(self) -> function:
-    def create_team_view(request) -> None: 
+    def create_action_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.action.create(args)
+      action_info, err = self.action.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return create_team_view
+      return MassenergizeResponse(data=action_info)
+    return create_action_view
 
 
   def list(self) -> function:
-    def list_team_view(request) -> None: 
+    def list_action_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args["community__id"]
       user_id = args["user_id"]
-      team_info, err = self.action.list_teams(community_id, user_id)
+      action_info, err = self.action.list_actions(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return list_team_view
+      return MassenergizeResponse(data=action_info)
+    return list_action_view
 
 
   def update(self) -> function:
-    def update_team_view(request) -> None: 
+    def update_action_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.action.update_team(args[id], args)
+      action_info, err = self.action.update_action(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return update_team_view
+      return MassenergizeResponse(data=action_info)
+    return update_action_view
 
+  def copy(self) -> function:
+    def copy_action_view(request) -> None: 
+      args = get_request_contents(request)
+      action_id = args.pop('action_id', None)
+      action_info, err = self.action.copy_action(action_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=action_info)
+    return copy_action_view
 
+    
   def delete(self) -> function:
-    def delete_team_view(request) -> None: 
+    def delete_action_view(request) -> None: 
       args = get_request_contents(request)
-      team_id = args[id]
-      team_info, err = self.action.delete_team(args[id])
+      action_id = args.pop('action_id', None)
+      action_info, err = self.action.delete_action(action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=team_info)
-    return delete_team_view
+      return MassenergizeResponse(data=action_info)
+    return delete_action_view
 
 
   def community_admin_list(self) -> function:

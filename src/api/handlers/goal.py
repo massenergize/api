@@ -24,6 +24,7 @@ class GoalHandler(RouteHandler):
     self.add("/goals.list", self.list())
     self.add("/goals.update", self.update())
     self.add("/goals.delete", self.delete())
+    self.add("/goals.copy", self.copy())
     self.add("/goals.remove", self.delete())
     self.add("/goals.increase", self.increase())
     self.add("/goals.decrease", self.decrease())
@@ -90,6 +91,17 @@ class GoalHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
     return delete_goal_view
+
+
+  def copy(self) -> function:
+    def copy_goal_view(request) -> None: 
+      args = get_request_contents(request)
+      goal_id = args.pop('goal_id', None)
+      goal_info, err = self.goal.copy_goal(goal_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=goal_info)
+    return copy_goal_view
 
 
   def community_admin_list(self) -> function:

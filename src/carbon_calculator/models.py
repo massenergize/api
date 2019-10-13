@@ -8,9 +8,9 @@ NAME_STR_LEN = 40
 MED_STR_LEN = 200
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 
-class Media(models.Model):
+class CarbonCalculatorMedia(models.Model):
   """
-  A class used to represent any Media that is uploaded to this website
+  A class used to represent any CarbonCalculatorMedia that is uploaded to this website
 
   Attributes
   ----------
@@ -51,7 +51,7 @@ class Action(models.Model):
     helptext = models.CharField(max_length=MED_STR_LEN, blank=True) #"This text explains what the action is about, in 20 words or less."
     average_points = models.PositiveIntegerField(default=0)
     questions = JSONField(blank=True)    # list of questions by name
-    picture = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
+    picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
 
     class Meta:
         db_table = 'cc_action'
@@ -123,11 +123,11 @@ class Event(models.Model):
     host_email = models.EmailField()
     host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
     host_url = models.URLField(blank=True)
-    host_logo = models.ForeignKey(Media,on_delete=models.SET_NULL, 
+    host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
         null=True, blank=True, related_name='event_host_logo')
     sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
     sponsor_url = models.URLField(blank=True)
-    sponsor_logo = models.ForeignKey(Media,on_delete=models.SET_NULL, 
+    sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
         null=True, blank=True, related_name='event_sponsor_logo')
 
     class Meta:

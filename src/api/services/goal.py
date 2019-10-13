@@ -68,6 +68,12 @@ class GoalService:
       return None, err
     return goal.full_json(), None
 
+  def copy_goal(self, goal_id) -> (dict, MassEnergizeAPIError):
+    goal, err = self.store.copy_goal(goal_id)
+    if err:
+      return None, err
+    return goal.full_json(), None
+
 
   def list_goals_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     goals, err = self.store.list_goals_for_community_admin(community_id)

@@ -25,3 +25,9 @@ urlpatterns = [
     # path('cc/',include('carbon_calculator.urls')),
     path('', include('website.urls')),
 ]
+
+#set error handling views
+handler400 = 'website.views.handler400'
+handler403 = 'website.views.handler403'
+handler404 = 'website.views.handler404'
+handler500 = 'website.views.handler500'
