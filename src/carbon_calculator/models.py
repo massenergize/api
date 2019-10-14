@@ -104,7 +104,7 @@ class Station(models.Model):
     name = models.CharField(max_length=NAME_STR_LEN, unique=True)
     displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
     description = models.CharField(max_length=SHORT_STR_LEN)
-    icon = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, related_name='cc_station_icon')
+    icon = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_station_icon')
     actions = JSONField(blank=True, null=True)
 
     class Meta:

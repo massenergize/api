@@ -3,7 +3,7 @@
 #
 #imports
 from datetime import date,datetime
-from .models import Action,Question,Event,Station,Group,ActionPoints,Media
+from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia
 from django.utils import timezone
 from .homeHeating import HeatingLoad
 from database.utils.create_factory import CreateFactory
@@ -47,7 +47,7 @@ def SavePic2Media(picURL):
             fp = open(file_name,"wb")
             fp.write(resp.content)
             fp.close()
-            media=Media(file = file_name)
+            media=CarbonCalculatorMedia(file = file_name)
             if media:
                 media.save()
                 return media

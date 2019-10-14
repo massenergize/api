@@ -1,7 +1,7 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
 from api.utils.massenergize_response import MassenergizeResponse
 from api.store.community import CommunityStore
-from api.utils.emailer import send_massenergize_email
+from api.utils.emailer.send_email import send_massenergize_rich_email
 from api.utils.emailer.email_types import COMMUNITY_REGISTRATION_EMAIL
 
 class CommunityService:
