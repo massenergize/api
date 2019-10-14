@@ -28,7 +28,7 @@ class CarbonCalculatorMedia(models.Model):
 
 
   class Meta:
-    db_table = "cc_media"
+    db_table = "cc_media_files"
 
 
 class Action(models.Model):
@@ -54,7 +54,7 @@ class Action(models.Model):
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
 
     class Meta:
-        db_table = 'cc_action'
+        db_table = 'cc_actions'
 
 
 class Question(models.Model):
@@ -97,7 +97,7 @@ class Question(models.Model):
     skip_6 = JSONField(blank=True, null=True)
 
     class Meta:
-        db_table = 'cc_question'
+        db_table = 'cc_questions'
 
 class Station(models.Model):
     id = models.AutoField(primary_key=True)
@@ -108,7 +108,7 @@ class Station(models.Model):
     actions = JSONField(blank=True, null=True)
 
     class Meta:
-        db_table = 'cc_station'
+        db_table = 'cc_stations'
 
 class Group(models.Model):
     id = models.AutoField(primary_key=True)
@@ -120,7 +120,7 @@ class Group(models.Model):
     savings = models.DecimalField(default=0.0,max_digits=10,decimal_places=2)
     
     class Meta:
-        db_table = 'cc_group'
+        db_table = 'cc_groups'
 
 class Event(models.Model):
     id = models.AutoField(primary_key=True)
@@ -145,7 +145,7 @@ class Event(models.Model):
         null=True, blank=True, related_name='event_sponsor_logo')
 
     class Meta:
-        db_table = 'cc_event'
+        db_table = 'cc_events'
 
 class CalcUser(models.Model):
     """
@@ -198,7 +198,7 @@ class CalcUser(models.Model):
 #  return data
 #
     class Meta:
-        db_table = 'cc_user_profile' 
+        db_table = 'cc_user_profiles' 
 
 class ActionPoints(models.Model):
     """
@@ -218,6 +218,6 @@ class ActionPoints(models.Model):
     savings = models.IntegerField(default = 0)
 #
     class Meta:
-        db_table = 'cc_actionpoints'
+        db_table = 'cc_action_points'
 #
 #
