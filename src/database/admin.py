@@ -23,7 +23,6 @@ def register_all_models():
     try:
       admin.site.register(model)
     except admin.sites.AlreadyRegistered:
-      print('%s: Already Registered' % model)
       success = False
   return success
 
