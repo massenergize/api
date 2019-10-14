@@ -18,6 +18,7 @@ def send_massenergize_email(subject, msg, to):
     return False
   return True
 
+
 def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables):
   html_content = render_to_string(massenergize_email_type, content_variables)
   text_content = strip_tags(html_content)
