@@ -23,11 +23,11 @@ class TeamService:
     return team, None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(args)
+  def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.create_team(user_id, args)
     if err:
       return None, err
-    return team, None
+    return team.full_json(), None
 
 
   def update_team(self, args) -> (dict, MassEnergizeAPIError):

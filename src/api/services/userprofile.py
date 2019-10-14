@@ -14,7 +14,7 @@ class UserService:
     user, err = self.store.get_user_info(user_id)
     if err:
       return None, err
-    return user
+    return user.full_json(), None
 
   def list_users(self, user_id) -> (list, MassEnergizeAPIError):
     user, err = self.store.list_users(user_id)

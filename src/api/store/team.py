@@ -20,13 +20,15 @@ class TeamStore:
     return [t.simple_json() for t in teams], None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
+  def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_team = Team.create(**args)
+      new_team = Team.objects.create(**args)
       new_team.save()
-      return new_team.full_json(), None
-    except Exception:
-      return None, ServerError()
+      new_team.members.add(user_id)
+      new_team.admins.add(user_id)
+      return new_team, None
+    except Exception as e:
+      return None, CustomMassenergizeError(str(e))
 
 
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
