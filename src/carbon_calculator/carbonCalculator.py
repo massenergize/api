@@ -132,11 +132,16 @@ class CarbonCalculator:
                 q = qs[0]
                 host_logo_url = sponsor_logo_url = ""
                 if q.host_logo:
-                    print(q.host_logo)
-                    if q.host_logo.pk:
-                    # locate Media, get file and get the URL
-                        pass
+                    host_logo_url = q.host_logo.file.url
+                if q.sponsor_logo:
+                    sponsor_logo_url = q.sponsor_logo.file.url
+
+                groupsList = []
+                for group in q.groups.all():
+                    groupsList.append(group.name)
+                    
                 return {"status":True,"EventInfo":{"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":q.stationslist,
+                                "groups":groupsList,
                                 "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":host_logo_url,
                                 "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":sponsor_logo_url}}
             else:
@@ -158,7 +163,11 @@ class CarbonCalculator:
             qs = Station.objects.filter(name=station)
             if qs:
                 q = qs[0]
-                return {"status":True,"StationInfo":{"name":q.name, "displayname":q.displayname, "description":q.description, "actions":q.actions}}
+                icon = ""
+                if q.icon:
+                    icon = q.icon.file.url
+
+                return {"status":True,"StationInfo":{"name":q.name, "displayname":q.displayname, "description":q.description, "icon":icon, "actions":q.actions}}
             else:
                 return {"status":False, "statusText":"Station ("+station+") not found"}
         else:
@@ -172,6 +181,27 @@ class CarbonCalculator:
                 return {"status":True,"stationList":stationInfo}
             else:
                 return {"status":False,"statusText":"No stations found"}
+
+    def QueryGroups(self,group=None):
+        if group:
+            qs = Group.objects.filter(name=group)
+            if qs:
+                q = qs[0]
+                return {"status":True,"GroupInfo":{"name":q.name, "displayname":q.displayname, "description":q.description, 
+                        "members":q.members, "points":q.points, "savings":q.savings}}
+            else:
+                return {"status":False, "statusText":"Group ("+group+") not found"}
+        else:
+            qs = Group.objects.all()
+            if qs:
+
+                groupInfo = []
+                for q in qs:
+                    info = {"name":q.name, "displayname":q.displayname, "members":q.members}
+                    groupInfo.append(info)
+                return {"status":True,"groupList":groupInfo}
+            else:
+                return {"status":False,"statusText":"No groups found"}
 
 
     def Estimate(self, action, inputs, save=False):
@@ -478,6 +508,7 @@ class CalculatorAction:
         self.points = 0
         self.cost = 0
         self.savings = 0
+        self.picture = ""
 #
 #    def load(self,name):
         qs = Action.objects.filter(name=name)
@@ -491,13 +522,20 @@ class CalculatorAction:
                 #print(jsons.dump(CalculatorQuestion(question)))
                 self.questions.append(jsons.dump(qq))
             self.average_points = q.average_points
+            if q.picture:
+                self.picture = q.picture.file.url
+
             self.initialized = True
         except:
             print("ERROR: Action "+name+" was not found")
             self.initialized = False
 
     def Query(self):
-        return {'status':VALID_QUERY, 'name':self.name, 'description':self.description, 'average_carbon_points':self.average_points, 'helptext':self.helptext, 'questions':jsons.dump(self.questions)}
+        picture = ""
+        if self.picture:
+            picture = self.picture.file.url
+        return {'status':VALID_QUERY, 'name':self.name, 'description':self.description, 'average_carbon_points':self.average_points, 'helptext':self.helptext, 
+                'questions':jsons.dump(self.questions), 'picture':picture}
 
     def Eval(self, inputs):
         return {'status':VALID_QUERY, 'carbon_points':self.points, 'cost':self.cost, 'savings':self.savings}

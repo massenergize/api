@@ -25,6 +25,9 @@ def actioninfo(request, action):
 def eventinfo(request, event=None):
     return JsonResponse(CALC.QueryEvents(event))
 
+def groupinfo(request, group=None):
+    return JsonResponse(CALC.QueryGroups(group))
+
 def stationinfo(request, station=None):
     return JsonResponse(CALC.QueryStations(station))
 

@@ -26,6 +26,8 @@ class CarbonCalculatorMedia(models.Model):
   file = models.FileField(upload_to='cc_media/')
   is_deleted = models.BooleanField(default=False)
 
+  def __str__(self):      
+    return self.file
 
   class Meta:
     db_table = "cc_media_files"
@@ -52,6 +54,9 @@ class Action(models.Model):
     average_points = models.PositiveIntegerField(default=0)
     questions = JSONField(blank=True)    # list of questions by name
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
+
+    def __str__(self):      
+        return self.name
 
     class Meta:
         db_table = 'cc_actions'
@@ -96,6 +101,9 @@ class Question(models.Model):
     response_6 = models.CharField(max_length=SHORT_STR_LEN, null=True)
     skip_6 = JSONField(blank=True, null=True)
 
+    def __str__(self):      
+        return self.name
+
     class Meta:
         db_table = 'cc_questions'
 
@@ -106,6 +114,9 @@ class Station(models.Model):
     description = models.CharField(max_length=SHORT_STR_LEN)
     icon = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_station_icon')
     actions = JSONField(blank=True, null=True)
+
+    def __str__(self):      
+        return self.displayname
 
     class Meta:
         db_table = 'cc_stations'
@@ -119,6 +130,9 @@ class Group(models.Model):
     points = models.PositiveIntegerField(default=0)
     savings = models.DecimalField(default=0.0,max_digits=10,decimal_places=2)
     
+    def __str__(self):      
+        return self.displayname
+
     class Meta:
         db_table = 'cc_groups'
 
@@ -143,6 +157,10 @@ class Event(models.Model):
     sponsor_url = models.URLField(blank=True)
     sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
         null=True, blank=True, related_name='event_sponsor_logo')
+
+
+    def __str__(self):      
+        return self.displayname
 
     class Meta:
         db_table = 'cc_events'
@@ -205,7 +223,7 @@ class ActionPoints(models.Model):
     Class to record choices made for actions - first from the Event Calculator and eventually from  
     """
     id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
     created_date = models.DateTimeField(auto_now_add=True)
 #
     #action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.SET_NULL)
@@ -217,6 +235,9 @@ class ActionPoints(models.Model):
     cost = models.IntegerField(default = 0)
     savings = models.IntegerField(default = 0)
 #
+    def __str__(self):      
+        return "%s-%s-(%s)" % (self.action, self.user, self.created_date)
+
     class Meta:
         db_table = 'cc_action_points'
 #

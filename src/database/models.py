@@ -572,7 +572,7 @@ class Service(models.Model):
     return model_to_dict(self, ['id', 'name', 'description', 'service_location', 'icon'])
 
   def full_json(self):
-    res =  self.simple_json()
+    return self.simple_json()
 
 
   class Meta:
@@ -919,7 +919,7 @@ class Event(models.Model):
     data = model_to_dict(self, exclude=['tags', 'image', 'community'])
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['community'] = get_json_if_not_none(self.community)
-    data['image'] = None if not self.image else self.image.full_json();
+    data['image'] = None if not self.image else self.image.full_json()
     data['more_info'] = self.more_info
     return data
 
