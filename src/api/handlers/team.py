@@ -24,6 +24,10 @@ class TeamHandler(RouteHandler):
     self.add("/teams.update", self.update())
     self.add("/teams.delete", self.delete())
     self.add("/teams.remove", self.delete())
+    self.add("/teams.leave", self.leave())
+    self.add("/teams.join", self.join())
+    self.add("/teams.addAdmin", self.add_admin())
+    self.add("/teams.removeAdmin", self.remove_admin())
 
     #admin routes
     self.add("/teams.listForCommunityAdmin", self.community_admin_list())
@@ -81,6 +85,52 @@ class TeamHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
     return delete_team_view
+
+  def join(self) -> function:
+    def join_team_view(request) -> None: 
+      args = get_request_contents(request)
+      team_id = args.get('team_id', None)
+      user_id = args.get('user_id', None)
+      team_info, err = self.team.join_team(team_id, user_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_info)
+    return join_team_view
+
+  def leave(self) -> function:
+    def leave_team_view(request) -> None: 
+      args = get_request_contents(request)
+      team_id = args.get('team_id', None)
+      user_id = args.get('user_id', None)
+      team_info, err = self.team.leave_team(team_id, user_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_info)
+    return leave_team_view
+
+  def add_admin(self) -> function:
+    def add_team_admin_view(request) -> None: 
+      args = get_request_contents(request)
+      team_id = args.get('team_id', None)
+      user_id = args.get('user_id', None)
+      new_admin_email = args.get('email', None)
+      team_info, err = self.team.add_team_admin(team_id, user_id, new_admin_email)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_info)
+    return add_team_admin_view
+
+  def remove_admin(self) -> function:
+    def remove_team_admin_view(request) -> None: 
+      args = get_request_contents(request)
+      team_id = args.get('team_id', None)
+      user_id = args.get('user_id', None)
+      new_admin_email = args.get('email', None)
+      team_info, err = self.team.remove_team_admin(team_id, user_id, new_admin_email)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_info)
+    return remove_team_admin_view
 
 
   def community_admin_list(self) -> function:
