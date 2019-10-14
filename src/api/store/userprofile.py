@@ -7,11 +7,11 @@ class UserStore:
     self.name = "UserProfile Store/DB"
 
   def get_user_info(self, user_id) -> (dict, MassEnergizeAPIError):
-    user = UserProfile.objects.filter(id=user_id)
-    if not user:
-      return None, InvalidResourceError()
-    return user.full_json(), None
-
+    try:
+      user = UserProfile.objects.get(id=user_id)
+      return user, None
+    except Exception as e:
+      return None, CustomMassenergizeError(str(e))
 
   def list_users(self, community_id) -> (list, MassEnergizeAPIError):
     users = UserProfile.objects.filter(community__id=community_id)

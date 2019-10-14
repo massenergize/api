@@ -33,7 +33,8 @@ class UserHandler(RouteHandler):
   def info(self) -> function:
     def user_info_view(request) -> None: 
       args = get_request_contents(request)
-      user_info, err = self.user.info(args)
+      user_id = args.pop('user_id', None)
+      user_info, err = self.user.get_user_info(user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

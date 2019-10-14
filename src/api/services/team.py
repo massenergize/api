@@ -23,11 +23,11 @@ class TeamService:
     return team, None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(args)
+  def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.create_team(user_id, args)
     if err:
       return None, err
-    return team, None
+    return team.full_json(), None
 
 
   def update_team(self, args) -> (dict, MassEnergizeAPIError):
@@ -42,16 +42,40 @@ class TeamService:
       return None, err
     return team, None
 
+  def join_team(self, team_id, user_id) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.join_team(team_id, user_id)
+    if err:
+      return None, err
+    return team.full_json(), None
+
+  def leave_team(self, team_id, user_id) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.leave_team(team_id, user_id)
+    if err:
+      return None, err
+    return team.full_json(), None
+
+  def add_team_admin(self, team_id, user_id, email) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.add_team_admin(team_id, user_id, email)
+    if err:
+      return None, err
+    return team.full_json(), None
+
+  def remove_team_admin(self, team_id, user_id, email) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.remove_team_admin(team_id, user_id, email)
+    if err:
+      return None, err
+    return team.full_json(), None
+
 
   def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     teams, err = self.store.list_teams_for_community_admin(community_id)
     if err:
       return None, err
-    return teams, None
+    return [t.simple_json() for t in teams], None
 
 
   def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
     teams, err = self.store.list_teams_for_super_admin()
     if err:
       return None, err
-    return teams, None
+    return [t.simple_json() for t in teams], None
