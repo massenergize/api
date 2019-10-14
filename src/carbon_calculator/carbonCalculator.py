@@ -5,7 +5,6 @@
 from datetime import date,datetime
 from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia
 from django.utils import timezone
-from .homeHeating import HeatingLoad
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
 import jsons
@@ -14,18 +13,9 @@ import csv
 from django.core import files
 from io import BytesIO
 import requests
-
-# constants
-YES = "Yes"
-NO = "No"
-FRACTIONS = ["None","Some","Half","Most","All"]
-DATE = str(date.today())
-NUM = 0   
-VALID_QUERY = 0
-INVALID_QUERY = -1
-HEATING_SYSTEM_POINTS = 10000
-SOLAR_POINTS = 6000
-ELECTRICITY_POINTS = 5000
+from .CCConstants import *
+from .homeHeating import HeatingLoad
+from .electricity import EvalCommunitySolar,EvalRenewableElectricity
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -207,12 +197,15 @@ class CarbonCalculator:
     def Estimate(self, action, inputs, save=False):
 # inputs is a dictionary of input parameters
 # outputs is a dictionary of results
-        status = INVALID_QUERY
+        queryFailed = {'status':INVALID_QUERY}
         if action in self.allActions:
             # community context
             #community = inputs.get("community", "unknown")
 
             theAction = self.allActions[action]
+            if not theAction.initialized:
+                return queryFailed            
+
             #if theAction.Eval(inputs) == VALID_QUERY:
             #    points = theAction.points
             #    cost = theAction.cost
@@ -223,16 +216,13 @@ class CarbonCalculator:
                 results = self.RecordActionPoints(action,inputs,results)
             return results
         else:    
-            outputs = {}
-            outputs["status"] = status
-        #outputs["carbon_points"] = points
-        #outputs["action_cost"] = cost
-        #outputs["annual_savings"] = savings
-            return outputs
+            #outputs = {}
+            #outputs["status"] = status
+            #return outputs
+            return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
-        user_id = inputs.pop("MEId",None)
-            
+        user_id = inputs.pop("UserID",None)            
         record = ActionPoints(  user_id=user_id,
                                 action=action,
                                 choices=inputs,
@@ -247,6 +237,7 @@ class CarbonCalculator:
             print(Action.objects.all().delete())
             print(Question.objects.all().delete())
             print(Event.objects.all().delete())
+            print(Group.objects.all().delete())
             print(Station.objects.all().delete())
             print("Deleted Actions, Questions, Events and Stations")
             return {"status":True}
@@ -508,6 +499,7 @@ class CalculatorAction:
         self.points = 0
         self.cost = 0
         self.savings = 0
+        self.text = "" # "Explanation for the calculated results."
         self.picture = ""
 #
 #    def load(self,name):
@@ -538,39 +530,32 @@ class CalculatorAction:
                 'questions':jsons.dump(self.questions), 'picture':picture}
 
     def Eval(self, inputs):
-        return {'status':VALID_QUERY, 'carbon_points':self.points, 'cost':self.cost, 'savings':self.savings}
+        return {'status':VALID_QUERY, 'carbon_points':round(self.points,0), 'cost':round(self.cost,0), 'savings':round(self.savings,0), 'explanation':self.text}
 
 ENERGY_FAIR_POINTS = 50
 class EnergyFair(CalculatorAction):
-        # inputs:   MEid (MassEnergize profile ID) if available.  If not no record keeping
-        # attend_fair,own_rent,fuel_assistance,activity_group
+    # a trivial bonus points action, part of registering for the energy fair
+    # inputs: attend_fair,own_rent,fuel_assistance,activity_group
     def Eval(self, inputs):
-        if not self.initialized:
-            return {'status':INVALID_QUERY}            
         self.points = 0
         if inputs.get('attend_fair',NO) == YES:
-            # a trivial bonus points action
             self.points = ENERGY_FAIR_POINTS
-            # TODO: save action to ME profile
-
+            self.text = "Thank you for participating!"
         return super().Eval(inputs)
 
 ENERGY_AUDIT_POINTS = 250
 ELEC_UTILITY = 'elec_utility'
 class EnergyAudit(CalculatorAction):
     def Eval(self, inputs):
-        # inputs: MEid (MassEnergize user)
-        #         community
-        #         signup_energy_audit  YesNo
-        #         last_audit_year  (year number)
-        #         already_had_audit YesNo
-        #energy_audit_recently,energy_audit,heating_system_fuel,electric_utility
+        # inputs: energy_audit_recently,energy_audit,heating_system_fuel,electric_utility
         signup_energy_audit = inputs.get(self.name, YES)
-        already_had_audit = inputs.get("energy_audit_recently", YES) # get default from db if user entered
-        if signup_energy_audit == YES and already_had_audit != YES:
-
-            # permissible to sign up for audit
-            self.points = ENERGY_AUDIT_POINTS
+        self.text = "You didn't choose to sign up for an energy audit"
+        already_had_audit = inputs.get("energy_audit_recently", YES)
+        if signup_energy_audit == YES:
+            self.text = "You may have had an energy audit too recently?" 
+            if already_had_audit != YES:
+                self.text = "You chose to sign up for an energy audit, now get it scheduled and try to follow through on the recommendations.  "
+                self.points = ENERGY_AUDIT_POINTS
         return super().Eval(inputs)
 
 HEATING_FUEL = "Heating Fuel"
@@ -610,26 +595,15 @@ class Weatherize(CalculatorAction):
             self.savings = weatherize_load_reduction * heatingCost
             self.cost = 500.     # figure out a typical value 
         return super().Eval(inputs)
- 
-MONTHLY_ELEC = "monthly_elec_bill",
+        
 class CommunitySolar(CalculatorAction):
     def Eval(self, inputs):
-        #community_solar,monthly_elec,electric_utility
-
-        join_community_solar = inputs.get(self.name,YES)
-        monthly_elec_bill = inputs.get(MONTHLY_ELEC, 150.)
-        fractional_savings = 0.1       # "save 10% of electric bill"
-        if join_community_solar == YES:
-            self.points = 0.
-            self.savings = fractional_savings * 12. * monthly_elec_bill
-            self.cost = 1000.    # figure out a typical value
+        self.points, self.cost, self.savings, self.text = EvalCommunitySolar(inputs)
         return super().Eval(inputs)
 
-RENEWABLE_FRACTION = "renewable_elec_fraction"
 class RenewableElectricity(CalculatorAction):
-    #choose_renewable,monthly_elec,electric_utility
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalRenewableElectricity(inputs)
         return super().Eval(inputs)
 
 LED_SWAP_FRACTION = "fraction_led_replacement"

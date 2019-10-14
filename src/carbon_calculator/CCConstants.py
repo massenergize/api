@@ -1,0 +1,10 @@
+# constants
+YES = "Yes"
+NO = "No"
+FRACTIONS = ["None","Some","Half","Most","All"]
+NUM = 0   
+VALID_QUERY = 0
+INVALID_QUERY = -1
+HEATING_SYSTEM_POINTS = 10000
+SOLAR_POINTS = 6000
+ELECTRICITY_POINTS = 5000
