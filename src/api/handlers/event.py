@@ -13,7 +13,7 @@ class EventHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.event = EventService()
+    self.service = EventService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -33,7 +33,7 @@ class EventHandler(RouteHandler):
   def info(self) -> function:
     def event_info_view(request) -> None: 
       args = get_request_contents(request)
-      event_info, err = self.event.info(args)
+      event_info, err = self.service.info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -43,7 +43,7 @@ class EventHandler(RouteHandler):
   def create(self) -> function:
     def create_event_view(request) -> None: 
       args = get_request_contents(request)
-      event_info, err = self.event.create(args)
+      event_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -55,7 +55,7 @@ class EventHandler(RouteHandler):
       args = get_request_contents(request)
       community_id = args["community__id"]
       user_id = args["user_id"]
-      event_info, err = self.event.list_events(community_id, user_id)
+      event_info, err = self.service.list_events(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -65,7 +65,7 @@ class EventHandler(RouteHandler):
   def update(self) -> function:
     def update_event_view(request) -> None: 
       args = get_request_contents(request)
-      event_info, err = self.event.update_event(args[id], args)
+      event_info, err = self.service.update_event(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -76,7 +76,7 @@ class EventHandler(RouteHandler):
     def delete_event_view(request) -> None: 
       args = get_request_contents(request)
       event_id = args[id]
-      event_info, err = self.event.delete_event(args[id])
+      event_info, err = self.service.delete_event(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -87,7 +87,7 @@ class EventHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.get("community__id")
-      events, err = self.event.list_events_for_community_admin(community_id)
+      events, err = self.service.list_events_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=events)
@@ -97,7 +97,7 @@ class EventHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      events, err = self.event.list_events_for_super_admin()
+      events, err = self.service.list_events_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=events)

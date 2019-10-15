@@ -13,7 +13,7 @@ class TestimonialHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.testimonial = TestimonialService()
+    self.service = TestimonialService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -33,7 +33,7 @@ class TestimonialHandler(RouteHandler):
   def info(self) -> function:
     def testimonial_info_view(request) -> None: 
       args = get_request_contents(request)
-      testimonial_info, err = self.testimonial.info(args)
+      testimonial_info, err = self.service.info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -43,7 +43,7 @@ class TestimonialHandler(RouteHandler):
   def create(self) -> function:
     def create_testimonial_view(request) -> None: 
       args = get_request_contents(request)
-      testimonial_info, err = self.testimonial.create(args)
+      testimonial_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -55,7 +55,7 @@ class TestimonialHandler(RouteHandler):
       args = get_request_contents(request)
       community_id = args["community__id"]
       user_id = args["user_id"]
-      testimonial_info, err = self.testimonial.list_testimonials(community_id, user_id)
+      testimonial_info, err = self.service.list_testimonials(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -65,7 +65,7 @@ class TestimonialHandler(RouteHandler):
   def update(self) -> function:
     def update_testimonial_view(request) -> None: 
       args = get_request_contents(request)
-      testimonial_info, err = self.testimonial.update_testimonial(args[id], args)
+      testimonial_info, err = self.service.update_testimonial(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -76,7 +76,7 @@ class TestimonialHandler(RouteHandler):
     def delete_testimonial_view(request) -> None: 
       args = get_request_contents(request)
       testimonial_id = args[id]
-      testimonial_info, err = self.testimonial.delete_testimonial(args[id])
+      testimonial_info, err = self.service.delete_testimonial(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -87,7 +87,7 @@ class TestimonialHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.get("community__id")
-      testimonials, err = self.testimonial.list_testimonials_for_community_admin(community_id)
+      testimonials, err = self.service.list_testimonials_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonials)
@@ -97,7 +97,7 @@ class TestimonialHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      testimonials, err = self.testimonial.list_testimonials_for_super_admin()
+      testimonials, err = self.service.list_testimonials_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonials)

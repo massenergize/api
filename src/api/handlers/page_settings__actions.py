@@ -13,7 +13,7 @@ class ActionsPageSettingsHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.actions_page_setting = ActionsPageSettingsService()
+    self.service = ActionsPageSettingsService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -33,7 +33,7 @@ class ActionsPageSettingsHandler(RouteHandler):
   def info(self) -> function:
     def actions_page_setting_info_view(request) -> None: 
       args = get_request_contents(request)
-      actions_page_setting_info, err = self.actions_page_setting.info(args)
+      actions_page_setting_info, err = self.service.info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_setting_info)
@@ -43,7 +43,7 @@ class ActionsPageSettingsHandler(RouteHandler):
   def create(self) -> function:
     def create_actions_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      actions_page_setting_info, err = self.actions_page_setting.create(args)
+      actions_page_setting_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_setting_info)
@@ -55,7 +55,7 @@ class ActionsPageSettingsHandler(RouteHandler):
       args = get_request_contents(request)
       community_id = args["community__id"]
       user_id = args["user_id"]
-      actions_page_setting_info, err = self.actions_page_setting.list_actions_page_settings(community_id, user_id)
+      actions_page_setting_info, err = self.service.list_actions_page_settings(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_setting_info)
@@ -65,7 +65,7 @@ class ActionsPageSettingsHandler(RouteHandler):
   def update(self) -> function:
     def update_actions_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      actions_page_setting_info, err = self.actions_page_setting.update_actions_page_setting(args[id], args)
+      actions_page_setting_info, err = self.service.update_actions_page_setting(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_setting_info)
@@ -76,7 +76,7 @@ class ActionsPageSettingsHandler(RouteHandler):
     def delete_actions_page_setting_view(request) -> None: 
       args = get_request_contents(request)
       actions_page_setting_id = args[id]
-      actions_page_setting_info, err = self.actions_page_setting.delete_actions_page_setting(args[id])
+      actions_page_setting_info, err = self.service.delete_actions_page_setting(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_setting_info)
@@ -87,7 +87,7 @@ class ActionsPageSettingsHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.get("community__id")
-      actions_page_settings, err = self.actions_page_setting.list_actions_page_settings_for_community_admin(community_id)
+      actions_page_settings, err = self.service.list_actions_page_settings_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_settings)
@@ -97,7 +97,7 @@ class ActionsPageSettingsHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      actions_page_settings, err = self.actions_page_setting.list_actions_page_settings_for_super_admin()
+      actions_page_settings, err = self.service.list_actions_page_settings_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_settings)

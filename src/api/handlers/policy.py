@@ -13,7 +13,7 @@ class PolicyHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.policy = PolicyService()
+    self.service = PolicyService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -33,7 +33,8 @@ class PolicyHandler(RouteHandler):
   def info(self) -> function:
     def policy_info_view(request) -> None: 
       args = get_request_contents(request)
-      policy_info, err = self.policy.info(args)
+      policy_id = args.pop('policy_id', None)
+      policy_info, err = self.service.get_policy_info(policy_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policy_info)
@@ -43,7 +44,7 @@ class PolicyHandler(RouteHandler):
   def create(self) -> function:
     def create_policy_view(request) -> None: 
       args = get_request_contents(request)
-      policy_info, err = self.policy.create(args)
+      policy_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policy_info)
@@ -53,9 +54,9 @@ class PolicyHandler(RouteHandler):
   def list(self) -> function:
     def list_policy_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args["community__id"]
-      user_id = args["user_id"]
-      policy_info, err = self.policy.list_policies(community_id, user_id)
+      community_id = args.pop('community_id', None)
+      user_id = args.pop('user_id', None)
+      policy_info, err = self.service.list_policies(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policy_info)
@@ -65,7 +66,8 @@ class PolicyHandler(RouteHandler):
   def update(self) -> function:
     def update_policy_view(request) -> None: 
       args = get_request_contents(request)
-      policy_info, err = self.policy.update_policy(args[id], args)
+      policy_id = args.pop('policy_id', None)
+      policy_info, err = self.service.update_policy(policy_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policy_info)
@@ -75,8 +77,8 @@ class PolicyHandler(RouteHandler):
   def delete(self) -> function:
     def delete_policy_view(request) -> None: 
       args = get_request_contents(request)
-      policy_id = args[id]
-      policy_info, err = self.policy.delete_policy(args[id])
+      policy_id = args.pop('policy_id', None)
+      policy_info, err = self.service.delete_policy(policy_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policy_info)
@@ -86,8 +88,8 @@ class PolicyHandler(RouteHandler):
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args.get("community__id")
-      policies, err = self.policy.list_policies_for_community_admin(community_id)
+      community_id = args.pop('community_id', None)
+      policies, err = self.service.list_policies_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policies)
@@ -97,7 +99,7 @@ class PolicyHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      policies, err = self.policy.list_policies_for_super_admin()
+      policies, err = self.service.list_policies_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policies)

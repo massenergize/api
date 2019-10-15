@@ -13,7 +13,7 @@ class UserHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.user = UserService()
+    self.service = UserService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -34,7 +34,7 @@ class UserHandler(RouteHandler):
     def user_info_view(request) -> None: 
       args = get_request_contents(request)
       user_id = args.pop('user_id', None)
-      user_info, err = self.user.get_user_info(user_id)
+      user_info, err = self.service.get_user_info(user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -44,7 +44,7 @@ class UserHandler(RouteHandler):
   def create(self) -> function:
     def create_user_view(request) -> None: 
       args = get_request_contents(request)
-      user_info, err = self.user.create(args)
+      user_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -56,7 +56,7 @@ class UserHandler(RouteHandler):
       args = get_request_contents(request)
       community_id = args["community__id"]
       user_id = args["user_id"]
-      user_info, err = self.user.list_users(community_id, user_id)
+      user_info, err = self.service.list_users(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -66,7 +66,7 @@ class UserHandler(RouteHandler):
   def update(self) -> function:
     def update_user_view(request) -> None: 
       args = get_request_contents(request)
-      user_info, err = self.user.update_user(args[id], args)
+      user_info, err = self.service.update_user(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -77,7 +77,7 @@ class UserHandler(RouteHandler):
     def delete_user_view(request) -> None: 
       args = get_request_contents(request)
       user_id = args[id]
-      user_info, err = self.user.delete_user(args[id])
+      user_info, err = self.service.delete_user(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -88,7 +88,7 @@ class UserHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.get("community__id")
-      users, err = self.user.list_users_for_community_admin(community_id)
+      users, err = self.service.list_users_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=users)
@@ -98,7 +98,7 @@ class UserHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      users, err = self.user.list_users_for_super_admin()
+      users, err = self.service.list_users_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=users)

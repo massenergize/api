@@ -13,11 +13,12 @@ class HomePageSettingsHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.home_page_setting = HomePageSettingsService()
+    self.service = HomePageSettingsService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
     self.add("/home_page_settings.info", self.info()) 
+    self.add("/home_page_settings.publish", self.info()) 
     self.add("/home_page_settings.create", self.create())
     self.add("/home_page_settings.add", self.create())
     self.add("/home_page_settings.list", self.list())
@@ -33,17 +34,29 @@ class HomePageSettingsHandler(RouteHandler):
   def info(self) -> function:
     def home_page_setting_info_view(request) -> None: 
       args = get_request_contents(request)
-      home_page_setting_info, err = self.home_page_setting.info(args)
+      home_page_id = args.pop('home_page_id', None)
+      community_id = args.pop('community_id', None)
+      home_page_setting_info, err = self.service.get_home_page_setting_info(home_page_id, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_setting_info)
     return home_page_setting_info_view
 
+  def publish(self) -> function:
+    def home_page_setting_publish_view(request) -> None: 
+      args = get_request_contents(request)
+      home_page_id = args.pop('home_page_id', None)
+      home_page_setting_info, err = self.service.get_home_page_setting_publish(home_page_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=home_page_setting_info)
+    return home_page_setting_publish_view
+
 
   def create(self) -> function:
     def create_home_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      home_page_setting_info, err = self.home_page_setting.create(args)
+      home_page_setting_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_setting_info)
@@ -53,9 +66,7 @@ class HomePageSettingsHandler(RouteHandler):
   def list(self) -> function:
     def list_home_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args["community__id"]
-      user_id = args["user_id"]
-      home_page_setting_info, err = self.home_page_setting.list_home_page_settings(community_id, user_id)
+      home_page_setting_info, err = self.service.list_home_page_settings(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_setting_info)
@@ -65,7 +76,8 @@ class HomePageSettingsHandler(RouteHandler):
   def update(self) -> function:
     def update_home_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      home_page_setting_info, err = self.home_page_setting.update_home_page_setting(args[id], args)
+      home_page_id = args.pop('home_page_id', None)
+      home_page_setting_info, err = self.service.update_home_page_setting(home_page_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_setting_info)
@@ -75,8 +87,8 @@ class HomePageSettingsHandler(RouteHandler):
   def delete(self) -> function:
     def delete_home_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      home_page_setting_id = args[id]
-      home_page_setting_info, err = self.home_page_setting.delete_home_page_setting(args[id])
+      home_page_id = args.pop('home_page_id', None)
+      home_page_setting_info, err = self.service.delete_home_page_setting(home_page_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_setting_info)
@@ -86,8 +98,8 @@ class HomePageSettingsHandler(RouteHandler):
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args.get("community__id")
-      home_page_settings, err = self.home_page_setting.list_home_page_settings_for_community_admin(community_id)
+      community_id = args.pop('community_id', None)
+      home_page_settings, err = self.service.list_home_page_settings_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_settings)
@@ -97,7 +109,7 @@ class HomePageSettingsHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      home_page_settings, err = self.home_page_setting.list_home_page_settings_for_super_admin()
+      home_page_settings, err = self.service.list_home_page_settings_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_settings)
