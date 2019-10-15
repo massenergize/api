@@ -26,7 +26,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.remove", self.delete())
 
     #admin routes
-    self.add("/communities.listForCommunityAdmin", self.service_admin_list())
+    self.add("/communities.listForCommunityAdmin", self.community_admin_list())
     self.add("/communities.listForSuperAdmin", self.super_admin_list())
 
 

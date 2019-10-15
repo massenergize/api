@@ -24,6 +24,7 @@ class VendorHandler(RouteHandler):
     self.add("/vendors.update", self.update())
     self.add("/vendors.delete", self.delete())
     self.add("/vendors.remove", self.delete())
+    self.add("/vendors.publish", self.publish())
 
     #admin routes
     self.add("/vendors.listForCommunityAdmin", self.community_admin_list())
@@ -34,6 +35,16 @@ class VendorHandler(RouteHandler):
     def vendor_info_view(request) -> None: 
       args = get_request_contents(request)
       vendor_info, err = self.service.get_vendor_info(args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=vendor_info)
+    return vendor_info_view
+
+  def publish(self) -> function:
+    def vendor_info_view(request) -> None: 
+      args = get_request_contents(request)
+      vendor_id = args.pop('vendor_id', None)
+      vendor_info, err = self.service.get_vendor_info(vendor_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)
