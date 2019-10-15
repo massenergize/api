@@ -7,7 +7,7 @@ class TeamStore:
     self.name = "Team Store/DB"
 
   def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
+    team = Team.objects.get(id=team_id)
     if not team:
       return None, InvalidResourceError()
     return team, None
