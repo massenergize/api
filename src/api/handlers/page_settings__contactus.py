@@ -33,7 +33,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
   def info(self) -> function:
     def contact_us_page_setting_info_view(request) -> None: 
       args = get_request_contents(request)
-      contact_us_page_setting_info, err = self.service.info(args)
+      contact_us_page_setting_info, err = self.service.get_contact_us_page_setting_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=contact_us_page_setting_info)

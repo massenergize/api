@@ -33,7 +33,7 @@ class AboutUsPageSettingsHandler(RouteHandler):
   def info(self) -> function:
     def about_us_page_setting_info_view(request) -> None: 
       args = get_request_contents(request)
-      about_us_page_setting_info, err = self.service.info(args)
+      about_us_page_setting_info, err = self.service.get_about_us_page_setting_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=about_us_page_setting_info)

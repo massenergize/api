@@ -34,7 +34,7 @@ class ActionHandler(RouteHandler):
   def info(self) -> function:
     def action_info_view(request) -> None: 
       args = get_request_contents(request)
-      action_info, err = self.service.info(args)
+      action_info, err = self.service.get_action_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)

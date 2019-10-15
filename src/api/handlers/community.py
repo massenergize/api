@@ -33,7 +33,7 @@ class CommunityHandler(RouteHandler):
   def info(self) -> function:
     def community_info_view(request) -> None: 
       args = get_request_contents(request)
-      community_info, err = self.service.info(args)
+      community_info, err = self.service.get_community_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)

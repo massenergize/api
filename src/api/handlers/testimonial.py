@@ -33,7 +33,7 @@ class TestimonialHandler(RouteHandler):
   def info(self) -> function:
     def testimonial_info_view(request) -> None: 
       args = get_request_contents(request)
-      testimonial_info, err = self.service.info(args)
+      testimonial_info, err = self.service.get_testimonial_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)

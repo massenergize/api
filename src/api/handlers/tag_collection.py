@@ -33,7 +33,7 @@ class TagCollectionHandler(RouteHandler):
   def info(self) -> function:
     def tag_collection_info_view(request) -> None: 
       args = get_request_contents(request)
-      tag_collection_info, err = self.service.info(args)
+      tag_collection_info, err = self.service.get_tag_collection_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=tag_collection_info)
