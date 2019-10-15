@@ -53,8 +53,8 @@ class TagCollectionHandler(RouteHandler):
   def list(self) -> function:
     def list_tag_collection_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args["community__id"]
-      user_id = args["user_id"]
+      community_id = args.pop('community_id', None)
+      user_id = args.pop('user_id', None)
       tag_collection_info, err = self.service.list_tag_collections(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
