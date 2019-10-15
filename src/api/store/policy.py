@@ -44,6 +44,7 @@ class PolicyStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
+
   def delete_policy(self, policy_id) -> (Policy, MassEnergizeAPIError):
     try:
       #find the policy
