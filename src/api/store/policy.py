@@ -7,7 +7,7 @@ class PolicyStore:
     self.name = "Policy Store/DB"
 
   def get_policy_info(self, policy_id) -> (dict, MassEnergizeAPIError):
-    policy = Policy.objects.filter(id=policy_id)
+    policy = Policy.objects.get(id=policy_id)
     if not policy:
       return None, InvalidResourceError()
     return policy, None
@@ -35,6 +35,7 @@ class PolicyStore:
 
   def update_policy(self, policy_id, args) -> (dict, MassEnergizeAPIError):
     try:
+      print(args)
       policy = Policy.objects.filter(id=policy_id)
       if not policy:
         return None, InvalidResourceError()
