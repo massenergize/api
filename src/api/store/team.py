@@ -10,14 +10,14 @@ class TeamStore:
     team = Team.objects.filter(id=team_id)
     if not team:
       return None, InvalidResourceError()
-    return team.full_json(), None
+    return team, None
 
 
   def list_teams(self, community_id) -> (list, MassEnergizeAPIError):
     teams = Team.objects.filter(community__id=community_id)
     if not teams:
       return [], None
-    return [t.simple_json() for t in teams], None
+    return teams, None
 
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
@@ -36,7 +36,7 @@ class TeamStore:
     if not team:
       return None, InvalidResourceError()
     team.update(**args)
-    return team.full_json(), None
+    return team, None
 
 
   def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):

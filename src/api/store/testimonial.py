@@ -10,21 +10,21 @@ class TestimonialStore:
     testimonial = Testimonial.objects.filter(id=testimonial_id)
     if not testimonial:
       return None, InvalidResourceError()
-    return testimonial.full_json(), None
+    return testimonial, None
 
 
   def list_testimonials(self, community_id) -> (list, MassEnergizeAPIError):
     testimonials = Testimonial.objects.filter(community__id=community_id)
     if not testimonials:
       return [], None
-    return [t.simple_json() for t in testimonials], None
+    return testimonials, None
 
 
   def create_testimonial(self, args) -> (dict, MassEnergizeAPIError):
     try:
       new_testimonial = Testimonial.create(**args)
       new_testimonial.save()
-      return new_testimonial.full_json(), None
+      return new_testimonial, None
     except Exception:
       return None, ServerError()
 
@@ -34,7 +34,7 @@ class TestimonialStore:
     if not testimonial:
       return None, InvalidResourceError()
     testimonial.update(**args)
-    return testimonial.full_json(), None
+    return testimonial, None
 
 
   def delete_testimonial(self, testimonial_id) -> (dict, MassEnergizeAPIError):

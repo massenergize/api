@@ -10,21 +10,21 @@ class TagStore:
     tag = Tag.objects.filter(id=tag_id)
     if not tag:
       return None, InvalidResourceError()
-    return tag.full_json(), None
+    return tag, None
 
 
   def list_tags(self, community_id) -> (list, MassEnergizeAPIError):
     tags = Tag.objects.filter(community__id=community_id)
     if not tags:
       return [], None
-    return [t.simple_json() for t in tags], None
+    return tags, None
 
 
   def create_tag(self, args) -> (dict, MassEnergizeAPIError):
     try:
       new_tag = Tag.create(**args)
       new_tag.save()
-      return new_tag.full_json(), None
+      return new_tag, None
     except Exception:
       return None, ServerError()
 
@@ -34,7 +34,7 @@ class TagStore:
     if not tag:
       return None, InvalidResourceError()
     tag.update(**args)
-    return tag.full_json(), None
+    return tag, None
 
 
   def delete_tag(self, tag_id) -> (dict, MassEnergizeAPIError):
@@ -45,13 +45,13 @@ class TagStore:
 
   def list_tags_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     tags = Tag.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in tags], None
+    return tags, None
 
 
   def list_tags_for_super_admin(self):
     try:
       tags = Tag.objects.all()
-      return [t.simple_json() for t in tags], None
+      return tags, None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))
