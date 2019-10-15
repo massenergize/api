@@ -17,11 +17,11 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def list_teams(self, team_id) -> (list, MassEnergizeAPIError):
-    team, err = self.store.list_teams(team_id)
+  def list_teams(self, team_id, user_id) -> (list, MassEnergizeAPIError):
+    team, err = self.store.list_teams(team_id, user_id)
     if err:
       return None, err
-    return serialize(team), None
+    return serialize_all(team), None
 
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):

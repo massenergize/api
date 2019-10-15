@@ -22,7 +22,7 @@ class TestimonialStore:
 
   def create_testimonial(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_testimonial = Testimonial.create(**args)
+      new_testimonial = Testimonial.objects.create(**args)
       new_testimonial.save()
       return new_testimonial, None
     except Exception:

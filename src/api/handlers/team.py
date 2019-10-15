@@ -13,7 +13,7 @@ class TeamHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.service = TeamService()
+    self.team = TeamService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -40,7 +40,7 @@ class TeamHandler(RouteHandler):
     def team_info_view(request) -> None: 
       args = get_request_contents(request)
       team_id = args.pop('team_id', None)
-      team_info, err = self.service.get_team_info(team_id)
+      team_info, err = self.team.get_team_info(team_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -51,7 +51,7 @@ class TeamHandler(RouteHandler):
     def create_team_view(request) -> None: 
       args = get_request_contents(request)
       user_id = args.pop('user_id', None)
-      team_info, err = self.service.create_team(user_id, args)
+      team_info, err = self.team.create_team(user_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -61,9 +61,9 @@ class TeamHandler(RouteHandler):
   def list(self) -> function:
     def list_team_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      team_info, err = self.service.list_teams(community_id, user_id)
+      community_id = args["community__id"]
+      user_id = args["user_id"]
+      team_info, err = self.team.list_teams(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -73,7 +73,7 @@ class TeamHandler(RouteHandler):
   def update(self) -> function:
     def update_team_view(request) -> None: 
       args = get_request_contents(request)
-      team_info, err = self.service.update_team(args[id], args)
+      team_info, err = self.team.update_team(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -84,7 +84,7 @@ class TeamHandler(RouteHandler):
     def delete_team_view(request) -> None: 
       args = get_request_contents(request)
       team_id = args[id]
-      team_info, err = self.service.delete_team(args[id])
+      team_info, err = self.team.delete_team(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -95,7 +95,7 @@ class TeamHandler(RouteHandler):
       args = get_request_contents(request)
       team_id = args.pop('team_id', None)
       user_id = args.pop('user_id', None)
-      team_info, err = self.service.join_team(team_id, user_id)
+      team_info, err = self.team.join_team(team_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -106,7 +106,7 @@ class TeamHandler(RouteHandler):
       args = get_request_contents(request)
       team_id = args.pop('team_id', None)
       user_id = args.pop('user_id', None)
-      team_info, err = self.service.leave_team(team_id, user_id)
+      team_info, err = self.team.leave_team(team_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -118,7 +118,7 @@ class TeamHandler(RouteHandler):
       team_id = args.pop('team_id', None)
       user_id = args.pop('user_id', None)
       new_admin_email = args.pop('email', None)
-      team_info, err = self.service.add_team_admin(team_id, user_id, new_admin_email)
+      team_info, err = self.team.add_team_admin(team_id, user_id, new_admin_email)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -130,7 +130,7 @@ class TeamHandler(RouteHandler):
       team_id = args.pop('team_id', None)
       user_id = args.pop('user_id', None)
       new_admin_email = args.pop('email', None)
-      team_info, err = self.service.remove_team_admin(team_id, user_id, new_admin_email)
+      team_info, err = self.team.remove_team_admin(team_id, user_id, new_admin_email)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -153,7 +153,7 @@ class TeamHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.pop('community_id', None)
-      teams, err = self.service.list_teams_for_community_admin(community_id)
+      teams, err = self.team.list_teams_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=teams)
@@ -163,7 +163,7 @@ class TeamHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      teams, err = self.service.list_teams_for_super_admin()
+      teams, err = self.team.list_teams_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=teams)

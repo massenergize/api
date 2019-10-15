@@ -22,7 +22,7 @@ class UserStore:
 
   def create_user(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_user = UserProfile.create(**args)
+      new_user = UserProfile.objects.create(**args)
       new_user.save()
       return new_user, None
     except Exception:

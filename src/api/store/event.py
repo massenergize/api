@@ -22,7 +22,7 @@ class EventStore:
 
   def create_event(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_event = Event.create(**args)
+      new_event = Event.objects.create(**args)
       new_event.save()
       return new_event, None
     except Exception:

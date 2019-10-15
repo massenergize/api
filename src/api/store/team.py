@@ -13,7 +13,7 @@ class TeamStore:
     return team, None
 
 
-  def list_teams(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_teams(self, community_id, user_id) -> (list, MassEnergizeAPIError):
     teams = Team.objects.filter(community__id=community_id)
     if not teams:
       return [], None

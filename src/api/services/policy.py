@@ -31,8 +31,8 @@ class PolicyService:
     return serialize(policy), None
 
 
-  def update_policy(self, args) -> (dict, MassEnergizeAPIError):
-    policy, err = self.store.update_policy(args)
+  def update_policy(self, policy_id, args) -> (dict, MassEnergizeAPIError):
+    policy, err = self.store.update_policy(policy_id, args)
     if err:
       return None, err
     return serialize(policy), None

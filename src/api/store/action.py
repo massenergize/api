@@ -23,7 +23,7 @@ class ActionStore:
 
   def create_action(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_action = Action.create(**args)
+      new_action = Action.objects.create(**args)
       new_action.save()
       return new_action, None
     except Exception:

@@ -22,7 +22,7 @@ class TagStore:
 
   def create_tag(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_tag = Tag.create(**args)
+      new_tag = Tag.objects.objects.create(**args)
       new_tag.save()
       return new_tag, None
     except Exception:

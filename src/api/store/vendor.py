@@ -22,7 +22,7 @@ class VendorStore:
 
   def create_vendor(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_vendor = Vendor.create(**args)
+      new_vendor = Vendor.objects.create(**args)
       new_vendor.save()
       return new_vendor, None
     except Exception:

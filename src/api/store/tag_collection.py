@@ -22,7 +22,7 @@ class TagCollectionStore:
 
   def create_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_tag_collection = TagCollection.create(**args)
+      new_tag_collection = TagCollection.objects.create(**args)
       new_tag_collection.save()
       return new_tag_collection, None
     except Exception:

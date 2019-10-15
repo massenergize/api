@@ -22,7 +22,7 @@ class CommunityStore:
 
   def create_community(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_community = Community.create(**args)
+      new_community = Community.objects.create(**args)
       new_community.save()
       return new_community, None
     except Exception:
