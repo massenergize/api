@@ -136,7 +136,7 @@ class Policy(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   more_info = JSONField(blank=True, null=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):
     return self.name
@@ -265,7 +265,7 @@ class Community(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):      
     return self.name
@@ -503,7 +503,7 @@ class Team(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def is_admin(self, UserProfile):
     return self.admins.filter(id=UserProfile.id)
@@ -567,7 +567,7 @@ class Service(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -655,7 +655,7 @@ class Vendor(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   communities = models.ManyToManyField(Community, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -695,7 +695,7 @@ class ActionProperty(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self): 
@@ -727,7 +727,7 @@ class TagCollection(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   allow_multiple = models.BooleanField(default=False)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):
@@ -766,7 +766,7 @@ class Tag(models.Model):
     on_delete=models.SET_NULL, blank=True)
   order = models.PositiveIntegerField(default=0)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):
     return "%s - %s" % (self.name, self.tag_collection)
@@ -838,7 +838,7 @@ class Action(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self): 
     return self.title
@@ -913,7 +913,7 @@ class Event(models.Model):
   is_external_event = models.BooleanField(default=False, blank=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):             
@@ -1001,7 +1001,7 @@ class Permission(models.Model):
   )
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):
@@ -1082,7 +1082,7 @@ class Testimonial(models.Model):
   created_at = models.DateTimeField(auto_now_add=True, blank=True)
   updated_at = models.DateTimeField(auto_now=True, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):        
     return self.title
@@ -1303,7 +1303,7 @@ class Graph(models.Model):
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True,blank=True)
   data = models.ManyToManyField(Data,  blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def simple_json(self):
@@ -1412,7 +1412,7 @@ class Slider(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -1443,7 +1443,7 @@ class Menu(models.Model):
   name = models.CharField(max_length=LONG_STR_LEN, unique=True)
   content = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):              
     return self.name
@@ -1512,7 +1512,7 @@ class PageSection(models.Model):
   graphs = models.ManyToManyField(Graph, blank=True, related_name='graphs')
   info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -1555,7 +1555,7 @@ class Page(models.Model):
   sections = models.ManyToManyField(PageSection, blank=True)
   info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return f"{self.name} - {self.community.name}"
@@ -1606,7 +1606,7 @@ class BillingStatement(models.Model):
   more_info = JSONField(blank=True, null=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):
     return self.name
@@ -1677,7 +1677,7 @@ class EmailCategory(models.Model):
     on_delete=models.CASCADE)
   is_global = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
