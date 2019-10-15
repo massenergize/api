@@ -145,7 +145,11 @@ class Policy(models.Model):
     return model_to_dict(self)
 
   def full_json(self):
-    return model_to_dict(self)
+    res  =  model_to_dict(self)
+    community = self.community_set.all().first()
+    if community:
+      res['community'] = get_json_if_not_none(community)
+    return res
 
 
   class Meta:

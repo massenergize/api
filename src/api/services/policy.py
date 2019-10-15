@@ -24,8 +24,8 @@ class PolicyService:
     return serialize(policy), None
 
 
-  def create_policy(self, args) -> (dict, MassEnergizeAPIError):
-    policy, err = self.store.create_policy(args)
+  def create_policy(self, community_id, args) -> (dict, MassEnergizeAPIError):
+    policy, err = self.store.create_policy(community_id, args)
     if err:
       return None, err
     return serialize(policy), None
@@ -37,12 +37,17 @@ class PolicyService:
       return None, err
     return serialize(policy), None
 
-  def delete_policy(self, args) -> (dict, MassEnergizeAPIError):
-    policy, err = self.store.delete_policy(args)
+  def delete_policy(self, policy_id) -> (dict, MassEnergizeAPIError):
+    policy, err = self.store.delete_policy(policy_id)
     if err:
       return None, err
     return serialize(policy), None
 
+  def copy_policy(self, policy_id) -> (dict, MassEnergizeAPIError):
+    policy, err = self.store.copy_policy(policy_id)
+    if err:
+      return None, err
+    return serialize(policy), None
 
   def list_policies_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     policies, err = self.store.list_policies_for_community_admin(community_id)
@@ -55,4 +60,4 @@ class PolicyService:
     policies, err = self.store.list_policies_for_super_admin()
     if err:
       return None, err
-    return serialize_all(policies), None
+    return serialize_all(policies, full=True), None

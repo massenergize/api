@@ -1,4 +1,4 @@
-from database.models import Policy, UserProfile
+from database.models import Policy, UserProfile, Community
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
@@ -20,10 +20,14 @@ class PolicyStore:
     return policies, None
 
 
-  def create_policy(self, args) -> (dict, MassEnergizeAPIError):
+  def create_policy(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
       new_policy = Policy.objects.create(**args)
       new_policy.save()
+      if community_id:
+        community = Community.objects.get(id=community_id)
+        community.policies.add(new_policy)
+        community.save()
       return new_policy, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -43,7 +47,7 @@ class PolicyStore:
     try:
       #find the policy
       policies_to_delete = Policy.objects.filter(id=policy_id)
-      policies_to_delete.update(is_deleted=True, community=None)
+      policies_to_delete.update(is_deleted=True)
       if not policies_to_delete:
         return None, InvalidResourceError()
       return policies_to_delete.first(), None
@@ -67,14 +71,13 @@ class PolicyStore:
 
 
   def list_policies_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    policies = Policy.objects.filter(community__id = community_id)
+    policies = Policy.objects.filter(community__id = community_id, is_deleted=False)
     return policies, None
 
 
   def list_policies_for_super_admin(self):
     try:
-      policies = Policy.objects.all()
+      policies = Policy.objects.filter(is_deleted=False)
       return policies, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(str(e))

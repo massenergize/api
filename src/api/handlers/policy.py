@@ -19,6 +19,7 @@ class PolicyHandler(RouteHandler):
   def registerRoutes(self) -> None:
     self.add("/policies.info", self.info()) 
     self.add("/policies.create", self.create())
+    self.add("/policies.copy", self.copy())
     self.add("/policies.add", self.create())
     self.add("/policies.list", self.list())
     self.add("/policies.update", self.update())
@@ -44,7 +45,8 @@ class PolicyHandler(RouteHandler):
   def create(self) -> function:
     def create_policy_view(request) -> None: 
       args = get_request_contents(request)
-      policy_info, err = self.service.create_policy(args)
+      community_id = args.pop('community_id', None)
+      policy_info, err = self.service.create_policy(community_id ,args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policy_info)
@@ -61,6 +63,17 @@ class PolicyHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policy_info)
     return list_policy_view
+
+
+  def copy(self) -> function:
+    def copy_policy_view(request) -> None: 
+      args = get_request_contents(request)
+      policy_id = args.pop('policy_id', None)
+      policy_info, err = self.service.copy_policy(policy_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=policy_info)
+    return copy_policy_view
 
 
   def update(self) -> function:
