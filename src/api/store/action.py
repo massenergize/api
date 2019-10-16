@@ -1,4 +1,4 @@
-from database.models import Action, UserProfile
+from database.models import Action, UserProfile, Community
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 import random
@@ -21,13 +21,16 @@ class ActionStore:
     return actions, None
 
 
-  def create_action(self, args) -> (dict, MassEnergizeAPIError):
+  def create_action(self,community_id, args) -> (dict, MassEnergizeAPIError):
     try:
       new_action = Action.objects.create(**args)
+      community = Community.objects.get(id=community_id)
+      print(community)
+      new_action.community = community
       new_action.save()
       return new_action, None
-    except Exception:
-      return None, ServerError()
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
   def copy_action(self, action_id) -> (Action, MassEnergizeAPIError):
     try:

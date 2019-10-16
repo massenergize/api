@@ -44,7 +44,9 @@ class ActionHandler(RouteHandler):
   def create(self) -> function:
     def create_action_view(request) -> None: 
       args = get_request_contents(request)
-      action_info, err = self.service.create(args)
+      print(args)
+      community_id = args.pop('community_id', None)
+      action_info, err = self.service.create_action(community_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)

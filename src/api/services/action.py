@@ -24,8 +24,8 @@ class ActionService:
     return serialize(action), None
 
 
-  def create_action(self, args) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.create_action(args)
+  def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.create_action(community_id, args)
     if err:
       return None, err
     return serialize(action), None

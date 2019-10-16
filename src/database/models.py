@@ -28,7 +28,7 @@ class Location(models.Model):
   state: str
     the name of the state if available
   more_info: JSON
-    any another dynamic information we would like to store about this location 
+    any anotheraction() dynamic information we would like to store about this location 
   """
   id = models.AutoField(primary_key=True)
   location_type = models.CharField(max_length=TINY_STR_LEN, 
