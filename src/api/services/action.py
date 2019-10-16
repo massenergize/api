@@ -41,13 +41,13 @@ class ActionService:
     action, err = self.store.delete_action(action_id)
     if err:
       return None, err
-    return serialize(action).full_json(), None
+    return serialize(action), None
 
   def copy_action(self, action_id) -> (dict, MassEnergizeAPIError):
     action, err = self.store.copy_action(action_id)
     if err:
       return None, err
-    return serialize(action).full_json(), None
+    return serialize(action), None
 
   def list_actions_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     actions, err = self.store.list_actions_for_community_admin(community_id)

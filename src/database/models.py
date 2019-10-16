@@ -69,7 +69,7 @@ class Location(models.Model):
     db_table = 'locations'
 
 
-class Media(models.Model):
+class              Media(models.Model):
   """
   A class used to represent any Media that is uploaded to this website
 

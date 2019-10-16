@@ -55,7 +55,7 @@ class ActionStore:
     return action, None
 
 
-  def delete_action(self, action_id) -> (dict, MassEnergizeAPIError):
+  def delete_action(self, action_id) -> (Action, MassEnergizeAPIError):
     try:
       #find the action
       actions_to_delete = Action.objects.filter(id=action_id)
