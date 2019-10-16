@@ -21,15 +21,32 @@ class ActionStore:
     return actions, None
 
 
-  def create_action(self,community_id, args) -> (dict, MassEnergizeAPIError):
+  def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
+    print("store")
     try:
+      tags = args.pop('tags', [])
+      vendors = args.pop('vendors', [])
       new_action = Action.objects.create(**args)
-      community = Community.objects.get(id=community_id)
-      print(community)
-      new_action.community = community
+
+      if community_id:
+        print("here")
+        community = Community.objects.get(id=community_id)
+        print(community)
+        new_action.community = community
+      
+      #save so you set an id
+      new_action.save()
+
+      if tags:
+        new_action.tags.set(tags)
+
+      if vendors:
+        new_action.vendors.set(vendors)
+    
       new_action.save()
       return new_action, None
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(e)
 
   def copy_action(self, action_id) -> (Action, MassEnergizeAPIError):

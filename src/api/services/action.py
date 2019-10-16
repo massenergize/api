@@ -25,6 +25,7 @@ class ActionService:
 
 
   def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
+    print("service")
     action, err = self.store.create_action(community_id, args)
     if err:
       return None, err
