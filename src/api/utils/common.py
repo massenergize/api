@@ -23,3 +23,14 @@ def get_request_contents(request):
     except Exception as e:
       return {}
 
+
+def serialize_all(data, full=False):
+  if full:
+    return [d.full_json() for d in data]
+  return [d.simple_json() for d in data]
+
+
+def serialize(data, full=False):
+  if full:
+    return data.full_json()
+  return data.simple_json()

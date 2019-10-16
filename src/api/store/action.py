@@ -11,21 +11,21 @@ class ActionStore:
     action = Action.objects.filter(id=action_id)
     if not action:
       return None, InvalidResourceError()
-    return action.full_json(), None
+    return action, None
 
 
   def list_actions(self, community_id) -> (list, MassEnergizeAPIError):
     actions = Action.objects.filter(community__id=community_id)
     if not actions:
       return [], None
-    return [t.simple_json() for t in actions], None
+    return actions, None
 
 
   def create_action(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_action = Action.create(**args)
+      new_action = Action.objects.create(**args)
       new_action.save()
-      return new_action.full_json(), None
+      return new_action, None
     except Exception:
       return None, ServerError()
 
@@ -52,7 +52,7 @@ class ActionStore:
     if not action:
       return None, InvalidResourceError()
     action.update(**args)
-    return action.full_json(), None
+    return action, None
 
 
   def delete_action(self, action_id) -> (dict, MassEnergizeAPIError):
@@ -68,13 +68,13 @@ class ActionStore:
 
   def list_actions_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     actions = Action.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in actions], None
+    return actions, None
 
 
   def list_actions_for_super_admin(self):
     try:
       actions = Action.objects.filter(is_deleted=False);
-      return [t.simple_json() for t in actions], None
+      return actions, None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

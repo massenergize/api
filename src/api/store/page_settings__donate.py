@@ -10,21 +10,21 @@ class DonatePageSettingsStore:
     donate_page_setting = DonatePageSettings.objects.filter(id=donate_page_setting_id)
     if not donate_page_setting:
       return None, InvalidResourceError()
-    return donate_page_setting.full_json(), None
+    return donate_page_setting, None
 
 
   def list_donate_page_settings(self, community_id) -> (list, MassEnergizeAPIError):
     donate_page_settings = DonatePageSettings.objects.filter(community__id=community_id)
     if not donate_page_settings:
       return [], None
-    return [t.simple_json() for t in donate_page_settings], None
+    return donate_page_settings, None
 
 
   def create_donate_page_setting(self, args) -> (dict, MassEnergizeAPIError):
     try:
       new_donate_page_setting = DonatePageSettings.create(**args)
       new_donate_page_setting.save()
-      return new_donate_page_setting.full_json(), None
+      return new_donate_page_setting, None
     except Exception:
       return None, ServerError()
 
@@ -34,7 +34,7 @@ class DonatePageSettingsStore:
     if not donate_page_setting:
       return None, InvalidResourceError()
     donate_page_setting.update(**args)
-    return donate_page_setting.full_json(), None
+    return donate_page_setting, None
 
 
   def delete_donate_page_setting(self, donate_page_setting_id) -> (dict, MassEnergizeAPIError):
@@ -45,13 +45,12 @@ class DonatePageSettingsStore:
 
   def list_donate_page_settings_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     donate_page_settings = DonatePageSettings.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in donate_page_settings], None
+    return donate_page_settings, None
 
 
   def list_donate_page_settings_for_super_admin(self):
     try:
       donate_page_settings = DonatePageSettings.objects.all()
-      return [t.simple_json() for t in donate_page_settings], None
+      return donate_page_settings, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(str(e))

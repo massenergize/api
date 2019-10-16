@@ -10,21 +10,21 @@ class AboutUsPageSettingsStore:
     about_us_page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_setting_id)
     if not about_us_page_setting:
       return None, InvalidResourceError()
-    return about_us_page_setting.full_json(), None
+    return about_us_page_setting, None
 
 
   def list_about_us_page_settings(self, community_id) -> (list, MassEnergizeAPIError):
     about_us_page_settings = AboutUsPageSettings.objects.filter(community__id=community_id)
     if not about_us_page_settings:
       return [], None
-    return [t.simple_json() for t in about_us_page_settings], None
+    return about_us_page_settings, None
 
 
   def create_about_us_page_setting(self, args) -> (dict, MassEnergizeAPIError):
     try:
       new_about_us_page_setting = AboutUsPageSettings.create(**args)
       new_about_us_page_setting.save()
-      return new_about_us_page_setting.full_json(), None
+      return new_about_us_page_setting, None
     except Exception:
       return None, ServerError()
 
@@ -34,7 +34,7 @@ class AboutUsPageSettingsStore:
     if not about_us_page_setting:
       return None, InvalidResourceError()
     about_us_page_setting.update(**args)
-    return about_us_page_setting.full_json(), None
+    return about_us_page_setting, None
 
 
   def delete_about_us_page_setting(self, about_us_page_setting_id) -> (dict, MassEnergizeAPIError):
@@ -45,13 +45,13 @@ class AboutUsPageSettingsStore:
 
   def list_about_us_page_settings_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     about_us_page_settings = AboutUsPageSettings.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in about_us_page_settings], None
+    return about_us_page_settings, None
 
 
   def list_about_us_page_settings_for_super_admin(self):
     try:
       about_us_page_settings = AboutUsPageSettings.objects.all()
-      return [t.simple_json() for t in about_us_page_settings], None
+      return about_us_page_settings, None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

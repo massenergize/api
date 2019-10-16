@@ -30,4 +30,4 @@ class ServerError(MassEnergizeAPIError):
 
 class CustomMassenergizeError(MassEnergizeAPIError):
   def __init__(self, err_msg):
-    super().__init__(err_msg, 200)
+    super().__init__(str(err_msg), 200)

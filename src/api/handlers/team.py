@@ -28,6 +28,8 @@ class TeamHandler(RouteHandler):
     self.add("/teams.join", self.join())
     self.add("/teams.addAdmin", self.add_admin())
     self.add("/teams.removeAdmin", self.remove_admin())
+    self.add("/teams.messageAdmin", self.message_admin())
+    self.add("/teams.contactAdmin", self.message_admin())
 
     #admin routes
     self.add("/teams.listForCommunityAdmin", self.community_admin_list())
@@ -133,6 +135,18 @@ class TeamHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
     return remove_team_admin_view
+
+
+
+  def message_admin(self) -> function:
+    def message_team_admin_view(request) -> None: 
+      args = get_request_contents(request)
+      team_id = args.pop('team_id', None)
+      user_id = args.pop('user_id', None)
+      user_id = args.pop('message', None)
+      #TODO: implement actual sending of message
+      return MassenergizeResponse()
+    return message_team_admin_view
 
 
   def community_admin_list(self) -> function:

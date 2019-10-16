@@ -13,7 +13,7 @@ class DonatePageSettingsHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.donate_page_setting = DonatePageSettingsService()
+    self.service = DonatePageSettingsService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -33,7 +33,7 @@ class DonatePageSettingsHandler(RouteHandler):
   def info(self) -> function:
     def donate_page_setting_info_view(request) -> None: 
       args = get_request_contents(request)
-      donate_page_setting_info, err = self.donate_page_setting.info(args)
+      donate_page_setting_info, err = self.service.get_donate_page_setting_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_setting_info)
@@ -43,7 +43,7 @@ class DonatePageSettingsHandler(RouteHandler):
   def create(self) -> function:
     def create_donate_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      donate_page_setting_info, err = self.donate_page_setting.create(args)
+      donate_page_setting_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_setting_info)
@@ -53,9 +53,9 @@ class DonatePageSettingsHandler(RouteHandler):
   def list(self) -> function:
     def list_donate_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args["community__id"]
-      user_id = args["user_id"]
-      donate_page_setting_info, err = self.donate_page_setting.list_donate_page_settings(community_id, user_id)
+      community_id = args.pop('community_id', None)
+      user_id = args.pop('user_id', None)
+      donate_page_setting_info, err = self.service.list_donate_page_settings(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_setting_info)
@@ -65,7 +65,7 @@ class DonatePageSettingsHandler(RouteHandler):
   def update(self) -> function:
     def update_donate_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      donate_page_setting_info, err = self.donate_page_setting.update_donate_page_setting(args[id], args)
+      donate_page_setting_info, err = self.service.update_donate_page_setting(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_setting_info)
@@ -76,7 +76,7 @@ class DonatePageSettingsHandler(RouteHandler):
     def delete_donate_page_setting_view(request) -> None: 
       args = get_request_contents(request)
       donate_page_setting_id = args[id]
-      donate_page_setting_info, err = self.donate_page_setting.delete_donate_page_setting(args[id])
+      donate_page_setting_info, err = self.service.delete_donate_page_setting(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_setting_info)
@@ -87,7 +87,7 @@ class DonatePageSettingsHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.get("community__id")
-      donate_page_settings, err = self.donate_page_setting.list_donate_page_settings_for_community_admin(community_id)
+      donate_page_settings, err = self.service.list_donate_page_settings_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_settings)
@@ -97,7 +97,7 @@ class DonatePageSettingsHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      donate_page_settings, err = self.donate_page_setting.list_donate_page_settings_for_super_admin()
+      donate_page_settings, err = self.service.list_donate_page_settings_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_settings)
