@@ -1,4 +1,4 @@
-from database.models import Action, UserProfile, Community
+from database.models import Action, UserProfile, Community, Media
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 import random
@@ -25,12 +25,17 @@ class ActionStore:
     try:
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
+      image = args.pop('image', None)
       new_action = Action.objects.create(**args)
 
       if community_id:
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
+      if image:
+        media = Media.objects.create(name=f"{args['title']}", file=image)
+        # media.save()
+        new_action.image = media
       #save so you set an id
       new_action.save()
 
