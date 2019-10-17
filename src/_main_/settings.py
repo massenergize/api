@@ -15,7 +15,7 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = False
+IS_PROD = True
 
 DEPLOY_VERSION = '0.0.1'
 
@@ -23,8 +23,8 @@ DEPLOY_VERSION = '0.0.1'
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-# path_to_config = '/_main_/config/massenergizeProjectConfig.json'
+# path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
+path_to_config = '/_main_/config/massenergizeProjectConfig.json'
 CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
 os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#

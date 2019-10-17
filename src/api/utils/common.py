@@ -1,5 +1,4 @@
 import json 
-import querystring
 from querystring_parser import parser
 from api.api_errors.massenergize_errors import CustomMassenergizeError
 
