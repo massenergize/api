@@ -1,6 +1,7 @@
 import json 
 import querystring
 from querystring_parser import parser
+from api.api_errors.massenergize_errors import CustomMassenergizeError
 
 
 def get_request_contents(request):
@@ -60,3 +61,14 @@ def serialize(data, full=False):
   if full:
     return data.full_json()
   return data.simple_json()
+
+def check_length(args, field,  min_length=5, max_length=25):
+  print("here")
+  data = args.get(field, None)
+  if not data:
+    return False, CustomMassenergizeError(f"Please provide a {field} field")
+  
+  data_length = len(data)
+  if data_length < min_length or data_length > max_length:
+    return False, CustomMassenergizeError(f"{field} has to be between {min_length} and {max_length}")
+  return True, None

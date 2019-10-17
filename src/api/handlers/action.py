@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to actions"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents, parse_list, parse_bool
+from api.utils.common import get_request_contents, parse_list, parse_bool, check_length
 from api.services.action import ActionService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -44,6 +44,9 @@ class ActionHandler(RouteHandler):
   def create(self) -> function:
     def create_action_view(request) -> None: 
       args = get_request_contents(request)
+      success, err = check_length(args, 'title', min_length=5, max_length=25)
+      if not success:
+        return MassenergizeResponse(error=str(err))
       community_id = args.pop('community_id', None)
       args['tags'] = parse_list(args.pop('tags', []))
       args['vendors'] = parse_list(args.pop('vendors', []))

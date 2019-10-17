@@ -22,16 +22,13 @@ class ActionStore:
 
 
   def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
-    print("store")
     try:
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
       new_action = Action.objects.create(**args)
 
       if community_id:
-        print("here")
         community = Community.objects.get(id=community_id)
-        print(community)
         new_action.community = community
       
       #save so you set an id
@@ -46,7 +43,6 @@ class ActionStore:
       new_action.save()
       return new_action, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(e)
 
   def copy_action(self, action_id) -> (Action, MassEnergizeAPIError):
@@ -63,7 +59,6 @@ class ActionStore:
       new_action.tags.set(old_tags)
       return new_action, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(str(e))
 
 
@@ -96,5 +91,4 @@ class ActionStore:
       actions = Action.objects.filter(is_deleted=False);
       return actions, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(str(e))
