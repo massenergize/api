@@ -23,19 +23,19 @@ class ActionStore:
 
   def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
+
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
       new_action = Action.objects.create(**args)
-
       if community_id:
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
       if image:
-        media = Media.objects.create(name=f"{args['title']}", file=image)
-        # media.save()
+        media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
         new_action.image = media
+      
       #save so you set an id
       new_action.save()
 
@@ -47,7 +47,9 @@ class ActionStore:
     
       new_action.save()
       return new_action, None
+
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(e)
 
   def copy_action(self, action_id) -> (Action, MassEnergizeAPIError):

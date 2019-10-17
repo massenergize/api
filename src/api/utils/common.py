@@ -11,19 +11,9 @@ def get_request_contents(request):
 
     args = {}
     if request.content_type == 'application/x-www-form-urlencoded':
-      tmp = parser.parse(request.POST.urlencode())
-      args= tmp
-      
-      # print(tmp)
-      # for k, v in tmp.items():
-      #   if(isinstance(v, dict)):
-      #     args[k] = list(v.values())
-      #   elif isinstance(v, str) and v.isnumeric():
-      #     args = int(v)
-      #   else:
-      #     args[k] = v
+      args = parser.parse(request.POST.urlencode())
     elif request.content_type == 'multipart/form-data':
-      tmp = request.POST.dict()
+      args = request.POST.dict()
       if(request.FILES):
         for i in request.FILES.dict():
           args[i] = request.FILES[i]
@@ -32,14 +22,12 @@ def get_request_contents(request):
     return args
 
   except Exception as e:
-    print(e)
     return {}
-
 
 def parse_list(d):
   try:
     if isinstance(d, str):
-      return d.split(',')
+      return d.strip().split(',') if d else []
     elif isinstance(d, dict):
       return list(d.values())
     else:
