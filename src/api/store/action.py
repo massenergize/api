@@ -8,7 +8,7 @@ class ActionStore:
     self.name = "Action Store/DB"
 
   def get_action_info(self, action_id) -> (dict, MassEnergizeAPIError):
-    action = Action.objects.filter(id=action_id)
+    action = Action.objects.get(id=action_id)
     if not action:
       return None, InvalidResourceError()
     return action, None

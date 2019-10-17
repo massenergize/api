@@ -11,14 +11,14 @@ class ActionService:
   def __init__(self):
     self.store =  ActionStore()
 
-  def get_action_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.get_action_info(team_id)
+  def get_action_info(self, action_id) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.get_action_info(action_id)
     if err:
       return None, err
-    return serialize(action)
+    return serialize(action), None
 
-  def list_actions(self, team_id) -> (list, MassEnergizeAPIError):
-    action, err = self.store.list_actions(team_id)
+  def list_actions(self, action_id) -> (list, MassEnergizeAPIError):
+    action, err = self.store.list_actions(action_id)
     if err:
       return None, err
     return serialize(action), None
