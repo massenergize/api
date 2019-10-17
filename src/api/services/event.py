@@ -17,8 +17,8 @@ class EventService:
       return None, err
     return serialize(event), None
 
-  def list_events(self, community_id, user_id) -> (list, MassEnergizeAPIError):
-    events, err = self.store.list_events(community_id, user_id)
+  def list_events(self, community_id, subdomain, user_id) -> (list, MassEnergizeAPIError):
+    events, err = self.store.list_events(community_id, subdomain, user_id)
     if err:
       return None, err
     return serialize_all(events), None
