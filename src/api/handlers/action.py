@@ -51,7 +51,6 @@ class ActionHandler(RouteHandler):
       args['tags'] = parse_list(args.pop('tags', []))
       args['vendors'] = parse_list(args.pop('vendors', []))
       args['is_global'] = parse_bool(args.pop('vendors', False))
-      print(00000000)
       action_info, err = self.service.create_action(community_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
