@@ -17,11 +17,11 @@ class EventService:
       return None, err
     return serialize(event), None
 
-  def list_events(self, event_id) -> (list, MassEnergizeAPIError):
-    event, err = self.store.list_events(event_id)
+  def list_events(self, community_id, user_id) -> (list, MassEnergizeAPIError):
+    events, err = self.store.list_events(community_id, user_id)
     if err:
       return None, err
-    return serialize(event), None
+    return serialize_all(events), None
 
 
   def create_event(self, args) -> (dict, MassEnergizeAPIError):

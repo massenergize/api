@@ -63,8 +63,7 @@ class ActionHandler(RouteHandler):
     def list_action_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      action_info, err = self.service.list_actions(community_id, user_id)
+      action_info, err = self.service.list_actions(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)

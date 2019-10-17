@@ -8,14 +8,18 @@ class ActionStore:
     self.name = "Action Store/DB"
 
   def get_action_info(self, action_id) -> (dict, MassEnergizeAPIError):
-    action = Action.objects.get(id=action_id)
-    if not action:
-      return None, InvalidResourceError()
-    return action, None
-
+    
+    try:
+      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
+      action = actions_retrieved.first()
+      if not action:
+        return None, InvalidResourceError()
+      return action, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
   def list_actions(self, community_id) -> (list, MassEnergizeAPIError):
-    actions = Action.objects.filter(community__id=community_id)
+    actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
     if not actions:
       return [], None
     return actions, None
@@ -95,7 +99,7 @@ class ActionStore:
 
   def list_actions_for_super_admin(self):
     try:
-      actions = Action.objects.filter(is_deleted=False);
+      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False);
       return actions, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))

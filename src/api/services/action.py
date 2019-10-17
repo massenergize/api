@@ -18,10 +18,10 @@ class ActionService:
     return serialize(action), None
 
   def list_actions(self, action_id) -> (list, MassEnergizeAPIError):
-    action, err = self.store.list_actions(action_id)
+    actions, err = self.store.list_actions(action_id)
     if err:
       return None, err
-    return serialize(action), None
+    return serialize_all(actions), None
 
 
   def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
