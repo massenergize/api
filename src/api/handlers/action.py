@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to actions"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents
+from api.utils.common import get_request_contents, parse_list, parse_bool, check_length
 from api.services.action import ActionService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -34,7 +34,8 @@ class ActionHandler(RouteHandler):
   def info(self) -> function:
     def action_info_view(request) -> None: 
       args = get_request_contents(request)
-      action_info, err = self.service.get_action_info(args)
+      action_id = args.pop('action_id', None)
+      action_info, err = self.service.get_action_info(action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -44,7 +45,14 @@ class ActionHandler(RouteHandler):
   def create(self) -> function:
     def create_action_view(request) -> None: 
       args = get_request_contents(request)
-      action_info, err = self.service.create(args)
+      success, err = check_length(args, 'title', min_length=5, max_length=25)
+      if not success:
+        return MassenergizeResponse(error=str(err))
+      community_id = args.pop('community_id', None)
+      args['tags'] = parse_list(args.pop('tags', []))
+      args['vendors'] = parse_list(args.pop('vendors', []))
+      args['is_global'] = parse_bool(args.pop('vendors', False))
+      action_info, err = self.service.create_action(community_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -55,8 +63,7 @@ class ActionHandler(RouteHandler):
     def list_action_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      action_info, err = self.service.list_actions(community_id, user_id)
+      action_info, err = self.service.list_actions(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)

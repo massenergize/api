@@ -67,11 +67,16 @@ def actions(request):
     return Json(actions, errors)
   elif request.method == 'POST':
     #about to create a new Action instance
-    print(args)
     if 'tags' in args and isinstance(args['tags'], str):
-      args['tags'] = [int(k) for k in args['tags'].split(',')]
+      if args['tags'] != '':
+        args['tags'] = [int(k) for k in args['tags'].split(',')]
+      else:
+        del args['tags']
     if 'vendors' in args and isinstance(args['vendors'], str):
-      args['vendors'] = [int(k) for k in args['vendors'].split(',') if k != '']
+      if  args['vendors'] != '':
+        args['vendors'] = [int(k) for k in args['vendors'].split(',') if k != '']
+      else:
+        del args['vendors']
     if 'community' in args and isinstance(args['community'], str):
       args['community'] = int(args['community'])      
     if 'is_global' in args and isinstance(args['is_global'], str):
@@ -84,6 +89,7 @@ def actions(request):
       if errors:
         print(errors)
       args['image'] = media.pk
+
 
     action, errors = FACTORY.create(Action, args)
     return Json(action, errors)
@@ -121,8 +127,9 @@ def action(request, id):
         del args['image']
       else:
         args['image'] = media.pk
-        print(args)
+        
     action, errors = FACTORY.update(Action, args)
+    # return JsonResponse({'success': True})
     return Json(action, errors, use_full_json=True)
 
   elif request.method == 'DELETE':

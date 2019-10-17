@@ -28,7 +28,7 @@ class Location(models.Model):
   state: str
     the name of the state if available
   more_info: JSON
-    any another dynamic information we would like to store about this location 
+    any anotheraction() dynamic information we would like to store about this location 
   """
   id = models.AutoField(primary_key=True)
   location_type = models.CharField(max_length=TINY_STR_LEN, 
@@ -69,7 +69,7 @@ class Location(models.Model):
     db_table = 'locations'
 
 
-class Media(models.Model):
+class              Media(models.Model):
   """
   A class used to represent any Media that is uploaded to this website
 
@@ -847,7 +847,7 @@ class Action(models.Model):
     data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
       'average_carbon_score'])
     data['image'] = get_json_if_not_none(self.image)
-    data['tags'] = [t.full_json() for t in self.tags.all()]
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
     data['community'] = get_json_if_not_none(self.community)
@@ -930,6 +930,8 @@ class Event(models.Model):
 
   def full_json(self):
     return self.simple_json()
+
+
 
 
   class Meta:

@@ -11,21 +11,21 @@ class ActionService:
   def __init__(self):
     self.store =  ActionStore()
 
-  def get_action_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.get_action_info(team_id)
-    if err:
-      return None, err
-    return serialize(action)
-
-  def list_actions(self, team_id) -> (list, MassEnergizeAPIError):
-    action, err = self.store.list_actions(team_id)
+  def get_action_info(self, action_id) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.get_action_info(action_id)
     if err:
       return None, err
     return serialize(action), None
 
+  def list_actions(self, action_id) -> (list, MassEnergizeAPIError):
+    actions, err = self.store.list_actions(action_id)
+    if err:
+      return None, err
+    return serialize_all(actions), None
 
-  def create_action(self, args) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.create_action(args)
+
+  def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.create_action(community_id, args)
     if err:
       return None, err
     return serialize(action), None
@@ -41,13 +41,13 @@ class ActionService:
     action, err = self.store.delete_action(action_id)
     if err:
       return None, err
-    return serialize(action).full_json(), None
+    return serialize(action), None
 
   def copy_action(self, action_id) -> (dict, MassEnergizeAPIError):
     action, err = self.store.copy_action(action_id)
     if err:
       return None, err
-    return serialize(action).full_json(), None
+    return serialize(action), None
 
   def list_actions_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     actions, err = self.store.list_actions_for_community_admin(community_id)
