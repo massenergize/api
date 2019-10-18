@@ -10,21 +10,21 @@ class TagCollectionStore:
     tag_collection = TagCollection.objects.filter(id=tag_collection_id)
     if not tag_collection:
       return None, InvalidResourceError()
-    return tag_collection.full_json(), None
+    return tag_collection, None
 
 
   def list_tag_collections(self, community_id) -> (list, MassEnergizeAPIError):
     tag_collections = TagCollection.objects.filter(community__id=community_id)
     if not tag_collections:
       return [], None
-    return [t.simple_json() for t in tag_collections], None
+    return tag_collections, None
 
 
   def create_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_tag_collection = TagCollection.create(**args)
+      new_tag_collection = TagCollection.objects.create(**args)
       new_tag_collection.save()
-      return new_tag_collection.full_json(), None
+      return new_tag_collection, None
     except Exception:
       return None, ServerError()
 
@@ -34,7 +34,7 @@ class TagCollectionStore:
     if not tag_collection:
       return None, InvalidResourceError()
     tag_collection.update(**args)
-    return tag_collection.full_json(), None
+    return tag_collection, None
 
 
   def delete_tag_collection(self, tag_collection_id) -> (dict, MassEnergizeAPIError):
@@ -45,13 +45,13 @@ class TagCollectionStore:
 
   def list_tag_collections_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     tag_collections = TagCollection.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in tag_collections], None
+    return tag_collections, None
 
 
   def list_tag_collections_for_super_admin(self):
     try:
       tag_collections = TagCollection.objects.all()
-      return [t.simple_json() for t in tag_collections], None
+      return tag_collections, None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

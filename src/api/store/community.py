@@ -10,21 +10,21 @@ class CommunityStore:
     community = Community.objects.filter(id=community_id)
     if not community:
       return None, InvalidResourceError()
-    return community.full_json(), None
+    return community, None
 
 
   def list_communities(self, community_id) -> (list, MassEnergizeAPIError):
     communities = Community.objects.filter(community__id=community_id)
     if not communities:
       return [], None
-    return [t.simple_json() for t in communities], None
+    return communities, None
 
 
   def create_community(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_community = Community.create(**args)
+      new_community = Community.objects.create(**args)
       new_community.save()
-      return new_community.full_json(), None
+      return new_community, None
     except Exception:
       return None, ServerError()
 
@@ -34,7 +34,7 @@ class CommunityStore:
     if not community:
       return None, InvalidResourceError()
     community.update(**args)
-    return community.full_json(), None
+    return community, None
 
 
   def delete_community(self, community_id) -> (dict, MassEnergizeAPIError):
@@ -45,13 +45,12 @@ class CommunityStore:
 
   def list_communities_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     communities = Community.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in communities], None
+    return communities, None
 
 
   def list_communities_for_super_admin(self):
     try:
       communities = Community.objects.all()
-      return [t.simple_json() for t in communities], None
+      return communities, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(str(e))

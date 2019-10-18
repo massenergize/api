@@ -102,7 +102,7 @@ class GoalStore:
     try:
       #find the goal
       goals_to_delete = Goal.objects.filter(id=goal_id)
-      goals_to_delete.update(is_deleted=True)
+      goals_to_delete.update(is_deleted=True, community=None)
       if not goals_to_delete:
         return None, InvalidResourceError()
       return goals_to_delete.first(), None

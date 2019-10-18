@@ -13,7 +13,7 @@ class CommunityHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.community = CommunityService()
+    self.service = CommunityService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -33,7 +33,7 @@ class CommunityHandler(RouteHandler):
   def info(self) -> function:
     def community_info_view(request) -> None: 
       args = get_request_contents(request)
-      community_info, err = self.community.info(args)
+      community_info, err = self.service.get_community_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -43,7 +43,7 @@ class CommunityHandler(RouteHandler):
   def create(self) -> function:
     def create_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_info, err = self.community.create(args)
+      community_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -53,9 +53,9 @@ class CommunityHandler(RouteHandler):
   def list(self) -> function:
     def list_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args["community__id"]
-      user_id = args["user_id"]
-      community_info, err = self.community.list_communities(community_id, user_id)
+      community_id = args.pop('community_id', None)
+      user_id = args.pop('user_id', None)
+      community_info, err = self.service.list_communities(community_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -65,7 +65,7 @@ class CommunityHandler(RouteHandler):
   def update(self) -> function:
     def update_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_info, err = self.community.update_community(args[id], args)
+      community_info, err = self.service.update_community(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -76,7 +76,7 @@ class CommunityHandler(RouteHandler):
     def delete_community_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args[id]
-      community_info, err = self.community.delete_community(args[id])
+      community_info, err = self.service.delete_community(args[id])
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -87,7 +87,7 @@ class CommunityHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.get("community__id")
-      communities, err = self.community.list_communities_for_community_admin(community_id)
+      communities, err = self.service.list_communities_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=communities)
@@ -97,7 +97,7 @@ class CommunityHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      communities, err = self.community.list_communities_for_super_admin()
+      communities, err = self.service.list_communities_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=communities)

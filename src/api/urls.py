@@ -11,6 +11,7 @@ from api.handlers.page_settings__actions import ActionsPageSettingsHandler
 from api.handlers.page_settings__contactus import ContactUsPageSettingsHandler
 from api.handlers.page_settings__donate import DonatePageSettingsHandler
 from api.handlers.page_settings__home import HomePageSettingsHandler
+from api.handlers.policy import PolicyHandler
 from api.handlers.tag import TagHandler
 from api.handlers.tag_collection import TagCollectionHandler
 from api.handlers.team import TeamHandler
@@ -31,6 +32,7 @@ urlpatterns.extend(ContactUsPageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(DonatePageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(EventHandler().get_routes_to_views())
 urlpatterns.extend(GoalHandler().get_routes_to_views())
+urlpatterns.extend(PolicyHandler().get_routes_to_views())
 urlpatterns.extend(HomePageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(TagHandler().get_routes_to_views())
 urlpatterns.extend(TagCollectionHandler().get_routes_to_views())

@@ -14,7 +14,7 @@ class GoalHandler(RouteHandler):
 
   def __init__(self):
     super().__init__()
-    self.goal = GoalService()
+    self.service = GoalService()
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
@@ -38,7 +38,7 @@ class GoalHandler(RouteHandler):
     def goal_info_view(request) -> None: 
       args = get_request_contents(request)
       goal_id = args.get('goal_id')
-      goal_info, err = self.goal.get_goal_info(goal_id)
+      goal_info, err = self.service.get_goal_info(goal_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -51,7 +51,7 @@ class GoalHandler(RouteHandler):
       team_id = args.pop('team_id', None) 
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
-      goal_info, err = self.goal.create_goal(community_id, team_id, user_id, args)
+      goal_info, err = self.service.create_goal(community_id, team_id, user_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -64,7 +64,7 @@ class GoalHandler(RouteHandler):
       team_id = args.pop('team_id', None) 
       community_id = args.pop("community_id", None)
       user_id = args.pop('user_id', None)
-      goal_info, err = self.goal.list_goals(community_id, team_id, user_id)
+      goal_info, err = self.service.list_goals(community_id, team_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -75,7 +75,7 @@ class GoalHandler(RouteHandler):
     def update_goal_view(request) -> None: 
       args = get_request_contents(request)
       goal_id = args.pop('goal_id', None)
-      goal_info, err = self.goal.update_goal(goal_id, args)
+      goal_info, err = self.service.update_goal(goal_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -86,7 +86,7 @@ class GoalHandler(RouteHandler):
     def delete_goal_view(request) -> None: 
       args = get_request_contents(request)
       goal_id = args.pop('goal_id', None)
-      goal_info, err = self.goal.delete_goal(goal_id)
+      goal_info, err = self.service.delete_goal(goal_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -97,7 +97,7 @@ class GoalHandler(RouteHandler):
     def copy_goal_view(request) -> None: 
       args = get_request_contents(request)
       goal_id = args.pop('goal_id', None)
-      goal_info, err = self.goal.copy_goal(goal_id)
+      goal_info, err = self.service.copy_goal(goal_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)
@@ -108,7 +108,7 @@ class GoalHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.get("community__id")
-      goals, err = self.goal.list_goals_for_community_admin(community_id)
+      goals, err = self.service.list_goals_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goals)
@@ -118,7 +118,7 @@ class GoalHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = get_request_contents(request)
-      goals, err = self.goal.list_goals_for_super_admin()
+      goals, err = self.service.list_goals_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goals)
@@ -130,7 +130,7 @@ class GoalHandler(RouteHandler):
       args = get_request_contents(request)
       goal_id = args.pop('goal_id', None)
       field_name = args.pop('field_name', None)
-      goal, err = self.goal.increase_value(goal_id, field_name)
+      goal, err = self.service.increase_value(goal_id, field_name)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal)
@@ -142,7 +142,7 @@ class GoalHandler(RouteHandler):
       args = get_request_contents(request)
       goal_id = args.pop('goal_id', None)
       field_name = args.pop('field_name', None)
-      goal, err = self.goal.decrease_value(goal_id, field_name)      
+      goal, err = self.service.decrease_value(goal_id, field_name)      
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal)
