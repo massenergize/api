@@ -15,7 +15,7 @@ from io import BytesIO
 import requests
 from .CCDefaults import *
 from .homeHeating import HeatingLoad
-from .electricity import EvalCommunitySolar,EvalRenewableElectricity
+from .electricity import *  # electricity related action calculations
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -196,29 +196,17 @@ class CarbonCalculator:
 
     def Estimate(self, action, inputs, save=False):
 # inputs is a dictionary of input parameters
-# outputs is a dictionary of results
         queryFailed = {'status':INVALID_QUERY}
         if action in self.allActions:
-            # community context
-            #community = inputs.get("community", "unknown")
-
             theAction = self.allActions[action]
             if not theAction.initialized:
                 return queryFailed            
 
-            #if theAction.Eval(inputs) == VALID_QUERY:
-            #    points = theAction.points
-            #    cost = theAction.cost
-            #    savings = theAction.savings
-            #status = VALID_QUERY
             results = theAction.Eval(inputs)
             if save:
                 results = self.RecordActionPoints(action,inputs,results)
             return results
         else:    
-            #outputs = {}
-            #outputs["status"] = status
-            #return outputs
             return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
@@ -234,11 +222,6 @@ class CarbonCalculator:
 
     def Reset(self,inputs):
         if inputs.get('Confirm',NO) == YES:
-            print(Action.objects.all().delete())
-            print(Question.objects.all().delete())
-            print(Event.objects.all().delete())
-            print(Group.objects.all().delete())
-            print(Station.objects.all().delete())
             print("Deleted Actions, Questions, Events and Stations")
             return {"status":True}
         else:
@@ -606,36 +589,9 @@ class RenewableElectricity(CalculatorAction):
         self.points, self.cost, self.savings, self.text = EvalRenewableElectricity(inputs)
         return super().Eval(inputs)
 
-LED_SWAP_FRACTION = "fraction_led_replacement"
-NUM_OLD_BULBS = "number_nonefficient_bulbs"
 class LEDLighting(CalculatorAction):
-    #bulbs_incandescent,bulbs_replace_leds
     def Eval(self, inputs):
-        num_old_bulbs = inputs.get(NUM_OLD_BULBS ,10)
-        replace_fraction = inputs.get("numeric_fraction_led_replacement",0.)
-        replace_fraction1 = inputs.get(LED_SWAP_FRACTION,FRACTIONS[0])
-        # if they can get energy audit it's free
-        bulb_price = 0.
-        if replace_fraction == 0. and replace_fraction1 != "None":
-            if replace_fraction1 == "All":
-                replace_fraction = 1.
-            elif replace_fraction1 == "Most":
-                replace_fraction = 0.75
-            elif replace_fraction1 == "Half":
-                replace_fraction = 0.5
-            elif replace_fraction1 == "Some":
-                replace_fraction = 0.25
-
-        average_watts = 60
-        average_ontime = 3
-        average_kwh = average_watts * average_ontime * 365 / 1000
-        saved_kwh = (1 - 0.12) * replace_fraction * num_old_bulbs * average_kwh
-        elec_co2_kwh = .75
-        elec_price_kwh = .2
-        if num_old_bulbs > 0 and replace_fraction>0.:
-            self.points = saved_kwh * elec_co2_kwh
-            self.savings = saved_kwh * elec_price_kwh
-            self.cost = bulb_price * replace_fraction * num_old_bulbs
+        self.points, self.cost, self.savings, self.text = EvalLEDLighting(inputs)
         return super().Eval(inputs)
 
 HEATING_SYSTEM = "heating_system_type"
@@ -708,37 +664,37 @@ class InstallSolarHW(CalculatorAction):
 class EnergystarRefrigerator(CalculatorAction):
     #replace_refrigerator,refrigerator_age
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalEnergystarRefrigerator(inputs)
         return super().Eval(inputs)
 
 class EnergystarWasher(CalculatorAction):
     #replace_washer,washer_age,wash_loads
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalEnergystarWasher(inputs)
         return super().Eval(inputs)
 
 class InductionStove(CalculatorAction):
     #induction_stove,stove_type
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalInductionStove(inputs)
         return super().Eval(inputs)
 
 class HeatPumpDryer(CalculatorAction):
     #replace_dryer,dryer_type
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalHeatPumpDryer(inputs)
         return super().Eval(inputs)
 
 class ColdWaterWash(CalculatorAction):
     #cold_water_wash,wash_loads
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalColdWaterWash(inputs)
         return super().Eval(inputs)
 
 class LineDry(CalculatorAction):
     #line_or_rack_dry_loads,wash_loads
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalLineDry(inputs)
         return super().Eval(inputs)
 
 #class UnusedAppliances(CalculatorAction):
@@ -748,19 +704,19 @@ class LineDry(CalculatorAction):
 class RefrigeratorPickup(CalculatorAction):
     #extra_refrigerator,extra_refrigerator_age,extra_refrigerator_pickup,unplug_refrigerator
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalRefrigeratorPickup(inputs)
         return super().Eval(inputs)
 
 class SmartPowerStrip(CalculatorAction):
     #smart_power_strips
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalSmartPowerStrip(inputs)
         return super().Eval(inputs)
 
 class ElectricityMonitor(CalculatorAction):
     #install_electricity_monitor
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalElectricityMonitor(inputs)
         return super().Eval(inputs)
 
 CAR_POINTS = 8000

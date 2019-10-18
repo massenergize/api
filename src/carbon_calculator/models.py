@@ -256,3 +256,6 @@ class CalcDefault(models.Model):
 
     class Meta:
         db_table = 'cc_defaults'
+
+    def __str__(self):      
+        return "%s : %s = %.3f" % (self.locality,self.variable, self.value)

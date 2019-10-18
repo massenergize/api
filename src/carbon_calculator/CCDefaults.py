@@ -1,4 +1,6 @@
 from .models import CalcDefault
+import time
+import timeit
 
 # constants
 YES = "Yes"
@@ -22,28 +24,41 @@ def getLocality(inputs):
     return locality
 
 
-def getDefault(locality, variable, roughGuess):
-    if locality in CCD.DefaultsByLocality:
-        if variable in CCD.DefaultsByLocality[locality]:
-            return CCD.DefaultsByLocality[locality][variable]
-    if variable in CCD.DefaultsByLocality["default"]:
-        return CCD.DefaultsByLocality["default"][variable]
-    return roughGuess
-
+def getDefault(locality, variable, defaultValue):
+    return CCD.getDefault(CCD,locality, variable, defaultValue)
 
 class CCD():
-    print("Start of CCD")
-    DefaultsByLocality = {}
-    #print(CalcDefault.objects.all().count())
-    #cq = CalcDefault.objects.all()
-    cq = []
+    num = CalcDefault.objects.all().count()
+    msg = "Initializing %d Carbon Calc defaults from db" % num
+    print(msg)
+    start = time.time()
+    startcpu = timeit.timeit()
+    DefaultsByLocality = {"default":{}}
+    cq = CalcDefault.objects.all()
     for c in cq:
         if c.locality not in DefaultsByLocality:
             print("Adding "+c.locality+" to DefaultsByLocality")
             DefaultsByLocality[c.locality] = {}
         DefaultsByLocality[c.locality][c.variable] = c.value
+    endcpu = timeit.timeit()
+    end = time.time()
+    msg = "Elapsed = %.3f sec, CPU = %.3f sec" % (end - start, endcpu - startcpu)
+    print(msg)
     print(DefaultsByLocality)
 
     def __init__():
         print("CCD __init__ called")
 
+    def getDefault(self,locality,variable,defaultValue):
+        if locality in self.DefaultsByLocality:
+            if variable in self.DefaultsByLocality[locality]:
+                return self.DefaultsByLocality[locality][variable]
+        if variable in self.DefaultsByLocality["default"]:
+            return self.DefaultsByLocality["default"][variable]
+        # no defaults found.  Store the default estiamte in the database
+
+        self.DefaultsByLocality["default"][variable] = defaultValue
+        d = CalcDefault(locality="default", variable=variable, value=defaultValue, reference="Default value without reference")
+        d.save()
+
+        return defaultValue
