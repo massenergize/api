@@ -1,4 +1,4 @@
-from .CCConstants import NO,YES
+from .CCDefaults import *
 
 MONTHLY_ELEC = "monthly_elec_bill"
 ELECTRIC_UTILITY = "electric_utility"
@@ -45,15 +45,21 @@ def EvalRenewableElectricity(inputs):
     
     """
     points = cost = savings = 0.
+    locality = getLocality(inputs)
+
     explanation = "Didn't choose to sign up for renewable electricity"
     choose_renewable = inputs.get("choose_renewable",NO)
-    monthly_elec_bill = eval(inputs.get(MONTHLY_ELEC, 150.))
-    kwh_price = 0.2209  # Eversource current price, should come from database
-    fixed_charge = 7.00  # Eversource current charge, should come from database
+    
+    monthly_elec_bill = eval(inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150.)))
+
+    kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
+    fixed_charge = getDefault(locality,"elec_monthly_fixed_charge",7.00)    # Eversource current charge
     annual_kwh = 12*(monthly_elec_bill - fixed_charge)/kwh_price
-    ghg_intensity_kwh = 0.75    # lbs CO2 per kwh, should come from database
+
+    ghg_intensity_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
     annual_ghg = annual_kwh * ghg_intensity_kwh
-    additional_kwh_cost = 0.038      # 7% on utility bill from one company ([3])
+
+    additional_kwh_cost = getDefault(locality,"elec_lbs_co2_per_kwh",0.038)    # GECA price for the 100% renewable
     if choose_renewable == YES:
         explanation = "You may not be eligible for purchasing renewable electricity, which is available to MA customers of Eversource or National Grid"
         electric_utility = inputs.get("electric_utility","").lower()

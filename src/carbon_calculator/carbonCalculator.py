@@ -13,7 +13,7 @@ import csv
 from django.core import files
 from io import BytesIO
 import requests
-from .CCConstants import *
+from .CCDefaults import *
 from .homeHeating import HeatingLoad
 from .electricity import EvalCommunitySolar,EvalRenewableElectricity
 
@@ -595,7 +595,7 @@ class Weatherize(CalculatorAction):
             self.savings = weatherize_load_reduction * heatingCost
             self.cost = 500.     # figure out a typical value 
         return super().Eval(inputs)
-        
+
 class CommunitySolar(CalculatorAction):
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalCommunitySolar(inputs)

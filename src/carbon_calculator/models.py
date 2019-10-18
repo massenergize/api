@@ -188,7 +188,7 @@ class CalcUser(models.Model):
     last_name = models.CharField(max_length=SHORT_STR_LEN, null=True)
     email = models.EmailField(max_length=SHORT_STR_LEN, 
       unique=True, db_index=True)
-    town =models.CharField(max_length=SHORT_STR_LEN, null=True)
+    locality = models.CharField(max_length=SHORT_STR_LEN, null=True)
     groups = models.ManyToManyField(Group, blank=True)
     minimum_age = models.BooleanField(default=False, blank=True)
     accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
@@ -242,3 +242,17 @@ class ActionPoints(models.Model):
         db_table = 'cc_action_points'
 #
 #
+class CalcDefault(models.Model):
+    """
+    Class to keep track of calculator assumptions by locality
+
+    """
+    id = models.AutoField(primary_key=True)
+    variable = models.CharField(max_length=NAME_STR_LEN,blank=False)
+    locality = models.CharField(max_length=NAME_STR_LEN)
+    value = models.FloatField(default=0.0)
+    reference = models.CharField(max_length=MED_STR_LEN)
+    updated = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'cc_defaults'
