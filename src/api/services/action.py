@@ -17,8 +17,8 @@ class ActionService:
       return None, err
     return serialize(action), None
 
-  def list_actions(self, action_id) -> (list, MassEnergizeAPIError):
-    actions, err = self.store.list_actions(action_id)
+  def list_actions(self, community_id, subdomain) -> (list, MassEnergizeAPIError):
+    actions, err = self.store.list_actions(community_id, subdomain)
     if err:
       return None, err
     return serialize_all(actions), None

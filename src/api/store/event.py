@@ -1,6 +1,7 @@
 from database.models import Event, UserProfile, EventAttendee
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
+from django.db.models import Q
 
 class EventStore:
   def __init__(self):
@@ -17,10 +18,15 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_events(self, community_id, user_id) -> (list, MassEnergizeAPIError):
+  def list_events(self, community_id, subdomain, user_id) -> (list, MassEnergizeAPIError):
     if community_id:
       #TODO: also account for communities who are added as invited_communities
-      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(community__id=community_id)
+      query =Q(community__id=community_id)
+      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+    elif subdomain:
+      query =  Q(community__subdomain=subdomain)
+      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+
     elif user_id:
       events = EventAttendee.objects.filter(attendee=user_id)
     else:
