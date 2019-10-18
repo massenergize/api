@@ -43,7 +43,7 @@ class EventHandler(RouteHandler):
   def create(self) -> function:
     def create_event_view(request) -> None: 
       args = get_request_contents(request)
-      event_info, err = self.service.create(args)
+      event_info, err = self.service.create_event(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)

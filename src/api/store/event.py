@@ -1,4 +1,4 @@
-from database.models import Event, UserProfile, EventAttendee
+from database.models import Event, UserProfile, EventAttendee, Media
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 from django.db.models import Q
@@ -38,7 +38,11 @@ class EventStore:
 
   def create_event(self, args) -> (dict, MassEnergizeAPIError):
     try:
+      image = args.pop('image', None)
       new_event = Event.objects.create(**args)
+      if image:
+        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
+        new_event = media
       new_event.save()
       return new_event, None
     except Exception:
