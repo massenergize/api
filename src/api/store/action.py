@@ -18,11 +18,17 @@ class ActionStore:
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
-  def list_actions(self, community_id) -> (list, MassEnergizeAPIError):
-    actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
-    if not actions:
-      return [], None
-    return actions, None
+  def list_actions(self, community_id, subdomain) -> (list, MassEnergizeAPIError):
+    try:
+      actions = []
+      if community_id:
+        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
+      elif subdomain:
+        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain, is_deleted=False)
+
+      return actions, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):

@@ -54,8 +54,9 @@ class EventHandler(RouteHandler):
     def list_event_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.pop('community_id', None)
+      subdomain = args.pop('subdomain', None)
       user_id = args.pop('user_id', None)
-      event_info, err = self.service.list_events(community_id, user_id)
+      event_info, err = self.service.list_events(community_id, subdomain, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
