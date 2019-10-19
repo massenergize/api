@@ -11,14 +11,14 @@ class DonatePageSettingsService:
   def __init__(self):
     self.store =  DonatePageSettingsStore()
 
-  def get_donate_page_setting_info(self, donate_page_setting_id) -> (dict, MassEnergizeAPIError):
-    donate_page_setting, err = self.store.get_donate_page_setting_info(donate_page_setting_id)
+  def get_donate_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    donate_page_setting, err = self.store.get_donate_page_setting_info(args)
     if err:
       return None, err
     return serialize(donate_page_setting), None
 
-  def list_donate_page_settings(self, donate_page_setting_id) -> (list, MassEnergizeAPIError):
-    donate_page_setting, err = self.store.list_donate_page_settings(donate_page_setting_id)
+  def list_donate_page_settings(self, args) -> (list, MassEnergizeAPIError):
+    donate_page_setting, err = self.store.list_donate_page_settings(args)
     if err:
       return None, err
     return serialize(donate_page_setting), None

@@ -39,22 +39,47 @@ class EventStore:
   def create_event(self, args) -> (dict, MassEnergizeAPIError):
     try:
       image = args.pop('image', None)
+      tags = args.pop('tags', [])
       new_event = Event.objects.create(**args)
+
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-        new_event = media
+        new_event.image = media
+      
       new_event.save()
+
+      if tags:
+        new_event.tags.set(tags)
+      
       return new_event, None
-    except Exception:
-      return None, ServerError()
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def update_event(self, event_id, args) -> (dict, MassEnergizeAPIError):
-    event = Event.objects.filter(id=event_id)
-    if not event:
-      return None, InvalidResourceError()
-    event.update(**args)
-    return event, None
+    try:
+      image = args.pop('image', None)
+      tags = args.pop('tags', [])
+      events = Event.objects.filter(id=event_id)
+      events.update(**args)
+      
+      event = events.first()
+      if not event:
+        return None, CustomMassenergizeError(f"No event with id: {event_id}")
+
+      if image:
+        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
+        event.image = media
+      
+      event.save()
+
+      if tags:
+        event.tags.set(tags)
+      
+      return event, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def delete_event(self, event_id) -> (dict, MassEnergizeAPIError):

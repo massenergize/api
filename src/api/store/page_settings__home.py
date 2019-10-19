@@ -6,8 +6,8 @@ class HomePageSettingsStore:
   def __init__(self):
     self.name = "HomePageSettings Store/DB"
 
-  def get_home_page_setting_info(self, home_page_setting_id) -> (dict, MassEnergizeAPIError):
-    home_page_setting = HomePageSettings.objects.filter(id=home_page_setting_id)
+  def get_home_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    home_page_setting = HomePageSettings.objects.filter(**args).first();
     if not home_page_setting:
       return None, InvalidResourceError()
     return home_page_setting, None

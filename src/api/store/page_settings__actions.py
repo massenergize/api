@@ -6,11 +6,15 @@ class ActionsPageSettingsStore:
   def __init__(self):
     self.name = "ActionsPageSettings Store/DB"
 
-  def get_actions_page_setting_info(self, actions_page_setting_id) -> (dict, MassEnergizeAPIError):
-    actions_page_setting = ActionsPageSettings.objects.filter(id=actions_page_setting_id)
-    if not actions_page_setting:
-      return None, InvalidResourceError()
-    return actions_page_setting, None
+  def get_actions_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      page = ActionsPageSettings.objects.filter(**args).first()
+      if not page:
+        return None, InvalidResourceError()
+      return page, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+
 
 
   def list_actions_page_settings(self, community_id) -> (list, MassEnergizeAPIError):

@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to testimonials"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents
+from api.utils.common import get_request_contents, parse_list, parse_bool, check_length, rename_field, parse_int
 from api.services.testimonial import TestimonialService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -43,7 +43,12 @@ class TestimonialHandler(RouteHandler):
   def create(self) -> function:
     def create_testimonial_view(request) -> None: 
       args = get_request_contents(request)
-      testimonial_info, err = self.service.create(args)
+      args = rename_field(args, 'community_id', 'community')
+      args = rename_field(args, 'action_id', 'action')
+      args = rename_field(args, 'vendor_id', 'vendor')
+      args['tags'] = parse_list(args.get('tags', []))
+      args['is_approved'] = parse_bool(args.pop('is_approved', None))
+      testimonial_info, err = self.service.create_testimonial(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)

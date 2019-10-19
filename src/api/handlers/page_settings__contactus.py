@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to contact_us_page_settings"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents
+from api.utils.common import get_request_contents, rename_field
 from api.services.page_settings__contactus import ContactUsPageSettingsService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -33,6 +33,9 @@ class ContactUsPageSettingsHandler(RouteHandler):
   def info(self) -> function:
     def contact_us_page_setting_info_view(request) -> None: 
       args = get_request_contents(request)
+      args = rename_field(args, 'community_id', 'community__id')
+      args = rename_field(args, 'subdomain', 'community__subdomain')
+      args = rename_field(args, 'contact_us_page_id', 'id')
       contact_us_page_setting_info, err = self.service.get_contact_us_page_setting_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

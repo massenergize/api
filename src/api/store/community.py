@@ -13,11 +13,14 @@ class CommunityStore:
     return community, None
 
 
-  def list_communities(self, community_id) -> (list, MassEnergizeAPIError):
-    communities = Community.objects.filter(community__id=community_id)
-    if not communities:
-      return [], None
-    return communities, None
+  def list_communities(self) -> (list, MassEnergizeAPIError):
+    try:
+      communities = Community.objects.filter(is_published=True)
+      if not communities:
+        return [], None
+      return communities, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_community(self, args) -> (dict, MassEnergizeAPIError):
@@ -25,8 +28,8 @@ class CommunityStore:
       new_community = Community.objects.create(**args)
       new_community.save()
       return new_community, None
-    except Exception:
-      return None, ServerError()
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):

@@ -11,11 +11,11 @@ class HomePageSettingsService:
   def __init__(self):
     self.store =  HomePageSettingsStore()
 
-  def get_home_page_setting_info(self, home_page_setting_id) -> (dict, MassEnergizeAPIError):
-    home_page_setting, err = self.store.get_home_page_setting_info(home_page_setting_id)
+  def get_home_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    home_page_setting, err = self.store.get_home_page_setting_info(args)
     if err:
       return None, err
-    return serialize(home_page_setting)
+    return serialize(home_page_setting), None
 
   def list_home_page_settings(self, home_page_setting_id) -> (list, MassEnergizeAPIError):
     home_page_setting, err = self.store.list_home_page_settings(home_page_setting_id)

@@ -43,7 +43,8 @@ class CommunityHandler(RouteHandler):
   def create(self) -> function:
     def create_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_info, err = self.service.create(args)
+      print(args)
+      community_info, err = self.service.create_community(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -53,9 +54,7 @@ class CommunityHandler(RouteHandler):
   def list(self) -> function:
     def list_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      community_info, err = self.service.list_communities(community_id, user_id)
+      community_info, err = self.service.list_communities()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)

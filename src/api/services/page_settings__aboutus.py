@@ -11,11 +11,11 @@ class AboutUsPageSettingsService:
   def __init__(self):
     self.store =  AboutUsPageSettingsStore()
 
-  def get_about_us_page_setting_info(self, about_us_page_setting_id) -> (dict, MassEnergizeAPIError):
-    about_us_page_setting, err = self.store.get_about_us_page_setting_info(about_us_page_setting_id)
+  def get_about_us_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    about_us_page_setting, err = self.store.get_about_us_page_setting_info(args)
     if err:
       return None, err
-    return serialize(about_us_page_setting)
+    return serialize(about_us_page_setting), None
 
   def list_about_us_page_settings(self, about_us_page_setting_id) -> (list, MassEnergizeAPIError):
     about_us_page_setting, err = self.store.list_about_us_page_settings(about_us_page_setting_id)
