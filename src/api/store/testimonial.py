@@ -13,11 +13,16 @@ class TestimonialStore:
     return testimonial, None
 
 
-  def list_testimonials(self, community_id) -> (list, MassEnergizeAPIError):
-    testimonials = Testimonial.objects.filter(community__id=community_id)
-    if not testimonials:
-      return [], None
-    return testimonials, None
+  def list_testimonials(self, args) -> (list, MassEnergizeAPIError):
+    try:
+      args['is_published'] = True
+      args['is_deleted'] = False
+      testimonials = Testimonial.objects.filter(**args)
+      if not testimonials:
+        return [], None
+      return testimonials, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_testimonial(self, args) -> (dict, MassEnergizeAPIError):
@@ -78,14 +83,12 @@ class TestimonialStore:
 
 
   def list_testimonials_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    testimonials = Testimonial.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in testimonials], None
+    return  Testimonial.objects.filter(community__id = community_id, is_deleted=False), None
 
 
   def list_testimonials_for_super_admin(self):
     try:
-      testimonials = Testimonial.objects.all()
-      return [t.simple_json() for t in testimonials], None
+      return  Testimonial.objects.filter(is_deleted=False), None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

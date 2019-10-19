@@ -58,9 +58,11 @@ class TestimonialHandler(RouteHandler):
   def list(self) -> function:
     def list_testimonial_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      testimonial_info, err = self.service.list_testimonials(community_id, user_id)
+      args = rename_field(args, 'community_id', 'community__id')
+      args = rename_field(args, 'subdomain', 'community__subdomain')
+      args = rename_field(args, 'user_id', 'user__id')
+      args = rename_field(args, 'user_email', 'user__email')
+      testimonial_info, err = self.service.list_testimonials(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)

@@ -1072,6 +1072,7 @@ class Testimonial(models.Model):
   title = models.CharField(max_length=SHORT_STR_LEN, db_index=True)
   body = models.TextField(max_length=LONG_STR_LEN)
   is_approved = models.BooleanField(default=False, blank=True)
+  tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True)
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True, null=True)
