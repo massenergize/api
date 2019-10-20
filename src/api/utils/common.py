@@ -81,3 +81,15 @@ def check_length(args, field,  min_length=5, max_length=25):
   if data_length < min_length or data_length > max_length:
     return False, CustomMassenergizeError(f"{field} has to be between {min_length} and {max_length}")
   return True, None
+
+def parse_location(args):
+  location = {
+    "address": args.pop("address", None),
+    "unit": args.pop("unit", None),
+    "city": args.pop("city", None),
+    "state": args.pop("state", None),
+    "zipcode": args.pop("zipcode", None),
+    "country": args.pop("country", None),
+  }
+  args['location'] = location
+  return args

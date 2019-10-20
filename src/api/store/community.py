@@ -1,4 +1,4 @@
-from database.models import Community, UserProfile
+from database.models import Community, UserProfile, Media
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
@@ -6,11 +6,14 @@ class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
 
-  def get_community_info(self, community_id) -> (dict, MassEnergizeAPIError):
-    community = Community.objects.filter(id=community_id)
-    if not community:
-      return None, InvalidResourceError()
-    return community, None
+  def get_community_info(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      community = Community.objects.filter(**args).first()
+      if not community:
+        return None, InvalidResourceError()
+      return community, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_communities(self) -> (list, MassEnergizeAPIError):
@@ -25,7 +28,14 @@ class CommunityStore:
 
   def create_community(self, args) -> (dict, MassEnergizeAPIError):
     try:
+      logo = args.pop('logo', None)
       new_community = Community.objects.create(**args)
+
+      if logo:
+        cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
+        cLogo.save()
+        new_community.logo = cLogo
+      
       new_community.save()
       return new_community, None
     except Exception as e:

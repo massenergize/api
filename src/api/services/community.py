@@ -14,8 +14,8 @@ class CommunityService:
   def __init__(self):
     self.store =  CommunityStore()
 
-  def get_community_info(self, community_id) -> (dict, MassEnergizeAPIError):
-    community, err = self.store.get_community_info(community_id)
+  def get_community_info(self, args) -> (dict, MassEnergizeAPIError):
+    community, err = self.store.get_community_info(args)
     if err:
       return None, err
 
