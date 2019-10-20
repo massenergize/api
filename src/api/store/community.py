@@ -1,4 +1,4 @@
-from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, Goal
+from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
@@ -47,32 +47,50 @@ class CommunityStore:
       aboutUsPage = AboutUsPageSettings.objects.filter(is_template=True).first()
       if aboutUsPage:
         aboutUsPage.pk = None
+        aboutUsPage.title = f"About {new_community.name}"
         aboutUsPage.community = new_community
+        aboutUsPage.is_template = False
         aboutUsPage.save()
 
       actionsPage = ActionsPageSettings.objects.filter(is_template=True).first()
       if actionsPage:
         actionsPage.pk = None
+        actionsPage.title = f"Actions for {new_community.name}"
         actionsPage.community = new_community
+        actionsPage.is_template = False
         actionsPage.save()
 
       contactUsPage = ContactUsPageSettings.objects.filter(is_template=True).first()
       if contactUsPage:
         contactUsPage.pk = None 
+        contactUsPage.title = f"Contact Us - {new_community.name}"
         contactUsPage.community = new_community
+        contactUsPage.is_template = False
         contactUsPage.save()
       
       donatePage = DonatePageSettings.objects.filter(is_template=True).first()
       if donatePage:
         donatePage.pk = None 
+        donatePage.title = f"Take Actions - {new_community.name}"
         donatePage.community = new_community
+        donatePage.is_template = False
         donatePage.save()
       
       homePage = HomePageSettings.objects.filter(is_template=True).first()
       if homePage:
         homePage.pk = None 
+        homePage.title = f"Welcome to Massenergize, {new_community.name}!"
         homePage.community = new_community
+        homePage.is_template = False
         homePage.save()
+      
+      impactPage = ImpactPageSettings.objects.filter(is_template=True).first()
+      if impactPage:
+        impactPage.pk = None 
+        impactPage.title = f"See our Impact - {new_community.name}"
+        impactPage.community = new_community
+        impactPage.is_template = False
+        impactPage.save()
 
       return new_community, None
     except Exception as e:
