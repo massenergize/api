@@ -6,11 +6,14 @@ class DonatePageSettingsStore:
   def __init__(self):
     self.name = "DonatePageSettings Store/DB"
 
-  def get_donate_page_setting_info(self, donate_page_setting_id) -> (dict, MassEnergizeAPIError):
-    donate_page_setting = DonatePageSettings.objects.filter(id=donate_page_setting_id)
-    if not donate_page_setting:
-      return None, InvalidResourceError()
-    return donate_page_setting, None
+  def get_donate_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      page = DonatePageSettings.objects.filter(**args).first()
+      if not page:
+        return None, InvalidResourceError()
+      return page, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_donate_page_settings(self, community_id) -> (list, MassEnergizeAPIError):

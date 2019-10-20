@@ -15,10 +15,10 @@ class TeamService:
     team, err = self.store.get_team_info(team_id)
     if err:
       return None, err
-    return serialize(team), None
+    return serialize(team, full=True), None
 
-  def list_teams(self, team_id, user_id) -> (list, MassEnergizeAPIError):
-    team, err = self.store.list_teams(team_id, user_id)
+  def list_teams(self, args) -> (list, MassEnergizeAPIError):
+    team, err = self.store.list_teams(args)
     if err:
       return None, err
     return serialize_all(team), None

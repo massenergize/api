@@ -14,25 +14,27 @@ class CommunityService:
   def __init__(self):
     self.store =  CommunityStore()
 
-  def get_community_info(self, community_id) -> (dict, MassEnergizeAPIError):
-    community, err = self.store.get_community_info(community_id)
+  def get_community_info(self, args) -> (dict, MassEnergizeAPIError):
+    community, err = self.store.get_community_info(args)
     if err:
       return None, err
 
     #send an email to the community admin
     return serialize(community), None
 
-  def list_communities(self, community_id) -> (list, MassEnergizeAPIError):
-    community, err = self.store.list_communities(community_id)
+  def list_communities(self) -> (list, MassEnergizeAPIError):
+    communities, err = self.store.list_communities()
     if err:
       return None, err
-    return serialize(community), None
+    return serialize_all(communities), None
 
 
   def create_community(self, args) -> (dict, MassEnergizeAPIError):
     community, err = self.store.create_community(args)
     if err:
       return None, err
+    
+    # send all emails
     return serialize(community), None
 
 

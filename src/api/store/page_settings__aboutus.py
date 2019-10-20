@@ -6,11 +6,14 @@ class AboutUsPageSettingsStore:
   def __init__(self):
     self.name = "AboutUsPageSettings Store/DB"
 
-  def get_about_us_page_setting_info(self, about_us_page_setting_id) -> (dict, MassEnergizeAPIError):
-    about_us_page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_setting_id)
-    if not about_us_page_setting:
-      return None, InvalidResourceError()
-    return about_us_page_setting, None
+  def get_about_us_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      page = AboutUsPageSettings.objects.filter(**args).first()
+      if not page:
+        return None, InvalidResourceError()
+      return page, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_about_us_page_settings(self, community_id) -> (list, MassEnergizeAPIError):

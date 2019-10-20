@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to events"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents
+from api.utils.common import get_request_contents, parse_list, parse_bool, check_length, parse_date, parse_int
 from api.services.event import EventService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -33,7 +33,8 @@ class EventHandler(RouteHandler):
   def info(self) -> function:
     def event_info_view(request) -> None: 
       args = get_request_contents(request)
-      event_info, err = self.service.get_event_info(args)
+      event_id = args.pop('event_id', None)
+      event_info, err = self.service.get_event_info(event_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -43,7 +44,20 @@ class EventHandler(RouteHandler):
   def create(self) -> function:
     def create_event_view(request) -> None: 
       args = get_request_contents(request)
-      event_info, err = self.service.create(args)
+      print(args)
+      ok, err = check_length(args, 'name', min_length=5, max_length=100)
+      if not ok:
+        return MassenergizeResponse(error=str(err), status=err.status)
+
+
+      args['start_date_and_time'] = parse_date(args.get('start_date_and_time', ''))
+      args['end_date_and_time'] = parse_date(args.get('end_date_and_time', ''))
+      args['tags'] = parse_list(args.get('tags', []))
+      args['is_global'] = parse_bool(args.pop('is_global', None))
+
+
+      event_info, err = self.service.create_event(args)
+      print(event_info)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -66,7 +80,17 @@ class EventHandler(RouteHandler):
   def update(self) -> function:
     def update_event_view(request) -> None: 
       args = get_request_contents(request)
-      event_info, err = self.service.update_event(args[id], args)
+      print(args)
+      event_id = args.pop('event_id', None)
+      ok, err = check_length(args, 'name', min_length=5, max_length=100)
+      if not ok:
+        return MassenergizeResponse(error=str(err), status=err.status)
+
+      args['tags'] = parse_list(args.get('tags', []))
+      args['is_global'] = parse_bool(args.pop('is_global', None))
+
+      event_info, err = self.service.update_event(event_id, args)
+      print(event_info)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)

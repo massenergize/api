@@ -13,11 +13,32 @@ class TeamStore:
     return team, None
 
 
-  def list_teams(self, community_id, user_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id=community_id)
-    if not teams:
-      return [], None
-    return teams, None
+  def list_teams(self, args) -> (list, MassEnergizeAPIError):
+    try:
+      user_id = args.pop('user_id', None)
+      user_email = args.pop('user_email', None)
+      # args['is_published'] = True
+      args['is_deleted'] = False
+      teams = Team.objects.filter(**args)
+      res = []
+      if user_id:
+        user = UserProfile.objects.get(id=user_id)
+        for t in teams:
+          if (user in t.members.all()) or (user in t.admins.all()):
+            res.append(t)
+        return res, None
+      elif user_email:
+        user = UserProfile.objects.get(email=user_email)
+        for t in teams:
+          if (user in t.members.all()) or (user in t.admins.all()):
+            res.append(t)
+        return res, None
+      else:
+        res = teams
+      return res, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+
 
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):

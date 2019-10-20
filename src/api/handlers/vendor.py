@@ -54,7 +54,7 @@ class VendorHandler(RouteHandler):
   def create(self) -> function:
     def create_vendor_view(request) -> None: 
       args = get_request_contents(request)
-      vendor_info, err = self.service.create(args)
+      vendor_info, err = self.service.create_vendor(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)

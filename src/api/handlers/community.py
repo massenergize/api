@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to communities"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents
+from api.utils.common import get_request_contents, parse_location, parse_bool, check_length, rename_field
 from api.services.community import CommunityService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -31,8 +31,9 @@ class CommunityHandler(RouteHandler):
 
 
   def info(self) -> function:
-    def community_info_view(request) -> None: 
+    def community_info_view(request) -> None:
       args = get_request_contents(request)
+      args = rename_field(args, 'community_id', 'id')
       community_info, err = self.service.get_community_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -43,7 +44,23 @@ class CommunityHandler(RouteHandler):
   def create(self) -> function:
     def create_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_info, err = self.service.create(args)
+      args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions'))
+      if not args['accepted_terms_and_conditions']:
+        return MassenergizeResponse(error="Please accept the terms and conditions")
+      
+      ok, err = check_length(args, 'name', 3, 25)
+      if not ok:
+        return MassenergizeResponse(error=str(err))
+      
+      ok, err = check_length(args, 'subdomain', 4, 10)
+      if not ok:
+        return MassenergizeResponse(error=str(err))
+        
+      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused'))
+
+      args = rename_field(args, 'image', 'logo')
+      args = parse_location(args)
+      community_info, err = self.service.create_community(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -53,9 +70,7 @@ class CommunityHandler(RouteHandler):
   def list(self) -> function:
     def list_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      community_info, err = self.service.list_communities(community_id, user_id)
+      community_info, err = self.service.list_communities()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
