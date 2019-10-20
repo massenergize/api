@@ -283,6 +283,7 @@ class Community(models.Model):
       "subdomain": self.subdomain,
       "owner_name": self.owner_name,
       "owner_email": self.owner_email,
+      "goal": get_json_if_not_none(self.goal),
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
       "location":self.location,
@@ -638,18 +639,17 @@ class Vendor(models.Model):
   banner = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='vendor_banner')
   address = JSONField(blank=True, null=True)
-  key_contact = models.ForeignKey(UserProfile, blank=True, null=True, 
-    on_delete=models.SET_NULL, related_name='key_contact')
-  service_area = models.CharField(max_length=TINY_STR_LEN, 
-    choices=CHOICES["SERVICE_AREAS"].items())
+  key_contact = JSONField(blank=True, null=True)
+  service_area = models.CharField(max_length=TINY_STR_LEN)
+  service_area_states = models.CharField(max_length=TINY_STR_LEN, blank=True, null=True)
   services = models.ManyToManyField(Service, blank=True)
-  properties_serviced = models.CharField(max_length=TINY_STR_LEN, 
-    choices=CHOICES["PROPERTIES_SERVICED"].items())
+  properties_serviced = models.CharField(max_length=TINY_STR_LEN)
   onboarding_date = models.DateTimeField(default=datetime.now)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
   verification_checklist = JSONField(blank=True, null=True) 
   is_verified = models.BooleanField(default=False, blank=True)
+  location = JSONField(blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -673,7 +673,6 @@ class Vendor(models.Model):
     data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
     data['logo'] = get_json_if_not_none(self.logo)
     data['banner']  = get_json_if_not_none(self.banner)
-    data['key_contact'] = get_json_if_not_none(self.key_contact, True)
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     return data
@@ -1766,10 +1765,13 @@ class HomePageSettings(models.Model):
 
 
   def full_json(self):
+   
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
-    res['featured_events'] = [i.simple_json() for i in self.featured_events]
-    res['featured_stats'] = [i.simple_json() for i in self.featured_stats]
+    res['images'] = [i.simple_json() for i in self.images.all()]
+    res['community'] = get_json_if_not_none(self.community)
+    res['featured_events'] = [i.simple_json() for i in self.featured_events.all()]
+    res['featured_stats'] = [i.simple_json() for i in self.featured_stats.all()]
+    res['goal']  = get_json_if_not_none(self.community.goal)
     return res
 
   class Meta:
@@ -1795,12 +1797,14 @@ class ActionsPageSettings(models.Model):
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images]
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
   class Meta:
@@ -1825,12 +1829,13 @@ class ContactUsPageSettings(models.Model):
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
   class Meta:
@@ -1856,12 +1861,13 @@ class DonatePageSettings(models.Model):
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
   class Meta:
@@ -1888,12 +1894,13 @@ class AboutUsPageSettings(models.Model):
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
   class Meta:
@@ -1920,12 +1927,13 @@ class ImpactPageSettings(models.Model):
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
   class Meta:

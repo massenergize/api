@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to vendors"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents
+from api.utils.common import get_request_contents, rename_field, parse_bool, parse_location, parse_list
 from api.services.vendor import VendorService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -43,8 +43,9 @@ class VendorHandler(RouteHandler):
   def publish(self) -> function:
     def vendor_info_view(request) -> None: 
       args = get_request_contents(request)
-      vendor_id = args.pop('vendor_id', None)
-      vendor_info, err = self.service.get_vendor_info(vendor_id)
+      args = rename_field(args, 'vendor_id', 'id')
+      args['is_published'] =True
+      vendor_info, err = self.service.update(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)
@@ -54,6 +55,12 @@ class VendorHandler(RouteHandler):
   def create(self) -> function:
     def create_vendor_view(request) -> None: 
       args = get_request_contents(request)
+      args = parse_location(args)
+      args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions', None))
+      args['is_verified'] = parse_bool(args.pop('is_verified', None))
+      args['communities'] = parse_list(args.pop('communities', None))
+      args.pop('has_address', None)
+      print(args)
       vendor_info, err = self.service.create_vendor(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

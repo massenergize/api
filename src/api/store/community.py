@@ -77,12 +77,14 @@ class CommunityStore:
         donatePage.save()
       
       homePage = HomePageSettings.objects.filter(is_template=True).first()
+      images = homePage.images.all()
       if homePage:
         homePage.pk = None 
         homePage.title = f"Welcome to Massenergize, {new_community.name}!"
         homePage.community = new_community
         homePage.is_template = False
         homePage.save()
+        homePage.images.set(images)
       
       impactPage = ImpactPageSettings.objects.filter(is_template=True).first()
       if impactPage:

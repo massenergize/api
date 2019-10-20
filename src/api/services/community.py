@@ -20,7 +20,7 @@ class CommunityService:
       return None, err
 
     #send an email to the community admin
-    return serialize(community), None
+    return serialize(community, full=True), None
 
   def list_communities(self) -> (list, MassEnergizeAPIError):
     communities, err = self.store.list_communities()
