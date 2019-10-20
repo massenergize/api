@@ -44,13 +44,23 @@ class CommunityHandler(RouteHandler):
   def create(self) -> function:
     def create_community_view(request) -> None: 
       args = get_request_contents(request)
+      args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions'))
+      if not args['accepted_terms_and_conditions']:
+        return MassenergizeResponse(error="Please accept the terms and conditions")
+      
+      ok, err = check_length(args, 'name', 3, 25)
+      if not ok:
+        return MassenergizeResponse(error=str(err))
+      
+      ok, err = check_length(args, 'subdomain', 4, 10)
+      if not ok:
+        return MassenergizeResponse(error=str(err))
+        
+      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused'))
+
       args = rename_field(args, 'image', 'logo')
       args = parse_location(args)
-      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused'))
-      args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions'))
-      
       community_info, err = self.service.create_community(args)
-      print(community_info)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)

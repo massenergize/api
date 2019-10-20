@@ -33,6 +33,8 @@ class CommunityService:
     community, err = self.store.create_community(args)
     if err:
       return None, err
+    
+    # send all emails
     return serialize(community), None
 
 

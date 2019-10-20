@@ -1751,6 +1751,7 @@ class HomePageSettings(models.Model):
   show_featured_links = models.BooleanField(default=True, blank=True)
   show_featured_video = models.BooleanField(default=False, blank=True)
 
+  is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
 
@@ -1787,6 +1788,7 @@ class ActionsPageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return "ActionsPageSettings - %s" % (self.community)
@@ -1816,6 +1818,7 @@ class ContactUsPageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return "ContactUsPageSettings - %s" % (self.community)
@@ -1846,6 +1849,7 @@ class DonatePageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return "DonatePageSettings - %s" % (self.community)
@@ -1876,6 +1880,7 @@ class AboutUsPageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):             
@@ -1908,6 +1913,7 @@ class ImpactPageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return "ImpactPageSettings - %s" % (self.community)

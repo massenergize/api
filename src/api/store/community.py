@@ -1,4 +1,4 @@
-from database.models import Community, UserProfile, Media
+from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, Goal
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
@@ -36,7 +36,44 @@ class CommunityStore:
         cLogo.save()
         new_community.logo = cLogo
       
+
+      #create a goal for this community
+      community_goal = Goal.objects.create(name=f"{new_community.name}-Goal")
+      new_community.goal = community_goal
       new_community.save()
+
+
+      #now create all the pages
+      aboutUsPage = AboutUsPageSettings.objects.filter(is_template=True).first()
+      if aboutUsPage:
+        aboutUsPage.pk = None
+        aboutUsPage.community = new_community
+        aboutUsPage.save()
+
+      actionsPage = ActionsPageSettings.objects.filter(is_template=True).first()
+      if actionsPage:
+        actionsPage.pk = None
+        actionsPage.community = new_community
+        actionsPage.save()
+
+      contactUsPage = ContactUsPageSettings.objects.filter(is_template=True).first()
+      if contactUsPage:
+        contactUsPage.pk = None 
+        contactUsPage.community = new_community
+        contactUsPage.save()
+      
+      donatePage = DonatePageSettings.objects.filter(is_template=True).first()
+      if donatePage:
+        donatePage.pk = None 
+        donatePage.community = new_community
+        donatePage.save()
+      
+      homePage = HomePageSettings.objects.filter(is_template=True).first()
+      if homePage:
+        homePage.pk = None 
+        homePage.community = new_community
+        homePage.save()
+
       return new_community, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
