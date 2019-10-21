@@ -48,7 +48,7 @@ class CommunityService:
     community, err = self.store.delete_community(args)
     if err:
       return None, err
-    return serialize(community), None
+    return serialize_all(community), None
 
 
   def list_communities_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):

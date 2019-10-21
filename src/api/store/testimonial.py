@@ -6,16 +6,20 @@ class TestimonialStore:
   def __init__(self):
     self.name = "Testimonial Store/DB"
 
-  def get_testimonial_info(self, testimonial_id) -> (dict, MassEnergizeAPIError):
-    testimonial = Testimonial.objects.filter(id=testimonial_id)
-    if not testimonial:
-      return None, InvalidResourceError()
-    return testimonial, None
+  def get_testimonial_info(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      testimonial = Testimonial.objects.filter(**args).first()
+      if not testimonial:
+        return None, InvalidResourceError()
+      return testimonial, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_testimonials(self, args) -> (list, MassEnergizeAPIError):
     try:
       args['is_published'] = True
+      args['is_approved'] = True
       args['is_deleted'] = False
       testimonials = Testimonial.objects.filter(**args)
       if not testimonials:
@@ -77,9 +81,11 @@ class TestimonialStore:
 
 
   def delete_testimonial(self, testimonial_id) -> (dict, MassEnergizeAPIError):
-    testimonials = Testimonial.objects.filter(id=testimonial_id)
-    if not testimonials:
-      return None, InvalidResourceError()
+    try:
+      testimonials = Testimonial.objects.filter(id=testimonial_id)
+      testimonials.update(is_deleted=True, is_published=False)
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_testimonials_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):

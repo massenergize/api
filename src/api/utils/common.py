@@ -38,7 +38,7 @@ def parse_list(d):
     return []
 
 def parse_bool(b):
-  return (b == 'true') or (b == '1') or (b == 1) or (b == 'True')
+  return b and (b or (b == 'true') or (b == '1') or (b == 1) or (b == 'True'))
 
 def parse_int(b):
   try:
