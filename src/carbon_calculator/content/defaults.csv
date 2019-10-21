@@ -1,0 +1,8 @@
+Variable,Locality,Value,Reference,Updated
+elec_typical_monthly_bill,default,150.0,Default value without reference,2019-10-18 16:05:13.732563+00:00
+elec_price_per_kwh,default,0.2209,Default value without reference,2019-10-18 16:05:13.770159+00:00
+elec_monthly_fixed_charge,default,7.0,Default value without reference,2019-10-18 16:05:13.797358+00:00
+elec_price_per_kwh,ConcordMA,0.148,BHN CMLP Utility Bill Sep 2019,2019-10-18 16:16:32.382269+00:00
+elec_renewable_additional_kwh_cost,default,0.038,Default value without reference,2019-10-18 16:26:15.927296+00:00
+elec_lbs_co2_per_kwh,default,0.682,"ISO-NE average, 2017 from their report",2019-10-18 16:05:13.824653+00:00
+elec_community_solar_average_savings,default,0.07,7% on utility bill from one company (range from 5-10%),2019-10-18 20:57:19.090814+00:00

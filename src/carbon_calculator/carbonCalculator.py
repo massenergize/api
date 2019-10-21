@@ -13,9 +13,12 @@ import csv
 from django.core import files
 from io import BytesIO
 import requests
-from .CCDefaults import *
+from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
+from .CCDefaults import getDefault, CCD
 from .homeHeating import HeatingLoad
-from .electricity import *  # electricity related action calculations
+from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLighting, EvalEnergystarRefrigerator, \
+                        EvalEnergystarWasher, EvalInductionStove, EvalHeatPumpDryer, EvalColdWaterWash, EvalLineDry, \
+                        EvalRefrigeratorPickup, EvalSmartPowerStrip, EvalElectricityMonitor
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -262,7 +265,7 @@ class CarbonCalculator:
                                     picture = picture)
                                 print('Importing Action ',action.name,': ',action.description)
                                 action.save()
-
+                    csvfile.close()
                     status = True
 
             questionsFile = inputs.get('Questions','') 
@@ -303,6 +306,7 @@ class CarbonCalculator:
                                 
                             print('Importing Question ',question.name,': ',question.question_text)
                             question.save()
+                    csvfile.close()
                     status = True
 
             stationsFile = inputs.get('Stations','') 
@@ -332,6 +336,7 @@ class CarbonCalculator:
                                 
                             print('Importing Station ',station.name,': ',station.description)
                             station.save()
+                    csvfile.close()
                     status = True
             
             eventsFile = inputs.get('Events','') 
@@ -389,6 +394,7 @@ class CarbonCalculator:
                                         event.groups.add(gg)
                             print('Importing Event ',event.name,' at ',event.location,' on ',event.datetime)
                             event.save()
+                    csvfile.close()
                     status = True
             groupsFile = inputs.get('Groups','') 
             if groupsFile!='':
@@ -419,12 +425,24 @@ class CarbonCalculator:
                                 
                             print('Importing Group ',group.displayname)
                             group.save()
+                    csvfile.close()
                     status = True
+            defaultsFile = inputs.get('Defaults','') 
+            if defaultsFile!='':
+                status = CCD.importDefaults(CCD,defaultsFile)
+
             self.__init__()    
             return {"status":status}
         else:
             return {"status":False}
 
+    def Export(self,inputs):
+        status = False
+        defaultsFile = inputs.get('Defaults','')
+        if defaultsFile!='':
+            status = CCD.exportDefaults(CCD, defaultsFile)
+        
+        return {"status":status}
 
 class CalculatorQuestion:
     def __init__(self, name):

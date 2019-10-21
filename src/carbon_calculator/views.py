@@ -49,4 +49,6 @@ def importcsv(request):
 	inputs = get_request_contents(request)
 	return JsonResponse(CALC.Import(inputs))
 
-	
+def exportcsv(request):
+	inputs = get_request_contents(request)
+	return JsonResponse(CALC.Export(inputs))

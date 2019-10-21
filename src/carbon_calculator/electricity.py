@@ -1,4 +1,5 @@
-from .CCDefaults import *
+from .CCDefaults import getDefault, getLocality
+from .CCConstants import YES, NO, FRACTIONS
 
 MONTHLY_ELEC = "monthly_elec_bill"
 ELECTRIC_UTILITY = "electric_utility"
@@ -71,7 +72,7 @@ def EvalRenewableElectricity(inputs):
             explanation = "You are eligible for renewable power, which adds a small charge on your electric bill" # could be eligible.  May depend the community
             # assuming 100% renewable GECA plan
             points = annual_ghg
-            savings = - additional_kwh_cost * annual_kwh
+            savings = -1 * additional_kwh_cost * annual_kwh
             cost = 0.    # figure out a typical value
     return points, cost, savings, explanation
 
@@ -79,6 +80,7 @@ LED_SWAP_FRACTION = "fraction_led_replacement"
 NUM_OLD_BULBS = "number_nonefficient_bulbs"
 def EvalLEDLighting(inputs):
     explanation = "Didn't choose to replace bulbs with LEDs"
+    locality = getLocality(inputs)
 
     #bulbs_incandescent,bulbs_replace_leds
     num_old_bulbs = inputs.get(NUM_OLD_BULBS ,10)
@@ -111,6 +113,7 @@ def EvalLEDLighting(inputs):
 
 def EvalEnergystarRefrigerator(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.
@@ -118,6 +121,7 @@ def EvalEnergystarRefrigerator(inputs):
 
 def EvalEnergystarWasher(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.
@@ -125,6 +129,7 @@ def EvalEnergystarWasher(inputs):
 
 def EvalInductionStove(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.
@@ -132,6 +137,7 @@ def EvalInductionStove(inputs):
 
 def EvalHeatPumpDryer(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.
@@ -139,6 +145,7 @@ def EvalHeatPumpDryer(inputs):
 
 def EvalColdWaterWash(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.
@@ -146,6 +153,7 @@ def EvalColdWaterWash(inputs):
 
 def EvalLineDry(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.
@@ -153,6 +161,7 @@ def EvalLineDry(inputs):
 
 def EvalRefrigeratorPickup(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.
@@ -160,6 +169,7 @@ def EvalRefrigeratorPickup(inputs):
 
 def EvalSmartPowerStrip(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.
@@ -167,6 +177,7 @@ def EvalSmartPowerStrip(inputs):
 
 def EvalElectricityMonitor(inputs):
     explanation = "Didn't choose to ..."
+    locality = getLocality(inputs)
     points = 666
     cost = 666.
     savings = 666.

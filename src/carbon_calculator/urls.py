@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import index, ping, actioninfo, eventinfo, groupinfo, stationinfo, estimate, reset, importcsv
+from .views import index, ping, actioninfo, eventinfo, groupinfo, stationinfo, estimate, reset, importcsv, exportcsv
 
 urlpatterns = [
     path('',index),
@@ -14,6 +14,7 @@ urlpatterns = [
     path('info/station/<station>', stationinfo ),
     path('estimate/<action>', estimate ),
     path('reset', reset ),
-    path('import', importcsv )
+    path('import', importcsv ),
+    path('export', exportcsv )
 
 ]
