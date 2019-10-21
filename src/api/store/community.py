@@ -18,7 +18,7 @@ class CommunityStore:
 
   def list_communities(self) -> (list, MassEnergizeAPIError):
     try:
-      communities = Community.objects.filter(is_published=True)
+      communities = Community.objects.filter(is_published=True, is_deleted=False, is_approved=True)
       if not communities:
         return [], None
       return communities, None
@@ -77,12 +77,14 @@ class CommunityStore:
         donatePage.save()
       
       homePage = HomePageSettings.objects.filter(is_template=True).first()
+      images = homePage.images.all()
       if homePage:
         homePage.pk = None 
         homePage.title = f"Welcome to Massenergize, {new_community.name}!"
         homePage.community = new_community
         homePage.is_template = False
         homePage.save()
+        homePage.images.set(images)
       
       impactPage = ImpactPageSettings.objects.filter(is_template=True).first()
       if impactPage:
@@ -105,10 +107,13 @@ class CommunityStore:
     return community, None
 
 
-  def delete_community(self, community_id) -> (dict, MassEnergizeAPIError):
-    communities = Community.objects.filter(id=community_id)
-    if not communities:
-      return None, InvalidResourceError()
+  def delete_community(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      communities = Community.objects.filter(**args)
+      communities.delete()
+      return communities, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_communities_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
@@ -118,7 +123,7 @@ class CommunityStore:
 
   def list_communities_for_super_admin(self):
     try:
-      communities = Community.objects.all()
+      communities = Community.objects.filter(is_deleted=False)
       return communities, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))

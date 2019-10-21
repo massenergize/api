@@ -46,6 +46,7 @@ class PolicyHandler(RouteHandler):
     def create_policy_view(request) -> None: 
       args = get_request_contents(request)
       community_id = args.pop('community_id', None)
+      args.pop('is_global', None)
       policy_info, err = self.service.create_policy(community_id ,args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

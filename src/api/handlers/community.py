@@ -44,7 +44,7 @@ class CommunityHandler(RouteHandler):
   def create(self) -> function:
     def create_community_view(request) -> None: 
       args = get_request_contents(request)
-      args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions'))
+      args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions', None))
       if not args['accepted_terms_and_conditions']:
         return MassenergizeResponse(error="Please accept the terms and conditions")
       
@@ -56,7 +56,9 @@ class CommunityHandler(RouteHandler):
       if not ok:
         return MassenergizeResponse(error=str(err))
         
-      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused'))
+      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', None))
+      args['is_published'] = parse_bool(args.pop('is_published', None))
+      args['is_approved'] = parse_bool(args.pop('is_approved', None))
 
       args = rename_field(args, 'image', 'logo')
       args = parse_location(args)
@@ -90,8 +92,8 @@ class CommunityHandler(RouteHandler):
   def delete(self) -> function:
     def delete_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args[id]
-      community_info, err = self.service.delete_community(args[id])
+      args = rename_field(args, 'community_id', 'id')
+      community_info, err = self.service.delete_community(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)

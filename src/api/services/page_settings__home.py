@@ -15,7 +15,7 @@ class HomePageSettingsService:
     home_page_setting, err = self.store.get_home_page_setting_info(args)
     if err:
       return None, err
-    return serialize(home_page_setting), None
+    return serialize(home_page_setting, full=True), None
 
   def list_home_page_settings(self, home_page_setting_id) -> (list, MassEnergizeAPIError):
     home_page_setting, err = self.store.list_home_page_settings(home_page_setting_id)

@@ -33,6 +33,7 @@ class TestimonialHandler(RouteHandler):
   def info(self) -> function:
     def testimonial_info_view(request) -> None: 
       args = get_request_contents(request)
+      args = rename_field(args, 'testimonial_id', 'id')
       testimonial_info, err = self.service.get_testimonial_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -82,8 +83,8 @@ class TestimonialHandler(RouteHandler):
   def delete(self) -> function:
     def delete_testimonial_view(request) -> None: 
       args = get_request_contents(request)
-      testimonial_id = args[id]
-      testimonial_info, err = self.service.delete_testimonial(args[id])
+      testimonial_id = args.pop('testimonial_id', None)
+      testimonial_info, err = self.service.delete_testimonial(testimonial_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
