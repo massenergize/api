@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to teams"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents
+from api.utils.common import get_request_contents, rename_field
 from api.services.team import TeamService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -61,9 +61,10 @@ class TeamHandler(RouteHandler):
   def list(self) -> function:
     def list_team_view(request) -> None: 
       args = get_request_contents(request)
-      community_id = args["community__id"]
-      user_id = args["user_id"]
-      team_info, err = self.team.list_teams(community_id, user_id)
+      args = get_request_contents(request)
+      args = rename_field(args, 'community_id', 'community__id')
+      args = rename_field(args, 'subdomain', 'community__subdomain')
+      team_info, err = self.team.list_teams(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)

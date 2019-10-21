@@ -63,8 +63,9 @@ class GoalHandler(RouteHandler):
       args = get_request_contents(request)
       team_id = args.pop('team_id', None) 
       community_id = args.pop("community_id", None)
+      subdomain = args.pop("subdomain", None)
       user_id = args.pop('user_id', None)
-      goal_info, err = self.service.list_goals(community_id, team_id, user_id)
+      goal_info, err = self.service.list_goals(community_id, subdomain, team_id, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goal_info)

@@ -6,11 +6,14 @@ class ContactUsPageSettingsStore:
   def __init__(self):
     self.name = "ContactUsPageSettings Store/DB"
 
-  def get_contact_us_page_setting_info(self, contact_us_page_setting_id) -> (dict, MassEnergizeAPIError):
-    contact_us_page_setting = ContactUsPageSettings.objects.filter(id=contact_us_page_setting_id)
-    if not contact_us_page_setting:
-      return None, InvalidResourceError()
-    return contact_us_page_setting, None
+  def get_contact_us_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      page = ContactUsPageSettings.objects.filter(**args).first()
+      if not page:
+        return None, InvalidResourceError()
+      return page, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_contact_us_page_settings(self, community_id) -> (list, MassEnergizeAPIError):

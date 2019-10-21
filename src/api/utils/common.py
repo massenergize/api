@@ -1,7 +1,9 @@
 import json 
 from querystring_parser import parser
 from api.api_errors.massenergize_errors import CustomMassenergizeError
-
+import pytz
+from django.utils import timezone
+from datetime import datetime
 
 def get_request_contents(request):
   try:
@@ -36,7 +38,28 @@ def parse_list(d):
     return []
 
 def parse_bool(b):
-  return (b == 'true') or (b == '1') or (b == 1) or (b == 'True')
+  return b and (b or (b == 'true') or (b == '1') or (b == 1) or (b == 'True'))
+
+def parse_int(b):
+  try:
+    return int(b)
+  except Exception as e:
+    print(e)
+    return 1
+
+def parse_date(d):
+  try:
+    return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d %H:%M'))
+  except Exception as e:
+    print(e)
+    return timezone.now()
+
+def rename_field(args, old_name, new_name):
+  oldVal = args.pop(old_name, None)
+  if oldVal:
+    args[new_name] = oldVal
+  return args
+
 
 def serialize_all(data, full=False):
   if full:
@@ -58,3 +81,15 @@ def check_length(args, field,  min_length=5, max_length=25):
   if data_length < min_length or data_length > max_length:
     return False, CustomMassenergizeError(f"{field} has to be between {min_length} and {max_length}")
   return True, None
+
+def parse_location(args):
+  location = {
+    "address": args.pop("address", None),
+    "unit": args.pop("unit", None),
+    "city": args.pop("city", None),
+    "state": args.pop("state", None),
+    "zipcode": args.pop("zipcode", None),
+    "country": args.pop("country", None),
+  }
+  args['location'] = location
+  return args

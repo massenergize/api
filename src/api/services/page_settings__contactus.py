@@ -11,8 +11,8 @@ class ContactUsPageSettingsService:
   def __init__(self):
     self.store =  ContactUsPageSettingsStore()
 
-  def get_contact_us_page_setting_info(self, contact_us_page_setting_id) -> (dict, MassEnergizeAPIError):
-    contact_us_page_setting, err = self.store.get_contact_us_page_setting_info(contact_us_page_setting_id)
+  def get_contact_us_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+    contact_us_page_setting, err = self.store.get_contact_us_page_setting_info(args)
     if err:
       return None, err
     return serialize(contact_us_page_setting), None

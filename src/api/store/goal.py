@@ -15,13 +15,20 @@ class GoalStore:
       return None, InvalidResourceError()
 
 
-  def list_goals(self, community_id, team_id, user_id) -> (list, MassEnergizeAPIError):
+  def list_goals(self, community_id, subdomain, team_id, user_id) -> (list, MassEnergizeAPIError):
     try:
       goals = []
       if community_id:
         community = Community.objects.filter(id=community_id).first()
         if not community:
           return None, CustomMassenergizeError(f"There is no community with id {community_id}")
+        
+        if community.goal and not community.goal.is_deleted:
+          goals.append(community.goal)
+      elif subdomain:
+        community = Community.objects.filter(subdomain=subdomain).first()
+        if not community:
+          return None, CustomMassenergizeError(f"There is no community with subdomain {subdomain}")
         
         if community.goal and not community.goal.is_deleted:
           goals.append(community.goal)

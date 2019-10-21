@@ -38,8 +38,8 @@ class GoalService:
       return None, err
     return serialize(goal), None
 
-  def list_goals(self, community_id, team_id, user_id) -> (list, MassEnergizeAPIError):
-    goals, err = self.store.list_goals(community_id, team_id, user_id)
+  def list_goals(self, community_id, subdomain, team_id, user_id) -> (list, MassEnergizeAPIError):
+    goals, err = self.store.list_goals(community_id, subdomain, team_id, user_id)
     if err:
       return None, err
     return serialize_all(goals), None

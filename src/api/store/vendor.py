@@ -1,4 +1,4 @@
-from database.models import Vendor, UserProfile
+from database.models import Vendor, UserProfile, Media
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
@@ -22,11 +22,36 @@ class VendorStore:
 
   def create_vendor(self, args) -> (dict, MassEnergizeAPIError):
     try:
+      communities = args.pop('communities', [])
+      image = args.pop('image', None)
+      onboarding_contact = args.pop('onboarding_contact', None)
+      key_contact_full_name = args.pop('key_contact_full_name', None)
+      key_contact_email = args.pop('key_contact_email', None)
       new_vendor = Vendor.objects.create(**args)
+
+      if image:
+        logo = Media(name=f"Logo-{new_vendor.name}", file=image)
+        logo.save()
+        new_vendor.logo = logo
+      
+      if onboarding_contact:
+        onboarding_contact = UserProfile.objects.filter(email=onboarding_contact).first()
+        new_vendor.onboarding_contact = onboarding_contact
+
+      if key_contact_email:
+        new_vendor.key_contact = {
+          'full_name': key_contact_full_name,
+          'email': key_contact_email
+        }
+      else:
+        return None, CustomMassenergizeError("Please provide key contact email and name")
+
+      
       new_vendor.save()
+      new_vendor.communities.set(communities)
       return new_vendor, None
-    except Exception:
-      return None, ServerError()
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def update_vendor(self, vendor_id, args) -> (dict, MassEnergizeAPIError):

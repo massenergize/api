@@ -11,17 +11,17 @@ class TestimonialService:
   def __init__(self):
     self.store =  TestimonialStore()
 
-  def get_testimonial_info(self, testimonial_id) -> (dict, MassEnergizeAPIError):
-    testimonial, err = self.store.get_testimonial_info(testimonial_id)
+  def get_testimonial_info(self, args) -> (dict, MassEnergizeAPIError):
+    testimonial, err = self.store.get_testimonial_info(args)
     if err:
       return None, err
-    return serialize(testimonial)
+    return serialize(testimonial, full=True), None
 
-  def list_testimonials(self, testimonial_id) -> (list, MassEnergizeAPIError):
-    testimonial, err = self.store.list_testimonials(testimonial_id)
+  def list_testimonials(self, args) -> (list, MassEnergizeAPIError):
+    testimonial, err = self.store.list_testimonials(args)
     if err:
       return None, err
-    return serialize(testimonial), None
+    return serialize_all(testimonial), None
 
 
   def create_testimonial(self, args) -> (dict, MassEnergizeAPIError):
@@ -37,8 +37,8 @@ class TestimonialService:
       return None, err
     return serialize(testimonial), None
 
-  def delete_testimonial(self, args) -> (dict, MassEnergizeAPIError):
-    testimonial, err = self.store.delete_testimonial(args)
+  def delete_testimonial(self, testimonial_id) -> (dict, MassEnergizeAPIError):
+    testimonial, err = self.store.delete_testimonial(testimonial_id)
     if err:
       return None, err
     return serialize(testimonial), None
@@ -48,11 +48,11 @@ class TestimonialService:
     testimonials, err = self.store.list_testimonials_for_community_admin(community_id)
     if err:
       return None, err
-    return serialize(testimonials), None
+    return serialize_all(testimonials), None
 
 
   def list_testimonials_for_super_admin(self) -> (list, MassEnergizeAPIError):
     testimonials, err = self.store.list_testimonials_for_super_admin()
     if err:
       return None, err
-    return serialize(testimonials), None
+    return serialize_all(testimonials), None
