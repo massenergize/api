@@ -112,6 +112,7 @@ def EvalLEDLighting(inputs):
     return points, cost, savings, explanation
 
 def EvalEnergystarRefrigerator(inputs):
+    #replace_refrigerator,refrigerator_age
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666
@@ -120,6 +121,7 @@ def EvalEnergystarRefrigerator(inputs):
     return points, cost, savings, explanation
 
 def EvalEnergystarWasher(inputs):
+    #replace_washer,washer_age,wash_loads
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666
@@ -128,6 +130,7 @@ def EvalEnergystarWasher(inputs):
     return points, cost, savings, explanation
 
 def EvalInductionStove(inputs):
+    #induction_stove,stove_type
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666
@@ -136,6 +139,7 @@ def EvalInductionStove(inputs):
     return points, cost, savings, explanation
 
 def EvalHeatPumpDryer(inputs):
+    #replace_dryer,dryer_type
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666
@@ -144,6 +148,7 @@ def EvalHeatPumpDryer(inputs):
     return points, cost, savings, explanation
 
 def EvalColdWaterWash(inputs):
+    #cold_water_wash,wash_loads
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666
@@ -152,6 +157,7 @@ def EvalColdWaterWash(inputs):
     return points, cost, savings, explanation
 
 def EvalLineDry(inputs):
+    #line_or_rack_dry_loads,wash_loads
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666
@@ -160,6 +166,7 @@ def EvalLineDry(inputs):
     return points, cost, savings, explanation
 
 def EvalRefrigeratorPickup(inputs):
+    #extra_refrigerator,extra_refrigerator_age,extra_refrigerator_pickup,unplug_refrigerator
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666
@@ -168,6 +175,7 @@ def EvalRefrigeratorPickup(inputs):
     return points, cost, savings, explanation
 
 def EvalSmartPowerStrip(inputs):
+    #smart_power_strips
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666
@@ -176,6 +184,7 @@ def EvalSmartPowerStrip(inputs):
     return points, cost, savings, explanation
 
 def EvalElectricityMonitor(inputs):
+    #install_electricity_monitor
     explanation = "Didn't choose to ..."
     locality = getLocality(inputs)
     points = 666

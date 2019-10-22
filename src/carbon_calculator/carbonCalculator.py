@@ -15,10 +15,13 @@ from io import BytesIO
 import requests
 from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
 from .CCDefaults import getDefault, CCD
-from .homeHeating import HeatingLoad
+from .homeHeating import EvalEnergyAudit, EvalWeatherization, EvalProgrammableThermostats, EvalAirSourceHeatPump, \
+                        EvalGroundSourceHeatPump, EvalHeatingSystemAssessment
 from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLighting, EvalEnergystarRefrigerator, \
                         EvalEnergystarWasher, EvalInductionStove, EvalHeatPumpDryer, EvalColdWaterWash, EvalLineDry, \
                         EvalRefrigeratorPickup, EvalSmartPowerStrip, EvalElectricityMonitor
+from .solar import EvalSolarAssessment, EvalSolarPV
+from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolarHW
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -544,57 +547,19 @@ class EnergyFair(CalculatorAction):
             self.text = "Thank you for participating!"
         return super().Eval(inputs)
 
-ENERGY_AUDIT_POINTS = 250
-ELEC_UTILITY = 'elec_utility'
 class EnergyAudit(CalculatorAction):
     def Eval(self, inputs):
-        # inputs: energy_audit_recently,energy_audit,heating_system_fuel,electric_utility
-        signup_energy_audit = inputs.get(self.name, YES)
-        self.text = "You didn't choose to sign up for an energy audit"
-        already_had_audit = inputs.get("energy_audit_recently", YES)
-        if signup_energy_audit == YES:
-            self.text = "You may have had an energy audit too recently?" 
-            if already_had_audit != YES:
-                self.text = "You chose to sign up for an energy audit, now get it scheduled and try to follow through on the recommendations.  "
-                self.points = ENERGY_AUDIT_POINTS
+        self.points, self.cost, self.savings, self.text = EvalEnergyAudit(inputs)
         return super().Eval(inputs)
 
-HEATING_FUEL = "Heating Fuel"
-FUELS = ["Fuel Oil","Natural Gas","Propane","Electric Resistance","Electric Heat Pump","Wood","Other"]
-HAVE_PSTATS = "have_prog_thermostats"
-PSTAT_PROGRAMMING = "prog_thermostat_programming"
 class ProgrammableThermostats(CalculatorAction):
     def Eval(self, inputs):
-        #have_pstats,pstats_programmed,install_programmable_thermostats,heating_system_fuel
-
-        install_pstats = inputs.get(self.name,YES)
-        have_pstats = inputs.get(HAVE_PSTATS,NO)
-        heating_fuel = inputs.get(HEATING_FUEL,FUELS[0])
-        if install_pstats == YES and have_pstats == NO :
-            # need to know total fuel consumption
-            heatingCO2, heatingCost = HeatingLoad(heating_fuel)     # to gross approximation
-            pstat_load_reduction = 0.15
-            self.points = pstat_load_reduction * heatingCO2
-            self.savings = pstat_load_reduction * heatingCost
-            self.cost = 150. 
+        self.points, self.cost, self.savings, self.text = EvalProgrammableThermostats(inputs)
         return super().Eval(inputs)
 
-HOME_WEATHERIZED = "home_weatherized"
 class Weatherize(CalculatorAction):
     def Eval(self, inputs):
-        #weatherized,insulate_home,heating_system_fuel
-
-        weatherize_home = inputs.get(self.name,YES)
-        # could get this from fuel usage ...
-        home_weatherized = inputs.get(HOME_WEATHERIZED,YES)
-        heating_fuel = inputs.get(HEATING_FUEL,FUELS[0])
-        if weatherize_home == YES and home_weatherized != YES:
-            # need to know total fuel consumption
-            heatingCO2, heatingCost = HeatingLoad(heating_fuel)     # to gross approximation
-            weatherize_load_reduction = 0.15
-            self.points = weatherize_load_reduction * heatingCO2
-            self.savings = weatherize_load_reduction * heatingCost
-            self.cost = 500.     # figure out a typical value 
+        self.points, self.cost, self.savings, self.text = EvalWeatherization(inputs)
         return super().Eval(inputs)
 
 class CommunitySolar(CalculatorAction):
@@ -612,127 +577,92 @@ class LEDLighting(CalculatorAction):
         self.points, self.cost, self.savings, self.text = EvalLEDLighting(inputs)
         return super().Eval(inputs)
 
-HEATING_SYSTEM = "heating_system_type"
-HEATING_AGE = "heating_system_age"
-AC_TYPE = "AC_type"
-AC_AGE = "AC_age"
-AGE_OPTIONS = ["<10 years","10-20 years",">20 years"]
-HEATING_SYSTEMS = ["Boiler","Furnace","Baseboard","Wood Stove","Other"]
-AC_TYPES = ["None","Central","Wall","Other"]
 class HeatingAssessment(CalculatorAction):
-    #heating_system_assessment,heating_system_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     def Eval(self, inputs):
-        self.points = self.average_points        
+        self.points, self.cost, self.savings, self.text = EvalHeatingSystemAssessment(inputs)
         return super().Eval(inputs)
 
-HEATING_EFF = 'heating_efficiency'
-NEW_SYSTEM = 'new_system'
 class EfficientBoilerFurnace(CalculatorAction):
-    #upgrade_heating_system_efficiency,heating_system_fuel,heating_system_type,heating_system_age
-
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalEfficientBoilerFurnace(inputs)
         return super().Eval(inputs)
 
 class AirSourceHeatPump(CalculatorAction):
-    #upgrade_heating_with_ashp,heating_system_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalAirSourceHeatPump(inputs)
         return super().Eval(inputs)
 
 class GroundSourceHeatPump(CalculatorAction):
-    #install_gshp,heating_system_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalGroundSourceHeatPump(inputs)
         return super().Eval(inputs)
 
 class HotWaterAssessment(CalculatorAction):
-    #hot_water_assessment,water_heater_type,water_heater_age
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalHotWaterAssessment(inputs)
         return super().Eval(inputs)
 
 class HeatPumpWaterHeater(CalculatorAction):
-    #replace_water_heater,water_heater_type,water_heater_age
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalHeatPumpWaterHeater(inputs)
         return super().Eval(inputs)
 
-SOLAR_POTENTIAL = 'solar_potential'
-POTENTIALS = ['Not sure','Poor', 'Good', 'Great']
 class SolarAssessment(CalculatorAction):
-    #solar_assessment,solar_potential
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalSolarAssessment(inputs)
         return super().Eval(inputs)
 
-ARRAY_SIZE = 'solar_pv_size'
 class InstallSolarPV(CalculatorAction):
-    #install_solar_panels,solar_potential
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalSolarPV(inputs)
         return super().Eval(inputs)
 
 class InstallSolarHW(CalculatorAction):
-    #install_solar_hw,solar_potential
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalSolarHW(inputs)
         return super().Eval(inputs)
 
 class EnergystarRefrigerator(CalculatorAction):
-    #replace_refrigerator,refrigerator_age
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalEnergystarRefrigerator(inputs)
         return super().Eval(inputs)
 
 class EnergystarWasher(CalculatorAction):
-    #replace_washer,washer_age,wash_loads
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalEnergystarWasher(inputs)
         return super().Eval(inputs)
 
 class InductionStove(CalculatorAction):
-    #induction_stove,stove_type
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalInductionStove(inputs)
         return super().Eval(inputs)
 
 class HeatPumpDryer(CalculatorAction):
-    #replace_dryer,dryer_type
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalHeatPumpDryer(inputs)
         return super().Eval(inputs)
 
 class ColdWaterWash(CalculatorAction):
-    #cold_water_wash,wash_loads
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalColdWaterWash(inputs)
         return super().Eval(inputs)
 
 class LineDry(CalculatorAction):
-    #line_or_rack_dry_loads,wash_loads
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalLineDry(inputs)
         return super().Eval(inputs)
 
-#class UnusedAppliances(CalculatorAction):
-#    def Eval(self, inputs):
-#        return super().Eval(inputs)
-
 class RefrigeratorPickup(CalculatorAction):
-    #extra_refrigerator,extra_refrigerator_age,extra_refrigerator_pickup,unplug_refrigerator
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalRefrigeratorPickup(inputs)
         return super().Eval(inputs)
 
 class SmartPowerStrip(CalculatorAction):
-    #smart_power_strips
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalSmartPowerStrip(inputs)
         return super().Eval(inputs)
 
 class ElectricityMonitor(CalculatorAction):
-    #install_electricity_monitor
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalElectricityMonitor(inputs)
         return super().Eval(inputs)
@@ -750,14 +680,6 @@ class ReduceMilesDriven(CalculatorAction):
         self.points = self.average_points
         return super().Eval(inputs)
 
-#lass ReplaceCar2(CalculatorAction):
-#   def Eval(self, inputs):
-#       return super().Eval(inputs)
-#
-#class ReduceMilesDriven2(CalculatorAction):
-#    def Eval(self, inputs):
-#        return super().Eval(inputs)
-#
 class EliminateCar(CalculatorAction):
     #eliminate_car,transportation_car_type,car_annual_miles,car_mpg
     def Eval(self, inputs):
