@@ -22,6 +22,7 @@ from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLi
                         EvalRefrigeratorPickup, EvalSmartPowerStrip, EvalElectricityMonitor
 from .solar import EvalSolarAssessment, EvalSolarPV
 from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolarHW
+from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -671,32 +672,32 @@ CAR_POINTS = 8000
 class ReplaceCar(CalculatorAction):
     #transportation_car_type,replace_car,car_annual_miles,car_mpg,car_model_new
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalReplaceCar(inputs)
         return super().Eval(inputs)
 
 class ReduceMilesDriven(CalculatorAction):
     #reduce_total_mileage,car_annual_miles,car_mpg,transportation_public,transportation_public_amount,transportation_commute_bike_walk,transportation_commute_bike_walk_amount,transportation_telecommute,transportation_telecommute_amount
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalReduceMilesDriven(inputs)
         return super().Eval(inputs)
 
 class EliminateCar(CalculatorAction):
     #eliminate_car,transportation_car_type,car_annual_miles,car_mpg
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalEliminateCar(inputs)
         return super().Eval(inputs)
 
 FLIGHT_POINTS = 2000
 class ReduceFlights(CalculatorAction):
     #flights_amount,transportation_flights
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalReduceFlights(inputs)
         return super().Eval(inputs)
 
 class OffsetFlights(CalculatorAction):
     #flights_amount,offset_flights
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalOffsetFlights(inputs)
         return super().Eval(inputs)
 
 DIET_POINTS = 1000

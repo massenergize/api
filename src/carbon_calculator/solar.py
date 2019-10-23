@@ -1,3 +1,4 @@
+from .CCDefaults import getDefault, getLocality
 from .CCConstants import NO,YES
 
 """ 
