@@ -27,7 +27,7 @@ def EvalReduceFlights(inputs):
     points = cost = savings = 500.
     return points, cost, savings, explanation
 
-class OffsetFlights(inputs):
+def EvalOffsetFlights(inputs):
     #flights_amount,offset_flights
     explanation = "Didn't choose to ..."
     points = cost = savings = 500.

@@ -23,6 +23,8 @@ from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLi
 from .solar import EvalSolarAssessment, EvalSolarPV
 from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolarHW
 from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
+from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
+from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -55,7 +57,6 @@ def SavePic2Media(picURL):
         return None
 
 class CarbonCalculator:
-
     def __init__(self) :
         self.allActions = {  
                         'energy_fair':EnergyFair,
@@ -700,52 +701,44 @@ class OffsetFlights(CalculatorAction):
         self.points, self.cost, self.savings, self.text = EvalOffsetFlights(inputs)
         return super().Eval(inputs)
 
-DIET_POINTS = 1000
 class LowCarbonDiet(CalculatorAction):
     #eating_switch_meals,family_size,meat_frequency,eating_switch_meals_amount
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalLowCarbonDiet(inputs)
         return super().Eval(inputs)
 
 class ReduceWaste(CalculatorAction):
     #reduce_waste,reuse_containers,buy_sell_used,buy_bulk,buy_recycled
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalReduceWaste(inputs)
         return super().Eval(inputs)
 
-COMPOST_POINTS = 100
 class Compost(CalculatorAction):
     #compost_food_waste,compost_pickup
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalCompost(inputs)
         return super().Eval(inputs)
 
-LAWN_ASSESSMENT_POINTS = 100
-LAWN_SIZES = ["Small (up to 2000 sq ft)", "Medium (2000-4000 sq ft)","Large (4000-6000 sq ft)","Very large (above 6000 sq ft)"]
-#class LawnAssessment(CalculatorAction):
-#    def Eval(self, inputs):
-#        return super().Eval(inputs)
-#
 class ReduceLawnSize(CalculatorAction):
     #lawn_size,reduce_lawn_size,mower_type,mowing_frequency
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalReduceLawnSize(inputs)
         return super().Eval(inputs)
 
 class ReduceLawnCare(CalculatorAction):
     #lawn_size,lawn_service,mowing_frequency,mower_type,fertilizer,fertilizer_applications
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalReduceLawnCare(inputs)
         return super().Eval(inputs)
 
 class ElectricMower(CalculatorAction):
     #lawn_size,mower_type,mower_switch
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalElectricMower(inputs)
         return super().Eval(inputs)
 
 class RakeOrElecBlower(CalculatorAction):
     #leaf_cleanup_gas_blower,leaf_cleanup_blower_switch
     def Eval(self, inputs):
-        self.points = self.average_points
+        self.points, self.cost, self.savings, self.text = EvalRakeOrElecBlower(inputs)
         return super().Eval(inputs)
