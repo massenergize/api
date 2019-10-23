@@ -83,7 +83,6 @@ class HomePageSettingsStore:
 
       #images
       current_images = home_page_setting.images.all()
-      print(current_images)
 
       image_1 = args.pop('image_1', None)
       image_2 = args.pop('image_2', None)
@@ -95,15 +94,15 @@ class HomePageSettingsStore:
 
 
       if image_1:
-        current_image_1 = Media(file=image_1, name=f"FeaturedImage1-{home_page_setting.community.name}")
+        current_image_1 = Media(file=image_1, name=f"FeaturedImage1-{home_page_setting.community.name}", order=1)
         current_image_1.save()
 
       if image_2:
-        current_image_2 = Media(file=image_2, name=f"FeaturedImage2-{home_page_setting.community.name}")
+        current_image_2 = Media(file=image_2, name=f"FeaturedImage2-{home_page_setting.community.name}", order=2)
         current_image_2.save()
 
       if image_3:
-        current_image_3 = Media(file=image_3, name=f"FeaturedImage3-{home_page_setting.community.name}")
+        current_image_3 = Media(file=image_3, name=f"FeaturedImage3-{home_page_setting.community.name}", order=3)
         current_image_3.save()
       
       home_page_setting.images.set([current_image_1, current_image_2, current_image_3])

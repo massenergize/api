@@ -68,7 +68,7 @@ class DonatePageSettingsHandler(RouteHandler):
   def update(self) -> function:
     def update_donate_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      donate_page_setting_info, err = self.service.update_donate_page_setting(args[id], args)
+      donate_page_setting_info, err = self.service.update_donate_page_setting(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_setting_info)

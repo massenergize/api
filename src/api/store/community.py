@@ -18,7 +18,7 @@ class CommunityStore:
 
   def list_communities(self) -> (list, MassEnergizeAPIError):
     try:
-      communities = Community.objects.filter(is_published=True, is_deleted=False, is_approved=True)
+      communities = Community.objects.filter(is_deleted=False, is_approved=True)
       if not communities:
         return [], None
       return communities, None
@@ -78,6 +78,7 @@ class CommunityStore:
       
       homePage = HomePageSettings.objects.filter(is_template=True).first()
       images = homePage.images.all()
+      #TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
       if homePage:
         homePage.pk = None 
         homePage.title = f"Welcome to Massenergize, {new_community.name}!"

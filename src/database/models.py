@@ -110,7 +110,7 @@ class Media(models.Model):
     }
   class Meta:
     db_table = "media"
-    ordering = ('name',)
+    ordering = ('order', 'name')
 
 class Policy(models.Model):
   """
