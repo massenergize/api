@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to home_page_settings"""
 
 from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents, rename_field
+from api.utils.common import get_request_contents, rename_field, rename_fields, parse_bool, parse_list, check_length, parse_int
 from api.services.page_settings__home import HomePageSettingsService
 from api.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -77,8 +77,52 @@ class HomePageSettingsHandler(RouteHandler):
   def update(self) -> function:
     def update_home_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      home_page_id = args.pop('home_page_id', None)
-      home_page_setting_info, err = self.service.update_home_page_setting(home_page_id, args)
+
+      #featured links
+      args['show_featured_links'] = parse_bool(args.pop('show_featured_links', True))
+      args['featured_links'] = [
+        {
+          'title': args.pop('icon_box_1_title', ''),
+          'link': args.pop('icon_box_1_link', ''),
+          'icon': args.pop('icon_box_1_icon', ''),
+          'description': args.pop('icon_box_1_description', '')
+        },
+        {
+          'title': args.pop('icon_box_2_title', ''),
+          'link': args.pop('icon_box_2_link', ''),
+          'icon': args.pop('icon_box_2_icon', ''),
+          'description': args.pop('icon_box_2_description', '')
+        },
+        {
+          'title': args.pop('icon_box_3_title', ''),
+          'link': args.pop('icon_box_3_link', ''),
+          'icon': args.pop('icon_box_3_icon', ''),
+          'description': args.pop('icon_box_3_description', '')
+        },
+        {
+          'title': args.pop('icon_box_4_title', ''),
+          'link': args.pop('icon_box_4_link', ''),
+          'icon': args.pop('icon_box_4_icon', ''),
+          'description': args.pop('icon_box_4_description', '')
+        },
+      ]
+
+      #events
+      args['show_featured_events'] = parse_bool(args.pop('show_featured_events', True))
+      args['featured_events'] = parse_list(args.pop('featured_events', []))
+
+      #statistics
+      args['show_featured_stats'] = parse_bool(args.pop('show_featured_stats'))
+      args['goal'] = {
+        'attained_number_of_actions': parse_int(args.pop('attained_number_of_actions', 0)),
+        'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
+        'attained_number_of_households': parse_int(args.pop('attained_number_of_households', 0)),
+        'target_number_of_households': parse_int(args.pop('target_number_of_households', 0))
+      }
+
+      # print(args)
+      home_page_setting_info, err = self.service.update_home_page_setting(args)
+
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_setting_info)

@@ -508,9 +508,9 @@ def community_profile_full(request, cid):
     if community:
       res = community.full_json()
       res['users'] = [u.simple_json() for u in community.userprofile_set.all()]
-      res['testimonials'] = [t.simple_json() for t in community.testimonial_set.all()]
-      res['events'] = [e.simple_json() for e in community.event_set.all()]
-      res['actions'] = [a.simple_json() for a in community.action_set.all()]
+      res['testimonials'] = [t.simple_json() for t in community.testimonial_set.all()[:3]]
+      res['events'] = [e.simple_json() for e in community.event_set.all()[:3]]
+      res['actions'] = [a.simple_json() for a in community.action_set.all()[:3]]
       res['graphs'] = [g.simple_json() for g in community.graph_set.all()]
       return Json(res, errors, use_full_json=True)
   return Json(None)

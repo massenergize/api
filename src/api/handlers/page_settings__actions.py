@@ -68,7 +68,7 @@ class ActionsPageSettingsHandler(RouteHandler):
   def update(self) -> function:
     def update_actions_page_setting_view(request) -> None: 
       args = get_request_contents(request)
-      actions_page_setting_info, err = self.service.update_actions_page_setting(args[id], args)
+      actions_page_setting_info, err = self.service.update_actions_page_setting(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_setting_info)

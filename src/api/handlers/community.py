@@ -52,7 +52,7 @@ class CommunityHandler(RouteHandler):
       if not ok:
         return MassenergizeResponse(error=str(err))
       
-      ok, err = check_length(args, 'subdomain', 4, 10)
+      ok, err = check_length(args, 'subdomain', 4, 20)
       if not ok:
         return MassenergizeResponse(error=str(err))
         

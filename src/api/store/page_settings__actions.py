@@ -33,12 +33,21 @@ class ActionsPageSettingsStore:
       return None, ServerError()
 
 
-  def update_actions_page_setting(self, actions_page_setting_id, args) -> (dict, MassEnergizeAPIError):
-    actions_page_setting = ActionsPageSettings.objects.filter(id=actions_page_setting_id)
-    if not actions_page_setting:
-      return None, InvalidResourceError()
-    actions_page_setting.update(**args)
-    return actions_page_setting, None
+  def update_actions_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      actions_page_id = args.get('id', None)
+      if actions_page_id:
+        print(args)
+        actions_page_setting = ActionsPageSettings.objects.filter(id=actions_page_id)
+        actions_page_setting.update(**args)
+        if not actions_page_setting:
+          return None, InvalidResourceError()
+
+        return actions_page_setting.first(), None
+      else:
+        return None, CustomMassenergizeError("Please provide an id")
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def delete_actions_page_setting(self, actions_page_setting_id) -> (dict, MassEnergizeAPIError):
