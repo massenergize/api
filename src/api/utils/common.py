@@ -63,6 +63,11 @@ def rename_field(args, old_name, new_name):
     args[new_name] = oldVal
   return args
 
+def rename_fields(args, pairs):
+  for (old_name, new_name) in pairs:
+    args = rename_field(args, old_name, new_name)
+  return args
+
 
 def serialize_all(data, full=False):
   if full:
