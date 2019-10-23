@@ -20,6 +20,7 @@ def get_request_contents(request):
           args[i] = request.FILES[i]
     else:
       args = request.POST.dict()
+    args = rename_field(args, 'is_dev', 'is_published')
     return args
 
   except Exception as e:
@@ -38,7 +39,9 @@ def parse_list(d):
     return []
 
 def parse_bool(b):
-  return b and (b or (b == 'true') or (b == '1') or (b == 1) or (b == 'True'))
+  if not b:
+    return False
+  return ((isinstance(b, bool) and b) or (b == 'true') or (b == '1') or (b == 1) or (b == 'True'))
 
 def parse_int(b):
   try:
