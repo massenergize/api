@@ -69,7 +69,7 @@ class Location(models.Model):
     db_table = 'locations'
 
 
-class              Media(models.Model):
+class Media(models.Model):
   """
   A class used to represent any Media that is uploaded to this website
 
@@ -88,6 +88,7 @@ class              Media(models.Model):
   file = models.FileField(upload_to='media/')
   media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
+  order = models.PositiveIntegerField(default=0, blank=True, null=True)
 
 
   def __str__(self):      
@@ -109,7 +110,7 @@ class              Media(models.Model):
     }
   class Meta:
     db_table = "media"
-    ordering = ('name',)
+    ordering = ('order', 'name')
 
 class Policy(models.Model):
   """
@@ -913,6 +914,7 @@ class Event(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
+  rank = models.PositiveIntegerField(default=0, blank=True, null=True)
 
 
   def __str__(self):             
@@ -929,8 +931,6 @@ class Event(models.Model):
 
   def full_json(self):
     return self.simple_json()
-
-
 
 
   class Meta:
@@ -1765,7 +1765,6 @@ class HomePageSettings(models.Model):
 
 
   def full_json(self):
-   
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     res['community'] = get_json_if_not_none(self.community)

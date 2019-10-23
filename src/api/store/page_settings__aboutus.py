@@ -32,12 +32,21 @@ class AboutUsPageSettingsStore:
       return None, ServerError()
 
 
-  def update_about_us_page_setting(self, about_us_page_setting_id, args) -> (dict, MassEnergizeAPIError):
-    about_us_page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_setting_id)
-    if not about_us_page_setting:
-      return None, InvalidResourceError()
-    about_us_page_setting.update(**args)
-    return about_us_page_setting, None
+  def update_about_us_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      about_us_page_id= args.get('id', None)
+      if about_us_page_id:
+        print(args)
+        actions_page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_id)
+        actions_page_setting.update(**args)
+        if not actions_page_setting:
+          return None, InvalidResourceError()
+
+        return actions_page_setting.first(), None
+      else:
+        return None, CustomMassenergizeError("Please provide an id")
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def delete_about_us_page_setting(self, about_us_page_setting_id) -> (dict, MassEnergizeAPIError):
