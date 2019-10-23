@@ -4,8 +4,8 @@ from database.utils.constants import *
 from datetime import date, datetime
 from .utils.common import  json_loader,get_json_if_not_none
 from django.forms.models import model_to_dict
-import uuid
 from carbon_calculator.models import Action as CCAction
+import uuid
 
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 ZIP_CODE_AND_STATES = json_loader('./database/raw_data/other/states.json')
@@ -28,7 +28,7 @@ class Location(models.Model):
   state: str
     the name of the state if available
   more_info: JSON
-    any another dynamic information we would like to store about this location 
+    any anotheraction() dynamic information we would like to store about this location 
   """
   id = models.AutoField(primary_key=True)
   location_type = models.CharField(max_length=TINY_STR_LEN, 
@@ -88,6 +88,7 @@ class Media(models.Model):
   file = models.FileField(upload_to='media/')
   media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
+  order = models.PositiveIntegerField(default=0, blank=True, null=True)
 
 
   def __str__(self):      
@@ -109,7 +110,7 @@ class Media(models.Model):
     }
   class Meta:
     db_table = "media"
-    ordering = ('name',)
+    ordering = ('order', 'name')
 
 class Policy(models.Model):
   """
@@ -136,7 +137,7 @@ class Policy(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   more_info = JSONField(blank=True, null=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):
     return self.name
@@ -145,7 +146,11 @@ class Policy(models.Model):
     return model_to_dict(self)
 
   def full_json(self):
-    return model_to_dict(self)
+    res  =  model_to_dict(self)
+    community = self.community_set.all().first()
+    if community:
+      res['community'] = get_json_if_not_none(community)
+    return res
 
 
   class Meta:
@@ -197,7 +202,7 @@ class Goal(models.Model):
     return self.name
 
   def simple_json(self):
-    return model_to_dict(self)
+    return model_to_dict(self, exclude=['is_deleted'])
 
   def full_json(self):
     return self.simple_json()
@@ -261,14 +266,14 @@ class Community(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):      
     return self.name
 
   def simple_json(self):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 
-      'owner_name', 'owner_email', 'is_geographically_focused'])
+      'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
     res['logo'] = get_json_if_not_none(self.logo)
     return res
 
@@ -279,6 +284,7 @@ class Community(models.Model):
       "subdomain": self.subdomain,
       "owner_name": self.owner_name,
       "owner_email": self.owner_email,
+      "goal": get_json_if_not_none(self.goal),
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
       "location":self.location,
@@ -499,7 +505,7 @@ class Team(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def is_admin(self, UserProfile):
     return self.admins.filter(id=UserProfile.id)
@@ -563,7 +569,7 @@ class Service(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -634,24 +640,23 @@ class Vendor(models.Model):
   banner = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='vendor_banner')
   address = JSONField(blank=True, null=True)
-  key_contact = models.ForeignKey(UserProfile, blank=True, null=True, 
-    on_delete=models.SET_NULL, related_name='key_contact')
-  service_area = models.CharField(max_length=TINY_STR_LEN, 
-    choices=CHOICES["SERVICE_AREAS"].items())
+  key_contact = JSONField(blank=True, null=True)
+  service_area = models.CharField(max_length=TINY_STR_LEN)
+  service_area_states = models.CharField(max_length=TINY_STR_LEN, blank=True, null=True)
   services = models.ManyToManyField(Service, blank=True)
-  properties_serviced = models.CharField(max_length=TINY_STR_LEN, 
-    choices=CHOICES["PROPERTIES_SERVICED"].items())
+  properties_serviced = models.CharField(max_length=TINY_STR_LEN)
   onboarding_date = models.DateTimeField(default=datetime.now)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
   verification_checklist = JSONField(blank=True, null=True) 
   is_verified = models.BooleanField(default=False, blank=True)
+  location = JSONField(blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   communities = models.ManyToManyField(Community, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -669,7 +674,6 @@ class Vendor(models.Model):
     data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
     data['logo'] = get_json_if_not_none(self.logo)
     data['banner']  = get_json_if_not_none(self.banner)
-    data['key_contact'] = get_json_if_not_none(self.key_contact, True)
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     return data
@@ -691,7 +695,7 @@ class ActionProperty(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self): 
@@ -723,7 +727,7 @@ class TagCollection(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   allow_multiple = models.BooleanField(default=False)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):
@@ -762,7 +766,7 @@ class Tag(models.Model):
     on_delete=models.SET_NULL, blank=True)
   order = models.PositiveIntegerField(default=0)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):
     return "%s - %s" % (self.name, self.tag_collection)
@@ -834,24 +838,24 @@ class Action(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self): 
     return self.title
 
   def simple_json(self):
     data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
-      'average_carbon_score', 'community'])
+      'average_carbon_score'])
     data['image'] = get_json_if_not_none(self.image)
-    data['tags'] = [t.full_json() for t in self.tags.all()]
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
+    data['community'] = get_json_if_not_none(self.community)
     return data
 
   def full_json(self):
     data  = self.simple_json()
     data['is_global'] = self.is_global
-    data['community'] = get_json_if_not_none(self.community)
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
     data['geographic_area'] = self.geographic_area
@@ -909,7 +913,8 @@ class Event(models.Model):
   is_external_event = models.BooleanField(default=False, blank=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
+  rank = models.PositiveIntegerField(default=0, blank=True, null=True)
 
 
   def __str__(self):             
@@ -997,7 +1002,7 @@ class Permission(models.Model):
   )
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):
@@ -1066,6 +1071,7 @@ class Testimonial(models.Model):
   title = models.CharField(max_length=SHORT_STR_LEN, db_index=True)
   body = models.TextField(max_length=LONG_STR_LEN)
   is_approved = models.BooleanField(default=False, blank=True)
+  tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True)
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True, null=True)
@@ -1078,7 +1084,7 @@ class Testimonial(models.Model):
   created_at = models.DateTimeField(auto_now_add=True, blank=True)
   updated_at = models.DateTimeField(auto_now=True, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):        
     return self.title
@@ -1299,7 +1305,7 @@ class Graph(models.Model):
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True,blank=True)
   data = models.ManyToManyField(Data,  blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
 
   def simple_json(self):
@@ -1408,7 +1414,7 @@ class Slider(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -1439,7 +1445,7 @@ class Menu(models.Model):
   name = models.CharField(max_length=LONG_STR_LEN, unique=True)
   content = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):              
     return self.name
@@ -1508,7 +1514,7 @@ class PageSection(models.Model):
   graphs = models.ManyToManyField(Graph, blank=True, related_name='graphs')
   info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -1551,7 +1557,7 @@ class Page(models.Model):
   sections = models.ManyToManyField(PageSection, blank=True)
   info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return f"{self.name} - {self.community.name}"
@@ -1602,7 +1608,7 @@ class BillingStatement(models.Model):
   more_info = JSONField(blank=True, null=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):
     return self.name
@@ -1673,7 +1679,7 @@ class EmailCategory(models.Model):
     on_delete=models.CASCADE)
   is_global = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False)
+  is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
@@ -1744,6 +1750,7 @@ class HomePageSettings(models.Model):
   show_featured_links = models.BooleanField(default=True, blank=True)
   show_featured_video = models.BooleanField(default=False, blank=True)
 
+  is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
 
@@ -1759,9 +1766,11 @@ class HomePageSettings(models.Model):
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
-    res['featured_events'] = [i.simple_json() for i in self.featured_events]
-    res['featured_stats'] = [i.simple_json() for i in self.featured_stats]
+    res['images'] = [i.simple_json() for i in self.images.all()]
+    res['community'] = get_json_if_not_none(self.community)
+    res['featured_events'] = [i.simple_json() for i in self.featured_events.all()]
+    res['featured_stats'] = [i.simple_json() for i in self.featured_stats.all()]
+    res['goal']  = get_json_if_not_none(self.community.goal)
     return res
 
   class Meta:
@@ -1780,18 +1789,21 @@ class ActionsPageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return "ActionsPageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images]
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
   class Meta:
@@ -1809,18 +1821,20 @@ class ContactUsPageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return "ContactUsPageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
   class Meta:
@@ -1839,18 +1853,20 @@ class DonatePageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return "DonatePageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
   class Meta:
@@ -1869,6 +1885,7 @@ class AboutUsPageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
 
   def __str__(self):             
@@ -1876,12 +1893,13 @@ class AboutUsPageSettings(models.Model):
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
   class Meta:
@@ -1901,18 +1919,20 @@ class ImpactPageSettings(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return "ImpactPageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
     return res
 
 
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
   class Meta:

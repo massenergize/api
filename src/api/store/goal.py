@@ -15,13 +15,20 @@ class GoalStore:
       return None, InvalidResourceError()
 
 
-  def list_goals(self, community_id, team_id, user_id) -> (list, MassEnergizeAPIError):
+  def list_goals(self, community_id, subdomain, team_id, user_id) -> (list, MassEnergizeAPIError):
     try:
       goals = []
       if community_id:
         community = Community.objects.filter(id=community_id).first()
         if not community:
           return None, CustomMassenergizeError(f"There is no community with id {community_id}")
+        
+        if community.goal and not community.goal.is_deleted:
+          goals.append(community.goal)
+      elif subdomain:
+        community = Community.objects.filter(subdomain=subdomain).first()
+        if not community:
+          return None, CustomMassenergizeError(f"There is no community with subdomain {subdomain}")
         
         if community.goal and not community.goal.is_deleted:
           goals.append(community.goal)
@@ -102,10 +109,25 @@ class GoalStore:
     try:
       #find the goal
       goals_to_delete = Goal.objects.filter(id=goal_id)
-      goals_to_delete.update(is_deleted=True)
+      goals_to_delete.update(is_deleted=True, community=None)
       if not goals_to_delete:
         return None, InvalidResourceError()
       return goals_to_delete.first(), None
+    except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
+  def copy_goal(self, goal_id) -> (Goal, MassEnergizeAPIError):
+    try:
+      #find the goal
+      goal_to_copy = Goal.objects.filter(id=goal_id).first()
+      if not goal_to_copy:
+        return None, InvalidResourceError()
+      
+      new_goal = goal_to_copy
+      new_goal.pk = None
+      new_goal.name = goal_to_copy.name + ' Copy'
+      new_goal.save()
+      return new_goal, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
@@ -115,7 +137,7 @@ class GoalStore:
 
   def list_goals_for_super_admin(self):
     try:
-      return Goal.objects.all(is_deleted=False)
+      return Goal.objects.filter(is_deleted=False), None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 

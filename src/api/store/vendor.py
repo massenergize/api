@@ -1,4 +1,4 @@
-from database.models import Vendor, UserProfile
+from database.models import Vendor, UserProfile, Media
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
 
@@ -10,23 +10,48 @@ class VendorStore:
     vendor = Vendor.objects.filter(id=vendor_id)
     if not vendor:
       return None, InvalidResourceError()
-    return vendor.full_json(), None
+    return vendor, None
 
 
   def list_vendors(self, community_id) -> (list, MassEnergizeAPIError):
     vendors = Vendor.objects.filter(community__id=community_id)
     if not vendors:
       return [], None
-    return [t.simple_json() for t in vendors], None
+    return vendors, None
 
 
   def create_vendor(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_vendor = Vendor.create(**args)
+      communities = args.pop('communities', [])
+      image = args.pop('image', None)
+      onboarding_contact = args.pop('onboarding_contact', None)
+      key_contact_full_name = args.pop('key_contact_full_name', None)
+      key_contact_email = args.pop('key_contact_email', None)
+      new_vendor = Vendor.objects.create(**args)
+
+      if image:
+        logo = Media(name=f"Logo-{new_vendor.name}", file=image)
+        logo.save()
+        new_vendor.logo = logo
+      
+      if onboarding_contact:
+        onboarding_contact = UserProfile.objects.filter(email=onboarding_contact).first()
+        new_vendor.onboarding_contact = onboarding_contact
+
+      if key_contact_email:
+        new_vendor.key_contact = {
+          'full_name': key_contact_full_name,
+          'email': key_contact_email
+        }
+      else:
+        return None, CustomMassenergizeError("Please provide key contact email and name")
+
+      
       new_vendor.save()
-      return new_vendor.full_json(), None
-    except Exception:
-      return None, ServerError()
+      new_vendor.communities.set(communities)
+      return new_vendor, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def update_vendor(self, vendor_id, args) -> (dict, MassEnergizeAPIError):
@@ -34,7 +59,7 @@ class VendorStore:
     if not vendor:
       return None, InvalidResourceError()
     vendor.update(**args)
-    return vendor.full_json(), None
+    return vendor, None
 
 
   def delete_vendor(self, vendor_id) -> (dict, MassEnergizeAPIError):
@@ -45,13 +70,13 @@ class VendorStore:
 
   def list_vendors_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     vendors = Vendor.objects.filter(community__id = community_id)
-    return [t.simple_json() for t in vendors], None
+    return vendors, None
 
 
   def list_vendors_for_super_admin(self):
     try:
       vendors = Vendor.objects.all()
-      return [t.simple_json() for t in vendors], None
+      return vendors, None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

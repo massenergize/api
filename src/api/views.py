@@ -67,11 +67,16 @@ def actions(request):
     return Json(actions, errors)
   elif request.method == 'POST':
     #about to create a new Action instance
-    print(args)
     if 'tags' in args and isinstance(args['tags'], str):
-      args['tags'] = [int(k) for k in args['tags'].split(',')]
+      if args['tags'] != '':
+        args['tags'] = [int(k) for k in args['tags'].split(',')]
+      else:
+        del args['tags']
     if 'vendors' in args and isinstance(args['vendors'], str):
-      args['vendors'] = [int(k) for k in args['vendors'].split(',') if k != '']
+      if  args['vendors'] != '':
+        args['vendors'] = [int(k) for k in args['vendors'].split(',') if k != '']
+      else:
+        del args['vendors']
     if 'community' in args and isinstance(args['community'], str):
       args['community'] = int(args['community'])      
     if 'is_global' in args and isinstance(args['is_global'], str):
@@ -84,6 +89,7 @@ def actions(request):
       if errors:
         print(errors)
       args['image'] = media.pk
+
 
     action, errors = FACTORY.create(Action, args)
     return Json(action, errors)
@@ -121,8 +127,9 @@ def action(request, id):
         del args['image']
       else:
         args['image'] = media.pk
-        print(args)
+        
     action, errors = FACTORY.update(Action, args)
+    # return JsonResponse({'success': True})
     return Json(action, errors, use_full_json=True)
 
   elif request.method == 'DELETE':
@@ -501,9 +508,9 @@ def community_profile_full(request, cid):
     if community:
       res = community.full_json()
       res['users'] = [u.simple_json() for u in community.userprofile_set.all()]
-      res['testimonials'] = [t.simple_json() for t in community.testimonial_set.all()]
-      res['events'] = [e.simple_json() for e in community.event_set.all()]
-      res['actions'] = [a.simple_json() for a in community.action_set.all()]
+      res['testimonials'] = [t.simple_json() for t in community.testimonial_set.all()[:3]]
+      res['events'] = [e.simple_json() for e in community.event_set.all()[:3]]
+      res['actions'] = [a.simple_json() for a in community.action_set.all()[:3]]
       res['graphs'] = [g.simple_json() for g in community.graph_set.all()]
       return Json(res, errors, use_full_json=True)
   return Json(None)

@@ -1,5 +1,6 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from api.utils.massenergize_response import MassenergizeResponse
+from api.utils.common import serialize, serialize_all
 from api.store.goal import GoalStore
 from database.models import Goal
 
@@ -35,13 +36,13 @@ class GoalService:
     goal, err = self.store.get_goal_info(goal_id)
     if err:
       return None, err
-    return goal.full_json(), None
+    return serialize(goal), None
 
-  def list_goals(self, community_id, team_id, user_id) -> (list, MassEnergizeAPIError):
-    goals, err = self.store.list_goals(community_id, team_id, user_id)
+  def list_goals(self, community_id, subdomain, team_id, user_id) -> (list, MassEnergizeAPIError):
+    goals, err = self.store.list_goals(community_id, subdomain, team_id, user_id)
     if err:
       return None, err
-    return [g.simple_json() for g in goals], None
+    return serialize_all(goals), None
 
 
   def create_goal(self, community_id, team_id, user_id, args) -> (dict, MassEnergizeAPIError):
@@ -53,43 +54,49 @@ class GoalService:
     goal, err = self.store.create_goal(community_id, team_id, user_id,  args)
     if err:
       return None, err
-    return goal.full_json(), None
+    return serialize(goal), None
 
 
   def update_goal(self, goal_id, args) -> (dict, MassEnergizeAPIError):
     goal, err = self.store.update_goal(goal_id, args)
     if err:
       return None, err
-    return goal.full_json(), None
+    return serialize(goal), None
 
   def delete_goal(self, goal_id) -> (dict, MassEnergizeAPIError):
     goal, err = self.store.delete_goal(goal_id)
     if err:
       return None, err
-    return goal.full_json(), None
+    return serialize(goal), None
+
+  def copy_goal(self, goal_id) -> (dict, MassEnergizeAPIError):
+    goal, err = self.store.copy_goal(goal_id)
+    if err:
+      return None, err
+    return serialize(goal), None
 
 
   def list_goals_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     goals, err = self.store.list_goals_for_community_admin(community_id)
     if err:
       return None, err
-    return goals, None
+    return serialize_all(goals), None
 
 
   def list_goals_for_super_admin(self) -> (list, MassEnergizeAPIError):
     goals, err = self.store.list_goals_for_super_admin()
     if err:
       return None, err
-    return [g.full_json() for g in goals], None
+    return serialize_all(goals), None
 
   def increase_value(self, goal_id, field_name):
     goal, err = self.store.increase_value(goal_id, field_name)
     if err:
       return None, err
-    return goal.full_json(), None
+    return serialize(goal), None
 
   def decrease_value(self, goal_id, field_name):
     goal, err = self.store.decrease_value(goal_id, field_name)
     if err:
       return None, err
-    return goal.full_json(), None
+    return serialize(goal), None
