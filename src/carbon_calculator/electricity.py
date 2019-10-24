@@ -113,7 +113,7 @@ def EvalLEDLighting(inputs):
 
 def EvalEnergystarRefrigerator(inputs):
     #replace_refrigerator,refrigerator_age
-    explanation = "Didn't choose to ..."
+    explanation = "Didn't choose to replace your refrigerator"
     locality = getLocality(inputs)
     points = 666
     cost = 666.

@@ -7,7 +7,6 @@ from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalcu
 from django.utils import timezone
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
-import jsons
 import json
 import csv
 from django.core import files
@@ -15,6 +14,7 @@ from io import BytesIO
 import requests
 from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
 from .CCDefaults import getDefault, CCD
+from .queries import QuerySingleAction, QueryAllActions
 from .homeHeating import EvalEnergyAudit, EvalWeatherization, EvalProgrammableThermostats, EvalAirSourceHeatPump, \
                         EvalGroundSourceHeatPump, EvalHeatingSystemAssessment
 from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLighting, EvalEnergystarRefrigerator, \
@@ -105,7 +105,7 @@ class CarbonCalculator:
             theClass = self.allActions[name]
             theInstance = theClass(name)
             self.allActions[name] = theInstance
-        
+    # query actions    
     def Query(self,action=None):
         if action in self.allActions:
             return self.allActions[action].Query()
@@ -122,85 +122,6 @@ class CarbonCalculator:
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
-
-    def QueryEvents(self,event=None):
-        if event:
-            qs = Event.objects.filter(name=event)
-            if qs:
-                q = qs[0]
-                host_logo_url = sponsor_logo_url = ""
-                if q.host_logo:
-                    host_logo_url = q.host_logo.file.url
-                if q.sponsor_logo:
-                    sponsor_logo_url = q.sponsor_logo.file.url
-
-                groupsList = []
-                for group in q.groups.all():
-                    groupsList.append(group.name)
-                    
-                return {"status":True,"EventInfo":{"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":q.stationslist,
-                                "groups":groupsList,
-                                "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":host_logo_url,
-                                "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":sponsor_logo_url}}
-            else:
-                return {"status":False, "statusText":"Event ("+event+") not found"}
-        else:
-            qs = Event.objects.all()
-            if qs:
-
-                eventInfo = []
-                for q in qs:
-                    info = {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location}
-                    eventInfo.append(info)
-                return {"status":True,"eventList":eventInfo}
-            else:
-                return {"status":False,"statusText":"No events found"}
-
-    def QueryStations(self,station=None):
-        if station:
-            qs = Station.objects.filter(name=station)
-            if qs:
-                q = qs[0]
-                icon = ""
-                if q.icon:
-                    icon = q.icon.file.url
-
-                return {"status":True,"StationInfo":{"name":q.name, "displayname":q.displayname, "description":q.description, "icon":icon, "actions":q.actions}}
-            else:
-                return {"status":False, "statusText":"Station ("+station+") not found"}
-        else:
-            qs = Station.objects.all()
-            if qs:
-
-                stationInfo = []
-                for q in qs:
-                    info = {"name":q.name, "displayname":q.displayname}
-                    stationInfo.append(info)
-                return {"status":True,"stationList":stationInfo}
-            else:
-                return {"status":False,"statusText":"No stations found"}
-
-    def QueryGroups(self,group=None):
-        if group:
-            qs = Group.objects.filter(name=group)
-            if qs:
-                q = qs[0]
-                return {"status":True,"GroupInfo":{"name":q.name, "displayname":q.displayname, "description":q.description, 
-                        "members":q.members, "points":q.points, "savings":q.savings}}
-            else:
-                return {"status":False, "statusText":"Group ("+group+") not found"}
-        else:
-            qs = Group.objects.all()
-            if qs:
-
-                groupInfo = []
-                for q in qs:
-                    info = {"name":q.name, "displayname":q.displayname, "members":q.members}
-                    groupInfo.append(info)
-                return {"status":True,"groupList":groupInfo}
-            else:
-                return {"status":False,"statusText":"No groups found"}
-
 
     def Estimate(self, action, inputs, save=False):
 # inputs is a dictionary of input parameters
@@ -449,55 +370,10 @@ class CarbonCalculator:
         
         return {"status":status}
 
-class CalculatorQuestion:
-    def __init__(self, name):
-        self.name = name
-
-        qs = Question.objects.filter(name=name)
-        if qs:
-            q = qs[0]
-            self.category = q.category
-            self.questionText = q.question_text
-            self.questionType = q.question_type
-            self.responses = []
-            if q.question_type == 'Choice':
-                if q.response_1 != '':
-                    response = {'text':q.response_1}
-                    if len(q.skip_1)>0:
-                        response['skip']=q.skip_1
-                    self.responses.append(response)
-                if q.response_2 != '':
-                    response = {'text':q.response_2}
-                    if len(q.skip_2)>0:
-                        response['skip']=q.skip_2
-                    self.responses.append(response)
-                if q.response_3 != '':
-                    response = {'text':q.response_3}
-                    if len(q.skip_3)>0:
-                        response['skip']=q.skip_3
-                    self.responses.append(response)
-                if q.response_4 != '':
-                    response = {'text':q.response_4}
-                    if len(q.skip_4)>0:
-                        response['skip']=q.skip_4
-                    self.responses.append(response)
-                if q.response_5 != '':
-                    response = {'text':q.response_5}
-                    if len(q.skip_5)>0:
-                        response['skip']=q.skip_5
-                    self.responses.append(response)
-                if q.response_6 != '':
-                    response = {'text':q.response_6}
-                    if len(q.skip_6)>0:
-                        response['skip']=q.skip_6
-                    self.responses.append(response)
-        else:
-            print("ERROR: Question "+name+" was not found")
-
-
 class CalculatorAction:
     def __init__(self,name):       
         self.name = name
+        self.initialized = False
         self.description = "Action short description"
         self.helptext = "This text explains what the action is about, in 20 words or less."
         self.questions = []    # question with list of valid responses.
@@ -509,31 +385,17 @@ class CalculatorAction:
         self.picture = ""
 #
 #    def load(self,name):
-        qs = Action.objects.filter(name=name)
-        try: #if len(qs)>0:
-            q = qs[0]
-            self.description=q.description
-            self.helptext = q.helptext
-
-            for question in q.questions:
-                qq = CalculatorQuestion(question)
-                #print(jsons.dump(CalculatorQuestion(question)))
-                self.questions.append(jsons.dump(qq))
-            self.average_points = q.average_points
-            if q.picture:
-                self.picture = q.picture.file.url
-
-            self.initialized = True
-        except:
-            print("ERROR: Action "+name+" was not found")
-            self.initialized = False
+        status, actionInfo = QuerySingleAction(self.name)
+        if status == VALID_QUERY:
+            self.description = actionInfo["description"]
+            self.helptext = actionInfo["helptext"]
+            self.questions = actionInfo["questionInfo"]    # question with list of valid responses.
+            self.average_points = actionInfo["average_points"]
+            self.picture = actionInfo["picture"]
 
     def Query(self):
-        picture = ""
-        if self.picture:
-            picture = self.picture.file.url
-        return {'status':VALID_QUERY, 'name':self.name, 'description':self.description, 'average_carbon_points':self.average_points, 'helptext':self.helptext, 
-                'questions':jsons.dump(self.questions), 'picture':picture}
+        status, actionInfo = QuerySingleAction(self.name)
+        return {"status":status, "action":actionInfo}
 
     def Eval(self, inputs):
         return {'status':VALID_QUERY, 'carbon_points':round(self.points,0), 'cost':round(self.cost,0), 'savings':round(self.savings,0), 'explanation':self.text}
