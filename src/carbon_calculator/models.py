@@ -27,7 +27,7 @@ class CarbonCalculatorMedia(models.Model):
   is_deleted = models.BooleanField(default=False)
 
   def __str__(self):      
-    return self.file
+    return self.file.name
 
   class Meta:
     db_table = "cc_media_files"
