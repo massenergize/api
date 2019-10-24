@@ -84,13 +84,15 @@ def QuerySingleEvent(event):
 
         stationsList = []
         for station in q.stationslist:
-            stationInfo = QuerySingleStation(station)
-            stationsList.append(stationInfo)
+            stat, stationInfo = QuerySingleStation(station)
+            if stat == VALID_QUERY:
+                stationsList.append(stationInfo)
 
         groupsList = []
         for group in q.groups.all():
-            groupInfo = QuerySingleGroup(group.name)
-            groupsList.append(groupInfo)
+            stat, groupInfo = QuerySingleGroup(group.name)
+            if stat == VALID_QUERY:
+                groupsList.append(groupInfo)
             
         return VALID_QUERY, {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":stationsList,
                 "groups":groupsList,
@@ -154,8 +156,9 @@ def QuerySingleStation(station):
 
         actionsList = []
         for action in q.actions:
-            actionInfo = QuerySingleAction(action)
-            actionsList.append(actionInfo)
+            stat, actionInfo = QuerySingleAction(action)
+            if stat == VALID_QUERY:
+                actionsList.append(actionInfo)
 
         icon = ""
         if q.icon:
