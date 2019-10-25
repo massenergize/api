@@ -392,7 +392,8 @@ class CalculatorAction:
             self.questions = actionInfo["questionInfo"]    # question with list of valid responses.
             self.average_points = actionInfo["average_points"]
             self.picture = actionInfo["picture"]
-
+            self.initialized = True
+            
     def Query(self):
         status, actionInfo = QuerySingleAction(self.name)
         return {"status":status, "action":actionInfo}
