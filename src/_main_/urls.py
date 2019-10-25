@@ -19,14 +19,14 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('v2/', include('api.urls_v2')),
-    path('v3/', include('api.urls')), #latest
+    path('v3/', include('api.urls')),  # latest
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
-    # path('cc/',include('carbon_calculator.urls')),
+    path('cc/', include('carbon_calculator.urls')),
     path('', include('website.urls')),
 ]
 
-#set error handling views
+# set error handling views
 handler400 = 'website.views.handler400'
 handler403 = 'website.views.handler403'
 handler404 = 'website.views.handler404'

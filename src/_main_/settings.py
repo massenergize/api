@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import firebase_admin
+import pyrebase
 from firebase_admin import credentials
 from .utils.utils import load_json
 
@@ -25,18 +26,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 # path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
 path_to_config = '/_main_/config/massenergizeProjectConfig.json'
-CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
+CONFIG_DATA = load_json(BASE_DIR + path_to_config)
 os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
 
-SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
+SECRET_KEY = CONFIG_DATA["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = not IS_PROD
 
 ALLOWED_HOSTS = [
-    '*', #TODO: remove later
+    '*',  # TODO: remove later
     '10.0.0.187:8000',
     'localhost',
     '127.0.0.1',
@@ -65,7 +66,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -119,7 +120,7 @@ AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-AWS_DEFAULT_ACL  = None
+AWS_DEFAULT_ACL = None
 #--------END AWS CONFIGURATION ---------------------#
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
 
@@ -169,7 +170,8 @@ DATABASES = {
 }
 
 
-FIREBASE_CREDENTIALS = credentials.Certificate(BASE_DIR + '/_main_/config/massenergizeFirebaseServiceAccount.json')
+FIREBASE_CREDENTIALS = credentials.Certificate(
+    BASE_DIR + '/_main_/config/massenergizeFirebaseServiceAccount.json')
 FIREBASE_CONFIG = {
     'apiKey': os.environ.get('FIREBASE_API_KEY'),
     'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN'),
@@ -180,6 +182,18 @@ FIREBASE_CONFIG = {
     "appId": os.environ.get('FIREBASE_APP_ID'),
 }
 firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
+
+FIREBASE_CC_CONFIG = {
+    'apiKey': os.environ.get('FIREBASE_CC_API_KEY'),
+    'authDomain': os.environ.get('FIREBASE_CC_AUTH_DOMAIN'),
+    'projectId': os.environ.get('FIREBASE_CC_PROJECT_ID'),
+    "databaseURL": os.environ.get('FIREBASE_CC_DATABASE_URL'),
+    "storageBucket": os.environ.get('FIREBASE_CC_STORAGE_URL'),
+    "messagingSenderId": os.environ.get('FIREBASE_CC_MESSAGE_SENDER_ID'),
+    "appId": os.environ.get('FIREBASE_CC_APP_ID'),
+}
+
+firebase = pyrebase.initialize_app(FIREBASE_CC_CONFIG)
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -213,11 +227,11 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
-EMAIL_USE_TLS = True 
-EMAIL_HOST = 'smtp.gmail.com' 
-EMAIL_PORT = 587 
-EMAIL_HOST_USER = os.environ.get('EMAIL') 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get('EMAIL')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
@@ -232,6 +246,3 @@ MEDIA_URL = '/media/'
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-
-
-
