@@ -22,7 +22,7 @@ class CommunityService:
     #send an email to the community admin
     return serialize(community, full=True), None
 
-  def list_communities(self) -> (list, MassEnergizeAPIError):
+  def list_communities(self, args) -> (list, MassEnergizeAPIError):
     communities, err = self.store.list_communities()
     if err:
       return None, err
@@ -38,8 +38,8 @@ class CommunityService:
     return serialize(community), None
 
 
-  def update_community(self, args) -> (dict, MassEnergizeAPIError):
-    community, err = self.store.update_community(args)
+  def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
+    community, err = self.store.update_community(community_id ,args)
     if err:
       return None, err
     return serialize(community), None

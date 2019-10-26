@@ -72,7 +72,7 @@ class CommunityHandler(RouteHandler):
   def list(self) -> function:
     def list_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_info, err = self.service.list_communities()
+      community_info, err = self.service.list_communities(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -82,7 +82,27 @@ class CommunityHandler(RouteHandler):
   def update(self) -> function:
     def update_community_view(request) -> None: 
       args = get_request_contents(request)
-      community_info, err = self.service.update_community(args[id], args)
+      args = rename_field(args, 'community_id', 'id')
+  
+      community_id = args.pop('id', None)
+      if community_id:
+        return MassenergizeResponse(error='Please provide an ID')
+
+      ok, err = check_length(args, 'name', 3, 25)
+      if not ok:
+        return MassenergizeResponse(error=str(err))
+      
+      ok, err = check_length(args, 'subdomain', 4, 20)
+      if not ok:
+        return MassenergizeResponse(error=str(err))
+        
+      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', None))
+      args['is_published'] = parse_bool(args.pop('is_published', None))
+      args['is_approved'] = parse_bool(args.pop('is_approved', None))
+
+      args = rename_field(args, 'image', 'logo')
+      args = parse_location(args)
+      community_info, err = self.service.update_community(community_id ,args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)

@@ -101,10 +101,21 @@ class CommunityStore:
 
 
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
+    logo = args.pop('logo', None)
+
     community = Community.objects.filter(id=community_id)
     if not community:
       return None, InvalidResourceError()
     community.update(**args)
+
+    new_community = community.first()
+    if logo and new_community.logo:
+      new_community.logo.file = logo
+      new_community.logo.save()
+      cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
+      cLogo.save()
+      new_community.logo = cLogo
+
     return community, None
 
 
