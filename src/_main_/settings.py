@@ -16,7 +16,7 @@ import pyrebase
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = True
+IS_PROD = False
 
 DEPLOY_VERSION = '0.0.1'
 
@@ -159,7 +159,7 @@ DATABASES = {
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT')
     },
-    'test': {
+    'local-default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': 'postgres',
         'USER': 'Brad',
