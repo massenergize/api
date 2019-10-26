@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from database.utils.common import get_request_contents
 
 from .carbonCalculator import CarbonCalculator
+from .queries import QueryEvents, QueryStations, QueryGroups
 
 # Create your views here.
 CALC = CarbonCalculator()
@@ -23,13 +24,17 @@ def actioninfo(request, action):
     return JsonResponse(CALC.Query(action))
 
 def eventinfo(request, event=None):
-    return JsonResponse(CALC.QueryEvents(event))
+    return JsonResponse(QueryEvents(event))
+
+def groupinfo(request, group=None):
+    return JsonResponse(QueryGroups(group))
 
 def stationinfo(request, station=None):
-    return JsonResponse(CALC.QueryStations(station))
+    return JsonResponse(QueryStations(station))
 
 # these requests should be POSTs, not GETs
 def estimate(request, action):
+	print("views.estimate")
 	inputs = get_request_contents(request)
 	if request.method == "POST":
 		save = True
@@ -45,4 +50,6 @@ def importcsv(request):
 	inputs = get_request_contents(request)
 	return JsonResponse(CALC.Import(inputs))
 
-	
+def exportcsv(request):
+	inputs = get_request_contents(request)
+	return JsonResponse(CALC.Export(inputs))
