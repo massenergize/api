@@ -4,6 +4,7 @@ from database.utils.json_response_wrapper import Json
 from firebase_admin import auth
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
+import json
 
 
 def login(request):
@@ -32,5 +33,18 @@ def csrf(request):
   return Json({'csrfToken': get_token(request)})
 
 def who_am_i(request):
-  #TODO: returns user info if logged in else return error
-  pass
+  return verify(request)
+
+
+def verify(request):
+  try:
+    payload = json.loads(request.body.decode('utf-8'))
+    id_token = payload.get('idToken', None)
+    if id_token:
+      decoded_token = auth.verify_id_token(id_token)
+      uid = decoded_token['uid']
+      return Json({"login": "successful", "user": uid, "decoded_token": decoded_token})
+    else:
+      return Json(errors=['Invalid Auth'])
+  except Exception as e:
+    return Json(errors=[str(e)])

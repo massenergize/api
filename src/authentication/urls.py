@@ -9,5 +9,7 @@ urlpatterns = [
   path('login/', login),
   path('signin/', login),
   path('ping', ping),
-  path('csrf', csrf)
+  path('csrf', csrf),
+  path('verify', verify),
+  path('whoami', who_am_i)
 ]
