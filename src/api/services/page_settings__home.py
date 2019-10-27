@@ -1,4 +1,4 @@
-from _main_.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.page_settings__home import HomePageSettingsStore

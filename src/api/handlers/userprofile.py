@@ -1,6 +1,6 @@
 """Handler file for all routes pertaining to users"""
 
-from _main_.route_handler import RouteHandler
+from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
