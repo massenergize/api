@@ -1,4 +1,4 @@
-from api.api_errors.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
+_main_.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.goal import GoalStore

@@ -1,3 +1,7 @@
+"""
+Definition of the different Massenergize Error Types
+"""
+
 class MassEnergizeAPIError:
   def __init__(self, msg="UNKNOWN ERROR", status=400):
     self.msg = msg

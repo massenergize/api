@@ -1,6 +1,6 @@
 import json 
 from querystring_parser import parser
-from api.api_errors.massenergize_errors import CustomMassenergizeError
+_main_.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
 from datetime import datetime
