@@ -1,5 +1,5 @@
 from database.models import ContactUsPageSettings, UserProfile
-_main_.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 
 class ContactUsPageSettingsStore:
