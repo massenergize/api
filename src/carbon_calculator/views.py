@@ -34,7 +34,6 @@ def stationinfo(request, station=None):
 
 # these requests should be POSTs, not GETs
 def estimate(request, action):
-	print("views.estimate")
 	inputs = get_request_contents(request)
 	if request.method == "POST":
 		save = True
