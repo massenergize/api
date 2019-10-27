@@ -1,14 +1,16 @@
 """
 Definition of the different Massenergize Error Types
 """
+from _main_.utils.massenergize_response import MassenergizeResponse
 
-class MassEnergizeAPIError:
+class MassEnergizeAPIError(MassenergizeResponse):
   def __init__(self, msg="UNKNOWN ERROR", status=400):
     self.msg = msg
     self.status = status
+    super().__init__(error=msg, status=200)
 
   def __str__(self):
-    return f"Error: {self.msg}"
+    return f"Error: {self.msg}, Status: {self.status}"
 
 
 class ResourceNotFoundError(MassEnergizeAPIError):
