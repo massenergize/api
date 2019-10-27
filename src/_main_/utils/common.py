@@ -5,6 +5,7 @@ import pytz
 from django.utils import timezone
 from datetime import datetime
 
+
 def get_request_contents(request):
   try:
     if request.method != 'POST' :

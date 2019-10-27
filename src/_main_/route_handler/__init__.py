@@ -1,4 +1,3 @@
-from api.utils.constants import API_VERSION
 from types import FunctionType as function
 from django.urls import path, re_path
 from django.conf.urls import url

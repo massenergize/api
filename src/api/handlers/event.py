@@ -1,9 +1,9 @@
 """Handler file for all routes pertaining to events"""
 
-from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents, parse_list, parse_bool, check_length, parse_date, parse_int
+from _main_.route_handler import RouteHandler
+from _main_.utils.common import get_request_contents, parse_list, parse_bool, check_length, parse_date, parse_int
 from api.services.event import EventService
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 
 #TODO: install middleware to catch authz violations

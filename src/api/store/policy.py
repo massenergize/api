@@ -1,6 +1,6 @@
 from database.models import Policy, UserProfile, Community
 from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_response import MassenergizeResponse
 
 class PolicyStore:
   def __init__(self):

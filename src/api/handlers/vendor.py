@@ -1,9 +1,9 @@
 """Handler file for all routes pertaining to vendors"""
 
-from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents, rename_field, parse_bool, parse_location, parse_list
+from _main_.route_handler import RouteHandler
+from _main_.utils.common import get_request_contents, rename_field, parse_bool, parse_location, parse_list
 from api.services.vendor import VendorService
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 
 #TODO: install middleware to catch authz violations

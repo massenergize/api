@@ -1,9 +1,9 @@
 """Handler file for all routes pertaining to goals"""
 
-from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents
+from _main_.route_handler import RouteHandler
+from _main_.utils.common import get_request_contents
 from api.services.goal import GoalService
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.utils import get_models_and_field_types
 

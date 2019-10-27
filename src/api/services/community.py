@@ -1,9 +1,9 @@
 from api.api_errors.massenergize_errors import MassEnergizeAPIError
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_response import MassenergizeResponse
 from api.store.community import CommunityStore
-from api.utils.common import serialize, serialize_all
-from api.utils.emailer.send_email import send_massenergize_rich_email
-from api.utils.emailer.email_types import COMMUNITY_REGISTRATION_EMAIL
+from _main_.utils.common import serialize, serialize_all
+from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.emailer.email_types import COMMUNITY_REGISTRATION_EMAIL
 
 class CommunityService:
   """
