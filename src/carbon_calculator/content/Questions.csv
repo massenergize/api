@@ -16,7 +16,7 @@ fuel_assistance,General,Do you receive or qualify for fuel assistance?,Choice,No
 attend_fair,General,Will you attend an energy fair and find ways to take sustainable action? ,Choice,No,,Yes,,,,,,,,,,energy_fair
 activity_group,General,Name of group or activity you're considering:,Text,,,,,,,,,,,,,energy_fair
 replace_refrigerator,Home Appliances,Will you replace your refrigerator with an EnergyStar model?,Choice,I already use a Energy Star Product,,No,refrigerator_age,Yes,,,,,,,,energystar_fridge
-replace_washer,Home Appliances,Will you choose to upgrade to an Energy Star model Washer?,Choice,I already use a Energy Star Product,,No,"washer_age,wash_loads",Yes,,,,,,,,energystar_washer
+replace_washer,Home Appliances,Will you choose to upgrade to an Energy Star model Washer?,Choice,I already use a Energy Star Product,,No,"washer_age,washer_loads,washer_energystar",Yes,,,,,,,,energystar_washer
 cold_water_wash,Home Appliances,Will you choose to wash clothes with cold or warm water instead of hot?,Choice,No,,Once per week,,Twice per week,,Three times per week,,,,,,coldwater_wash
 line_or_rack_dry_loads,Home Appliances,Will you dry some clothes loads on a clothes line or rack instead of a dryer?,Choice,No,,Once per week,,Twice per week,,Three times per week,,,,,,line_dry
 extra_refrigerator,Home Appliances,Do you have an extra refrigerator?,Choice,No,"extra_refrigerator_age,extra_refrigerator_pickup,unplug_refrigerator",Yes,,,,,,,,,,fridge_pickup
@@ -24,14 +24,16 @@ extra_refrigerator_age,Home Appliances,What is the age of your extra refrigerato
 extra_refrigerator_pickup,Home Appliances,Will you sign up for a free extra refrigerator pick-up?,Choice,No,,Yes,unplug_refrigerator,,,,,,,,,fridge_pickup
 unplug_refrigerator,Home Appliances,Will you unplug your extra fridge temporarily?,Choice,No,,,,,,,,,,,,fridge_pickup
 smart_power_strips,Home Appliances,Will you install smart power strips to kill phantom loads?,Choice,No,,Yes,,,,,,,,,,smart_power_strip
-install_electricity_monitor,Home Appliances,Will you install an electricity monitor to find energy hogs?,Choice,No,,Yes,,,,,,,,,,elec_monitor
-refrigerator_age,Home Appliances,About how old is your refrigerator?,Choice,0-10 years,,10-20 years,,>20 years,,Not sure,,,,,,energystar_fridge
-washer_age,Home Appliances,How old is your washing machine?,Choice,0-10 years,,10-20 years,,>20 years,,Not sure,,,,,,energystar_washer
-wash_loads,Home Appliances,How many loads of laundry do you do each week on average?,Number,,,,,,,,,,,,,"energystar_washer,coldwater_wash,line_dry"
+install_electricity_monitor,Home Appliances,Will you install an electricity monitor to find energy hogs?,Choice,No,,Yes,,,,,,,,,,electricity_monitor
+refrigerator_age,Home Appliances,About how old is your refrigerator?,Choice,0-10 years,,10-15 years,,15-20 years,,>20 years,,Not sure,,,,energystar_fridge
+washer_age,Home Appliances,How old is your washing machine?,Choice,0-10 years,,10-15 years,,15-20 years,,>20 years,,Not sure,,,,energystar_washer
+washer_loads,Home Appliances,How many loads of laundry do you do each week on average?,Number,,,,,,,,,,,,,"energystar_washer,coldwater_wash,line_dry"
 induction_stove,Home Appliances,Will you replace your stove with an induction stove?,Choice,Yes,,No,,,,,,,,,,induction_stove
 stove_type,Home Appliances,What type of oven/stove do you currently have?,Choice,Induction,,Electric (non-induction),,Gas,,Gas+Electric,,,,,,induction_stove
 replace_dryer,Home Appliances,Will you replace your dryer with a heat pump dryer?,Choice,Yes,,No,dryer_type,,,,,,,,,hp_dryer
 dryer_type,Home Appliances,What type of clothes dryer do you have currently?,Choice,Gas,,Electric,,Heat pump,,Not sure,,,,,,hp_dryer
+refrigerator_energystar,Home Appliances,Is the current refrigerator an EnergyStar model?,Choice,Yes,,No,,Not sure,,,,,,,,
+washer_energystar,Home Appliances,Is the current washer an EnergyStar model?,Choice,Yes,,No,,Not sure,,,,,,,,energystar_washer
 heating_system_fuel,Home Heating and Cooling,What is the primary heating system type in your home?,Choice,Fuel Oil,,Nat Gas,,Propane,,Wood,,Conventional Electric,heating_system_type,Heat Pump,"heating_system_assessment,upgrade_heating_with_ashp,heating_system_type","energy_audit,prog_thermostats,weatherization,heating_assessment,efficient_fossil,air_source_hp,ground_source_hp"
 heating_system_assessment,Home Heating and Cooling,Will you choose to sign up for a heating system assessment?,Choice,No,,Yes,,,,,,,,,,heating_assessment
 upgrade_heating_with_ashp,Home Heating and Cooling,Will you choose to upgrade with air-source heat pump(s)? ,Choice,No,heat_pump_heating_fraction,Yes,upgrade_heating_system_efficiency,,,,,,,,,air_source_hp
