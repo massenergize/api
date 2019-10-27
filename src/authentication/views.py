@@ -11,13 +11,8 @@ from _main_.settings import SECRET_KEY
 import json, jwt
 
 def login(request):
-  # cookie = request.COOKIES.get('login')
-  # auth.verify_session_cookie('cookie')
-  # print(auth.list_users())
-  # uid = decoded_token['uid']
-  # print(uid)
-  print(request.body.decode('utf-8'))
-  return Json({"login": "successful"})
+  # This does the same work as verify
+  return verify(request)
 
 def logout(request):
   return Json(None) 
@@ -70,10 +65,9 @@ def verify(request):
         "is_community_admin": user.is_community_admin,
         "iat": decoded_token.get("iat"),
         "exp": decoded_token.get("exp"),
-        }
+      }
 
       massenergize_jwt_token = jwt.encode(payload, SECRET_KEY).decode('utf-8')
-      print(massenergize_jwt_token)
       return MassenergizeResponse(data={"idToken": str(massenergize_jwt_token)})
     else:
       return Json(errors=['Invalid Auth'])

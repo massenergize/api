@@ -10,12 +10,7 @@ import json, jwt
 class MassenergizeJWTAuthMiddleware:
   def __init__(self, get_response):
     self.get_response = get_response
-    self.restricted_paths = set([
-      'communities.info',
-      'goals.info',
-      # superadmin routess
-      'communities.listForSuperAdmin',
-    ])
+    self.restricted_paths = set([])
     # One-time configuration and initialization.
 
   def __call__(self, request):
@@ -33,7 +28,8 @@ class MassenergizeJWTAuthMiddleware:
   def _get_auth_token(self, request):
     try:
       authz = request.headers.get('Authorization', None)
-      if (authz is None) and (request.path.split('/')[-1] in self.restricted_paths):
+      cleaned_path = request.path.split('/')[-1]
+      if (authz is None) and (cleaned_path in self.restricted_paths):
         return None, NotAuthorizedError()
       elif authz:
         id_token = authz.split(' ')[1]
@@ -53,7 +49,6 @@ class MassenergizeJWTAuthMiddleware:
       
       if id_token:
         decoded_token = jwt.decode(id_token, SECRET_KEY)
-        print(decoded_token)
 
         #check if the sign in is over yet
         iat = decoded_token.get('iat', 0)
@@ -66,8 +61,8 @@ class MassenergizeJWTAuthMiddleware:
         request.user_id = decoded_token.get('user_id', None)
         request.is_super_admin = decoded_token.get('is_super_admin', None)
         request.is_community_admin = decoded_token.get('is_community_admin', None)
-      # else:
-      #   return CustomMassenergizeError("Invalid Auth")
+      
+      #TODO: enforce all requests accessing resources are always logged in first
 
     except Exception as e:
       return CustomMassenergizeError(e)
