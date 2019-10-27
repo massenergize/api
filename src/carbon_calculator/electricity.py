@@ -177,19 +177,19 @@ def EvalEnergystarWasher(inputs):
             water_heating_price = kwh_price * water_heating_kwh
             water_heating_co2 = co2_per_kwh * water_heating_kwh
 
-            if washer_weekly_loads > 0.:
-                annual_loads = 52 * washer_weekly_loads
+            if washer_loads > 0.:
+                annual_loads = 52 * washer_loads
             else:
-                annual_loads = getDefaults(locality,"elec_washer_average_annual_loads", 300)
+                annual_loads = getDefault(locality,"elec_washer_average_annual_loads", 300)
 
-            estar_water_use = getDefaults(locality,"elec_energystar_washer_water_use", 14)
+            estar_water_use = getDefault(locality,"elec_energystar_washer_water_use", 14)
             cost_estar_water = (water_price + water_heating_price) * estar_water_use
 
-            water_embodied_kwh = 1e-6 * getDefaults(locality,"water_kwh_per_MG", 2000)
+            water_embodied_kwh = 1e-6 * getDefault(locality,"water_kwh_per_MG", 2000)
             water_embodied_co2 = water_embodied_kwh * co2_per_kwh
             co2_estar_water = (water_embodied_co2 + water_heating_co2) * estar_water_use 
 
-            estar_load_kwh = getDefaults(locality,"elec_energystar_elec_per_load", 1.053)
+            estar_load_kwh = getDefault(locality,"elec_energystar_elec_per_load", 1.053)
             estar_elec_use = estar_load_kwh
 
             cost_estar_elec =  estar_elec_use * kwh_price
@@ -199,8 +199,8 @@ def EvalEnergystarWasher(inputs):
             co2_energystar = (co2_estar_elec + co2_estar_water) * annual_loads
 
             # water savings 45%, elec savings 25%
-            estar_water_faction_savings = getDefault(locality,"elec_energystar_washer_water_saved_frac")
-            estar_elec_faction_savings = getDefault(locality,"elec_energystar_washer_elec_saved_frac")
+            estar_water_fraction_savings = getDefault(locality,"elec_energystar_washer_water_saved_frac", .45)
+            estar_elec_fraction_savings = getDefault(locality,"elec_energystar_washer_elec_saved_frac", .25)
             old_water_use = estar_water_use / (1. - estar_water_fraction_savings)
             old_elec_use = estar_elec_use / (1. - estar_elec_fraction_savings)
 
@@ -243,7 +243,7 @@ def EvalInductionStove(inputs):
             co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
             kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
 
-            kwh_induction = getDefault(locality, "elec_cooking_kwh_induction", 801)
+            kwh_induction = int(getDefault(locality, "elec_cooking_kwh_induction", 801))
             cost_induction = kwh_induction * kwh_price
             co2_induction = kwh_induction * co2_per_kwh
 
@@ -253,12 +253,12 @@ def EvalInductionStove(inputs):
                 co2_per_therm = GasFootprint(locality)
                 co2_cooking = therm_gas * co2_per_therm
                 cooking_cost = therm_gas * therm_price
-                explanation = "Replacing your gas range with induction would save energy and emissions, but probably cost more"
+                explanation = "Replacing your gas range with induction would save energy and emissions, but probably cost slightly more to operate"
             else:
-                cooking_kwh = getDefault(locality, "elec_cooking_kwh_conventional", 1144)
+                cooking_kwh = int(getDefault(locality, "elec_cooking_kwh_conventional", 1144))
                 cooking_cost = cooking_kwh * kwh_price
                 co2_cooking = cooking_kwh * co2_per_kwh
-                explanation = "Replacing your electric range with induction would save %.0f kwh" % cooking_kwh - kwh_induction
+                explanation = "Replacing your electric range with induction would save %.0f kwh" % (cooking_kwh - kwh_induction)
             points = co2_cooking - co2_induction
             savings = cooking_cost - cost_induction
 
@@ -279,7 +279,7 @@ def EvalHeatPumpDryer(inputs):
 
     if inputs.get("replace_dryer",NO) == YES:
         old_dryer = inputs.get("dryer_type","")
-        dryer_loads = inputs.get("dryer_loads", 8.)
+        dryer_loads = float(inputs.get("dryer_loads", 8.))
         if old_dryer == "Heat pump":
             explanation = "You already have a heat pump dryer, so you can't switch to one"
         else:
@@ -292,16 +292,16 @@ def EvalHeatPumpDryer(inputs):
             co2_heatpump = kwh_heatpump * co2_per_kwh
 
             if old_dryer == "Gas":
-                therm_gas = getDefault(locality,"elec_dryerload_therm_gas", 0.24) * 52 * dryer_loads
+                therm_gas = getDefault(locality,"elec_dryerload_therm_gas", 0.24)
                 therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
                 co2_per_therm = GasFootprint(locality)
-                co2_drying = therm_gas * co2_per_therm
-                drying_cost = therm_gas * therm_price
-                explanation = "Replacing your gas dryer with heatpump would save energy and emissions, but probably cost more"
+                co2_drying = therm_gas * co2_per_therm * dryer_loads * 52
+                drying_cost = therm_gas * therm_price * dryer_loads * 52
+                explanation = "Replacing your gas dryer with heatpump would save energy and emissions"
             else:
-                drying_cost = kwh_electric_dryer * kwh_price
-                co2_drying = kwh_electric_dryer * co2_per_kwh
-                explanation = "Replacing your electric dryer with heatpump would save %.0f kwh" % drying_kwh - kwh_heatpump
+                drying_cost = kwh_electric_dryer * kwh_price * dryer_loads * 52
+                co2_drying = kwh_electric_dryer * co2_per_kwh * dryer_loads * 52
+                explanation = "Replacing your electric dryer with heatpump would save %.0f kwh" % ((kwh_electric_dryer - kwh_heatpump) * dryer_loads * 52)
 
             points = co2_drying - co2_heatpump
             savings = drying_cost - cost_heatpump
