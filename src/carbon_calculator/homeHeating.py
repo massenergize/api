@@ -73,6 +73,8 @@ FUELS = ["Fuel Oil","Natural Gas","Propane","Electric Resistance","Electric Heat
 HAVE_PSTATS = "have_prog_thermostats"
 PSTAT_PROGRAMMING = "prog_thermostat_programming"
 def EvalProgrammableThermostats(inputs):
+    points = cost = savings = 0.
+    locality = getLocality(inputs)
     #have_pstats,pstats_programmed,install_programmable_thermostats,heating_system_fuel
     explanation = "Didn't choose to install programmable thermostats"
 
@@ -82,7 +84,7 @@ def EvalProgrammableThermostats(inputs):
     if install_pstats == YES and have_pstats == NO :
         # need to know total fuel consumption
         heatingCO2, heatingCost = HeatingLoad(heating_fuel)     # to gross approximation
-        pstat_load_reduction = 0.15
+        pstat_load_reduction = getDefault(locality,"elec_pstat_fractional_savings", 0.15)
         points = pstat_load_reduction * heatingCO2
         savings = pstat_load_reduction * heatingCost
         cost = 150. 
@@ -91,6 +93,8 @@ def EvalProgrammableThermostats(inputs):
 HOME_WEATHERIZED = "home_weatherized"
 def EvalWeatherization(inputs):
     #weatherized,insulate_home,heating_system_fuel
+    points = cost = savings = 0.
+    locality = getLocality(inputs)
     explanation = "Didn't choose to weatherize"
 
     weatherize_home = inputs.get('weatherize',YES)
@@ -100,7 +104,7 @@ def EvalWeatherization(inputs):
     if weatherize_home == YES and home_weatherized != YES:
         # need to know total fuel consumption
         heatingCO2, heatingCost = HeatingLoad(heating_fuel)     # to gross approximation
-        weatherize_load_reduction = 0.15
+        weatherize_load_reduction = getDefault(locality,"weatherize_fractional_savings", 0.15)
         points = weatherize_load_reduction * heatingCO2
         savings = weatherize_load_reduction * heatingCost
         cost = 500.     # figure out a typical value 
