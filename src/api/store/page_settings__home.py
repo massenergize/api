@@ -76,10 +76,8 @@ class HomePageSettingsStore:
       
 
       #featured links
-      if (args.get('show_featured_links', None)):
+      if (not args.get('show_featured_links', False)):
         featured_links = args.pop('featured_links', None)
-     
-
 
       #images
       current_images = home_page_setting.images.all()

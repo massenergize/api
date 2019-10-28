@@ -102,6 +102,7 @@ class CommunityStore:
 
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
+      print(args)
       logo = args.pop('logo', None)
       community = Community.objects.filter(id=community_id)
       if not community:
