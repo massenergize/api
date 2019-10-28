@@ -127,7 +127,7 @@ class CommunityStore:
   def delete_community(self, args) -> (dict, MassEnergizeAPIError):
     try:
       communities = Community.objects.filter(**args)
-      communities.delete()
+      communities.update(is_deleted=True)
       return communities, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
