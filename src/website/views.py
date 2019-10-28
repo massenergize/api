@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_response import MassenergizeResponse
 
 
 # Create your views here.

@@ -289,6 +289,7 @@ class Community(models.Model):
       "logo":get_json_if_not_none(self.logo),
       "location":self.location,
       "is_approved": self.is_approved,
+      "is_published": self.is_published,
       "is_geographically_focused": self.is_geographically_focused,
       "banner":get_json_if_not_none(self.banner),
       "created_at": self.created_at,
@@ -578,7 +579,7 @@ class Service(models.Model):
     return model_to_dict(self, ['id', 'name', 'description', 'service_location', 'icon'])
 
   def full_json(self):
-    res =  self.simple_json()
+    return self.simple_json()
 
 
   class Meta:
@@ -819,6 +820,7 @@ class Action(models.Model):
   id = models.AutoField(primary_key=True)
   title = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   is_global = models.BooleanField(default=False, blank=True)
+  featured_summary = models.TextField(max_length = LONG_STR_LEN, blank=True, null=True)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
@@ -845,7 +847,7 @@ class Action(models.Model):
 
   def simple_json(self):
     data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
-      'average_carbon_score'])
+      'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
@@ -924,7 +926,7 @@ class Event(models.Model):
     data = model_to_dict(self, exclude=['tags', 'image', 'community'])
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['community'] = get_json_if_not_none(self.community)
-    data['image'] = None if not self.image else self.image.full_json();
+    data['image'] = None if not self.image else self.image.full_json()
     data['more_info'] = self.more_info
     return data
 
@@ -1740,7 +1742,7 @@ class HomePageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
 
-  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   featured_links = JSONField(blank=True, null=True)
   featured_events = models.ManyToManyField(Event, blank=True)
   featured_stats = models.ManyToManyField(Data, blank=True)
@@ -1784,7 +1786,7 @@ class ActionsPageSettings(models.Model):
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -1816,7 +1818,7 @@ class ContactUsPageSettings(models.Model):
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -1848,7 +1850,7 @@ class DonatePageSettings(models.Model):
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -1880,7 +1882,7 @@ class AboutUsPageSettings(models.Model):
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)

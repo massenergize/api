@@ -1,6 +1,6 @@
 from database.models import HomePageSettings, UserProfile, Media
-from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_response import MassenergizeResponse
 
 class HomePageSettingsStore:
   def __init__(self):
@@ -76,10 +76,8 @@ class HomePageSettingsStore:
       
 
       #featured links
-      if (args.get('show_featured_links', None)):
+      if (not args.get('show_featured_links', False)):
         featured_links = args.pop('featured_links', None)
-     
-
 
       #images
       current_images = home_page_setting.images.all()

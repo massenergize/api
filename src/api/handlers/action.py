@@ -1,9 +1,9 @@
 """Handler file for all routes pertaining to actions"""
 
-from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents, parse_list, parse_bool, check_length
+from _main_.utils.route_handler import RouteHandler
+from _main_.utils.common import get_request_contents, parse_list, parse_bool, check_length, rename_field
 from api.services.action import ActionService
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 
 #TODO: install middleware to catch authz violations
@@ -52,6 +52,7 @@ class ActionHandler(RouteHandler):
       args['tags'] = parse_list(args.pop('tags', []))
       args['vendors'] = parse_list(args.pop('vendors', []))
       args['is_global'] = parse_bool(args.pop('vendors', False))
+      args['is_published'] = parse_bool(args.pop('is_published', False))
       action_info, err = self.service.create_action(community_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -74,9 +75,19 @@ class ActionHandler(RouteHandler):
   def update(self) -> function:
     def update_action_view(request) -> None: 
       args = get_request_contents(request)
-      action_info, err = self.service.update_action(args[id], args)
+      success, err = check_length(args, 'title', min_length=5, max_length=25)
+      if not success:
+        return MassenergizeResponse(error=str(err))
+      args = rename_field(args, 'action_id', 'id')
+      args['tags'] = parse_list(args.pop('tags', []))
+      args['vendors'] = parse_list(args.pop('vendors', []))
+      args['is_global'] = parse_bool(args.pop('is_global', False))
+      args['is_published'] = parse_bool(args.pop('is_published', False))
+      action_id = args.pop('id', None)
+      action_info, err = self.service.update_action(action_id, args)
       if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
+        return MassenergizeResponse(error=str(err), status=err.status)      
+        
       return MassenergizeResponse(data=action_info)
     return update_action_view
 

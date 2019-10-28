@@ -1,9 +1,9 @@
 """Handler file for all routes pertaining to home_page_settings"""
 
-from api.utils.route_handler import RouteHandler
-from api.utils.common import get_request_contents, rename_field, rename_fields, parse_bool, parse_list, check_length, parse_int
+from _main_.utils.route_handler import RouteHandler
+from _main_.utils.common import get_request_contents, rename_field, rename_fields, parse_bool, parse_list, check_length, parse_int
 from api.services.page_settings__home import HomePageSettingsService
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 
 #TODO: install middleware to catch authz violations
@@ -120,7 +120,6 @@ class HomePageSettingsHandler(RouteHandler):
         'target_number_of_households': parse_int(args.pop('target_number_of_households', 0))
       }
 
-      # print(args)
       home_page_setting_info, err = self.service.update_home_page_setting(args)
 
       if err:
