@@ -1,9 +1,10 @@
 import json 
 from querystring_parser import parser
-from api.api_errors.massenergize_errors import CustomMassenergizeError
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
 from datetime import datetime
+
 
 def get_request_contents(request):
   try:
@@ -20,7 +21,10 @@ def get_request_contents(request):
           args[i] = request.FILES[i]
     else:
       args = request.POST.dict()
-    args = rename_field(args, 'is_dev', 'is_published')
+    
+    is_dev = args.pop('is_dev', None)
+    if is_dev:
+      args['is_published'] = parse_bool(is_dev)
     return args
 
   except Exception as e:
