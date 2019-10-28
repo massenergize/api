@@ -23,7 +23,7 @@ class CommunityService:
     return serialize(community, full=True), None
 
   def list_communities(self, args) -> (list, MassEnergizeAPIError):
-    communities, err = self.store.list_communities()
+    communities, err = self.store.list_communities(args)
     if err:
       return None, err
     return serialize_all(communities), None

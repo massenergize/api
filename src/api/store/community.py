@@ -16,9 +16,11 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_communities(self) -> (list, MassEnergizeAPIError):
+  def list_communities(self, args) -> (list, MassEnergizeAPIError):
     try:
-      communities = Community.objects.filter(is_deleted=False, is_approved=True)
+      args['is_deleted'] = False
+      args['is_approved'] = True
+      communities = Community.objects.filter(**args)
       if not communities:
         return [], None
       return communities, None
