@@ -1,9 +1,9 @@
-from api.api_errors.massenergize_errors import MassEnergizeAPIError
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.massenergize_response import MassenergizeResponse
 from api.store.community import CommunityStore
-from api.utils.common import serialize, serialize_all
-from api.utils.emailer.send_email import send_massenergize_rich_email
-from api.utils.emailer.email_types import COMMUNITY_REGISTRATION_EMAIL
+from _main_.utils.common import serialize, serialize_all
+from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.emailer.email_types import COMMUNITY_REGISTRATION_EMAIL
 
 class CommunityService:
   """
@@ -22,7 +22,7 @@ class CommunityService:
     #send an email to the community admin
     return serialize(community, full=True), None
 
-  def list_communities(self) -> (list, MassEnergizeAPIError):
+  def list_communities(self, args) -> (list, MassEnergizeAPIError):
     communities, err = self.store.list_communities()
     if err:
       return None, err
@@ -38,8 +38,8 @@ class CommunityService:
     return serialize(community), None
 
 
-  def update_community(self, args) -> (dict, MassEnergizeAPIError):
-    community, err = self.store.update_community(args)
+  def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
+    community, err = self.store.update_community(community_id ,args)
     if err:
       return None, err
     return serialize(community), None

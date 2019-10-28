@@ -1,9 +1,10 @@
 import json 
 from querystring_parser import parser
-from api.api_errors.massenergize_errors import CustomMassenergizeError
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
 from datetime import datetime
+
 
 def get_request_contents(request):
   try:

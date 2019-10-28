@@ -1,6 +1,6 @@
 from database.models import Team, UserProfile
-from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_response import MassenergizeResponse
 
 class TeamStore:
   def __init__(self):
