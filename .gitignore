@@ -6,3 +6,4 @@ timelog.csv
 **/.DS_Store
 
 \.vscode/
+src/venv

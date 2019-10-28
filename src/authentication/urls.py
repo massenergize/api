@@ -4,11 +4,12 @@ from .views import *
 
 
 urlpatterns = [
-    path('signup/', signUp),
     path('logout/', logout),
     path('signout/', logout),
     path('login/', login),
     path('signin/', login),
     path('ping', ping),
-    path('csrf', csrf)
+    path('csrf', csrf),
+    path('verify', verify),
+    path('whoami', who_am_i)
 ]

@@ -3,7 +3,7 @@ dj-database-url==0.4.1
 gunicorn==19.9.0
 psycopg2-binary==2.7.5
 whitenoise==4.1
-Pillow==5.2.0
+Pillow==6.2.1
 django-storages==1.7.1
 boto3==1.9.181
 django-cors-headers==3.0.2
@@ -12,3 +12,5 @@ firebase-admin==2.17.0
 requests==2.22.0
 jsons==0.10.1
 querystring-parser==1.2.4
+python-jwt==2.0.1
+PyJWT==1.7.1

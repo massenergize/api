@@ -1,6 +1,6 @@
 from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal
-from api.api_errors.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from api.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_response import MassenergizeResponse
 
 class CommunityStore:
   def __init__(self):
@@ -16,9 +16,11 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_communities(self) -> (list, MassEnergizeAPIError):
+  def list_communities(self, args) -> (list, MassEnergizeAPIError):
     try:
-      communities = Community.objects.filter(is_deleted=False, is_approved=True)
+      args['is_deleted'] = False
+      args['is_approved'] = True
+      communities = Community.objects.filter(**args)
       if not communities:
         return [], None
       return communities, None
@@ -101,17 +103,34 @@ class CommunityStore:
 
 
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
-    community = Community.objects.filter(id=community_id)
-    if not community:
-      return None, InvalidResourceError()
-    community.update(**args)
-    return community, None
+    try:
+      print(args)
+      logo = args.pop('logo', None)
+      community = Community.objects.filter(id=community_id)
+      if not community:
+        return None, InvalidResourceError()
+      
+      community.update(**args)
+
+      new_community = community.first()
+      if logo and new_community.logo:
+        # new_community.logo.file = logo
+        # new_community.logo.save()
+        cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
+        cLogo.save()
+        new_community.logo = cLogo
+        new_community.save()
+
+      return new_community, None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def delete_community(self, args) -> (dict, MassEnergizeAPIError):
     try:
       communities = Community.objects.filter(**args)
-      communities.delete()
+      communities.update(is_deleted=True)
       return communities, None
     except Exception as e:
       return None, CustomMassenergizeError(e)

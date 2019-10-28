@@ -5,7 +5,6 @@ errors to the caller of a particular route
 
 """
 from django.http import JsonResponse
-# from .common import convert_to_json
 from collections.abc import Iterable
 
 class MassenergizeResponse(JsonResponse):
@@ -14,7 +13,7 @@ class MassenergizeResponse(JsonResponse):
     super().__init__(
       response, 
       safe=True, 
-      json_dumps_params={'indent': 2}, 
+      # json_dumps_params={'indent': 2}, 
       status=status
     )
 
