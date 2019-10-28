@@ -32,7 +32,7 @@ class MassenergizeJWTAuthMiddleware:
       if (authz is None) and (cleaned_path in self.restricted_paths):
         return None, NotAuthorizedError()
       elif authz:
-        id_token = authz.split(' ')[1]
+        id_token = authz.split(' ')[-1]
         return id_token, None
       return None, None
     except Exception as e:

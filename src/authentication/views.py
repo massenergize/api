@@ -55,7 +55,7 @@ def verify(request):
       decoded_token = auth.verify_id_token(firebase_id_token)
       user_email = decoded_token["email"]
       user = UserProfile.objects.filter(email=user_email).first()
-      if(not user):
+      if (not user):
         return CustomMassenergizeError("Please create an account")
 
       payload = {
@@ -72,5 +72,6 @@ def verify(request):
 
     else:
       return Json(errors=['Invalid Auth'])
+
   except Exception as e:
     return Json(errors=[str(e)])

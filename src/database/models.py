@@ -289,6 +289,7 @@ class Community(models.Model):
       "logo":get_json_if_not_none(self.logo),
       "location":self.location,
       "is_approved": self.is_approved,
+      "is_published": self.is_published,
       "is_geographically_focused": self.is_geographically_focused,
       "banner":get_json_if_not_none(self.banner),
       "created_at": self.created_at,

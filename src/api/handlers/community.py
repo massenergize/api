@@ -83,9 +83,8 @@ class CommunityHandler(RouteHandler):
     def update_community_view(request) -> None: 
       args = get_request_contents(request)
       args = rename_field(args, 'community_id', 'id')
-  
       community_id = args.pop('id', None)
-      if community_id:
+      if not community_id:
         return MassenergizeResponse(error='Please provide an ID')
 
       ok, err = check_length(args, 'name', 3, 25)
