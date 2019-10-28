@@ -49,18 +49,14 @@ class MassenergizeJWTAuthMiddleware:
       
       if id_token:
         decoded_token = jwt.decode(id_token, SECRET_KEY)
-
-        #check if the sign in is over yet
-        iat = decoded_token.get('iat', 0)
-        exp = decoded_token.get('exp', iat - 1)
-        if exp < iat:
-          return CustomMassenergizeError("Session Expired: Please sign in again")
-
-        #at this point the user has an active session
+        # at this point the user has an active session
+        request.is_logged_in = True
         request.email = decoded_token.get('email', None)
         request.user_id = decoded_token.get('user_id', None)
         request.is_super_admin = decoded_token.get('is_super_admin', None)
         request.is_community_admin = decoded_token.get('is_community_admin', None)
+      else:
+        request.is_logged_in = False
       
       #TODO: enforce all requests accessing resources are always logged in first
 

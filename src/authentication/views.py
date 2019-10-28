@@ -69,6 +69,7 @@ def verify(request):
 
       massenergize_jwt_token = jwt.encode(payload, SECRET_KEY).decode('utf-8')
       return MassenergizeResponse(data={"idToken": str(massenergize_jwt_token)})
+
     else:
       return Json(errors=['Invalid Auth'])
   except Exception as e:
