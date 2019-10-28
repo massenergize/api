@@ -847,7 +847,7 @@ class Action(models.Model):
 
   def simple_json(self):
     data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
-      'average_carbon_score'])
+      'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take

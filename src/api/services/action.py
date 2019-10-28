@@ -15,7 +15,7 @@ class ActionService:
     action, err = self.store.get_action_info(action_id)
     if err:
       return None, err
-    return serialize(action), None
+    return serialize(action, full=True), None
 
   def list_actions(self, community_id, subdomain) -> (list, MassEnergizeAPIError):
     actions, err = self.store.list_actions(community_id, subdomain)
@@ -24,15 +24,15 @@ class ActionService:
     return serialize_all(actions), None
 
 
-  def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.create_action(community_id, args)
+  def create_action(self, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.create_action(args)
     if err:
       return None, err
     return serialize(action), None
 
 
-  def update_action(self, args) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.update_action(args)
+  def update_action(self,action_id, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.update_action(action_id, args)
     if err:
       return None, err
     return serialize(action), None

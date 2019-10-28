@@ -80,11 +80,39 @@ class ActionStore:
 
 
   def update_action(self, action_id, args) -> (dict, MassEnergizeAPIError):
-    action = Action.objects.filter(id=action_id)
-    if not action:
-      return None, InvalidResourceError()
-    action.update(**args)
-    return action, None
+    try:
+      print(args)
+      action = Action.objects.filter(id=action_id)
+      if not action:
+        return None, InvalidResourceError()
+
+      community_id = args.pop('community_id', None)
+      tags = args.pop('tags', [])
+      vendors = args.pop('vendors', [])
+      image = args.pop('image', None)
+      
+      action.update(**args)
+
+      action = action.first()
+      if image:
+        media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
+        action.image = media
+
+      if tags:
+        action.tags.set(tags)
+
+      if vendors:
+        action.vendors.set(vendors)
+
+      if community_id:
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          action.community = community
+    
+      action.save()
+      return action, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def delete_action(self, action_id) -> (Action, MassEnergizeAPIError):
