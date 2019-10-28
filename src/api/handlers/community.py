@@ -87,17 +87,22 @@ class CommunityHandler(RouteHandler):
       if not community_id:
         return MassenergizeResponse(error='Please provide an ID')
 
-      ok, err = check_length(args, 'name', 3, 25)
-      if not ok:
-        return MassenergizeResponse(error=str(err))
+      if(args.get('name', None)):
+        ok, err = check_length(args, 'name', 3, 25)
+        if not ok:
+          return MassenergizeResponse(error=str(err))
       
-      ok, err = check_length(args, 'subdomain', 4, 20)
-      if not ok:
-        return MassenergizeResponse(error=str(err))
-        
-      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', None))
-      args['is_published'] = parse_bool(args.pop('is_published', None))
-      args['is_approved'] = parse_bool(args.pop('is_approved', None))
+      if(args.get('subdomain', None)):
+        ok, err = check_length(args, 'subdomain', 4, 20)
+        if not ok:
+          return MassenergizeResponse(error=str(err))
+
+      if(args.get('is_geographically_focused', None)):
+        args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', None))
+      if(args.get('is_published', None)):
+        args['is_published'] = parse_bool(args.pop('is_published', None))
+      if(args.get('is_approved', None)):
+        args['is_approved'] = parse_bool(args.pop('is_approved', None))
 
       args = rename_field(args, 'image', 'logo')
       args = parse_location(args)
