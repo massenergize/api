@@ -5,6 +5,7 @@ from _main_.utils.common import get_request_contents, rename_field, parse_bool, 
 from api.services.vendor import VendorService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
+from _main_.utils.context import Context
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -70,11 +71,11 @@ class VendorHandler(RouteHandler):
 
   def list(self) -> function:
     def list_vendor_view(request) -> None: 
-      print(request.context)
-      args = get_request_contents(request)
+      context: Context  = request.context
+      args = context.get_request_body()
       community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      vendor_info, err = self.service.list_vendors(community_id, user_id)
+      
+      vendor_info, err = self.service.list_vendors(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)

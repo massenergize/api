@@ -17,11 +17,11 @@ class VendorService:
       return None, err
     return serialize(vendor), None
 
-  def list_vendors(self, vendor_id) -> (list, MassEnergizeAPIError):
-    vendor, err = self.store.list_vendors(vendor_id)
+  def list_vendors(self, context, community_id) -> (list, MassEnergizeAPIError):
+    vendors, err = self.store.list_vendors(context, community_id)
     if err:
       return None, err
-    return serialize(vendor), None
+    return serialize_all(vendors), None
 
 
   def create_vendor(self, args) -> (dict, MassEnergizeAPIError):

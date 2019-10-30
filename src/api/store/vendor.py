@@ -1,7 +1,7 @@
-from database.models import Vendor, UserProfile, Media
+from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
-
+from _main_.utils.context import Context
 class VendorStore:
   def __init__(self):
     self.name = "Vendor Store/DB"
@@ -13,11 +13,14 @@ class VendorStore:
     return vendor, None
 
 
-  def list_vendors(self, community_id) -> (list, MassEnergizeAPIError):
-    vendors = Vendor.objects.filter(community__id=community_id)
-    if not vendors:
-      return [], None
-    return vendors, None
+  def list_vendors(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    try:
+      community = Community.objects.get(pk=community_id)
+      vendors = community.vendor_set.all()
+      # context.logger.info(f"{context.user_id} accessed: vendors.list")
+      return vendors, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_vendor(self, args) -> (dict, MassEnergizeAPIError):

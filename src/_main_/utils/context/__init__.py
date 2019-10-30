@@ -30,8 +30,15 @@ class Context:
     self.is_community_admin = decoded_token.get('is_community_admin', None)
 
 
-  def set_args(self, request):
+  def set_request_body(self, request):
+    #get the request args
     self.args = get_request_contents(request)
+
+    #set the is_dev field
+    self.is_dev = self.args.pop('is_dev', False)
+
+  def get_request_body(self):
+    return self.args
 
   def __str__(self):
     return str({

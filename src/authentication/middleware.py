@@ -51,11 +51,14 @@ class MassenergizeJWTAuthMiddleware:
       # add a context: (this will contain all info about this user's session info)
       ctx = Context()
 
+      #set request body
+      ctx.set_request_body(request)
+
       if id_token:
         decoded_token = jwt.decode(id_token, SECRET_KEY, algorithm='HS256')
         # at this point the user has an active session
         ctx.set_user_credentials(decoded_token)
-        ctx.set_args(request)
+        
       
       request.context = ctx
 
