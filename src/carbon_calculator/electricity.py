@@ -1,6 +1,6 @@
 from .CCDefaults import getDefault, getLocality
 from .CCConstants import YES, NO, FRACTIONS
-from .naturalGas import GasFootprint
+from .naturalGas import NatGasFootprint
 
 MONTHLY_ELEC = "monthly_elec_bill"
 ELECTRIC_UTILITY = "electric_utility"
@@ -125,7 +125,7 @@ APPLIANCE_AGES = {"0-10 years":"age0-10", "10-15 years":"age10-15","15-20 years"
 def EvalEnergystarRefrigerator(inputs):
     replace_refrig = inputs.get("replace_refrigerator",NO)          # Yes, No
     refrig_age = inputs.get("refrigerator_age", "")                 # >20, 15-20, 10-15, 0-10
-    refrig_energystar = inputs.get("refrigerator_energyztar", NO)   # Yes, No, Not Sure
+    #refrig_energystar = inputs.get("refrigerator_energystar", NO)   # Yes, No, Not Sure
 
     explanation = "Didn't choose to replace your refrigerator"
     locality = getLocality(inputs)
@@ -251,7 +251,7 @@ def EvalInductionStove(inputs):
             if old_stove == "Gas":
                 therm_gas = getDefault(locality,"elec_cooking_therm_gas", 110)
                 therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
-                co2_per_therm = GasFootprint(locality)
+                co2_per_therm = NatGasFootprint(locality)
                 co2_cooking = therm_gas * co2_per_therm
                 cooking_cost = therm_gas * therm_price
                 explanation = "Replacing your gas range with induction would save energy and emissions, but probably cost slightly more to operate"
@@ -296,7 +296,7 @@ def EvalHeatPumpDryer(inputs):
             if old_dryer == "Gas":
                 therm_gas = getDefault(locality,"elec_dryerload_therm_gas", 0.24)
                 therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
-                co2_per_therm = GasFootprint(locality)
+                co2_per_therm = NatGasFootprint(locality)
                 co2_drying = therm_gas * co2_per_therm * dryer_loads * 52
                 drying_cost = therm_gas * therm_price * dryer_loads * 52
                 explanation = "Replacing your gas dryer with heatpump would save energy and emissions"
@@ -344,7 +344,6 @@ def EvalColdWaterWash(inputs):
         co2_estar_water = water_heating_co2 * estar_water_use
         # water savings 45%, elec savings 25%
         estar_water_fraction_savings = getDefault(locality,"elec_energystar_washer_water_saved_frac", .45)
-        estar_elec_fraction_savings = getDefault(locality,"elec_energystar_washer_elec_saved_frac", .25)
         old_water_use = estar_water_use / (1. - estar_water_fraction_savings)
 
         if washer_age != "0-10 years":      # old washers, double it
@@ -392,14 +391,14 @@ def EvalLineDry(inputs):
         if old_dryer == "Gas":
             therm_gas = getDefault(locality,"elec_dryerload_therm_gas", 0.24)
             therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
-            co2_per_therm = GasFootprint(locality)
+            co2_per_therm = NatGasFootprint(locality)
             co2_drying = therm_gas * co2_per_therm * loads * 52
             drying_cost = therm_gas * therm_price * loads * 52
             explanation = "Drying %.1f of your loads on the line would save energy and money"
         elif old_dryer != "Heat pump":
             drying_cost = kwh_electric_dryer * kwh_price * loads * 52
             co2_drying = kwh_electric_dryer * co2_per_kwh * loads * 52
-            explanation = "Drying %.1f of your loads on the line would save %.0f kwh" % (fraction, (kwh_electric_dryer - kwh_heatpump) * dryer_loads * 52)
+            explanation = "Drying %.1f of your loads on the line would save %.0f kwh" % (fraction, (kwh_electric_dryer - kwh_heatpump) * loads * 52)
         else:
             drying_cost = cost_heatpump * loads * 52
             co2_drying = co2_heatpump * loads * 52
@@ -444,11 +443,11 @@ def EvalSmartPowerStrip(inputs):
     if inputs.get("smart_power_strips",NO) == YES:
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
         kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
-        kwh_savings = getDefaults(locality,"elec_kwh_savings_smart_power_strips", 100.)
+        kwh_savings = getDefault(locality,"elec_kwh_savings_smart_power_strips", 100.)
         points = co2_per_kwh * kwh_savings
         savings = kwh_price * kwh_savings
         cost = getDefault(locality,"elec_cost_smart_power_strip", 15.)
-        explanation = "Using a smart power strip to kill vampire loads can money and emissions.  Get one free with many home energy audits" % old_kwh
+        explanation = "Using a smart power strip to kill vampire loads can money and emissions.  You can get one free with a home energy audit"
 
     return points, cost, savings, explanation
 

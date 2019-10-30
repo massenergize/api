@@ -16,7 +16,7 @@ from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
 from .CCDefaults import getDefault, CCD
 from .queries import QuerySingleAction, QueryAllActions
 from .homeHeating import EvalEnergyAudit, EvalWeatherization, EvalProgrammableThermostats, EvalAirSourceHeatPump, \
-                        EvalGroundSourceHeatPump, EvalHeatingSystemAssessment
+                        EvalGroundSourceHeatPump, EvalHeatingSystemAssessment, EvalEfficientBoilerFurnace
 from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLighting, EvalEnergystarRefrigerator, \
                         EvalEnergystarWasher, EvalInductionStove, EvalHeatPumpDryer, EvalColdWaterWash, EvalLineDry, \
                         EvalRefrigeratorPickup, EvalSmartPowerStrip, EvalElectricityMonitor
@@ -393,7 +393,7 @@ class CalculatorAction:
             self.average_points = actionInfo["average_points"]
             self.picture = actionInfo["picture"]
             self.initialized = True
-            
+
     def Query(self):
         status, actionInfo = QuerySingleAction(self.name)
         return {"status":status, "action":actionInfo}

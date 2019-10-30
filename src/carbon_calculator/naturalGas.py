@@ -1,7 +1,7 @@
 from .CCDefaults import getDefault
 
 
-def GasFootprint(locality):
+def NatGasFootprint(locality):
     combustion_footprint = getDefault(locality,"natgas_lbs_co2_per_therm", 11.7)
 
     ch4_leakage_fraction = getDefault(locality,"natgas_fraction_methane_leakage", 0.0284)

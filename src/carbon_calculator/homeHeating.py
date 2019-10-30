@@ -53,7 +53,7 @@ ELEC_UTILITY = 'elec_utility'
 
 def EvalEnergyAudit(inputs):
     points = cost = savings = 0.
-    locality = getLocality(inputs)
+    #locality = getLocality(inputs)
 
     explanation = "Didn't choose to sign up for an energy audit"
     # inputs: energy_audit_recently,energy_audit,heating_system_fuel,electric_utility
