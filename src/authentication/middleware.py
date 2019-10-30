@@ -28,14 +28,10 @@ class MassenergizeJWTAuthMiddleware:
   def _get_auth_token(self, request):
     try:
       authz = request.headers.get('Authorization', None)
-      print("Headers: ", request.headers)
-      print("Authorization", authz)
       cleaned_path = request.path.split('/')[-1]
       if (authz is None) and (cleaned_path in self.restricted_paths):
         return None, NotAuthorizedError()
       elif authz:
-        print("Authorization", authz)
-        print("\n\n")
         id_token = authz.split(' ')[-1]
         return id_token, None
       return None, None
@@ -51,13 +47,8 @@ class MassenergizeJWTAuthMiddleware:
       if err:
         return err
       
-      print("idToken: ", id_token)
-      print("\n\n")
-      
       if id_token:
         decoded_token = jwt.decode(id_token, SECRET_KEY, algorithm='HS256')
-        print("decoded_token", decoded_token)
-        print("\n\n")
         # at this point the user has an active session
         request.is_logged_in = True
         request.email = decoded_token.get('email', None)
