@@ -23,8 +23,8 @@ def get_request_contents(request):
       args = request.POST.dict()
     
     is_dev = args.pop('is_dev', None)
-    if is_dev:
-      args['is_published'] = parse_bool(is_dev)
+    if not is_dev and 'list' in request.path:
+      args['is_published'] = True
     return args
 
   except Exception as e:
