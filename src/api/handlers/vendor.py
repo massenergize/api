@@ -70,6 +70,7 @@ class VendorHandler(RouteHandler):
 
   def list(self) -> function:
     def list_vendor_view(request) -> None: 
+      print(request.context)
       args = get_request_contents(request)
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
