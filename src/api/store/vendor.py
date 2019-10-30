@@ -6,8 +6,8 @@ class VendorStore:
   def __init__(self):
     self.name = "Vendor Store/DB"
 
-  def get_vendor_info(self, vendor_id) -> (dict, MassEnergizeAPIError):
-    vendor = Vendor.objects.filter(id=vendor_id)
+  def get_vendor_info(self, context, args) -> (dict, MassEnergizeAPIError):
+    vendor = Vendor.objects.filter(**args).first()
     if not vendor:
       return None, InvalidResourceError()
     return vendor, None

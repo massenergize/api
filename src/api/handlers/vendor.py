@@ -34,8 +34,10 @@ class VendorHandler(RouteHandler):
 
   def info(self) -> function:
     def vendor_info_view(request) -> None: 
-      args = get_request_contents(request)
-      vendor_info, err = self.service.get_vendor_info(args)
+      context: Context  = request.context
+      args = context.get_request_body()
+      args = rename_field(args, 'vendor_id', 'id')
+      vendor_info, err = self.service.get_vendor_info(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)
