@@ -1,5 +1,5 @@
 from .CCDefaults import getDefault, getLocality
-from .CCConstants import NO,YES
+from .CCConstants import NO,YES, FREQUENCIES
 
 CAR_POINTS = 8000
 def EvalReplaceCar(inputs):
@@ -235,17 +235,7 @@ def EvalOffsetFlights(inputs):
     locality = getLocality(inputs)
     
     offset_flights = inputs.get('offset_flights', NO)
-    offset_fraction = 0.
-    if offset_flights == "Rarely":
-        offset_fraction = 0.1
-    elif offset_flights == "Sometimes":
-        offset_fraction = 0.25
-    elif offset_flights == "Often":
-        offset_fraction = 0.5
-    elif offset_flights == "Usually":
-        offset_fraction = 0.75
-    elif offset_flights == "Always":
-        offset_fraction = 1.
+    offset_fraction = FREQUENCIES.get(offset_flights, 0.)
 
     if offset_fraction > 0.:
         default_flights = getDefault(locality,'flights_default_annual_family', 12.)     # a wild guess

@@ -90,22 +90,13 @@ def EvalLEDLighting(inputs):
     #bulbs_incandescent,bulbs_replace_leds
     num_old_bulbs = inputs.get(NUM_OLD_BULBS, 10)
     num_old_bulbs = int(num_old_bulbs)
-    
-    
-    replace_fraction = inputs.get("numeric_fraction_led_replacement",0.)
-    replace_fraction1 = inputs.get(LED_SWAP_FRACTION,FRACTIONS[0])
-    # if they can get energy audit it's free
     bulb_price = 0.
+     # if they can get energy audit it's free
     points = cost = savings = 0
-    if replace_fraction == 0. and replace_fraction1 != "None":
-        if replace_fraction1 == "All":
-            replace_fraction = 1.
-        elif replace_fraction1 == "Most":
-            replace_fraction = 0.75
-        elif replace_fraction1 == "Half":
-            replace_fraction = 0.5
-        elif replace_fraction1 == "Some":
-            replace_fraction = 0.25
+
+    fraction = FRACTIONS.get(inputs.get(LED_SWAP_FRACTION,''),0.)
+    replace_fraction = inputs.get("numeric_fraction_led_replacement", fraction)    # if specified as a number
+
     average_watts = getDefault(locality,"elec_bulb_average_wattage",60.)
     average_ontime = getDefault(locality,"elec_bulb_average_ontime_hours",3.)
     average_kwh = average_watts * average_ontime * 365 / 1000
