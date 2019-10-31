@@ -49,19 +49,20 @@ def EvalReduceWaste(inputs):
             points += co2
             explanation += "Purchasing bulk %s eliminates packaging, saving perhaps %.0f lbs CO2. " % (buy_bulk, co2)
 
-        buy_recyled = inputs.get('buy_recycled','Never')
+        buy_recycled = inputs.get('buy_recycled','Never')
         freq_buy_recycled = FREQUENCIES.get(buy_recycled,0.)
         if freq_buy_recycled > 0.:
             co2 = freq_buy_recycled * getDefault(locality,'buy_recycled_co2', 200.)   # bonus points, until we get a better idea
             points += co2
             explanation += "Purchasing recycled material %s saves perhaps %.0f lbs CO2 in production emissions. " % (buy_recycled, co2)
 
-        freq_buy_sell_used = FREQUENCIES.get(inputs.get('buy_sell_used','Never'),0.)
+        buy_sell_used = inputs.get('buy_sell_used','Never')
+        freq_buy_sell_used = FREQUENCIES.get(buy_sell_used,0.)
         if freq_buy_sell_used > 0.:
             co2 = freq_buy_sell_used * getDefault(locality,'buy_sell_used_co2', 2000.)   # bonus points, until we get a better idea
-            savings = freq_buy_sell_used * getDefaults(locality,'buy_sell_use_savings', 4000.)  # total guess
+            savings = freq_buy_sell_used * getDefault(locality,'buy_sell_use_savings', 4000.)  # total guess
             points += co2
-            explanation += "Buying used items %s instead of new can saving perhaps %.0f lbs CO2 and perhaps $%.f in a year." % (buy_sell_used, co2, savings)
+            explanation += "Buying used items %s instead of new can save perhaps %.0f lbs CO2 and perhaps $%.f in a year." % (buy_sell_used, co2, savings)
 
     return points, cost, savings, explanation
 
@@ -70,4 +71,11 @@ def EvalCompost(inputs):
     #compost_food_waste,compost_pickup
     explanation = "Didn't choose to start composting"
     points = cost = savings = 0.
+    locality = getLocality(inputs)
+
+    if inputs.get('compost_food_waste', NO) == YES:
+        co2 = getDefault(locality,'compost_co2', 2000.)   # bonus points, until we get a better idea
+        points += co2
+        explanation += "Composting food and yard waste is good for the environment, and save perhaps %.0f lbs emissions in a year." % (co2)
+
     return points, cost, savings, explanation
