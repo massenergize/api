@@ -1,6 +1,8 @@
 from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from django.utils.text import slugify
+
 from _main_.utils.context import Context
 class VendorStore:
   def __init__(self):
@@ -34,13 +36,14 @@ class VendorStore:
       new_vendor = Vendor.objects.create(**args)
 
       if image:
-        logo = Media(name=f"Logo-{new_vendor.name}", file=image)
+        logo = Media(name=f"Logo-{slugify(new_vendor.name)}", file=image)
         logo.save()
         new_vendor.logo = logo
       
       if onboarding_contact_email:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
-        new_vendor.onboarding_contact = onboarding_contact
+        if onboarding_contact:
+          new_vendor.onboarding_contact = onboarding_contact
       
       new_vendor.save()
       new_vendor.communities.set(communities)

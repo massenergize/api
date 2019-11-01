@@ -662,7 +662,7 @@ class Vendor(models.Model):
 
   def simple_json(self):
     data = model_to_dict(self, exclude=[
-     'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services'
+     'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services','communities'
     ])
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['logo'] = get_json_if_not_none(self.logo)
