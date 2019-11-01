@@ -1,11 +1,13 @@
 """Handler file for all routes pertaining to vendors"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, rename_field, parse_bool, parse_location, parse_list
+import _main_.utils.common as utils
+from _main_.utils.common import get_request_contents, rename_field, parse_bool, parse_location, parse_list, validate_fields, parse_string
 from api.services.vendor import VendorService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
+from _main_.utils.validator import Validator
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -56,15 +58,40 @@ class VendorHandler(RouteHandler):
 
 
   def create(self) -> function:
-    def create_vendor_view(request) -> None: 
-      args = get_request_contents(request)
+    def create_vendor_view(request) -> None:
+      context: Context  = request.context
+      args = context.get_request_body() 
+      validator: Validator = Validator()
+      (validator
+        .add("accepted_terms_and_conditions", bool)
+        .add("key_contact_name", str)
+        .add("key_contact_email", str)
+        .add("name", str)
+        .add("email", str)
+        .add("is_verified", str)
+        .add("phone_number", str)
+        .add("have_address", bool)
+        .add("is_verified", bool, is_required=False)
+        .add("communities", list, is_required=False)
+      )
+
+      args, err = validator.verify(args)
+      if err:
+        return err
+
+      if not args.pop('accepted_terms_and_conditions', False):
+        return MassenergizeResponse(error="Please accept terms the Terms And Conditions to Proceed")
+      
       args = parse_location(args)
-      args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions', None))
-      args['is_verified'] = parse_bool(args.pop('is_verified', None))
-      args['communities'] = parse_list(args.pop('communities', None))
-      args.pop('has_address', None)
-      print(args)
-      vendor_info, err = self.service.create_vendor(args)
+      if not args.pop('have_address', None):
+        args.pop('location')
+
+      args['key_contact'] = {
+        "name": args.pop('key_contact_name', None),
+        "email": args.pop('key_contact_email', None)
+      } 
+
+      vendor_info, err = self.service.create_vendor(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)

@@ -24,8 +24,8 @@ class VendorService:
     return serialize_all(vendors), None
 
 
-  def create_vendor(self, args) -> (dict, MassEnergizeAPIError):
-    vendor, err = self.store.create_vendor(args)
+  def create_vendor(self, ctx, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.create_vendor(ctx, args)
     if err:
       return None, err
     return serialize(vendor), None

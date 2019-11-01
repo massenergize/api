@@ -23,7 +23,7 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_vendor(self, args) -> (dict, MassEnergizeAPIError):
+  def create_vendor(self, ctx: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       communities = args.pop('communities', [])
       image = args.pop('image', None)
@@ -41,11 +41,6 @@ class VendorStore:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact).first()
         new_vendor.onboarding_contact = onboarding_contact
 
-      if key_contact_email:
-        new_vendor.key_contact = {
-          'full_name': key_contact_full_name,
-          'email': key_contact_email
-        }
       else:
         return None, CustomMassenergizeError("Please provide key contact email and name")
 

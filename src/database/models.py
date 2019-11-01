@@ -250,7 +250,7 @@ class Community(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
-  owner_email = models.EmailField(max_length=SHORT_STR_LEN)
+  owner_email = models.EmailField(blank=False)
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
@@ -422,8 +422,7 @@ class UserProfile(models.Model):
   profile_picture = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     blank=True, null=True)
   preferred_name=models.CharField(max_length=SHORT_STR_LEN, null=True)
-  email = models.EmailField(max_length=SHORT_STR_LEN, 
-    unique=True, db_index=True)
+  email = models.EmailField(unique=True, db_index=True)
   user_info = JSONField(blank=True, null=True)
   real_estate_units = models.ManyToManyField(RealEstateUnit, 
     related_name='user_real_estate_units', blank=True)
@@ -633,7 +632,7 @@ class Vendor(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   phone_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  email = models.EmailField(max_length=SHORT_STR_LEN,blank=True)
+  email = models.EmailField(blank=True, null=True, db_index=True)
 
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   logo = models.ForeignKey(Media, blank=True, null=True, 
