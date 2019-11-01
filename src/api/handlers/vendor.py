@@ -26,6 +26,7 @@ class VendorHandler(RouteHandler):
     self.add("/vendors.add", self.create())
     self.add("/vendors.list", self.list())
     self.add("/vendors.update", self.update())
+    self.add("/vendors.copy", self.copy())
     self.add("/vendors.delete", self.delete())
     self.add("/vendors.remove", self.delete())
     self.add("/vendors.publish", self.publish())
@@ -169,6 +170,20 @@ class VendorHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)
     return delete_vendor_view
+
+
+  def copy(self) -> function:
+    def copy_vendor_view(request) -> None: 
+      args = get_request_contents(request)
+      args = rename_field(args, 'vendor_id', 'id')
+      vendor_id = args.pop('id', None)
+      if not vendor_id:
+        return CustomMassenergizeError("Please Provide Vendor Id")
+      vendor_info, err = self.service.copy_vendor(vendor_id)
+      if err:
+        return err
+      return MassenergizeResponse(data=vendor_info)
+    return copy_vendor_view
 
 
   def community_admin_list(self) -> function:

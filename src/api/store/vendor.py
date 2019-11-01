@@ -2,6 +2,7 @@ from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
+import random
 
 from _main_.utils.context import Context
 class VendorStore:
@@ -107,6 +108,17 @@ class VendorStore:
       vendors.update(is_deleted=True)
       #TODO: also remove it from all places that it was ever set in many to many or foreign key
       return vendors.first(), None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+
+
+  def copy_vendor(self, vendor_id) -> (Vendor, MassEnergizeAPIError):
+    try:
+      vendor: Vendor = Vendor.objects.get(id=vendor_id)
+      vendor.pk = None
+      vendor.name = f"{vendor.name}-Copy-{random.randint(1,100000)}"
+      vendor.save()
+      return vendor, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
