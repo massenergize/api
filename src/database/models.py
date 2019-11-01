@@ -633,7 +633,6 @@ class Vendor(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   phone_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   email = models.EmailField(blank=True, null=True, db_index=True)
-
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   logo = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='vender_logo')
@@ -662,8 +661,9 @@ class Vendor(models.Model):
     return self.name
 
   def simple_json(self):
-    data = model_to_dict(self, ['id', 'name','email', 'phone_number' 'description','service_area', 'properties_serviced', 'more_info', 'address'])
-    data['key_contact'] = get_json_if_not_none(self.key_contact)
+    data = model_to_dict(self, exclude=[
+     'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services'
+    ])
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['logo'] = get_json_if_not_none(self.logo)
     return data

@@ -66,6 +66,7 @@ class VendorHandler(RouteHandler):
         .add("accepted_terms_and_conditions", bool)
         .add("key_contact_name", str)
         .add("key_contact_email", str)
+        .add("onboarding_contact_email", str)
         .add("name", str)
         .add("email", str)
         .add("is_verified", str)
