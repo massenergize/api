@@ -25,6 +25,7 @@ class VendorStore:
 
   def create_vendor(self, ctx: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      print(args)
       communities = args.pop('communities', [])
       image = args.pop('image', None)
       onboarding_contact = args.pop('onboarding_contact', None)
