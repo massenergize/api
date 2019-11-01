@@ -644,7 +644,7 @@ class Vendor(models.Model):
   service_area = models.CharField(max_length=SHORT_STR_LEN)
   service_area_states = JSONField(blank=True, null=True)
   services = models.ManyToManyField(Service, blank=True)
-  properties_serviced = models.CharField(max_length=TINY_STR_LEN)
+  properties_serviced = JSONField(blank=True, null=True) 
   onboarding_date = models.DateTimeField(default=datetime.now)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
