@@ -169,7 +169,6 @@ def EvalRakeOrElecBlower(inputs):
         gal_per_blow = getDefault(locality, 'lawn_blower_gal_per_hour', 0.5)    # Echo 58.2cc spec
         co2_per_blower_hour = gal_per_blow * co2_per_gal_gas
 
-
         points = blower_hours * (lawn_size/STANDARD_LAWNSIZE) * co2_per_blower_hour
         explanation = "Switching your gas blower with electric or using a rake is cleaner and much less noisy, besides reducing emissions"
 

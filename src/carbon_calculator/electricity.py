@@ -60,7 +60,9 @@ def EvalRenewableElectricity(inputs):
     explanation = "Didn't choose to sign up for renewable electricity"
     choose_renewable = inputs.get("choose_renewable",NO)
     
-    monthly_elec_bill = eval(inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150.)))
+    default_bill = getDefault(locality,"elec_typical_monthly_bill",150.)
+    monthly_bill = inputs.get(MONTHLY_ELEC, default_bill)
+    monthly_elec_bill = eval(monthly_bill)
 
     kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
     fixed_charge = getDefault(locality,"elec_monthly_fixed_charge",7.00)    # Eversource current charge
