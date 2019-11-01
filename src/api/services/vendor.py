@@ -31,14 +31,14 @@ class VendorService:
     return serialize(vendor), None
 
 
-  def update_vendor(self, args) -> (dict, MassEnergizeAPIError):
-    vendor, err = self.store.update_vendor(args)
+  def update_vendor(self, vendor_id, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.update_vendor(vendor_id ,args)
     if err:
       return None, err
     return serialize(vendor), None
 
-  def delete_vendor(self, args) -> (dict, MassEnergizeAPIError):
-    vendor, err = self.store.delete_vendor(args)
+  def delete_vendor(self, vendor_id) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.delete_vendor(vendor_id)
     if err:
       return None, err
     return serialize(vendor), None

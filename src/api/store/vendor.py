@@ -27,14 +27,17 @@ class VendorStore:
 
   def create_vendor(self, ctx: Context, args) -> (Vendor, MassEnergizeAPIError):
     try:
-      print(args)
       communities = args.pop('communities', [])
       image = args.pop('image', None)
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       key_contact_full_name = args.pop('key_contact_full_name', None)
       key_contact_email = args.pop('key_contact_email', None)
-      new_vendor = Vendor.objects.create(**args)
+      args["key_contact"] = {
+        "name": key_contact_full_name,
+        "email": key_contact_email
+      }
 
+      new_vendor = Vendor.objects.create(**args)
       if image:
         logo = Media(name=f"Logo-{slugify(new_vendor.name)}", file=image)
         logo.save()
@@ -53,27 +56,73 @@ class VendorStore:
 
 
   def update_vendor(self, vendor_id, args) -> (dict, MassEnergizeAPIError):
-    vendor = Vendor.objects.filter(id=vendor_id)
-    if not vendor:
-      return None, InvalidResourceError()
-    vendor.update(**args)
-    return vendor, None
+    try:
+      vendor = Vendor.objects.get(id=vendor_id)
+      if not vendor:
+        return None, InvalidResourceError()  
+
+      communities = args.pop('communities', [])
+      if communities:
+        vendor.communities.set(communities)
+      
+      onboarding_contact_email = args.pop('onboarding_contact_email', None)
+      if onboarding_contact_email:
+        vendor.onboarding_contact_email = onboarding_contact_email
+      
+      key_contact_full_name = args.pop('key_contact_full_name', None)
+      if key_contact_full_name:
+        if not vendor.key_contact:
+          vendor.key_contact = {}
+        vendor.key_contact["name"] = key_contact_full_name
+
+      key_contact_email = args.pop('key_contact_email', None)
+      if key_contact_email:
+        if not vendor.key_contact:
+          vendor.key_contact = {}
+        vendor.key_contact["email"] = key_contact_email
+
+      image = args.pop('image', None)
+      if image:
+        logo = Media(name=f"Logo-{slugify(vendor.name)}", file=image)
+        logo.save()
+        vendor.logo = logo
+      
+      if onboarding_contact_email:
+        onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
+        if onboarding_contact:
+          vendor.onboarding_contact = onboarding_contact
+    
+      vendor.save()
+
+      updated = Vendor.objects.filter(id=vendor_id).update(**args)
+      return vendor, None
+
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def delete_vendor(self, vendor_id) -> (dict, MassEnergizeAPIError):
-    vendors = Vendor.objects.filter(id=vendor_id)
-    if not vendors:
-      return None, InvalidResourceError()
+    try:
+      vendors = Vendor.objects.filter(id=vendor_id)
+      vendors.update(is_deleted=True)
+      #TODO: also remove it from all places that it was ever set in many to many or foreign key
+      return vendors.first(), None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_vendors_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    vendors = Vendor.objects.filter(community__id = community_id)
-    return vendors, None
+    try:
+      community = Community.objects.get(id=community_id)
+      vendors = community.vendor_set().filter(is_deleted=False)
+      return vendors, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_vendors_for_super_admin(self):
     try:
-      vendors = Vendor.objects.all()
+      vendors = Vendor.objects.filter(is_deleted=False)
       return vendors, None
     except Exception as e:
       print(e)

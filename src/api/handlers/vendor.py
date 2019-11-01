@@ -5,6 +5,7 @@ import _main_.utils.common as utils
 from _main_.utils.common import get_request_contents, rename_field, parse_bool, parse_location, parse_list, validate_fields, parse_string
 from api.services.vendor import VendorService
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
@@ -116,8 +117,40 @@ class VendorHandler(RouteHandler):
 
   def update(self) -> function:
     def update_vendor_view(request) -> None: 
-      args = get_request_contents(request)
-      vendor_info, err = self.service.update_vendor(args[id], args)
+      context: Context  = request.context
+      args = context.get_request_body() 
+      validator: Validator = Validator()
+      (validator
+        .add("id", str)
+        .add("key_contact_name", str, is_required=False)
+        .add("key_contact_email", str, is_required=False)
+        .add("onboarding_contact_email", str, is_required=False)
+        .add("name", str, is_required=False)
+        .add("email", str, is_required=False)
+        .add("is_verified", str, is_required=False)
+        .add("phone_number", str, is_required=False)
+        .add("have_address", bool, is_required=False)
+        .add("is_verified", bool, is_required=False)
+        .add("communities", list, is_required=False)
+        .add("service_area_states", list, is_required=False)
+        .add("properties_serviced", list, is_required=False)
+      )
+
+      args, err = validator.verify(args)
+      if err:
+        return err
+
+      args = parse_location(args)
+      if not args.pop('have_address', None):
+        args.pop('location', None)
+
+      args['key_contact'] = {
+        "name": args.pop('key_contact_name', None),
+        "email": args.pop('key_contact_email', None)
+      } 
+
+      vendor_id = args.pop("id", None)
+      vendor_info, err = self.service.update_vendor(vendor_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)
@@ -127,8 +160,11 @@ class VendorHandler(RouteHandler):
   def delete(self) -> function:
     def delete_vendor_view(request) -> None: 
       args = get_request_contents(request)
-      vendor_id = args[id]
-      vendor_info, err = self.service.delete_vendor(args[id])
+      args = rename_field(args, 'vendor_id', 'id')
+      vendor_id = args.pop('id', None)
+      if not vendor_id:
+        return CustomMassenergizeError("Please Provide Vendor Id")
+      vendor_info, err = self.service.delete_vendor(vendor_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)
