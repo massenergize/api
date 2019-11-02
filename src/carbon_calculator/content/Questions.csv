@@ -40,7 +40,7 @@ heating_fuel,Home Heating and Cooling,What is the primary heating system type in
 heating_system_assessment,Home Heating and Cooling,Will you choose to sign up for a heating system assessment?,Choice,No,,Yes,,,,,,,,,,heating_assessment
 upgrade_heating_with_ashp,Home Heating and Cooling,Will you choose to upgrade with air-source heat pump(s)? ,Choice,No,heat_pump_heating_fraction,Yes,upgrade_heating_system_efficiency,,,,,,,,,air_source_hp
 weatherized,Home Heating and Cooling,Is your home adequately weatherized (well insulated and not drafty)?,Choice,No,,Yes,,Not sure,,,,,,,,weatherization
-insulate_home,Home Heating and Cooling,Will you choose to better insulate and/or air-seal your home?,Choice,No,,Yes,,,,,,,,,,weatherization
+weatherize_home,Home Heating and Cooling,Will you choose to better insulate and/or air-seal your home?,Choice,No,,Yes,,,,,,,,,,weatherization
 energy_audit,Home Heating and Cooling,Will you choose to sign up for a free energy audit?,Choice,No,,Yes,,,,,,,,,,energy_audit
 install_pstats,Home Heating and Cooling,Will you choose to install programmable thermostats?,Choice,Yes,,No,,,,,,,,,,prog_thermostats
 energy_audit_recently,Home Heating and Cooling,Have you had an energy audit in the last three years?,Choice,Yes,,No,,Not sure,,,,,,,,energy_audit

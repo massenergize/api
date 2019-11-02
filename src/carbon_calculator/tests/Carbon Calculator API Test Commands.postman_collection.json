@@ -26,7 +26,7 @@
 			"response": []
 		},
 		{
-			"name": "Import Defaults",
+			"name": "Get info on weatherization",
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -773,6 +773,195 @@
 							"key": "heating_fuel",
 							"value": "FuelOil"
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on weatherization",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate weatherization, Yes, weatherized",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate weatherization, Yes, not weatherized",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate weatherization, No, not weatherized",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on efficient_fossil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate efficient_fossil, Yes, Fuel Oil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate efficient_fossil, Yes, Natural Gas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate efficient_fossil, Yes, Wood",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate efficient_fossil, Yes, Propane",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
 					]
 				}
 			},

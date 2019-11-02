@@ -60,7 +60,7 @@ def EvalEnergyAudit(inputs):
     explanation = "Didn't choose to sign up for an energy audit"
     # inputs: energy_audit_recently,energy_audit,heating_fuel,electric_utility
     signup_energy_audit = inputs.get('energy_audit', YES)
-    heating_fuel = inputs.get("heating_fuel","Fuel Oil")
+    #heating_fuel = inputs.get("heating_fuel","Fuel Oil")
     
     already_had_audit = inputs.get("energy_audit_recently", YES)
     if signup_energy_audit == YES:
@@ -101,22 +101,28 @@ def EvalProgrammableThermostats(inputs):
     return points, cost, savings, explanation
 
 def EvalWeatherization(inputs):
-    #weatherized,insulate_home,heating_fuel
+    #weatherized,weatherize_home,heating_fuel
     points = cost = savings = 0.
     locality = getLocality(inputs)
     explanation = "Didn't choose to weatherize"
 
-    weatherize_home = inputs.get('insulate_home',NO)
+    weatherize_home = inputs.get('weatherize_home',NO)
     # could get this from fuel usage ...
     home_weatherized = inputs.get('weatherized',YES)
-    if weatherize_home == YES and home_weatherized != YES:
+    if weatherize_home == YES:
         # need to know total fuel consumption
         heatingCO2, heatingCost = HeatingLoad(inputs)     # to gross approximation
+
         weatherize_load_reduction = getDefault(locality,"weatherize_fractional_savings", 0.15)
+        explanation = "Improving the air-sealing and/or insulation on your home can save up to %d percent on your heating bill." % (int(100*weatherize_load_reduction))
+        if home_weatherized == YES:        
+            weatherize_load_reduction = getDefault(locality,"weatherize_incremental_savings", 0.05)
+            explanation = "Further improving the air-sealing and/or insulation on your home might %d percent on your heating bill." % (int(100*weatherize_load_reduction))
+        
         points = weatherize_load_reduction * heatingCO2
         savings = weatherize_load_reduction * heatingCost
-        cost = 500.     # figure out a typical value 
-        explanation = "Improving the air-sealing and/or insulation on your home can save %f percent on your heating bill." % (int(100*weatherize_load_reduction))
+        cost = getDefault(locality,'heating_typical_weatherization_cost', 500.)     # figure out a typical value 
+    
     return points, cost, savings, explanation
 
 HEATING_SYSTEM = "heating_system_type"
@@ -154,7 +160,7 @@ def EvalEfficientBoilerFurnace(inputs):
         heating_fuel = inputs.get("heating_fuel", "Fuel Oil")
         if heating_fuel == "Fuel Oil":
             new_efficiency = getDefault(locality,"heating_fueloil_high_efficiency", 0.90)
-        elif heating_fuel == "Nat Gas":
+        elif heating_fuel == "Natural Gas":
             new_efficiency = getDefault(locality,"heating_natgas_high_efficiency", 0.95)
         elif heating_fuel == "Propane":
             new_efficiency = getDefault(locality,"heating_propane_high_efficiency", 0.95)
@@ -178,9 +184,9 @@ def EvalEfficientBoilerFurnace(inputs):
 
         payback = cost / savings
         if payback > 0 and payback < 10:
-            explanation = "Upgrading to a higher efficiency boiler or furnace could save %d tons of CO2 per year, and pay for itself in around %d years" % (int(points/2000), int(payback))
+            explanation = "Upgrading to a higher efficiency boiler or furnace could save %.1f tons of CO2 per year, and pay for itself in around %d years" % (points/2000, int(payback))
         else:
-            explanation = "Upgrading to a higher efficiency boiler or furnace could save %d tons of CO2 per year, but the payback time would be >10 years" % int(points/2000)
+            explanation = "Upgrading to a higher efficiency boiler or furnace could save %.1f tons of CO2 per year, but the payback time would be >10 years" %  (points/2000)
 
     return points, cost, savings, explanation
 
