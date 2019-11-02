@@ -28,7 +28,7 @@ class TagCollectionService:
     tag_collection, err = self.store.create_tag_collection(args)
     if err:
       return None, err
-    return serialize_all(tag_collection), None
+    return serialize(tag_collection), None
 
 
   def update_tag_collection(self, args) -> (dict, MassEnergizeAPIError):

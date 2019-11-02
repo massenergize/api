@@ -60,6 +60,7 @@ class TeamStore:
       new_team.save()
       new_team.members.add(user_id)
       new_team.admins.add(user_id)
+      new_team.save()
       return new_team, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
@@ -67,12 +68,13 @@ class TeamStore:
 
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
+      print(args)
       community_id = args.pop('community_id', None)
       logo = args.pop('logo', None)
       team = Team.objects.filter(id=team_id)
       team.update(**args)
-
       team = team.first()
+
       if team:
         if community_id:
           community = Community.objects.filter(pk=community_id).first()

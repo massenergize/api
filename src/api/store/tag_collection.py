@@ -1,4 +1,4 @@
-from database.models import TagCollection, UserProfile
+from database.models import TagCollection, UserProfile, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 
@@ -22,11 +22,19 @@ class TagCollectionStore:
 
   def create_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_tag_collection = TagCollection.objects.create(**args)
+      name = args.pop('name', None)
+      tmp_tags = args.pop('tags', '').split(',')
+      new_tag_collection = TagCollection.objects.create(name=name, is_global=True)
       new_tag_collection.save()
+      tags = []
+      for t in tmp_tags:
+        tag = Tag.objects.create(name=t.title(), tag_collection=new_tag_collection)
+        tag.save()
+        # new_tag_collection.tags.add(t)
+
       return new_tag_collection, None
-    except Exception:
-      return None, ServerError()
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def update_tag_collection(self, tag_collection_id, args) -> (dict, MassEnergizeAPIError):

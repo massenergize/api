@@ -199,10 +199,13 @@ class Goal(models.Model):
     return CHOICES["GOAL_STATUS"][self.status]
 
   def __str__(self):
-    return self.name
+    return f"{self.name} {' - Deleted' if self.is_deleted else ''}"
 
   def simple_json(self):
-    return model_to_dict(self, exclude=['is_deleted'])
+    res = model_to_dict(self, exclude=['is_deleted'])
+    res['community'] = get_json_if_not_none(Community.objects.filter(goal__id=self.id).first())
+    res['team'] = get_json_if_not_none(Team.objects.filter(goal__id=self.id).first())
+    return res
 
   def full_json(self):
     return self.simple_json()
@@ -525,6 +528,7 @@ class Team(models.Model):
   def simple_json(self):
     res =  model_to_dict(self, ['id', 'name', 'description'])
     res['community'] = get_json_if_not_none(self.community)
+    res['logo'] = get_json_if_not_none(self.logo)
     return res
 
   def full_json(self):
@@ -532,7 +536,6 @@ class Team(models.Model):
     data['admins'] = [a.simple_json() for a in self.admins.all()]
     data['members'] = [m.simple_json() for m in self.members.all()]
     data['goal'] = get_json_if_not_none(self.goal)
-    data['logo'] = get_json_if_not_none(self.logo)
     data['banner'] = get_json_if_not_none(self.banner)
     return data
 
@@ -771,7 +774,7 @@ class Tag(models.Model):
   name = models.CharField(max_length = SHORT_STR_LEN)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
   tag_collection = models.ForeignKey(TagCollection, null=True, 
-    on_delete=models.SET_NULL, blank=True)
+    on_delete=models.CASCADE, blank=True)
   order = models.PositiveIntegerField(default=0)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
