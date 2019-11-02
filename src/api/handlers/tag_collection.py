@@ -32,7 +32,7 @@ class TagCollectionHandler(RouteHandler):
 
   def info(self) -> function:
     def tag_collection_info_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       tag_collection_info, err = self.service.get_tag_collection_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -42,7 +42,7 @@ class TagCollectionHandler(RouteHandler):
 
   def create(self) -> function:
     def create_tag_collection_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       tag_collection_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -52,7 +52,7 @@ class TagCollectionHandler(RouteHandler):
 
   def list(self) -> function:
     def list_tag_collection_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
       tag_collection_info, err = self.service.list_tag_collections(community_id, user_id)
@@ -64,7 +64,7 @@ class TagCollectionHandler(RouteHandler):
 
   def update(self) -> function:
     def update_tag_collection_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       tag_collection_info, err = self.service.update_tag_collection(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -74,7 +74,7 @@ class TagCollectionHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_tag_collection_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       tag_collection_id = args[id]
       tag_collection_info, err = self.service.delete_tag_collection(args[id])
       if err:
@@ -85,8 +85,8 @@ class TagCollectionHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
-      community_id = args.get("community__id")
+      args = request.context.args
+      community_id = args.pop("community_id", None)
       tag_collections, err = self.service.list_tag_collections_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -96,7 +96,7 @@ class TagCollectionHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       tag_collections, err = self.service.list_tag_collections_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

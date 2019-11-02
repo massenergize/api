@@ -20,7 +20,7 @@ class CommunityStore:
   def list_communities(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       if context.is_dev:
-        communities = Community.objects.filter(is_deleted=False)
+        communities = Community.objects.filter(is_deleted=False, is_approved=True)
       else:
         communities = Community.objects.filter(is_deleted=False, is_approved=True, is_published=True)
 
@@ -107,7 +107,6 @@ class CommunityStore:
 
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
       logo = args.pop('logo', None)
       community = Community.objects.filter(id=community_id)
       if not community:
@@ -126,7 +125,6 @@ class CommunityStore:
 
       return new_community, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(e)
 
 

@@ -32,7 +32,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
 
   def info(self) -> function:
     def contact_us_page_setting_info_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       args = rename_field(args, 'community_id', 'community__id')
       args = rename_field(args, 'subdomain', 'community__subdomain')
       args = rename_field(args, 'contact_us_page_id', 'id')
@@ -45,7 +45,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
 
   def create(self) -> function:
     def create_contact_us_page_setting_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       contact_us_page_setting_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -55,7 +55,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
 
   def list(self) -> function:
     def list_contact_us_page_setting_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
       contact_us_page_setting_info, err = self.service.list_contact_us_page_settings(community_id, user_id)
@@ -67,7 +67,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
 
   def update(self) -> function:
     def update_contact_us_page_setting_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       contact_us_page_setting_info, err = self.service.update_contact_us_page_setting(args[id], args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -77,7 +77,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_contact_us_page_setting_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       contact_us_page_setting_id = args[id]
       contact_us_page_setting_info, err = self.service.delete_contact_us_page_setting(args[id])
       if err:
@@ -88,8 +88,8 @@ class ContactUsPageSettingsHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
-      community_id = args.get("community__id")
+      args = request.context.args
+      community_id = args.pop("community_id", None)
       contact_us_page_settings, err = self.service.list_contact_us_page_settings_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -99,7 +99,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       contact_us_page_settings, err = self.service.list_contact_us_page_settings_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

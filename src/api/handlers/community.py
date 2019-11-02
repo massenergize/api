@@ -33,7 +33,7 @@ class CommunityHandler(RouteHandler):
 
   def info(self) -> function:
     def community_info_view(request) -> None:
-      args = get_request_contents(request)
+      args = request.context.args
       args = rename_field(args, 'community_id', 'id')
       community_info, err = self.service.get_community_info(args)
       if err:
@@ -44,7 +44,7 @@ class CommunityHandler(RouteHandler):
 
   def create(self) -> function:
     def create_community_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions', None))
       if not args['accepted_terms_and_conditions']:
         return MassenergizeResponse(error="Please accept the terms and conditions")
@@ -83,7 +83,7 @@ class CommunityHandler(RouteHandler):
 
   def update(self) -> function:
     def update_community_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       args = rename_field(args, 'community_id', 'id')
       community_id = args.pop('id', None)
       if not community_id:
@@ -117,7 +117,7 @@ class CommunityHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_community_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       args = rename_field(args, 'community_id', 'id')
       community_info, err = self.service.delete_community(args)
       if err:
@@ -128,8 +128,8 @@ class CommunityHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
-      community_id = args.get("community__id")
+      args = request.context.args
+      community_id = args.pop("community_id", None)
       communities, err = self.service.list_communities_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -139,7 +139,7 @@ class CommunityHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       communities, err = self.service.list_communities_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
