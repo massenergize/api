@@ -140,7 +140,11 @@ def EvalHeatingSystemAssessment(inputs):
 
     heating_system_assessment = inputs.get('heating_system_assessment',NO)
     if heating_system_assessment == YES:
-        pass
+        co2, operating_cost = HeatingLoad(inputs)
+
+        points = co2 * 0.1
+        savings = operating_cost * 0.1
+        explanation = "A free heating system assessment can help you plan to reduce costs and emissions. Assuming average 10 percent reduction."
 
     return points, cost, savings, explanation
 
@@ -191,13 +195,13 @@ def EvalEfficientBoilerFurnace(inputs):
     return points, cost, savings, explanation
 
 def EvalAirSourceHeatPump(inputs):
-    #upgrade_heating_with_ashp,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
+    #install_ashp,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     explanation = "Didn't choose to install an air-source heat pump"
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    upgrade_heating_with_ashp = inputs.get('upgrade_heating_with_ashp',NO)
-    if upgrade_heating_with_ashp == YES:
+    install_ashp = inputs.get('install_ashp',NO)
+    if install_ashp == YES:
 
         default_hp_heating_fraction = getDefault(locality,'heating_default_ashp_fraction', 0.8)
         fraction = inputs.get('heat_pump_heating_fraction', default_hp_heating_fraction)
@@ -365,10 +369,6 @@ def HeatingLoad(inputs):
         heating_cost = kwh * kwh_price
 
     return heating_co2, heating_cost
-
-def ASHPHeatingLoad(ASHP_seasonal_COP, fractional_offset):
-    return 1000, 1000
-
 
 
 

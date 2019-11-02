@@ -38,7 +38,7 @@ dryer_loads,Home Appliances,How many dryer loads do you do each week on average?
 fraction_line_dry,Home Appliances,What fraction of wash loads would you dry on the line or drying rack?,Number,,,,,,,,,,,,,line_dry
 heating_fuel,Home Heating and Cooling,What is the primary heating system type in your home?,Choice,Fuel Oil,,Nat Gas,,Propane,,Wood,,Conventional Electric,heating_system_type,Heat Pump,"heating_system_assessment,upgrade_heating_with_ashp,heating_system_type","energy_audit,prog_thermostats,weatherization,heating_assessment,efficient_fossil,air_source_hp,ground_source_hp"
 heating_system_assessment,Home Heating and Cooling,Will you choose to sign up for a heating system assessment?,Choice,No,,Yes,,,,,,,,,,heating_assessment
-upgrade_heating_with_ashp,Home Heating and Cooling,Will you choose to upgrade with air-source heat pump(s)? ,Choice,No,heat_pump_heating_fraction,Yes,upgrade_heating_system_efficiency,,,,,,,,,air_source_hp
+install_ashp,Home Heating and Cooling,Will you choose to upgrade with air-source heat pump(s)? ,Choice,No,heat_pump_heating_fraction,Yes,upgrade_heating_system_efficiency,,,,,,,,,air_source_hp
 weatherized,Home Heating and Cooling,Is your home adequately weatherized (well insulated and not drafty)?,Choice,No,,Yes,,Not sure,,,,,,,,weatherization
 weatherize_home,Home Heating and Cooling,Will you choose to better insulate and/or air-seal your home?,Choice,No,,Yes,,,,,,,,,,weatherization
 energy_audit,Home Heating and Cooling,Will you choose to sign up for a free energy audit?,Choice,No,,Yes,,,,,,,,,,energy_audit

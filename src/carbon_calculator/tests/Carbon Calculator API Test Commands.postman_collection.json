@@ -60,7 +60,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/export?Confirm=Yes&Defaults=carbon_calculator/content/exportdefaults.csv",
+					"raw": "localhost:8000/cc/export?Defaults=carbon_calculator/content/exportdefaults.csv",
 					"host": [
 						"localhost"
 					],
@@ -70,10 +70,6 @@
 						"export"
 					],
 					"query": [
-						{
-							"key": "Confirm",
-							"value": "Yes"
-						},
 						{
 							"key": "Defaults",
 							"value": "carbon_calculator/content/exportdefaults.csv"
@@ -281,7 +277,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/energy_fair?attend_fair=Yes",
+					"raw": "localhost:8000/cc/estimate/energy_fair?attend_fair=No",
 					"host": [
 						"localhost"
 					],
@@ -294,7 +290,7 @@
 					"query": [
 						{
 							"key": "attend_fair",
-							"value": "Yes"
+							"value": "No"
 						}
 					]
 				}
@@ -307,33 +303,16 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=Yes&energy_audit_recently=Yes&heating_system_fuel=Fuel%20Oil&electric_utility=cmlp",
+					"raw": "localhost:8000/cc/info/action/energy_audit",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
 						"cc",
-						"estimate",
+						"info",
+						"action",
 						"energy_audit"
-					],
-					"query": [
-						{
-							"key": "energy_audit",
-							"value": "Yes"
-						},
-						{
-							"key": "energy_audit_recently",
-							"value": "Yes"
-						},
-						{
-							"key": "heating_system_fuel",
-							"value": "Fuel%20Oil"
-						},
-						{
-							"key": "electric_utility",
-							"value": "cmlp"
-						}
 					]
 				}
 			},
@@ -345,7 +324,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=Yes&energy_audit_recently=Yes&heating_system_fuel=Fuel%20Oil&electric_utility=cmlp",
+					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=Yes&energy_audit_recently=Yes&heating_system_fuel=Fuel Oil&electric_utility=cmlp",
 					"host": [
 						"localhost"
 					],
@@ -366,7 +345,7 @@
 						},
 						{
 							"key": "heating_system_fuel",
-							"value": "Fuel%20Oil"
+							"value": "Fuel Oil"
 						},
 						{
 							"key": "electric_utility",
@@ -480,7 +459,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=FuelOil",
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Fuel Oil",
 					"host": [
 						"localhost"
 					],
@@ -505,7 +484,7 @@
 						},
 						{
 							"key": "heating_fuel",
-							"value": "FuelOil"
+							"value": "Fuel Oil"
 						}
 					]
 				}
@@ -518,7 +497,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Natural Gas",
 					"host": [
 						"localhost"
 					],
@@ -543,7 +522,7 @@
 						},
 						{
 							"key": "heating_fuel",
-							"value": "NaturalGas"
+							"value": "Natural Gas"
 						}
 					]
 				}
@@ -556,7 +535,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Propane",
 					"host": [
 						"localhost"
 					],
@@ -581,7 +560,7 @@
 						},
 						{
 							"key": "heating_fuel",
-							"value": "NaturalGas"
+							"value": "Propane"
 						}
 					]
 				}
@@ -594,7 +573,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Wood",
 					"host": [
 						"localhost"
 					],
@@ -619,7 +598,7 @@
 						},
 						{
 							"key": "heating_fuel",
-							"value": "NaturalGas"
+							"value": "Wood"
 						}
 					]
 				}
@@ -632,7 +611,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Conventional Electric",
 					"host": [
 						"localhost"
 					],
@@ -657,7 +636,7 @@
 						},
 						{
 							"key": "heating_fuel",
-							"value": "NaturalGas"
+							"value": "Conventional Electric"
 						}
 					]
 				}
@@ -670,7 +649,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Heat Pump",
 					"host": [
 						"localhost"
 					],
@@ -695,7 +674,7 @@
 						},
 						{
 							"key": "heating_fuel",
-							"value": "NaturalGas"
+							"value": "Heat Pump"
 						}
 					]
 				}
@@ -708,7 +687,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Geothermal",
 					"host": [
 						"localhost"
 					],
@@ -733,7 +712,7 @@
 						},
 						{
 							"key": "heating_fuel",
-							"value": "NaturalGas"
+							"value": "Geothermal"
 						}
 					]
 				}
@@ -746,7 +725,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=FuelOil",
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=Yes&pstats_programmed=No&heating_fuel=Fuel Oil",
 					"host": [
 						"localhost"
 					],
@@ -763,7 +742,7 @@
 						},
 						{
 							"key": "have_pstats",
-							"value": "No"
+							"value": "Yes"
 						},
 						{
 							"key": "pstats_programmed",
@@ -771,7 +750,7 @@
 						},
 						{
 							"key": "heating_fuel",
-							"value": "FuelOil"
+							"value": "Fuel Oil"
 						}
 					]
 				}
@@ -805,16 +784,25 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/info/action/weatherization",
+					"raw": "localhost:8000/cc/estimate/weatherization?weatherize_home=Yes&weatherized=Yes",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
 						"cc",
-						"info",
-						"action",
+						"estimate",
 						"weatherization"
+					],
+					"query": [
+						{
+							"key": "weatherize_home",
+							"value": "Yes"
+						},
+						{
+							"key": "weatherized",
+							"value": "Yes"
+						}
 					]
 				}
 			},
@@ -826,16 +814,25 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/info/action/weatherization",
+					"raw": "localhost:8000/cc/estimate/weatherization?weatherize_home=Yes&weatherized=No",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
 						"cc",
-						"info",
-						"action",
+						"estimate",
 						"weatherization"
+					],
+					"query": [
+						{
+							"key": "weatherize_home",
+							"value": "Yes"
+						},
+						{
+							"key": "weatherized",
+							"value": "No"
+						}
 					]
 				}
 			},
@@ -847,7 +844,37 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/info/action/weatherization",
+					"raw": "localhost:8000/cc/estimate/weatherization?weatherize_home=No&weatherized=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"weatherization"
+					],
+					"query": [
+						{
+							"key": "weatherize_home",
+							"value": "No"
+						},
+						{
+							"key": "weatherized",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on heating_assessment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/heating_assessment",
 					"host": [
 						"localhost"
 					],
@@ -856,7 +883,59 @@
 						"cc",
 						"info",
 						"action",
-						"weatherization"
+						"heating_assessment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate heating_assessment, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/heating_assessment?heating_system_assessment=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"heating_assessment"
+					],
+					"query": [
+						{
+							"key": "heating_system_assessment",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate heating_assessment, Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/heating_assessment?heating_system_assessment=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"heating_assessment"
+					],
+					"query": [
+						{
+							"key": "heating_system_assessment",
+							"value": "Yes"
+						}
 					]
 				}
 			},
@@ -868,7 +947,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/info/action/weatherization",
+					"raw": "localhost:8000/cc/info/action/efficient_fossil",
 					"host": [
 						"localhost"
 					],
@@ -877,7 +956,7 @@
 						"cc",
 						"info",
 						"action",
-						"weatherization"
+						"efficient_fossil"
 					]
 				}
 			},
@@ -889,16 +968,25 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/info/action/weatherization",
+					"raw": "localhost:8000/cc/estimate/efficient_fossil?upgrade_heating_system_efficiency=Yes&heating_fuel=Fuel Oil",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
 						"cc",
-						"info",
-						"action",
-						"weatherization"
+						"estimate",
+						"efficient_fossil"
+					],
+					"query": [
+						{
+							"key": "upgrade_heating_system_efficiency",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						}
 					]
 				}
 			},
@@ -910,16 +998,25 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/info/action/weatherization",
+					"raw": "localhost:8000/cc/estimate/efficient_fossil?upgrade_heating_system_efficiency=Yes&heating_fuel=Natural Gas",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
 						"cc",
-						"info",
-						"action",
-						"weatherization"
+						"estimate",
+						"efficient_fossil"
+					],
+					"query": [
+						{
+							"key": "upgrade_heating_system_efficiency",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Natural Gas"
+						}
 					]
 				}
 			},
@@ -931,16 +1028,25 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/info/action/weatherization",
+					"raw": "localhost:8000/cc/estimate/efficient_fossil?upgrade_heating_system_efficiency=Yes&heating_fuel=Wood",
 					"host": [
 						"localhost"
 					],
 					"port": "8000",
 					"path": [
 						"cc",
-						"info",
-						"action",
-						"weatherization"
+						"estimate",
+						"efficient_fossil"
+					],
+					"query": [
+						{
+							"key": "upgrade_heating_system_efficiency",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Wood"
+						}
 					]
 				}
 			},
@@ -952,7 +1058,37 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/info/action/weatherization",
+					"raw": "localhost:8000/cc/estimate/efficient_fossil?upgrade_heating_system_efficiency=Yes&heating_fuel=Propane",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"efficient_fossil"
+					],
+					"query": [
+						{
+							"key": "upgrade_heating_system_efficiency",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Propane"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on air_source_hp",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/air_source_hp",
 					"host": [
 						"localhost"
 					],
@@ -961,7 +1097,153 @@
 						"cc",
 						"info",
 						"action",
-						"weatherization"
+						"air_source_hp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, Yes, Fuel Oil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=Yes&heating_fuel=Fuel Oil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, Yes, Natural Gas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=Yes&heating_fuel=Natural Gas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Natural Gas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, Yes, Conventional Electric",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=Yes&heating_fuel=Conventional Electric",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Conventional Electric"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, Yes, Propane",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=Yes&heating_fuel=Propane",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Propane"
+						}
 					]
 				}
 			},
