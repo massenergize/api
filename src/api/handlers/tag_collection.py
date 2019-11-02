@@ -65,7 +65,10 @@ class TagCollectionHandler(RouteHandler):
   def update(self) -> function:
     def update_tag_collection_view(request) -> None: 
       args = request.context.args
-      tag_collection_info, err = self.service.update_tag_collection(args[id], args)
+      tag_collection_id = args.pop('id', None)
+      if not tag_collection_id:
+        return MassenergizeResponse(error="Please provide an id")
+      tag_collection_info, err = self.service.update_tag_collection(tag_collection_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=tag_collection_info)
