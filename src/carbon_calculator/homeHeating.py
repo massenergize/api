@@ -248,7 +248,7 @@ def EvalGroundSourceHeatPump(inputs):
         utility_rebates = getDefault(locality,'heating_geothermal_utility_rebate', 5000.)
 
         cost = cost * (1 - tax_credit) - utility_rebates
-        explanation = "Installing a Geothermal system for your whole home could save %d tons of CO2 per year, the most efficient heating system availabke." % points/2000
+        explanation = "Installing a Geothermal system for your whole home could save %d tons of CO2 per year, the most efficient heating system availabke." % (points/2000)
 
     return points, cost, savings, explanation
 
