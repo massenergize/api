@@ -75,7 +75,7 @@ class CCD():
             status = False
 
         if csvfile:
-            csvfile.close(csvfile)
+            csvfile.close()
         return status
     def importDefaults(self,fileName):
         try:

@@ -55,7 +55,7 @@ def EvalHotWaterAssessment(inputs):
             co2_old = btu * co2_per_gal / btu_per_gal
 
         elif wh_type == "Nat Gas" or wh_type == "Not sure":
-            co2_per_therm = NatGasFootprint(inputs)
+            co2_per_therm = NatGasFootprint(locality)
             btu_per_therm = 100000,
 
             wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency', 0.7)
@@ -131,7 +131,7 @@ def EvalHeatPumpWaterHeater(inputs):
 
         elif wh_type == "Nat Gas" or wh_type == "Not sure":
             therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
-            co2_per_therm = NatGasFootprint(inputs)
+            co2_per_therm = NatGasFootprint(locality)
             btu_per_therm = 100000,
 
             wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency', 0.7)
@@ -230,7 +230,7 @@ def EvalSolarHW(inputs):
 
             elif wh_type == "Nat Gas" or wh_type == "Not sure":
                 therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
-                co2_per_therm = NatGasFootprint(inputs)
+                co2_per_therm = NatGasFootprint(locality)
                 btu_per_therm = 100000,
 
                 wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency', 0.7)

@@ -1,0 +1,64 @@
+Variable,Locality,Value,Reference,Updated
+elec_energystar_fridge_cost_low,default,750.0,"Frigidaire 18cf top freezer, Crane's appliance online",2019-10-26 10:59:12.550088+00:00
+elec_refrig_annual_kwh_age10-15,default,651.0,"Cooler Concord fair, needs reference",2019-10-26 12:02:38.814089+00:00
+elec_refrig_annual_kwh_age0-10,default,440.0,"Cooler Concord fair, needs reference",2019-10-26 12:01:41.232260+00:00
+elec_refrig_annual_kwh_age15-20,default,1031.0,"Cooler Concord fair, needs reference",2019-10-26 12:03:53.010102+00:00
+elec_refrig_annual_kwh_age20+,default,1539.0,"Cooler Concord fair, needs reference",2019-10-26 12:04:16.804370+00:00
+water_price_per_scf,default,0.0564,"Concord utility water price, July 2019 bill",2019-10-26 12:45:38.322889+00:00
+water_price_per_scf,ConcordMA,0.0564,"Concord utility water price, July 2019 bill",2019-10-26 12:46:23.340981+00:00
+elec_cooking_therm_gas,default,110.0,Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week,2019-10-27 10:51:06.977457+00:00
+water_kwh_per_MG,default,2000.0,"CarbonFootprintofWater-RiverNetwork-2009.pdf: For most utilities, energy use from 1250 kWh/MG to 6,500 kWh/MG.1",2019-10-26 16:52:20.364243+00:00
+elec_energystar_refrig_kwh_usage,default,404.0,"Frigidaire FFTR1821TB 18cf top freezer, product spec",2019-10-26 11:09:39.558209+00:00
+elec_energystar_washer_water_use,default,14.0,Gallons per load: https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 16:57:52.703050+00:00
+elec_washer_average_annual_loads,default,300.0,Average loads per year: https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 17:00:18.035389+00:00
+elec_energystar_washer_water_saved_frac,default,0.33,https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 17:26:07.511632+00:00
+elec_energystar_washer_elec_saved_frac,default,0.25,https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 17:26:34.666651+00:00
+elec_energystar_elec_per_load,default,1.053,2019: https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 17:36:29.724064+00:00
+water_price_per_scf,WaylandMA,0.0729,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:56:57.259108+00:00
+water_price_per_scf,FraminghamMA,0.0654,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:58:02.251135+00:00
+water_price_per_scf,ActonMA,0.0283,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:58:32.979862+00:00
+water_price_per_scf,LincolnMA,0.0442,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:59:16.166847+00:00
+water_price_per_scf,SudburyMA,0.0425,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:59:59.793991+00:00
+water_price_per_scf,BedfordMA,0.0559,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 16:00:23.075825+00:00
+elec_energystar_washer_cost_low,default,700.0,Samsung 4.2 cf - Crane's Appliances 2019,2019-10-26 18:06:49.528887+00:00
+elec_cooking_kwh_induction,default,801.0,Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week,2019-10-27 10:49:28.863219+00:00
+elec_cooking_kwh_conventional,default,1144.0,Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week,2019-10-27 10:50:34.974911+00:00
+natgas_price_per_therm,default,1.52,Web: https://www.mass.gov/info-details/household-heating-costs Winter 2018-19,2019-10-27 10:54:34.075492+00:00
+elec_cost_induction_stove_low,default,1600.0,Web: Crane's appliances - Fridgidaire Gallery + $300 for cookware,2019-10-27 11:15:31.223845+00:00
+natgas_fraction_methane_leakage,default,0.028,survey report from 2015 - 2.8% fugitive emissions,2019-10-27 11:19:34.591447+00:00
+natgas_lbs_co2_per_therm,default,11.7,Standard combustion CO2 for Natural Gas,2019-10-27 11:18:22.107851+00:00
+natgas_ch4_global_warming_potential,default,86.0,IPCC 2014 report - low end GWP for Natural Gas on 20 yr timescale,2019-10-27 11:20:50.923598+00:00
+"elec_cost_heatpump_dryer_low""",default,1200.0,https://www.greenbuildingadvisor.com/article/heat-pump-clothes-dryers - LG dryer,2019-10-27 11:28:34.437922+00:00
+elec_bulb_average_wattage,default,60.0,Default value without reference,2019-10-27 13:23:37.184695+00:00
+elec_bulb_average_ontime_hours,default,3.0,Default value without reference,2019-10-27 13:23:37.194600+00:00
+elec_bulb_relative_LED_consumption,default,0.12,Default value without reference,2019-10-27 13:23:37.197856+00:00
+elec_dryer_load_kwh,default,3.3,Default value without reference,2019-10-27 16:03:33.369317+00:00
+elec_heatpump_dryer_energy_reduction,default,0.4,Default value without reference,2019-10-27 16:03:33.377909+00:00
+elec_cost_heatpump_dryer_low,default,1250.0,Default value without reference,2019-10-27 16:04:44.832775+00:00
+elec_dryerload_therm_gas,default,0.24,Default value without reference,2019-10-27 16:09:19.710653+00:00
+elec_typical_monthly_bill,default,150.0,Default value without reference,2019-11-02 01:23:42.565069+00:00
+elec_price_per_kwh,default,0.2209,Default value without reference,2019-11-02 01:23:42.571029+00:00
+elec_monthly_fixed_charge,default,7.0,Default value without reference,2019-11-02 01:23:42.576330+00:00
+elec_price_per_kwh,ConcordMA,0.148,BHN CMLP Utility Bill Sep 2019,2019-11-02 01:23:42.585991+00:00
+elec_renewable_additional_kwh_cost,default,0.038,Default value without reference,2019-11-02 01:23:42.593366+00:00
+elec_lbs_co2_per_kwh,default,0.682,"ISO-NE average, 2017 from their report",2019-11-02 01:23:42.603079+00:00
+elec_community_solar_average_savings,default,0.07,7% on utility bill from one company (range from 5-10%),2019-11-02 01:23:42.608595+00:00
+heating_parasitics_kwh,default,150.0,Default value without reference,2019-11-02 01:30:34.593785+00:00
+heating_default_load_mmbtu,default,114.3,Default value without reference,2019-11-02 01:30:34.599913+00:00
+fueloil_price_per_gallon,default,2.92,Default value without reference,2019-11-02 01:30:34.601001+00:00
+fueloil_co2_per_gallon,default,22.4,Default value without reference,2019-11-02 01:30:34.602342+00:00
+fueloil_btu_per_gallon,default,137619.0,Default value without reference,2019-11-02 01:30:34.603738+00:00
+heating_default_fueloil_efficiency,default,0.8,Default value without reference,2019-11-02 01:30:34.604992+00:00
+elec_pstat_fractional_savings,default,0.15,Default value without reference,2019-11-02 01:30:34.606261+00:00
+heating_default_natgas_efficiency,default,0.87,Default value without reference,2019-11-02 13:00:12.732734+00:00
+propane_price_per_gallon,default,3.09,Default value without reference,2019-11-02 13:04:03.169497+00:00
+propane_co2_per_gallon,default,12.7,Default value without reference,2019-11-02 13:04:03.180598+00:00
+propane_btu_per_gallon,default,91333.0,Default value without reference,2019-11-02 13:04:03.182980+00:00
+heating_default_propane_efficiency,default,0.82,Default value without reference,2019-11-02 13:04:03.189398+00:00
+wood_price_per_cord,default,320.0,Default value without reference,2019-11-02 13:04:40.832682+00:00
+wood_btu_per_cord,default,23.7,Default value without reference,2019-11-02 13:04:40.846646+00:00
+wood_co2_per_mmbtu,default,255.2,Default value without reference,2019-11-02 13:04:40.848177+00:00
+heating_default_wood_efficiency,default,0.7,Default value without reference,2019-11-02 13:04:40.850449+00:00
+elec_btu_per_kwh,default,3414.0,Default value without reference,2019-11-02 13:06:02.425189+00:00
+heating_default_electric_efficiency,default,1.0,Default value without reference,2019-11-02 13:08:23.274148+00:00
+heating_default_ashp_efficiency,default,3.0,Default value without reference,2019-11-02 13:09:19.139840+00:00

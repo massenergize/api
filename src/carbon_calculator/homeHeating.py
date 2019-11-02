@@ -58,9 +58,10 @@ def EvalEnergyAudit(inputs):
     #locality = getLocality(inputs)
 
     explanation = "Didn't choose to sign up for an energy audit"
-    # inputs: energy_audit_recently,energy_audit,heating_system_fuel,electric_utility
+    # inputs: energy_audit_recently,energy_audit,heating_fuel,electric_utility
     signup_energy_audit = inputs.get('energy_audit', YES)
-
+    heating_fuel = inputs.get("heating_fuel","Fuel Oil")
+    
     already_had_audit = inputs.get("energy_audit_recently", YES)
     if signup_energy_audit == YES:
         explanation = "You may have had an energy audit too recently?" 
@@ -74,23 +75,33 @@ PSTAT_PROGRAMMING = "prog_thermostat_programming"
 def EvalProgrammableThermostats(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
-    #have_pstats,pstats_programmed,install_programmable_thermostats,heating_system_fuel
+    #have_pstats,pstats_programmed,install_programmable_thermostats,heating_fuel
     explanation = "Didn't choose to install programmable thermostats"
 
-    install_pstats = inputs.get('prog_thermostats',YES)
+    install_pstats = inputs.get('install_pstats',YES)
     have_pstats = inputs.get('have_pstats',NO)
-    if install_pstats == YES and have_pstats == NO :
-        # need to know total fuel consumption
-        heatingCO2, heatingCost = HeatingLoad(inputs)     # to gross approximation
-        pstat_load_reduction = getDefault(locality,"elec_pstat_fractional_savings", 0.15)
-        points = pstat_load_reduction * heatingCO2
-        savings = pstat_load_reduction * heatingCost
-        cost = 150. 
-        explanation = "Installing and using a programmable thermostat can save %f percent on your heating bill." % (int(100*pstat_load_reduction))
+    if install_pstats == YES:
+        if have_pstats == NO :
+            heating_fuel = inputs.get('heating_fuel','')
+            if heating_fuel != "Heat Pump" and heating_fuel != "Geothermal":
+                # need to know total fuel consumption
+                heatingCO2, heatingCost = HeatingLoad(inputs)     # to gross approximation
+                pstat_load_reduction = getDefault(locality,"elec_pstat_fractional_savings", 0.15)
+                points = pstat_load_reduction * heatingCO2
+                savings = pstat_load_reduction * heatingCost
+                cost = 150. 
+                explanation = "Installing and using a programmable thermostat can save up to %d percent on your heating bill (UCS)." % (int(100*pstat_load_reduction))
+            else:
+                explanation = "We don't recommend using a programmable thermostat for %s systems, which generally have their own special thermostats" % heating_fuel
+        else:
+            explanation = "You already have programmable thermostat(s)."
+            pstats_programmed = inputs.get("pstats_programmed", YES)
+            if pstats_programmed:
+                explanation += " They should be programmed properly to save money and energy."
     return points, cost, savings, explanation
 
 def EvalWeatherization(inputs):
-    #weatherized,insulate_home,heating_system_fuel
+    #weatherized,insulate_home,heating_fuel
     points = cost = savings = 0.
     locality = getLocality(inputs)
     explanation = "Didn't choose to weatherize"
@@ -116,7 +127,7 @@ AGE_OPTIONS = ["<10 years","10-20 years",">20 years"]
 HEATING_SYSTEMS = ["Boiler","Furnace","Baseboard","Wood Stove","Other"]
 AC_TYPES = ["None","Central","Wall","Other"]
 def EvalHeatingSystemAssessment(inputs):
-    #heating_system_assessment,heating_system_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
+    #heating_system_assessment,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     explanation = "Didn't sign up for a heating system assessment"
     points = cost = savings = 0.
     #locality = getLocality(inputs)
@@ -130,7 +141,7 @@ def EvalHeatingSystemAssessment(inputs):
 HEATING_EFF = 'heating_efficiency'
 NEW_SYSTEM = 'new_system'
 def EvalEfficientBoilerFurnace(inputs):
-    #upgrade_heating_system_efficiency,heating_system_fuel,heating_system_type,heating_system_age
+    #upgrade_heating_system_efficiency,heating_fuel,heating_system_type,heating_system_age
     explanation = "Didn't choose to upgrade to an efficient boiler or furnace"
     points = cost = savings = 0.
     locality = getLocality(inputs)
@@ -140,7 +151,7 @@ def EvalEfficientBoilerFurnace(inputs):
 
         old_co2, old_cost = HeatingLoad(inputs)
 
-        heating_fuel = inputs.get("heating_system_fuel", "Fuel Oil")
+        heating_fuel = inputs.get("heating_fuel", "Fuel Oil")
         if heating_fuel == "Fuel Oil":
             new_efficiency = getDefault(locality,"heating_fueloil_high_efficiency", 0.90)
         elif heating_fuel == "Nat Gas":
@@ -174,7 +185,7 @@ def EvalEfficientBoilerFurnace(inputs):
     return points, cost, savings, explanation
 
 def EvalAirSourceHeatPump(inputs):
-    #upgrade_heating_with_ashp,heating_system_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
+    #upgrade_heating_with_ashp,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     explanation = "Didn't choose to install an air-source heat pump"
     points = cost = savings = 0.
     locality = getLocality(inputs)
@@ -187,7 +198,7 @@ def EvalAirSourceHeatPump(inputs):
 
         old_co2, old_cost = HeatingLoad(inputs)
         new_inputs = inputs
-        new_inputs["heating_system_fuel"] = "Heat Pump"
+        new_inputs["heating_fuel"] = "Heat Pump"
 
         new_co2, new_cost = HeatingLoad(new_inputs)
 
@@ -207,7 +218,7 @@ def EvalAirSourceHeatPump(inputs):
     return points, cost, savings, explanation
 
 def EvalGroundSourceHeatPump(inputs):
-    #install_gshp,heating_system_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
+    #install_gshp,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     explanation = "Didn't choose to install a ground-source heat pump"
     points = cost = savings = 0.
     locality = getLocality(inputs)
@@ -216,7 +227,7 @@ def EvalGroundSourceHeatPump(inputs):
     if install_gshp == YES:
         old_co2, old_cost = HeatingLoad(inputs)
         new_inputs = inputs
-        new_inputs["heating_system_fuel"] = "Geothermal"
+        new_inputs["heating_fuel"] = "Geothermal"
 
         new_co2, new_cost = HeatingLoad(new_inputs)
 
@@ -237,7 +248,7 @@ def HeatingLoad(inputs):
 
     locality = getLocality(inputs)
 
-    heating_fuel = inputs.get("heating_system_fuel","Fuel Oil")
+    heating_fuel = inputs.get("heating_fuel","Fuel Oil")
     #heating_system_age = inputs.get('heating_system_age',0)
     #weatherized = inputs.get('weatherized', NO)
     #air_conditioning_type = inputs.get('air_conditioning_type','')
@@ -254,6 +265,8 @@ def HeatingLoad(inputs):
     default_heating_load = getDefault(locality,'heating_default_load_mmbtu', 114.3)   # Zogg spreadsheet
     heating_load = default_heating_load         # we will do better than this
 
+    heating_co2 = heating_cost = 0.
+
     if heating_fuel == "Fuel Oil":
         gallon_price = getDefault(locality,"fueloil_price_per_gallon", 2.92)
         co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon", 22.4) # https://www.eia.gov/environment/emissions/co2_vol_mass.php
@@ -262,21 +275,22 @@ def HeatingLoad(inputs):
         default_efficiency = getDefault(locality,'heating_default_fueloil_efficiency', 0.80)
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        oil_gal = heating_load / btu_per_gal * 1e-6 / efficiency
+        oil_gal = heating_load / btu_per_gal * 1e6 / efficiency
+
         fuel_co2 = oil_gal * co2_per_gal
         fuel_cost = oil_gal * gallon_price
 
         heating_co2 = fuel_co2 + parasitics_co2
         heating_cost = fuel_cost + parasitics_cost
-    elif heating_fuel == "Nat Gas":
+    elif heating_fuel == "Natural Gas":
         therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
-        co2_per_therm = NatGasFootprint(inputs)
-        btu_per_therm = 100000,
+        co2_per_therm = NatGasFootprint(locality)
+        btu_per_therm = 100000.
 
         default_efficiency = getDefault(locality,'heating_default_natgas_efficiency', 0.87)
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        therms = heating_load / btu_per_therm * 1e-6 / efficiency
+        therms = heating_load / btu_per_therm * 1e6 / efficiency
         fuel_co2 = therms * co2_per_therm
         fuel_cost = therms * therm_price
 
@@ -291,7 +305,7 @@ def HeatingLoad(inputs):
         default_efficiency = getDefault(locality,'heating_default_propane_efficiency', 0.82)
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        gallons = heating_load / btu_per_gal * 1e-6 / efficiency
+        gallons = heating_load / btu_per_gal * 1e6 / efficiency
         fuel_co2 = gallons * co2_per_gal
         fuel_cost = gallons * gallon_price
 
@@ -307,7 +321,7 @@ def HeatingLoad(inputs):
         default_efficiency = getDefault(locality,'heating_default_wood_efficiency', 0.7)
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        cords = heating_load / mmbtu_per_cord * 1e-6 / efficiency
+        cords = heating_load / mmbtu_per_cord / efficiency
         fuel_co2 = co2_per_mmbtu * heating_load / efficiency
         fuel_cost = cords * cord_price
 
@@ -317,10 +331,10 @@ def HeatingLoad(inputs):
     elif heating_fuel == "Conventional Electric":
         btu_per_kwh = getDefault(locality, 'elec_btu_per_kwh', 3414.)
 
-        default_efficiency = getDefault(locality,'heating_default_conventional_electric_efficiency', 1.0)
+        default_efficiency = getDefault(locality,'heating_default_electric_efficiency', 1.0)
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        kwh = heating_load / btu_per_kwh * 1e-6 / efficiency
+        kwh = heating_load / btu_per_kwh * 1e6 / efficiency
         heating_co2 = kwh * co2_per_kwh
         heating_cost = kwh * kwh_price
 
@@ -330,7 +344,7 @@ def HeatingLoad(inputs):
         default_efficiency = getDefault(locality,'heating_default_ashp_efficiency', 3.)
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        kwh = heating_load / btu_per_kwh * 1e-6 / efficiency
+        kwh = heating_load / btu_per_kwh * 1e6 / efficiency
         heating_co2 = kwh * co2_per_kwh
         heating_cost = kwh * kwh_price
  
@@ -340,7 +354,7 @@ def HeatingLoad(inputs):
         default_efficiency = getDefault(locality,'heating_default_gshp_efficiency', 4.5)
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
  
-        kwh = heating_load / btu_per_kwh * 1e-6 / efficiency
+        kwh = heating_load / btu_per_kwh * 1e6 / efficiency
         heating_co2 = kwh * co2_per_kwh
         heating_cost = kwh * kwh_price
 

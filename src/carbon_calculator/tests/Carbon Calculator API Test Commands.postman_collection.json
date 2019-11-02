@@ -1,0 +1,783 @@
+{
+	"info": {
+		"_postman_id": "0483274c-6258-4898-8939-cc3aa12d40c7",
+		"name": "Carbon Calculator API Test Commands",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get action list",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						""
+					]
+				},
+				"description": "General info on the carbon calculator"
+			},
+			"response": []
+		},
+		{
+			"name": "Import Defaults",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Defaults=carbon_calculator/content/Defaults.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Defaults",
+							"value": "carbon_calculator/content/Defaults.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "export Defaults",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/export?Confirm=Yes&Defaults=carbon_calculator/content/exportdefaults.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"export"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Defaults",
+							"value": "carbon_calculator/content/exportdefaults.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Questions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Questions=carbon_calculator/content/Questions.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Questions",
+							"value": "carbon_calculator/content/Questions.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Actions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Actions=carbon_calculator/content/Actions.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Actions",
+							"value": "carbon_calculator/content/Actions.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Stations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Stations=carbon_calculator/content/Stations.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Stations",
+							"value": "carbon_calculator/content/Stations.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Groups",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Groups=carbon_calculator/content/Groups.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Groups",
+							"value": "carbon_calculator/content/Groups.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Events",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Events=carbon_calculator/content/Events.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Events",
+							"value": "carbon_calculator/content/Events.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on energy_fair action",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/energy_fair",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"energy_fair"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_fair action, Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_fair?attend_fair=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_fair"
+					],
+					"query": [
+						{
+							"key": "attend_fair",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_fair action, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_fair?attend_fair=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_fair"
+					],
+					"query": [
+						{
+							"key": "attend_fair",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on energy_audit action",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=Yes&energy_audit_recently=Yes&heating_system_fuel=Fuel%20Oil&electric_utility=cmlp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_audit"
+					],
+					"query": [
+						{
+							"key": "energy_audit",
+							"value": "Yes"
+						},
+						{
+							"key": "energy_audit_recently",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_system_fuel",
+							"value": "Fuel%20Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "cmlp"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_audit, Yes, recent=Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=Yes&energy_audit_recently=Yes&heating_system_fuel=Fuel%20Oil&electric_utility=cmlp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_audit"
+					],
+					"query": [
+						{
+							"key": "energy_audit",
+							"value": "Yes"
+						},
+						{
+							"key": "energy_audit_recently",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_system_fuel",
+							"value": "Fuel%20Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "cmlp"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_audit, Yes, recent=No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=Yes&energy_audit_recently=No&heating_system_fuel=Fuel%20Oil&electric_utility=cmlp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_audit"
+					],
+					"query": [
+						{
+							"key": "energy_audit",
+							"value": "Yes"
+						},
+						{
+							"key": "energy_audit_recently",
+							"value": "No"
+						},
+						{
+							"key": "heating_system_fuel",
+							"value": "Fuel%20Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "cmlp"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_audit, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=No&energy_audit_recently=No&heating_system_fuel=Fuel%20Oil&electric_utility=cmlp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_audit"
+					],
+					"query": [
+						{
+							"key": "energy_audit",
+							"value": "No"
+						},
+						{
+							"key": "energy_audit_recently",
+							"value": "No"
+						},
+						{
+							"key": "heating_system_fuel",
+							"value": "Fuel%20Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "cmlp"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on prog_thermostats",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/prog_thermostats",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"prog_thermostats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Fuel Oil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=FuelOil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "FuelOil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Natural Gas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "NaturalGas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Propane",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "NaturalGas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Wood",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "NaturalGas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Electric",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "NaturalGas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, HeatPump",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "NaturalGas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Geothermal",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=NaturalGas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "NaturalGas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, have_pstats=Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=FuelOil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "FuelOil"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
