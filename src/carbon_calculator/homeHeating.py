@@ -119,7 +119,7 @@ def EvalHeatingSystemAssessment(inputs):
     #heating_system_assessment,heating_system_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     explanation = "Didn't sign up for a heating system assessment"
     points = cost = savings = 0.
-    locality = getLocality(inputs)
+    #locality = getLocality(inputs)
 
     heating_system_assessment = inputs.get('heating_system_assessment',NO)
     if heating_system_assessment == YES:
@@ -131,13 +131,45 @@ HEATING_EFF = 'heating_efficiency'
 NEW_SYSTEM = 'new_system'
 def EvalEfficientBoilerFurnace(inputs):
     #upgrade_heating_system_efficiency,heating_system_fuel,heating_system_type,heating_system_age
-    explanation = "Didn't sign up for a heating system assessment"
+    explanation = "Didn't choose to upgrade to an efficient boiler or furnace"
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
     upgrade_heating_system_efficiency = inputs.get('upgrade_heating_system_efficiency',NO)
     if upgrade_heating_system_efficiency == YES:
-        pass
+
+        old_co2, old_cost = HeatingLoad(inputs)
+
+        heating_fuel = inputs.get("heating_system_fuel", "Fuel Oil")
+        if heating_fuel == "Fuel Oil":
+            new_efficiency = getDefault(locality,"heating_fueloil_high_efficiency", 0.90)
+        elif heating_fuel == "Nat Gas":
+            new_efficiency = getDefault(locality,"heating_natgas_high_efficiency", 0.95)
+        elif heating_fuel == "Propane":
+            new_efficiency = getDefault(locality,"heating_propane_high_efficiency", 0.95)
+        elif heating_fuel == "Wood":
+            new_efficiency = getDefault(locality,"heating_wood_high_efficiency", 0.88)
+        else:
+            msg = "Can't upgrade a %s system to high efficiency boiler or furnace." % heating_fuel
+            return 0., 0., 0., msg
+        
+        new_inputs = inputs
+        new_inputs["heating_system_efficiency"] = new_efficiency
+
+        new_co2, new_cost = HeatingLoad(new_inputs)
+
+        points = old_co2 - new_co2
+        savings = old_cost - new_cost
+        cost = getDefault(locality,'heating_standard_hieff_boiler_cost', 8000)
+        tax_credit = getDefault(locality,'heating_hieff_boiler_fed_tax_credit', 0)
+        utility_rebates = getDefault(locality,'heating_hieff_boiler_utility_rebate', 2000.)
+        cost = cost * (1 - tax_credit) - utility_rebates
+
+        payback = cost / savings
+        if payback > 0 and payback < 10:
+            explanation = "Upgrading to a higher efficiency boiler or furnace could save %d tons of CO2 per year, and pay for itself in around %d years" % (int(points/2000), int(payback))
+        else:
+            explanation = "Upgrading to a higher efficiency boiler or furnace could save %d tons of CO2 per year, but the payback time would be >10 years" % int(points/2000)
 
     return points, cost, savings, explanation
 
@@ -166,7 +198,11 @@ def EvalAirSourceHeatPump(inputs):
         utility_rebates = getDefault(locality,'heating_ashp_utility_rebate', 2500.)
         cost = cost * (1 - tax_credit) - utility_rebates
 
-        explanation = "you did it"
+        payback = cost / savings
+        if payback > 0 and payback < 10:
+            explanation = "Installing an air-source heat pump system for your home could save %d tons of CO2 per year, and pay for itself in around %d years" % (int(points/2000), int(payback))
+        else:
+            explanation = "Installing an air-source heat pump system for your home could save %d tons of CO2 per year, but the payback time would be >10 years" % int(points/2000)
 
     return points, cost, savings, explanation
 
@@ -191,7 +227,7 @@ def EvalGroundSourceHeatPump(inputs):
         utility_rebates = getDefault(locality,'heating_geothermal_utility_rebate', 5000.)
 
         cost = cost * (1 - tax_credit) - utility_rebates
-        explanation = "you did it"
+        explanation = "Installing a Geothermal system for your whole home could save %d tons of CO2 per year, the most efficient heating system availabke." % points/2000
 
     return points, cost, savings, explanation
 
@@ -202,10 +238,10 @@ def HeatingLoad(inputs):
     locality = getLocality(inputs)
 
     heating_fuel = inputs.get("heating_system_fuel","Fuel Oil")
-    heating_system_age = inputs.get('heating_system_age',0)
-    weatherized = inputs.get('weatherized', NO)
-    air_conditioning_type = inputs.get('air_conditioning_type','')
-    air_conditioning_age = inputs.get('air_conditioning_age',0.)
+    #heating_system_age = inputs.get('heating_system_age',0)
+    #weatherized = inputs.get('weatherized', NO)
+    #air_conditioning_type = inputs.get('air_conditioning_type','')
+    #air_conditioning_age = inputs.get('air_conditioning_age',0.)
 
     co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
     kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
