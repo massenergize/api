@@ -5,6 +5,7 @@ from _main_.utils.common import get_request_contents, parse_location, parse_bool
 from api.services.community import CommunityService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
+from _main_.utils.context import Context
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -71,8 +72,9 @@ class CommunityHandler(RouteHandler):
 
   def list(self) -> function:
     def list_community_view(request) -> None: 
-      args = get_request_contents(request)
-      community_info, err = self.service.list_communities(args)
+      context: Context  = request.context
+      args = context.args
+      community_info, err = self.service.list_communities(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)

@@ -22,8 +22,8 @@ class CommunityService:
     #send an email to the community admin
     return serialize(community, full=True), None
 
-  def list_communities(self, args) -> (list, MassEnergizeAPIError):
-    communities, err = self.store.list_communities(args)
+  def list_communities(self, context, args) -> (list, MassEnergizeAPIError):
+    communities, err = self.store.list_communities(context, args)
     if err:
       return None, err
     return serialize_all(communities), None

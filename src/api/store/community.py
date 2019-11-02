@@ -1,6 +1,7 @@
 from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
 
 class CommunityStore:
   def __init__(self):
@@ -16,11 +17,13 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_communities(self, args) -> (list, MassEnergizeAPIError):
+  def list_communities(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      args['is_deleted'] = False
-      args['is_approved'] = True
-      communities = Community.objects.filter(**args)
+      if context.is_dev:
+        communities = Community.objects.filter(is_deleted=False)
+      else:
+        communities = Community.objects.filter(is_deleted=False, is_approved=True, is_published=True)
+
       if not communities:
         return [], None
       return communities, None

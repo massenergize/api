@@ -26,8 +26,8 @@ class Context:
     self.user_is_logged_in = True
     self.user_email = decoded_token.get('email', None)
     self.user_id = decoded_token.get('user_id', None)
-    self.is_super_admin = decoded_token.get('is_super_admin', None)
-    self.is_community_admin = decoded_token.get('is_community_admin', None)
+    self.user_is_super_admin = decoded_token.get('is_super_admin', None)
+    self.user_is_community_admin = decoded_token.get('is_community_admin', None)
 
 
   def set_request_body(self, request):

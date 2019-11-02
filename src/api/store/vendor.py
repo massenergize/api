@@ -115,6 +115,9 @@ class VendorStore:
   def copy_vendor(self, vendor_id) -> (Vendor, MassEnergizeAPIError):
     try:
       vendor: Vendor = Vendor.objects.get(id=vendor_id)
+      if not vendor:
+        return CustomMassenergizeError(f"No vendor with id {vendor_id}")
+        
       vendor.pk = None
       vendor.name = f"{vendor.name}-Copy-{random.randint(1,100000)}"
       vendor.save()
