@@ -34,7 +34,7 @@ def csrf(request):
 
 def who_am_i(request):
   try:
-    user_id = request.user_id
+    user_id = request.context.user_id
     if not user_id:
         return CustomMassenergizeError(f"No user exists with ID: {user_id}")
     user = UserProfile.objects.get(pk=user_id)
