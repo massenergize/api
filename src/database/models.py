@@ -251,6 +251,7 @@ class Community(models.Model):
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
   owner_email = models.EmailField(blank=False)
+  owner_phone_number = models.CharField(blank=False, null=True, max_length=SHORT_STR_LEN)
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
@@ -272,18 +273,20 @@ class Community(models.Model):
     return self.name
 
   def simple_json(self):
-    res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 
+    res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
       'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
     res['logo'] = get_json_if_not_none(self.logo)
     return res
 
   def full_json(self):
+    admins = [a.simple_json() for a in CommunityAdminGroup.objects.filter(community__id=self.pk)]
     return {
       "id": self.id,
       "name": self.name,
       "subdomain": self.subdomain,
       "owner_name": self.owner_name,
       "owner_email": self.owner_email,
+      "owner_phone_number": self.owner_phone_number,
       "goal": get_json_if_not_none(self.goal),
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
@@ -294,7 +297,8 @@ class Community(models.Model):
       "banner":get_json_if_not_none(self.banner),
       "created_at": self.created_at,
       "updated_at": self.updated_at,
-      "more_info": self.more_info
+      "more_info": self.more_info,
+      "admins": admins
     }
 
 
@@ -454,8 +458,10 @@ class UserProfile(models.Model):
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
     data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['admin_at'] = data['communities'] 
     data['teams'] = [t.simple_json() for t in self.team_members.all()]
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    admin = []
     return data
 
   class Meta:
@@ -517,13 +523,14 @@ class Team(models.Model):
     return self.name
 
   def simple_json(self):
-    return model_to_dict(self, ['id', 'name', 'description'])
+    res =  model_to_dict(self, ['id', 'name', 'description'])
+    res['community'] = get_json_if_not_none(self.community)
+    return res
 
   def full_json(self):
     data = self.simple_json()
     data['admins'] = [a.simple_json() for a in self.admins.all()]
     data['members'] = [m.simple_json() for m in self.members.all()]
-    data['community'] =self.community.simple_json()
     data['goal'] = get_json_if_not_none(self.goal)
     data['logo'] = get_json_if_not_none(self.logo)
     data['banner'] = get_json_if_not_none(self.banner)
@@ -1184,6 +1191,7 @@ class CommunityAdminGroup(models.Model):
   community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
   members = models.ManyToManyField(UserProfile, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
+  pending_admins = JSONField(blank=True, null=True)
 
   def __str__(self):
     return self.name

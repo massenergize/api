@@ -1,6 +1,7 @@
-from database.models import Team, UserProfile
+from database.models import Team, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from django.utils.text import slugify
 
 class TeamStore:
   def __init__(self):
@@ -43,7 +44,19 @@ class TeamStore:
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
     try:
+      community_id = args.pop('community_id', None)
+      image = args.pop('image', None)
       new_team = Team.objects.create(**args)
+
+      if image:
+       new_team.logo = image
+
+      if community_id:
+        community = Community.objects.get(pk=community_id).first()
+        if community:
+          new_team.community = community
+
+      
       new_team.save()
       new_team.members.add(user_id)
       new_team.admins.add(user_id)
@@ -53,11 +66,30 @@ class TeamStore:
 
 
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
-      return None, InvalidResourceError()
-    team.update(**args)
-    return team, None
+    try:
+      community_id = args.pop('community_id', None)
+      logo = args.pop('logo', None)
+      team = Team.objects.filter(id=team_id)
+      team.update(**args)
+
+      team = team.first()
+      if team:
+        if community_id:
+          community = Community.objects.filter(pk=community_id).first()
+          if community:
+            team.community = community
+        
+        if logo:
+          logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
+          logo.save()
+          team.logo = logo
+
+        team.save()
+
+      return team, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+    
 
 
   def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):

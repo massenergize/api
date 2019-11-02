@@ -40,6 +40,7 @@ class TeamHandler(RouteHandler):
     def team_info_view(request) -> None: 
       args = request.context.args
       team_id = args.pop('team_id', None)
+      print(args)
       team_info, err = self.team.get_team_info(team_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -74,7 +75,10 @@ class TeamHandler(RouteHandler):
   def update(self) -> function:
     def update_team_view(request) -> None: 
       args = request.context.args
-      team_info, err = self.team.update_team(args[id], args)
+      team_id = args.pop('id', None)
+      if not team_id:
+        return  MassenergizeResponse(error="Please provide a team ID")
+      team_info, err = self.team.update_team(team_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
