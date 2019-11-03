@@ -100,7 +100,7 @@ class CommunityStore:
         impactPage.is_template = False
         impactPage.save()
 
-      comm_admin = CommunityAdminGroup.objects.create(name=f"{new_community.name}-Admin-Group")
+      comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=f"{new_community.name}-Admin-Group", community=new_community)
       comm_admin.save()
       
       return new_community, None

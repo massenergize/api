@@ -254,7 +254,7 @@ class Community(models.Model):
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
   owner_email = models.EmailField(blank=False)
-  owner_phone_number = models.CharField(blank=False, null=True, max_length=SHORT_STR_LEN)
+  owner_phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
