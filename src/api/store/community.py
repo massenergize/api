@@ -1,4 +1,4 @@
-from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal
+from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -100,6 +100,9 @@ class CommunityStore:
         impactPage.is_template = False
         impactPage.save()
 
+      comm_admin = CommunityAdminGroup.objects.create(name=f"{new_community.name}-Admin-Group")
+      comm_admin.save()
+      
       return new_community, None
     except Exception as e:
       return None, CustomMassenergizeError(e)

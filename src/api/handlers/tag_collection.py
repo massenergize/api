@@ -78,8 +78,9 @@ class TagCollectionHandler(RouteHandler):
   def delete(self) -> function:
     def delete_tag_collection_view(request) -> None: 
       args = request.context.args
-      tag_collection_id = args[id]
-      tag_collection_info, err = self.service.delete_tag_collection(args[id])
+      print(args)
+      tag_collection_id = args.pop('tag_collection_id', None)
+      tag_collection_info, err = self.service.delete_tag_collection(tag_collection_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=tag_collection_info)

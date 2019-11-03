@@ -37,11 +37,11 @@ class TagCollectionService:
       return None, err
     return serialize(tag_collection), None
 
-  def delete_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
-    tag_collection, err = self.store.delete_tag_collection(args)
+  def delete_tag_collection(self, tag_collection_id) -> (dict, MassEnergizeAPIError):
+    tag_collection, err = self.store.delete_tag_collection(tag_collection_id)
     if err:
       return None, err
-    return serialize_all(tag_collection), None
+    return serialize(tag_collection), None
 
 
   def list_tag_collections_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):

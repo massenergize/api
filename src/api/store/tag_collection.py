@@ -79,9 +79,14 @@ class TagCollectionStore:
 
 
   def delete_tag_collection(self, tag_collection_id) -> (dict, MassEnergizeAPIError):
-    tag_collections = TagCollection.objects.filter(id=tag_collection_id)
-    if not tag_collections:
-      return None, InvalidResourceError()
+    try:
+      tag_collections = TagCollection.objects.filter(id=tag_collection_id)
+      print(tag_collection_id, tag_collections)
+      if not tag_collections:
+        return None, InvalidResourceError()
+      tag_collections.delete()
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def list_tag_collections_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
