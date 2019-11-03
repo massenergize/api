@@ -1248,6 +1248,554 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Get info on ground_source_hp",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/ground_source_hp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"ground_source_hp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate ground_source_hp, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/ground_source_hp?install_gshp=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"ground_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_gshp",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate ground_source_hp, Yes, Fuel Oil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/ground_source_hp?install_gshp=Yes&heating_fuel=Fuel Oil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"ground_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_gshp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on community_solar",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/community_solar",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"community_solar"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate community_solar, Yes, Eversource",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/community_solar?community_solar=Yes&heating_fuel=Fuel Oil&electric_utility=Eversource",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"community_solar"
+					],
+					"query": [
+						{
+							"key": "community_solar",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "Eversource"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate community_solar, Yes, CMLP",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/community_solar?community_solar=Yes&monthly_elec_bill=250&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"community_solar"
+					],
+					"query": [
+						{
+							"key": "community_solar",
+							"value": "Yes"
+						},
+						{
+							"key": "monthly_elec_bill",
+							"value": "250"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate community_solar, Yes, NationalGrid",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/community_solar?community_solar=Yes&monthly_elec_bill=250&electric_utility=NationalGrid",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"community_solar"
+					],
+					"query": [
+						{
+							"key": "community_solar",
+							"value": "Yes"
+						},
+						{
+							"key": "monthly_elec_bill",
+							"value": "250"
+						},
+						{
+							"key": "electric_utility",
+							"value": "NationalGrid"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on renewable_elec",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/renewable_elec",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"renewable_elec"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate renewable_elec, Yes, Eversource",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/renewable_elec?choose_renewable=Yes&heating_fuel=Fuel Oil&electric_utility=Eversource",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"renewable_elec"
+					],
+					"query": [
+						{
+							"key": "choose_renewable",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "Eversource"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate renewable_elec, Yes, CMLP",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/renewable_elec?choose_renewable=Yes&heating_fuel=Fuel Oil&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"renewable_elec"
+					],
+					"query": [
+						{
+							"key": "choose_renewable",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate renewable_elec, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/renewable_elec?choose_renewable=No&heating_fuel=Fuel Oil&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"renewable_elec"
+					],
+					"query": [
+						{
+							"key": "choose_renewable",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on led_lighting",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/led_lighting",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"led_lighting"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, None",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=None&heating_fuel=Fuel Oil&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "None"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, Some",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Some&number_nonefficient_bulbs=50&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Some"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "50"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, Half",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Half&number_nonefficient_bulbs=50&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Half"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "50"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, Most 0",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Most&number_nonefficient_bulbs=0&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Most"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "0"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, Most 100",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Most&number_nonefficient_bulbs=100&electric_utility=Eversource",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Most"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "100"
+						},
+						{
+							"key": "electric_utility",
+							"value": "Eversource"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, All 77",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Most&number_nonefficient_bulbs=100&electric_utility=Eversource",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Most"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "100"
+						},
+						{
+							"key": "electric_utility",
+							"value": "Eversource"
+						}
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"protocolProfileBehavior": {}

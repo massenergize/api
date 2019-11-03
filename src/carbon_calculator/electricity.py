@@ -25,7 +25,7 @@ def EvalCommunitySolar(inputs):
     explanation = "Didn't choose to sign up for community solar"
     join_community_solar = inputs.get("community_solar",NO)
 
-    monthly_elec_bill = inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150.))
+    monthly_elec_bill = int(inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150)))
 
     co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
     kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
@@ -62,7 +62,7 @@ def EvalRenewableElectricity(inputs):
     
     default_bill = getDefault(locality,"elec_typical_monthly_bill",150.)
     monthly_bill = inputs.get(MONTHLY_ELEC, default_bill)
-    monthly_elec_bill = eval(monthly_bill)
+    monthly_elec_bill = int(monthly_bill)
 
     kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
     fixed_charge = getDefault(locality,"elec_monthly_fixed_charge",7.00)    # Eversource current charge
@@ -107,11 +107,15 @@ def EvalLEDLighting(inputs):
     saved_kwh = (1. - relative_LED_consumption) * replace_fraction * num_old_bulbs * average_kwh
     co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
     kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
-    if num_old_bulbs > 0 and replace_fraction>0.:
-        explanation = "Replacing %d bulbs with LEDS would save %.0f kwh" % (replace_fraction * num_old_bulbs, saved_kwh)
-        points = saved_kwh * co2_per_kwh
-        savings = saved_kwh * kwh_price
-        cost = bulb_price * replace_fraction * num_old_bulbs
+    if replace_fraction>0.:
+        if num_old_bulbs > 0:
+            explanation = "Replacing %d bulbs with LEDS would save around %.0f kwh" % (replace_fraction * num_old_bulbs, saved_kwh)
+            points = saved_kwh * co2_per_kwh
+            savings = saved_kwh * kwh_price
+            cost = bulb_price * replace_fraction * num_old_bulbs
+        else:
+            explanation = "There aren't any old bubs to replace with LEDs"
+
     return points, cost, savings, explanation
 
 APPLIANCE_AGES = {"0-10 years":"age0-10", "10-15 years":"age10-15","15-20 years":"age15-20",">20 years":"age20+"}
