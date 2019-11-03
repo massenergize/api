@@ -458,10 +458,11 @@ class UserProfile(models.Model):
   def full_json(self):
     data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles'])
+    admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
     data['communities'] = [c.simple_json() for c in self.communities.all()]
-    data['admin_at'] = data['communities'] 
+    data['admin_at'] = admin_at
     data['teams'] = [t.simple_json() for t in self.team_members.all()]
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
     admin = []
