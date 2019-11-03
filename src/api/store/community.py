@@ -1,6 +1,7 @@
-from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal
+from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
 
 class CommunityStore:
   def __init__(self):
@@ -16,11 +17,13 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_communities(self, args) -> (list, MassEnergizeAPIError):
+  def list_communities(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      args['is_deleted'] = False
-      args['is_approved'] = True
-      communities = Community.objects.filter(**args)
+      if context.is_dev:
+        communities = Community.objects.filter(is_deleted=False, is_approved=True)
+      else:
+        communities = Community.objects.filter(is_deleted=False, is_approved=True, is_published=True)
+
       if not communities:
         return [], None
       return communities, None
@@ -97,6 +100,9 @@ class CommunityStore:
         impactPage.is_template = False
         impactPage.save()
 
+      comm_admin = CommunityAdminGroup.objects.create(name=f"{new_community.name}-Admin-Group")
+      comm_admin.save()
+      
       return new_community, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -104,7 +110,6 @@ class CommunityStore:
 
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
       logo = args.pop('logo', None)
       community = Community.objects.filter(id=community_id)
       if not community:
@@ -123,7 +128,6 @@ class CommunityStore:
 
       return new_community, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
