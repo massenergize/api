@@ -91,7 +91,7 @@ water_heater_age,Water Heating,How old is your water heater?,Choice,0-10 years,,
 replace_water_heater,Water Heating,Will you choose to replace your current water heater w/ heat pump?,Choice,Yes,,No,,,,,,,,,,hp_water_heater
 hot_water_assessment,Water Heating,Will you choose to sign up for a free hot water assessment?,Choice,Yes,,No,,,,,,,,,,hw_assessment
 ,Water Heating,,,,,,,,,,,,,,,
-reduce_lawn_size,Yard/Landscaping,Will you choose to reduce the size of your lawn?,Choice,Small Change ~100 sq ft reduction,,Medium Change ~ 500 sq ft reduction,,"Large Change ~ 1,000 sq ft reduction",,No,,,,,,reduce_lawn_size
+reduce_lawn_size,Yard/Landscaping,Will you choose to reduce the size of your lawn?,Choice,Small Change (~ 10% reduction),,Medium Change (~20% reduction),,"Large Change ~ 1,000 sq ft reduction",,Eliminate Lawn,,No,,,,reduce_lawn_size
 mower_type,Yard/Landscaping,Do you use a gas mower?,Choice,Yes,,No,mower_switch,,,,,,,,,"reduce_lawn_size,reduce_lawn_care,electric_mower"
 mower_switch,Yard/Landscaping,Will you choose to switch away from a gas mower?,Choice,No,,Yes,,,,,,,,,,electric_mower
 mowing_frequency,Yard/Landscaping,Will you choose to mow your lawn less in the summer?,Choice,No,,Two  Less,,Five Less ,,Ten Less,,,,,,"reduce_lawn_size,reduce_lawn_care"

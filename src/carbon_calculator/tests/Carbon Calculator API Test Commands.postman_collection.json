@@ -1769,7 +1769,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Most&number_nonefficient_bulbs=100&electric_utility=Eversource",
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=All&number_nonefficient_bulbs=77&electric_utility=Eversource",
 					"host": [
 						"localhost"
 					],
@@ -1782,16 +1782,457 @@
 					"query": [
 						{
 							"key": "fraction_led_replacement",
-							"value": "Most"
+							"value": "All"
 						},
 						{
 							"key": "number_nonefficient_bulbs",
-							"value": "100"
+							"value": "77"
 						},
 						{
 							"key": "electric_utility",
 							"value": "Eversource"
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on energystar_fridge",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/energystar_fridge",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"energystar_fridge"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on energystar_washer",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/energystar_washer",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"energystar_washer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on induction_stove",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/induction_stove",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"induction_stove"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on hp_dryer",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/hp_dryer",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"hp_dryer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on coldwater_wash",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/coldwater_wash",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"coldwater_wash"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on line_dry",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/line_dry",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"line_dry"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on fridge_pickup",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/fridge_pickup",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"fridge_pickup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on smart_power_strip",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/smart_power_strip",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"smart_power_strip"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on electricity_monitor",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/electricity_monitor",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"electricity_monitor"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on replace_car",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/replace_car",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"replace_car"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_car_miles",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_car_miles",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_car_miles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on eliminate_car",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/eliminate_car",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"eliminate_car"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_flights",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_flights",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_flights"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on offset_flights",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/offset_flights",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"offset_flights"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on low_carbon_diet",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/low_carbon_diet",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"low_carbon_diet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_waste",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_waste",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_waste"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on compost",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/compost",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"compost"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_lawn_size",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_lawn_size",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_lawn_size"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_lawn_care",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_lawn_care",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_lawn_care"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on electric_mower",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/electric_mower",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"electric_mower"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on rake_elec_blower",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/rake_elec_blower",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"rake_elec_blower"
 					]
 				}
 			},

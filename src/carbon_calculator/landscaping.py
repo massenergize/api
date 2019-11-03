@@ -19,14 +19,14 @@ def EvalReduceLawnSize(inputs):
     if reduce_lawn_size != NO:
         default_lawn_size = getDefault(locality,'lawn_default_size', 4000)
         lawn_size = LAWN_SIZES.get(inputs.get('lawn_size', ''), default_lawn_size)
-
+        
         reduction = 0
         if (reduce_lawn_size.find('Small Change')==0):  # 100 sq ft
-            reduction = 100
+            reduction = 0.1 * lawn_size
         elif (reduce_lawn_size.find('Medium Change')==0): # 500 sq ft
-            reduction = min(500, lawn_size)
+            reduction = 0.2 * lawn_size
         elif (reduce_lawn_size.find('Large Change')==0): # 1000 sq ft
-            reduction = min(1000, lawn_size)
+            reduction = 0.5 * lawn_size
         elif (reduce_lawn_size.find('Eliminate Lawn')==0):
             reduction = lawn_size
 
@@ -74,7 +74,7 @@ def EvalReduceLawnCare(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    REDUCTIONS = {"No":0., "1 less":1, "2 Less":2., "Two Less":2., "3 Less":3., "Five Less":5., "Ten Less":10.}
+    REDUCTIONS = {"No":0., "1 less":1, "2 less":2., "Two Less":2., "3 less":3., "Five Less":5., "Ten Less":10.}
     reduce_mowing = inputs.get('mowing_frequency', NO)
     reduce_fertilizer = inputs.get('fertilizer_applications', NO)
 
@@ -138,13 +138,14 @@ def EvalElectricMower(inputs):
 
         # mowing
         co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
-        gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf', 0.5) * lawn_size / 5000
+        gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf', 0.5)
         co2_per_gas_mow = gal_per_mow * co2_per_gal_gas
       
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
         kwh_per_mow = getDefault(locality,'lawn_mow_kwh_5000sf', 2.)        # guesstimate
         co2_per_elec_mow = kwh_per_mow * co2_per_kwh
 
+        print(total_mows, lawn_size/STANDARD_LAWNSIZE)
         points = total_mows * (lawn_size/STANDARD_LAWNSIZE) * (co2_per_gas_mow - co2_per_elec_mow)
         cost = getDefault(locality,'lawn_cost_elec_mower', 400.)
         explanation = "Switching your gas mower with electric is cleaner and less noisy, besides reducing emissions"
@@ -158,19 +159,21 @@ def EvalRakeOrElecBlower(inputs):
     locality = getLocality(inputs)
 
     gas_blower = inputs.get('leaf_cleanup_gas_blower',YES)
-    if gas_blower == YES and inputs.get('leaf_cleanup_blower_switch', NO) ==YES:
+    if inputs.get('leaf_cleanup_blower_switch', NO) == YES:
+        if gas_blower == YES:
 
-        default_lawn_size = getDefault(locality,'lawn_default_size', 4000)
-        lawn_size = LAWN_SIZES.get(inputs.get('lawn_size', ''), default_lawn_size)
+            default_lawn_size = getDefault(locality,'lawn_default_size', 4000)
+            lawn_size = LAWN_SIZES.get(inputs.get('lawn_size', ''), default_lawn_size)
 
-        # blowing 
-        blower_hours = getDefault(locality, 'lawn_blower_typical_hours', 10.)     # guesstimate
-        co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
-        gal_per_blow = getDefault(locality, 'lawn_blower_gal_per_hour', 0.5)    # Echo 58.2cc spec
-        co2_per_blower_hour = gal_per_blow * co2_per_gal_gas
+            # blowing 
+            blower_hours = getDefault(locality, 'lawn_blower_typical_hours', 10.)     # guesstimate
+            co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
+            gal_per_blow = getDefault(locality, 'lawn_blower_gal_per_hour', 0.5)    # Echo 58.2cc spec
+            co2_per_blower_hour = gal_per_blow * co2_per_gal_gas
 
-        points = blower_hours * (lawn_size/STANDARD_LAWNSIZE) * co2_per_blower_hour
-        explanation = "Switching your gas blower with electric or using a rake is cleaner and much less noisy, besides reducing emissions"
-
+            points = blower_hours * (lawn_size/STANDARD_LAWNSIZE) * co2_per_blower_hour
+            explanation = "Switching your gas blower with electric or using a rake is cleaner and much less noisy, besides reducing emissions"
+        else:
+            explanation = "You already don't use a gasoline powered blower."
 
     return points, cost, savings, explanation
