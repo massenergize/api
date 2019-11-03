@@ -109,7 +109,9 @@ class GoalStore:
     try:
       #find the goal
       goals_to_delete = Goal.objects.filter(id=goal_id)
-      goals_to_delete.update(is_deleted=True, community=None)
+      print(goal_id, goals_to_delete)
+      # goals_to_delete.delete()
+      goals_to_delete.update(is_deleted=True)
       if not goals_to_delete:
         return None, InvalidResourceError()
       return goals_to_delete.first(), None
@@ -137,7 +139,9 @@ class GoalStore:
 
   def list_goals_for_super_admin(self):
     try:
-      return Goal.objects.filter(is_deleted=False), None
+      goals = Goal.objects.filter(is_deleted=False)
+      print(len(goals))
+      return goals, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 

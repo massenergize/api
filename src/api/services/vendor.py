@@ -11,34 +11,41 @@ class VendorService:
   def __init__(self):
     self.store =  VendorStore()
 
-  def get_vendor_info(self, vendor_id) -> (dict, MassEnergizeAPIError):
-    vendor, err = self.store.get_vendor_info(vendor_id)
+  def get_vendor_info(self, context, vendor_id) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.get_vendor_info(context, vendor_id)
+    if err:
+      return None, err
+    return serialize(vendor, full=True), None
+
+  def list_vendors(self, context, community_id) -> (list, MassEnergizeAPIError):
+    vendors, err = self.store.list_vendors(context, community_id)
+    if err:
+      return None, err
+    return serialize_all(vendors), None
+
+
+  def create_vendor(self, ctx, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.create_vendor(ctx, args)
     if err:
       return None, err
     return serialize(vendor), None
 
-  def list_vendors(self, vendor_id) -> (list, MassEnergizeAPIError):
-    vendor, err = self.store.list_vendors(vendor_id)
+
+  def update_vendor(self, vendor_id, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.update_vendor(vendor_id ,args)
     if err:
       return None, err
     return serialize(vendor), None
 
 
-  def create_vendor(self, args) -> (dict, MassEnergizeAPIError):
-    vendor, err = self.store.create_vendor(args)
+  def copy_vendor(self, vendor_id) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.copy_vendor(vendor_id)
     if err:
       return None, err
     return serialize(vendor), None
 
-
-  def update_vendor(self, args) -> (dict, MassEnergizeAPIError):
-    vendor, err = self.store.update_vendor(args)
-    if err:
-      return None, err
-    return serialize(vendor), None
-
-  def delete_vendor(self, args) -> (dict, MassEnergizeAPIError):
-    vendor, err = self.store.delete_vendor(args)
+  def delete_vendor(self, vendor_id) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.delete_vendor(vendor_id)
     if err:
       return None, err
     return serialize(vendor), None

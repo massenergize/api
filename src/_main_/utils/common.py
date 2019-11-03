@@ -22,9 +22,6 @@ def get_request_contents(request):
     else:
       args = request.POST.dict()
     
-    is_dev = args.pop('is_dev', None)
-    if not is_dev and 'list' in request.path:
-      args['is_published'] = True
     return args
 
   except Exception as e:
@@ -46,6 +43,13 @@ def parse_bool(b):
   if not b:
     return False
   return ((isinstance(b, bool) and b) or (b == 'true') or (b == '1') or (b == 1) or (b == 'True'))
+
+def parse_string(s):
+  try:
+    return str(s)
+  except Exception as e:
+    print(e)
+    return None
 
 def parse_int(b):
   try:
@@ -105,3 +109,13 @@ def parse_location(args):
   }
   args['location'] = location
   return args
+
+
+def _common_name(s):
+  return (' '.join(s.split('_'))).title()
+
+def validate_fields(args, checklist):
+  for field in checklist:
+    if field not in args:
+      return False, CustomMassenergizeError(f"You are missing: {_common_name(field)}")
+  return True, None

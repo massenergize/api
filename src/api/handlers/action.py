@@ -33,7 +33,7 @@ class ActionHandler(RouteHandler):
 
   def info(self) -> function:
     def action_info_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       action_id = args.pop('action_id', None)
       action_info, err = self.service.get_action_info(action_id)
       if err:
@@ -44,7 +44,7 @@ class ActionHandler(RouteHandler):
 
   def create(self) -> function:
     def create_action_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       success, err = check_length(args, 'title', min_length=5, max_length=25)
       if not success:
         return MassenergizeResponse(error=str(err))
@@ -62,7 +62,7 @@ class ActionHandler(RouteHandler):
 
   def list(self) -> function:
     def list_action_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       community_id = args.pop('community_id', None)
       subdomain = args.pop('subdomain', None)
       action_info, err = self.service.list_actions(community_id, subdomain)
@@ -74,7 +74,7 @@ class ActionHandler(RouteHandler):
 
   def update(self) -> function:
     def update_action_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       success, err = check_length(args, 'title', min_length=5, max_length=25)
       if not success:
         return MassenergizeResponse(error=str(err))
@@ -93,7 +93,7 @@ class ActionHandler(RouteHandler):
 
   def copy(self) -> function:
     def copy_action_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       action_id = args.pop('action_id', None)
       action_info, err = self.service.copy_action(action_id)
       if err:
@@ -104,7 +104,7 @@ class ActionHandler(RouteHandler):
     
   def delete(self) -> function:
     def delete_action_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       action_id = args.pop('action_id', None)
       action_info, err = self.service.delete_action(action_id)
       if err:
@@ -115,8 +115,8 @@ class ActionHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
-      community_id = args.get("community__id")
+      args = request.context.args
+      community_id = args.pop("community_id", None)
       actions, err = self.service.list_actions_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -126,7 +126,7 @@ class ActionHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       actions, err = self.service.list_actions_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

@@ -199,10 +199,13 @@ class Goal(models.Model):
     return CHOICES["GOAL_STATUS"][self.status]
 
   def __str__(self):
-    return self.name
+    return f"{self.name} {' - Deleted' if self.is_deleted else ''}"
 
   def simple_json(self):
-    return model_to_dict(self, exclude=['is_deleted'])
+    res = model_to_dict(self, exclude=['is_deleted'])
+    res['community'] = get_json_if_not_none(Community.objects.filter(goal__id=self.id).first())
+    res['team'] = get_json_if_not_none(Team.objects.filter(goal__id=self.id).first())
+    return res
 
   def full_json(self):
     return self.simple_json()
@@ -250,7 +253,8 @@ class Community(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
-  owner_email = models.EmailField(max_length=SHORT_STR_LEN)
+  owner_email = models.EmailField(blank=False)
+  owner_phone_number = models.CharField(blank=False, null=True, max_length=SHORT_STR_LEN)
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
@@ -272,18 +276,20 @@ class Community(models.Model):
     return self.name
 
   def simple_json(self):
-    res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 
+    res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
       'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
     res['logo'] = get_json_if_not_none(self.logo)
     return res
 
   def full_json(self):
+    admins = [a.simple_json() for a in CommunityAdminGroup.objects.filter(community__id=self.pk)]
     return {
       "id": self.id,
       "name": self.name,
       "subdomain": self.subdomain,
       "owner_name": self.owner_name,
       "owner_email": self.owner_email,
+      "owner_phone_number": self.owner_phone_number,
       "goal": get_json_if_not_none(self.goal),
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
@@ -294,7 +300,8 @@ class Community(models.Model):
       "banner":get_json_if_not_none(self.banner),
       "created_at": self.created_at,
       "updated_at": self.updated_at,
-      "more_info": self.more_info
+      "more_info": self.more_info,
+      "admins": admins
     }
 
 
@@ -422,8 +429,7 @@ class UserProfile(models.Model):
   profile_picture = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     blank=True, null=True)
   preferred_name=models.CharField(max_length=SHORT_STR_LEN, null=True)
-  email = models.EmailField(max_length=SHORT_STR_LEN, 
-    unique=True, db_index=True)
+  email = models.EmailField(unique=True, db_index=True)
   user_info = JSONField(blank=True, null=True)
   real_estate_units = models.ManyToManyField(RealEstateUnit, 
     related_name='user_real_estate_units', blank=True)
@@ -455,8 +461,10 @@ class UserProfile(models.Model):
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
     data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['admin_at'] = data['communities'] 
     data['teams'] = [t.simple_json() for t in self.team_members.all()]
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    admin = []
     return data
 
   class Meta:
@@ -518,15 +526,16 @@ class Team(models.Model):
     return self.name
 
   def simple_json(self):
-    return model_to_dict(self, ['id', 'name', 'description'])
+    res =  model_to_dict(self, ['id', 'name', 'description'])
+    res['community'] = get_json_if_not_none(self.community)
+    res['logo'] = get_json_if_not_none(self.logo)
+    return res
 
   def full_json(self):
     data = self.simple_json()
     data['admins'] = [a.simple_json() for a in self.admins.all()]
     data['members'] = [m.simple_json() for m in self.members.all()]
-    data['community'] =self.community.simple_json()
     data['goal'] = get_json_if_not_none(self.goal)
-    data['logo'] = get_json_if_not_none(self.logo)
     data['banner'] = get_json_if_not_none(self.banner)
     return data
 
@@ -633,8 +642,7 @@ class Vendor(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
   phone_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  email = models.EmailField(max_length=SHORT_STR_LEN,blank=True)
-
+  email = models.EmailField(blank=True, null=True, db_index=True)
   description = models.CharField(max_length=LONG_STR_LEN, blank = True)
   logo = models.ForeignKey(Media, blank=True, null=True, 
     on_delete=models.SET_NULL, related_name='vender_logo')
@@ -642,10 +650,10 @@ class Vendor(models.Model):
     on_delete=models.SET_NULL, related_name='vendor_banner')
   address = JSONField(blank=True, null=True)
   key_contact = JSONField(blank=True, null=True)
-  service_area = models.CharField(max_length=TINY_STR_LEN)
-  service_area_states = models.CharField(max_length=TINY_STR_LEN, blank=True, null=True)
+  service_area = models.CharField(max_length=SHORT_STR_LEN)
+  service_area_states = JSONField(blank=True, null=True)
   services = models.ManyToManyField(Service, blank=True)
-  properties_serviced = models.CharField(max_length=TINY_STR_LEN)
+  properties_serviced = JSONField(blank=True, null=True) 
   onboarding_date = models.DateTimeField(default=datetime.now)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
@@ -663,9 +671,11 @@ class Vendor(models.Model):
     return self.name
 
   def simple_json(self):
-    data = model_to_dict(self, ['id', 'name','email', 'phone_number' 'description','service_area', 'properties_serviced', 'more_info', 'address'])
-    data['key_contact'] = get_json_if_not_none(self.key_contact)
+    data = model_to_dict(self, exclude=[
+     'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services','communities'
+    ])
     data['services'] = [s.simple_json() for s in self.services.all()]
+    data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['logo'] = get_json_if_not_none(self.logo)
     return data
 
@@ -764,7 +774,7 @@ class Tag(models.Model):
   name = models.CharField(max_length = SHORT_STR_LEN)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
   tag_collection = models.ForeignKey(TagCollection, null=True, 
-    on_delete=models.SET_NULL, blank=True)
+    on_delete=models.CASCADE, blank=True)
   order = models.PositiveIntegerField(default=0)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
@@ -1184,6 +1194,7 @@ class CommunityAdminGroup(models.Model):
   community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
   members = models.ManyToManyField(UserProfile, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
+  pending_admins = JSONField(blank=True, null=True)
 
   def __str__(self):
     return self.name
