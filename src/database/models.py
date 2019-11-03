@@ -282,7 +282,12 @@ class Community(models.Model):
     return res
 
   def full_json(self):
-    admins = [a.simple_json() for a in CommunityAdminGroup.objects.filter(community__id=self.pk)]
+    admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community__id=self.pk).first()
+    if admin_group:
+      admins = [a.simple_json() for a in admin_group.members.all()]
+    else:
+      admins = []
+
     return {
       "id": self.id,
       "name": self.name,
