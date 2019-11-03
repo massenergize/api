@@ -215,7 +215,7 @@ def EvalReduceFlights(inputs):
     if  percent_reduction > 0.:
 
         default_flights = getDefault(locality,'flights_default_annual_family', 12.)     # a wild guess
-        flights_amount = inputs.get('flight_amount', default_flights)      
+        flights_amount = float(inputs.get('flight_amount', default_flights))      
         reduce_flights = percent_reduction * flights_amount
 
         default_flight_co2 = getDefault(locality,'filghts_default_co2', 1.04*2200)  # online estimate for BOS SFO round trip

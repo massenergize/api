@@ -11,8 +11,8 @@ def EvalLowCarbonDiet(inputs):
 
     if inputs.get('eating_switch_meals', NO) == YES:
         default_size = float(getDefault(locality,'general_household_size_default', 4.))
-        family_size = inputs.get('family_size', default_size)
-        switch_amount = inputs.get('eating_switch_meals_amount', 1.)
+        family_size = float(inputs.get('family_size', default_size))
+        switch_amount = float(inputs.get('eating_switch_meals_amount', 1.))
 
         meat_co2 = getDefault(locality,'food_meat_co2_serving', 4.75)   # Lamb, Beef, Pork averaged
         #poultry_co2 = getDefault(locality,'food_poultry_fish_co2_serving', 1.45) 
@@ -22,9 +22,10 @@ def EvalLowCarbonDiet(inputs):
         #poultry_cost = getDefault(locality,'food_poultry_fish_co2_serving', 1.45) 
         #vegetarian_cost = getDefault(locality,'food_vegetarian_co2_serving', 0.88)   
 
-        co2_savings = (meat_co2 - vegetarian_co2) * family_size * switch_amount * 52
+        co2_savings = (meat_co2 - vegetarian_co2) * family_size 
+        co2_savings = co2_savings * switch_amount * 52
         points = co2_savings
-        explanation = "Switching %d meals per week from meat to vegetarian would save %d lbs CO2 in a year, cost a bit less and is probably healthier in the long run."
+        explanation = "Switching %d meals per week from meat to vegetarian would save %d lbs CO2 in a year, cost a bit less and is probably healthier in the long run." % (int(switch_amount), int(points))
     return points, cost, savings, explanation
 
 def EvalReduceWaste(inputs):
@@ -64,9 +65,11 @@ def EvalReduceWaste(inputs):
             points += co2
             explanation += "Buying used items %s instead of new can save perhaps %.0f lbs CO2 and perhaps $%.f in a year." % (buy_sell_used, co2, savings)
 
+    if explanation == "":
+        explanation = "No actions chosen to reduce waste."
     return points, cost, savings, explanation
 
-COMPOST_POINTS = 100
+COMPOST_POINTS = 200
 def EvalCompost(inputs):
     #compost_food_waste,compost_pickup
     explanation = "Didn't choose to start composting"
@@ -74,8 +77,8 @@ def EvalCompost(inputs):
     locality = getLocality(inputs)
 
     if inputs.get('compost_food_waste', NO) == YES:
-        co2 = getDefault(locality,'compost_co2', 2000.)   # bonus points, until we get a better idea
+        co2 = getDefault(locality,'compost_co2', 200.)   # bonus points, until we get a better idea
         points += co2
-        explanation += "Composting food and yard waste is good for the environment, and save perhaps %.0f lbs emissions in a year." % (co2)
+        explanation = "Composting food and yard waste is good for the environment, and save perhaps %.0f lbs emissions in a year." % (co2)
 
     return points, cost, savings, explanation
