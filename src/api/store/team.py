@@ -43,6 +43,7 @@ class TeamStore:
 
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
+    team = None
     try:
       print(args, user_id)
       community_id = args.pop('community_id', None)
@@ -58,9 +59,12 @@ class TeamStore:
 
       args["community"] = community
       new_team = Team.objects.create(**args)
+      team = new_team
 
       if image:
-       new_team.logo = image
+        logo = Media.objects.create(file=image, name=f"{slugify(new_team.name)}-TeamLogo")
+        logo.save()
+        new_team.logo = logo
 
       new_team.save()
       if user_id:
@@ -70,6 +74,8 @@ class TeamStore:
       return new_team, None
     except Exception as e:
       print(e)
+      if team:
+        team.delete()
       return None, CustomMassenergizeError(str(e))
 
 
