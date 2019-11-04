@@ -87,15 +87,18 @@ class AdminStore:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
 
       if email:
-        user = UserProfile.objects.filter(email=email).first()
+        user: UserProfile = UserProfile.objects.filter(email=email).first()
       elif user_id:
-        user = UserProfile.objects.filter(email=email).first()
+        user: UserProfile = UserProfile.objects.filter(email=email).first()
       else:
-        user = None
+        user: UserProfile = None
 
       
       if user:
         admin_group.members.add(user)
+        if not user.is_super_admin and not user.is_super_admin:
+          user.is_community_admin = True
+          user.save()
       else:
         if not admin_group.pending_admins:
           admin_group.pending_admins = {"data": [{"name": name, "email": email}]}
@@ -135,10 +138,17 @@ class AdminStore:
       else:
         user = None
 
-      print(admin_group.members.all())
+
       if user and user in admin_group.members.all():
         admin_group.members.remove(user)
         admin_group.save()
+
+        admin_at = user.communityadmingroup_set.all()
+        if not (admin_at):
+          # this user has been kicked off all communities they are on
+          user.is_community_admin = False
+          user.save()
+
       else:
         if admin_group.pending_admins:
           data = admin_group.pending_admins.get("data", []) 

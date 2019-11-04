@@ -44,7 +44,9 @@ class CommunityHandler(RouteHandler):
 
   def create(self) -> function:
     def create_community_view(request) -> None: 
-      args = request.context.args
+      context: Context  = request.context
+      args = context.get_request_body()
+
       args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions', None))
       if not args['accepted_terms_and_conditions']:
         return MassenergizeResponse(error="Please accept the terms and conditions")
@@ -63,7 +65,7 @@ class CommunityHandler(RouteHandler):
 
       args = rename_field(args, 'image', 'logo')
       args = parse_location(args)
-      community_info, err = self.service.create_community(args)
+      community_info, err = self.service.create_community(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
@@ -128,9 +130,9 @@ class CommunityHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
-      community_id = args.pop("community_id", None)
-      communities, err = self.service.list_communities_for_community_admin(community_id)
+      context: Context  = request.context
+      args = context.get_request_body()
+      communities, err = self.service.list_communities_for_community_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=communities)
@@ -139,8 +141,9 @@ class CommunityHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
-      communities, err = self.service.list_communities_for_super_admin()
+      context: Context  = request.context
+      args = context.get_request_body()
+      communities, err = self.service.list_communities_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=communities)

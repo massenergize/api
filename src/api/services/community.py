@@ -29,8 +29,8 @@ class CommunityService:
     return serialize_all(communities), None
 
 
-  def create_community(self, args) -> (dict, MassEnergizeAPIError):
-    community, err = self.store.create_community(args)
+  def create_community(self,context, args) -> (dict, MassEnergizeAPIError):
+    community, err = self.store.create_community(context, args)
     if err:
       return None, err
     
@@ -51,15 +51,15 @@ class CommunityService:
     return serialize_all(community), None
 
 
-  def list_communities_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    communities, err = self.store.list_communities_for_community_admin(community_id)
+  def list_communities_for_community_admin(self, context) -> (list, MassEnergizeAPIError):
+    communities, err = self.store.list_communities_for_community_admin(context)
     if err:
       return None, err
     return serialize_all(communities), None
 
 
-  def list_communities_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    communities, err = self.store.list_communities_for_super_admin()
+  def list_communities_for_super_admin(self, context) -> (list, MassEnergizeAPIError):
+    communities, err = self.store.list_communities_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(communities), None
