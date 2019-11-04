@@ -42,9 +42,8 @@ class TestimonialStore:
 
       if user_email:
         user = UserProfile.objects.filter(email=user_email).first()
-        if not user:
-          return None, CustomMassenergizeError("No user with that email")
-        new_testimonial.user = user
+        if user:
+          new_testimonial.user = user
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
