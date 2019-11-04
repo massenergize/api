@@ -21,7 +21,8 @@ def ping(request):
   """
   This is a view to test if the server is up
   """
-  return MassenergizeResponse({'result': 'OK'})
+
+  return MassenergizeResponse({'ping': 'pong'})
 
 
 def csrf(request):
@@ -33,16 +34,13 @@ def csrf(request):
 
 def who_am_i(request):
   try:
-    user_id = request.user_id
-    if user_id:
-      user = UserProfile.objects.get(pk=user_id)
-      if not user:
+    user_id = request.context.user_id
+    if not user_id:
         return CustomMassenergizeError(f"No user exists with ID: {user_id}")
-      
-      return MassenergizeResponse(user.full_json())
-    
+    user = UserProfile.objects.get(pk=user_id)
+    return MassenergizeResponse(user.full_json())
+
   except Exception as e:
-    print(e)
     return CustomMassenergizeError(e)
 
 
@@ -67,11 +65,11 @@ def verify(request):
         "exp": decoded_token.get("exp"),
       }
 
-      massenergize_jwt_token = jwt.encode(payload, SECRET_KEY).decode('utf-8')
+      massenergize_jwt_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
       return MassenergizeResponse(data={"idToken": str(massenergize_jwt_token)})
 
     else:
-      return Json(errors=['Invalid Auth'])
+      return CustomMassenergizeError("Invalid Auth")
 
   except Exception as e:
-    return Json(errors=[str(e)])
+    return CustomMassenergizeError(e)

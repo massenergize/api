@@ -32,7 +32,7 @@ class TestimonialHandler(RouteHandler):
 
   def info(self) -> function:
     def testimonial_info_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       args = rename_field(args, 'testimonial_id', 'id')
       testimonial_info, err = self.service.get_testimonial_info(args)
       if err:
@@ -43,7 +43,7 @@ class TestimonialHandler(RouteHandler):
 
   def create(self) -> function:
     def create_testimonial_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       args = rename_field(args, 'community_id', 'community')
       args = rename_field(args, 'action_id', 'action')
       args = rename_field(args, 'vendor_id', 'vendor')
@@ -58,7 +58,7 @@ class TestimonialHandler(RouteHandler):
 
   def list(self) -> function:
     def list_testimonial_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       args = rename_field(args, 'community_id', 'community__id')
       args = rename_field(args, 'subdomain', 'community__subdomain')
       args = rename_field(args, 'user_id', 'user__id')
@@ -72,8 +72,20 @@ class TestimonialHandler(RouteHandler):
 
   def update(self) -> function:
     def update_testimonial_view(request) -> None: 
-      args = get_request_contents(request)
-      testimonial_info, err = self.service.update_testimonial(args[id], args)
+      args = request.context.args
+      print(args)
+      is_approved = args.pop("is_approved", None)
+      if is_approved:
+        args["is_approved"] = parse_bool(is_approved)
+      is_published = args.get("is_published", None)
+      if is_published:
+        args["is_published"] = parse_bool(is_published)
+      args = rename_field(args, 'community_id', 'community')
+      args = rename_field(args, 'action_id', 'action')
+      args = rename_field(args, 'vendor_id', 'vendor')
+      args['tags'] = parse_list(args.get('tags', []))
+      testimonial_id = args.pop("testimonial_id", None)
+      testimonial_info, err = self.service.update_testimonial(testimonial_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -82,7 +94,7 @@ class TestimonialHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_testimonial_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       testimonial_id = args.pop('testimonial_id', None)
       testimonial_info, err = self.service.delete_testimonial(testimonial_id)
       if err:
@@ -93,8 +105,8 @@ class TestimonialHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
-      community_id = args.get("community__id")
+      args = request.context.args
+      community_id = args.pop("community_id", None)
       testimonials, err = self.service.list_testimonials_for_community_admin(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -104,7 +116,7 @@ class TestimonialHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = get_request_contents(request)
+      args = request.context.args
       testimonials, err = self.service.list_testimonials_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

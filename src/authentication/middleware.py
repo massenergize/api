@@ -2,6 +2,7 @@
 Middle ware for authorization for users before they access specific resources
 """
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
+from _main_.utils.context import Context
 from _main_.settings import SECRET_KEY
 from firebase_admin import auth
 import json, jwt
@@ -47,17 +48,20 @@ class MassenergizeJWTAuthMiddleware:
       if err:
         return err
       
+      # add a context: (this will contain all info about this user's session info)
+      ctx = Context()
+
+      #set request body
+      ctx.set_request_body(request)
+
       if id_token:
-        decoded_token = jwt.decode(id_token, SECRET_KEY)
+        decoded_token = jwt.decode(id_token, SECRET_KEY, algorithm='HS256')
         # at this point the user has an active session
-        request.is_logged_in = True
-        request.email = decoded_token.get('email', None)
-        request.user_id = decoded_token.get('user_id', None)
-        request.is_super_admin = decoded_token.get('is_super_admin', None)
-        request.is_community_admin = decoded_token.get('is_community_admin', None)
-      else:
-        request.is_logged_in = False
+        ctx.set_user_credentials(decoded_token)
+        
       
+      request.context = ctx
+
       #TODO: enforce all requests accessing resources are always logged in first
 
     except Exception as e:

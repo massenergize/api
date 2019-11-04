@@ -31,8 +31,8 @@ class TestimonialService:
     return serialize(testimonial), None
 
 
-  def update_testimonial(self, args) -> (dict, MassEnergizeAPIError):
-    testimonial, err = self.store.update_testimonial(args)
+  def update_testimonial(self, testimonial_id, args) -> (dict, MassEnergizeAPIError):
+    testimonial, err = self.store.update_testimonial(testimonial_id, args)
     if err:
       return None, err
     return serialize(testimonial), None

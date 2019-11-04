@@ -1,6 +1,7 @@
-from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal
+from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
 
 class CommunityStore:
   def __init__(self):
@@ -16,9 +17,13 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_communities(self) -> (list, MassEnergizeAPIError):
+  def list_communities(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      communities = Community.objects.filter(is_deleted=False, is_approved=True)
+      if context.is_dev:
+        communities = Community.objects.filter(is_deleted=False, is_approved=True)
+      else:
+        communities = Community.objects.filter(is_deleted=False, is_approved=True, is_published=True)
+
       if not communities:
         return [], None
       return communities, None
@@ -26,7 +31,7 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_community(self, args) -> (dict, MassEnergizeAPIError):
+  def create_community(self,context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       logo = args.pop('logo', None)
       new_community = Community.objects.create(**args)
@@ -95,6 +100,22 @@ class CommunityStore:
         impactPage.is_template = False
         impactPage.save()
 
+      comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=f"{new_community.name}-Admin-Group", community=new_community)
+      comm_admin.save()
+
+      if context.user_id:
+        user = UserProfile.objects.filter(pk=context.user_id).first()
+        if user:
+          comm_admin.members.add(user)
+          comm_admin.save()
+      
+      owner_email = args.get('owner_email', None)
+      if owner_email:
+        owner = UserProfile.objects.filter(email=owner_email).first()
+        if owner:
+          comm_admin.members.add(owner)
+          comm_admin.save()
+      
       return new_community, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -102,7 +123,6 @@ class CommunityStore:
 
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
       logo = args.pop('logo', None)
       community = Community.objects.filter(id=community_id)
       if not community:
@@ -121,26 +141,49 @@ class CommunityStore:
 
       return new_community, None
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
   def delete_community(self, args) -> (dict, MassEnergizeAPIError):
     try:
       communities = Community.objects.filter(**args)
-      communities.update(is_deleted=True)
+      if len(communities) > 1:
+        print('here')
+        return None, CustomMassenergizeError("You cannot delete more than one community at once")
+      for c in communities:
+        if "template" in c.name.lower():
+          return None, CustomMassenergizeError("You cannot delete a template community")
+      
+      communities.delete()
+      # communities.update(is_deleted=True)
       return communities, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
 
-  def list_communities_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    communities = Community.objects.filter(community__id = community_id)
-    return communities, None
-
-
-  def list_communities_for_super_admin(self):
+  def list_communities_for_community_admin(self, context: Context) -> (list, MassEnergizeAPIError):
     try:
+      # if not context.user_is_community_admin and not context.user_is_community_admin:
+      #   return None, CustomMassenergizeError("You are not a super admin or community admin")
+      if context.user_is_community_admin:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        return [a.community for a in admin_groups], None
+      elif context.user_is_super_admin:
+        return self.list_communities_for_super_admin(context)
+      else:
+        return [], None
+
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+
+  def list_communities_for_super_admin(self, context):
+    try:
+      # if not context.user_is_community_admin and not context.user_is_community_admin:
+      #   return None, CustomMassenergizeError("You are not a super admin or community admin")
+
       communities = Community.objects.filter(is_deleted=False)
       return communities, None
     except Exception as e:

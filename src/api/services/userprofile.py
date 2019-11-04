@@ -15,7 +15,7 @@ class UserService:
     user, err = self.store.get_user_info(user_id)
     if err:
       return None, err
-    return serialize(user), None
+    return serialize(user, full=True), None
 
   def list_users(self, user_id) -> (list, MassEnergizeAPIError):
     user, err = self.store.list_users(user_id)

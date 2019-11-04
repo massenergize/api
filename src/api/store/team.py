@@ -1,6 +1,7 @@
-from database.models import Team, UserProfile
+from database.models import Team, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from django.utils.text import slugify
 
 class TeamStore:
   def __init__(self):
@@ -42,28 +43,81 @@ class TeamStore:
 
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
+    team = None
     try:
+      print(args, user_id)
+      community_id = args.pop('community_id', None)
+      image = args.pop('image', None)
+
+      if community_id:
+        community = Community.objects.filter(pk=community_id).first()
+        if not community:
+          return None, CustomMassenergizeError("Please provide a valid community")
+        
+      else:
+        return None, CustomMassenergizeError("Please provide a community")
+
+      args["community"] = community
       new_team = Team.objects.create(**args)
+      team = new_team
+
+      if image:
+        logo = Media.objects.create(file=image, name=f"{slugify(new_team.name)}-TeamLogo")
+        logo.save()
+        new_team.logo = logo
+
       new_team.save()
-      new_team.members.add(user_id)
-      new_team.admins.add(user_id)
+      if user_id:
+        new_team.members.add(user_id)
+        new_team.admins.add(user_id)
+      new_team.save()
       return new_team, None
     except Exception as e:
+      print(e)
+      if team:
+        team.delete()
       return None, CustomMassenergizeError(str(e))
 
 
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.filter(id=team_id)
-    if not team:
-      return None, InvalidResourceError()
-    team.update(**args)
-    return team, None
+    try:
+      print(args)
+      community_id = args.pop('community_id', None)
+      logo = args.pop('logo', None)
+      team = Team.objects.filter(id=team_id)
+      team.update(**args)
+      team = team.first()
+
+      if team:
+        if community_id:
+          community = Community.objects.filter(pk=community_id).first()
+          if community:
+            team.community = community
+        
+        if logo:
+          logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
+          logo.save()
+          team.logo = logo
+
+        team.save()
+
+      return team, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+    
 
 
   def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
-    teams = Team.objects.filter(id=team_id)
-    if not teams:
-      return None, InvalidResourceError()
+    try:
+      print(team_id)
+      teams = Team.objects.filter(id=team_id)
+      if not teams:
+        return None, InvalidResourceError()
+      teams.delete()
+      return teams.first(), None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def join_team(self, team_id, user_id) -> (Team, MassEnergizeAPIError):

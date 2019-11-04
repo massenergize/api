@@ -1,4 +1,4 @@
-from database.models import Event, UserProfile, EventAttendee, Media
+from database.models import Event, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.db.models import Q
@@ -40,7 +40,15 @@ class EventStore:
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
-      new_event = Event.objects.create(**args)
+      community = args.pop("community_id", None)
+      if community:
+        community = Community.objects.get(pk=community)
+        if not community:
+          return None, CustomMassenergizeError("Please provide a valid community_id")
+
+      new_event: Event = Event.objects.create(**args)
+      if community:
+        new_event.community = community
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
@@ -62,15 +70,23 @@ class EventStore:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       events = Event.objects.filter(id=event_id)
-      events.update(**args)
+
+      community = args.pop("community_id", None)
+      if community:
+        community = Community.objects.get(pk=community)
       
-      event = events.first()
+      event: Event = events.first()
       if not event:
         return None, CustomMassenergizeError(f"No event with id: {event_id}")
+
+      events.update(**args)
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         event.image = media
+      
+      if community:
+        event.community = community
       
       event.save()
 
@@ -83,19 +99,29 @@ class EventStore:
 
 
   def delete_event(self, event_id) -> (dict, MassEnergizeAPIError):
-    events = Event.objects.filter(id=event_id)
-    if not events:
-      return None, InvalidResourceError()
+    try:
+      events = Event.objects.filter(id=event_id)
+      if not events:
+        return None, InvalidResourceError()
+      
+      if len(events) > 1:
+        return None, CustomMassenergizeError("Deleting multiple events not supported")
+
+      events.delete()
+      return events.first(), None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def list_events_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    events = Event.objects.filter(community__id = community_id)
+    events = Event.objects.filter(community__id = community_id, is_deleted=False)
     return events, None
 
 
   def list_events_for_super_admin(self):
     try:
-      events = Event.objects.all()
+      events = Event.objects.filter(is_deleted=False)
       return events, None
     except Exception as e:
       print(e)
