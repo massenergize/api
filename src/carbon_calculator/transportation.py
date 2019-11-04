@@ -14,7 +14,7 @@ def EvalReplaceCar(inputs):
         miles_est = inputs.get('car_annual_miles', default_miles)
         
         default_mpg = getDefault(locality, 'car_default_mpg', 25.)
-        old_mpg = inputs.get('car_mpg', default_mpg)
+        old_mpg = float(inputs.get('car_mpg', default_mpg))
 
         annual_service_gas = getDefault(locality,'car_annual_service_gas', 500.)
         gallons = miles_est/old_mpg
@@ -24,8 +24,13 @@ def EvalReplaceCar(inputs):
         old_cost = gallons * gasoline_price + annual_service_gas
         old_co2 = gallons * co2_per_gal_gas
 
+
+        co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
+        kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
+ 
         new_type = inputs.get('car_new_type', '')
-        new_mpg_specified = inputs.get('car_new_mpg', 0)
+        new_mpg_specified = float(inputs.get('car_new_mpg', 0))
+
         if new_type == 'Electric' or new_mpg_specified > 75.:
             new_mpg = new_mpg_specified
             if new_mpg_specified==0:
@@ -34,8 +39,6 @@ def EvalReplaceCar(inputs):
             annual_service = getDefault(locality,'car_annual_service_electric', 200.)
             #new_mile_cost = kwh_cost / miles_per_kwh + annual_service / miles_est
             kwh_per_mile = getDefault(locality,'car_electric_kwh_per_mile', 0.25)
-            co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
-            kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
 
             new_co2 = miles_est * kwh_per_mile * co2_per_kwh
             new_cost = miles_est * kwh_per_mile * kwh_price + annual_service
@@ -47,7 +50,7 @@ def EvalReplaceCar(inputs):
 
             car_price = getDefault(locality,'car_BEV_price', 30000.)    # current price of Nissan Leaf
             car_price = car_price - total_incentives
-            explanation = "A battery electric vehicle would save %.0f gallons of gas over 10 years and is fun to drive." % 10*gallons
+            explanation = "A battery electric vehicle would save %.0f gallons of gas over 10 years and is fun to drive." % (10*gallons)
 
         elif new_type == 'Plug-in Hybrid' or new_mpg_specified>55:
 
@@ -77,7 +80,7 @@ def EvalReplaceCar(inputs):
 
             car_price = getDefault(locality,'car_PHEV_price', 27750.)   # current price of Prius Prime
             car_price = car_price - total_incentives
-            explanation = "A plug-in hybrid would save %.0f gallons of gas over 10 years and is fun to drive." % 10 * (gallons - gal_gas)
+            explanation = "A plug-in hybrid would save %.0f gallons of gas over 10 years and is fun to drive." % (10 * (gallons - gal_gas))
 
         elif new_type == 'Hybrid' or new_mpg_specified>40.:
 
@@ -92,7 +95,7 @@ def EvalReplaceCar(inputs):
 
             car_price = getDefault(locality,'car_hybrid_price', 26000.)   # current price of Kia Optima
             car_price = car_price
-            explanation = "A standard hybrid would save %.0f gallons of gas over 10 years." % 10 * (gallons - gal_gas)
+            explanation = "A standard hybrid would save %.0f gallons of gas over 10 years." % (10 * (gallons - gal_gas))
 
         elif new_mpg_specified > 0.:
             new_mpg = new_mpg_specified
@@ -107,8 +110,10 @@ def EvalReplaceCar(inputs):
 
             car_price = getDefault(locality,'car_default_price', 22000.)   # current price of some car or other
             car_price = car_price
-            explanation = "The new car would save %.0f gallons of gas over 10 years." % 10 * (gallons - gal_gas)
-   
+            explanation = "The new car would save %.0f gallons of gas over 10 years." % (10 * (gallons - gal_gas))
+        else:
+            explanation = "Didn't specify milage or type of car to replace it with"
+            return points, cost, savings, explanation
 
         points = old_co2 - new_co2
         savings = old_cost - new_cost
@@ -122,7 +127,7 @@ def EvalReduceMilesDriven(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    miles_reduction = inputs.get('reduce_total_milage', 0.)
+    miles_reduction = float(inputs.get('reduce_total_milage', 0.))
     if miles_reduction > 0.:
 
         default_miles = getDefault(locality, 'car_default_miles', 15000.)
@@ -143,16 +148,16 @@ def EvalReduceMilesDriven(inputs):
 
         other_cost = 0.
         if inputs.get('transportation_public', NO) == YES:
-            public_trans_daily_cost = getDefault(locality,'transportation_public_daily_cost', 25.) # MBTA Zone 5 (COncord) daily + subway
+            public_trans_daily_cost = getDefault(locality,'transportation_public_daily_cost', 20.) # MBTA Zone 5 (COncord) daily + subway
             public_trans_monthly_cost = getDefault(locality,'transportation_public_monthly_cost', 301.) # MBTA Zone 5 (COncord) monthly pass
-            public_trans_amount = inputs.get('transportation_public_amount', 5.)                        # once a week
+            public_trans_amount = float(inputs.get('transportation_public_amount', 5.) )                       # once a week
             monthly_trans_cost = min(public_trans_amount * public_trans_daily_cost, public_trans_monthly_cost)
             other_cost += 12 * monthly_trans_cost
 
         points = old_co2 * (1 - new_miles/miles_est)
         savings = old_cost * (1 - new_miles/miles_est) - other_cost
         cost = 0.
-        explanation = "Eliminating your car would save %.1f gallons of gas yearly."
+        explanation = "Reducing your miles drive by %d would save %.1f gallons of gas yearly." % (miles_reduction, gallons*(1-new_miles/miles_est))
 
     return points, cost, savings, explanation
 
@@ -182,7 +187,7 @@ def EvalEliminateCar(inputs):
         other_cost = 0.
         if inputs.get('transportation_public', NO) == YES:
             public_trans_monthly_cost = getDefault(locality,'transportation_public_monthly_cost', 301.) # MBTA Zone 5 (COncord) monthly pass
-            public_trans_amount = inputs.get('transportation_public_amount', 5.)                        # once a week
+            public_trans_amount = float(inputs.get('transportation_public_amount', 5.) )                       # once a week
             public_transit_cost = (public_trans_amount / 20.) * 12 * public_trans_monthly_cost
             other_cost += public_transit_cost
 

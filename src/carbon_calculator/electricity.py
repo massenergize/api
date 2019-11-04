@@ -153,7 +153,7 @@ def EvalEnergystarWasher(inputs):
     replace_washer = inputs.get("replace_washer",NO)          # Yes, No
     washer_age = inputs.get("washer_age", "")                 # >20, 15-20, 10-15, 0-10
     washer_energystar = inputs.get("washer_energystar", NO)   # Yes, No, Not Sure
-    washer_loads = inputs.get("washer_loads", 0.)
+    washer_loads = float(inputs.get("washer_loads", 0.))
     #replace_washer,washer_age,wash_loads
     explanation = "Didn't choose to replace your washer"
     locality = getLocality(inputs)
@@ -450,12 +450,13 @@ def EvalSmartPowerStrip(inputs):
 
 def EvalElectricityMonitor(inputs):
     #install_electricity_monitor
-    explanation = "Didn't choose to ..."
+    explanation = "Didn't choose to make use of an electricity monitoring system"
     locality = getLocality(inputs)
+    points = cost = savings = 0
     electricity_monitor = inputs.get("electricity_monitor",NO)
 
     if electricity_monitor == YES:
-        monthly_elec_bill = inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150.))
+        monthly_elec_bill = float(inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150.)))
         fractional_savings = getDefault(locality, "elec_electricity_monitor_average_savings",0.1)       # 7% on utility bill from one company ([3])
         explanation = "Using an electricity monitor will show you where your electricity is going, and can save %d percent on your electric bill" % int(100*fractional_savings)  
     
