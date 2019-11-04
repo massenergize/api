@@ -25,18 +25,21 @@ def EvalSolarAssessment(inputs):
     if inputs.get('solar_assessment',NO) == YES:
 
         default_size = getDefault(locality,'solar_default_pv_size',7.)
-        size = inputs.get('solar_array_size',default_size)
+        size = float(inputs.get('solar_array_size',default_size))
+        spotential = inputs.get('solar_potential','')
         potential = SolarPotential(inputs)
+        if spotential != "None" and spotential != "Poor":
 
-        co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
-        annual_kwh_per_kw = getDefault(locality,'solar_annual_kwh_per_kw', 1100)
-        annual_kwh = annual_kwh_per_kw * size * potential
+            co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
+            annual_kwh_per_kw = getDefault(locality,'solar_annual_kwh_per_kw', 1100)
+            annual_kwh = annual_kwh_per_kw * size * potential
 
-        assessment_conversion = getDefault(locality,'solar_assessment_convertion_fraction', 0.2)
-        points = co2_per_kwh * annual_kwh * assessment_conversion
+            assessment_conversion = getDefault(locality,'solar_assessment_convertion_fraction', 0.2)
+            points = co2_per_kwh * annual_kwh * assessment_conversion
 
-        explanation = "A solar PV array on your home might save %.1f tons of CO2 over 10 years" % (points/200./assessment_conversion)
-    
+            explanation = "A solar PV array on your home might save %.1f tons of CO2 over 10 years" % (points/200./assessment_conversion)
+        else:
+            explanation = "With poor solar potential, we don't necessarily recommend having an assessment"
     return points, cost, savings, explanation
 
 ARRAY_SIZE = 'solar_pv_size'
@@ -48,7 +51,7 @@ def EvalSolarPV(inputs):
     if inputs.get('install_solar_panels',NO) == YES:
 
         default_size = getDefault(locality,'solar_default_pv_size',7.)
-        size = inputs.get('solar_array_size',default_size)
+        size = float(inputs.get('solar_array_size',default_size))
         potential = SolarPotential(inputs)
 
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
@@ -71,9 +74,9 @@ def EvalSolarPV(inputs):
         decent_payback = getDefault(locality,'general_decent_home_investment_payback',10.)
         payback = int(cost/savings) + 1
         if (payback < decent_payback):
-            explanation = "installing a solar PV array on your home will pay back in about %d years and save %.1f tons of CO2 over 10 years" % (payback, points/200.)
+            explanation = "installing a solar PV array on your home would pay back in around %d years and save %.1f tons of CO2 over 10 years" % (payback, points/200.)
         else:
-            explanation = "installing a solar PV array on your home will pay back in over %d years but save %.1f tons of CO2 over 10 years" % (decent_payback, points/200.)
+            explanation = "installing a solar PV array on your home could pay back in over %d years but save %.1f tons of CO2 over 10 years" % (decent_payback, points/200.)
 
     return points, cost, savings, explanation
 

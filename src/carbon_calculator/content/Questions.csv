@@ -35,7 +35,7 @@ dryer_type,Home Appliances,What type of clothes dryer do you have currently?,Cho
 refrigerator_energystar,Home Appliances,Is the current refrigerator an EnergyStar model?,Choice,Yes,,No,,Not sure,,,,,,,,
 washer_energystar,Home Appliances,Is the current washer an EnergyStar model?,Choice,Yes,,No,,Not sure,,,,,,,,energystar_washer
 dryer_loads,Home Appliances,How many dryer loads do you do each week on average?,Number,,,,,,,,,,,,,hp_dryer
-fraction_line_dry,Home Appliances,What fraction of wash loads would you dry on the line or drying rack?,Number,,,,,,,,,,,,,line_dry
+fraction_line_dry,Home Appliances,What fraction of wash loads would you dry on the line or drying rack?,Choice,None,,Some,,Half,,Most,,All,,,,line_dry
 heating_fuel,Home Heating and Cooling,What is the primary heating system type in your home?,Choice,Fuel Oil,,Nat Gas,,Propane,,Wood,,Conventional Electric,heating_system_type,Heat Pump,"heating_system_assessment,install_ashp,heating_system_type","energy_audit,prog_thermostats,weatherization,heating_assessment,efficient_fossil,air_source_hp,ground_source_hp"
 heating_system_assessment,Home Heating and Cooling,Will you choose to sign up for a heating system assessment?,Choice,No,,Yes,,,,,,,,,,heating_assessment
 install_ashp,Home Heating and Cooling,Will you choose to upgrade with air-source heat pump(s)? ,Choice,No,heat_pump_heating_fraction,Yes,upgrade_heating_system_efficiency,,,,,,,,,air_source_hp

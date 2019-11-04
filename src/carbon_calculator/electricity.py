@@ -127,25 +127,29 @@ def EvalEnergystarRefrigerator(inputs):
     explanation = "Didn't choose to replace your refrigerator"
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if replace_refrig == YES and refrig_age!="":
-        co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
-        kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
+    if replace_refrig == YES:
+        if  refrig_age!="" and refrig_age!="0-10 years":
+            co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
+            kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
 
-        #estar_kwh =65/kwh_price     # assumes $65 per year electricity use
-        estar_kwh = getDefault(locality,"elec_energystar_refrig_kwh_usage", 404) # Frigidaire FFTR1821TB 18cf top freezer
+            #estar_kwh =65/kwh_price     # assumes $65 per year electricity use
+            estar_kwh = getDefault(locality,"elec_energystar_refrig_kwh_usage", 404) # Frigidaire FFTR1821TB 18cf top freezer
 
-        variable = "elec_refrig_annual_kwh_"+APPLIANCE_AGES.get(refrig_age,"age10-15")
-        old_kwh = getDefault(locality,variable,0.,True) # don't update db constants
+            variable = "elec_refrig_annual_kwh_"+APPLIANCE_AGES.get(refrig_age,"age10-15")
+            old_kwh = getDefault(locality,variable,0.,True) # don't update db constants
 
-        elec_savings = old_kwh - estar_kwh
+            elec_savings = old_kwh - estar_kwh
 
-        explanation = "Replacing a typical refrigerator of that age with EnergyStar saves %.0f kwh electricity" % elec_savings
+            explanation = "Replacing a typical refrigerator of that age with EnergyStar could save %.0f kwh electricity each year" % elec_savings
 
-        points = elec_savings * co2_per_kwh
-        savings = elec_savings * kwh_price
+            points = elec_savings * co2_per_kwh
+            savings = elec_savings * kwh_price
 
-        cost = getDefault(locality,"elec_energystar_fridge_cost_low",750.)  # Frigidaire FFTR1821TB 18cf top freezer
-
+            cost = getDefault(locality,"elec_energystar_fridge_cost_low",750.)  # Frigidaire FFTR1821TB 18cf top freezer
+        elif refrig_age == "0-10 years":
+             explanation = "Not recommended to replace such a new refrigerator unless it isn't functioning properly."
+        else:
+            explanation = "Need to know how old your current refrigerator is to estimate the impact"
     return points, cost, savings, explanation
 
 GALS_PER_SCF = 7.48052
@@ -161,7 +165,7 @@ def EvalEnergystarWasher(inputs):
     if replace_washer == YES:
         if washer_age == "0-10 years" and washer_energystar == YES:
             explanation = "You have a pretty new energystar washer already, no point in replacing it."
-        else:
+        elif washer_age != "":
             co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
             kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
 
@@ -201,7 +205,7 @@ def EvalEnergystarWasher(inputs):
             old_water_use = estar_water_use / (1. - estar_water_fraction_savings)
             old_elec_use = estar_elec_use / (1. - estar_elec_fraction_savings)
 
-            if washer_age != "0-10 years":      # old washers, double it
+            if washer_age != "0-10 years" and not washer_energystar:      # old washers, double it
                 old_water_use = 2. * old_water_use
                 old_elec_use = 2. * old_elec_use
                 
@@ -217,10 +221,12 @@ def EvalEnergystarWasher(inputs):
             water_savings = (old_water_use - estar_water_use) * annual_loads
             elec_savings = (old_elec_use - estar_elec_use) * annual_loads
 
-            explanation = "Replacing your current washer with EnergyStar would save %.0f Gal of water and %.0f kwh" % (water_savings, elec_savings)
+            explanation = "Replacing your current washer with EnergyStar could save %.0f Gal of water and %.0f kwh" % (water_savings, elec_savings)
             points = (co2_old-co2_energystar)
             savings = (cost_old-cost_energystar)
             cost = getDefault(locality,"elec_energystar_washer_cost_low",700.)
+        else:
+            explanation = "Need to know how old your current washer is to estimate the impact"
 
     return points, cost, savings, explanation
 
@@ -315,7 +321,7 @@ def EvalColdWaterWash(inputs):
     cold_wash = inputs.get("cold_water_wash",NO)          # Yes, No
     washer_age = inputs.get("washer_age", "")                 # >20, 15-20, 10-15, 0-10
     washer_energystar = inputs.get("washer_energystar", NO)   # Yes, No, Not Sure
-    washer_loads = inputs.get("washer_loads", 0.)
+    washer_loads = float(inputs.get("washer_loads", 0.))
     #replace_washer,washer_age,wash_loads
     points = cost = savings = 0
     if cold_wash != NO:
@@ -370,13 +376,14 @@ def EvalColdWaterWash(inputs):
 
 def EvalLineDry(inputs):
     #line_or_rack_dry,dryer_loads
-    explanation = "Didn't choose to ..."
+    explanation = "Didn't choose to dry clothes on a line or rack"
     locality = getLocality(inputs)
     points = cost = savings = 0
     if inputs.get("line_or_rack_dry",NO) == YES:
         old_dryer = inputs.get("dryer_type","")
         loads = float(inputs.get("washer_loads", 8.))
-        fraction = float(inputs.get("fraction_line_dry"),0.5)
+        sfraction = inputs.get("fraction_line_dry","Half")
+        fraction = FRACTIONS.get(sfraction,0.)
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
         kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
 
@@ -391,15 +398,15 @@ def EvalLineDry(inputs):
             co2_per_therm = NatGasFootprint(locality)
             co2_drying = therm_gas * co2_per_therm * loads * 52
             drying_cost = therm_gas * therm_price * loads * 52
-            explanation = "Drying %.1f of your loads on the line would save energy and money"
+            explanation = "Drying %s of your loads on the line would save energy and money" % sfraction
         elif old_dryer != "Heat pump":
             drying_cost = kwh_electric_dryer * kwh_price * loads * 52
             co2_drying = kwh_electric_dryer * co2_per_kwh * loads * 52
-            explanation = "Drying %.1f of your loads on the line would save %.0f kwh" % (fraction, (kwh_electric_dryer - kwh_heatpump) * loads * 52)
+            explanation = "Drying %s of your loads on the line would save %.0f kwh" % (sfraction, (kwh_electric_dryer - kwh_heatpump) * loads * 52)
         else:
             drying_cost = cost_heatpump * loads * 52
             co2_drying = co2_heatpump * loads * 52
-            explanation = "Drying %.1f of your loads on the line can save energy and money" % fraction
+            explanation = "Drying %s of your loads on the line can save energy and money" % sfraction
         points = co2_drying * fraction
         savings = drying_cost * fraction
 
@@ -416,20 +423,22 @@ def EvalRefrigeratorPickup(inputs):
     extra_refrig_age = inputs.get("extra_refrigerator_age", "")                 # >20, 15-20, 10-15, 0-10
 
     points = cost = savings = 0
-    if extra_refrig == YES and refrig_pickup == YES:
-        co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
-        kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
+    if  refrig_pickup == YES:
+        if extra_refrig == YES:
+            co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
+            kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
 
-        variable = "elec_refrig_annual_kwh_"+APPLIANCE_AGES.get(extra_refrig_age,"age10-15")
-        old_kwh = getDefault(locality,variable,0.,True) # don't update db constants
-        explanation = "Eliminating a typical refrigerator of that age saves %.0f kwh electricity" % old_kwh
+            variable = "elec_refrig_annual_kwh_"+APPLIANCE_AGES.get(extra_refrig_age,"age10-15")
+            old_kwh = getDefault(locality,variable,0.,True) # don't update db constants
+            explanation = "Eliminating a typical refrigerator of that age saves %.0f kwh electricity." % old_kwh
 
-        elec_savings = old_kwh
+            elec_savings = old_kwh
 
-        points = elec_savings * co2_per_kwh
-        savings = elec_savings * kwh_price
+            points = elec_savings * co2_per_kwh
+            savings = elec_savings * kwh_price
+        else:
+            explanation = "Not clear that you have an extra refrigerator to be picked up."
 
-        cost = getDefault(locality,"elec_energystar_fridge_cost_low",750.)  # Frigidaire FFTR1821TB 18cf top freezer
     return points, cost, savings, explanation
 
 def EvalSmartPowerStrip(inputs):

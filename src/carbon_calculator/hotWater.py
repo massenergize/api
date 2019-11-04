@@ -56,15 +56,17 @@ def EvalHotWaterAssessment(inputs):
 
         elif wh_type == "Nat Gas" or wh_type == "Not sure":
             co2_per_therm = NatGasFootprint(locality)
-            btu_per_therm = 100000,
+            btu_per_therm = 100000.
 
             wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency', 0.7)
             btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
             co2_old = btu * co2_per_therm / btu_per_therm
 
         else:
-            explanation = "Not recommended to replace %s water heater with heat pump" % wh_type
+            explanation = "No need for a hot water assessment with a %s water heater" % wh_type
             return points, cost, savings, explanation
+        
+        explanation = "Getting a hot water assessment could save money and emissions, depending on several factors."
 
         conversion_rate = getDefault('locality', 'water_hw_assessment_conversion_rate', 0.2)
         points = (co2_old - co2_hp) * conversion_rate
@@ -132,7 +134,7 @@ def EvalHeatPumpWaterHeater(inputs):
         elif wh_type == "Nat Gas" or wh_type == "Not sure":
             therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
             co2_per_therm = NatGasFootprint(locality)
-            btu_per_therm = 100000,
+            btu_per_therm = 100000.
 
             wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency', 0.7)
             btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
@@ -153,9 +155,9 @@ def EvalHeatPumpWaterHeater(inputs):
 
         payback = int(cost/savings) + 1
         if (payback < decent_payback and payback > 0):
-            explanation = "installing a heat pump water heater will pay back in about %d years and save %.1f tons of CO2 over 10 years" % (payback, points/200.)
+            explanation = "installing a heat pump water heater would pay back in about %d years and save %.1f tons of CO2 over 10 years" % (payback, points/200.)
         else:
-            explanation = "installing a heat pump water heater will pay back in over %d years but save %.1f tons of CO2 over 10 years" % (decent_payback, points/200.)
+            explanation = "installing a heat pump water heater could pay back in over %d years but save %.1f tons of CO2 over 10 years" % (decent_payback, points/200.)
 
     return points, cost, savings, explanation
 
@@ -231,7 +233,7 @@ def EvalSolarHW(inputs):
             elif wh_type == "Nat Gas" or wh_type == "Not sure":
                 therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
                 co2_per_therm = NatGasFootprint(locality)
-                btu_per_therm = 100000,
+                btu_per_therm = 100000
 
                 wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency', 0.7)
                 btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
@@ -250,5 +252,12 @@ def EvalSolarHW(inputs):
             system_cost = getDefault(locality,'solar_hw_system_average_cost', 9000.) / potential
 
             cost = system_cost * (1 - tax_credit) * (1 - state_credit) - state_rebate - utility_rebate
+
+            decent_payback = getDefault(locality,'general_decent_home_investment_payback',10.)
+            payback = int(cost/savings) + 1
+            if (payback < decent_payback and payback > 0):
+                explanation = "installing solar hot water could pay back in about %d years and save %.1f tons of CO2 over 10 years" % (payback, points/200.)
+            else:
+                explanation = "installing solar hot water could pay back in over %d years but save %.1f tons of CO2 over 10 years" % (decent_payback, points/200.)
 
     return points, cost, savings, explanation
