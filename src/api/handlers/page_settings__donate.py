@@ -78,8 +78,8 @@ class DonatePageSettingsHandler(RouteHandler):
   def delete(self) -> function:
     def delete_donate_page_setting_view(request) -> None: 
       args = request.context.args
-      donate_page_setting_id = args[id]
-      donate_page_setting_info, err = self.service.delete_donate_page_setting(args[id])
+      donate_page_setting_id = args.get("id", None)
+      donate_page_setting_info, err = self.service.delete_donate_page_setting(args.get("id", None))
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=donate_page_setting_info)

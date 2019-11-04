@@ -100,6 +100,12 @@ class GoalStore:
       goal = Goal.objects.filter(id=goal_id)
       if not goal:
         return None, InvalidResourceError()
+
+      args.pop('community', None)
+      args.pop('more_info', None)
+      args.pop('team', None)
+
+      print(args)
       goal.update(**args)
       return goal.first(), None
     except Exception as e:

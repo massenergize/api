@@ -208,7 +208,9 @@ class Goal(models.Model):
     return res
 
   def full_json(self):
-    return self.simple_json()
+    communities = self.community_set.all()
+    res = self.simple_json()
+    res["community"] = None if not communities else get_json_if_not_none(communities[0])
 
   class Meta:
     db_table = 'goals'
@@ -254,7 +256,7 @@ class Community(models.Model):
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
   owner_email = models.EmailField(blank=False)
-  owner_phone_number = models.CharField(blank=False, null=True, max_length=SHORT_STR_LEN)
+  owner_phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_logo')
@@ -282,7 +284,12 @@ class Community(models.Model):
     return res
 
   def full_json(self):
-    admins = [a.simple_json() for a in CommunityAdminGroup.objects.filter(community__id=self.pk)]
+    admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community__id=self.pk).first()
+    if admin_group:
+      admins = [a.simple_json() for a in admin_group.members.all()]
+    else:
+      admins = []
+
     return {
       "id": self.id,
       "name": self.name,
@@ -458,10 +465,11 @@ class UserProfile(models.Model):
   def full_json(self):
     data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles'])
+    admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
     data['communities'] = [c.simple_json() for c in self.communities.all()]
-    data['admin_at'] = data['communities'] 
+    data['admin_at'] = admin_at
     data['teams'] = [t.simple_json() for t in self.team_members.all()]
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
     admin = []
@@ -911,7 +919,7 @@ class Event(models.Model):
   id = models.AutoField(primary_key=True)
   name  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
-  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   invited_communities = models.ManyToManyField(Community, 
     related_name="invited_communites", blank=True)
   start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
@@ -1102,16 +1110,18 @@ class Testimonial(models.Model):
     return self.title
 
   def simple_json(self):
-    res = model_to_dict(self, exclude=['image'])
+    res = model_to_dict(self, exclude=['image', 'tags'])
     res["user"] = get_json_if_not_none(self.user)
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = get_json_if_not_none(self.vendor)
+    res["community"] = get_json_if_not_none(self.community)
     res["created_at"] = self.created_at
     return res
 
   def full_json(self):
     data = self.simple_json() 
     data['image'] = get_json_if_not_none(self.image)
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
     return data
 
   class Meta:
@@ -1619,7 +1629,7 @@ class BillingStatement(models.Model):
   start_date = models.DateTimeField(blank=True, db_index=True)
   end_date = models.DateTimeField(blank=True)
   more_info = JSONField(blank=True, null=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, db_index=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
 

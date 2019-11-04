@@ -68,7 +68,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
   def update(self) -> function:
     def update_contact_us_page_setting_view(request) -> None: 
       args = request.context.args
-      contact_us_page_setting_info, err = self.service.update_contact_us_page_setting(args[id], args)
+      contact_us_page_setting_info, err = self.service.update_contact_us_page_setting(args.get("id", None), args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=contact_us_page_setting_info)
@@ -78,8 +78,8 @@ class ContactUsPageSettingsHandler(RouteHandler):
   def delete(self) -> function:
     def delete_contact_us_page_setting_view(request) -> None: 
       args = request.context.args
-      contact_us_page_setting_id = args[id]
-      contact_us_page_setting_info, err = self.service.delete_contact_us_page_setting(args[id])
+      contact_us_page_setting_id = args.get("id", None)
+      contact_us_page_setting_info, err = self.service.delete_contact_us_page_setting(args.get("id", None))
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=contact_us_page_setting_info)

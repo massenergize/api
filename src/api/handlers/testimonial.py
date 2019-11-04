@@ -73,7 +73,19 @@ class TestimonialHandler(RouteHandler):
   def update(self) -> function:
     def update_testimonial_view(request) -> None: 
       args = request.context.args
-      testimonial_info, err = self.service.update_testimonial(args[id], args)
+      print(args)
+      is_approved = args.pop("is_approved", None)
+      if is_approved:
+        args["is_approved"] = parse_bool(is_approved)
+      is_published = args.get("is_published", None)
+      if is_published:
+        args["is_published"] = parse_bool(is_published)
+      args = rename_field(args, 'community_id', 'community')
+      args = rename_field(args, 'action_id', 'action')
+      args = rename_field(args, 'vendor_id', 'vendor')
+      args['tags'] = parse_list(args.get('tags', []))
+      testimonial_id = args.pop("testimonial_id", None)
+      testimonial_info, err = self.service.update_testimonial(testimonial_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)

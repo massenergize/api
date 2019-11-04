@@ -65,7 +65,7 @@ class TagHandler(RouteHandler):
   def update(self) -> function:
     def update_tag_view(request) -> None: 
       args = request.context.args
-      tag_info, err = self.service.update_tag(args[id], args)
+      tag_info, err = self.service.update_tag(args.get("id", None), args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=tag_info)
@@ -75,8 +75,8 @@ class TagHandler(RouteHandler):
   def delete(self) -> function:
     def delete_tag_view(request) -> None: 
       args = request.context.args
-      tag_id = args[id]
-      tag_info, err = self.service.delete_tag(args[id])
+      tag_id = args.get("id", None)
+      tag_info, err = self.service.delete_tag(args.get("id", None))
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=tag_info)

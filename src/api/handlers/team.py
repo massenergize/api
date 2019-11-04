@@ -88,8 +88,8 @@ class TeamHandler(RouteHandler):
   def delete(self) -> function:
     def delete_team_view(request) -> None: 
       args = request.context.args
-      team_id = args[id]
-      team_info, err = self.team.delete_team(args[id])
+      team_id = args.get("team_id", None)
+      team_info, err = self.team.delete_team(team_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)

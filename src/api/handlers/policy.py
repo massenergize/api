@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to policies"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents
+from _main_.utils.common import get_request_contents, parse_bool
 from api.services.policy import PolicyService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -46,7 +46,9 @@ class PolicyHandler(RouteHandler):
     def create_policy_view(request) -> None: 
       args = request.context.args
       community_id = args.pop('community_id', None)
-      args.pop('is_global', None)
+      is_global = args.pop('is_global', None)
+      if is_global:
+        args["is_global"] = parse_bool(is_global)
       policy_info, err = self.service.create_policy(community_id ,args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -81,6 +83,9 @@ class PolicyHandler(RouteHandler):
     def update_policy_view(request) -> None: 
       args = request.context.args
       policy_id = args.pop('policy_id', None)
+      is_global = args.pop('is_global', None)
+      if is_global:
+        args["is_global"] = parse_bool(is_global)
       policy_info, err = self.service.update_policy(policy_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
