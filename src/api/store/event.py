@@ -83,9 +83,15 @@ class EventStore:
 
 
   def delete_event(self, event_id) -> (dict, MassEnergizeAPIError):
-    events = Event.objects.filter(id=event_id)
-    if not events:
-      return None, InvalidResourceError()
+    try:
+      events = Event.objects.filter(id=event_id)
+      if not events:
+        return None, InvalidResourceError()
+      events.delete()
+      return events, None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def list_events_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):

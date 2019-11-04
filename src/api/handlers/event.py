@@ -44,7 +44,6 @@ class EventHandler(RouteHandler):
   def create(self) -> function:
     def create_event_view(request) -> None: 
       args = request.context.args
-      print(args)
       ok, err = check_length(args, 'name', min_length=5, max_length=100)
       if not ok:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -57,7 +56,6 @@ class EventHandler(RouteHandler):
 
 
       event_info, err = self.service.create_event(args)
-      print(event_info)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -80,7 +78,6 @@ class EventHandler(RouteHandler):
   def update(self) -> function:
     def update_event_view(request) -> None: 
       args = request.context.args
-      print(args)
       event_id = args.pop('event_id', None)
       ok, err = check_length(args, 'name', min_length=5, max_length=100)
       if not ok:
@@ -90,7 +87,6 @@ class EventHandler(RouteHandler):
       args['is_global'] = parse_bool(args.pop('is_global', None))
 
       event_info, err = self.service.update_event(event_id, args)
-      print(event_info)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)

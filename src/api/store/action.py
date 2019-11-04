@@ -33,7 +33,6 @@ class ActionStore:
 
   def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
-
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
@@ -65,15 +64,17 @@ class ActionStore:
   def copy_action(self, action_id) -> (Action, MassEnergizeAPIError):
     try:
       #find the action
-      action_to_copy = Action.objects.filter(id=action_id).first()
+      action_to_copy: Action = Action.objects.filter(id=action_id).first()
       if not action_to_copy:
         return None, InvalidResourceError()
       old_tags = action_to_copy.tags.all()
+      old_vendors = action_to_copy.vendors.all()
       new_action = action_to_copy
       new_action.pk = None
       new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
       new_action.save()
       new_action.tags.set(old_tags)
+      new_action.vendors.set(old_vendors)
       return new_action, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
@@ -81,7 +82,6 @@ class ActionStore:
 
   def update_action(self, action_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
       action = Action.objects.filter(id=action_id)
       if not action:
         return None, InvalidResourceError()

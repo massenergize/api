@@ -917,7 +917,7 @@ class Event(models.Model):
   id = models.AutoField(primary_key=True)
   name  = models.CharField(max_length = SHORT_STR_LEN)
   description = models.TextField(max_length = LONG_STR_LEN)
-  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   invited_communities = models.ManyToManyField(Community, 
     related_name="invited_communites", blank=True)
   start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
@@ -1625,7 +1625,7 @@ class BillingStatement(models.Model):
   start_date = models.DateTimeField(blank=True, db_index=True)
   end_date = models.DateTimeField(blank=True)
   more_info = JSONField(blank=True, null=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, db_index=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
 
