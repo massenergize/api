@@ -15,7 +15,7 @@ class PolicyService:
     policy, err = self.store.get_policy_info(policy_id)
     if err:
       return None, err
-    return serialize(policy), None
+    return serialize(policy, full=True), None
 
   def list_policies(self, policy_id) -> (list, MassEnergizeAPIError):
     policy, err = self.store.list_policies(policy_id)

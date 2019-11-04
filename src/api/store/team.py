@@ -44,25 +44,32 @@ class TeamStore:
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
     try:
+      print(args, user_id)
       community_id = args.pop('community_id', None)
       image = args.pop('image', None)
+
+      if community_id:
+        community = Community.objects.filter(pk=community_id).first()
+        if not community:
+          return None, CustomMassenergizeError("Please provide a valid community")
+        
+      else:
+        return None, CustomMassenergizeError("Please provide a community")
+
+      args["community"] = community
       new_team = Team.objects.create(**args)
 
       if image:
        new_team.logo = image
 
-      if community_id:
-        community = Community.objects.get(pk=community_id).first()
-        if community:
-          new_team.community = community
-
-      
       new_team.save()
-      new_team.members.add(user_id)
-      new_team.admins.add(user_id)
+      if user_id:
+        new_team.members.add(user_id)
+        new_team.admins.add(user_id)
       new_team.save()
       return new_team, None
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(str(e))
 
 
@@ -95,9 +102,16 @@ class TeamStore:
 
 
   def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
-    teams = Team.objects.filter(id=team_id)
-    if not teams:
-      return None, InvalidResourceError()
+    try:
+      print(team_id)
+      teams = Team.objects.filter(id=team_id)
+      if not teams:
+        return None, InvalidResourceError()
+      teams.delete()
+      return teams.first(), None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def join_team(self, team_id, user_id) -> (Team, MassEnergizeAPIError):

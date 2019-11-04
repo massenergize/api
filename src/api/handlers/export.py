@@ -65,7 +65,7 @@ class TeamHandler(RouteHandler):
   def update(self) -> function:
     def update_team_view(request) -> None: 
       args = request.context.args
-      team_info, err = self.service.update_team(args[id], args)
+      team_info, err = self.service.update_team(args.get("id", None), args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
@@ -75,8 +75,8 @@ class TeamHandler(RouteHandler):
   def delete(self) -> function:
     def delete_team_view(request) -> None: 
       args = request.context.args
-      team_id = args[id]
-      team_info, err = self.service.delete_team(args[id])
+      team_id = args.get("id", None)
+      team_info, err = self.service.delete_team(args.get("id", None))
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)

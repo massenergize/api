@@ -78,8 +78,8 @@ class ActionsPageSettingsHandler(RouteHandler):
   def delete(self) -> function:
     def delete_actions_page_setting_view(request) -> None: 
       args = request.context.args
-      actions_page_setting_id = args[id]
-      actions_page_setting_info, err = self.service.delete_actions_page_setting(args[id])
+      actions_page_setting_id = args.get("id", None)
+      actions_page_setting_info, err = self.service.delete_actions_page_setting(args.get("id", None))
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_setting_info)

@@ -78,8 +78,8 @@ class AboutUsPageSettingsHandler(RouteHandler):
   def delete(self) -> function:
     def delete_about_us_page_setting_view(request) -> None: 
       args = request.context.args
-      about_us_page_setting_id = args[id]
-      about_us_page_setting_info, err = self.service.delete_about_us_page_setting(args[id])
+      about_us_page_setting_id = args.get("id", None)
+      about_us_page_setting_info, err = self.service.delete_about_us_page_setting(args.get("id", None))
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=about_us_page_setting_info)

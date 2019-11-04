@@ -7,11 +7,13 @@ class PolicyStore:
     self.name = "Policy Store/DB"
 
   def get_policy_info(self, policy_id) -> (dict, MassEnergizeAPIError):
-    policy = Policy.objects.get(id=policy_id)
-    if not policy:
-      return None, InvalidResourceError()
-    return policy, None
-
+    try:
+      policy = Policy.objects.get(id=policy_id)
+      if not policy:
+        return None, InvalidResourceError()
+      return policy, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
   def list_policies(self, community_id) -> (list, MassEnergizeAPIError):
     policies = Policy.objects.filter(community__id=community_id)
@@ -35,12 +37,19 @@ class PolicyStore:
 
   def update_policy(self, policy_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
+      community_id = args.pop("community_id", None)
       policy = Policy.objects.filter(id=policy_id)
       if not policy:
         return None, InvalidResourceError()
+
       policy.update(**args)
-      return policy.first(), None
+      policy: Policy = policy.first()
+      if policy and community_id:
+        community: Community = Community.objects.filter(pk=community_id).first()
+        if community:
+          community.policies.add(policy)
+          community.save()
+      return policy, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 

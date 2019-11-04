@@ -208,7 +208,9 @@ class Goal(models.Model):
     return res
 
   def full_json(self):
-    return self.simple_json()
+    communities = self.community_set.all()
+    res = self.simple_json()
+    res["community"] = None if not communities else get_json_if_not_none(communities[0])
 
   class Meta:
     db_table = 'goals'
@@ -1108,16 +1110,18 @@ class Testimonial(models.Model):
     return self.title
 
   def simple_json(self):
-    res = model_to_dict(self, exclude=['image'])
+    res = model_to_dict(self, exclude=['image', 'tags'])
     res["user"] = get_json_if_not_none(self.user)
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = get_json_if_not_none(self.vendor)
+    res["community"] = get_json_if_not_none(self.community)
     res["created_at"] = self.created_at
     return res
 
   def full_json(self):
     data = self.simple_json() 
     data['image'] = get_json_if_not_none(self.image)
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
     return data
 
   class Meta:

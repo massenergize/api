@@ -96,8 +96,8 @@ class EventHandler(RouteHandler):
   def delete(self) -> function:
     def delete_event_view(request) -> None: 
       args = request.context.args
-      event_id = args[id]
-      event_info, err = self.service.delete_event(args[id])
+      event_id = args.get("event_id", None)
+      event_info, err = self.service.delete_event(event_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -118,6 +118,7 @@ class EventHandler(RouteHandler):
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
       args = request.context.args
+      print(args)
       events, err = self.service.list_events_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

@@ -66,7 +66,7 @@ class UserHandler(RouteHandler):
   def update(self) -> function:
     def update_user_view(request) -> None: 
       args = request.context.args
-      user_info, err = self.service.update_user(args[id], args)
+      user_info, err = self.service.update_user(args.get("id", None), args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -76,8 +76,8 @@ class UserHandler(RouteHandler):
   def delete(self) -> function:
     def delete_user_view(request) -> None: 
       args = request.context.args
-      user_id = args[id]
-      user_info, err = self.service.delete_user(args[id])
+      user_id = args.get("id", None)
+      user_info, err = self.service.delete_user(args.get("id", None))
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

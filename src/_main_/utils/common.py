@@ -84,6 +84,8 @@ def serialize_all(data, full=False):
 
 
 def serialize(data, full=False):
+  if not data:
+    return
   if full:
     return data.full_json()
   return data.simple_json()
