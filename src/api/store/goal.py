@@ -2,6 +2,7 @@ from database.models import Goal, UserProfile, Team, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.db.models import F
+from _main_.utils.context import Context
 
 class GoalStore:
   def __init__(self):
