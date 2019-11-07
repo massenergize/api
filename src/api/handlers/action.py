@@ -45,7 +45,7 @@ class ActionHandler(RouteHandler):
   def create(self) -> function:
     def create_action_view(request) -> None: 
       args = request.context.args
-      success, err = check_length(args, 'title', min_length=5, max_length=25)
+      success, err = check_length(args, 'title', min_length=4, max_length=40)
       if not success:
         return MassenergizeResponse(error=str(err))
       community_id = args.pop('community_id', None)
@@ -75,7 +75,7 @@ class ActionHandler(RouteHandler):
   def update(self) -> function:
     def update_action_view(request) -> None: 
       args = request.context.args
-      success, err = check_length(args, 'title', min_length=5, max_length=25)
+      success, err = check_length(args, 'title', min_length=4, max_length=40)
       if not success:
         return MassenergizeResponse(error=str(err))
       args = rename_field(args, 'action_id', 'id')

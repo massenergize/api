@@ -90,7 +90,7 @@ def serialize(data, full=False):
     return data.full_json()
   return data.simple_json()
 
-def check_length(args, field,  min_length=5, max_length=25):
+def check_length(args, field,  min_length=5, max_length=40):
   data = args.get(field, None)
   if not data:
     return False, CustomMassenergizeError(f"Please provide a {field} field")

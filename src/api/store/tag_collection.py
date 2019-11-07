@@ -33,8 +33,9 @@ class TagCollectionStore:
       new_tag_collection = TagCollection.objects.create(name=name, is_global=True)
       new_tag_collection.save()
       tags = []
-      for t in tmp_tags:
-        tag = Tag.objects.create(name=t.title(), tag_collection=new_tag_collection)
+      for i in range(len(tmp_tags)):
+        t = tmp_tags[i]
+        tag = Tag.objects.create(name=t.title(), tag_collection=new_tag_collection,rank=i+1)
         tag.save()
         # new_tag_collection.tags.add(t)
 
@@ -52,27 +53,39 @@ class TagCollectionStore:
 
       tags = Tag.objects.filter(tag_collection__id=tag_collection.id)
       name = args.pop('name', None)
+      rank = args.pop('rank', None)
       tags_to_add = args.pop('tags_to_add', '').split(', ')
       tags_to_delete = args.pop('tags_to_delete', '').split(', ')
 
       if name:
         tag_collection.name = name
 
+      if rank:
+        tag_collection.rank = rank
+
       for (k,v) in args.items():
-        if k.startswith('tag_'):
+        if k.startswith('tag_') and not k.endswith('_rank'):
           tag_id = int(k.split('_')[-1])
           tag = tags.filter(id=tag_id).first()
           if tag:
             tag.name = v
             tag.save()
+        if k.startswith('tag_') and k.endswith('_rank'):
+          tag_id = int(k.split('_')[1])
+          tag = tags.filter(id=tag_id).first()
+          if tag:
+            tag.rank = v
+            tag.save()
 
-      for t in tags_to_add:
-        tag = Tag.objects.create(name=t.title(), tag_collection=tag_collection)
+      for i in range(len(tags_to_add)):
+        t = tags_to_add[i]
+        tag = Tag.objects.create(name=t.title(), tag_collection=tag_collection, rank=len(tags)+i+1)
         tag.save()
 
       for t in tags_to_delete:
         Tag.objects.filter(name=t.title(), tag_collection=tag_collection).delete()
 
+      tag_collection.save()
       return tag_collection, None
     except Exception as e:
       return None, CustomMassenergizeError(e)

@@ -1,6 +1,7 @@
 from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
 
 class TestimonialStore:
   def __init__(self):
@@ -16,20 +17,42 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_testimonials(self, args) -> (list, MassEnergizeAPIError):
+  def list_testimonials(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      args['is_published'] = True
-      args['is_approved'] = True
-      args['is_deleted'] = False
-      testimonials = Testimonial.objects.filter(**args)
-      if not testimonials:
-        return [], None
+      subdomain = args.pop('subdomain', None)
+      community_id = args.pop('community_id', None)
+      user_id = args.pop('user_id', None)
+      user_email = args.pop('user_email', None)
+
+      testimonials = []
+
+      if context.is_dev:
+        if subdomain:
+          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False)
+        elif community_id:
+          testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False)
+        elif user_id:
+          testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False)
+        elif user_email:
+          testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False)
+
+      else:
+        if subdomain:
+          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False, is_published=True)
+        elif community_id:
+          testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
+        elif user_id:
+          testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False, is_published=True)
+        elif user_email:
+          testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False, is_published=True)
+
+
       return testimonials, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
 
-  def create_testimonial(self,testimonial_id, args) -> (dict, MassEnergizeAPIError):
+  def create_testimonial(self, args) -> (dict, MassEnergizeAPIError):
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -42,9 +65,8 @@ class TestimonialStore:
 
       if user_email:
         user = UserProfile.objects.filter(email=user_email).first()
-        if not user:
-          return None, CustomMassenergizeError("No user with that email")
-        new_testimonial.user = user
+        if user:
+          new_testimonial.user = user
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")

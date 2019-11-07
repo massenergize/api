@@ -747,6 +747,7 @@ class TagCollection(models.Model):
   allow_multiple = models.BooleanField(default=False)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
+  rank = models.PositiveIntegerField(default=0)
 
 
   def __str__(self):
@@ -783,7 +784,7 @@ class Tag(models.Model):
   icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
   tag_collection = models.ForeignKey(TagCollection, null=True, 
     on_delete=models.CASCADE, blank=True)
-  order = models.PositiveIntegerField(default=0)
+  rank = models.PositiveIntegerField(default=0)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
 
@@ -791,7 +792,9 @@ class Tag(models.Model):
     return "%s - %s" % (self.name, self.tag_collection)
 
   def simple_json(self):
-    return model_to_dict(self)
+    res = model_to_dict(self)
+    res['order'] = self.rank
+    return res
 
 
   def full_json(self):
@@ -800,9 +803,9 @@ class Tag(models.Model):
     return data
 
   class Meta:
-    ordering = ('order',)
+    ordering = ('rank',)
     db_table = 'tags'
-    unique_together = [['order', 'name', 'tag_collection']]
+    unique_together = [['rank', 'name', 'tag_collection']]
 
 
 class Action(models.Model):

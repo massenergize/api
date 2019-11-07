@@ -17,8 +17,8 @@ class TestimonialService:
       return None, err
     return serialize(testimonial, full=True), None
 
-  def list_testimonials(self, args) -> (list, MassEnergizeAPIError):
-    testimonial, err = self.store.list_testimonials(args)
+  def list_testimonials(self, context, args) -> (list, MassEnergizeAPIError):
+    testimonial, err = self.store.list_testimonials(context, args)
     if err:
       return None, err
     return serialize_all(testimonial), None

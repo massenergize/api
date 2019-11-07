@@ -106,8 +106,12 @@ class HomePageSettingsHandler(RouteHandler):
           'description': args.pop('icon_box_4_description', '')
         },
       ]
+      #checks for length
+      for t in args["featured_links"]:
+        if len(t["description"]) >  40:
+          return MassenergizeResponse(error=f"Please description text for {t['title']} should be less than 40 characters")
 
-      #events
+      # events
       args['show_featured_events'] = parse_bool(args.pop('show_featured_events', True))
       args['featured_events'] = parse_list(args.pop('featured_events', []))
 
