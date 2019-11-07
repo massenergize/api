@@ -36,7 +36,8 @@ class HomePageSettingsHandler(RouteHandler):
 
   def info(self) -> function:
     def home_page_setting_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'community__id')
       args = rename_field(args, 'subdomain', 'community__subdomain')
       args = rename_field(args, 'home_page_id', 'id')
@@ -48,7 +49,8 @@ class HomePageSettingsHandler(RouteHandler):
 
   def publish(self) -> function:
     def home_page_setting_publish_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       home_page_id = args.pop('home_page_id', None)
       home_page_setting_info, err = self.service.get_home_page_setting_publish(home_page_id)
       if err:
@@ -59,7 +61,8 @@ class HomePageSettingsHandler(RouteHandler):
 
   def create(self) -> function:
     def create_home_page_setting_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       home_page_setting_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -69,7 +72,8 @@ class HomePageSettingsHandler(RouteHandler):
 
   def list(self) -> function:
     def list_home_page_setting_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       home_page_setting_info, err = self.service.list_home_page_settings(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -79,7 +83,8 @@ class HomePageSettingsHandler(RouteHandler):
 
   def update(self) -> function:
     def update_home_page_setting_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
 
       #featured links
       args['show_featured_links'] = parse_bool(args.pop('show_featured_links', True))
@@ -137,7 +142,8 @@ class HomePageSettingsHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_home_page_setting_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       home_page_id = args.pop('home_page_id', None)
       home_page_setting_info, err = self.service.delete_home_page_setting(home_page_id)
       if err:
@@ -148,7 +154,8 @@ class HomePageSettingsHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop('community_id', None)
       home_page_settings, err = self.service.list_home_page_settings_for_community_admin(community_id)
       if err:
@@ -159,7 +166,8 @@ class HomePageSettingsHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       home_page_settings, err = self.service.list_home_page_settings_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

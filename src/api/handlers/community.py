@@ -34,7 +34,8 @@ class CommunityHandler(RouteHandler):
 
   def info(self) -> function:
     def community_info_view(request) -> None:
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'id')
       community_info, err = self.service.get_community_info(args)
       if err:
@@ -86,7 +87,8 @@ class CommunityHandler(RouteHandler):
 
   def update(self) -> function:
     def update_community_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'id')
       community_id = args.pop('id', None)
       if not community_id:
@@ -120,7 +122,8 @@ class CommunityHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_community_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'id')
       community_info, err = self.service.delete_community(args)
       if err:

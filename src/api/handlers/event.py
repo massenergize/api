@@ -34,7 +34,8 @@ class EventHandler(RouteHandler):
 
   def info(self) -> function:
     def event_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       event_id = args.pop('event_id', None)
       event_info, err = self.service.get_event_info(event_id)
       if err:
@@ -45,7 +46,8 @@ class EventHandler(RouteHandler):
 
   def create(self) -> function:
     def create_event_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       ok, err = check_length(args, 'name', min_length=5, max_length=100)
       if not ok:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -66,7 +68,8 @@ class EventHandler(RouteHandler):
 
   def list(self) -> function:
     def list_event_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop('community_id', None)
       subdomain = args.pop('subdomain', None)
       user_id = args.pop('user_id', None)
@@ -79,7 +82,8 @@ class EventHandler(RouteHandler):
 
   def update(self) -> function:
     def update_event_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       event_id = args.pop('event_id', None)
       ok, err = check_length(args, 'name', min_length=5, max_length=100)
       if not ok:
@@ -97,7 +101,8 @@ class EventHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_event_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       event_id = args.get("event_id", None)
       event_info, err = self.service.delete_event(event_id)
       if err:
@@ -108,7 +113,8 @@ class EventHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
       events, err = self.service.list_events_for_community_admin(community_id)
       if err:
@@ -119,7 +125,8 @@ class EventHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       print(args)
       events, err = self.service.list_events_for_super_admin()
       if err:

@@ -34,7 +34,8 @@ class UserHandler(RouteHandler):
 
   def info(self) -> function:
     def user_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       user_id = args.pop('user_id', None)
       user_info, err = self.service.get_user_info(user_id)
       if err:
@@ -45,7 +46,8 @@ class UserHandler(RouteHandler):
 
   def create(self) -> function:
     def create_user_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       user_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -55,7 +57,8 @@ class UserHandler(RouteHandler):
 
   def list(self) -> function:
     def list_user_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
       user_info, err = self.service.list_users(community_id, user_id)
@@ -67,7 +70,8 @@ class UserHandler(RouteHandler):
 
   def update(self) -> function:
     def update_user_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       user_info, err = self.service.update_user(args.get("id", None), args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -77,7 +81,8 @@ class UserHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_user_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       user_id = args.get("id", None)
       user_info, err = self.service.delete_user(args.get("id", None))
       if err:
@@ -88,7 +93,8 @@ class UserHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
       users, err = self.service.list_users_for_community_admin(community_id)
       if err:
@@ -99,7 +105,8 @@ class UserHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       users, err = self.service.list_users_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

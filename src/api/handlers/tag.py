@@ -34,7 +34,8 @@ class TagHandler(RouteHandler):
 
   def info(self) -> function:
     def tag_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       tag_info, err = self.service.get_tag_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -44,7 +45,8 @@ class TagHandler(RouteHandler):
 
   def create(self) -> function:
     def create_tag_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       tag_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -54,7 +56,8 @@ class TagHandler(RouteHandler):
 
   def list(self) -> function:
     def list_tag_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
       tag_info, err = self.service.list_tags(community_id, user_id)
@@ -66,7 +69,8 @@ class TagHandler(RouteHandler):
 
   def update(self) -> function:
     def update_tag_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       tag_info, err = self.service.update_tag(args.get("id", None), args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -76,7 +80,8 @@ class TagHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_tag_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       tag_id = args.get("id", None)
       tag_info, err = self.service.delete_tag(args.get("id", None))
       if err:
@@ -87,7 +92,8 @@ class TagHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
       tags, err = self.service.list_tags_for_community_admin(community_id)
       if err:
@@ -98,7 +104,8 @@ class TagHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       tags, err = self.service.list_tags_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
