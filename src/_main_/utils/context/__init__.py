@@ -7,10 +7,15 @@ logger = logging.getLogger(__name__)
 
 class Context:
   """
-  This contains info about a particular user and their session.  
-  i.e. whether they are logged in or not, their user_id, 
-  and also what is in the body of their request
+  This contains info about a particular user and their request. 
+  About the user:
+  * Are they logged in?
+  * Are they an admin? super admin? community admin?
+  
+  About the request:
+  * args: the body/payload that was sent in the request
 
+  It also contains a logger
   """
   def __init__(self):
     self.args = {}
@@ -39,6 +44,10 @@ class Context:
 
   def get_request_body(self):
     return self.args
+
+  
+  def user_is_admin(self):
+    return self.user_is_community_admin or self.user_is_super_admin
 
   def __str__(self):
     return str({
