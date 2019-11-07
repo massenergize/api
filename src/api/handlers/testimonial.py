@@ -48,7 +48,14 @@ class TestimonialHandler(RouteHandler):
       args = rename_field(args, 'action_id', 'action')
       args = rename_field(args, 'vendor_id', 'vendor')
       args['tags'] = parse_list(args.get('tags', []))
-      args['is_approved'] = parse_bool(args.pop('is_approved', None))
+
+      is_approved = args.pop("is_approved", None)
+      if is_approved:
+        args["is_approved"] = parse_bool(is_approved)
+      is_published = args.get("is_published", None)
+      if is_published:
+        args["is_published"] = parse_bool(is_published)
+      
       testimonial_info, err = self.service.create_testimonial(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -58,12 +65,9 @@ class TestimonialHandler(RouteHandler):
 
   def list(self) -> function:
     def list_testimonial_view(request) -> None: 
-      args = request.context.args
-      args = rename_field(args, 'community_id', 'community__id')
-      args = rename_field(args, 'subdomain', 'community__subdomain')
-      args = rename_field(args, 'user_id', 'user__id')
-      args = rename_field(args, 'user_email', 'user__email')
-      testimonial_info, err = self.service.list_testimonials(args)
+      context = request.context
+      args = context.args
+      testimonial_info, err = self.service.list_testimonials(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
