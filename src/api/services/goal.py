@@ -3,6 +3,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.goal import GoalStore
 from database.models import Goal
+from _main_.utils.context import Context
 
 from _main_.utils.utils import get_models_and_field_types
 from database import models
