@@ -6,6 +6,7 @@ from api.services.community import CommunityService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
+from _main_.utils.validator import Validator
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
