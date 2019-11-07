@@ -106,10 +106,8 @@ class VendorHandler(RouteHandler):
   def list(self) -> function:
     def list_vendor_view(request) -> None: 
       context: Context  = request.context
-      args = context.get_request_body()
-      community_id = args.pop('community_id', None)
-      
-      vendor_info, err = self.service.list_vendors(context, community_id)
+      args = context.get_request_body()      
+      vendor_info, err = self.service.list_vendors(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)

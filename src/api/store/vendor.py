@@ -16,11 +16,27 @@ class VendorStore:
     return vendor, None
 
 
-  def list_vendors(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_vendors(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      community = Community.objects.get(pk=community_id)
+      subdomain = args.pop('subdomain', None)
+      community_id = args.pop('community_id', None)
+
+
+      if community_id:
+        community = Community.objects.get(pk=community_id)
+      elif subdomain:
+        community = Community.objects.get(subdomain=subdomain)
+      else:
+        community = None
+
+      if not community:
+        return [], None
+      
       vendors = community.vendor_set.all()
-      # context.logger.info(f"{context.user_id} accessed: vendors.list")
+
+      if not context.is_dev:
+        vendors = vendors.filter(is_published=True)
+
       return vendors, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
