@@ -13,8 +13,8 @@ def getLocality(inputs):
     return locality
 
 
-def getDefault(locality, variable, defaultValue):
-    return CCD.getDefault(CCD,locality, variable, defaultValue)
+def getDefault(locality, variable, defaultValue, noUpdate=False):
+    return CCD.getDefault(CCD,locality, variable, defaultValue, noUpdate)
 
 class CCD():
     DefaultsByLocality = {"default":{}} # the class variable
@@ -38,7 +38,7 @@ class CCD():
         print("CCD __init__ called")
 
 
-    def getDefault(self,locality,variable,defaultValue):
+    def getDefault(self,locality,variable,defaultValue, noUpdate=False):
         if locality in self.DefaultsByLocality:
             if variable in self.DefaultsByLocality[locality]:
                 return self.DefaultsByLocality[locality][variable]
@@ -47,8 +47,9 @@ class CCD():
         # no defaults found.  Store the default estiamte in the database
 
         self.DefaultsByLocality["default"][variable] = defaultValue
-        d = CalcDefault(locality="default", variable=variable, value=defaultValue, reference="Default value without reference")
-        d.save()
+        if not noUpdate:
+            d = CalcDefault(locality="default", variable=variable, value=defaultValue, reference="Default value without reference")
+            d.save()
 
         return defaultValue
 
@@ -74,7 +75,7 @@ class CCD():
             status = False
 
         if csvfile:
-            csvfile.close(csvfile)
+            csvfile.close()
         return status
     def importDefaults(self,fileName):
         try:
