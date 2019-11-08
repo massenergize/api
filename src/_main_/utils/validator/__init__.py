@@ -3,11 +3,19 @@ from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, p
 
 class Validator:
 
-  def __init__(self):
+  def __init__(self, args={}):
     self.fields = []
-
+    self.args = args
 
   def add(self, field_name, field_type=str, is_required=True):
+    self.fields.append({
+      "name": field_name,
+      "type": field_type,
+      "is_required": is_required
+    })
+    return self
+
+  def expect(self, field_name, field_type=str, is_required=True):
     self.fields.append({
       "name": field_name,
       "type": field_type,
@@ -20,7 +28,10 @@ class Validator:
   def _common_name(self, s):
     return (' '.join(s.split('_'))).title()
 
-  def verify(self, args):
+  def verify(self, args=None):
+    if not args:
+      args = self.args
+      
     for field in self.fields:
       field_name = field["name"]
       field_type = field["type"]
@@ -43,5 +54,4 @@ class Validator:
       else:
         if field_type == 'location':
           args[field_name] = parse_location(args)
-
     return args, None

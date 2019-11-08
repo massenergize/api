@@ -8,8 +8,7 @@ class ActionStore:
   def __init__(self):
     self.name = "Action Store/DB"
 
-  def get_action_info(self, action_id) -> (dict, MassEnergizeAPIError):
-    
+  def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
     try:
       actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
       action = actions_retrieved.first()
@@ -19,7 +18,7 @@ class ActionStore:
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
-  def list_actions(self, community_id, subdomain) -> (list, MassEnergizeAPIError):
+  def list_actions(self, context: Context,community_id, subdomain) -> (list, MassEnergizeAPIError):
     try:
       actions = []
       if community_id:
@@ -32,7 +31,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
+  def create_action(self, context: Context,community_id, args) -> (dict, MassEnergizeAPIError):
     try:
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
@@ -62,7 +61,7 @@ class ActionStore:
       print(e)
       return None, CustomMassenergizeError(e)
 
-  def copy_action(self, action_id) -> (Action, MassEnergizeAPIError):
+  def copy_action(self, context: Context, action_id) -> (Action, MassEnergizeAPIError):
     try:
       #find the action
       action_to_copy: Action = Action.objects.filter(id=action_id).first()
@@ -81,7 +80,7 @@ class ActionStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def update_action(self, action_id, args) -> (dict, MassEnergizeAPIError):
+  def update_action(self, context: Context, action_id, args) -> (dict, MassEnergizeAPIError):
     try:
       action = Action.objects.filter(id=action_id)
       if not action:
@@ -116,7 +115,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_action(self, action_id) -> (Action, MassEnergizeAPIError):
+  def delete_action(self, context: Context,action_id) -> (Action, MassEnergizeAPIError):
     try:
       #find the action
       actions_to_delete = Action.objects.filter(id=action_id)
@@ -127,7 +126,7 @@ class ActionStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
-  def list_actions_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_actions_for_community_admin(self, context: Context,community_id) -> (list, MassEnergizeAPIError):
     actions = Action.objects.filter(community__id = community_id)
     return actions, None
 

@@ -14,6 +14,7 @@ class Context:
   
   About the request:
   * args: the body/payload that was sent in the request
+  * dev? : also tells you if this request is coming from one of our dev sites
 
   It also contains a logger
   """

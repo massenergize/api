@@ -34,9 +34,17 @@ class ActionHandler(RouteHandler):
     def action_info_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
+      args = rename_field("id", "action_id")
 
+      # verify the body of the incoming request
+      validator: Validator = Validator(args)
+      validator.expect("action_id", str, is_required=True)
+      args, err = validator.verify()
+      if err:
+        return err
+      
       action_id = args.pop('action_id', None)
-      action_info, err = self.service.get_action_info(action_id)
+      action_info, err = self.service.get_action_info(context, action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -55,7 +63,7 @@ class ActionHandler(RouteHandler):
       args['vendors'] = parse_list(args.pop('vendors', []))
       args['is_global'] = parse_bool(args.pop('vendors', False))
       args['is_published'] = parse_bool(args.pop('is_published', False))
-      action_info, err = self.service.create_action(community_id, args)
+      action_info, err = self.service.create_action(context, community_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -68,7 +76,7 @@ class ActionHandler(RouteHandler):
       args: dict = context.args
       community_id = args.pop('community_id', None)
       subdomain = args.pop('subdomain', None)
-      action_info, err = self.service.list_actions(community_id, subdomain)
+      action_info, err = self.service.list_actions(context, community_id, subdomain)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -88,7 +96,7 @@ class ActionHandler(RouteHandler):
       args['is_global'] = parse_bool(args.pop('is_global', False))
       args['is_published'] = parse_bool(args.pop('is_published', False))
       action_id = args.pop('id', None)
-      action_info, err = self.service.update_action(action_id, args)
+      action_info, err = self.service.update_action(context, action_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)      
         
@@ -100,7 +108,7 @@ class ActionHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       action_id = args.pop('action_id', None)
-      action_info, err = self.service.copy_action(action_id)
+      action_info, err = self.service.copy_action(context, action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -112,7 +120,7 @@ class ActionHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       action_id = args.pop('action_id', None)
-      action_info, err = self.service.delete_action(action_id)
+      action_info, err = self.service.delete_action(context, action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -124,7 +132,7 @@ class ActionHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop("community_id", None)
-      actions, err = self.service.list_actions_for_community_admin(community_id)
+      actions, err = self.service.list_actions_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions)
@@ -135,7 +143,7 @@ class ActionHandler(RouteHandler):
     def super_admin_list_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      actions, err = self.service.list_actions_for_super_admin()
+      actions, err = self.service.list_actions_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions)

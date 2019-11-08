@@ -12,53 +12,53 @@ class ActionService:
   def __init__(self):
     self.store =  ActionStore()
 
-  def get_action_info(self, action_id) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.get_action_info(action_id)
+  def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.get_action_info(context, action_id)
     if err:
       return None, err
     return serialize(action, full=True), None
 
-  def list_actions(self, community_id, subdomain) -> (list, MassEnergizeAPIError):
-    actions, err = self.store.list_actions(community_id, subdomain)
+  def list_actions(self, context: Context, community_id, subdomain) -> (list, MassEnergizeAPIError):
+    actions, err = self.store.list_actions(context, community_id, subdomain)
     if err:
       return None, err
     return serialize_all(actions), None
 
 
-  def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.create_action(community_id, args)
+  def create_action(self, context: Context, community_id, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.create_action(context, community_id, args)
     if err:
       return None, err
     return serialize(action), None
 
 
-  def update_action(self,action_id, args) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.update_action(action_id, args)
+  def update_action(self, context: Context, action_id, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.update_action(context, action_id, args)
     if err:
       return None, err
     return serialize(action), None
 
-  def delete_action(self, action_id) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.delete_action(action_id)
+  def delete_action(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.delete_action(context, action_id)
     if err:
       return None, err
     return serialize(action), None
 
-  def copy_action(self, action_id) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.copy_action(action_id)
+  def copy_action(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.copy_action(context, action_id)
     if err:
       return None, err
     return serialize(action), None
 
-  def list_actions_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    actions, err = self.store.list_actions_for_community_admin(community_id)
+  def list_actions_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    actions, err = self.store.list_actions_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(actions), None
 
 
-  def list_actions_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    actions, err = self.store.list_actions_for_super_admin()
+  def list_actions_for_super_admin(self, context: Context) -> (list, MassEnergizeAPIError):
+    actions, err = self.store.list_actions_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(actions), None
