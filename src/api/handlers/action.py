@@ -37,9 +37,9 @@ class ActionHandler(RouteHandler):
       args = rename_field("id", "action_id")
 
       # verify the body of the incoming request
-      validator: Validator = Validator(args)
+      validator: Validator = Validator()
       validator.expect("action_id", str, is_required=True)
-      args, err = validator.verify()
+      args, err = validator.verify(args)
       if err:
         return err
       

@@ -3,9 +3,8 @@ from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, p
 
 class Validator:
 
-  def __init__(self, args={}):
+  def __init__(self):
     self.fields = []
-    self.args = args
 
   def add(self, field_name, field_type=str, is_required=True):
     self.fields.append({
@@ -28,10 +27,7 @@ class Validator:
   def _common_name(self, s):
     return (' '.join(s.split('_'))).title()
 
-  def verify(self, args=None):
-    if not args:
-      args = self.args
-      
+  def verify(self, args):
     for field in self.fields:
       field_name = field["name"]
       field_type = field["type"]
