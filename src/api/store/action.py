@@ -131,9 +131,12 @@ class ActionStore:
     return actions, None
 
 
-  def list_actions_for_super_admin(self):
+  def list_actions_for_super_admin(self, context: Context):
     try:
-      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False);
+      if not context.user_is_super_admin:
+        return None, CustomMassenergizeError("Insufficient Privileges")
+      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
       return actions, None
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(str(e))

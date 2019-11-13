@@ -100,12 +100,14 @@ class AdminStore:
           user.is_community_admin = True
           user.save()
       else:
-        if not admin_group.pending_admins:
-          admin_group.pending_admins = {"data": [{"name": name, "email": email}]}
-        else:
-          data = admin_group.pending_admins.get("data", []) 
-          data.append({"name": name, "email": email})
-          admin_group.pending_admins = {"data": data}
+        return None, CustomMassenergizeError("The user you are trying to add does not have an account yet")
+      
+        # if not admin_group.pending_admins:
+        #   admin_group.pending_admins = {"data": [{"name": name, "email": email}]}
+        # else:
+        #   data = admin_group.pending_admins.get("data", []) 
+        #   data.append({"name": name, "email": email})
+        #   admin_group.pending_admins = {"data": data}
 
       admin_group.save()
       return admin_group, None
@@ -150,12 +152,14 @@ class AdminStore:
           user.save()
 
       else:
-        if admin_group.pending_admins:
-          data = admin_group.pending_admins.get("data", []) 
-          for u in data:
-            if u.get("email", None) == email:
-              data.remove(u)
-          admin_group.pending_admins = {"data": data}
+        return None, CustomMassenergizeError("The user you are trying to remove does not exist")
+
+        # if admin_group.pending_admins:
+        #   data = admin_group.pending_admins.get("data", []) 
+        #   for u in data:
+        #     if u.get("email", None) == email:
+        #       data.remove(u)
+        #   admin_group.pending_admins = {"data": data}
 
       admin_group.save()
       return admin_group, None

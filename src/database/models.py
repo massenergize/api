@@ -1295,8 +1295,6 @@ class Data(models.Model):
     null=True, db_index=True )
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
-  action = models.ForeignKey(Action, blank=True,  
-    on_delete=models.CASCADE, null=True, db_index=True)
   info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)

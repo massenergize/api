@@ -1,7 +1,8 @@
-from database.models import UserProfile, RealEstateUnit, UserActionRel, Vendor, Action
+from database.models import UserProfile, RealEstateUnit, UserActionRel, Vendor, Action, Data
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from django.db.models import F
 
 class UserStore:
   def __init__(self):
@@ -68,27 +69,38 @@ class UserStore:
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
 
-      #TODO: update action stats
       user = UserProfile.objects.get(id=user_id)
       if not user:
-        return CustomMassenergizeError("Sign in required")
+        return None, CustomMassenergizeError("Sign in required")
 
-      action = Action.objects.get(id=action_id)
+      action: Action = Action.objects.get(id=action_id)
       if not action:
-        return CustomMassenergizeError("Please provide an action_id")
+        return None, CustomMassenergizeError("Please provide an action_id")
 
-      household = RealEstateUnit.objects.get(id=household_id)
+      household: RealEstateUnit = RealEstateUnit.objects.get(id=household_id)
       if not household:
-        return CustomMassenergizeError("Please provide a household_id")
+        return None, CustomMassenergizeError("Please provide a household_id")
 
       vendor = Vendor.objects.get(id=vendor_id) #not required
 
       #if this already exists as a todo just move it over
       completed = UserActionRel.objects.filter(user=user, real_estate_unit=household, action=action)
       if completed:
+        #TODO: update action stats
         completed.update(status="TODO")
         return completed.first(), None
+ 
+      # update all data points
+      for t in action.tags:
+        data = Data.objects.filter(community=action.community, tag=t)
+        if data:
+          data.update(value=max(F("value") - 1, 0)) #we never want to go negative
 
+        else:
+          #data for this community, action does not exist so create one
+          d = Data(tag=t, community=action.community, value=0, name=f"{t.name}")
+          d.save()
+      
       # create a new one since we didn't find it existed before
       new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="TODO")
 
@@ -107,7 +119,7 @@ class UserStore:
     try:
 
       if not context.user_is_logged_in:
-        return CustomMassenergizeError("Sign in required")
+        return None, CustomMassenergizeError("Sign in required")
       
       user_id = context.user_id
       action_id = args.get("action_id", None)
@@ -117,15 +129,15 @@ class UserStore:
 
       user = UserProfile.objects.get(id=user_id)
       if not user:
-        return CustomMassenergizeError("Sign in required")
+        return None, CustomMassenergizeError("Sign in required")
 
       action = Action.objects.get(id=action_id)
       if not action:
-        return CustomMassenergizeError("Please provide an action_id")
+        return None, CustomMassenergizeError("Please provide an action_id")
 
       household = RealEstateUnit.objects.get(id=household_id)
       if not household:
-        return CustomMassenergizeError("Please provide a household_id")
+        return None, CustomMassenergizeError("Please provide a household_id")
 
       vendor = Vendor.objects.get(id=vendor_id) #not required
 
@@ -140,6 +152,17 @@ class UserStore:
 
       if vendor_id:
         new_user_action_rel.vendor = vendor
+
+      # update all data points
+      for t in action.tags:
+        data = Data.objects.filter(community=action.community, tag=t)
+        if data:
+          data.update(value=F("value") + 1)
+
+        else:
+          #data for this community, action does not exist so create one
+          d = Data(tag=t, community=action.community, value=1, name=f"{t.name}")
+          d.save()
       
       new_user_action_rel.save()
 

@@ -34,7 +34,7 @@ class ActionHandler(RouteHandler):
     def action_info_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      args = rename_field("id", "action_id")
+      args = rename_field(args, "id", "action_id")
 
       # verify the body of the incoming request
       validator: Validator = Validator()
