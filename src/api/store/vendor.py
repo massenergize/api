@@ -45,6 +45,7 @@ class VendorStore:
 
   def create_vendor(self, ctx: Context, args) -> (Vendor, MassEnergizeAPIError):
     try:
+      tags = args.pop('tags', [])
       communities = args.pop('communities', [])
       image = args.pop('image', None)
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
@@ -67,7 +68,15 @@ class VendorStore:
           new_vendor.onboarding_contact = onboarding_contact
       
       new_vendor.save()
-      new_vendor.communities.set(communities)
+
+      if communities:
+        new_vendor.communities.set(communities)
+
+      if tags:
+        new_vendor.tags.set(tags)
+
+      new_vendor.save()
+
       return new_vendor, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -146,9 +155,10 @@ class VendorStore:
   def list_vendors_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     try:
       community = Community.objects.get(id=community_id)
-      vendors = community.vendor_set().filter(is_deleted=False)
+      vendors = community.vendor_set.all().filter(is_deleted=False)
       return vendors, None
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(e)
 
 

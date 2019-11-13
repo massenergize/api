@@ -104,7 +104,7 @@ class TagCollectionStore:
 
 
   def list_tag_collections_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    tag_collections = TagCollection.objects.filter(community__id = community_id)
+    tag_collections = TagCollection.objects.all()
     return tag_collections, None
 
 

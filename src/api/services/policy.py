@@ -54,7 +54,7 @@ class PolicyService:
     policies, err = self.store.list_policies_for_community_admin(community_id)
     if err:
       return None, err
-    return serialize_all(policies), None
+    return serialize_all(policies, full=True), None
 
 
   def list_policies_for_super_admin(self) -> (list, MassEnergizeAPIError):

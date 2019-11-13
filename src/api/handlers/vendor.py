@@ -79,6 +79,7 @@ class VendorHandler(RouteHandler):
         .add("communities", list, is_required=False)
         .add("service_area_states", list, is_required=False)
         .add("properties_serviced", list, is_required=False)
+        .add("tags", list, is_required=False)
       )
 
       args, err = validator.verify(args)
