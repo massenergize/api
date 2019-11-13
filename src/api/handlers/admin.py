@@ -27,6 +27,7 @@ class AdminHandler(RouteHandler):
     self.add("/admins.community.add", self.add_community_admin()) 
     self.add("/admins.community.remove", self.remove_community_admin()) 
     self.add("/admins.community.list", self.list_community_admin()) 
+    self.add("/admins.message", self.message()) 
 
 
   def add_super_admin(self) -> function:
@@ -147,4 +148,24 @@ class AdminHandler(RouteHandler):
         return err
       return MassenergizeResponse(data=admin_info)
     return list_community_admin_view
+
+  def message(self) -> function:
+    def message_admin_view(request) -> None: 
+      context: Context  = request.context
+      args = context.get_request_body() 
+      validator: Validator = Validator()
+      (validator
+        .add("community_id", str, is_required=False)
+        .add("subdomain", str, is_required=False)
+      )
+
+      args, err = validator.verify(args)
+      if err:
+        return err
+
+      admin_info, err = self.service.list_community_admin(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=admin_info)
+    return message_admin_view
 

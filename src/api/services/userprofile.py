@@ -57,3 +57,10 @@ class UserService:
     if err:
       return None, err
     return serialize_all(users), None
+
+
+  def add_action_todo(self, context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.add_action_todo(context, args)
+    if err:
+      return None, err
+    return serialize(user, full=True), None

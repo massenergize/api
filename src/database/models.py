@@ -605,102 +605,6 @@ class Service(models.Model):
 
 
 
-class Vendor(models.Model):
-  """
-  A class used to represent a Vendor/Contractor that provides a service 
-  associated with any of the actions.
-
-  Attributes
-  ----------
-  name : str
-    name of the Vendor
-  description: str
-    description of this service
-  logo: int
-    Foreign Key to Media file represtenting the logo for this Vendor    
-  banner: int
-    Foreign Key to Media file represtenting the banner for this Vendor  
-  address: int
-    Foreign Key for Location of this Vendor
-  key_contact: int
-    Foreign Key for MassEnergize User that is the key contact for this vendor
-  service_area: str
-    Information about whether this vendor provides services nationally, 
-    statewide, county or Town services only
-  properties_services: str
-    Whether this vendor services Residential or Commercial units only
-  onboarding_date: DateTime
-    When this vendor was onboard-ed on the MassEnergize Platform for this 
-      community
-  onboarding_contact:
-    Which MassEnergize Staff/User onboard-ed this vendor
-  verification_checklist:
-    contains information about some steps and checks needed for due diligence 
-    to be done on this vendor eg. Vendor MOU, Reesearch
-  is_verified: boolean
-    When the checklist items are all done and verified then set this as True
-    to confirm this vendor
-  more_info: JSON
-    any another dynamic information we would like to store about this Service 
-  created_at: DateTime
-    The date and time that this Vendor was added 
-  created_at: DateTime
-    The date and time of the last time any updates were made to the information
-    about this Vendor
-  """
-  id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
-  phone_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  email = models.EmailField(blank=True, null=True, db_index=True)
-  description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  logo = models.ForeignKey(Media, blank=True, null=True, 
-    on_delete=models.SET_NULL, related_name='vender_logo')
-  banner = models.ForeignKey(Media, blank=True, null=True, 
-    on_delete=models.SET_NULL, related_name='vendor_banner')
-  address = JSONField(blank=True, null=True)
-  key_contact = JSONField(blank=True, null=True)
-  service_area = models.CharField(max_length=SHORT_STR_LEN)
-  service_area_states = JSONField(blank=True, null=True)
-  services = models.ManyToManyField(Service, blank=True)
-  properties_serviced = JSONField(blank=True, null=True) 
-  onboarding_date = models.DateTimeField(auto_now_add=True)
-  onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
-    null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
-  verification_checklist = JSONField(blank=True, null=True) 
-  is_verified = models.BooleanField(default=False, blank=True)
-  location = JSONField(blank=True, null=True)
-  more_info = JSONField(blank=True, null=True)
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
-  communities = models.ManyToManyField(Community, blank=True)
-  is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False, blank=True)
-
-  def __str__(self):             
-    return self.name
-
-  def simple_json(self):
-    data = model_to_dict(self, exclude=[
-     'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services','communities'
-    ])
-    data['services'] = [s.simple_json() for s in self.services.all()]
-    data['communities'] = [c.simple_json() for c in self.communities.all()]
-    data['logo'] = get_json_if_not_none(self.logo)
-    return data
-
-
-  def full_json(self):
-    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
-    data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
-    data['logo'] = get_json_if_not_none(self.logo)
-    data['banner']  = get_json_if_not_none(self.banner)
-    data['services'] = [s.simple_json() for s in self.services.all()]
-    data['communities'] = [c.simple_json() for c in self.communities.all()]
-    return data
-
-  class Meta:
-    db_table = 'vendors'
-
 
 class ActionProperty(models.Model):
   """
@@ -782,6 +686,7 @@ class Tag(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN)
+  points = models.PositiveIntegerField(null=True, blank=True)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
   tag_collection = models.ForeignKey(TagCollection, null=True, 
     on_delete=models.CASCADE, blank=True)
@@ -807,6 +712,105 @@ class Tag(models.Model):
     ordering = ('rank',)
     db_table = 'tags'
     unique_together = [['rank', 'name', 'tag_collection']]
+
+
+
+class Vendor(models.Model):
+  """
+  A class used to represent a Vendor/Contractor that provides a service 
+  associated with any of the actions.
+
+  Attributes
+  ----------
+  name : str
+    name of the Vendor
+  description: str
+    description of this service
+  logo: int
+    Foreign Key to Media file represtenting the logo for this Vendor    
+  banner: int
+    Foreign Key to Media file represtenting the banner for this Vendor  
+  address: int
+    Foreign Key for Location of this Vendor
+  key_contact: int
+    Foreign Key for MassEnergize User that is the key contact for this vendor
+  service_area: str
+    Information about whether this vendor provides services nationally, 
+    statewide, county or Town services only
+  properties_services: str
+    Whether this vendor services Residential or Commercial units only
+  onboarding_date: DateTime
+    When this vendor was onboard-ed on the MassEnergize Platform for this 
+      community
+  onboarding_contact:
+    Which MassEnergize Staff/User onboard-ed this vendor
+  verification_checklist:
+    contains information about some steps and checks needed for due diligence 
+    to be done on this vendor eg. Vendor MOU, Reesearch
+  is_verified: boolean
+    When the checklist items are all done and verified then set this as True
+    to confirm this vendor
+  more_info: JSON
+    any another dynamic information we would like to store about this Service 
+  created_at: DateTime
+    The date and time that this Vendor was added 
+  created_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this Vendor
+  """
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
+  phone_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+  email = models.EmailField(blank=True, null=True, db_index=True)
+  description = models.CharField(max_length=LONG_STR_LEN, blank = True)
+  logo = models.ForeignKey(Media, blank=True, null=True, 
+    on_delete=models.SET_NULL, related_name='vender_logo')
+  banner = models.ForeignKey(Media, blank=True, null=True, 
+    on_delete=models.SET_NULL, related_name='vendor_banner')
+  address = JSONField(blank=True, null=True)
+  key_contact = JSONField(blank=True, null=True)
+  service_area = models.CharField(max_length=SHORT_STR_LEN)
+  service_area_states = JSONField(blank=True, null=True)
+  services = models.ManyToManyField(Service, blank=True)
+  properties_serviced = JSONField(blank=True, null=True) 
+  onboarding_date = models.DateTimeField(auto_now_add=True)
+  onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
+    null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
+  verification_checklist = JSONField(blank=True, null=True) 
+  is_verified = models.BooleanField(default=False, blank=True)
+  location = JSONField(blank=True, null=True)
+  more_info = JSONField(blank=True, null=True)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  communities = models.ManyToManyField(Community, blank=True)
+  tags = models.ManyToManyField(Tag, related_name='vendor_tags', blank=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  is_published = models.BooleanField(default=False, blank=True)
+
+  def __str__(self):             
+    return self.name
+
+  def simple_json(self):
+    data = model_to_dict(self, exclude=[
+     'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services','communities'
+    ])
+    data['services'] = [s.simple_json() for s in self.services.all()]
+    data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['logo'] = get_json_if_not_none(self.logo)
+    return data
+
+
+  def full_json(self):
+    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
+    data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
+    data['logo'] = get_json_if_not_none(self.logo)
+    data['banner']  = get_json_if_not_none(self.banner)
+    data['services'] = [s.simple_json() for s in self.services.all()]
+    data['communities'] = [c.simple_json() for c in self.communities.all()]
+    return data
+
+  class Meta:
+    db_table = 'vendors'
 
 
 class Action(models.Model):
@@ -1291,6 +1295,8 @@ class Data(models.Model):
     null=True, db_index=True )
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
+  action = models.ForeignKey(Action, blank=True,  
+    on_delete=models.CASCADE, null=True, db_index=True)
   info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -1965,3 +1971,39 @@ class ImpactPageSettings(models.Model):
   class Meta:
     db_table = 'impact_page_settings'
     verbose_name_plural = "ImpactPageSettings"
+
+
+class Message(models.Model):
+  """
+  A class used to represent  Role for users on the MassEnergize Platform
+
+  Attributes
+  ----------
+  name : str
+    name of the role
+  """
+  id = models.AutoField(primary_key=True)
+  email = models.EmailField(blank=True) 
+  user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True) 
+  title = models.CharField(max_length=SHORT_STR_LEN) 
+  body = models.TextField(max_length=LONG_STR_LEN)
+  community = models.ForeignKey(Community, blank=True, on_delete=models.SET_NULL, null=True)
+  is_read = models.BooleanField(default=False, blank=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+
+
+  def __str__(self):
+    return f"{self.title}"
+
+  def simple_json(self):
+    return model_to_dict(self)
+
+  def full_json(self):
+    return self.simple_json()
+
+
+  class Meta:
+    ordering = ('title',)
+    db_table = 'messages'
+
+

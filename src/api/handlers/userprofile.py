@@ -26,6 +26,11 @@ class UserHandler(RouteHandler):
     self.add("/users.update", self.update())
     self.add("/users.delete", self.delete())
     self.add("/users.remove", self.delete())
+    self.add("/users.actions.completed.add", self.delete())
+    self.add("/users.actions.completed.list", self.delete())
+    self.add("/users.actions.todo.add", self.delete())
+    self.add("/users.actions.todo.list", self.delete())
+
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list())
@@ -112,3 +117,19 @@ class UserHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=users)
     return super_admin_list_view
+
+  def add_action_todo(self) -> function:
+    def add_action_todo_view(request) -> None: 
+      context: Context = request.context
+      validator: Validator = Validator()
+      args: dict = (validator
+        .expect("action_id", str, is_required=True)
+        .expect("household_id", str, is_required=True)
+        .verify(context.args)
+      )
+
+      user_info, err = self.service.add_action_todo(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return add_action_todo_view
