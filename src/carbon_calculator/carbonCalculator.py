@@ -139,7 +139,7 @@ class CarbonCalculator:
             return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
-        user_id = inputs.pop("UserID",None)            
+        user_id = inputs.pop("user_id",None)            
         record = ActionPoints(  user_id=user_id,
                                 action=action,
                                 choices=inputs,
