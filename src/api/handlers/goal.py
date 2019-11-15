@@ -40,6 +40,7 @@ class GoalHandler(RouteHandler):
     def goal_info_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
+      print(args)
       goal_id = args.get('goal_id')
       goal_info, err = self.service.get_goal_info(goal_id)
       if err:
@@ -118,7 +119,7 @@ class GoalHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop("community_id", None)
-      goals, err = self.service.list_goals_for_community_admin(community_id)
+      goals, err = self.service.list_goals_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goals)
