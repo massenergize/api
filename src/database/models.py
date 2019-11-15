@@ -209,9 +209,7 @@ class Goal(models.Model):
     return res
 
   def full_json(self):
-    communities = self.community_set.all()
-    res = self.simple_json()
-    res["community"] = None if not communities else get_json_if_not_none(communities[0])
+    return self.simple_json()
 
   class Meta:
     db_table = 'goals'
@@ -952,6 +950,8 @@ class Event(models.Model):
 
   def simple_json(self):
     data = model_to_dict(self, exclude=['tags', 'image', 'community'])
+    data['start_date_and_time'] = self.start_date_and_time
+    data['end_date_and_time'] = self.end_date_and_time
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['community'] = get_json_if_not_none(self.community)
     data['image'] = None if not self.image else self.image.full_json()

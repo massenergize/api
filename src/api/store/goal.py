@@ -151,9 +151,8 @@ class GoalStore:
       goals.append(community.goal)
 
     for t in community.team_set.all():
-      print(t, t.community, t.goal)
       if t.goal is not None:
-        goals.append(t)
+        goals.append(t.goal)
     
     return goals
 

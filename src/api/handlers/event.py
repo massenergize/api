@@ -48,7 +48,6 @@ class EventHandler(RouteHandler):
     def create_event_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      print(args)
       ok, err = check_length(args, 'name', min_length=5, max_length=100)
       if not ok:
         return MassenergizeResponse(error=str(err), status=err.status)
