@@ -700,6 +700,7 @@ class Tag(models.Model):
   def simple_json(self):
     res = model_to_dict(self)
     res['order'] = self.rank
+    res['tag_collection_name'] = None if not self.tag_collection else self.tag_collection.name
     return res
 
 
@@ -873,7 +874,7 @@ class Action(models.Model):
     return self.title
 
   def simple_json(self):
-    data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
+    data =  model_to_dict(self, ['id', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
@@ -963,7 +964,7 @@ class Event(models.Model):
 
 
   class Meta:
-    ordering = ('-start_date_and_time',)
+    ordering = ('rank', '-start_date_and_time',)
     db_table = 'events'
 
 

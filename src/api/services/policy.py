@@ -50,15 +50,15 @@ class PolicyService:
       return None, err
     return serialize(policy), None
 
-  def list_policies_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    policies, err = self.store.list_policies_for_community_admin(community_id)
+  def list_policies_for_community_admin(self, context, community_id) -> (list, MassEnergizeAPIError):
+    policies, err = self.store.list_policies_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(policies, full=True), None
 
 
-  def list_policies_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    policies, err = self.store.list_policies_for_super_admin()
+  def list_policies_for_super_admin(self, context) -> (list, MassEnergizeAPIError):
+    policies, err = self.store.list_policies_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(policies, full=True), None

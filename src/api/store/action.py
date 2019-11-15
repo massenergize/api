@@ -1,7 +1,8 @@
-from database.models import Action, UserProfile, Community, Media
+from database.models import Action, UserProfile, Community, Media, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from django.db.models import Q
 import random
 
 class ActionStore:
@@ -25,6 +26,11 @@ class ActionStore:
         actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
       elif subdomain:
         actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain, is_deleted=False)
+      else:
+        return [], None
+      
+      if not context.is_dev:
+        actions = actions.filter(is_published=True)
 
       return actions, None
     except Exception as e:
@@ -37,7 +43,8 @@ class ActionStore:
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
       new_action = Action.objects.create(**args)
-      if community_id:
+      
+      if community_id and not args.get('is_global', False):
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
@@ -104,7 +111,7 @@ class ActionStore:
       if vendors:
         action.vendors.set(vendors)
 
-      if community_id:
+      if community_id and not args.get('is_global', False):
         community = Community.objects.filter(id=community_id).first()
         if community:
           action.community = community
@@ -126,9 +133,27 @@ class ActionStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
-  def list_actions_for_community_admin(self, context: Context,community_id) -> (list, MassEnergizeAPIError):
-    actions = Action.objects.filter(community__id = community_id)
-    return actions, None
+  def list_actions_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    try:
+      if context.user_is_super_admin:
+        return self.list_actions_for_super_admin(context)
+
+      elif not context.user_is_community_admin:
+        return None, CustomMassenergizeError("Sign in as a valid community admin")
+
+      if not community_id:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        comm_ids = [ag.community.id for ag in admin_groups]
+        actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        return actions, None
+
+      actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+      return actions, None
+
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def list_actions_for_super_admin(self, context: Context):

@@ -55,13 +55,14 @@ class ActionHandler(RouteHandler):
     def create_action_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
+      print(args)
       success, err = check_length(args, 'title', min_length=4, max_length=40)
       if not success:
         return MassenergizeResponse(error=str(err))
       community_id = args.pop('community_id', None)
       args['tags'] = parse_list(args.pop('tags', []))
       args['vendors'] = parse_list(args.pop('vendors', []))
-      args['is_global'] = parse_bool(args.pop('vendors', False))
+      args['is_global'] = parse_bool(args.pop('is_global', False))
       args['is_published'] = parse_bool(args.pop('is_published', False))
       action_info, err = self.service.create_action(context, community_id, args)
       if err:

@@ -117,7 +117,7 @@ class PolicyHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop('community_id', None)
-      policies, err = self.service.list_policies_for_community_admin(community_id)
+      policies, err = self.service.list_policies_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policies)
@@ -128,7 +128,7 @@ class PolicyHandler(RouteHandler):
     def super_admin_list_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      policies, err = self.service.list_policies_for_super_admin()
+      policies, err = self.service.list_policies_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policies)
