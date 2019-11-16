@@ -145,6 +145,8 @@ class VendorStore:
         return CustomMassenergizeError(f"No vendor with id {vendor_id}")
         
       vendor.pk = None
+      vendor.is_published = False
+      vendor.is_verified = False
       vendor.name = f"{vendor.name}-Copy-{random.randint(1,100000)}"
       vendor.save()
       return vendor, None

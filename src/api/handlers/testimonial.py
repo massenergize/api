@@ -37,7 +37,7 @@ class TestimonialHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       args = rename_field(args, 'testimonial_id', 'id')
-      testimonial_info, err = self.service.get_testimonial_info(args)
+      testimonial_info, err = self.service.get_testimonial_info(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -60,7 +60,7 @@ class TestimonialHandler(RouteHandler):
       if is_published:
         args["is_published"] = parse_bool(is_published)
       
-      testimonial_info, err = self.service.create_testimonial(args)
+      testimonial_info, err = self.service.create_testimonial(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -94,7 +94,7 @@ class TestimonialHandler(RouteHandler):
       args = rename_field(args, 'vendor_id', 'vendor')
       args['tags'] = parse_list(args.get('tags', []))
       testimonial_id = args.pop("testimonial_id", None)
-      testimonial_info, err = self.service.update_testimonial(testimonial_id, args)
+      testimonial_info, err = self.service.update_testimonial(context, testimonial_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -106,7 +106,7 @@ class TestimonialHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       testimonial_id = args.pop('testimonial_id', None)
-      testimonial_info, err = self.service.delete_testimonial(testimonial_id)
+      testimonial_info, err = self.service.delete_testimonial(context, testimonial_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -118,7 +118,7 @@ class TestimonialHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop("community_id", None)
-      testimonials, err = self.service.list_testimonials_for_community_admin(community_id)
+      testimonials, err = self.service.list_testimonials_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonials)
@@ -129,7 +129,7 @@ class TestimonialHandler(RouteHandler):
     def super_admin_list_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      testimonials, err = self.service.list_testimonials_for_super_admin()
+      testimonials, err = self.service.list_testimonials_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonials)

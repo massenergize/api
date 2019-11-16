@@ -37,7 +37,7 @@ class EventHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       event_id = args.pop('event_id', None)
-      event_info, err = self.service.get_event_info(event_id)
+      event_info, err = self.service.get_event_info(context, event_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -57,7 +57,7 @@ class EventHandler(RouteHandler):
       if args.pop('have_address', None):
         args = parse_location(args)
 
-      event_info, err = self.service.create_event(args)
+      event_info, err = self.service.create_event(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -71,7 +71,7 @@ class EventHandler(RouteHandler):
       community_id = args.pop('community_id', None)
       subdomain = args.pop('subdomain', None)
       user_id = args.pop('user_id', None)
-      event_info, err = self.service.list_events(community_id, subdomain, user_id)
+      event_info, err = self.service.list_events(context, community_id, subdomain, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -93,7 +93,7 @@ class EventHandler(RouteHandler):
       if args.pop('have_address', None):
         args = parse_location(args)
 
-      event_info, err = self.service.update_event(event_id, args)
+      event_info, err = self.service.update_event(context, event_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -105,7 +105,7 @@ class EventHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       event_id = args.get("event_id", None)
-      event_info, err = self.service.delete_event(event_id)
+      event_info, err = self.service.delete_event(context, event_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
@@ -117,7 +117,7 @@ class EventHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop("community_id", None)
-      events, err = self.service.list_events_for_community_admin(community_id)
+      events, err = self.service.list_events_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=events)
@@ -129,7 +129,7 @@ class EventHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       print(args)
-      events, err = self.service.list_events_for_super_admin()
+      events, err = self.service.list_events_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=events)

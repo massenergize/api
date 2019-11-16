@@ -78,6 +78,7 @@ class ActionStore:
       old_vendors = action_to_copy.vendors.all()
       new_action = action_to_copy
       new_action.pk = None
+      new_action.is_published = False
       new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
       new_action.save()
       new_action.tags.set(old_tags)

@@ -12,48 +12,48 @@ class EventService:
   def __init__(self):
     self.store =  EventStore()
 
-  def get_event_info(self, event_id) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.get_event_info(event_id)
+  def get_event_info(self, context, event_id) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.get_event_info(context, event_id)
     if err:
       return None, err
     return serialize(event), None
 
-  def list_events(self, community_id, subdomain, user_id) -> (list, MassEnergizeAPIError):
-    events, err = self.store.list_events(community_id, subdomain, user_id)
+  def list_events(self, context, community_id, subdomain, user_id) -> (list, MassEnergizeAPIError):
+    events, err = self.store.list_events(context, community_id, subdomain, user_id)
     if err:
       return None, err
     return serialize_all(events), None
 
 
-  def create_event(self, args) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.create_event(args)
+  def create_event(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.create_event(context, args)
     if err:
       return None, err
     return serialize(event), None
 
 
-  def update_event(self, event_id, args) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.update_event(event_id, args)
+  def update_event(self, context, event_id, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.update_event(context, event_id, args)
     if err:
       return None, err
     return serialize(event), None
 
-  def delete_event(self, args) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.delete_event(args)
+  def delete_event(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.delete_event(context, args)
     if err:
       return None, err
     return serialize(event), None
 
 
-  def list_events_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    events, err = self.store.list_events_for_community_admin(community_id)
+  def list_events_for_community_admin(self, context, community_id) -> (list, MassEnergizeAPIError):
+    events, err = self.store.list_events_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(events), None
 
 
-  def list_events_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    events, err = self.store.list_events_for_super_admin()
+  def list_events_for_super_admin(self, context) -> (list, MassEnergizeAPIError):
+    events, err = self.store.list_events_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(events), None
