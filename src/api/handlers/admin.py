@@ -28,6 +28,7 @@ class AdminHandler(RouteHandler):
     self.add("/admins.community.remove", self.remove_community_admin()) 
     self.add("/admins.community.list", self.list_community_admin()) 
     self.add("/admins.message", self.message()) 
+    self.add("/admins.summary", self.message()) 
 
 
   def add_super_admin(self) -> function:

@@ -36,15 +36,12 @@ SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 DEBUG = not IS_PROD
 
 ALLOWED_HOSTS = [
-    '*', #TODO: remove later
-    '10.0.0.187:8000',
     'localhost',
     '127.0.0.1',
     'api.massenergize.org',
     'apis.massenergize.org',
     'api.massenergize.com',
     'apis.massenergize.com',
-    'energizewayland.org',
 ]
 
 INSTALLED_APPS = [

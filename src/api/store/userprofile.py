@@ -166,7 +166,7 @@ class UserStore:
       for t in action.tags:
         data = Data.objects.filter(community=action.community, tag=t)
         if data:
-          data.update(value=F("value") + 1)
+          data.update(value=F("value") - 1)
 
         else:
           #data for this community, action does not exist so create one

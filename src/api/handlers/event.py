@@ -26,6 +26,8 @@ class EventHandler(RouteHandler):
     self.add("/events.update", self.update())
     self.add("/events.delete", self.delete())
     self.add("/events.remove", self.delete())
+    self.add("/events.rsvp", self.delete())
+    self.add("/events.todo", self.delete())
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list())
