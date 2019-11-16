@@ -76,6 +76,8 @@ class EventStore:
       if community:
         community = Community.objects.get(pk=community)
       
+      events.update(**args)
+
       event: Event = events.first()
       if not event:
         return None, CustomMassenergizeError(f"No event with id: {event_id}")

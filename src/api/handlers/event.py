@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to events"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, parse_list, parse_bool, check_length, parse_date, parse_int
+from _main_.utils.common import get_request_contents, parse_list, parse_bool, check_length, parse_date, parse_int, parse_location
 from api.services.event import EventService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -51,13 +51,11 @@ class EventHandler(RouteHandler):
       ok, err = check_length(args, 'name', min_length=5, max_length=100)
       if not ok:
         return MassenergizeResponse(error=str(err), status=err.status)
-
-
-      args['start_date_and_time'] = parse_date(args.get('start_date_and_time', ''))
-      args['end_date_and_time'] = parse_date(args.get('end_date_and_time', ''))
       args['tags'] = parse_list(args.get('tags', []))
       args['is_global'] = parse_bool(args.pop('is_global', None))
 
+      if args.pop('have_address', None):
+        args = parse_location(args)
 
       event_info, err = self.service.create_event(args)
       if err:
@@ -91,6 +89,9 @@ class EventHandler(RouteHandler):
 
       args['tags'] = parse_list(args.get('tags', []))
       args['is_global'] = parse_bool(args.pop('is_global', None))
+
+      if args.pop('have_address', None):
+        args = parse_location(args)
 
       event_info, err = self.service.update_event(event_id, args)
       if err:
