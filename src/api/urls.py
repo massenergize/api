@@ -41,6 +41,5 @@ urlpatterns.extend(TagCollectionHandler().get_routes_to_views())
 urlpatterns.extend(TeamHandler().get_routes_to_views())
 urlpatterns.extend(TestimonialHandler().get_routes_to_views())
 urlpatterns.extend(UserHandler().get_routes_to_views())
-urlpatterns.extend(UserHandler().get_routes_to_views())
 urlpatterns.extend(VendorHandler().get_routes_to_views())
 

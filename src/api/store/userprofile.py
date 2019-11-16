@@ -61,27 +61,34 @@ class UserStore:
 
   def add_action_todo(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      if not context.user_is_logged_in:
-        return CustomMassenergizeError("Sign in required")
-      
-      user_id = context.user_id
+      # if not context.user_is_logged_in:
+      #   return CustomMassenergizeError("Sign in required")
+      user_id = context.user_id or args.pop('user_id', None)
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
 
-      user = UserProfile.objects.get(id=user_id)
+      user: UserProfile = UserProfile.objects.get(id=user_id)
       if not user:
         return None, CustomMassenergizeError("Sign in required")
 
       action: Action = Action.objects.get(id=action_id)
       if not action:
-        return None, CustomMassenergizeError("Please provide an action_id")
+        return None, CustomMassenergizeError("Please provide a valid action_id")
 
-      household: RealEstateUnit = RealEstateUnit.objects.get(id=household_id)
+      if household_id:
+        household: RealEstateUnit = RealEstateUnit.objects.get(id=household_id)
+        
+      else:
+        household = user.real_estate_units.all().first()
+
       if not household:
-        return None, CustomMassenergizeError("Please provide a household_id")
+        household = RealEstateUnit(name=f"{user.preferred_name}'s Home'")
+        household.save()
+        user.real_estate_units.add(household)
 
-      vendor = Vendor.objects.get(id=vendor_id) #not required
+      if vendor_id:
+        vendor = Vendor.objects.get(id=vendor_id) #not required
 
       #if this already exists as a todo just move it over
       completed = UserActionRel.objects.filter(user=user, real_estate_unit=household, action=action)
@@ -91,14 +98,14 @@ class UserStore:
         return completed.first(), None
  
       # update all data points
-      for t in action.tags:
+      for t in action.tags.all():
         data = Data.objects.filter(community=action.community, tag=t)
         if data:
-          data.update(value=max(F("value") - 1, 0)) #we never want to go negative
+          data.update(value=F("value")+1) #we never want to go negative
 
         else:
           #data for this community, action does not exist so create one
-          d = Data(tag=t, community=action.community, value=0, name=f"{t.name}")
+          d = Data(tag=t, community=action.community, value=1, name=f"{t.name}")
           d.save()
       
       # create a new one since we didn't find it existed before
@@ -111,6 +118,8 @@ class UserStore:
 
       return new_user_action_rel, None
     except Exception as e:
+      import traceback
+      traceback.print_exc()
       return None, CustomMassenergizeError(str(e))
 
 

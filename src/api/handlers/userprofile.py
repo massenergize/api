@@ -26,9 +26,9 @@ class UserHandler(RouteHandler):
     self.add("/users.update", self.update())
     self.add("/users.delete", self.delete())
     self.add("/users.remove", self.delete())
-    self.add("/users.actions.completed.add", self.delete())
-    self.add("/users.actions.completed.list", self.delete())
-    self.add("/users.actions.todo.add", self.delete())
+    self.add("/users.actions.completed.add", self.add_action_completed())
+    self.add("/users.actions.completed.list", self.list())
+    self.add("/users.actions.todo.add", self.add_action_todo())
     self.add("/users.actions.todo.list", self.delete())
 
 
@@ -121,15 +121,37 @@ class UserHandler(RouteHandler):
   def add_action_todo(self) -> function:
     def add_action_todo_view(request) -> None: 
       context: Context = request.context
+      print(context)
       validator: Validator = Validator()
-      args: dict = (validator
+      args, err = (validator
         .expect("action_id", str, is_required=True)
-        .expect("household_id", str, is_required=True)
+        .expect("household_id", str, is_required=False)
         .verify(context.args)
       )
-
+      if err:
+        return err
       user_info, err = self.service.add_action_todo(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
     return add_action_todo_view
+
+
+  def add_action_completed(self) -> function:
+    def add_action_completed_view(request) -> None: 
+      context: Context = request.context
+      print(context)
+      validator: Validator = Validator()
+      args, err = (validator
+        .expect("action_id", str, is_required=True)
+        .expect("household_id", str, is_required=False)
+        .verify(context.args)
+      )
+      if err:
+        return err
+
+      user_info, err = self.service.add_action_completed(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return add_action_completed_view

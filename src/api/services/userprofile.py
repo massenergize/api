@@ -64,3 +64,9 @@ class UserService:
     if err:
       return None, err
     return serialize(user, full=True), None
+
+  def add_action_completed(self, context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.add_action_completed(context, args)
+    if err:
+      return None, err
+    return serialize(user, full=True), None
