@@ -21,6 +21,8 @@ class GraphHandler(RouteHandler):
     self.add("/graphs.create", self.create())
     self.add("/graphs.add", self.create())
     self.add("/graphs.list", self.list())
+    self.add("/graphs.actions.completed", self.graph_actions_completed())
+    self.add("/graphs.communities.impact", self.graph_community_impact())
     self.add("/graphs.update", self.update())
     self.add("/graphs.delete", self.delete())
     self.add("/graphs.remove", self.delete())
@@ -67,13 +69,63 @@ class GraphHandler(RouteHandler):
 
   def list(self) -> function:
     def list_graph_view(request) -> None: 
-      context = request.context
-      args = context.args
+      context: Context = request.context
+      args: dict = context.args
+
+      # verify the body of the incoming request
+      v: Validator = Validator()
+      v.expect("community_id", str, False)
+      v.expect("subdomain", str, False)
+      v.rename("id", "community_id")
+      args, err = v.verify(args, strict=True)
+      if err:
+        return err
+      
       graph_info, err = self.service.list_graphs(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=graph_info)
     return list_graph_view
+
+  def graph_actions_completed(self) -> function:
+    def graph_actions_completed_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+
+      # verify the body of the incoming request
+      v: Validator = Validator()
+      v.expect("community_id", str, False)
+      v.expect("subdomain", str, False)
+      v.rename("id", "community_id")
+      args, err = v.verify(args, strict=True)
+      if err:
+        return err
+      
+      graph_info, err = self.service.graph_actions_completed(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=graph_info)
+    return graph_actions_completed_view
+
+  def graph_community_impact(self) -> function:
+    def graph_community_impact_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+
+      # verify the body of the incoming request
+      v: Validator = Validator()
+      v.expect("community_id", str, False)
+      v.expect("subdomain", str, False)
+      v.rename("id", "community_id")
+      args, err = v.verify(args, strict=True)
+      if err:
+        return err
+      
+      graph_info, err = self.service.graph_community_impact(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=graph_info)
+    return graph_community_impact_view
 
 
   def update(self) -> function:

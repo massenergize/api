@@ -19,10 +19,22 @@ class GraphService:
     return serialize(graph, full=True), None
 
   def list_graphs(self, context, args) -> (list, MassEnergizeAPIError):
-    graph, err = self.store.list_graphs(context, args)
+    graphs, err = self.store.list_graphs(context, args)
     if err:
       return None, err
-    return serialize_all(graph), None
+    return graphs, None
+
+  def graph_actions_completed(self, context, args) -> (list, MassEnergizeAPIError):
+    graph, err = self.store.graph_actions_completed(context, args)
+    if err:
+      return None, err
+    return graph, None
+
+  def graph_community_impact(self, context, args) -> (list, MassEnergizeAPIError):
+    graph, err = self.store.graph_communities_impact(context, args)
+    if err:
+      return None, err
+    return graph, None
 
 
   def create_graph(self, context, args) -> (dict, MassEnergizeAPIError):

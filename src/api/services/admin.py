@@ -53,3 +53,15 @@ class AdminService:
       return None, err
     return serialize(admins), None
 
+  def message_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    admins, err = self.store.message_admin(context, args)
+    if err:
+      return None, err
+    return serialize(admins), None
+
+  def list_admin_messages(self, context, args) -> (dict, MassEnergizeAPIError):
+    admins, err = self.store.list_admin_messages(context, args)
+    if err:
+      return None, err
+    return serialize_all(admins), None
+

@@ -1,4 +1,4 @@
-from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Tag
+from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -20,35 +20,92 @@ class GraphStore:
 
   def list_graphs(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      subdomain = args.pop('subdomain', None)
-      community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      user_email = args.pop('user_email', None)
-
       graphs = []
+      actions_completed_graph, err = self.graph_actions_completed(context, args)
+      if err:
+        return [], err
+      communities_impact_graph, err = self.graph_communities_impact(context, args)
+      if err:
+        return [], err
 
-      if context.is_dev:
-        if subdomain:
-          graphs = Graph.objects.filter(community__subdomain=subdomain, is_deleted=False)
-        elif community_id:
-          graphs = Graph.objects.filter(community__id=community_id, is_deleted=False)
-        elif user_id:
-          graphs = Graph.objects.filter(user__id=user_id, is_deleted=False)
-        elif user_email:
-          graphs = Graph.objects.filter(user__email=subdomain, is_deleted=False)
+      if actions_completed_graph:
+        graphs.append(actions_completed_graph)
 
-      else:
-        if subdomain:
-          graphs = Graph.objects.filter(community__subdomain=subdomain, is_deleted=False, is_published=True)
-        elif community_id:
-          graphs = Graph.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
-        elif user_id:
-          graphs = Graph.objects.filter(user__id=user_id, is_deleted=False, is_published=True)
-        elif user_email:
-          graphs = Graph.objects.filter(user__email=subdomain, is_deleted=False, is_published=True)
-
+      if communities_impact_graph:
+        graphs.append(communities_impact_graph)
 
       return graphs, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+
+  def graph_actions_completed(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
+    try:
+      subdomain = args.get('subdomain', None)
+      community_id = args.get('community_id', None)
+
+      if not community_id and not subdomain:
+        return None, CustomMassenergizeError("Missing community_id or subdomain field")
+
+      community: Community = Community.objects.get(Q(pk=community_id)| Q(subdomain=subdomain))
+      if not community:
+        return None, InvalidResourceError()
+
+      if context.is_prod and not context.user_is_admin():
+        if not community.is_published:
+          return None, CustomMassenergizeError("Content Available Yet")
+
+      graph = Graph.objects.prefetch_related('data').select_related('community').filter(community=community, title="Number of Actions Completed").first()
+      if not graph:
+        graph = Graph.objects.create(community=community, title="Number of Actions Completed")
+        graph.save()
+
+      category, ok = TagCollection.objects.get_or_create(name="Category")
+      for t in category.tag_set.all():
+        d, created = Data.objects.get_or_create(tag=t, community=community)
+        if created:
+          d.value = 10
+        d.name = t.name
+        d.save()
+        graph.data.add(d)
+
+      graph.save()
+
+      return graph.full_json(), None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+
+  def _get_households_engaged(self, community: Community):
+    households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
+    actions_completed = UserActionRel.objects.filter(action__community__id=community.id, status="DONE").count()
+    return {"community": {"id": community.id, "name": community.name}, "actions_completed": actions_completed, "households_engaged": households_engaged}
+
+  
+  def graph_communities_impact(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
+    try:
+      subdomain = args.get('subdomain', None)
+      community_id = args.get('community_id', None)
+      if not community_id and not subdomain:
+        return None, CustomMassenergizeError("Missing community_id or subdomain field")
+
+      community: Community = Community.objects.get(Q(pk=community_id)| Q(subdomain=subdomain))
+      if not community:
+        return None, InvalidResourceError()
+
+      res = [self._get_households_engaged(community)]
+      limit = 10
+      for c in Community.objects.filter(is_deleted=False, is_published=True)[:limit]:
+
+        if c.id != community.id:
+          res.append(self._get_households_engaged(c))
+
+      return {
+        "id": 1,
+        "title": "Communities Impact",
+        "graph_type": "bar_chart",
+        "data": res
+      }, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 

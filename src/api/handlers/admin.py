@@ -27,8 +27,8 @@ class AdminHandler(RouteHandler):
     self.add("/admins.community.add", self.add_community_admin()) 
     self.add("/admins.community.remove", self.remove_community_admin()) 
     self.add("/admins.community.list", self.list_community_admin()) 
-    self.add("/admins.message", self.message()) 
-    self.add("/admins.summary", self.message()) 
+    self.add("/admins.messages.add", self.message()) 
+    self.add("/admins.messages.list", self.list_messages()) 
 
 
   def add_super_admin(self) -> function:
@@ -90,10 +90,10 @@ class AdminHandler(RouteHandler):
       args = context.get_request_body() 
       validator: Validator = Validator()
       (validator
-        .add("name", str, is_required=True)
-        .add("email", str, is_required=True)
-        .add("community_id", str, is_required=False)
-        .add("subdomain", str, is_required=False)
+        .expect("name", str, is_required=True)
+        .expect("email", str, is_required=True)
+        .expect("community_id", str, is_required=False)
+        .expect("subdomain", str, is_required=False)
       )
 
       args, err = validator.verify(args)
@@ -164,9 +164,30 @@ class AdminHandler(RouteHandler):
       if err:
         return err
 
-      admin_info, err = self.service.list_community_admin(context, args)
+      admin_info, err = self.service.message_admin(context, args)
       if err:
         return err
       return MassenergizeResponse(data=admin_info)
     return message_admin_view
+
+
+  def list_messages(self) -> function:
+    def list_messages_view(request) -> None: 
+      context: Context  = request.context
+      args = context.get_request_body() 
+      validator: Validator = Validator()
+      (validator
+        .add("community_id", str, is_required=False)
+        .add("subdomain", str, is_required=False)
+      )
+
+      args, err = validator.verify(args)
+      if err:
+        return err
+
+      admin_info, err = self.service.list_admin_messages(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=admin_info)
+    return list_messages_view
 

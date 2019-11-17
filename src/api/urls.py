@@ -7,6 +7,7 @@ from api.handlers.admin import AdminHandler
 from api.handlers.community import CommunityHandler
 from api.handlers.event import EventHandler
 from api.handlers.goal import GoalHandler
+from api.handlers.graph import GraphHandler
 from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
 from api.handlers.page_settings__actions import ActionsPageSettingsHandler
 from api.handlers.page_settings__contactus import ContactUsPageSettingsHandler
@@ -34,6 +35,7 @@ urlpatterns.extend(ContactUsPageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(DonatePageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(EventHandler().get_routes_to_views())
 urlpatterns.extend(GoalHandler().get_routes_to_views())
+urlpatterns.extend(GraphHandler().get_routes_to_views())
 urlpatterns.extend(PolicyHandler().get_routes_to_views())
 urlpatterns.extend(HomePageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(TagHandler().get_routes_to_views())

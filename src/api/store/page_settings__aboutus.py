@@ -37,7 +37,6 @@ class AboutUsPageSettingsStore:
     try:
       about_us_page_id= args.get('id', None)
       if about_us_page_id:
-        print(args)
         actions_page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_id)
         actions_page_setting.update(**args)
         if not actions_page_setting:

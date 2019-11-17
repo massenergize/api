@@ -2,6 +2,7 @@ from database.models import Community, UserProfile, Graph, Media, AboutUsPageSet
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from django.db.models import Q
 
 class CommunityStore:
   def __init__(self):
@@ -9,13 +10,18 @@ class CommunityStore:
 
   def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      community = Community.objects.filter(**args).select_related('logo', 'goal').first()
+      subdomain = args.get('subdomain', None)
+      community_id = args.get('id', None)
+
+      if not community_id and not subdomain:
+        return None, CustomMassenergizeError("Missing community_id or subdomain field")
+
+      community: Community = Community.objects.select_related('logo', 'goal').filter(Q(pk=community_id)| Q(subdomain=subdomain)).first()
       if not community:
         return None, InvalidResourceError()
 
       
-      if context.is_prod:
-        if not community.is_published:
+      if context.is_prod and not community.is_published and not context.user_is_admin():
           return None, InvalidResourceError()
 
       return community, None

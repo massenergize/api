@@ -15,6 +15,9 @@ class Validator:
     }
     return self
 
+  def add(self, field_name, field_type=str, is_required=True):
+    return self.expect(field_name, field_type, is_required)
+
   def expect_all(self, lst):
     for (field_name, field_type, is_required) in lst:
       self.fields[field_name] = {

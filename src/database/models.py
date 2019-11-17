@@ -276,6 +276,9 @@ class Community(models.Model):
   def __str__(self):      
     return self.name
 
+  def info(self):
+    return model_to_dict(self, ['id', 'name', 'subdomain'])
+
   def simple_json(self):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
       'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
@@ -1302,10 +1305,10 @@ class Data(models.Model):
   is_published = models.BooleanField(default=True)
 
   def __str__(self):         
-    return "%s (%d)" % (self.name, self.value)
+    return "%s | %s (%d) |(%s)" % (self.community, self.name, self.value,  self.tag)
 
   def simple_json(self):
-    return model_to_dict(self)
+    return model_to_dict(self, fields=["id", "name", "value"])
 
   def full_json(self):
     data = self.simple_json()
@@ -1342,17 +1345,12 @@ class Graph(models.Model):
 
 
   def simple_json(self):
-    return {
-      "id": self.id,
-      "title": self.title,
-      "graph_type": self.graph_type,
-      "community": get_json_if_not_none(self.community)
-    }
+    return model_to_dict(self, fields=["title", "community", "is_published"])
 
 
   def full_json(self):
     res =  self.simple_json()
-    res["data"] = [d.full_json() for d in self.data.all()]
+    res["data"] = [d.simple_json() for d in self.data.all()]
     return res
 
 
@@ -1983,9 +1981,11 @@ class Message(models.Model):
     name of the role
   """
   id = models.AutoField(primary_key=True)
+  user_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True) 
+  title = models.CharField(max_length=SHORT_STR_LEN) 
+  uploaded_file = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL) 
   email = models.EmailField(blank=True) 
   user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True) 
-  title = models.CharField(max_length=SHORT_STR_LEN) 
   body = models.TextField(max_length=LONG_STR_LEN)
   community = models.ForeignKey(Community, blank=True, on_delete=models.SET_NULL, null=True)
   is_read = models.BooleanField(default=False, blank=True)
@@ -1996,10 +1996,14 @@ class Message(models.Model):
     return f"{self.title}"
 
   def simple_json(self):
-    return model_to_dict(self)
+    res = model_to_dict(self)
+    res["community"] = None if not self.community else self.community.info()
+    return res
 
   def full_json(self):
-    return self.simple_json()
+    res = self.simple_json()
+    res["uploaded_file"] = get_json_if_not_none(self.uploaded_file)
+    return res
 
 
   class Meta:

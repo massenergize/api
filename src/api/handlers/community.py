@@ -39,7 +39,7 @@ class CommunityHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       args = rename_field(args, 'community_id', 'id')
-      community_info, err = self.service.get_community_info(args)
+      community_info, err = self.service.get_community_info(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
