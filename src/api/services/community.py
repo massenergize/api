@@ -64,3 +64,9 @@ class CommunityService:
     if err:
       return None, err
     return serialize_all(communities), None
+
+  def get_graphs(self, context) -> (list, MassEnergizeAPIError):
+    communities, err = self.store.list_communities_for_super_admin(context)
+    if err:
+      return None, err
+    return serialize_all(communities), None

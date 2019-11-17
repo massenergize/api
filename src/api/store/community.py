@@ -1,4 +1,4 @@
-from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, UserProfile, Graph, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -7,11 +7,17 @@ class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
 
-  def get_community_info(self, args) -> (dict, MassEnergizeAPIError):
+  def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      community = Community.objects.filter(**args).first()
+      community = Community.objects.filter(**args).select_related('logo', 'goal').first()
       if not community:
         return None, InvalidResourceError()
+
+      
+      if context.is_prod:
+        if not community.is_published:
+          return None, InvalidResourceError()
+
       return community, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -187,4 +193,15 @@ class CommunityStore:
       communities = Community.objects.filter(is_deleted=False)
       return communities, None
     except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
+
+  def get_graphs(self, context, community_id):
+    try:
+      if not community_id:
+        return [], None
+      graphs = Graph.objects.filter(is_deleted=False, community__id=community_id)
+      return graphs, None
+    except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(str(e))

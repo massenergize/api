@@ -12,9 +12,14 @@ class ActionStore:
   def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
     try:
       actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
-      action = actions_retrieved.first()
+      action: Action = actions_retrieved.first()
       if not action:
         return None, InvalidResourceError()
+
+      if context.is_prod and action.community:
+        if (not action.is_published) or not action.community.is_published:
+          return None, InvalidResourceError()
+
       return action, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -29,6 +34,8 @@ class ActionStore:
       else:
         return [], None
       
+      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
+
       if not context.is_dev:
         actions = actions.filter(is_published=True)
 
@@ -159,8 +166,8 @@ class ActionStore:
 
   def list_actions_for_super_admin(self, context: Context):
     try:
-      if not context.user_is_super_admin:
-        return None, CustomMassenergizeError("Insufficient Privileges")
+      # if not context.user_is_super_admin:
+      #   return None, CustomMassenergizeError("Insufficient Privileges")
       actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
       return actions, None
     except Exception as e:

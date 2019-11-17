@@ -872,7 +872,7 @@ class Action(models.Model):
     return self.title
 
   def simple_json(self):
-    data =  model_to_dict(self, ['id', 'title', 'is_global', 'icon', 'rank', 
+    data =  model_to_dict(self, ['id','is_published', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
     data['tags'] = [t.simple_json() for t in self.tags.all()]

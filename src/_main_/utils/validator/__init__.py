@@ -31,8 +31,14 @@ class Validator:
   def _common_name(self, s):
     return (' '.join(s.split('_'))).title()
 
-  def verify(self, args):
+  def verify(self, args, strict=False):
     try:
+      # when in strict mode remove all unexpected fields
+      if strict:
+        for f in args:
+          if f not in self.fields:
+            del args[f]
+
       #first rename all fields that need renaming
       for (old_name, new_name) in self.rename_fields:
         val = self.fields.pop(old_name, None)
@@ -61,9 +67,13 @@ class Validator:
         else:
           if field_type == 'location':
             args[field_name] = parse_location(args)
+        
+        
+     
+          
 
       return args, None
-      
+
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(e)

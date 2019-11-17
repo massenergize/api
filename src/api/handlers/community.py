@@ -26,6 +26,8 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.update", self.update())
     self.add("/communities.delete", self.delete())
     self.add("/communities.remove", self.delete())
+    self.add("/communities.graphs", self.delete())
+    self.add("/communities.data", self.delete())
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list())
@@ -152,3 +154,4 @@ class CommunityHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=communities)
     return super_admin_list_view
+

@@ -21,6 +21,7 @@ class Context:
   def __init__(self):
     self.args = {}
     self.is_dev = False
+    self.is_prod = False
     self.logger = logger
     self.user_is_logged_in = False
     self.user_id = None
@@ -42,6 +43,8 @@ class Context:
 
     #set the is_dev field
     self.is_dev = self.args.pop('is_dev', False)
+    if not self.is_dev:
+      self.is_prod = True
 
   def get_request_body(self):
     return self.args

@@ -34,12 +34,12 @@ class ActionHandler(RouteHandler):
     def action_info_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      args = rename_field(args, "id", "action_id")
 
       # verify the body of the incoming request
-      validator: Validator = Validator()
-      validator.expect("action_id", str, is_required=True)
-      args, err = validator.verify(args)
+      v: Validator = Validator()
+      v.expect("action_id", str, is_required=True)
+      v.rename("id", "action_id")
+      args, err = v.verify(args, strict=True)
       if err:
         return err
       
