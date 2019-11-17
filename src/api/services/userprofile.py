@@ -45,15 +45,15 @@ class UserService:
     return serialize(user), None
 
 
-  def list_users_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    users, err = self.store.list_users_for_community_admin(community_id)
+  def list_users_for_community_admin(self, context, community_id) -> (list, MassEnergizeAPIError):
+    users, err = self.store.list_users_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(users), None
 
 
-  def list_users_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    users, err = self.store.list_users_for_super_admin()
+  def list_users_for_super_admin(self, context) -> (list, MassEnergizeAPIError):
+    users, err = self.store.list_users_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(users), None

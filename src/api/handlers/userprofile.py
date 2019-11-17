@@ -101,7 +101,7 @@ class UserHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop("community_id", None)
-      users, err = self.service.list_users_for_community_admin(community_id)
+      users, err = self.service.list_users_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=users)
@@ -112,7 +112,7 @@ class UserHandler(RouteHandler):
     def super_admin_list_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      users, err = self.service.list_users_for_super_admin()
+      users, err = self.service.list_users_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=users)

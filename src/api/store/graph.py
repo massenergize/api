@@ -61,8 +61,9 @@ class GraphStore:
 
       category, ok = TagCollection.objects.get_or_create(name="Category")
       for t in category.tag_set.all():
-        d, created = Data.objects.get_or_create(tag=t, community=community)
-        if created:
+        d = Data.objects.filter(tag=t, community=community).first()
+        if not d:
+          d = Data.objects.create(tag=t, community=community)
           d.value = 10
         d.name = t.name
         d.save()
@@ -73,6 +74,8 @@ class GraphStore:
       return graph.full_json(), None
     except Exception as e:
       print(e)
+      import traceback
+      traceback.print_exc()
       return None, CustomMassenergizeError(e)
 
 

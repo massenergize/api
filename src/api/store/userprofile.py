@@ -1,8 +1,9 @@
 from database.models import UserProfile, RealEstateUnit, UserActionRel, Vendor, Action, Data
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
+from .utils import get_community, get_user
 
 class UserStore:
   def __init__(self):
@@ -45,14 +46,42 @@ class UserStore:
       return None, InvalidResourceError()
 
 
-  def list_users_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    users = UserProfile.objects.filter(community__id = community_id)
-    return users, None
-
-
-  def list_users_for_super_admin(self):
+  def list_users_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
-      users = UserProfile.objects.all()
+      if context.user_is_super_admin:
+        return self.list_users_for_super_admin(context)
+
+      # elif not context.user_is_community_admin:
+      #   return None, NotAuthorizedError()
+
+      community, err = get_community(community_id)
+
+      if not community and context.user_id:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        users = None
+        for ag in admin_groups:
+          if not users:
+            users = ag.community.userprofile_set.all()
+          else:
+            users |= ag.community.userprofile_set.all()
+            
+        return users, None
+      elif not community:
+        return [], None
+
+      users = community.userprofile_set.filter(is_deleted=False)
+      return users, None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+
+  def list_users_for_super_admin(self, context: Context):
+    try:
+      # if not context.user_is_super_admin:
+      #   return None, NotAuthorizedError()
+      users = UserProfile.objects.filter(is_deleted=False)
       return users, None
     except Exception as e:
       print(e)

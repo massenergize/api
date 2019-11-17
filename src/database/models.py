@@ -1990,6 +1990,9 @@ class Message(models.Model):
   community = models.ForeignKey(Community, blank=True, on_delete=models.SET_NULL, null=True)
   is_read = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
+  archive = models.BooleanField(default=False, blank=True)
+  starred = models.BooleanField(default=False, blank=True)
+  created_at = models.DateTimeField(auto_now_add=True)
 
 
   def __str__(self):

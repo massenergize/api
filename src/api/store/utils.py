@@ -1,7 +1,7 @@
 from database.models import Community, UserProfile
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 
-def get_community(community_id, subdomain):
+def get_community(community_id=None, subdomain=None):
   try:
     if community_id:
       return Community.objects.filter(pk=community_id).first(), None
