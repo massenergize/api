@@ -1294,6 +1294,7 @@ class Data(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   value =  models.PositiveIntegerField(default=0)
+  reported_value =  models.PositiveIntegerField(default=0)
   denominator =  models.CharField(max_length = SHORT_STR_LEN, blank=True)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
   tag = models.ForeignKey(Tag, blank=True, on_delete=models.SET_NULL, 
@@ -1308,7 +1309,7 @@ class Data(models.Model):
     return "%s | %s (%d) |(%s)" % (self.community, self.name, self.value,  self.tag)
 
   def simple_json(self):
-    return model_to_dict(self, fields=["id", "name", "value"])
+    return model_to_dict(self, fields=["id", "name", "value", "reported_value"])
 
   def full_json(self):
     data = self.simple_json()
@@ -1992,7 +1993,7 @@ class Message(models.Model):
   is_deleted = models.BooleanField(default=False, blank=True)
   archive = models.BooleanField(default=False, blank=True)
   starred = models.BooleanField(default=False, blank=True)
-  created_at = models.DateTimeField(auto_now_add=True)
+  created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 
   def __str__(self):

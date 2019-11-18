@@ -68,7 +68,6 @@ class GraphStore:
         d.name = t.name
         d.save()
         graph.data.add(d)
-
       graph.save()
 
       return graph.full_json(), None
