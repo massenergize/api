@@ -1680,7 +1680,8 @@ class Subscriber(models.Model):
 
   def simple_json(self):
     res = model_to_dict(self)
-    res['community'] = get_json_if_not_none(self.community)
+    res['community'] = None if not self.community else self.community.info()
+    return res
 
   def full_json(self):
     return self.simple_json()

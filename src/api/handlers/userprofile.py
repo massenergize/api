@@ -66,7 +66,7 @@ class UserHandler(RouteHandler):
       args: dict = context.args
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
-      user_info, err = self.service.list_users(community_id, user_id)
+      user_info, err = self.service.list_users(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

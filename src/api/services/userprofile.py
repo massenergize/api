@@ -18,11 +18,11 @@ class UserService:
       return None, err
     return serialize(user, full=True), None
 
-  def list_users(self, user_id) -> (list, MassEnergizeAPIError):
-    user, err = self.store.list_users(user_id)
+  def list_users(self, community_id) -> (list, MassEnergizeAPIError):
+    user, err = self.store.list_users(community_id)
     if err:
       return None, err
-    return serialize(user), None
+    return serialize_all(user), None
 
 
   def create_user(self, args) -> (dict, MassEnergizeAPIError):

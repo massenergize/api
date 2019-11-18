@@ -17,10 +17,11 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
   def list_users(self, community_id) -> (list, MassEnergizeAPIError):
-    users = UserProfile.objects.filter(community__id=community_id)
-    if not users:
+    community,err = get_community(community_id)
+    
+    if not community:
       return [], None
-    return [t.simple_json() for t in users], None
+    return community.userprofile_set.all(), None
 
 
   def create_user(self, args) -> (dict, MassEnergizeAPIError):

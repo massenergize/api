@@ -44,8 +44,8 @@ class GraphService:
     return serialize(graph), None
 
 
-  def update_graph(self, context, graph_id, args) -> (dict, MassEnergizeAPIError):
-    graph, err = self.store.update_graph(context, graph_id, args)
+  def update_graph(self, context, args) -> (dict, MassEnergizeAPIError):
+    graph, err = self.store.update_graph(context, args)
     if err:
       return None, err
     return serialize(graph), None

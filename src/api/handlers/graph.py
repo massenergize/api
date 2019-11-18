@@ -24,6 +24,7 @@ class GraphHandler(RouteHandler):
     self.add("/graphs.actions.completed", self.graph_actions_completed())
     self.add("/graphs.communities.impact", self.graph_community_impact())
     self.add("/graphs.update", self.update())
+    self.add("/graphs.data.update", self.update())
     self.add("/graphs.delete", self.delete())
     self.add("/graphs.remove", self.delete())
 
@@ -132,19 +133,7 @@ class GraphHandler(RouteHandler):
     def update_graph_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      print(args)
-      is_approved = args.pop("is_approved", None)
-      if is_approved:
-        args["is_approved"] = parse_bool(is_approved)
-      is_published = args.get("is_published", None)
-      if is_published:
-        args["is_published"] = parse_bool(is_published)
-      args = rename_field(args, 'community_id', 'community')
-      args = rename_field(args, 'action_id', 'action')
-      args = rename_field(args, 'vendor_id', 'vendor')
-      args['tags'] = parse_list(args.get('tags', []))
-      graph_id = args.pop("graph_id", None)
-      graph_info, err = self.service.update_graph(context, graph_id, args)
+      graph_info, err = self.service.update_graph(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=graph_info)

@@ -63,16 +63,17 @@ class GraphStore:
       for t in category.tag_set.all():
         d = Data.objects.filter(tag=t, community=community).first()
         if not d:
-          d = Data.objects.create(tag=t, community=community)
-          d.value = 10
-        d.name = t.name
-        d.save()
+          d = Data.objects.create(tag=t, community=community, name=f"{t.name}", value=10)
+          if not d.pk:
+            d.save()
+        if d.name != t.name:
+          d.name = t.name
+          d.save()
         graph.data.add(d)
       graph.save()
 
       return graph.full_json(), None
     except Exception as e:
-      print(e)
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(e)
@@ -160,54 +161,20 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_graph(self, context: Context, graph_id, args) -> (dict, MassEnergizeAPIError):
+  def update_graph(self, context:Context, args:dict) -> (dict, MassEnergizeAPIError):
     try:
-      graph = Graph.objects.filter(id=graph_id)
-      if not graph:
-        return None, InvalidResourceError()
+      for k,v in args.items():
+        if 'reported_value' in k:
+          data_id = k.split('_')[-1]
+          if data_id.isnumeric() and v.isnumeric():
+            data = Data.objects.filter(pk=data_id).first()
+            if data:
+              print(data)
+              data.reported_value = v
+              data.save()
       
-      image = args.pop('image', None)
-      tags = args.pop('tags', [])
-      action = args.pop('action', None)
-      vendor = args.pop('vendor', None)
-      community = args.pop('community', None)
-      user_email = args.pop('user_email', None)
-     
-      new_graph = graph.first()
 
-      # if user_email:
-      #   user = UserProfile.objects.filter(email=user_email).first()
-      #   if not user:
-      #     return None, CustomMassenergizeError("No user with that email")
-      #   new_graph.user = user
-
-      if image:
-        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-        new_graph.image = media
-
-      if action:
-        graph_action = Action.objects.get(id=action)
-        new_graph.action = graph_action
-
-      if vendor:
-        graph_vendor = Vendor.objects.get(id=vendor)
-        new_graph.vendor = graph_vendor
-
-      if community:
-        graph_community = Community.objects.get(id=community)
-        new_graph.community = graph_community
-      
-      tags_to_set = []
-      for t in tags:
-        tag = Tag.objects.filter(pk=t).first()
-        if tag:
-          tags_to_set.append(tag)
-      if tags_to_set:
-        new_graph.tags.set(tags_to_set)
-
-      new_graph.save()
-      graph.update(**args)
-      return new_graph, None
+      return None, None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(e)
