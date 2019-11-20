@@ -95,14 +95,15 @@ class SubscriberStore:
       if not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
-        communities = [ag.community.subscribers for ag in admin_groups]
+        communities = [ag.community for ag in admin_groups]
         subscribers = None
         for ag in admin_groups:
           if not subscribers:
-            subscribers = ag.community.subscribers.all().filter(is_deleted=False)
+            subscribers = ag.community.subscriber_set.all().filter(is_deleted=False)
           else:
-            subscribers |= ag.community.subscribers.all().filter(is_deleted=False)
+            subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False)
 
+        print(subscribers)
         return subscribers, None
 
       community: Community = Community.objects.get(pk=community_id)

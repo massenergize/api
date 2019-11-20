@@ -85,6 +85,14 @@ class GraphStore:
     return {"community": {"id": community.id, "name": community.name}, "actions_completed": actions_completed, "households_engaged": households_engaged}
 
   
+
+
+  def _get_all_households_engaged(self):
+    households_engaged = UserProfile.objects.filter(is_deleted=False).count()
+    actions_completed = UserActionRel.objects.filter(status="DONE").count()
+    return {"community": {"id": 0, "name": 'Other'}, "actions_completed": actions_completed, "households_engaged": households_engaged}
+
+  
   def graph_communities_impact(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
     try:
       subdomain = args.get('subdomain', None)
@@ -197,17 +205,27 @@ class GraphStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
-      if not community_id:
-        user = UserProfile.objects.get(pk=context.user_id)
-        admin_groups = user.communityadmingroup_set.all()
-        comm_ids = [ag.community.id for ag in admin_groups]
-        graphs = Graph.objects.filter(community__id__in = comm_ids, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
-        return graphs, None
+      user = UserProfile.objects.get(pk=context.user_id)
+      admin_groups = user.communityadmingroup_set.all()
+      comm_ids = [ag.community.id for ag in admin_groups]
+      communities = [ag.community for ag in admin_groups]
 
-      graphs = Graph.objects.filter(community__id = community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
-      return graphs, None
+      graphs = []      
+      for community in communities:
+        g, err = self.graph_actions_completed(context, {"community_id": community.id})
+        if g:
+          graphs.append({community.name: g["data"]})
+
+      comm_impact = []
+      for c in Community.objects.filter(is_deleted=False, id__in = comm_ids):
+        comm_impact.append(self._get_households_engaged(c))
+      comm_impact.append(self._get_all_households_engaged())
+      return {
+        "actions_completed": graphs,
+        "communities_impact": comm_impact
+      }, None
+
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(e)
 
 

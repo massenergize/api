@@ -52,7 +52,7 @@ class CommunityService:
     return serialize_all(community), None
 
 
-  def list_communities_for_community_admin(self, context) -> (list, MassEnergizeAPIError):
+  def list_communities_for_community_admin(self, context: Context) -> (list, MassEnergizeAPIError):
     communities, err = self.store.list_communities_for_community_admin(context)
     if err:
       return None, err

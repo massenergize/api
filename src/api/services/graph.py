@@ -61,11 +61,11 @@ class GraphService:
     graphs, err = self.store.list_graphs_for_community_admin(context, community_id)
     if err:
       return None, err
-    return serialize_all(graphs), None
+    return graphs, None
 
 
   def list_graphs_for_super_admin(self, context) -> (list, MassEnergizeAPIError):
     graphs, err = self.store.list_graphs_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(graphs), None
+    return graphs, None

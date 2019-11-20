@@ -2016,3 +2016,34 @@ class Message(models.Model):
     db_table = 'messages'
 
 
+class ActivityLog(models.Model):
+  """
+  A class used to represent  Activity Log on the MassEnergize Platform
+
+  Attributes
+  ----------
+  """
+  id = models.AutoField(primary_key=True)
+  activity = models.CharField(max_length=SHORT_STR_LEN) 
+  user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True) 
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True) 
+  created_at = models.DateTimeField(auto_now_add=True)
+
+  def __str__(self):
+    return self.activity
+
+  def simple_json(self):
+    return  model_to_dict(self)
+
+  def full_json(self):
+    res = self.simple_json()
+    res["user"] = get_json_if_not_none(self.user)
+    res["community"] = get_json_if_not_none(self.community)
+    return res
+
+
+  class Meta:
+    ordering = ('activity',)
+    db_table = 'activity_logs'
+
+
