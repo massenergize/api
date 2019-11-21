@@ -184,11 +184,11 @@ class CalcUser(models.Model):
     """
     id = models.AutoField(primary_key=True)
     #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-    first_name = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    last_name = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    first_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    last_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     email = models.EmailField(max_length=SHORT_STR_LEN, 
       unique=True, db_index=True)
-    locality = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    locality = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     groups = models.ManyToManyField(Group, blank=True)
     minimum_age = models.BooleanField(default=False, blank=True)
     accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)

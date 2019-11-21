@@ -6,6 +6,13 @@ from database.utils.common import get_request_contents
 
 from .carbonCalculator import CarbonCalculator
 from .queries import QueryEvents, QueryStations, QueryGroups
+from .calcUsers import QueryCalcUsers, CreateCalcUser
+
+#from database.utils.create_factory import CreateFactory
+#from database.utils.database_reader import DatabaseReader
+
+#FACTORY = CreateFactory("Data Creator")
+#FETCH = DatabaseReader("Database Reader")
 
 # Create your views here.
 CALC = CarbonCalculator()
@@ -52,3 +59,14 @@ def importcsv(request):
 def exportcsv(request):
 	inputs = get_request_contents(request)
 	return JsonResponse(CALC.Export(inputs))
+
+def users(request):
+  args = get_request_contents(request)
+  if request.method == 'GET':
+    users = QueryCalcUsers(args)
+    return Json(users)
+  elif request.method == 'POST':
+    #about to create a new User instance
+    user = CreateCalcUser(args)
+    return Json(user)
+  return Json(None)
