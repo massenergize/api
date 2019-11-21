@@ -66,7 +66,7 @@ class UserStore:
             users = ag.community.userprofile_set.all()
           else:
             users |= ag.community.userprofile_set.all()
-            
+        users = users.distinct()
         return users, None
       elif not community:
         return [], None

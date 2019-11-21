@@ -15,7 +15,7 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = True
+IS_PROD = False
 
 DEPLOY_VERSION = '0.0.1'
 

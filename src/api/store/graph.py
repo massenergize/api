@@ -233,8 +233,22 @@ class GraphStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      events = Graph.objects.filter(is_deleted=False).select_related('image', 'community', 'vendor').prefetch_related('tags')
-      return events, None
+      
+      graphs = []      
+      for community in Community.objects.filter(is_deleted=False)[:4]:
+        g, err = self.graph_actions_completed(context, {"community_id": community.id})
+        if g:
+          graphs.append({community.name: g["data"]})
+
+      comm_impact = []
+      for c in Community.objects.filter(is_deleted=False)[:4]:
+        comm_impact.append(self._get_households_engaged(c))
+      comm_impact.append(self._get_all_households_engaged())
+      return {
+        "actions_completed": graphs,
+        "communities_impact": comm_impact
+      }, None
+
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

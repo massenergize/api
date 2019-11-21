@@ -458,9 +458,10 @@ class UserProfile(models.Model):
     return self.email
 
   def simple_json(self):
-    res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email'])
+    res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
     res['user_info'] = self.user_info
     res['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    res['communities'] = [c.name for c in self.communities.all()]
     return res
 
 
