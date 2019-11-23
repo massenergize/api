@@ -119,7 +119,12 @@ class VendorStore:
         if onboarding_contact:
           vendor.onboarding_contact = onboarding_contact
     
+      tags = args.pop('tags', [])
+      if tags:
+        vendor.tags.set(tags)
+
       vendor.save()
+
 
       updated = Vendor.objects.filter(id=vendor_id).update(**args)
       return vendor, None

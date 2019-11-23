@@ -26,8 +26,9 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.update", self.update())
     self.add("/communities.delete", self.delete())
     self.add("/communities.remove", self.delete())
-    self.add("/communities.graphs", self.delete())
-    self.add("/communities.data", self.delete())
+    self.add("/communities.graphs", self.info())
+    self.add("/communities.data", self.info())
+    self.add("/communities.join", self.info())
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list())
@@ -69,6 +70,9 @@ class CommunityHandler(RouteHandler):
 
       args = rename_field(args, 'image', 'logo')
       args = parse_location(args)
+      if not args['is_geographically_focused']:
+        args.pop('location', None)
+      
       community_info, err = self.service.create_community(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

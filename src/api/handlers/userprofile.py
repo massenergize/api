@@ -27,9 +27,12 @@ class UserHandler(RouteHandler):
     self.add("/users.delete", self.delete())
     self.add("/users.remove", self.delete())
     self.add("/users.actions.completed.add", self.add_action_completed())
-    self.add("/users.actions.completed.list", self.list())
     self.add("/users.actions.todo.add", self.add_action_todo())
-    self.add("/users.actions.todo.list", self.delete())
+    self.add("/users.actions.list", self.list())
+    self.add("/users.households.add", self.add_household())
+    self.add("/users.households.remove", self.remove_household())
+    self.add("/users.households.list", self.list_households())
+    self.add("/users.events.list", self.list_events())
 
 
     #admin routes
@@ -155,3 +158,47 @@ class UserHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
     return add_action_completed_view
+
+
+  def list_households(self) -> function:
+    def list_households_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      user_info, err = self.service.get_user_info(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return list_households_view
+
+  def remove_household(self) -> function:
+    def remove_household_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+
+      user_info, err = self.service.get_user_info(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return remove_household_view
+
+  def add_household(self) -> function:
+    def add_household_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      user_id = args.pop('user_id', None)
+      user_info, err = self.service.get_user_info(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return add_household_view
+
+  def list_events(self) -> function:
+    def list_events_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      user_id = args.pop('user_id', None)
+      user_info, err = self.service.get_user_info(user_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return list_events_view

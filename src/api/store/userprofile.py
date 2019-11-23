@@ -1,4 +1,4 @@
-from database.models import UserProfile, RealEstateUnit, UserActionRel, Vendor, Action, Data
+from database.models import UserProfile, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -93,14 +93,20 @@ class UserStore:
     try:
       # if not context.user_is_logged_in:
       #   return CustomMassenergizeError("Sign in required")
-      user_id = context.user_id or args.pop('user_id', None)
+      user_id = context.user_id or args.get('user_id')
+      user_email = context.user_email or args.get('user_email')
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
+    
 
-      user: UserProfile = UserProfile.objects.get(id=user_id)
+      user = None
+      if user_id:
+        user = UserProfile.objects.get(id=user_id)
+      elif user_email:
+        user = UserProfile.objects.get(email=user_email)
       if not user:
-        return None, CustomMassenergizeError("Sign in required")
+        return None, CustomMassenergizeError("Sign in required / provide user_id or user_email")
 
       action: Action = Action.objects.get(id=action_id)
       if not action:
@@ -157,18 +163,23 @@ class UserStore:
   def add_action_completed(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
 
-      if not context.user_is_logged_in:
-        return None, CustomMassenergizeError("Sign in required")
+      # if not context.user_is_logged_in:
+      #   return None, CustomMassenergizeError("Sign in required")
       
-      user_id = context.user_id
+      user_id = context.user_id or args.get('user_id')
+      user_email = context.user_email or args.get('user_email')
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
 
+      user = None
+      if user_id:
+        user = UserProfile.objects.get(id=user_id)
+      elif user_email:
+        user = UserProfile.objects.get(email=user_email)
 
-      user = UserProfile.objects.get(id=user_id)
       if not user:
-        return None, CustomMassenergizeError("Sign in required")
+        return None, CustomMassenergizeError("Sign in required / Provide user_id")
 
       action = Action.objects.get(id=action_id)
       if not action:
@@ -178,7 +189,20 @@ class UserStore:
       if not household:
         return None, CustomMassenergizeError("Please provide a household_id")
 
-      vendor = Vendor.objects.get(id=vendor_id) #not required
+
+      # update all data points
+      for t in action.tags.all():
+        data = Data.objects.filter(community=action.community, tag=t)
+        if data:
+          print(data)
+          data.update(value=F("value") + 1)
+          print(data)
+
+        else:
+          #data for this community, action does not exist so create one
+          d = Data(tag=t, community=action.community, value=1, name=f"{t.name}")
+          d.save()
+      
 
       #if this already exists as a todo just move it over
       completed = UserActionRel.objects.filter(user=user, real_estate_unit=household, action=action)
@@ -190,19 +214,9 @@ class UserStore:
       new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="DONE")
 
       if vendor_id:
+        vendor = Vendor.objects.get(id=vendor_id) #not required
         new_user_action_rel.vendor = vendor
 
-      # update all data points
-      for t in action.tags:
-        data = Data.objects.filter(community=action.community, tag=t)
-        if data:
-          data.update(value=F("value") - 1)
-
-        else:
-          #data for this community, action does not exist so create one
-          d = Data(tag=t, community=action.community, value=1, name=f"{t.name}")
-          d.save()
-      
       new_user_action_rel.save()
 
       return new_user_action_rel, None

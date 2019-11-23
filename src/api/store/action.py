@@ -16,9 +16,9 @@ class ActionStore:
       if not action:
         return None, InvalidResourceError()
 
-      if context.is_prod and action.community:
-        if (not action.is_published) or not action.community.is_published:
-          return None, InvalidResourceError()
+      # if context.is_prod and action.community:
+      #   if (not action.is_published) or not action.community.is_published:
+      #     return None, InvalidResourceError()
 
       return action, None
     except Exception as e:

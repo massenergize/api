@@ -63,6 +63,7 @@ class GraphStore:
       for t in category.tag_set.all():
         d = Data.objects.filter(tag=t, community=community).first()
         if not d:
+          print(t, community)
           d = Data.objects.create(tag=t, community=community, name=f"{t.name}", value=10)
           if not d.pk:
             d.save()

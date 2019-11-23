@@ -341,6 +341,7 @@ class RealEstateUnit(models.Model):
     max_length=TINY_STR_LEN, 
     choices=CHOICES["REAL_ESTATE_TYPES"].items()
   )
+  community = models.ForeignKey(Community, null=True, on_delete=models.SET_NULL)
   location = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)

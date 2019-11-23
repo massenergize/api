@@ -26,8 +26,8 @@ class EventHandler(RouteHandler):
     self.add("/events.update", self.update())
     self.add("/events.delete", self.delete())
     self.add("/events.remove", self.delete())
-    self.add("/events.rsvp", self.delete())
-    self.add("/events.todo", self.delete())
+    self.add("/events.rsvp", self.info())
+    self.add("/events.todo", self.save_for_later())
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list())
@@ -44,6 +44,29 @@ class EventHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
     return event_info_view
+
+
+  def rsvp(self) -> function:
+    def rsvp_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      event_id = args.pop('event_id', None)
+      event_info, err = self.service.get_event_info(context, event_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=event_info)
+    return rsvp_view
+
+  def save_for_later(self) -> function:
+    def save_for_later_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      event_id = args.pop('event_id', None)
+      event_info, err = self.service.get_event_info(context, event_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=event_info)
+    return save_for_later_view
 
 
   def create(self) -> function:
