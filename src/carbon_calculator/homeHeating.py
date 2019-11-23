@@ -57,7 +57,7 @@ def EvalEnergyAudit(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    explanation = "Didn't choose to sign up for an energy audit"
+    explanation = "Didn't choose to sign up for an energy audit."
     # inputs: energy_audit_recently,energy_audit,heating_fuel,electric_utility
     signup_energy_audit = inputs.get('energy_audit', YES)
     #heating_fuel = inputs.get("heating_fuel","Fuel Oil")
@@ -66,7 +66,7 @@ def EvalEnergyAudit(inputs):
     if signup_energy_audit == YES:
         explanation = "You may have had an energy audit too recently?" 
         if already_had_audit != YES:
-            explanation = "You chose to sign up for an energy audit, now get it scheduled and try to follow through on the recommendations.  "
+            explanation = "You chose to sign up for an energy audit, now get it scheduled and try to follow through on the recommendations."
             points = ENERGY_AUDIT_POINTS
 
     return points, cost, savings, explanation
@@ -76,7 +76,7 @@ def EvalProgrammableThermostats(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
     #have_pstats,pstats_programmed,install_programmable_thermostats,heating_fuel
-    explanation = "Didn't choose to install programmable thermostats"
+    explanation = "Didn't choose to install programmable thermostats."
 
     install_pstats = inputs.get('install_pstats',YES)
     have_pstats = inputs.get('have_pstats',NO)
@@ -92,7 +92,7 @@ def EvalProgrammableThermostats(inputs):
                 cost = 150. 
                 explanation = "Installing and using a programmable thermostat can save up to %d percent on your heating bill (UCS)." % (int(100*pstat_load_reduction))
             else:
-                explanation = "We don't recommend using a programmable thermostat for %s systems, which generally have their own special thermostats" % heating_fuel
+                explanation = "We don't recommend using a programmable thermostat for %s systems, which generally have their own special thermostats." % heating_fuel
         else:
             explanation = "You already have programmable thermostat(s)."
             pstats_programmed = inputs.get("pstats_programmed", YES)
@@ -104,7 +104,7 @@ def EvalWeatherization(inputs):
     #weatherized,weatherize_home,heating_fuel
     points = cost = savings = 0.
     locality = getLocality(inputs)
-    explanation = "Didn't choose to weatherize"
+    explanation = "Didn't choose to weatherize."
 
     weatherize_home = inputs.get('weatherize_home',NO)
     # could get this from fuel usage ...
@@ -134,7 +134,7 @@ HEATING_SYSTEMS = ["Boiler","Furnace","Baseboard","Wood Stove","Other"]
 AC_TYPES = ["None","Central","Wall","Other"]
 def EvalHeatingSystemAssessment(inputs):
     #heating_system_assessment,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
-    explanation = "Didn't sign up for a heating system assessment"
+    explanation = "Didn't sign up for a heating system assessment."
     points = cost = savings = 0.
     #locality = getLocality(inputs)
 
@@ -152,7 +152,7 @@ HEATING_EFF = 'heating_efficiency'
 NEW_SYSTEM = 'new_system'
 def EvalEfficientBoilerFurnace(inputs):
     #upgrade_heating_system_efficiency,heating_fuel,heating_system_type,heating_system_age
-    explanation = "Didn't choose to upgrade to an efficient boiler or furnace"
+    explanation = "Didn't choose to upgrade to an efficient boiler or furnace."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -188,15 +188,15 @@ def EvalEfficientBoilerFurnace(inputs):
 
         payback = cost / savings
         if payback > 0 and payback < 10:
-            explanation = "Upgrading to a higher efficiency boiler or furnace could save %.1f tons of CO2 per year, and pay for itself in around %d years" % (points/2000, int(payback))
+            explanation = "Upgrading to a higher efficiency boiler or furnace could save %.1f tons of CO2 per year, and pay for itself in around %d years." % (points/2000, int(payback))
         else:
-            explanation = "Upgrading to a higher efficiency boiler or furnace could save %.1f tons of CO2 per year, but the payback time would be >10 years" %  (points/2000)
+            explanation = "Upgrading to a higher efficiency boiler or furnace could save %.1f tons of CO2 per year, but the payback time would be >10 years." %  (points/2000)
 
     return points, cost, savings, explanation
 
 def EvalAirSourceHeatPump(inputs):
     #install_ashp,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
-    explanation = "Didn't choose to install an air-source heat pump"
+    explanation = "Didn't choose to install an air-source heat pump."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -221,15 +221,15 @@ def EvalAirSourceHeatPump(inputs):
 
         payback = cost / savings
         if payback > 0 and payback < 10:
-            explanation = "Installing an air-source heat pump system for your home could save %d tons of CO2 per year, and pay for itself in around %d years" % (int(points/2000), int(payback))
+            explanation = "Installing an air-source heat pump system for your home could save %d tons of CO2 per year, and pay for itself in around %d years." % (int(points/2000), int(payback))
         else:
-            explanation = "Installing an air-source heat pump system for your home could save %d tons of CO2 per year, but the payback time would be >10 years" % int(points/2000)
+            explanation = "Installing an air-source heat pump system for your home could save %d tons of CO2 per year, but the payback time would be >10 years." % int(points/2000)
 
     return points, cost, savings, explanation
 
 def EvalGroundSourceHeatPump(inputs):
     #install_gshp,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
-    explanation = "Didn't choose to install a ground-source heat pump"
+    explanation = "Didn't choose to install a ground-source heat pump."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 

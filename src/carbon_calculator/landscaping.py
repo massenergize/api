@@ -11,7 +11,7 @@ STANDARD_LAWNSIZE = 5000.
 LAWN_SIZES = {"None":0.,"Small (<500 sq ft)":500, "Medium (500-2000 sq ft)":1500,"Sizable (2000-5000 sq ft)":4000, "Large (>5000 sq ft)":8000}
 def EvalReduceLawnSize(inputs):
     #lawn_size,reduce_lawn_size,mower_type,mowing_frequency
-    explanation = "Didn't choose to reduce lawn size"
+    explanation = "Didn't choose to reduce lawn size."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -64,13 +64,13 @@ def EvalReduceLawnSize(inputs):
 
             savings = (reduction/lawn_size) * lawn_cost
             points = (reduction/lawn_size) * lawn_co2
-            explanation = "Reducing your lawn size (%s) can lower cost and emissions"
+            explanation = "Reducing your lawn size (%s) can lower cost and emissions."
 
     return points, cost, savings, explanation
 
 def EvalReduceLawnCare(inputs):
     #lawn_size,lawn_service,mowing_frequency,mower_type,fertilizer,fertilizer_applications
-    explanation = "Didn't choose to reduce mowing or fertilizing frequency"
+    explanation = "Didn't choose to reduce mowing or fertilizing frequency."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -125,7 +125,7 @@ def EvalReduceLawnCare(inputs):
 
 def EvalElectricMower(inputs):
     #lawn_size,mower_type,mower_switch
-    explanation = "Didn't choose to switch to an electric or manual mower"
+    explanation = "Didn't choose to switch to an electric or manual mower."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -148,13 +148,13 @@ def EvalElectricMower(inputs):
         print(total_mows, lawn_size/STANDARD_LAWNSIZE)
         points = total_mows * (lawn_size/STANDARD_LAWNSIZE) * (co2_per_gas_mow - co2_per_elec_mow)
         cost = getDefault(locality,'lawn_cost_elec_mower', 400.)
-        explanation = "Switching your gas mower with electric is cleaner and less noisy, besides reducing emissions"
+        explanation = "Switching your gas mower with electric is cleaner and less noisy, besides reducing emissions."
 
     return points, cost, savings, explanation
 
 def EvalRakeOrElecBlower(inputs):
     #leaf_cleanup_gas_blower,leaf_cleanup_blower_switch
-    explanation = "Didn't choose to switch to a rake or electric blower"
+    explanation = "Didn't choose to switch to a rake or electric blower."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -172,7 +172,7 @@ def EvalRakeOrElecBlower(inputs):
             co2_per_blower_hour = gal_per_blow * co2_per_gal_gas
 
             points = blower_hours * (lawn_size/STANDARD_LAWNSIZE) * co2_per_blower_hour
-            explanation = "Switching your gas blower with electric or using a rake is cleaner and much less noisy, besides reducing emissions"
+            explanation = "Switching your gas blower with electric or using a rake is cleaner and much less noisy, besides reducing emissions."
         else:
             explanation = "You already don't use a gasoline powered blower."
 

@@ -4,7 +4,7 @@ from .CCConstants import NO,YES, FREQUENCIES
 CAR_POINTS = 8000
 def EvalReplaceCar(inputs):
     #transportation_car_type,replace_car,car_annual_miles,car_mpg,car_model_new
-    explanation = "Didn't choose to replace a car with a hybrid or electric"
+    explanation = "Didn't choose to replace a car with a hybrid or electric."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -112,7 +112,7 @@ def EvalReplaceCar(inputs):
             car_price = car_price
             explanation = "The new car would save %.0f gallons of gas over 10 years." % (10 * (gallons - gal_gas))
         else:
-            explanation = "Didn't specify milage or type of car to replace it with"
+            explanation = "Didn't specify milage or type of car to replace it with."
             return points, cost, savings, explanation
 
         points = old_co2 - new_co2
@@ -123,7 +123,7 @@ def EvalReplaceCar(inputs):
 
 def EvalReduceMilesDriven(inputs):
     #reduce_total_mileage,car_annual_miles,car_mpg,transportation_public,transportation_public_amount,transportation_commute_bike_walk,transportation_commute_bike_walk_amount,transportation_telecommute,transportation_telecommute_amount
-    explanation = "Didn't choose to reduce miles driven"
+    explanation = "Didn't choose to reduce miles driven."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -163,7 +163,7 @@ def EvalReduceMilesDriven(inputs):
 
 def EvalEliminateCar(inputs):
     #eliminate_car,transportation_car_type,car_annual_miles,car_mpg
-    explanation = "Didn't choose to eliminate a car"
+    explanation = "Didn't choose to eliminate a car."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -200,7 +200,7 @@ def EvalEliminateCar(inputs):
 FLIGHT_POINTS = 2000
 def EvalReduceFlights(inputs):
     #flights_amount,transportation_flights
-    explanation = "Didn't choose to reduce flights"
+    explanation = "Didn't choose to reduce flights."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -229,13 +229,13 @@ def EvalReduceFlights(inputs):
         points = reduce_flights * default_flight_co2
         savings = reduce_flights * default_flight_cost
         cost = 0.
-        explanation = "Reducing flights can save a ton of money and more than that of CO2"
+        explanation = "Reducing flights can save a ton of money and more than that of CO2."
 
     return points, cost, savings, explanation
 
 def EvalOffsetFlights(inputs):
     #flights_amount,offset_flights
-    explanation = "Didn't choose to offset flights"
+    explanation = "Didn't choose to offset flights."
     points = cost = savings = 0.
     locality = getLocality(inputs)
     
@@ -255,6 +255,6 @@ def EvalOffsetFlights(inputs):
         points = offset_co2
         savings = - offset_cost
         cost = 0
-        explanation = "Purchasing these flight offsets would cost around $%.0f, but save %.1f tons CO2 annually" % (offset_cost, offset_co2/2000.)
+        explanation = "Purchasing these flight offsets would cost around $%.0f, but save %.1f tons CO2 annually." % (offset_cost, offset_co2/2000.)
 
     return points, cost, savings, explanation

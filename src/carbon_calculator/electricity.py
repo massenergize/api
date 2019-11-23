@@ -22,7 +22,7 @@ def EvalCommunitySolar(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    explanation = "Didn't choose to sign up for community solar"
+    explanation = "Didn't choose to sign up for community solar."
     join_community_solar = inputs.get("community_solar",NO)
 
     monthly_elec_bill = int(inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150)))
@@ -33,10 +33,10 @@ def EvalCommunitySolar(inputs):
     annual_kwh = 12*(monthly_elec_bill - fixed_charge)/kwh_price
     fractional_savings = getDefault(locality, "elec_community_solar_average_savings",0.07)       # 7% on utility bill from one company ([3])
     if join_community_solar == YES:
-        explanation = "You may not be eligible for community solar, which is available to MA customers of Eversource or National Grid"
+        explanation = "You may not be eligible for community solar, which is available to MA customers of Eversource or National Grid."
         electric_utility = inputs.get("electric_utility","").lower()
         if electric_utility == "eversource" or electric_utility == "ever source" or electric_utility == "nationalgrid" or electric_utility == "national grid":
-            explanation = "You may be eligible for community solar, which can save 7-10% on your electric bill" # could be eligible.  May depend the community
+            explanation = "You may be eligible for community solar, which can save 7-10% on your electric bill." # could be eligible.  May depend the community
             points = fractional_savings * annual_kwh * co2_per_kwh
             savings = fractional_savings * annual_kwh * kwh_price
             cost = 0.    # figure out a typical value
@@ -57,7 +57,7 @@ def EvalRenewableElectricity(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    explanation = "Didn't choose to sign up for renewable electricity"
+    explanation = "Didn't choose to sign up for renewable electricity."
     choose_renewable = inputs.get("choose_renewable",NO)
     
     default_bill = getDefault(locality,"elec_typical_monthly_bill",150.)
@@ -73,10 +73,10 @@ def EvalRenewableElectricity(inputs):
 
     additional_kwh_cost = getDefault(locality,"elec_renewable_additional_kwh_cost",0.038)    # GECA price for the 100% renewable
     if choose_renewable == YES:
-        explanation = "You may not be eligible for purchasing renewable electricity, which is available to MA customers of Eversource or National Grid"
+        explanation = "You may not be eligible for purchasing renewable electricity, which is available to MA customers of Eversource or National Grid."
         electric_utility = inputs.get("electric_utility","").lower()
         if electric_utility == "eversource" or electric_utility == "ever source" or electric_utility == "nationalgrid" or electric_utility == "national grid":
-            explanation = "You are eligible for renewable power, which adds a small charge on your electric bill" # could be eligible.  May depend the community
+            explanation = "You are eligible for renewable power, which adds a small charge on your electric bill." # could be eligible.  May depend the community
             # assuming 100% renewable GECA plan
             points = annual_ghg
             savings = -1 * additional_kwh_cost * annual_kwh
@@ -86,7 +86,7 @@ def EvalRenewableElectricity(inputs):
 LED_SWAP_FRACTION = "fraction_led_replacement"
 NUM_OLD_BULBS = "number_nonefficient_bulbs"
 def EvalLEDLighting(inputs):
-    explanation = "Didn't choose to replace bulbs with LEDs"
+    explanation = "Didn't choose to replace bulbs with LEDs."
     locality = getLocality(inputs)
 
     #bulbs_incandescent,bulbs_replace_leds
@@ -109,12 +109,12 @@ def EvalLEDLighting(inputs):
     kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
     if replace_fraction>0.:
         if num_old_bulbs > 0:
-            explanation = "Replacing %d bulbs with LEDS would save around %.0f kwh" % (replace_fraction * num_old_bulbs, saved_kwh)
+            explanation = "Replacing %d bulbs with LEDS would save around %.0f kwh." % (replace_fraction * num_old_bulbs, saved_kwh)
             points = saved_kwh * co2_per_kwh
             savings = saved_kwh * kwh_price
             cost = bulb_price * replace_fraction * num_old_bulbs
         else:
-            explanation = "There aren't any old bubs to replace with LEDs"
+            explanation = "There aren't any old bubs to replace with LEDs."
 
     return points, cost, savings, explanation
 
@@ -124,7 +124,7 @@ def EvalEnergystarRefrigerator(inputs):
     refrig_age = inputs.get("refrigerator_age", "")                 # >20, 15-20, 10-15, 0-10
     #refrig_energystar = inputs.get("refrigerator_energystar", NO)   # Yes, No, Not Sure
 
-    explanation = "Didn't choose to replace your refrigerator"
+    explanation = "Didn't choose to replace your refrigerator."
     locality = getLocality(inputs)
     points = cost = savings = 0
     if replace_refrig == YES:
@@ -140,7 +140,7 @@ def EvalEnergystarRefrigerator(inputs):
 
             elec_savings = old_kwh - estar_kwh
 
-            explanation = "Replacing a typical refrigerator of that age with EnergyStar could save %.0f kwh electricity each year" % elec_savings
+            explanation = "Replacing a typical refrigerator of that age with EnergyStar could save %.0f kwh electricity each year." % elec_savings
 
             points = elec_savings * co2_per_kwh
             savings = elec_savings * kwh_price
@@ -149,7 +149,7 @@ def EvalEnergystarRefrigerator(inputs):
         elif refrig_age == "0-10 years":
              explanation = "Not recommended to replace such a new refrigerator unless it isn't functioning properly."
         else:
-            explanation = "Need to know how old your current refrigerator is to estimate the impact"
+            explanation = "Need to know how old your current refrigerator is to estimate the impact."
     return points, cost, savings, explanation
 
 GALS_PER_SCF = 7.48052
@@ -159,7 +159,7 @@ def EvalEnergystarWasher(inputs):
     washer_energystar = inputs.get("washer_energystar", NO)   # Yes, No, Not Sure
     washer_loads = float(inputs.get("washer_loads", 0.))
     #replace_washer,washer_age,wash_loads
-    explanation = "Didn't choose to replace your washer"
+    explanation = "Didn't choose to replace your washer."
     locality = getLocality(inputs)
     points = cost = savings = 0
     if replace_washer == YES:
@@ -221,12 +221,12 @@ def EvalEnergystarWasher(inputs):
             water_savings = (old_water_use - estar_water_use) * annual_loads
             elec_savings = (old_elec_use - estar_elec_use) * annual_loads
 
-            explanation = "Replacing your current washer with EnergyStar could save %.0f Gal of water and %.0f kwh" % (water_savings, elec_savings)
+            explanation = "Replacing your current washer with EnergyStar could save %.0f Gal of water and %.0f kwh." % (water_savings, elec_savings)
             points = (co2_old-co2_energystar)
             savings = (cost_old-cost_energystar)
             cost = getDefault(locality,"elec_energystar_washer_cost_low",700.)
         else:
-            explanation = "Need to know how old your current washer is to estimate the impact"
+            explanation = "Need to know how old your current washer is to estimate the impact."
 
     return points, cost, savings, explanation
 
@@ -235,14 +235,14 @@ def EvalInductionStove(inputs):
     # efficiency: 90% induction, 65% electric, 45% gas
     # how much gas used in cooking
 
-    explanation = "Didn't choose to switch to an induction stove w convection oven"
+    explanation = "Didn't choose to switch to an induction stove w convection oven."
     locality = getLocality(inputs)
     points = cost = savings = 0
 
     if inputs.get("induction_stove",NO) == YES:    
         old_stove = inputs.get("stove_type","")
         if old_stove == "Induction":
-            explanation = "You already have an induction stove, so you can't switch to one"
+            explanation = "You already have an induction stove, so you can't switch to one."
         else:
             co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
             kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
@@ -257,12 +257,12 @@ def EvalInductionStove(inputs):
                 co2_per_therm = NatGasFootprint(locality)
                 co2_cooking = therm_gas * co2_per_therm
                 cooking_cost = therm_gas * therm_price
-                explanation = "Replacing your gas range with induction would save energy and emissions, but probably cost slightly more to operate"
+                explanation = "Replacing your gas range with induction would save energy and emissions, but probably cost slightly more to operate."
             else:
                 cooking_kwh = int(getDefault(locality, "elec_cooking_kwh_conventional", 1144))
                 cooking_cost = cooking_kwh * kwh_price
                 co2_cooking = cooking_kwh * co2_per_kwh
-                explanation = "Replacing your electric range with induction would save %.0f kwh" % (cooking_kwh - kwh_induction)
+                explanation = "Replacing your electric range with induction would save %.0f kwh." % (cooking_kwh - kwh_induction)
             points = co2_cooking - co2_induction
             savings = cooking_cost - cost_induction
 
@@ -278,7 +278,7 @@ def EvalHeatPumpDryer(inputs):
     # average dryer 3.3 kwh energy per load, gas 0.24 therms/load
 
 
-    explanation = "Didn't choose to switch to a heat pump dryer"
+    explanation = "Didn't choose to switch to a heat pump dryer."
     locality = getLocality(inputs)
     points = cost = savings = 0
 
@@ -286,7 +286,7 @@ def EvalHeatPumpDryer(inputs):
         old_dryer = inputs.get("dryer_type","")
         dryer_loads = float(inputs.get("dryer_loads", 8.))
         if old_dryer == "Heat pump":
-            explanation = "You already have a heat pump dryer, so you can't switch to one"
+            explanation = "You already have a heat pump dryer, so you can't switch to one."
         else:
             co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
             kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
@@ -302,11 +302,11 @@ def EvalHeatPumpDryer(inputs):
                 co2_per_therm = NatGasFootprint(locality)
                 co2_drying = therm_gas * co2_per_therm * dryer_loads * 52
                 drying_cost = therm_gas * therm_price * dryer_loads * 52
-                explanation = "Replacing your gas dryer with heatpump would save energy and emissions"
+                explanation = "Replacing your gas dryer with heatpump would save energy and emissions."
             else:
                 drying_cost = kwh_electric_dryer * kwh_price * dryer_loads * 52
                 co2_drying = kwh_electric_dryer * co2_per_kwh * dryer_loads * 52
-                explanation = "Replacing your electric dryer with heatpump would save %.0f kwh" % ((kwh_electric_dryer - kwh_heatpump) * dryer_loads * 52)
+                explanation = "Replacing your electric dryer with heatpump would save %.0f kwh." % ((kwh_electric_dryer - kwh_heatpump) * dryer_loads * 52)
 
             points = co2_drying - co2_heatpump
             savings = drying_cost - cost_heatpump
@@ -316,7 +316,7 @@ def EvalHeatPumpDryer(inputs):
 
 def EvalColdWaterWash(inputs):
     #cold_water_wash,wash_loads
-    explanation = "Didn't choose to use cold water wash"
+    explanation = "Didn't choose to use cold water wash."
     locality = getLocality(inputs)
     cold_wash = inputs.get("cold_water_wash",NO)          # Yes, No
     washer_age = inputs.get("washer_age", "")                 # >20, 15-20, 10-15, 0-10
@@ -362,12 +362,12 @@ def EvalColdWaterWash(inputs):
             cost_savings = cost_old_water * annual_loads
             co2_savings = co2_old_water * annual_loads
 
-        explanation = "Washing with cold water would save a good amount of energy and emissions"
+        explanation = "Washing with cold water would save a good amount of energy and emissions."
 
         if cold_wash == "Yes, warm":
             cost_savings /=2
             co2_savings /=2
-            explanation = "Washing with warm water would save some energy and emissions" 
+            explanation = "Washing with warm water would save some energy and emissions." 
 
         points = co2_savings
         savings = cost_savings
@@ -376,7 +376,7 @@ def EvalColdWaterWash(inputs):
 
 def EvalLineDry(inputs):
     #line_or_rack_dry,dryer_loads
-    explanation = "Didn't choose to dry clothes on a line or rack"
+    explanation = "Didn't choose to dry clothes on a line or rack."
     locality = getLocality(inputs)
     points = cost = savings = 0
     if inputs.get("line_or_rack_dry",NO) == YES:
@@ -398,15 +398,15 @@ def EvalLineDry(inputs):
             co2_per_therm = NatGasFootprint(locality)
             co2_drying = therm_gas * co2_per_therm * loads * 52
             drying_cost = therm_gas * therm_price * loads * 52
-            explanation = "Drying %s of your loads on the line would save energy and money" % sfraction
+            explanation = "Drying %s of your loads on the line would save energy and money." % sfraction
         elif old_dryer != "Heat pump":
             drying_cost = kwh_electric_dryer * kwh_price * loads * 52
             co2_drying = kwh_electric_dryer * co2_per_kwh * loads * 52
-            explanation = "Drying %s of your loads on the line would save %.0f kwh" % (sfraction, (kwh_electric_dryer - kwh_heatpump) * loads * 52)
+            explanation = "Drying %s of your loads on the line would save %.0f kwh." % (sfraction, (kwh_electric_dryer - kwh_heatpump) * loads * 52)
         else:
             drying_cost = cost_heatpump * loads * 52
             co2_drying = co2_heatpump * loads * 52
-            explanation = "Drying %s of your loads on the line can save energy and money" % sfraction
+            explanation = "Drying %s of your loads on the line can save energy and money." % sfraction
         points = co2_drying * fraction
         savings = drying_cost * fraction
 
@@ -415,7 +415,7 @@ def EvalLineDry(inputs):
 
 def EvalRefrigeratorPickup(inputs):
     #extra_refrigerator,extra_refrigerator_age,extra_refrigerator_pickup,unplug_refrigerator
-    explanation = "Didn't choose to have an extra refrigerator pickup"
+    explanation = "Didn't choose to have an extra refrigerator pickup."
     locality = getLocality(inputs)
 
     refrig_pickup = inputs.get("extra_refrigerator_pickup",NO)
@@ -443,7 +443,7 @@ def EvalRefrigeratorPickup(inputs):
 
 def EvalSmartPowerStrip(inputs):
     #smart_power_strips
-    explanation = "Didn't choose to install a smart power strip"
+    explanation = "Didn't choose to install a smart power strip."
     locality = getLocality(inputs)
     points = cost = savings = 0
     if inputs.get("smart_power_strips",NO) == YES:
@@ -453,13 +453,13 @@ def EvalSmartPowerStrip(inputs):
         points = co2_per_kwh * kwh_savings
         savings = kwh_price * kwh_savings
         cost = getDefault(locality,"elec_cost_smart_power_strip", 15.)
-        explanation = "Using a smart power strip to kill vampire loads can money and emissions.  You can get one free with a home energy audit"
+        explanation = "Using a smart power strip to kill vampire loads can money and emissions.  You can get one free with a home energy audit."
 
     return points, cost, savings, explanation
 
 def EvalElectricityMonitor(inputs):
     #install_electricity_monitor
-    explanation = "Didn't choose to make use of an electricity monitoring system"
+    explanation = "Didn't choose to make use of an electricity monitoring system."
     locality = getLocality(inputs)
     points = cost = savings = 0
     electricity_monitor = inputs.get("electricity_monitor",NO)
@@ -467,7 +467,7 @@ def EvalElectricityMonitor(inputs):
     if electricity_monitor == YES:
         monthly_elec_bill = float(inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150.)))
         fractional_savings = getDefault(locality, "elec_electricity_monitor_average_savings",0.1)       # 7% on utility bill from one company ([3])
-        explanation = "Using an electricity monitor will show you where your electricity is going, and can save %d percent on your electric bill" % int(100*fractional_savings)  
+        explanation = "Using an electricity monitor will show you where your electricity is going, and can save %d percent on your electric bill." % int(100*fractional_savings)  
     
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh%
         kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
