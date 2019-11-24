@@ -15,7 +15,7 @@ def EvalReduceLawnSize(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    reduce_lawn_size = inputs.get('reduce_lawn_size', NO)
+    reduce_lawn_size = inputs.get('reduce_lawn_size', YES)
     if reduce_lawn_size != NO:
         default_lawn_size = getDefault(locality,'lawn_default_size', 4000)
         lawn_size = LAWN_SIZES.get(inputs.get('lawn_size', ''), default_lawn_size)
@@ -159,7 +159,7 @@ def EvalRakeOrElecBlower(inputs):
     locality = getLocality(inputs)
 
     gas_blower = inputs.get('leaf_cleanup_gas_blower',YES)
-    if inputs.get('leaf_cleanup_blower_switch', NO) == YES:
+    if inputs.get('leaf_cleanup_blower_switch', YES) == YES:
         if gas_blower == YES:
 
             default_lawn_size = getDefault(locality,'lawn_default_size', 4000)

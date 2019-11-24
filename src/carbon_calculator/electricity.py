@@ -23,7 +23,7 @@ def EvalCommunitySolar(inputs):
     locality = getLocality(inputs)
 
     explanation = "Didn't choose to sign up for community solar."
-    join_community_solar = inputs.get("community_solar",NO)
+    join_community_solar = inputs.get("community_solar",YES)
 
     monthly_elec_bill = int(inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150)))
 
@@ -58,7 +58,7 @@ def EvalRenewableElectricity(inputs):
     locality = getLocality(inputs)
 
     explanation = "Didn't choose to sign up for renewable electricity."
-    choose_renewable = inputs.get("choose_renewable",NO)
+    choose_renewable = inputs.get("choose_renewable",YES)
     
     default_bill = getDefault(locality,"elec_typical_monthly_bill",150.)
     monthly_bill = inputs.get(MONTHLY_ELEC, default_bill)
@@ -120,7 +120,7 @@ def EvalLEDLighting(inputs):
 
 APPLIANCE_AGES = {"0-10 years":"age0-10", "10-15 years":"age10-15","15-20 years":"age15-20",">20 years":"age20+"}
 def EvalEnergystarRefrigerator(inputs):
-    replace_refrig = inputs.get("replace_refrigerator",NO)          # Yes, No
+    replace_refrig = inputs.get("replace_refrigerator",YES)          # Yes, No
     refrig_age = inputs.get("refrigerator_age", "")                 # >20, 15-20, 10-15, 0-10
     #refrig_energystar = inputs.get("refrigerator_energystar", NO)   # Yes, No, Not Sure
 
@@ -154,7 +154,7 @@ def EvalEnergystarRefrigerator(inputs):
 
 GALS_PER_SCF = 7.48052
 def EvalEnergystarWasher(inputs):
-    replace_washer = inputs.get("replace_washer",NO)          # Yes, No
+    replace_washer = inputs.get("replace_washer",YES)          # Yes, No
     washer_age = inputs.get("washer_age", "")                 # >20, 15-20, 10-15, 0-10
     washer_energystar = inputs.get("washer_energystar", NO)   # Yes, No, Not Sure
     washer_loads = float(inputs.get("washer_loads", 0.))
@@ -239,7 +239,7 @@ def EvalInductionStove(inputs):
     locality = getLocality(inputs)
     points = cost = savings = 0
 
-    if inputs.get("induction_stove",NO) == YES:    
+    if inputs.get("induction_stove",YES) == YES:    
         old_stove = inputs.get("stove_type","")
         if old_stove == "Induction":
             explanation = "You already have an induction stove, so you can't switch to one."
@@ -282,7 +282,7 @@ def EvalHeatPumpDryer(inputs):
     locality = getLocality(inputs)
     points = cost = savings = 0
 
-    if inputs.get("replace_dryer",NO) == YES:
+    if inputs.get("replace_dryer",YES) == YES:
         old_dryer = inputs.get("dryer_type","")
         dryer_loads = float(inputs.get("dryer_loads", 8.))
         if old_dryer == "Heat pump":
@@ -318,7 +318,7 @@ def EvalColdWaterWash(inputs):
     #cold_water_wash,wash_loads
     explanation = "Didn't choose to use cold water wash."
     locality = getLocality(inputs)
-    cold_wash = inputs.get("cold_water_wash",NO)          # Yes, No
+    cold_wash = inputs.get("cold_water_wash",YES)          # Yes, No
     washer_age = inputs.get("washer_age", "")                 # >20, 15-20, 10-15, 0-10
     washer_energystar = inputs.get("washer_energystar", NO)   # Yes, No, Not Sure
     washer_loads = float(inputs.get("washer_loads", 0.))
@@ -379,7 +379,7 @@ def EvalLineDry(inputs):
     explanation = "Didn't choose to dry clothes on a line or rack."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if inputs.get("line_or_rack_dry",NO) == YES:
+    if inputs.get("line_or_rack_dry",YES) == YES:
         old_dryer = inputs.get("dryer_type","")
         loads = float(inputs.get("washer_loads", 8.))
         sfraction = inputs.get("fraction_line_dry","Half")
@@ -418,7 +418,7 @@ def EvalRefrigeratorPickup(inputs):
     explanation = "Didn't choose to have an extra refrigerator pickup."
     locality = getLocality(inputs)
 
-    refrig_pickup = inputs.get("extra_refrigerator_pickup",NO)
+    refrig_pickup = inputs.get("extra_refrigerator_pickup",YES)
     extra_refrig = inputs.get("extra_refrigerator",NO)              # Yes, No
     extra_refrig_age = inputs.get("extra_refrigerator_age", "")                 # >20, 15-20, 10-15, 0-10
 
@@ -446,7 +446,7 @@ def EvalSmartPowerStrip(inputs):
     explanation = "Didn't choose to install a smart power strip."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if inputs.get("smart_power_strips",NO) == YES:
+    if inputs.get("smart_power_strips",YES) == YES:
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
         kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
         kwh_savings = getDefault(locality,"elec_kwh_savings_smart_power_strips", 100.)
@@ -462,7 +462,7 @@ def EvalElectricityMonitor(inputs):
     explanation = "Didn't choose to make use of an electricity monitoring system."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    electricity_monitor = inputs.get("electricity_monitor",NO)
+    electricity_monitor = inputs.get("electricity_monitor",YES)
 
     if electricity_monitor == YES:
         monthly_elec_bill = float(inputs.get(MONTHLY_ELEC, getDefault(locality,"elec_typical_monthly_bill",150.)))

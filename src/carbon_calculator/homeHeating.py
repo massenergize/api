@@ -106,7 +106,7 @@ def EvalWeatherization(inputs):
     locality = getLocality(inputs)
     explanation = "Didn't choose to weatherize."
 
-    weatherize_home = inputs.get('weatherize_home',NO)
+    weatherize_home = inputs.get('weatherize_home',YES)
     # could get this from fuel usage ...
     home_weatherized = inputs.get('weatherized',YES)
     if weatherize_home == YES:
@@ -138,7 +138,7 @@ def EvalHeatingSystemAssessment(inputs):
     points = cost = savings = 0.
     #locality = getLocality(inputs)
 
-    heating_system_assessment = inputs.get('heating_system_assessment',NO)
+    heating_system_assessment = inputs.get('heating_system_assessment',YES)
     if heating_system_assessment == YES:
         co2, operating_cost = HeatingLoad(inputs)
 
@@ -156,7 +156,7 @@ def EvalEfficientBoilerFurnace(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    upgrade_heating_system_efficiency = inputs.get('upgrade_heating_system_efficiency',NO)
+    upgrade_heating_system_efficiency = inputs.get('upgrade_heating_system_efficiency',YES)
     if upgrade_heating_system_efficiency == YES:
 
         old_co2, old_cost = HeatingLoad(inputs)
@@ -200,7 +200,7 @@ def EvalAirSourceHeatPump(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    install_ashp = inputs.get('install_ashp',NO)
+    install_ashp = inputs.get('install_ashp',YES)
     if install_ashp == YES:
 
         default_hp_heating_fraction = getDefault(locality,'heating_default_ashp_fraction', 0.8)
@@ -233,7 +233,7 @@ def EvalGroundSourceHeatPump(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    install_gshp = inputs.get('install_gshp',NO)
+    install_gshp = inputs.get('install_gshp',YES)
     if install_gshp == YES:
         old_co2, old_cost = HeatingLoad(inputs)
         new_inputs = inputs

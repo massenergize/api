@@ -8,7 +8,7 @@ def EvalReplaceCar(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    if inputs.get('replace_car', NO) ==YES:
+    if inputs.get('replace_car', YES) ==YES:
 
         default_miles = getDefault(locality, 'car_default_miles', 15000.)
         miles_est = inputs.get('car_annual_miles', default_miles)
@@ -167,7 +167,7 @@ def EvalEliminateCar(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    if inputs.get('eliminate_car', NO) == YES:
+    if inputs.get('eliminate_car', YES) == YES:
 
         default_miles = getDefault(locality, 'car_default_miles', 15000.)
         miles_est = inputs.get('car_annual_miles', default_miles)
@@ -204,7 +204,7 @@ def EvalReduceFlights(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    reduce_flights = inputs.get('transportation_flights', NO)
+    reduce_flights = inputs.get('transportation_flights', YES)
     percent_reduction = 0.
     if reduce_flights == "10% fewer":
         percent_reduction = 0.1
@@ -239,7 +239,7 @@ def EvalOffsetFlights(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
     
-    offset_flights = inputs.get('offset_flights', NO)
+    offset_flights = inputs.get('offset_flights', YES)
     offset_fraction = FREQUENCIES.get(offset_flights, 0.)
 
     if offset_fraction > 0.:

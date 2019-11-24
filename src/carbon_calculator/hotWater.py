@@ -11,7 +11,7 @@ def EvalHotWaterAssessment(inputs):
     explanation = "Didn't sign up for a hot water assessment."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if inputs.get('hot_water_assessment', NO) == YES:
+    if inputs.get('hot_water_assessment', YES) == YES:
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
 
         gallons_per_person = getDefault(locality,'water_hw_use_per_person', 13.)
@@ -79,7 +79,7 @@ def EvalHeatPumpWaterHeater(inputs):
     explanation = "Didn't choose to install a HP Water Heater."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if inputs.get('replace_water_heater', NO) == YES:
+    if inputs.get('replace_water_heater', YES) == YES:
 
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
         kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
@@ -166,7 +166,7 @@ def EvalSolarHW(inputs):
     explanation = "Didn't choose to install solar HW."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if inputs.get('install_solar_hw', NO) == YES:
+    if inputs.get('install_solar_hw', YES) == YES:
 
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
         kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price

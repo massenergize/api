@@ -22,7 +22,7 @@ def EvalSolarAssessment(inputs):
     explanation = "Didn't choose to have a solar assessment."
     points = cost = savings = 0.
     locality = getLocality(inputs)
-    if inputs.get('solar_assessment',NO) == YES:
+    if inputs.get('solar_assessment',YES) == YES:
 
         default_size = getDefault(locality,'solar_default_pv_size',7.)
         size = float(inputs.get('solar_array_size',default_size))
@@ -48,7 +48,7 @@ def EvalSolarPV(inputs):
     explanation = "Didn't choose to install a solar PV array."
     points = cost = savings = 0.
     locality = getLocality(inputs)
-    if inputs.get('install_solar_panels',NO) == YES:
+    if inputs.get('install_solar_panels',YES) == YES:
 
         default_size = getDefault(locality,'solar_default_pv_size',7.)
         size = float(inputs.get('solar_array_size',default_size))

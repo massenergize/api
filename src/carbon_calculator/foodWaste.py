@@ -76,7 +76,7 @@ def EvalCompost(inputs):
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    if inputs.get('compost_food_waste', NO) == YES:
+    if inputs.get('compost_food_waste', YES) == YES:
         co2 = getDefault(locality,'compost_co2', 200.)   # bonus points, until we get a better idea
         points += co2
         explanation = "Composting food and yard waste is good for the environment, and save perhaps %.0f lbs emissions in a year." % (co2)
