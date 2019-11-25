@@ -458,6 +458,9 @@ class UserProfile(models.Model):
   def __str__(self):
     return self.email
 
+  def info(self):
+    return model_to_dict(self, ['id', 'email', 'subdomain'])
+
   def simple_json(self):
     res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
     res['user_info'] = self.user_info
@@ -2026,13 +2029,17 @@ class ActivityLog(models.Model):
   ----------
   """
   id = models.AutoField(primary_key=True)
-  activity = models.CharField(max_length=SHORT_STR_LEN) 
-  user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True) 
-  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True) 
+  path = models.CharField(max_length=SHORT_STR_LEN, default='/') 
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True) 
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True) 
   created_at = models.DateTimeField(auto_now_add=True)
+  status = models.CharField(max_length=SHORT_STR_LEN, default='success', blank=True) 
+  trace = JSONField(blank=True, null=True) 
+  request_body = JSONField(blank=True, null=True) 
+  # add response or error field
 
   def __str__(self):
-    return self.activity
+    return self.path
 
   def simple_json(self):
     return  model_to_dict(self)
@@ -2045,7 +2052,7 @@ class ActivityLog(models.Model):
 
 
   class Meta:
-    ordering = ('activity',)
+    ordering = ('path',)
     db_table = 'activity_logs'
 
 

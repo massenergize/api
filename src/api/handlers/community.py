@@ -28,7 +28,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.remove", self.delete())
     self.add("/communities.graphs", self.info())
     self.add("/communities.data", self.info())
-    self.add("/communities.join", self.info())
+    self.add("/communities.join", self.join())
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list())
@@ -45,6 +45,16 @@ class CommunityHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
     return community_info_view
+
+  def join(self) -> function:
+    def join_community_view(request) -> None:
+      context: Context = request.context
+      args: dict = context.args
+      community_info, err = self.service.join_community(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=community_info)
+    return join_community_view
 
 
   def create(self) -> function:

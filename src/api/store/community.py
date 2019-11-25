@@ -1,8 +1,9 @@
-from database.models import Community, UserProfile, Graph, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, UserProfile, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
+from .utils import get_community_or_die, get_user_or_die
 
 class CommunityStore:
   def __init__(self):
@@ -25,6 +26,24 @@ class CommunityStore:
           return None, InvalidResourceError()
 
       return community, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+
+
+  def join_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      context.logger.add_trace('join_community')
+
+      community = get_community_or_die(context, args)
+      user = get_user_or_die(context, args)
+      user.communities.add(community)
+      user.save()
+
+      context.logger.log({
+        "user": user,
+        "community": community,
+      })
+      return None, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
