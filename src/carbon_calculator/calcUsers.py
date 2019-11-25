@@ -13,12 +13,34 @@ def CreateCalcUser(args):
         groups = args.get("groups",[])
         minimum_age = args.get("minimum_age",False)
         accepts_tnc = args.get("accepts_terms_and_conditions", False)
+        event = args.get("eventName","")
 
         newUser = CalcUser.objects.filter(email=email).first()
         if newUser:
             if first_name!="":
                 newUser.first_name = first_name
+            if last_name != "":
+                newUser.last_name = last_name
+            if locality != "":
+                newUser.locality = locality
+            newUser.minimum_age = minimum_age
+            newUser.accepts_tnc = accepts_tnc
 
+            newUser.save()
+
+            if eventName != "":
+                event = Event.objects.filter(name=eventName).first()
+                if event:
+                    newUser.event = event
+                    event.attendees.add(newUser)
+
+            newUser.save()
+
+            if groups != []:
+                for group in groups:
+                    group1 = Group.objects.filter(name=group)
+                    if group1:
+                        newUser.groups.add(group1)
 
         else:
             newUser = CalcUser(first_name=first_name,

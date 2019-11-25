@@ -93,9 +93,18 @@ def QuerySingleEvent(event):
             stat, groupInfo = QuerySingleGroup(group.name)
             if stat == VALID_QUERY:
                 groupsList.append(groupInfo)
-            
+
+        communitiesList = []
+        for calcuser in q.attendees.all():
+            community = calcuser.locality
+            if community not in communitiesList:
+                print(community)
+                communitiesList.append(community)
+        communitiesList.sort()
+        print(communitiesList)
+
         return VALID_QUERY, {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":stationsList,
-                "groups":groupsList,
+                "groups":groupsList,"communities":communitiesList,
                 "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":host_logo_url,
                 "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":sponsor_logo_url}
     else:

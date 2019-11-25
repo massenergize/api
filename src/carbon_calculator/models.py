@@ -121,6 +121,8 @@ class Station(models.Model):
     class Meta:
         db_table = 'cc_stations'
 
+
+
 class Group(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN,unique=True)
@@ -136,34 +138,6 @@ class Group(models.Model):
     class Meta:
         db_table = 'cc_groups'
 
-class Event(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=NAME_STR_LEN,unique=True)
-    displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
-    datetime = models.DateTimeField(blank=True)
-    location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-#    stations = models.ForeignKey(Station, on_delete=models.SET_NULL, 
-#        null=True, blank=True, related_name='cc_station_picture')
-    stationslist = JSONField(null=True, blank=True)
-    groups = models.ManyToManyField(Group,blank=True)
-    host_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    host_contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    host_email = models.EmailField()
-    host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
-    host_url = models.URLField(blank=True)
-    host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-        null=True, blank=True, related_name='event_host_logo')
-    sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    sponsor_url = models.URLField(blank=True)
-    sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-        null=True, blank=True, related_name='event_sponsor_logo')
-
-
-    def __str__(self):      
-        return self.displayname
-
-    class Meta:
-        db_table = 'cc_events'
 
 class CalcUser(models.Model):
     """
@@ -194,29 +168,46 @@ class CalcUser(models.Model):
     accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    #updated 11/24
+    #event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.email
-#
-#def simple_json(self):
-#  res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email'])
-#  res['user_info'] = self.user_info
-#  res['profile_picture'] = get_json_if_not_none(self.profile_picture)
-#  return res
-#
-#
-#def full_json(self):
-#  data = model_to_dict(self, exclude=['real_estate_units', 
-#    'communities', 'roles'])
-#  data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
-#  data['goal'] = get_json_if_not_none(self.goal)
-#  data['communities'] = [c.simple_json() for c in self.communities.all()]
-#  data['teams'] = [t.simple_json() for t in self.team_members.all()]
-#  data['profile_picture'] = get_json_if_not_none(self.profile_picture)
-#  return data
+
 #
     class Meta:
         db_table = 'cc_user_profiles' 
+
+class Event(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=NAME_STR_LEN,unique=True)
+    displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
+    datetime = models.DateTimeField(blank=True)
+    location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+#    stations = models.ForeignKey(Station, on_delete=models.SET_NULL, 
+#        null=True, blank=True, related_name='cc_station_picture')
+    stationslist = JSONField(null=True, blank=True)
+    groups = models.ManyToManyField(Group,blank=True)
+    host_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    host_contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    host_email = models.EmailField()
+    host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
+    host_url = models.URLField(blank=True)
+    host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
+        null=True, blank=True, related_name='event_host_logo')
+    sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    sponsor_url = models.URLField(blank=True)
+    sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
+        null=True, blank=True, related_name='event_sponsor_logo')
+#   updated 11/24
+    attendees = models.ManyToManyField(CalcUser, blank=True)
+
+    def __str__(self):      
+        return self.displayname
+
+    class Meta:
+        db_table = 'cc_events'
+
 
 class ActionPoints(models.Model):
     """
