@@ -31,8 +31,9 @@ def CreateCalcUser(args):
             if eventName != "":
                 event = Event.objects.filter(name=eventName).first()
                 if event:
-                    newUser.event = event
+                    #newUser.event = event
                     event.attendees.add(newUser)
+                    event.save()
 
             newUser.save()
 
