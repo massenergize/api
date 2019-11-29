@@ -19,10 +19,10 @@ SOLAR_POTENTIAL = 'solar_potential'
 POTENTIALS = {'Not sure':0.75,'None':0.0,'Poor':0.25, 'OK':0.5, 'Good':0.75, 'Great':1.0}
 def EvalSolarAssessment(inputs):
     #solar_assessment,solar_potential
-    explanation = "Didn't choose to have a solar assessment"
+    explanation = "Didn't choose to have a solar assessment."
     points = cost = savings = 0.
     locality = getLocality(inputs)
-    if inputs.get('solar_assessment',NO) == YES:
+    if inputs.get('solar_assessment',YES) == YES:
 
         default_size = getDefault(locality,'solar_default_pv_size',7.)
         size = float(inputs.get('solar_array_size',default_size))
@@ -37,18 +37,18 @@ def EvalSolarAssessment(inputs):
             assessment_conversion = getDefault(locality,'solar_assessment_convertion_fraction', 0.2)
             points = co2_per_kwh * annual_kwh * assessment_conversion
 
-            explanation = "A solar PV array on your home might save %.1f tons of CO2 over 10 years" % (points/200./assessment_conversion)
+            explanation = "A solar PV array on your home might save %.1f tons of CO2 over 10 years." % (points/200./assessment_conversion)
         else:
-            explanation = "With poor solar potential, we don't necessarily recommend having an assessment"
+            explanation = "With poor solar potential, we don't necessarily recommend having an assessment."
     return points, cost, savings, explanation
 
 ARRAY_SIZE = 'solar_pv_size'
 def EvalSolarPV(inputs):
     #install_solar_panels,solar_potential
-    explanation = "Didn't choose to install a solar PV array"
+    explanation = "Didn't choose to install a solar PV array."
     points = cost = savings = 0.
     locality = getLocality(inputs)
-    if inputs.get('install_solar_panels',NO) == YES:
+    if inputs.get('install_solar_panels',YES) == YES:
 
         default_size = getDefault(locality,'solar_default_pv_size',7.)
         size = float(inputs.get('solar_array_size',default_size))
@@ -74,9 +74,9 @@ def EvalSolarPV(inputs):
         decent_payback = getDefault(locality,'general_decent_home_investment_payback',10.)
         payback = int(cost/savings) + 1
         if (payback < decent_payback):
-            explanation = "installing a solar PV array on your home would pay back in around %d years and save %.1f tons of CO2 over 10 years" % (payback, points/200.)
+            explanation = "installing a solar PV array on your home would pay back in around %d years and save %.1f tons of CO2 over 10 years." % (payback, points/200.)
         else:
-            explanation = "installing a solar PV array on your home could pay back in over %d years but save %.1f tons of CO2 over 10 years" % (decent_payback, points/200.)
+            explanation = "installing a solar PV array on your home could pay back in over %d years but save %.1f tons of CO2 over 10 years." % (decent_payback, points/200.)
 
     return points, cost, savings, explanation
 

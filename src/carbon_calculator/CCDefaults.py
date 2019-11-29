@@ -4,10 +4,11 @@ import timeit
 import csv
 
 def getLocality(inputs):
-    userID = inputs.get("user_id","")
+    id = inputs.get("user_id","")
+    #userID = inputs.get("user_id","")
     locality = "default"
-    if userID != "":
-        user = CalcUser.objects.get(id=userID).first()
+    if id != "":
+        user = CalcUser.objects.filter(id=id).first()
         if user:
             locality = user.locality
     return locality

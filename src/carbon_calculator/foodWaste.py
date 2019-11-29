@@ -5,7 +5,7 @@ DIET_POINTS = 1000
 def EvalLowCarbonDiet(inputs):
     #eating_switch_meals,family_size,meat_frequency,eating_switch_meals_amount
 
-    explanation = "Didn't choose to switch to a lower carbon diet"
+    explanation = "Didn't choose to switch to a lower carbon diet."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -30,7 +30,7 @@ def EvalLowCarbonDiet(inputs):
 
 def EvalReduceWaste(inputs):
     #reduce_waste,reuse_containers,buy_sell_used,buy_bulk,buy_recycled
-    explanation = "Didn't choose to reduce waste"
+    explanation = "Didn't choose to reduce waste."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
@@ -41,21 +41,21 @@ def EvalReduceWaste(inputs):
         if freq_reuse_containers > 0.:
             co2 = freq_reuse_containers * getDefault(locality,'reuse_containers_co2', 100.)   # bonus points, until we get a better idea
             points += co2
-            explanation += "Reusing containers %s is good for the planet, saving perhaps %.0f lbs CO2 in a year. " % (reuse_containers, co2)
+            explanation += " Reusing containers %s is good for the planet, saving perhaps %.0f lbs CO2 in a year." % (reuse_containers, co2)
 
         buy_bulk = inputs.get('buy_bulk','Never')
         freq_buy_bulk = FREQUENCIES.get(buy_bulk,0.)
         if freq_buy_bulk > 0.:
             co2 = freq_buy_bulk * getDefault(locality,'buy_bulk_co2', 100.)   # bonus points, until we get a better idea
             points += co2
-            explanation += "Purchasing bulk %s eliminates packaging, saving perhaps %.0f lbs CO2. " % (buy_bulk, co2)
+            explanation += " Purchasing bulk %s eliminates packaging, saving perhaps %.0f lbs CO2." % (buy_bulk, co2)
 
         buy_recycled = inputs.get('buy_recycled','Never')
         freq_buy_recycled = FREQUENCIES.get(buy_recycled,0.)
         if freq_buy_recycled > 0.:
             co2 = freq_buy_recycled * getDefault(locality,'buy_recycled_co2', 200.)   # bonus points, until we get a better idea
             points += co2
-            explanation += "Purchasing recycled material %s saves perhaps %.0f lbs CO2 in production emissions. " % (buy_recycled, co2)
+            explanation += " Purchasing recycled material %s saves perhaps %.0f lbs CO2 in production emissions." % (buy_recycled, co2)
 
         buy_sell_used = inputs.get('buy_sell_used','Never')
         freq_buy_sell_used = FREQUENCIES.get(buy_sell_used,0.)
@@ -63,7 +63,7 @@ def EvalReduceWaste(inputs):
             co2 = freq_buy_sell_used * getDefault(locality,'buy_sell_used_co2', 2000.)   # bonus points, until we get a better idea
             savings = freq_buy_sell_used * getDefault(locality,'buy_sell_use_savings', 4000.)  # total guess
             points += co2
-            explanation += "Buying used items %s instead of new can save perhaps %.0f lbs CO2 and perhaps $%.f in a year." % (buy_sell_used, co2, savings)
+            explanation += " Buying used items %s instead of new can save perhaps %.0f lbs CO2 and perhaps $%.f in a year." % (buy_sell_used, co2, savings)
 
     if explanation == "":
         explanation = "No actions chosen to reduce waste."
@@ -72,11 +72,11 @@ def EvalReduceWaste(inputs):
 COMPOST_POINTS = 200
 def EvalCompost(inputs):
     #compost_food_waste,compost_pickup
-    explanation = "Didn't choose to start composting"
+    explanation = "Didn't choose to start composting."
     points = cost = savings = 0.
     locality = getLocality(inputs)
 
-    if inputs.get('compost_food_waste', NO) == YES:
+    if inputs.get('compost_food_waste', YES) == YES:
         co2 = getDefault(locality,'compost_co2', 200.)   # bonus points, until we get a better idea
         points += co2
         explanation = "Composting food and yard waste is good for the environment, and save perhaps %.0f lbs emissions in a year." % (co2)

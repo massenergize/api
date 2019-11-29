@@ -8,10 +8,10 @@ from .naturalGas import NatGasFootprint
 
 def EvalHotWaterAssessment(inputs):
     #hot_water_assessment,water_heater_type,water_heater_age
-    explanation = "Didn't sign up for a hot water assessment"
+    explanation = "Didn't sign up for a hot water assessment."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if inputs.get('hot_water_assessment', NO) == YES:
+    if inputs.get('hot_water_assessment', YES) == YES:
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
 
         gallons_per_person = getDefault(locality,'water_hw_use_per_person', 13.)
@@ -63,7 +63,7 @@ def EvalHotWaterAssessment(inputs):
             co2_old = btu * co2_per_therm / btu_per_therm
 
         else:
-            explanation = "No need for a hot water assessment with a %s water heater" % wh_type
+            explanation = "No need for a hot water assessment with a %s water heater." % wh_type
             return points, cost, savings, explanation
         
         explanation = "Getting a hot water assessment could save money and emissions, depending on several factors."
@@ -76,10 +76,10 @@ def EvalHotWaterAssessment(inputs):
 def EvalHeatPumpWaterHeater(inputs):
     #replace_water_heater,water_heater_type,water_heater_age
     # using methods from Alan Whitney's spreadsheet 
-    explanation = "Didn't choose to install a HP Water Heater"
+    explanation = "Didn't choose to install a HP Water Heater."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if inputs.get('replace_water_heater', NO) == YES:
+    if inputs.get('replace_water_heater', YES) == YES:
 
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
         kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
@@ -142,7 +142,7 @@ def EvalHeatPumpWaterHeater(inputs):
             cost_old = btu * therm_price / btu_per_therm
 
         else:
-            explanation = "Not recommended to replace %s water heater with heat pump" % wh_type
+            explanation = "Not recommended to replace %s water heater with heat pump." % wh_type
             return points, cost, savings, explanation
 
         points = co2_old - co2_hp
@@ -155,18 +155,18 @@ def EvalHeatPumpWaterHeater(inputs):
 
         payback = int(cost/savings) + 1
         if (payback < decent_payback and payback > 0):
-            explanation = "installing a heat pump water heater would pay back in about %d years and save %.1f tons of CO2 over 10 years" % (payback, points/200.)
+            explanation = "installing a heat pump water heater would pay back in about %d years and save %.1f tons of CO2 over 10 years." % (payback, points/200.)
         else:
-            explanation = "installing a heat pump water heater could pay back in over %d years but save %.1f tons of CO2 over 10 years" % (decent_payback, points/200.)
+            explanation = "installing a heat pump water heater could pay back in over %d years but save %.1f tons of CO2 over 10 years." % (decent_payback, points/200.)
 
     return points, cost, savings, explanation
 
 def EvalSolarHW(inputs):
     #install_solar_hw,solar_potential
-    explanation = "Didn't choose to install solar HW"
+    explanation = "Didn't choose to install solar HW."
     locality = getLocality(inputs)
     points = cost = savings = 0
-    if inputs.get('install_solar_hw', NO) == YES:
+    if inputs.get('install_solar_hw', YES) == YES:
 
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
         kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
@@ -192,10 +192,10 @@ def EvalSolarHW(inputs):
         potential = SolarPotential(inputs)
 
         if potential<0.5:
-            explanation = "installing solar hot water doesn't make sense with your homes solar potential" 
+            explanation = "installing solar hot water doesn't make sense with your homes solar potential." 
         
         elif wh_type == "Heat pump" or wh_type == "Solar":
-            explanation = "Not recommended to replace %s water heater with solar hot water" % wh_type
+            explanation = "Not recommended to replace %s water heater with solar hot water." % wh_type
 
         else:
 
@@ -256,8 +256,8 @@ def EvalSolarHW(inputs):
             decent_payback = getDefault(locality,'general_decent_home_investment_payback',10.)
             payback = int(cost/savings) + 1
             if (payback < decent_payback and payback > 0):
-                explanation = "installing solar hot water could pay back in about %d years and save %.1f tons of CO2 over 10 years" % (payback, points/200.)
+                explanation = "installing solar hot water could pay back in about %d years and save %.1f tons of CO2 over 10 years." % (payback, points/200.)
             else:
-                explanation = "installing solar hot water could pay back in over %d years but save %.1f tons of CO2 over 10 years" % (decent_payback, points/200.)
+                explanation = "installing solar hot water could pay back in over %d years but save %.1f tons of CO2 over 10 years." % (decent_payback, points/200.)
 
     return points, cost, savings, explanation
