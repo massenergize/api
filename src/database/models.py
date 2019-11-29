@@ -1134,11 +1134,12 @@ class Testimonial(models.Model):
     res["vendor"] = get_json_if_not_none(self.vendor)
     res["community"] = get_json_if_not_none(self.community)
     res["created_at"] = self.created_at
+    res['file'] = get_json_if_not_none(self.image)
     return res
 
   def full_json(self):
     data = self.simple_json() 
-    data['image'] = get_json_if_not_none(self.image)
+    data['image'] = data.get('file', None)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     return data
 

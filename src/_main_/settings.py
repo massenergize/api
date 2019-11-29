@@ -17,7 +17,7 @@ from .utils.utils import load_json
 
 IS_PROD = False
 
-DEPLOY_VERSION = '0.0.1'
+DEPLOY_VERSION = '0.7.2'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
