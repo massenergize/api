@@ -39,6 +39,9 @@ def groupinfo(request, group=None):
 def stationinfo(request, station=None):
     return JsonResponse(QueryStations(station))
 
+def userinfo(request, user=None):
+    return JsonResponse(QueryCalcUsers(user, request))
+
 # these requests should be POSTs, not GETs
 def estimate(request, action):
 	inputs = get_request_contents(request)

@@ -225,7 +225,7 @@ class ActionPoints(models.Model):
     points = models.IntegerField(default = 0) 
     cost = models.IntegerField(default = 0)
     savings = models.IntegerField(default = 0)
-#
+#        
     def __str__(self):      
         return "%s-%s-(%s)" % (self.action, self.user, self.created_date)
 

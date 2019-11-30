@@ -1,6 +1,6 @@
 import jsons
 from .CCConstants import VALID_QUERY, INVALID_QUERY
-from .models import *
+from .models import Question, Event, Action, Station, Group
 
 class CalculatorQuestion:
     def __init__(self, name):
