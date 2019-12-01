@@ -168,8 +168,10 @@ class CalcUser(models.Model):
     accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    #updated 11/24
-    #event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True)
+    #updated 12/1
+    points = models.IntegerField(default = 0) 
+    cost = models.IntegerField(default = 0)
+    savings = models.IntegerField(default = 0)
 
     def __str__(self):
         return self.email

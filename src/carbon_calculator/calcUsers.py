@@ -49,9 +49,24 @@ def QueryAllCalcUsers(args):
                 lastName = "Anonymous"
                 email = "None"
 
+            #actions the user has committed to
+            actionInfoList = []
+            points = cost = savings = 0.
+            actions = ActionPoints.objects.filter(user=q.id)
+            if actions:
+                for action in actions:
+                    points += action.points
+                    cost += action.cost
+                    savings += action.savings
+                    actionInfo = {"action":action.action, "choices":action.choices,"points":action.points,
+                                "cost":action.cost, "savings":action.savings, "date":action.created_date}
+                    actionInfoList.append(actionInfo)
+
+
             info = {"id":q.id, "First Name":firstName, "Last Name":lastName, "e-mail":email, 
                     "Locality":q.locality, "Groups":groups, 
-                    "Created":q.created_at, "Updated":q.updated_at}
+                    "Created":q.created_at, "Updated":q.updated_at,
+                    "TotalPoints":points, "TotalCost":cost, "TotalSavings":savings, "ActionInfoList":actionInfoList}
             userInfo.append(info)
         return VALID_QUERY, userInfo
     else:
@@ -89,10 +104,16 @@ def QuerySingleCalcUser(userId,args):
                             "cost":action.cost, "savings":action.savings, "date":action.created_date}
                 actionInfoList.append(actionInfo)
 
+        if points>0 and q.points==0:
+            q.points = points
+            q.cost = cost
+            q.savings = savings
+            q.save()
+
         return VALID_QUERY, {"id":q.id, "First Name":firstName, "Last Name":lastName, "e-mail":email, 
                     "Locality":q.locality, "Groups":groups, 
                     "Created":q.created_at, "Updated":q.updated_at,
-                    "Points":points, "Cost":cost, "Savings":savings, "ActionInfoList":actionInfoList}
+                    "TotalPoints":points, "TotalCost":cost, "TotalSavings":savings, "ActionInfoList":actionInfoList}
     else:
         return INVALID_QUERY, {}
 
