@@ -5,6 +5,8 @@ from _main_.utils.common import get_request_contents, parse_list, parse_bool, ch
 from api.services.testimonial import TestimonialService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
+from _main_.utils.context import Context
+from _main_.utils.validator import Validator
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -32,9 +34,10 @@ class TestimonialHandler(RouteHandler):
 
   def info(self) -> function:
     def testimonial_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'testimonial_id', 'id')
-      testimonial_info, err = self.service.get_testimonial_info(args)
+      testimonial_info, err = self.service.get_testimonial_info(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -43,7 +46,8 @@ class TestimonialHandler(RouteHandler):
 
   def create(self) -> function:
     def create_testimonial_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'community')
       args = rename_field(args, 'action_id', 'action')
       args = rename_field(args, 'vendor_id', 'vendor')
@@ -56,7 +60,7 @@ class TestimonialHandler(RouteHandler):
       if is_published:
         args["is_published"] = parse_bool(is_published)
       
-      testimonial_info, err = self.service.create_testimonial(args)
+      testimonial_info, err = self.service.create_testimonial(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -76,7 +80,8 @@ class TestimonialHandler(RouteHandler):
 
   def update(self) -> function:
     def update_testimonial_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       print(args)
       is_approved = args.pop("is_approved", None)
       if is_approved:
@@ -89,7 +94,7 @@ class TestimonialHandler(RouteHandler):
       args = rename_field(args, 'vendor_id', 'vendor')
       args['tags'] = parse_list(args.get('tags', []))
       testimonial_id = args.pop("testimonial_id", None)
-      testimonial_info, err = self.service.update_testimonial(testimonial_id, args)
+      testimonial_info, err = self.service.update_testimonial(context, testimonial_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -98,9 +103,10 @@ class TestimonialHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_testimonial_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       testimonial_id = args.pop('testimonial_id', None)
-      testimonial_info, err = self.service.delete_testimonial(testimonial_id)
+      testimonial_info, err = self.service.delete_testimonial(context, testimonial_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonial_info)
@@ -109,9 +115,10 @@ class TestimonialHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
-      testimonials, err = self.service.list_testimonials_for_community_admin(community_id)
+      testimonials, err = self.service.list_testimonials_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonials)
@@ -120,8 +127,9 @@ class TestimonialHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
-      testimonials, err = self.service.list_testimonials_for_super_admin()
+      context: Context = request.context
+      args: dict = context.args
+      testimonials, err = self.service.list_testimonials_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=testimonials)

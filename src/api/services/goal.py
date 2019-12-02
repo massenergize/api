@@ -3,6 +3,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.goal import GoalStore
 from database.models import Goal
+from _main_.utils.context import Context
 
 from _main_.utils.utils import get_models_and_field_types
 from database import models
@@ -36,7 +37,7 @@ class GoalService:
     goal, err = self.store.get_goal_info(goal_id)
     if err:
       return None, err
-    return serialize(goal), None
+    return serialize(goal, full=True), None
 
   def list_goals(self, community_id, subdomain, team_id, user_id) -> (list, MassEnergizeAPIError):
     goals, err = self.store.list_goals(community_id, subdomain, team_id, user_id)
@@ -76,8 +77,8 @@ class GoalService:
     return serialize(goal), None
 
 
-  def list_goals_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    goals, err = self.store.list_goals_for_community_admin(community_id)
+  def list_goals_for_community_admin(self,context, community_id) -> (list, MassEnergizeAPIError):
+    goals, err = self.store.list_goals_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(goals), None

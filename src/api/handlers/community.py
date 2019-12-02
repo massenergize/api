@@ -6,6 +6,7 @@ from api.services.community import CommunityService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
+from _main_.utils.validator import Validator
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -25,6 +26,9 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.update", self.update())
     self.add("/communities.delete", self.delete())
     self.add("/communities.remove", self.delete())
+    self.add("/communities.graphs", self.info())
+    self.add("/communities.data", self.info())
+    self.add("/communities.join", self.join())
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list())
@@ -33,13 +37,24 @@ class CommunityHandler(RouteHandler):
 
   def info(self) -> function:
     def community_info_view(request) -> None:
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'id')
-      community_info, err = self.service.get_community_info(args)
+      community_info, err = self.service.get_community_info(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
     return community_info_view
+
+  def join(self) -> function:
+    def join_community_view(request) -> None:
+      context: Context = request.context
+      args: dict = context.args
+      community_info, err = self.service.join_community(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=community_info)
+    return join_community_view
 
 
   def create(self) -> function:
@@ -65,6 +80,9 @@ class CommunityHandler(RouteHandler):
 
       args = rename_field(args, 'image', 'logo')
       args = parse_location(args)
+      if not args['is_geographically_focused']:
+        args.pop('location', None)
+      
       community_info, err = self.service.create_community(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -85,7 +103,8 @@ class CommunityHandler(RouteHandler):
 
   def update(self) -> function:
     def update_community_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'id')
       community_id = args.pop('id', None)
       if not community_id:
@@ -119,7 +138,8 @@ class CommunityHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_community_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'id')
       community_info, err = self.service.delete_community(args)
       if err:
@@ -148,3 +168,4 @@ class CommunityHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=communities)
     return super_admin_list_view
+

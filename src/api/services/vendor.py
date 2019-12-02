@@ -2,6 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.vendor import VendorStore
+from _main_.utils.context import Context
 
 class VendorService:
   """
@@ -51,15 +52,15 @@ class VendorService:
     return serialize(vendor), None
 
 
-  def list_vendors_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    vendors, err = self.store.list_vendors_for_community_admin(community_id)
+  def list_vendors_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    vendors, err = self.store.list_vendors_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(vendors), None
 
 
-  def list_vendors_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    vendors, err = self.store.list_vendors_for_super_admin()
+  def list_vendors_for_super_admin(self, context: Context) -> (list, MassEnergizeAPIError):
+    vendors, err = self.store.list_vendors_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(vendors), None

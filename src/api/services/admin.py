@@ -2,6 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.admin import AdminStore
+from _main_.utils.context import Context
 
 class AdminService:
   """
@@ -51,4 +52,16 @@ class AdminService:
     if err:
       return None, err
     return serialize(admins), None
+
+  def message_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    admins, err = self.store.message_admin(context, args)
+    if err:
+      return None, err
+    return serialize(admins), None
+
+  def list_admin_messages(self, context, args) -> (dict, MassEnergizeAPIError):
+    admins, err = self.store.list_admin_messages(context, args)
+    if err:
+      return None, err
+    return serialize_all(admins), None
 
