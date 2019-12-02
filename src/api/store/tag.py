@@ -1,6 +1,7 @@
 from database.models import Tag, UserProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
 
 class TagStore:
   def __init__(self):
@@ -41,11 +42,12 @@ class TagStore:
     tags = Tag.objects.filter(id=tag_id)
     if not tags:
       return None, InvalidResourceError()
+    tags.delete()
+    return tags.first()
 
 
   def list_tags_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    tags = Tag.objects.filter(community__id = community_id)
-    return tags, None
+    return self.list_tags_for_super_admin()
 
 
   def list_tags_for_super_admin(self):

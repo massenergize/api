@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('carbon_calculator', '00001_initial'),
         ('database', '0037_auto_20191010_1305'),
     ]
 

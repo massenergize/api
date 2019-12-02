@@ -5,6 +5,8 @@ from _main_.utils.common import get_request_contents
 from api.services.team import TeamService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
+from _main_.utils.context import Context
+from _main_.utils.validator import Validator
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -32,7 +34,8 @@ class TeamHandler(RouteHandler):
 
   def info(self) -> function:
     def team_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       team_info, err = self.service.get_team_info(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -42,7 +45,8 @@ class TeamHandler(RouteHandler):
 
   def create(self) -> function:
     def create_team_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       team_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -52,7 +56,8 @@ class TeamHandler(RouteHandler):
 
   def list(self) -> function:
     def list_team_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
       team_info, err = self.service.list_teams(community_id, user_id)
@@ -64,7 +69,8 @@ class TeamHandler(RouteHandler):
 
   def update(self) -> function:
     def update_team_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       team_info, err = self.service.update_team(args.get("id", None), args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -74,7 +80,8 @@ class TeamHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_team_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       team_id = args.get("id", None)
       team_info, err = self.service.delete_team(args.get("id", None))
       if err:
@@ -85,7 +92,8 @@ class TeamHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
       teams, err = self.service.list_teams_for_community_admin(community_id)
       if err:
@@ -96,7 +104,8 @@ class TeamHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       teams, err = self.service.list_teams_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

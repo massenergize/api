@@ -5,6 +5,9 @@ from _main_.utils.common import get_request_contents, rename_field
 from api.services.page_settings__donate import DonatePageSettingsService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
+from _main_.utils.context import Context
+from _main_.utils.validator import Validator
+
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -32,7 +35,8 @@ class DonatePageSettingsHandler(RouteHandler):
 
   def info(self) -> function:
     def donate_page_setting_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'community_id', 'community__id')
       args = rename_field(args, 'subdomain', 'community__subdomain')
       args = rename_field(args, 'donate_page_id', 'id')
@@ -45,7 +49,8 @@ class DonatePageSettingsHandler(RouteHandler):
 
   def create(self) -> function:
     def create_donate_page_setting_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       donate_page_setting_info, err = self.service.create(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -55,7 +60,8 @@ class DonatePageSettingsHandler(RouteHandler):
 
   def list(self) -> function:
     def list_donate_page_setting_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
       donate_page_setting_info, err = self.service.list_donate_page_settings(community_id, user_id)
@@ -67,7 +73,8 @@ class DonatePageSettingsHandler(RouteHandler):
 
   def update(self) -> function:
     def update_donate_page_setting_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       donate_page_setting_info, err = self.service.update_donate_page_setting(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -77,7 +84,8 @@ class DonatePageSettingsHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_donate_page_setting_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       donate_page_setting_id = args.get("id", None)
       donate_page_setting_info, err = self.service.delete_donate_page_setting(args.get("id", None))
       if err:
@@ -88,7 +96,8 @@ class DonatePageSettingsHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
       donate_page_settings, err = self.service.list_donate_page_settings_for_community_admin(community_id)
       if err:
@@ -99,7 +108,8 @@ class DonatePageSettingsHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       donate_page_settings, err = self.service.list_donate_page_settings_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

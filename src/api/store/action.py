@@ -1,43 +1,57 @@
-from database.models import Action, UserProfile, Community, Media
+from database.models import Action, UserProfile, Community, Media, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
+from django.db.models import Q
 import random
 
 class ActionStore:
   def __init__(self):
     self.name = "Action Store/DB"
 
-  def get_action_info(self, action_id) -> (dict, MassEnergizeAPIError):
-    
+  def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
     try:
-      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
-      action = actions_retrieved.first()
+      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id, is_deleted=False)
+      action: Action = actions_retrieved.first()
       if not action:
         return None, InvalidResourceError()
+
+      # if context.is_prod and action.community:
+      #   if (not action.is_published) or not action.community.is_published:
+      #     return None, InvalidResourceError()
+
       return action, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
-  def list_actions(self, community_id, subdomain) -> (list, MassEnergizeAPIError):
+  def list_actions(self, context: Context,community_id, subdomain) -> (list, MassEnergizeAPIError):
     try:
       actions = []
       if community_id:
         actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
       elif subdomain:
         actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain, is_deleted=False)
+      else:
+        return [], None
+      
+      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
+
+      if not context.is_dev:
+        actions = actions.filter(is_published=True)
 
       return actions, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
 
-  def create_action(self, community_id, args) -> (dict, MassEnergizeAPIError):
+  def create_action(self, context: Context,community_id, args) -> (dict, MassEnergizeAPIError):
     try:
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
       new_action = Action.objects.create(**args)
-      if community_id:
+      
+      if community_id and not args.get('is_global', False):
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
@@ -61,7 +75,7 @@ class ActionStore:
       print(e)
       return None, CustomMassenergizeError(e)
 
-  def copy_action(self, action_id) -> (Action, MassEnergizeAPIError):
+  def copy_action(self, context: Context, action_id) -> (Action, MassEnergizeAPIError):
     try:
       #find the action
       action_to_copy: Action = Action.objects.filter(id=action_id).first()
@@ -71,6 +85,7 @@ class ActionStore:
       old_vendors = action_to_copy.vendors.all()
       new_action = action_to_copy
       new_action.pk = None
+      new_action.is_published = False
       new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
       new_action.save()
       new_action.tags.set(old_tags)
@@ -80,7 +95,7 @@ class ActionStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def update_action(self, action_id, args) -> (dict, MassEnergizeAPIError):
+  def update_action(self, context: Context, action_id, args) -> (dict, MassEnergizeAPIError):
     try:
       action = Action.objects.filter(id=action_id)
       if not action:
@@ -104,7 +119,7 @@ class ActionStore:
       if vendors:
         action.vendors.set(vendors)
 
-      if community_id:
+      if community_id and not args.get('is_global', False):
         community = Community.objects.filter(id=community_id).first()
         if community:
           action.community = community
@@ -115,7 +130,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_action(self, action_id) -> (Action, MassEnergizeAPIError):
+  def delete_action(self, context: Context,action_id) -> (Action, MassEnergizeAPIError):
     try:
       #find the action
       actions_to_delete = Action.objects.filter(id=action_id)
@@ -126,14 +141,35 @@ class ActionStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
-  def list_actions_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    actions = Action.objects.filter(community__id = community_id)
-    return actions, None
-
-
-  def list_actions_for_super_admin(self):
+  def list_actions_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
-      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False);
+      if context.user_is_super_admin:
+        return self.list_actions_for_super_admin(context)
+
+      elif not context.user_is_community_admin:
+        return None, CustomMassenergizeError("Sign in as a valid community admin")
+
+      if not community_id:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        comm_ids = [ag.community.id for ag in admin_groups]
+        actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        return actions, None
+
+      actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+      return actions, None
+
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+
+  def list_actions_for_super_admin(self, context: Context):
+    try:
+      # if not context.user_is_super_admin:
+      #   return None, CustomMassenergizeError("Insufficient Privileges")
+      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
       return actions, None
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(str(e))

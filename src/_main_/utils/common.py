@@ -29,12 +29,18 @@ def get_request_contents(request):
 
 def parse_list(d):
   try:
+    tmp = []
     if isinstance(d, str):
-      return d.strip().split(',') if d else []
+      tmp = d.strip().split(',') if d else []
     elif isinstance(d, dict):
-      return list(d.values())
-    else:
-      return []
+      tmp = list(d.values())
+    
+    res = []
+    for i in tmp:
+      if i.isnumeric():
+        res.append(i)
+    return res
+
   except Exception as e:
     print(e)
     return []
@@ -107,7 +113,7 @@ def parse_location(args):
     "city": args.pop("city", None),
     "state": args.pop("state", None),
     "zipcode": args.pop("zipcode", None),
-    "country": args.pop("country", None),
+    "country": args.pop("country", 'United States of America'),
   }
   args['location'] = location
   return args
