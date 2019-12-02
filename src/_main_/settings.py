@@ -17,8 +17,8 @@ from .utils.utils import load_json
 
 IS_PROD = True
 
-DEPLOY_VERSION = '0.7.5'
-RELEASE_NOTES = 'Changed color on API page, old v2/ routes now don\'t return deleted items'
+DEPLOY_VERSION = '0.7.6'
+RELEASE_NOTES = 'Improvements to user creation routes, flushed CC DB'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
