@@ -3,7 +3,7 @@
 #
 #imports
 from datetime import date,datetime
-from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia
+from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia, CalcUser
 from django.utils import timezone
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
@@ -25,6 +25,7 @@ from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolar
 from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
+from .calcUsers import ExportCalcUsers
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -137,6 +138,20 @@ class CarbonCalculator:
             return results
         else:    
             return queryFailed
+
+    def Undo(self, action, inputs):
+# inputs is a dictionary of input parameters
+        queryFailed = {'status':INVALID_QUERY}
+        if action in self.allActions:
+            user_id = inputs.pop("user_id",None)
+            if user_id:           
+                records = ActionPoints.objects.filter(user_id=user_id)
+                if records:
+                    record = records.objects.filter(action=action)
+                    if record:
+                        record.delete()
+                        return {'status':VALID_QUERY}
+        return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
         user_id = inputs.pop("user_id",None)            
@@ -367,7 +382,11 @@ class CarbonCalculator:
         defaultsFile = inputs.get('Defaults','')
         if defaultsFile!='':
             status = CCD.exportDefaults(CCD, defaultsFile)
-        
+
+        usersFile = inputs.get('Users','')
+        if usersFile!='':
+            event = inputs.get('Event','')
+            status = ExportCalcUsers(usersFile, event)
         return {"status":status}
 
 class CalculatorAction:
@@ -407,6 +426,7 @@ class EnergyFair(CalculatorAction):
     # inputs: attend_fair,own_rent,fuel_assistance,activity_group
     def Eval(self, inputs):
         self.points = 0
+        self.text = "You didn't attend the energy fair.  No points earned."
         if inputs.get('attend_fair',NO) == YES:
             self.points = ENERGY_FAIR_POINTS
             self.text = "Thank you for participating!"

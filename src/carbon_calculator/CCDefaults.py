@@ -19,21 +19,23 @@ def getDefault(locality, variable, defaultValue, noUpdate=False):
 
 class CCD():
     DefaultsByLocality = {"default":{}} # the class variable
-
-    num = CalcDefault.objects.all().count()
-    msg = "Initializing %d Carbon Calc defaults from db" % num
-    print(msg)
-    start = time.time()
-    startcpu = timeit.timeit()
-    cq = CalcDefault.objects.all()
-    for c in cq:
-        if c.locality not in DefaultsByLocality:
-            DefaultsByLocality[c.locality] = {}
-        DefaultsByLocality[c.locality][c.variable] = c.value
-    endcpu = timeit.timeit()
-    end = time.time()
-    msg = "Elapsed = %.3f sec, CPU = %.3f sec" % (end - start, endcpu - startcpu)
-    print(msg)
+    try:
+        num = CalcDefault.objects.all().count()
+        msg = "Initializing %d Carbon Calc defaults from db" % num
+        print(msg)
+        start = time.time()
+        startcpu = timeit.timeit()
+        cq = CalcDefault.objects.all()
+        for c in cq:
+            if c.locality not in DefaultsByLocality:
+                DefaultsByLocality[c.locality] = {}
+            DefaultsByLocality[c.locality][c.variable] = c.value
+        endcpu = timeit.timeit()
+        end = time.time()
+        msg = "Elapsed = %.3f sec, CPU = %.3f sec" % (end - start, endcpu - startcpu)
+        print(msg)
+    except:
+        print("CalcDefault initialization skipped")
 
     def __init__(self):
         print("CCD __init__ called")

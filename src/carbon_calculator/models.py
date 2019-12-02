@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from database.utils.constants import *
+from database.utils.constants import SHORT_STR_LEN, TINY_STR_LEN
 from database.utils.common import  json_loader
 # Create your models here.
 
@@ -168,8 +168,10 @@ class CalcUser(models.Model):
     accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    #updated 11/24
-    #event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True)
+    #updated 12/1
+    points = models.IntegerField(default = 0) 
+    cost = models.IntegerField(default = 0)
+    savings = models.IntegerField(default = 0)
 
     def __str__(self):
         return self.email
@@ -210,7 +212,7 @@ class ActionPoints(models.Model):
 	user = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
 	created_date = models.DateTimeField(auto_now_add=True)
 
-	action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.SET_NULL)
+	#action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.SET_NULL)
 	action = models.CharField(max_length=NAME_STR_LEN, blank=True)
 	choices = JSONField(blank=True)
 	
@@ -224,7 +226,7 @@ class ActionPoints(models.Model):
 
 	class Meta:
 		db_table = 'action_points_cc'
-
+    
 class CalcDefault(models.Model):
 	"""
 	Class to keep track of calculator assumptions by locality

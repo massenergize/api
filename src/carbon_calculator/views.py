@@ -39,7 +39,10 @@ def groupinfo(request, group=None):
 def stationinfo(request, station=None):
     return JsonResponse(QueryStations(station))
 
-# these requests should be POSTs, not GETs
+def userinfo(request, user=None):
+    return JsonResponse(QueryCalcUsers(user, request))
+
+# these requests should be POSTs or GETs
 def estimate(request, action):
 	inputs = get_request_contents(request)
 	if request.method == "POST":
@@ -47,6 +50,14 @@ def estimate(request, action):
 	else:
 		save = False
 	return JsonResponse(CALC.Estimate(action, inputs, save))
+
+# these requests should be POSTs
+def undo(request, action):
+	inputs = get_request_contents(request)
+	if request.method == "POST":
+		return JsonResponse(CALC.Undo(action, inputs))
+	else:
+		return Json(None)
 
 def reset(request):
 	inputs = get_request_contents(request)
@@ -63,7 +74,7 @@ def exportcsv(request):
 def users(request):
   args = get_request_contents(request)
   if request.method == 'GET':
-    users = QueryCalcUsers(args)
+    users = QueryCalcUsers(args, {})
     return Json(users)
   elif request.method == 'POST':
     #about to create a new User instance
