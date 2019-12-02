@@ -1,9 +1,10 @@
-from database.models import Community, UserProfile, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die
+import random 
 
 class CommunityStore:
   def __init__(self):
@@ -146,6 +147,21 @@ class CommunityStore:
         if owner:
           comm_admin.members.add(owner)
           comm_admin.save()
+
+      
+      #also clone all global actions for this community
+      global_actions = Action.objects.filter(is_global=True)
+      for action_to_copy in global_actions:
+        old_tags = action_to_copy.tags.all()
+        old_vendors = action_to_copy.vendors.all()
+        new_action = action_to_copy
+        new_action.pk = None
+        new_action.community = None
+        new_action.is_published = False
+        new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
+        new_action.save()
+        new_action.tags.set(old_tags)
+        new_action.vendors.set(old_vendors)
       
       return new_community, None
     except Exception as e:

@@ -194,7 +194,7 @@ class VendorHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop("community_id", None)
-      vendors, err = self.service.list_vendors_for_community_admin(community_id)
+      vendors, err = self.service.list_vendors_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendors)
@@ -205,7 +205,7 @@ class VendorHandler(RouteHandler):
     def super_admin_list_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      vendors, err = self.service.list_vendors_for_super_admin()
+      vendors, err = self.service.list_vendors_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendors)

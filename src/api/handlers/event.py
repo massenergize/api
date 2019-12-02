@@ -22,6 +22,7 @@ class EventHandler(RouteHandler):
     self.add("/events.info", self.info()) 
     self.add("/events.create", self.create())
     self.add("/events.add", self.create())
+    self.add("/events.copy", self.create())
     self.add("/events.list", self.list())
     self.add("/events.update", self.update())
     self.add("/events.delete", self.delete())
@@ -44,6 +45,17 @@ class EventHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)
     return event_info_view
+
+  def copy(self) -> function:
+    def copy_event(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      event_id = args.pop('event_id', None)
+      event_info, err = self.service.copy_event(context, event_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=event_info)
+    return copy_event
 
 
   def rsvp(self) -> function:

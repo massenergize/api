@@ -17,7 +17,8 @@ from .utils.utils import load_json
 
 IS_PROD = False
 
-DEPLOY_VERSION = '0.7.2'
+DEPLOY_VERSION = '0.7.5'
+RELEASE_NOTES = 'Changed color on API page, old v2/ routes now don\'t return deleted items'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -232,6 +233,3 @@ MEDIA_URL = '/media/'
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-
-
-

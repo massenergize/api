@@ -73,7 +73,10 @@ class GraphStore:
         graph.data.add(d)
       graph.save()
 
-      return graph.full_json(), None
+      res = graph.full_json()
+      res['community'] = community.info()
+      return res, None
+      
     except Exception as e:
       import traceback
       traceback.print_exc()

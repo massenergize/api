@@ -797,6 +797,9 @@ class Vendor(models.Model):
   def __str__(self):             
     return self.name
 
+  def info(self):
+    return model_to_dict(self, ['id', 'name', 'service_area'])
+
   def simple_json(self):
     data = model_to_dict(self, exclude=[
      'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services','communities'
@@ -812,6 +815,7 @@ class Vendor(models.Model):
     data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
     data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
     data['logo'] = get_json_if_not_none(self.logo)
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['banner']  = get_json_if_not_none(self.banner)
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
@@ -880,7 +884,7 @@ class Action(models.Model):
     return self.title
 
   def simple_json(self):
-    data =  model_to_dict(self, ['id','is_published', 'title', 'is_global', 'icon', 'rank', 
+    data =  model_to_dict(self, ['id','is_published', 'is_deleted', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
@@ -1131,7 +1135,7 @@ class Testimonial(models.Model):
     res = model_to_dict(self, exclude=['image', 'tags'])
     res["user"] = get_json_if_not_none(self.user)
     res["action"] = get_json_if_not_none(self.action)
-    res["vendor"] = get_json_if_not_none(self.vendor)
+    res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
     res["created_at"] = self.created_at
     res['file'] = get_json_if_not_none(self.image)

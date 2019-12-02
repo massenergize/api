@@ -42,11 +42,12 @@ class TagStore:
     tags = Tag.objects.filter(id=tag_id)
     if not tags:
       return None, InvalidResourceError()
+    tags.delete()
+    return tags.first()
 
 
   def list_tags_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    tags = Tag.objects.filter(community__id = community_id)
-    return tags, None
+    return self.list_tags_for_super_admin()
 
 
   def list_tags_for_super_admin(self):

@@ -11,7 +11,7 @@ class ActionStore:
 
   def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
     try:
-      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
+      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id, is_deleted=False)
       action: Action = actions_retrieved.first()
       if not action:
         return None, InvalidResourceError()

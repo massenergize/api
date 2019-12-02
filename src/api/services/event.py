@@ -18,6 +18,12 @@ class EventService:
       return None, err
     return serialize(event), None
 
+  def copy_event(self, context, event_id) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.copy_event(context, event_id)
+    if err:
+      return None, err
+    return serialize(event), None
+
   def list_events(self, context, community_id, subdomain, user_id) -> (list, MassEnergizeAPIError):
     events, err = self.store.list_events(context, community_id, subdomain, user_id)
     if err:

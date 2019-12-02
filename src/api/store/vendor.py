@@ -1,27 +1,37 @@
 from database.models import Vendor, UserProfile, Media, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 import random
 from _main_.utils.context import Context
-
+from django.db.models import Q
+from .utils import get_community_or_die
 from _main_.utils.context import Context
 class VendorStore:
   def __init__(self):
     self.name = "Vendor Store/DB"
 
   def get_vendor_info(self, context, args) -> (dict, MassEnergizeAPIError):
-    vendor = Vendor.objects.filter(**args).first()
-    if not vendor:
-      return None, InvalidResourceError()
-    return vendor, None
+    try:
+      vendor_id = args.pop('vendor_id', None) or args.pop('id', None)
+      
+      if not vendor_id:
+        return None, InvalidResourceError()
+      vendor = Vendor.objects.filter(pk=vendor_id).first()
+
+      if not vendor:
+        return None, InvalidResourceError()
+
+      return vendor, None
+    except Exception as e:
+      print(e)
+      return CustomMassenergizeError(e)
 
 
   def list_vendors(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       subdomain = args.pop('subdomain', None)
       community_id = args.pop('community_id', None)
-
 
       if community_id:
         community = Community.objects.get(pk=community_id)
@@ -159,19 +169,38 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_vendors_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_vendors_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
-      community = Community.objects.get(id=community_id)
-      vendors = community.vendor_set.all().filter(is_deleted=False)
+      if context.user_is_super_admin:
+        return self.list_vendors_for_super_admin(context)
+
+      elif not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
+      if not community_id:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        communities = [ag.community for ag in admin_groups]
+        vendors = None
+        for c in communities:
+          if vendors is not None:
+            vendors |= c.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+          else:
+            vendors = c.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+
+        return vendors, None
+
+      community = get_community_or_die(context, {'community_id': community_id})
+      vendors = community.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
       return vendors, None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(e)
 
 
-  def list_vendors_for_super_admin(self):
+  def list_vendors_for_super_admin(self, context: Context):
     try:
-      vendors = Vendor.objects.filter(is_deleted=False)
+      vendors = Vendor.objects.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
       return vendors, None
     except Exception as e:
       print(e)
