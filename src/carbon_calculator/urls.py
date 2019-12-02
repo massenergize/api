@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import index, ping, actioninfo, eventinfo, groupinfo, stationinfo, estimate, reset, importcsv, exportcsv, users, userinfo
+from .views import index, ping, actioninfo, eventinfo, groupinfo, stationinfo, userinfo, estimate, reset, importcsv, exportcsv, users
 
 urlpatterns = [
     path('',index),

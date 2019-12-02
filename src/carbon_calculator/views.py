@@ -66,7 +66,7 @@ def exportcsv(request):
 def users(request):
   args = get_request_contents(request)
   if request.method == 'GET':
-    users = QueryCalcUsers(args)
+    users = QueryCalcUsers(args, {})
     return Json(users)
   elif request.method == 'POST':
     #about to create a new User instance

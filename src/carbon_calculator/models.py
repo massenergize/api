@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from database.utils.constants import *
+from database.utils.constants import SHORT_STR_LEN, TINY_STR_LEN
 from database.utils.common import  json_loader
 # Create your models here.
 
