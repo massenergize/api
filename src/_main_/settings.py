@@ -15,7 +15,7 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = False
+IS_PROD = True
 
 DEPLOY_VERSION = '0.7.5'
 RELEASE_NOTES = 'Changed color on API page, old v2/ routes now don\'t return deleted items'

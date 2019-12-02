@@ -56,7 +56,8 @@ class UserHandler(RouteHandler):
     def create_user_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      user_info, err = self.service.create(args)
+      print(args)
+      user_info, err = self.service.create_user(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -185,8 +186,7 @@ class UserHandler(RouteHandler):
     def add_household_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      user_id = args.pop('user_id', None)
-      user_info, err = self.service.get_user_info(context, args)
+      user_info, err = self.service.add_household(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

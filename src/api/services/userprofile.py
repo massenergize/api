@@ -18,6 +18,12 @@ class UserService:
       return None, err
     return serialize(user, full=True), None
 
+  def add_household(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+    household, err = self.store.add_household(context, args)
+    if err:
+      return None, err
+    return serialize(household, full=True), None
+
   def list_users(self, community_id) -> (list, MassEnergizeAPIError):
     user, err = self.store.list_users(community_id)
     if err:
@@ -25,8 +31,8 @@ class UserService:
     return serialize_all(user), None
 
 
-  def create_user(self, args) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.create_user(args)
+  def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.create_user(context, args)
     if err:
       return None, err
     return serialize(user), None

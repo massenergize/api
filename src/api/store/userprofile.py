@@ -3,7 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
-from .utils import get_community, get_user
+from .utils import get_community, get_user, get_user_or_die
 
 class UserStore:
   def __init__(self):
@@ -16,6 +16,36 @@ class UserStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
+  def add_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+      name = args.pop('name', None)
+      unit_type=args.pop('unit_type', None)
+      location=args.pop('location', None)
+      community = args.pop('community_id', None)
+
+      new_unit = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
+      new_unit.save()
+
+      user.real_estate_units.add(new_unit)
+      print(community)
+      if community:
+        new_unit.community = community
+
+      new_unit.save()
+
+      return new_unit, None
+    except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
+  def list_households(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+
+      return user.real_estate_units.all(), None
+    except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
   def list_users(self, community_id) -> (list, MassEnergizeAPIError):
     community,err = get_community(community_id)
     
@@ -24,13 +54,31 @@ class UserStore:
     return community.userprofile_set.all(), None
 
 
-  def create_user(self, args) -> (dict, MassEnergizeAPIError):
+  def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      new_user = UserProfile.objects.create(**args)
-      new_user.save()
+      email = args.get('email', None) 
+      subdomain = args.pop('subdomain', None)
+
+      if not email:
+        return CustomMassenergizeError("email required for sign up")
+      
+      user = UserProfile.objects.filter(email=email)
+      if not email:
+        new_user = UserProfile.objects.create(**args)
+        new_user.save()
+      else:
+        new_user = user.first()
+      
+      if subdomain:
+        community = Community.objects.filter(subdomain=subdomain)
+        if community:
+          new_user.communities.add(community)
+          new_user.save()
+
       return new_user, None
-    except Exception:
-      return None, ServerError()
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def update_user(self, user_id, args) -> (dict, MassEnergizeAPIError):
