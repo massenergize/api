@@ -139,6 +139,20 @@ class CarbonCalculator:
         else:    
             return queryFailed
 
+    def Undo(self, action, inputs):
+# inputs is a dictionary of input parameters
+        queryFailed = {'status':INVALID_QUERY}
+        if action in self.allActions:
+            user_id = inputs.pop("user_id",None)
+            if user_id:           
+                records = ActionPoints.objects.filter(user_id=user_id)
+                if records:
+                    record = records.objects.filter(action=action)
+                    if record:
+                        record.delete()
+                        return {'status':VALID_QUERY}
+        return queryFailed
+
     def RecordActionPoints(self,action, inputs,results):
         user_id = inputs.pop("user_id",None)            
         record = ActionPoints(  user_id=user_id,
