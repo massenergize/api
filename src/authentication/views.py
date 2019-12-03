@@ -36,7 +36,7 @@ def who_am_i(request):
   try:
     user_id = request.context.user_id
     if not user_id:
-        return CustomMassenergizeError(f"No user exists with ID: {user_id}")
+      return CustomMassenergizeError(f"No user exists with ID: {user_id}")
     user = UserProfile.objects.get(pk=user_id)
     return MassenergizeResponse(user.full_json())
 

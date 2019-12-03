@@ -23,7 +23,7 @@ class TeamHandler(RouteHandler):
     self.add("/teams.create", self.create())
     self.add("/teams.add", self.create())
     self.add("/teams.list", self.list())
-    self.add("/teams.stats", self.list())
+    self.add("/teams.stats", self.team_stats())
     self.add("/teams.update", self.update())
     self.add("/teams.delete", self.delete())
     self.add("/teams.remove", self.delete())
@@ -76,7 +76,7 @@ class TeamHandler(RouteHandler):
     return list_team_view
 
   def team_stats(self) -> function:
-    def list_team_view(request) -> None: 
+    def team_stats_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
       context: Context = request.context
@@ -84,7 +84,7 @@ class TeamHandler(RouteHandler):
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
-    return list_team_view
+    return team_stats_view
 
 
   def update(self) -> function:

@@ -38,11 +38,12 @@ class TeamStore:
         res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
         res["team"] = team.simple_json()
         for m in team.members.all():
-          res["households"] += len(m.real_estate_units.count())
-          actions = m.useractionrel_set.count()
+          res["households"] += m.real_estate_units.count()
+          actions = m.useractionrel_set.all()
           res["actions"] += len(actions)
           res["actions_completed"] += actions.filter(**{"status":"DONE"}).count()
           res["actions_todo"] += actions.filter(**{"status":"TODO"}).count()
+
         ans.append(res)
 
       return ans, None
