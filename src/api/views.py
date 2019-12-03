@@ -63,6 +63,7 @@ def startup_data(request, cid=None, subdomain=None):
 def actions(request):
   args = get_request_contents(request)
   if request.method == 'GET':
+    args['is_deleted'] = False
     actions, errors = FETCH.all(Action, args)
     return Json(actions, errors)
   elif request.method == 'POST':
@@ -280,6 +281,7 @@ def community_actions(request, cid=None, subdomain=None):
   if subdomain:
     args['community__subdomain'] = subdomain 
   if request.method == 'GET':
+    args['is_deleted'] = False
     community, errors = FETCH.all(Action, args)
     return Json(community, errors)
   elif request.method == 'POST':
@@ -354,6 +356,7 @@ def community_events(request, cid=None, subdomain=None):
   if subdomain:
     args['community__subdomain'] = subdomain  
   if request.method == 'GET':
+    args['is_deleted'] = False
     community, errors = FETCH.all(Event, args)
     return Json(community, errors)
   elif request.method == 'POST':
@@ -392,6 +395,7 @@ def community_teams(request, cid=None, subdomain=None):
   if subdomain:
     args['community__subdomain'] = subdomain  
   if request.method == 'GET':
+    args['is_deleted'] = False
     community, errors = FETCH.all(Team, args)
     return Json(community, errors)
   elif request.method == 'POST':
@@ -430,7 +434,7 @@ def community_vendors(request, cid=None, subdomain=None):
   if request.method == 'GET':
     community, errors = FETCH.one(Community, args)
     if community:
-      return Json(community.vendor_set.all(), errors)
+      return Json(community.vendor_set.filter(is_deleted=False), errors)
 
   return Json(None)
 
@@ -443,6 +447,7 @@ def community_testimonials(request, cid=None, subdomain=None):
   if subdomain:
     args['action__community__subdomain'] = subdomain 
   if request.method == 'GET':
+    args['is_deleted'] = False
     community, errors = FETCH.all(Testimonial, args)
     return Json(community, errors)
   elif request.method == 'POST':
@@ -1686,6 +1691,7 @@ def user_group_by_email(request, email):
 def vendors(request):
   args = get_request_contents(request)
   if request.method == 'GET':
+    args['is_deleted'] = False
     vendors, errors = FETCH.all(Vendor, args)
     return Json(vendors, errors)
   elif request.method == 'POST':

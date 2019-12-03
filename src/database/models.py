@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
 from datetime import date, datetime
+from django.utils import timezone
 from .utils.common import  json_loader,get_json_if_not_none
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
@@ -208,9 +209,7 @@ class Goal(models.Model):
     return res
 
   def full_json(self):
-    communities = self.community_set.all()
-    res = self.simple_json()
-    res["community"] = None if not communities else get_json_if_not_none(communities[0])
+    return self.simple_json()
 
   class Meta:
     db_table = 'goals'
@@ -277,6 +276,9 @@ class Community(models.Model):
   def __str__(self):      
     return self.name
 
+  def info(self):
+    return model_to_dict(self, ['id', 'name', 'subdomain'])
+
   def simple_json(self):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
       'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
@@ -339,6 +341,7 @@ class RealEstateUnit(models.Model):
     max_length=TINY_STR_LEN, 
     choices=CHOICES["REAL_ESTATE_TYPES"].items()
   )
+  community = models.ForeignKey(Community, null=True, on_delete=models.SET_NULL, blank=True)
   location = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -455,10 +458,14 @@ class UserProfile(models.Model):
   def __str__(self):
     return self.email
 
+  def info(self):
+    return model_to_dict(self, ['id', 'email', 'subdomain'])
+
   def simple_json(self):
-    res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email'])
+    res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
     res['user_info'] = self.user_info
     res['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    res['communities'] = [c.name for c in self.communities.all()]
     return res
 
 
@@ -604,102 +611,6 @@ class Service(models.Model):
 
 
 
-class Vendor(models.Model):
-  """
-  A class used to represent a Vendor/Contractor that provides a service 
-  associated with any of the actions.
-
-  Attributes
-  ----------
-  name : str
-    name of the Vendor
-  description: str
-    description of this service
-  logo: int
-    Foreign Key to Media file represtenting the logo for this Vendor    
-  banner: int
-    Foreign Key to Media file represtenting the banner for this Vendor  
-  address: int
-    Foreign Key for Location of this Vendor
-  key_contact: int
-    Foreign Key for MassEnergize User that is the key contact for this vendor
-  service_area: str
-    Information about whether this vendor provides services nationally, 
-    statewide, county or Town services only
-  properties_services: str
-    Whether this vendor services Residential or Commercial units only
-  onboarding_date: DateTime
-    When this vendor was onboard-ed on the MassEnergize Platform for this 
-      community
-  onboarding_contact:
-    Which MassEnergize Staff/User onboard-ed this vendor
-  verification_checklist:
-    contains information about some steps and checks needed for due diligence 
-    to be done on this vendor eg. Vendor MOU, Reesearch
-  is_verified: boolean
-    When the checklist items are all done and verified then set this as True
-    to confirm this vendor
-  more_info: JSON
-    any another dynamic information we would like to store about this Service 
-  created_at: DateTime
-    The date and time that this Vendor was added 
-  created_at: DateTime
-    The date and time of the last time any updates were made to the information
-    about this Vendor
-  """
-  id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
-  phone_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  email = models.EmailField(blank=True, null=True, db_index=True)
-  description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  logo = models.ForeignKey(Media, blank=True, null=True, 
-    on_delete=models.SET_NULL, related_name='vender_logo')
-  banner = models.ForeignKey(Media, blank=True, null=True, 
-    on_delete=models.SET_NULL, related_name='vendor_banner')
-  address = JSONField(blank=True, null=True)
-  key_contact = JSONField(blank=True, null=True)
-  service_area = models.CharField(max_length=SHORT_STR_LEN)
-  service_area_states = JSONField(blank=True, null=True)
-  services = models.ManyToManyField(Service, blank=True)
-  properties_serviced = JSONField(blank=True, null=True) 
-  onboarding_date = models.DateTimeField(default=datetime.now)
-  onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
-    null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
-  verification_checklist = JSONField(blank=True, null=True) 
-  is_verified = models.BooleanField(default=False, blank=True)
-  location = JSONField(blank=True, null=True)
-  more_info = JSONField(blank=True, null=True)
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
-  communities = models.ManyToManyField(Community, blank=True)
-  is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False, blank=True)
-
-  def __str__(self):             
-    return self.name
-
-  def simple_json(self):
-    data = model_to_dict(self, exclude=[
-     'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services','communities'
-    ])
-    data['services'] = [s.simple_json() for s in self.services.all()]
-    data['communities'] = [c.simple_json() for c in self.communities.all()]
-    data['logo'] = get_json_if_not_none(self.logo)
-    return data
-
-
-  def full_json(self):
-    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
-    data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
-    data['logo'] = get_json_if_not_none(self.logo)
-    data['banner']  = get_json_if_not_none(self.banner)
-    data['services'] = [s.simple_json() for s in self.services.all()]
-    data['communities'] = [c.simple_json() for c in self.communities.all()]
-    return data
-
-  class Meta:
-    db_table = 'vendors'
-
 
 class ActionProperty(models.Model):
   """
@@ -781,6 +692,7 @@ class Tag(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN)
+  points = models.PositiveIntegerField(null=True, blank=True)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
   tag_collection = models.ForeignKey(TagCollection, null=True, 
     on_delete=models.CASCADE, blank=True)
@@ -794,6 +706,7 @@ class Tag(models.Model):
   def simple_json(self):
     res = model_to_dict(self)
     res['order'] = self.rank
+    res['tag_collection_name'] = None if not self.tag_collection else self.tag_collection.name
     return res
 
 
@@ -806,6 +719,110 @@ class Tag(models.Model):
     ordering = ('rank',)
     db_table = 'tags'
     unique_together = [['rank', 'name', 'tag_collection']]
+
+
+
+class Vendor(models.Model):
+  """
+  A class used to represent a Vendor/Contractor that provides a service 
+  associated with any of the actions.
+
+  Attributes
+  ----------
+  name : str
+    name of the Vendor
+  description: str
+    description of this service
+  logo: int
+    Foreign Key to Media file represtenting the logo for this Vendor    
+  banner: int
+    Foreign Key to Media file represtenting the banner for this Vendor  
+  address: int
+    Foreign Key for Location of this Vendor
+  key_contact: int
+    Foreign Key for MassEnergize User that is the key contact for this vendor
+  service_area: str
+    Information about whether this vendor provides services nationally, 
+    statewide, county or Town services only
+  properties_services: str
+    Whether this vendor services Residential or Commercial units only
+  onboarding_date: DateTime
+    When this vendor was onboard-ed on the MassEnergize Platform for this 
+      community
+  onboarding_contact:
+    Which MassEnergize Staff/User onboard-ed this vendor
+  verification_checklist:
+    contains information about some steps and checks needed for due diligence 
+    to be done on this vendor eg. Vendor MOU, Reesearch
+  is_verified: boolean
+    When the checklist items are all done and verified then set this as True
+    to confirm this vendor
+  more_info: JSON
+    any another dynamic information we would like to store about this Service 
+  created_at: DateTime
+    The date and time that this Vendor was added 
+  created_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this Vendor
+  """
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=SHORT_STR_LEN,unique=True)
+  phone_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+  email = models.EmailField(blank=True, null=True, db_index=True)
+  description = models.CharField(max_length=LONG_STR_LEN, blank = True)
+  logo = models.ForeignKey(Media, blank=True, null=True, 
+    on_delete=models.SET_NULL, related_name='vender_logo')
+  banner = models.ForeignKey(Media, blank=True, null=True, 
+    on_delete=models.SET_NULL, related_name='vendor_banner')
+  address = JSONField(blank=True, null=True)
+  key_contact = JSONField(blank=True, null=True)
+  service_area = models.CharField(max_length=SHORT_STR_LEN)
+  service_area_states = JSONField(blank=True, null=True)
+  services = models.ManyToManyField(Service, blank=True)
+  properties_serviced = JSONField(blank=True, null=True) 
+  onboarding_date = models.DateTimeField(auto_now_add=True)
+  onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
+    null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
+  verification_checklist = JSONField(blank=True, null=True) 
+  is_verified = models.BooleanField(default=False, blank=True)
+  location = JSONField(blank=True, null=True)
+  more_info = JSONField(blank=True, null=True)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  communities = models.ManyToManyField(Community, blank=True)
+  tags = models.ManyToManyField(Tag, related_name='vendor_tags', blank=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  is_published = models.BooleanField(default=False, blank=True)
+
+  def __str__(self):             
+    return self.name
+
+  def info(self):
+    return model_to_dict(self, ['id', 'name', 'service_area'])
+
+  def simple_json(self):
+    data = model_to_dict(self, exclude=[
+     'logo', 'banner', 'services', 'onboarding_contact', 'more_info', 'services','communities'
+    ])
+    data['services'] = [s.simple_json() for s in self.services.all()]
+    data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
+    data['logo'] = get_json_if_not_none(self.logo)
+    return data
+
+
+  def full_json(self):
+    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
+    data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
+    data['logo'] = get_json_if_not_none(self.logo)
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
+    data['banner']  = get_json_if_not_none(self.banner)
+    data['services'] = [s.simple_json() for s in self.services.all()]
+    data['communities'] = [c.simple_json() for c in self.communities.all()]
+    return data
+
+  class Meta:
+    db_table = 'vendors'
 
 
 class Action(models.Model):
@@ -867,7 +884,7 @@ class Action(models.Model):
     return self.title
 
   def simple_json(self):
-    data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
+    data =  model_to_dict(self, ['id','is_published', 'is_deleted', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
@@ -925,8 +942,8 @@ class Event(models.Model):
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   invited_communities = models.ManyToManyField(Community, 
     related_name="invited_communites", blank=True)
-  start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
-  end_date_and_time  = models.DateTimeField(default=datetime.now)
+  start_date_and_time  = models.DateTimeField(db_index=True, auto_now_add=True)
+  end_date_and_time  = models.DateTimeField(auto_now_add=True)
   location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
@@ -945,6 +962,8 @@ class Event(models.Model):
 
   def simple_json(self):
     data = model_to_dict(self, exclude=['tags', 'image', 'community'])
+    data['start_date_and_time'] = self.start_date_and_time
+    data['end_date_and_time'] = self.end_date_and_time
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['community'] = get_json_if_not_none(self.community)
     data['image'] = None if not self.image else self.image.full_json()
@@ -957,7 +976,7 @@ class Event(models.Model):
 
 
   class Meta:
-    ordering = ('-start_date_and_time',)
+    ordering = ('rank', '-start_date_and_time',)
     db_table = 'events'
 
 
@@ -1116,14 +1135,15 @@ class Testimonial(models.Model):
     res = model_to_dict(self, exclude=['image', 'tags'])
     res["user"] = get_json_if_not_none(self.user)
     res["action"] = get_json_if_not_none(self.action)
-    res["vendor"] = get_json_if_not_none(self.vendor)
+    res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
     res["created_at"] = self.created_at
+    res['file'] = get_json_if_not_none(self.image)
     return res
 
   def full_json(self):
     data = self.simple_json() 
-    data['image'] = get_json_if_not_none(self.image)
+    data['image'] = data.get('file', None)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     return data
 
@@ -1284,6 +1304,7 @@ class Data(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   value =  models.PositiveIntegerField(default=0)
+  reported_value =  models.PositiveIntegerField(default=0)
   denominator =  models.CharField(max_length = SHORT_STR_LEN, blank=True)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
   tag = models.ForeignKey(Tag, blank=True, on_delete=models.SET_NULL, 
@@ -1295,10 +1316,10 @@ class Data(models.Model):
   is_published = models.BooleanField(default=True)
 
   def __str__(self):         
-    return "%s (%d)" % (self.name, self.value)
+    return "%s | %s (%d) |(%s)" % (self.community, self.name, self.value,  self.tag)
 
   def simple_json(self):
-    return model_to_dict(self)
+    return model_to_dict(self, fields=["id", "name", "value", "reported_value"])
 
   def full_json(self):
     data = self.simple_json()
@@ -1335,17 +1356,12 @@ class Graph(models.Model):
 
 
   def simple_json(self):
-    return {
-      "id": self.id,
-      "title": self.title,
-      "graph_type": self.graph_type,
-      "community": get_json_if_not_none(self.community)
-    }
+    return model_to_dict(self, fields=["title", "community", "is_published"])
 
 
   def full_json(self):
     res =  self.simple_json()
-    res["data"] = [d.full_json() for d in self.data.all()]
+    res["data"] = [d.simple_json() for d in self.data.all()]
     return res
 
 
@@ -1674,7 +1690,8 @@ class Subscriber(models.Model):
 
   def simple_json(self):
     res = model_to_dict(self)
-    res['community'] = get_json_if_not_none(self.community)
+    res['community'] = None if not self.community else self.community.info()
+    return res
 
   def full_json(self):
     return self.simple_json()
@@ -1964,3 +1981,83 @@ class ImpactPageSettings(models.Model):
   class Meta:
     db_table = 'impact_page_settings'
     verbose_name_plural = "ImpactPageSettings"
+
+
+class Message(models.Model):
+  """
+  A class used to represent  Role for users on the MassEnergize Platform
+
+  Attributes
+  ----------
+  name : str
+    name of the role
+  """
+  id = models.AutoField(primary_key=True)
+  user_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True) 
+  title = models.CharField(max_length=SHORT_STR_LEN) 
+  uploaded_file = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL) 
+  email = models.EmailField(blank=True) 
+  user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True) 
+  body = models.TextField(max_length=LONG_STR_LEN)
+  community = models.ForeignKey(Community, blank=True, on_delete=models.SET_NULL, null=True)
+  is_read = models.BooleanField(default=False, blank=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  archive = models.BooleanField(default=False, blank=True)
+  starred = models.BooleanField(default=False, blank=True)
+  created_at = models.DateTimeField(auto_now_add=True, null=True)
+
+
+  def __str__(self):
+    return f"{self.title}"
+
+  def simple_json(self):
+    res = model_to_dict(self)
+    res["community"] = None if not self.community else self.community.info()
+    return res
+
+  def full_json(self):
+    res = self.simple_json()
+    res["uploaded_file"] = get_json_if_not_none(self.uploaded_file)
+    return res
+
+
+  class Meta:
+    ordering = ('title',)
+    db_table = 'messages'
+
+
+class ActivityLog(models.Model):
+  """
+  A class used to represent  Activity Log on the MassEnergize Platform
+
+  Attributes
+  ----------
+  """
+  id = models.AutoField(primary_key=True)
+  path = models.CharField(max_length=SHORT_STR_LEN, default='/') 
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True) 
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True) 
+  created_at = models.DateTimeField(auto_now_add=True)
+  status = models.CharField(max_length=SHORT_STR_LEN, default='success', blank=True) 
+  trace = JSONField(blank=True, null=True) 
+  request_body = JSONField(blank=True, null=True) 
+  # add response or error field
+
+  def __str__(self):
+    return self.path
+
+  def simple_json(self):
+    return  model_to_dict(self)
+
+  def full_json(self):
+    res = self.simple_json()
+    res["user"] = get_json_if_not_none(self.user)
+    res["community"] = get_json_if_not_none(self.community)
+    return res
+
+
+  class Meta:
+    ordering = ('path',)
+    db_table = 'activity_logs'
+
+

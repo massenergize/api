@@ -30,7 +30,7 @@ class CarbonCalculatorMedia(models.Model):
     return self.file.name
 
   class Meta:
-    db_table = "cc_media_files"
+    db_table = "media_files_cc"
 
 
 class Action(models.Model):
@@ -59,7 +59,7 @@ class Action(models.Model):
         return self.name
 
     class Meta:
-        db_table = 'cc_actions'
+        db_table = 'actions_cc'
 
 
 class Question(models.Model):
@@ -105,7 +105,7 @@ class Question(models.Model):
         return self.name
 
     class Meta:
-        db_table = 'cc_questions'
+        db_table = 'questions_cc'
 
 class Station(models.Model):
     id = models.AutoField(primary_key=True)
@@ -119,7 +119,7 @@ class Station(models.Model):
         return self.displayname
 
     class Meta:
-        db_table = 'cc_stations'
+        db_table = 'stations_cc'
 
 
 
@@ -136,7 +136,7 @@ class Group(models.Model):
         return self.displayname
 
     class Meta:
-        db_table = 'cc_groups'
+        db_table = 'groups_cc'
 
 
 class CalcUser(models.Model):
@@ -176,79 +176,71 @@ class CalcUser(models.Model):
     def __str__(self):
         return self.email
 
-#
     class Meta:
-        db_table = 'cc_user_profiles' 
+        db_table = 'user_profiles_cc' 
 
 class Event(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=NAME_STR_LEN,unique=True)
-    displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
-    datetime = models.DateTimeField(blank=True)
-    location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-#    stations = models.ForeignKey(Station, on_delete=models.SET_NULL, 
-#        null=True, blank=True, related_name='cc_station_picture')
-    stationslist = JSONField(null=True, blank=True)
-    groups = models.ManyToManyField(Group,blank=True)
-    host_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    host_contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    host_email = models.EmailField()
-    host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
-    host_url = models.URLField(blank=True)
-    host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-        null=True, blank=True, related_name='event_host_logo')
-    sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    sponsor_url = models.URLField(blank=True)
-    sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-        null=True, blank=True, related_name='event_sponsor_logo')
-#   updated 11/24
-    attendees = models.ManyToManyField(CalcUser, blank=True)
-
-    def __str__(self):      
-        return self.displayname
-
-    class Meta:
-        db_table = 'cc_events'
-
+	id = models.AutoField(primary_key=True)
+	name = models.CharField(max_length=NAME_STR_LEN,unique=True)
+	displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
+	datetime = models.DateTimeField(blank=True)
+	location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+	stationslist = JSONField(null=True, blank=True)
+	groups = models.ManyToManyField(Group,blank=True)
+	host_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+	host_contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+	host_email = models.EmailField()
+	host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
+	host_url = models.URLField(blank=True)
+	host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
+		null=True, blank=True, related_name='event_host_logo')
+	sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+	sponsor_url = models.URLField(blank=True)
+	sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
+		null=True, blank=True, related_name='event_sponsor_logo')
+	attendees = models.ManyToManyField(CalcUser, blank=True)
+	
+	def __str__(self):
+		return self.displayname
+	
+	class Meta:
+		db_table = 'events_cc'
 
 class ActionPoints(models.Model):
-    """
-    Class to record choices made for actions - first from the Event Calculator and eventually from  
-    """
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
-    created_date = models.DateTimeField(auto_now_add=True)
-#
-    #action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.SET_NULL)
-    action = models.CharField(max_length=NAME_STR_LEN, blank=True)
-    choices = JSONField(blank=True)
-#    # how to put in the questions and answers?
-#
-    points = models.IntegerField(default = 0) 
-    cost = models.IntegerField(default = 0)
-    savings = models.IntegerField(default = 0)
-#        
-    def __str__(self):      
-        return "%s-%s-(%s)" % (self.action, self.user, self.created_date)
+	"""Class to record choices made for actions - first from the Event Calculator and eventually from"""
+	id = models.AutoField(primary_key=True)
+	user = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
+	created_date = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        db_table = 'cc_action_points'
-#
-#
+	#action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.SET_NULL)
+	action = models.CharField(max_length=NAME_STR_LEN, blank=True)
+	choices = JSONField(blank=True)
+	
+	# how to put in the questions and answers?
+	points = models.IntegerField(default = 0) 
+	cost = models.IntegerField(default = 0)
+	savings = models.IntegerField(default = 0)
+
+	def __str__(self):      
+		return "%s-%s-(%s)" % (self.action, self.user, self.created_date)
+
+	class Meta:
+		db_table = 'action_points_cc'
+    
 class CalcDefault(models.Model):
-    """
-    Class to keep track of calculator assumptions by locality
+	"""
+	Class to keep track of calculator assumptions by locality
 
-    """
-    id = models.AutoField(primary_key=True)
-    variable = models.CharField(max_length=NAME_STR_LEN,blank=False)
-    locality = models.CharField(max_length=NAME_STR_LEN)
-    value = models.FloatField(default=0.0)
-    reference = models.CharField(max_length=MED_STR_LEN)
-    updated = models.DateTimeField(auto_now_add=True)
+	"""
+	id = models.AutoField(primary_key=True)
+	variable = models.CharField(max_length=NAME_STR_LEN,blank=False)
+	locality = models.CharField(max_length=NAME_STR_LEN)
+	value = models.FloatField(default=0.0)
+	reference = models.CharField(max_length=MED_STR_LEN)
+	updated = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        db_table = 'cc_defaults'
+	class Meta:
+		db_table = 'defaults_cc'
 
-    def __str__(self):      
-        return "%s : %s = %.3f" % (self.locality,self.variable, self.value)
+	def __str__(self):
+		return "%s : %s = %.3f" % (self.locality,self.variable, self.value)

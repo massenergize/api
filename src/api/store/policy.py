@@ -1,6 +1,8 @@
 from database.models import Policy, UserProfile, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
+from django.db.models import Q
 
 class PolicyStore:
   def __init__(self):
@@ -78,15 +80,42 @@ class PolicyStore:
       new_policy.save()
       return new_policy, None
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(str(e))
 
 
-  def list_policies_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    policies = Policy.objects.filter(community__id = community_id, is_deleted=False)
-    return policies, None
+  def list_policies_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    try:
+      if context.user_is_super_admin:
+        return self.list_policies_for_super_admin(context)
+
+      elif not context.user_is_community_admin:
+        return None, CustomMassenergizeError("Sign in as a valid community admin")
+
+      if not community_id:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        communities = [ag.community.policies for ag in admin_groups]
+        policies = None
+        for ag in admin_groups:
+          if not policies:
+            policies = ag.community.policies.all().filter(is_deleted=False)
+          else:
+            policies |= ag.community.policies.all().filter(is_deleted=False)
+
+        return policies, None
+
+      community: Community = Community.objects.get(pk=community_id)
+      policies = community.policies.all().filter(is_deleted=False)
+      policies |= Policy.objects.filter(is_global=True, is_deleted=False)
+      return policies, None
+ 
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
-  def list_policies_for_super_admin(self):
+  def list_policies_for_super_admin(self, context: Context):
     try:
       policies = Policy.objects.filter(is_deleted=False)
       return policies, None

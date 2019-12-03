@@ -2,6 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.userprofile import UserStore
+from _main_.utils.context import Context
 
 class UserService:
   """
@@ -17,15 +18,21 @@ class UserService:
       return None, err
     return serialize(user, full=True), None
 
-  def list_users(self, user_id) -> (list, MassEnergizeAPIError):
-    user, err = self.store.list_users(user_id)
+  def add_household(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+    household, err = self.store.add_household(context, args)
     if err:
       return None, err
-    return serialize(user), None
+    return serialize(household, full=True), None
+
+  def list_users(self, community_id) -> (list, MassEnergizeAPIError):
+    user, err = self.store.list_users(community_id)
+    if err:
+      return None, err
+    return serialize_all(user), None
 
 
-  def create_user(self, args) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.create_user(args)
+  def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.create_user(context, args)
     if err:
       return None, err
     return serialize(user), None
@@ -44,15 +51,28 @@ class UserService:
     return serialize(user), None
 
 
-  def list_users_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    users, err = self.store.list_users_for_community_admin(community_id)
+  def list_users_for_community_admin(self, context, community_id) -> (list, MassEnergizeAPIError):
+    users, err = self.store.list_users_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(users), None
 
 
-  def list_users_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    users, err = self.store.list_users_for_super_admin()
+  def list_users_for_super_admin(self, context) -> (list, MassEnergizeAPIError):
+    users, err = self.store.list_users_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(users), None
+
+
+  def add_action_todo(self, context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.add_action_todo(context, args)
+    if err:
+      return None, err
+    return serialize(user, full=True), None
+
+  def add_action_completed(self, context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.add_action_completed(context, args)
+    if err:
+      return None, err
+    return serialize(user, full=True), None

@@ -1,13 +1,12 @@
 """Handler file for all routes pertaining to actions"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, parse_list, parse_bool, check_length, rename_field
+from _main_.utils.common import parse_list, parse_bool, check_length, rename_field
 from api.services.action import ActionService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
-
-#TODO: install middleware to catch authz violations
-#TODO: add logger
+from _main_.utils.context import Context
+from _main_.utils.validator import Validator
 
 class ActionHandler(RouteHandler):
 
@@ -33,9 +32,19 @@ class ActionHandler(RouteHandler):
 
   def info(self) -> function:
     def action_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
+
+      # verify the body of the incoming request
+      v: Validator = Validator()
+      v.expect("action_id", str, is_required=True)
+      v.rename("id", "action_id")
+      args, err = v.verify(args, strict=True)
+      if err:
+        return err
+      
       action_id = args.pop('action_id', None)
-      action_info, err = self.service.get_action_info(action_id)
+      action_info, err = self.service.get_action_info(context, action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -44,16 +53,18 @@ class ActionHandler(RouteHandler):
 
   def create(self) -> function:
     def create_action_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
+      print(args)
       success, err = check_length(args, 'title', min_length=4, max_length=40)
       if not success:
         return MassenergizeResponse(error=str(err))
       community_id = args.pop('community_id', None)
       args['tags'] = parse_list(args.pop('tags', []))
       args['vendors'] = parse_list(args.pop('vendors', []))
-      args['is_global'] = parse_bool(args.pop('vendors', False))
+      args['is_global'] = parse_bool(args.pop('is_global', False))
       args['is_published'] = parse_bool(args.pop('is_published', False))
-      action_info, err = self.service.create_action(community_id, args)
+      action_info, err = self.service.create_action(context, community_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -62,10 +73,11 @@ class ActionHandler(RouteHandler):
 
   def list(self) -> function:
     def list_action_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop('community_id', None)
       subdomain = args.pop('subdomain', None)
-      action_info, err = self.service.list_actions(community_id, subdomain)
+      action_info, err = self.service.list_actions(context, community_id, subdomain)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -74,7 +86,8 @@ class ActionHandler(RouteHandler):
 
   def update(self) -> function:
     def update_action_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       success, err = check_length(args, 'title', min_length=4, max_length=40)
       if not success:
         return MassenergizeResponse(error=str(err))
@@ -84,7 +97,7 @@ class ActionHandler(RouteHandler):
       args['is_global'] = parse_bool(args.pop('is_global', False))
       args['is_published'] = parse_bool(args.pop('is_published', False))
       action_id = args.pop('id', None)
-      action_info, err = self.service.update_action(action_id, args)
+      action_info, err = self.service.update_action(context, action_id, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)      
         
@@ -93,9 +106,10 @@ class ActionHandler(RouteHandler):
 
   def copy(self) -> function:
     def copy_action_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       action_id = args.pop('action_id', None)
-      action_info, err = self.service.copy_action(action_id)
+      action_info, err = self.service.copy_action(context, action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -104,9 +118,10 @@ class ActionHandler(RouteHandler):
     
   def delete(self) -> function:
     def delete_action_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       action_id = args.pop('action_id', None)
-      action_info, err = self.service.delete_action(action_id)
+      action_info, err = self.service.delete_action(context, action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -115,9 +130,10 @@ class ActionHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
-      actions, err = self.service.list_actions_for_community_admin(community_id)
+      actions, err = self.service.list_actions_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions)
@@ -126,8 +142,9 @@ class ActionHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
-      actions, err = self.service.list_actions_for_super_admin()
+      context: Context = request.context
+      args: dict = context.args
+      actions, err = self.service.list_actions_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions)

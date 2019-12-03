@@ -17,7 +17,8 @@ from .utils.utils import load_json
 
 IS_PROD = True
 
-DEPLOY_VERSION = '0.0.1'
+DEPLOY_VERSION = '0.7.6'
+RELEASE_NOTES = 'Improvements to user creation routes, flushed CC DB'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -36,15 +37,12 @@ SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 DEBUG = not IS_PROD
 
 ALLOWED_HOSTS = [
-    '*', #TODO: remove later
-    '10.0.0.187:8000',
     'localhost',
     '127.0.0.1',
     'api.massenergize.org',
     'apis.massenergize.org',
     'api.massenergize.com',
     'apis.massenergize.com',
-    'energizewayland.org',
 ]
 
 INSTALLED_APPS = [
@@ -235,6 +233,3 @@ MEDIA_URL = '/media/'
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-
-
-

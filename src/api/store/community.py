@@ -1,18 +1,50 @@
-from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from django.db.models import Q
+from .utils import get_community_or_die, get_user_or_die
+import random 
 
 class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
 
-  def get_community_info(self, args) -> (dict, MassEnergizeAPIError):
+  def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      community = Community.objects.filter(**args).first()
+      subdomain = args.get('subdomain', None)
+      community_id = args.get('id', None)
+
+      if not community_id and not subdomain:
+        return None, CustomMassenergizeError("Missing community_id or subdomain field")
+
+      community: Community = Community.objects.select_related('logo', 'goal').filter(Q(pk=community_id)| Q(subdomain=subdomain)).first()
       if not community:
         return None, InvalidResourceError()
+
+      
+      if context.is_prod and not community.is_published and not context.user_is_admin():
+          return None, InvalidResourceError()
+
       return community, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+
+
+  def join_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      context.logger.add_trace('join_community')
+
+      community = get_community_or_die(context, args)
+      user = get_user_or_die(context, args)
+      user.communities.add(community)
+      user.save()
+
+      context.logger.log({
+        "user": user,
+        "community": community,
+      })
+      return None, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
@@ -115,6 +147,21 @@ class CommunityStore:
         if owner:
           comm_admin.members.add(owner)
           comm_admin.save()
+
+      
+      #also clone all global actions for this community
+      global_actions = Action.objects.filter(is_global=True)
+      for action_to_copy in global_actions:
+        old_tags = action_to_copy.tags.all()
+        old_vendors = action_to_copy.vendors.all()
+        new_action = action_to_copy
+        new_action.pk = None
+        new_action.community = None
+        new_action.is_published = False
+        new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
+        new_action.save()
+        new_action.tags.set(old_tags)
+        new_action.vendors.set(old_vendors)
       
       return new_community, None
     except Exception as e:
@@ -187,4 +234,15 @@ class CommunityStore:
       communities = Community.objects.filter(is_deleted=False)
       return communities, None
     except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
+
+  def get_graphs(self, context, community_id):
+    try:
+      if not community_id:
+        return [], None
+      graphs = Graph.objects.filter(is_deleted=False, community__id=community_id)
+      return graphs, None
+    except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(str(e))
