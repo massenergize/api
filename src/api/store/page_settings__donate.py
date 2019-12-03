@@ -37,7 +37,7 @@ class DonatePageSettingsStore:
     try:
       donate_page_id= args.get('id', None)
       if donate_page_id:
-        print(args)
+        
         donate_page_setting = DonatePageSettings.objects.filter(id=donate_page_id)
         donate_page_setting.update(**args)
         if not donate_page_setting:

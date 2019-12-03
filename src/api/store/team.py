@@ -89,7 +89,7 @@ class TeamStore:
 
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
+      
       community_id = args.pop('community_id', None)
       logo = args.pop('logo', None)
       team = Team.objects.filter(id=team_id)

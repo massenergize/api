@@ -84,7 +84,7 @@ class TagCollectionHandler(RouteHandler):
     def delete_tag_collection_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      print(args)
+      
       tag_collection_id = args.pop('tag_collection_id', None)
       tag_collection_info, err = self.service.delete_tag_collection(tag_collection_id)
       if err:

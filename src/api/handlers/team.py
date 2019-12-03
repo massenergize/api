@@ -44,7 +44,7 @@ class TeamHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       team_id = args.pop('team_id', None)
-      print(args)
+      
       team_info, err = self.team.get_team_info(team_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

@@ -82,7 +82,7 @@ class TestimonialHandler(RouteHandler):
     def update_testimonial_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      print(args)
+      
       is_approved = args.pop("is_approved", None)
       if is_approved:
         args["is_approved"] = parse_bool(is_approved)

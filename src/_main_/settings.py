@@ -15,10 +15,10 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = False
+IS_PROD = True
 
-DEPLOY_VERSION = '0.7.5'
-RELEASE_NOTES = 'Changed color on API page, old v2/ routes now don\'t return deleted items'
+DEPLOY_VERSION = '0.7.7'
+RELEASE_NOTES = 'New routes for community Portal.  Fixed actions.list bug for community portal'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

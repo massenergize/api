@@ -165,7 +165,6 @@ class EventHandler(RouteHandler):
     def super_admin_list_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      print(args)
       events, err = self.service.list_events_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

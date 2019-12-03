@@ -26,7 +26,6 @@ class ActionStore:
 
   def list_actions(self, context: Context,community_id, subdomain) -> (list, MassEnergizeAPIError):
     try:
-      print(community_id, subdomain)
       actions = []
       if community_id:
         actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
@@ -35,8 +34,6 @@ class ActionStore:
       else:
         return [], None
       
-      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
-
       if not context.is_dev:
         actions = actions.filter(is_published=True)
 

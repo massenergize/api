@@ -56,7 +56,7 @@ class UserHandler(RouteHandler):
     def create_user_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      print(args)
+      
       user_info, err = self.service.create_user(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -145,7 +145,7 @@ class UserHandler(RouteHandler):
   def add_action_todo(self) -> function:
     def add_action_todo_view(request) -> None: 
       context: Context = request.context
-      print(context)
+      
       validator: Validator = Validator()
       args, err = (validator
         .expect("action_id", str, is_required=True)
@@ -164,7 +164,7 @@ class UserHandler(RouteHandler):
   def add_action_completed(self) -> function:
     def add_action_completed_view(request) -> None: 
       context: Context = request.context
-      print(context)
+      
       validator: Validator = Validator()
       args, err = (validator
         .expect("action_id", str, is_required=True)

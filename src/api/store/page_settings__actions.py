@@ -38,7 +38,7 @@ class ActionsPageSettingsStore:
     try:
       actions_page_id = args.get('id', None)
       if actions_page_id:
-        print(args)
+        
         actions_page_setting = ActionsPageSettings.objects.filter(id=actions_page_id)
         actions_page_setting.update(**args)
         if not actions_page_setting:

@@ -171,8 +171,8 @@ class AdminStore:
 
   def list_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      if not context.user_is_community_admin and not context.user_is_super_admin:
-        return None, CustomMassenergizeError("You must be a community admin or super admin")
+      # if not context.user_is_community_admin and not context.user_is_super_admin:
+      #   return None, CustomMassenergizeError("You must be a community admin or super admin")
 
       community_id = args.pop("community_id", None)
       subdomain = args.pop("subdomain", None)
@@ -206,7 +206,7 @@ class AdminStore:
 
   def message_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      print(args)
+      
       community_id = args.pop("community_id", None)
       subdomain = args.pop("subdomain", None)
       user_name = args.pop("user_name", None)
@@ -243,7 +243,7 @@ class AdminStore:
 
   def list_admin_messages(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      print(args)
+      
       if context.user_is_super_admin:
         return Message.objects.all(is_deleted=False), None
 

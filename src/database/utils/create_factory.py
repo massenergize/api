@@ -33,7 +33,7 @@ class CreateFactory:
 
     #if code gets here we have everything all required fields
     try:
-      print(args)
+      
 
       many_to_many_fields =  MODELS_AND_FIELDS[model]['m2m']
       fk_fields = MODELS_AND_FIELDS[model]['fk']
@@ -68,7 +68,7 @@ class CreateFactory:
 
 
   def update(self, model, args={}):
-    print(args)
+    
     errors = []
     new_object = None 
 

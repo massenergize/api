@@ -55,7 +55,6 @@ class ActionHandler(RouteHandler):
     def create_action_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      print(args)
       success, err = check_length(args, 'title', min_length=4, max_length=40)
       if not success:
         return MassenergizeResponse(error=str(err))
