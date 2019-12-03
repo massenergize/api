@@ -14,6 +14,7 @@ urlpatterns = [
     path('info/station/<station>', stationinfo ),
     path('info/users', userinfo ),
     path('info/user/<user>', userinfo ),
+    path('info/user', userinfo ),
     path('estimate/<action>', estimate ),
     path('undo/<action>', undo),
     path('reset', reset ),

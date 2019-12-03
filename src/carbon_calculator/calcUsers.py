@@ -3,7 +3,12 @@ from .CCConstants import VALID_QUERY, INVALID_QUERY
 import csv
 
 def QueryCalcUsers(userId, args):
-    if userId:
+    id = args.GET.get("id", None)
+    email = args.GET.get("email",None)
+    if id and not userId:
+        userId = id
+    
+    if userId or email:
         status, userInfo = QuerySingleCalcUser(userId, args)
         if status == VALID_QUERY:
             return {"status":status, "userInfo":userInfo}
@@ -73,8 +78,15 @@ def QueryAllCalcUsers(args):
         return INVALID_QUERY, []
 
 def QuerySingleCalcUser(userId,args):
+    if userId:
+        qs = CalcUser.objects.filter(id=userId)
+    else:
+        email= args.GET.get("email",None)
+        if email:
+            qs = CalcUser.objects.filter(email=email)
+        else:
+            qs = None
 
-    qs = CalcUser.objects.filter(id=userId)
     if qs:
         q = qs[0]
 

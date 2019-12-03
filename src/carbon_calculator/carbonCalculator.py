@@ -149,19 +149,41 @@ class CarbonCalculator:
                 if records:
                     record = records.objects.filter(action=action)
                     if record:
+                        points = record.points
+                        cost = record.cost
+                        savings = record.savings
                         record.delete()
+
+                        user = CalcUser.objects.filter(id=user_id).first()
+                        if user:
+                            user.points -= points
+                            user.cost -= cost
+                            user.savings -= savings
+                            user.save()
+                            
                         return {'status':VALID_QUERY}
         return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
-        user_id = inputs.pop("user_id",None)            
+        user_id = inputs.pop("user_id",None)  
+        points = results.get("carbon_points",0.) 
+        cost = results.get("cost",0.)
+        savings = results.get("savings",0.)         
         record = ActionPoints(  user_id=user_id,
                                 action=action,
                                 choices=inputs,
-                                points=results.get("carbon_points",0),
-                                cost= results.get("cost",0),
-                                savings = results.get("savings",0))
+                                points=points,
+                                cost= cost,
+                                savings = savings)
         record.save()
+
+        user = CalcUser.objects.filter(id=user_id).first()
+        if user:
+            user.points += points
+            user.cost += cost
+            user.savings += savings
+            user.save()
+
         return results
 
     def Reset(self,inputs):
