@@ -25,7 +25,7 @@ class VendorStore:
       return vendor, None
     except Exception as e:
       print(e)
-      return CustomMassenergizeError(e)
+      return None, CustomMassenergizeError(e)
 
 
   def list_vendors(self, context: Context, args) -> (list, MassEnergizeAPIError):

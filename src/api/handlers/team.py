@@ -23,6 +23,7 @@ class TeamHandler(RouteHandler):
     self.add("/teams.create", self.create())
     self.add("/teams.add", self.create())
     self.add("/teams.list", self.list())
+    self.add("/teams.stats", self.list())
     self.add("/teams.update", self.update())
     self.add("/teams.delete", self.delete())
     self.add("/teams.remove", self.delete())
@@ -68,10 +69,18 @@ class TeamHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       context: Context = request.context
+      team_info, err = self.team.list_teams(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_info)
+    return list_team_view
+
+  def team_stats(self) -> function:
+    def list_team_view(request) -> None: 
+      context: Context = request.context
       args: dict = context.args
-      args = rename_field(args, 'community_id', 'community__id')
-      args = rename_field(args, 'subdomain', 'community__subdomain')
-      team_info, err = self.team.list_teams(args)
+      context: Context = request.context
+      team_info, err = self.team.team_stats(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)

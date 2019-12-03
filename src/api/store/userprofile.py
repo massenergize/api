@@ -1,4 +1,4 @@
-from database.models import UserProfile, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, EventAttendee, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -9,9 +9,9 @@ class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
 
-  def get_user_info(self, user_id) -> (dict, MassEnergizeAPIError):
+  def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      user = UserProfile.objects.get(id=user_id)
+      user = get_user_or_die(context, args)
       return user, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
@@ -52,6 +52,33 @@ class UserStore:
     if not community:
       return [], None
     return community.userprofile_set.all(), None
+
+
+  def list_actions_todo(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+      return UserActionRel.objects.filter(is_deleted=False, user=user, status="TODO"), None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+
+  def list_actions_completed(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+      return UserActionRel.objects.filter(is_deleted=False, user=user, status="DONE"), None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+  def list_events_for_user(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      user, err = get_user_or_die(context, args)
+      if not user:
+        return []
+      return EventAttendee.objects.filter(attendee=user)
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):

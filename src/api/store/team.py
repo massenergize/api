@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
+from .utils import get_community_or_die, get_user_or_die
 
 class TeamStore:
   def __init__(self):
@@ -15,32 +16,38 @@ class TeamStore:
     return team, None
 
 
-  def list_teams(self, args) -> (list, MassEnergizeAPIError):
+  def list_teams(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      user_id = args.pop('user_id', None)
-      user_email = args.pop('user_email', None)
-      # args['is_published'] = True
-      args['is_deleted'] = False
-      teams = Team.objects.filter(**args)
-      res = []
-      if user_id:
-        user = UserProfile.objects.get(id=user_id)
-        for t in teams:
-          if (user in t.members.all()) or (user in t.admins.all()):
-            res.append(t)
-        return res, None
-      elif user_email:
-        user = UserProfile.objects.get(email=user_email)
-        for t in teams:
-          if (user in t.members.all()) or (user in t.admins.all()):
-            res.append(t)
-        return res, None
-      else:
-        res = teams
-      return res, None
+      community = get_community_or_die(context, args)
+      user = get_user_or_die(context, args)
+      if community:
+        teams = Team.objects.filter(community=community)
+      elif user:
+        teams = user.team_set.all()
+      return teams, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
+
+  def team_stats(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      community = get_community_or_die(context, args)
+      teams = Team.objects.filter(community=community)
+      ans = []
+      for team in teams:
+        res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+        res["team"] = team.simple_json()
+        for m in team.members.all():
+          res["households"] += len(m.real_estate_units.count())
+          actions = m.useractionrel_set.count()
+          res["actions"] += len(actions)
+          res["actions_completed"] += actions.filter(**{"status":"DONE"}).count()
+          res["actions_todo"] += actions.filter(**{"status":"TODO"}).count()
+        ans.append(res)
+
+      return ans, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):

@@ -20,11 +20,12 @@ class TagCollectionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_tag_collections(self, community_id) -> (list, MassEnergizeAPIError):
-    tag_collections = TagCollection.objects.filter(community__id=community_id)
-    if not tag_collections:
-      return [], None
-    return tag_collections, None
+  def list_tag_collections(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      tag_collections = TagCollection.objects.filter(is_deleted=False)
+      return tag_collections, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
