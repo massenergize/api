@@ -17,7 +17,7 @@ from .utils.utils import load_json
 
 IS_PROD = True
 
-DEPLOY_VERSION = '0.7.7'
+DEPLOY_VERSION = '0.7.8'
 RELEASE_NOTES = 'New routes for community Portal.  Fixed actions.list bug for community portal'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

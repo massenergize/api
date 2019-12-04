@@ -2059,5 +2059,3 @@ class ActivityLog(models.Model):
   class Meta:
     ordering = ('path',)
     db_table = 'activity_logs'
-
-

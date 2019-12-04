@@ -1,5 +1,5 @@
 from database.models import Team, UserProfile, Media, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
@@ -179,15 +179,37 @@ class TeamStore:
       return None, InvalidResourceError()
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id = community_id)
-    return teams, None
-
-
-  def list_teams_for_super_admin(self):
+  def list_teams_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      teams = Team.objects.all()
+      if context.user_is_super_admin:
+        return self.list_teams_for_super_admin(context)
+
+      elif not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
+      community_id = args.pop('community_id', None)
+
+      if not community_id:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        comm_ids = [ag.community.id for ag in admin_groups]
+        teams = Team.objects.filter(community__id__in = comm_ids, is_deleted=False).select_related('logo', 'community')
+        return teams, None
+
+      teams = Team.objects.filter(community__id = community_id, is_deleted=False).select_related('logo', 'community')
       return teams, None
+
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+  def list_teams_for_super_admin(self, context: Context):
+    try:
+      if not context.user_is_super_admin:
+        return None, NotAuthorizedError()
+      teams = Team.objects.filter(is_deleted=False).select_related('logo', 'community')
+      return teams, None
+
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

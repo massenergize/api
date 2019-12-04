@@ -28,7 +28,6 @@ class UserStore:
       new_unit.save()
 
       user.real_estate_units.add(new_unit)
-      print(community)
       if community:
         new_unit.community = community
 
@@ -53,30 +52,12 @@ class UserStore:
       return [], None
     return community.userprofile_set.all(), None
 
-
-  def list_actions_todo(self, context: Context, args) -> (list, MassEnergizeAPIError):
-    try:
-      user = get_user_or_die(context, args)
-      return UserActionRel.objects.filter(is_deleted=False, user=user, status="TODO"), None
-    except Exception as e:
-      print(e)
-      return None, CustomMassenergizeError(e)
-
-
-  def list_actions_completed(self, context: Context, args) -> (list, MassEnergizeAPIError):
-    try:
-      user = get_user_or_die(context, args)
-      return UserActionRel.objects.filter(is_deleted=False, user=user, status="DONE"), None
-    except Exception as e:
-      print(e)
-      return None, CustomMassenergizeError(e)
-
   def list_events_for_user(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      user, err = get_user_or_die(context, args)
+      user = get_user_or_die(context, args)
       if not user:
         return []
-      return EventAttendee.objects.filter(attendee=user)
+      return EventAttendee.objects.filter(attendee=user), None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
@@ -168,18 +149,11 @@ class UserStore:
     try:
       # if not context.user_is_logged_in:
       #   return CustomMassenergizeError("Sign in required")
-      user_id = context.user_id or args.get('user_id')
-      user_email = context.user_email or args.get('user_email')
+      user = get_user_or_die(context, args)
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
     
-
-      user = None
-      if user_id:
-        user = UserProfile.objects.get(id=user_id)
-      elif user_email:
-        user = UserProfile.objects.get(email=user_email)
       if not user:
         return None, CustomMassenergizeError("Sign in required / provide user_id or user_email")
 
@@ -189,7 +163,6 @@ class UserStore:
 
       if household_id:
         household: RealEstateUnit = RealEstateUnit.objects.get(id=household_id)
-        
       else:
         household = user.real_estate_units.all().first()
 
@@ -206,6 +179,7 @@ class UserStore:
       if completed:
         #TODO: update action stats
         completed.update(status="TODO")
+        print(completed)
         return completed.first(), None
  
       # update all data points
@@ -303,16 +277,16 @@ class UserStore:
     try:
 
       if not context.user_is_logged_in:
-        return CustomMassenergizeError("Sign in required")
+        return [], CustomMassenergizeError("Sign in required")
       
-      user_id = context.user_id
+      user = get_user_or_die(context, args)
       household_id = args.get("household_id", None)
 
       if household_id:
-        todo = UserActionRel.objects.filter(status="TODO", user__id=user_id, real_state_unit__id=household_id) 
+        todo = UserActionRel.objects.filter(status="TODO", user=user, real_state_unit__id=household_id) 
       else:
-        todo = UserActionRel.objects.filter(status="TODO", user__id=user_id) 
-      
+        todo = UserActionRel.objects.filter(status="TODO", user=user) 
+
       return todo, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
@@ -322,15 +296,15 @@ class UserStore:
     try:
 
       if not context.user_is_logged_in:
-        return CustomMassenergizeError("Sign in required")
+        return [], CustomMassenergizeError("Sign in required")
       
-      user_id = context.user_id
+      user = get_user_or_die(context, args)
       household_id = args.get("household_id", None)
 
       if household_id:
-        todo = UserActionRel.objects.filter(status="DONE", user__id=user_id, real_state_unit__id=household_id) 
+        todo = UserActionRel.objects.filter(status="DONE", user=user, real_state_unit__id=household_id) 
       else:
-        todo = UserActionRel.objects.filter(status="DONE", user__id=user_id) 
+        todo = UserActionRel.objects.filter(status="DONE", user=user) 
       
       return todo, None
     except Exception as e:

@@ -75,15 +75,15 @@ class TeamService:
     return serialize(team), None
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_community_admin(community_id)
+  def list_teams_for_community_admin(self, context:Context, args) -> (list, MassEnergizeAPIError):
+    teams, err = self.store.list_teams_for_community_admin(context, args)
     if err:
       return None, err
     return serialize_all(teams), None
 
 
-  def list_teams_for_super_admin(self) -> (list, MassEnergizeAPIError):
-    teams, err = self.store.list_teams_for_super_admin()
+  def list_teams_for_super_admin(self, context: Context) -> (list, MassEnergizeAPIError):
+    teams, err = self.store.list_teams_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(teams), None

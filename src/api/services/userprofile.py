@@ -32,13 +32,13 @@ class UserService:
 
 
   def list_actions_todo(self, context: Context, args) -> (list, MassEnergizeAPIError):
-    actions_todo, err = self.store.list_actions_todo(context, args)
+    actions_todo, err = self.store.list_todo_actions(context, args)
     if err:
       return None, err
     return serialize_all(actions_todo), None
 
   def list_actions_completed(self, context: Context, args) -> (list, MassEnergizeAPIError):
-    actions_completed, err = self.store.list_actions_completed(context, args)
+    actions_completed, err = self.store.list_completed_actions(context, args)
     if err:
       return None, err
     return serialize_all(actions_completed), None
