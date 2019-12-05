@@ -105,12 +105,70 @@ def QuerySingleEvent(event):
                 communitiesList.append(community)
         communitiesList.sort()
 
-
         return VALID_QUERY, {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":stationsList,
                 "groups":groupsList,"communities":communitiesList,
                 "attendees":attendees.count(),"points":totalPoints, "savings":totalSavings,
                 "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":host_logo_url,
                 "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":sponsor_logo_url}
+    else:
+        return INVALID_QUERY, {}
+
+def QueryEventSummary(event=None):
+    if event:
+        status, eventInfo = QuerySingleEventSummary(event)
+        if status == VALID_QUERY:
+            return {"status":status, "eventInfo":eventInfo}
+        else:               
+            return {"status":status, "statusText":"Event ("+event+") not found"}
+    else:
+        status, eventList = QueryAllEventsSummary()
+        if status == VALID_QUERY:
+            return {"status":status,"eventList":eventList}
+        else:
+            return {"status":status,"statusText":"No events found"}
+
+def QueryAllEventsSummary():
+    qs = Event.objects.all()
+    if qs:
+        eventInfo = []
+        for q in qs:
+            event = q.name
+            status, info = QuerySingleEventSummary(event)
+            if status==VALID_QUERY:
+                eventInfo.append(info)
+            else:
+                return INVALID_QUERY, []
+        return VALID_QUERY, eventInfo
+    else:
+        return INVALID_QUERY, []
+
+
+def QuerySingleEventSummary(event):
+    print(event)    
+    qs = Event.objects.filter(name=event)
+    if qs:
+        q = qs[0]
+
+        groupsList = []
+        for group in q.groups.all():
+            stat, groupInfo = QuerySingleGroup(group.name)
+            if stat == VALID_QUERY:
+                groupsList.append(groupInfo)
+
+        communitiesList = []
+        attendees = q.attendees.all()
+        totalPoints = totalSavings = 0.
+        for calcuser in q.attendees.all():
+            totalPoints += calcuser.points
+            totalSavings += calcuser.savings
+            community = calcuser.locality
+            if community not in communitiesList:
+                communitiesList.append(community)
+        communitiesList.sort()
+
+        return VALID_QUERY, {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,
+                "groups":groupsList,"communities":communitiesList,
+                "attendees":attendees.count(),"points":totalPoints, "savings":totalSavings,}
     else:
         return INVALID_QUERY, {}
 
