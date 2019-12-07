@@ -22,7 +22,7 @@ urlpatterns = [
     path('v3/', include('api.urls')), #latest
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
-    # path('cc/',include('carbon_calculator.urls')),
+    path('cc/',include('carbon_calculator.urls')),
     path('', include('website.urls')),
 ]
 

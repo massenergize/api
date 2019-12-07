@@ -56,7 +56,17 @@ class UserHandler(RouteHandler):
     def create_user_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      
+      validator: Validator = Validator()
+      args, err = (validator
+        .expect("accepts_terms_and_conditions", bool, is_required=True)
+        .expect("email", str, is_required=True)
+        .expect("full_name", str, is_required=True)
+        .expect("preferred_name", str, is_required=True)
+        .expect("is_vendor", bool, is_required=True)
+        .verify(context.args)
+      )
+      if err:
+        return err
       user_info, err = self.service.create_user(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

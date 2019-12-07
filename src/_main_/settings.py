@@ -15,7 +15,7 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = False
+IS_PROD = True
 
 DEPLOY_VERSION = '0.7.8'
 RELEASE_NOTES = 'New routes for community Portal.  Fixed actions.list bug for community portal'

@@ -64,7 +64,6 @@ class UserStore:
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
       email = args.get('email', None) 
       subdomain = args.pop('subdomain', None)
 
@@ -83,7 +82,7 @@ class UserStore:
         if community:
           new_user.communities.add(community)
           new_user.save()
-      print(new_user)
+
       return new_user, None
     except Exception as e:
       print(e)
