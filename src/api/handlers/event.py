@@ -22,12 +22,12 @@ class EventHandler(RouteHandler):
     self.add("/events.info", self.info()) 
     self.add("/events.create", self.create())
     self.add("/events.add", self.create())
-    self.add("/events.copy", self.create())
+    self.add("/events.copy", self.copy())
     self.add("/events.list", self.list())
     self.add("/events.update", self.update())
     self.add("/events.delete", self.delete())
     self.add("/events.remove", self.delete())
-    self.add("/events.rsvp", self.info())
+    self.add("/events.rsvp", self.rsvp())
     self.add("/events.todo", self.save_for_later())
 
     #admin routes

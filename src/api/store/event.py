@@ -22,27 +22,26 @@ class EventStore:
   def copy_event(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
     try:
       events_selected = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(id=event_id)
-      event_to_copy = events_selected.first()
+      event_to_copy: Event = events_selected.first()
       if not event_to_copy:
         return None, InvalidResourceError()
       
-
-      new_event = event_to_copy
-      new_event.pk = None 
-      new_event.name = f"{event_to_copy.name} Copy {randint(1000,10000)}"
+      old_tags = event_to_copy.tags.all()
+      event_to_copy.pk = None
+      new_event = event_to_copy 
+      new_event.name = f"{event_to_copy.name}-Copy-{randint(1, 1000)}"
       new_event.is_published=False
       new_event.save()
 
-      image = event_to_copy.community
-      image.pk = None
-      image_copy = image
-      image_copy.name = f"{new_event.name}-Image"
-      image_copy.save()
-      new_event.image = image_copy
+      #copy tags over
+      for t in old_tags:
+        new_event.tags.add(t)
 
+      print(old_tags, new_event.tags.all())
 
       return new_event, None
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(e)
 
 

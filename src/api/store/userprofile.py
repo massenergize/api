@@ -64,14 +64,15 @@ class UserStore:
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      print(args)
       email = args.get('email', None) 
       subdomain = args.pop('subdomain', None)
 
       if not email:
-        return CustomMassenergizeError("email required for sign up")
+        return None, CustomMassenergizeError("email required for sign up")
       
       user = UserProfile.objects.filter(email=email)
-      if not email:
+      if not user:
         new_user = UserProfile.objects.create(**args)
         new_user.save()
       else:
@@ -82,7 +83,7 @@ class UserStore:
         if community:
           new_user.communities.add(community)
           new_user.save()
-
+      print(new_user)
       return new_user, None
     except Exception as e:
       print(e)
@@ -108,8 +109,8 @@ class UserStore:
       if context.user_is_super_admin:
         return self.list_users_for_super_admin(context)
 
-      # elif not context.user_is_community_admin:
-      #   return None, NotAuthorizedError()
+      elif not context.user_is_community_admin:
+        return None, NotAuthorizedError()
 
       community, err = get_community(community_id)
 

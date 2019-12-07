@@ -170,7 +170,7 @@ class TeamHandler(RouteHandler):
       args: dict = context.args
       team_id = args.pop('team_id', None)
       user_id = args.pop('user_id', None)
-      user_id = args.pop('message', None)
+      message = args.pop('message', None)
       #TODO: implement actual sending of message
       return MassenergizeResponse()
     return message_team_admin_view
