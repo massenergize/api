@@ -3,12 +3,20 @@ from .CCConstants import VALID_QUERY, INVALID_QUERY
 import csv
 
 def QueryCalcUsers(userId, args):
-    if userId:
+    id = args.GET.get("id", None)
+    email = args.GET.get("email",None)
+    if id and not userId:
+        userId = id
+    
+    if userId or email:
         status, userInfo = QuerySingleCalcUser(userId, args)
         if status == VALID_QUERY:
             return {"status":status, "userInfo":userInfo}
-        else:               
-            return {"status":status, "statusText":"UserId ("+userId+") not found"}
+        else:
+            if userId:               
+                return {"status":status, "statusText":"User Id ("+userId+") not found"}
+            else:
+                return {"status":status, "statusText":"User ("+email+") not found"}
     else:
         status, userList = QueryAllCalcUsers(args)
         if status == VALID_QUERY:
@@ -73,11 +81,17 @@ def QueryAllCalcUsers(args):
         return INVALID_QUERY, []
 
 def QuerySingleCalcUser(userId,args):
+    if userId:
+        qs = CalcUser.objects.filter(id=userId)
+    else:
+        email= args.GET.get("email",None)
+        if email:
+            qs = CalcUser.objects.filter(email=email)
+        else:
+            qs = None
 
-    qs = CalcUser.objects.filter(id=userId)
     if qs:
         q = qs[0]
-
         groups = []
         for group in q.groups.all():
             groups.append(group.displayname)
@@ -149,8 +163,6 @@ def CreateCalcUser(args):
                     event.attendees.add(newUser)
                     event.save()
 
-            newUser.save()
-
             if groups != []:
                 for group in groups:
                     group1 = Group.objects.filter(name=group)
@@ -162,9 +174,24 @@ def CreateCalcUser(args):
                             last_name = last_name,
                             email =email, 
                             locality = locality,
-                            #groups = ""groups"",
                             minimum_age = minimum_age,
                             accepts_terms_and_conditions = accepts_tnc)
+
+            newUser.save()                
+
+            if eventName != "":
+                event = Event.objects.filter(name=eventName).first()
+                if event:
+                    #newUser.event = event
+                    event.attendees.add(newUser)
+                    event.save()
+
+            if groups != []:
+                for group in groups:
+                    group1 = Group.objects.filter(name=group)
+                    if group1:
+                        newUser.groups.add(group1)
+
         newUser.save()
         return {"id":newUser.id,"email":newUser.email}
     except:

@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from database.utils.common import get_request_contents
 
 from .carbonCalculator import CarbonCalculator
-from .queries import QueryEvents, QueryStations, QueryGroups
+from .queries import QueryEvents, QueryStations, QueryGroups, QueryEventSummary
 from .calcUsers import QueryCalcUsers, CreateCalcUser
 
 #from database.utils.create_factory import CreateFactory
@@ -32,6 +32,9 @@ def actioninfo(request, action):
 
 def eventinfo(request, event=None):
     return JsonResponse(QueryEvents(event))
+
+def eventsummary(request, event=None):
+    return JsonResponse(QueryEventSummary(event))
 
 def groupinfo(request, group=None):
     return JsonResponse(QueryGroups(group))
