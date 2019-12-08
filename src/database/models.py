@@ -482,6 +482,55 @@ class UserProfile(models.Model):
     db_table = 'user_profiles' 
 
 
+class CommunityMember(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+  is_admin = models.BooleanField(blank=True, default=False)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+
+
+  def __str__(self):
+    return f"{self.user} is {'an ADMIN' if self.is_admin else 'a MEMBER'} in Community({self.community})"
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['id', 'is_admin'])
+    res['community'] = get_summary_info(self.community)
+    res['user'] = get_summary_info(self.user)
+    return res
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'community_members_and_admins'
+    unique_together = [['community', 'user']]
+
+
+class Subdomain(models.Model):
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, related_name="subdomain_community")
+  in_use = models.BooleanField(default=False, blank=True)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return f"{self.community} - {self.name}"
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['id', 'in_use', 'name', 'created_at', 'updated_at'])
+    res['community'] = get_summary_info(self.community)
+    return res
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'subdomains'
+
 class Team(models.Model):
   """
   A class used to represent a Team in a community
@@ -559,7 +608,7 @@ class Team(models.Model):
     db_table = 'teams'
     unique_together = [['community', 'name']]
 
-class TeamMembers(models.Model):
+class TeamMember(models.Model):
   id = models.AutoField(primary_key=True)
   team = models.ForeignKey(Team, on_delete=models.CASCADE)
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -570,7 +619,7 @@ class TeamMembers(models.Model):
 
 
   def __str__(self):
-    return self.name
+    return f"{self.user} is {'an ADMIN' if self.is_admin else 'a MEMBER'} in Team({self.team})"
 
   def simple_json(self):
     res =  model_to_dict(self, ['id', 'is_admin'])
