@@ -960,6 +960,7 @@ class Action(models.Model):
     data =  model_to_dict(self, ['id','is_published', 'is_deleted', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
+    data['calculator_action'] = self.calculator_action
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
