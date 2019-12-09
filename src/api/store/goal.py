@@ -107,7 +107,7 @@ class GoalStore:
       args.pop('more_info', None)
       args.pop('team', None)
 
-      print(args)
+      
       goal.update(**args)
       return goal.first(), None
     except Exception as e:

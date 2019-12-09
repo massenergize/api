@@ -64,9 +64,7 @@ class PolicyHandler(RouteHandler):
     def list_policy_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      policy_info, err = self.service.list_policies(community_id, user_id)
+      policy_info, err = self.service.list_policies(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=policy_info)

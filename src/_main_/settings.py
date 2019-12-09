@@ -15,10 +15,10 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = True
+IS_PROD = False
 
-DEPLOY_VERSION = '0.7.6'
-RELEASE_NOTES = 'Improvements to user creation routes, flushed CC DB'
+DEPLOY_VERSION = '0.7.8'
+RELEASE_NOTES = 'New routes for community Portal.  Fixed actions.list bug for community portal'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

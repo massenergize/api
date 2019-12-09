@@ -12,8 +12,8 @@ class UserService:
   def __init__(self):
     self.store =  UserStore()
 
-  def get_user_info(self, user_id) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.get_user_info(user_id)
+  def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.get_user_info(context, args)
     if err:
       return None, err
     return serialize(user, full=True), None
@@ -29,6 +29,25 @@ class UserService:
     if err:
       return None, err
     return serialize_all(user), None
+
+
+  def list_actions_todo(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    actions_todo, err = self.store.list_todo_actions(context, args)
+    if err:
+      return None, err
+    return serialize_all(actions_todo), None
+
+  def list_actions_completed(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    actions_completed, err = self.store.list_completed_actions(context, args)
+    if err:
+      return None, err
+    return serialize_all(actions_completed), None
+
+  def list_events_for_user(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    events, err = self.store.list_events_for_user(context, args)
+    if err:
+      return None, err
+    return serialize_all(events), None
 
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):

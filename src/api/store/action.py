@@ -34,8 +34,6 @@ class ActionStore:
       else:
         return [], None
       
-      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
-
       if not context.is_dev:
         actions = actions.filter(is_published=True)
 

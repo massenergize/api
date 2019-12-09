@@ -42,6 +42,7 @@ class MassenergizeJWTAuthMiddleware:
 
 
   def process_view(self, request, view_func, *view_args, **view_kwargs):
+
     try:
       #extract JWT auth token
       id_token, err = self._get_auth_token(request)

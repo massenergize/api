@@ -1,4 +1,4 @@
-from database.models import UserProfile, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, EventAttendee, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -9,9 +9,9 @@ class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
 
-  def get_user_info(self, user_id) -> (dict, MassEnergizeAPIError):
+  def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      user = UserProfile.objects.get(id=user_id)
+      user = get_user_or_die(context, args)
       return user, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
@@ -28,7 +28,6 @@ class UserStore:
       new_unit.save()
 
       user.real_estate_units.add(new_unit)
-      print(community)
       if community:
         new_unit.community = community
 
@@ -53,6 +52,15 @@ class UserStore:
       return [], None
     return community.userprofile_set.all(), None
 
+  def list_events_for_user(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+      if not user:
+        return []
+      return EventAttendee.objects.filter(attendee=user), None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -60,10 +68,10 @@ class UserStore:
       subdomain = args.pop('subdomain', None)
 
       if not email:
-        return CustomMassenergizeError("email required for sign up")
+        return None, CustomMassenergizeError("email required for sign up")
       
       user = UserProfile.objects.filter(email=email)
-      if not email:
+      if not user:
         new_user = UserProfile.objects.create(**args)
         new_user.save()
       else:
@@ -100,8 +108,8 @@ class UserStore:
       if context.user_is_super_admin:
         return self.list_users_for_super_admin(context)
 
-      # elif not context.user_is_community_admin:
-      #   return None, NotAuthorizedError()
+      elif not context.user_is_community_admin:
+        return None, NotAuthorizedError()
 
       community, err = get_community(community_id)
 
@@ -141,18 +149,11 @@ class UserStore:
     try:
       # if not context.user_is_logged_in:
       #   return CustomMassenergizeError("Sign in required")
-      user_id = context.user_id or args.get('user_id')
-      user_email = context.user_email or args.get('user_email')
+      user = get_user_or_die(context, args)
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
     
-
-      user = None
-      if user_id:
-        user = UserProfile.objects.get(id=user_id)
-      elif user_email:
-        user = UserProfile.objects.get(email=user_email)
       if not user:
         return None, CustomMassenergizeError("Sign in required / provide user_id or user_email")
 
@@ -162,7 +163,6 @@ class UserStore:
 
       if household_id:
         household: RealEstateUnit = RealEstateUnit.objects.get(id=household_id)
-        
       else:
         household = user.real_estate_units.all().first()
 
@@ -179,6 +179,7 @@ class UserStore:
       if completed:
         #TODO: update action stats
         completed.update(status="TODO")
+        print(completed)
         return completed.first(), None
  
       # update all data points
@@ -276,16 +277,16 @@ class UserStore:
     try:
 
       if not context.user_is_logged_in:
-        return CustomMassenergizeError("Sign in required")
+        return [], CustomMassenergizeError("Sign in required")
       
-      user_id = context.user_id
+      user = get_user_or_die(context, args)
       household_id = args.get("household_id", None)
 
       if household_id:
-        todo = UserActionRel.objects.filter(status="TODO", user__id=user_id, real_state_unit__id=household_id) 
+        todo = UserActionRel.objects.filter(status="TODO", user=user, real_state_unit__id=household_id) 
       else:
-        todo = UserActionRel.objects.filter(status="TODO", user__id=user_id) 
-      
+        todo = UserActionRel.objects.filter(status="TODO", user=user) 
+
       return todo, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
@@ -295,15 +296,15 @@ class UserStore:
     try:
 
       if not context.user_is_logged_in:
-        return CustomMassenergizeError("Sign in required")
+        return [], CustomMassenergizeError("Sign in required")
       
-      user_id = context.user_id
+      user = get_user_or_die(context, args)
       household_id = args.get("household_id", None)
 
       if household_id:
-        todo = UserActionRel.objects.filter(status="DONE", user__id=user_id, real_state_unit__id=household_id) 
+        todo = UserActionRel.objects.filter(status="DONE", user=user, real_state_unit__id=household_id) 
       else:
-        todo = UserActionRel.objects.filter(status="DONE", user__id=user_id) 
+        todo = UserActionRel.objects.filter(status="DONE", user=user) 
       
       return todo, None
     except Exception as e:

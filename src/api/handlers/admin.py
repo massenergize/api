@@ -61,7 +61,6 @@ class AdminHandler(RouteHandler):
         .add("user_id", str, is_required=False)
         .add("email", str, is_required=False)
       )
-      print(args)
       args, err = validator.verify(args)
       if err:
         return err
@@ -147,6 +146,7 @@ class AdminHandler(RouteHandler):
       admin_info, err = self.service.list_community_admin(context, args)
       if err:
         return err
+
       return MassenergizeResponse(data=admin_info)
     return list_community_admin_view
 

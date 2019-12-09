@@ -3,7 +3,7 @@ from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
 from datetime import date, datetime
 from django.utils import timezone
-from .utils.common import  json_loader,get_json_if_not_none
+from .utils.common import  json_loader,get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 import uuid
@@ -203,10 +203,7 @@ class Goal(models.Model):
     return f"{self.name} {' - Deleted' if self.is_deleted else ''}"
 
   def simple_json(self):
-    res = model_to_dict(self, exclude=['is_deleted'])
-    res['community'] = get_json_if_not_none(Community.objects.filter(goal__id=self.id).first())
-    res['team'] = get_json_if_not_none(Team.objects.filter(goal__id=self.id).first())
-    return res
+    return model_to_dict(self, exclude=['is_deleted'])
 
   def full_json(self):
     return self.simple_json()
@@ -475,16 +472,64 @@ class UserProfile(models.Model):
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
-    data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['communities'] = [c.info() for c in self.communities.all()]
     data['admin_at'] = admin_at
-    data['teams'] = [t.simple_json() for t in self.team_members.all()]
+    data['teams'] = [t.info() for t in self.team_members.all()]
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
-    admin = []
     return data
 
   class Meta:
     db_table = 'user_profiles' 
 
+
+class CommunityMember(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+  is_admin = models.BooleanField(blank=True, default=False)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+
+
+  def __str__(self):
+    return f"{self.user} is {'an ADMIN' if self.is_admin else 'a MEMBER'} in Community({self.community})"
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['id', 'is_admin'])
+    res['community'] = get_summary_info(self.community)
+    res['user'] = get_summary_info(self.user)
+    return res
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'community_members_and_admins'
+    unique_together = [['community', 'user']]
+
+
+class Subdomain(models.Model):
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, related_name="subdomain_community")
+  in_use = models.BooleanField(default=False, blank=True)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return f"{self.community} - {self.name}"
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['id', 'in_use', 'name', 'created_at', 'updated_at'])
+    res['community'] = get_summary_info(self.community)
+    return res
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'subdomains'
 
 class Team(models.Model):
   """
@@ -540,8 +585,11 @@ class Team(models.Model):
   def __str__(self):
     return self.name
 
+  def info(self):
+    return model_to_dict(self, ['id', 'name', 'description'])
+
   def simple_json(self):
-    res =  model_to_dict(self, ['id', 'name', 'description'])
+    res =  self.info()
     res['community'] = get_json_if_not_none(self.community)
     res['logo'] = get_json_if_not_none(self.logo)
     return res
@@ -560,6 +608,31 @@ class Team(models.Model):
     db_table = 'teams'
     unique_together = [['community', 'name']]
 
+class TeamMember(models.Model):
+  id = models.AutoField(primary_key=True)
+  team = models.ForeignKey(Team, on_delete=models.CASCADE)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+  is_admin = models.BooleanField(blank=True, default=False)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+
+
+  def __str__(self):
+    return f"{self.user} is {'an ADMIN' if self.is_admin else 'a MEMBER'} in Team({self.team})"
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['id', 'is_admin'])
+    res['team'] = get_summary_info(self.team)
+    res['user'] = get_summary_info(self.user)
+    return res
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'team_members_and_admins'
+    unique_together = [['team', 'user']]
 
 class Service(models.Model):
   """
@@ -887,6 +960,7 @@ class Action(models.Model):
     data =  model_to_dict(self, ['id','is_published', 'is_deleted', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
+    data['calculator_action'] = self.calculator_action
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
@@ -938,6 +1012,7 @@ class Event(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name  = models.CharField(max_length = SHORT_STR_LEN)
+  featured_summary = models.TextField(max_length = LONG_STR_LEN, blank=True, null=True)
   description = models.TextField(max_length = LONG_STR_LEN)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   invited_communities = models.ManyToManyField(Community, 
@@ -1139,6 +1214,7 @@ class Testimonial(models.Model):
     res["community"] = get_json_if_not_none(self.community)
     res["created_at"] = self.created_at
     res['file'] = get_json_if_not_none(self.image)
+    res['tags'] = [t.simple_json() for t in self.tags.all()]
     return res
 
   def full_json(self):
@@ -2004,6 +2080,7 @@ class Message(models.Model):
   is_deleted = models.BooleanField(default=False, blank=True)
   archive = models.BooleanField(default=False, blank=True)
   starred = models.BooleanField(default=False, blank=True)
+  response = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True) 
   created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 
@@ -2061,3 +2138,28 @@ class ActivityLog(models.Model):
     db_table = 'activity_logs'
 
 
+class Deployment(models.Model):
+  """
+  A class used to represent  Activity Log on the MassEnergize Platform
+
+  Attributes
+  ----------
+  """
+  id = models.AutoField(primary_key=True)
+  version = models.CharField(max_length=SHORT_STR_LEN, default='') 
+  deploy_commander = models.CharField(max_length=SHORT_STR_LEN, default='', blank=True) 
+  notes = models.CharField(max_length=LONG_STR_LEN, default='', blank=True) 
+  created_at = models.DateTimeField(auto_now_add=True)
+
+  def __str__(self):
+    return self.version
+
+  def simple_json(self):
+    return  model_to_dict(self)
+
+  def full_json(self):
+    return self.simple_json()
+
+
+  class Meta:
+    db_table = 'deployments'
