@@ -144,7 +144,6 @@ def QueryAllEventsSummary():
 
 
 def QuerySingleEventSummary(event):
-    print(event)    
     qs = Event.objects.filter(name=event)
     if qs:
         q = qs[0]
@@ -176,23 +175,27 @@ def QueryAllActions():
     pass
 
 def QuerySingleAction(name):
-    qs = Action.objects.filter(name=name)
-    if qs:
-        q = qs[0]
+    try:
+        qs = Action.objects.filter(name=name)
+        if qs:
+            q = qs[0]
 
-        questionInfo = []
-        for question in q.questions:
-            qq = CalculatorQuestion(question)
-            questionInfo.append(jsons.dump(qq))
+            questionInfo = []
+            for question in q.questions:
+                qq = CalculatorQuestion(question)
+                questionInfo.append(jsons.dump(qq))
 
-        picture = ""
-        if q.picture:
-            picture = q.picture.file.url
+            picture = ""
+            if q.picture:
+                picture = q.picture.file.url
 
-        return VALID_QUERY, {"name":q.name, "description":q.description, "helptext":q.helptext, "questionInfo":questionInfo, \
-                            "average_points":q.average_points, "picture":picture}
-    else:
-        print("ERROR: Action "+name+" was not found")
+            return VALID_QUERY, {"name":q.name, "description":q.description, "helptext":q.helptext, "questionInfo":questionInfo, \
+                                "average_points":q.average_points, "picture":picture}
+        else:
+            print("ERROR: Action "+name+" was not found")
+            return INVALID_QUERY, {}
+    except:
+        print("Failure to query action : "+name)
         return INVALID_QUERY, {}
 
 def QueryStations(station=None):
