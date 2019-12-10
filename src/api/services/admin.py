@@ -57,6 +57,8 @@ class AdminService:
     admins, err = self.store.message_admin(context, args)
     if err:
       return None, err
+    #dont want to send emails all the time, just show up in the admin site and if they want they can send emails
+    #need to define a send email function
     return serialize(admins), None
 
   def list_admin_messages(self, context, args) -> (dict, MassEnergizeAPIError):

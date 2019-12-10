@@ -29,6 +29,7 @@ class SubscriberService:
     subscriber, err = self.store.create_subscriber(community_id, args)
     if err:
       return None, err
+    #send email here
     return serialize(subscriber), None
 
 
