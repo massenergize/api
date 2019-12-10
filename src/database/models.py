@@ -456,7 +456,7 @@ class UserProfile(models.Model):
     return self.email
 
   def info(self):
-    return model_to_dict(self, ['id', 'email', 'subdomain'])
+    return model_to_dict(self, ['id', 'email', 'full_name'])
 
   def simple_json(self):
     res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
@@ -1965,6 +1965,7 @@ class DonatePageSettings(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE,  db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  donation_link = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
@@ -2076,7 +2077,10 @@ class Message(models.Model):
   user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True) 
   body = models.TextField(max_length=LONG_STR_LEN)
   community = models.ForeignKey(Community, blank=True, on_delete=models.SET_NULL, null=True)
-  is_read = models.BooleanField(default=False, blank=True)
+  team = models.ForeignKey(Team, blank=True, on_delete=models.SET_NULL, null=True)
+  have_replied = models.BooleanField(default=False, blank=True)
+  have_forwarded = models.BooleanField(default=False, blank=True)
+  is_team_admin_message = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   archive = models.BooleanField(default=False, blank=True)
   starred = models.BooleanField(default=False, blank=True)
@@ -2089,7 +2093,8 @@ class Message(models.Model):
 
   def simple_json(self):
     res = model_to_dict(self)
-    res["community"] = None if not self.community else self.community.info()
+    res["community"] = get_summary_info(self.community)
+    res["team"] = get_summary_info(self.team)
     return res
 
   def full_json(self):

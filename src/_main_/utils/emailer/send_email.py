@@ -10,7 +10,7 @@ def send_massenergize_email(subject, msg, to):
       msg,
       FROM_EMAIL, #from
       [to],
-      fail_silently=True,
+      fail_silently=False,
   )
 
   if not ok:

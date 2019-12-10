@@ -62,17 +62,23 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def add_team_admin(self, team_id, user_id, email) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.add_team_admin(team_id, user_id, email)
+  def add_member(self, context, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.add_team_member(context, args)
     if err:
       return None, err
     return serialize(team), None
 
-  def remove_team_admin(self, team_id, user_id, email) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.remove_team_admin(team_id, user_id, email)
+  def remove_team_member(self, context, args) -> (dict, MassEnergizeAPIError):
+    res, err = self.store.remove_team_member(context, args)
     if err:
       return None, err
-    return serialize(team), None
+    return res, None
+
+  def members(self, context, args) -> (dict, MassEnergizeAPIError):
+    members, err = self.store.members(context, args)
+    if err:
+      return None, err
+    return serialize_all(members), None
 
 
   def list_teams_for_community_admin(self, context:Context, args) -> (list, MassEnergizeAPIError):
