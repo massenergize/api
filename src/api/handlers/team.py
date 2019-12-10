@@ -28,7 +28,7 @@ class TeamHandler(RouteHandler):
     self.add("/teams.join", self.join())
     self.add("/teams.addMember", self.add_member())
     self.add("/teams.removeMember", self.remove_member())
-    self.add("/teams.messageAdmin", self.add_member())
+    self.add("/teams.messageAdmin", self.message_admin())
     self.add("/teams.contactAdmin", self.message_admin())
     self.add("/teams.members", self.members())
 
@@ -160,11 +160,10 @@ class TeamHandler(RouteHandler):
     def message_team_admin_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      team_id = args.pop('team_id', None)
-      user_id = args.pop('user_id', None)
-      message = args.pop('message', None)
-      #TODO: implement actual sending of message
-      return MassenergizeResponse()
+      team_info, err = self.team.message_admin(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_info)      
     return message_team_admin_view
 
   def members(self) -> function:

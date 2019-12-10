@@ -2,6 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.team import TeamStore
+from api.store.message import MessageStore
 from _main_.utils.context import Context
 
 class TeamService:
@@ -11,6 +12,7 @@ class TeamService:
 
   def __init__(self):
     self.store =  TeamStore()
+    self.message_store = MessageStore()
 
   def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
     team, err = self.store.get_team_info(team_id)
@@ -79,6 +81,12 @@ class TeamService:
     if err:
       return None, err
     return serialize_all(members), None
+
+  def message_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    message_info, err = self.message_store.message_team_admin(context, args)
+    if err:
+      return None, err
+    return serialize(message_info), None
 
 
   def list_teams_for_community_admin(self, context:Context, args) -> (list, MassEnergizeAPIError):
