@@ -17,15 +17,15 @@ from .utils.utils import load_json
 
 IS_PROD = False
 
-DEPLOY_VERSION = '0.7.8'
-RELEASE_NOTES = 'New routes for community Portal.  Fixed actions.list bug for community portal'
+DEPLOY_VERSION = '0.8.7'
+RELEASE_NOTES = 'Admin Messaging routes updates'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-# path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-path_to_config = '/_main_/config/massenergizeProjectConfig.json'
+path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
+# path_to_config = '/_main_/config/massenergizeProjectConfig.json'
 CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
 os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
@@ -34,7 +34,7 @@ os.environ.update(CONFIG_DATA)
 SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = not IS_PROD
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -43,6 +43,9 @@ ALLOWED_HOSTS = [
     'apis.massenergize.org',
     'api.massenergize.com',
     'apis.massenergize.com',
+    'api-prod.massenergize.org',
+    'api-dev.massenergize.org',
+    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
