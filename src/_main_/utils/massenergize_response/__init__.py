@@ -6,6 +6,7 @@ errors to the caller of a particular route
 """
 from django.http import JsonResponse
 from collections.abc import Iterable
+import json
 
 class MassenergizeResponse(JsonResponse):
   def __init__(self, data=None, error=None, status=200):    
@@ -16,4 +17,7 @@ class MassenergizeResponse(JsonResponse):
       # json_dumps_params={'indent': 2}, 
       status=status
     )
+  
+  def toDict(self):
+    return json.loads(str(self.content, encoding='utf8'))
 

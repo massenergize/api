@@ -74,9 +74,9 @@ class CommunityHandler(RouteHandler):
       if not ok:
         return MassenergizeResponse(error=str(err))
         
-      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', None))
-      args['is_published'] = parse_bool(args.pop('is_published', None))
-      args['is_approved'] = parse_bool(args.pop('is_approved', None))
+      args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', False))
+      args['is_published'] = parse_bool(args.pop('is_published', False))
+      args['is_approved'] = parse_bool(args.pop('is_approved', False))
 
       args = rename_field(args, 'image', 'logo')
       args = parse_location(args)
