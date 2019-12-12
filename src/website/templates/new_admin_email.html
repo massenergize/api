@@ -12,7 +12,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-	<title>Thank you for subscribing</title>
+	<title>Welcome Admin</title>
 
 	<!-- Google Fonts Link -->
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
@@ -97,7 +97,7 @@
 						<tr>
 							<td align="center" valign="middle" style="padding-top:40px;padding-bottom:40px" class="emailLogo">
 								<!-- Logo and Link // -->
-								<img src="{{logo}}" alt="" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
+								<img src="https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png" alt="" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
 							</td>
 						</tr>
 
@@ -105,8 +105,17 @@
 							<td align="center" valign="top" style="padding-bottom:5px;padding-left:20px;padding-right:20px;" class="mainTitle">
 								<!-- Main Title Text // -->
 								<h4 class="text" style="color:#000000; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:28px; font-weight:600; font-style:normal; letter-spacing:normal; line-height:36px; text-transform:none; text-align:left; padding:0; margin:0">
-									Hi, {{name}},
+									Congratulations, {{name}}!
 								</h4>
+							</td>
+						</tr>
+
+						<tr>
+							<td align="center" valign="top" style="padding-bottom:30px;padding-left:20px;padding-right:20px;" class="subTitle">
+								<!-- Sub Title Text // -->
+								<h6 class="text" style="color:#999999; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:left; padding:0; margin:0">
+									You are now a {{admintype}} Admin
+								</h6>
 							</td>
 						</tr>
 
@@ -125,11 +134,85 @@
 								
 								<table border="0" cellpadding="0" cellspacing="0" width="100%" class="tableTitleDescription">
 									<tr>
+										<td align="center" valign="top" style="padding-bottom:10px;" class="mediumTitle">
+											<!-- Medium Title Text // -->
+											<a href={{adminlink}}>
+												<p class="text" style="color:#000000; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:600; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:center; padding:0; margin:0">
+													Admin Site
+												</p>
+											</a>
+										</td>
+									</tr>
+
+									<tr>
 										<td align="center" valign="top" style="padding-bottom:20px;" class="description">
 											<!-- Description Text// -->
 											<p class="text" style="color:#666666; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:14px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:22px; text-transform:none; text-align:left; padding:0; margin:0">
-												Thank you for subscribing. We will let you know about upcoming events and campaigns and our community's progress towards our goals.
+                                                {{admintext}}
+                                            </p>
+										</td>
+									</tr>
+								</table>
+								
+
+								<table border="0" cellpadding="0" cellspacing="0" width="100%" class="tableDivider">
+									<tr>
+										<td align="center" valign="top" style="padding-top:20px;padding-bottom:40px;">
+											<!-- Divider // -->
+											<table border="0" cellpadding="0" cellspacing="0" width="100%">
+												<tr>
+													<td height="1" style="background-color:#E5E5E5;font-size:1px;line-height:1px;" class="divider">&nbsp;</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+								</table>
+
+								<!-- <table border="0" cellpadding="0" cellspacing="0" width="100%" class="tableImg">
+									<tr>
+										<td align="center" valign="top" style="padding-bottom:20px" class="linkImg">
+											<a href="#" target="_blank" style="text-decoration:none;">
+												<img src="img/welcome-5.png" width="170" alt="" border="0" style="width:100%; max-width:170px; height:auto; display:block;" />
+											</a>
+										</td>
+									</tr>
+								</table> -->
+								<table border="0" cellpadding="0" cellspacing="0" width="100%" class="tableTitleDescription">
+									<tr>
+										<td align="center" valign="top" style="padding-bottom:10px;" class="mediumTitle">
+											<!-- Medium Title Text // -->
+                                            <p class="text" style="color:#000000; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:600; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:center; padding:0; margin:0">
+                                                Help
+                                            </p>
+										</td>
+									</tr>
+
+									<tr>
+										<td align="center" valign="top" style="padding-bottom:20px;" class="description">
+											<!-- Description Text// -->
+                                            <p class="text" style="color:#666666; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:14px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:22px; text-transform:none; text-align:center; padding:0; margin:0">
+                                                If you need any help using the admin site, just reach out to info@massenergize.org. 
 											</p>
+										</td>
+									</tr>
+								</table>
+
+								<table border="0" cellpadding="0" cellspacing="0" width="100%" class="tableButton">
+									<tr>
+										<td align="center" valign="top" style="padding-top:20px;padding-bottom:20px;">
+
+											<!-- Button Table // -->
+											<table align="center" border="0" cellpadding="0" cellspacing="0">
+												<tr>
+													<td align="center" class="ctaButton" style="background-color:#8dc63f;padding-top:12px;padding-bottom:12px;padding-left:35px;padding-right:35px;border-radius:50px">
+														<!-- Button Link // -->
+														<a class="text" href={{adminlink}} target="_blank" style="color:#FFFFFF; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:13px; font-weight:700; font-style:normal;letter-spacing:1px; line-height:20px; text-transform:uppercase; text-decoration:none; display:block">
+															Get Started
+														</a>
+													</td>
+												</tr>
+											</table>
+
 										</td>
 									</tr>
 								</table>
@@ -175,7 +258,7 @@
 								<!-- Information of NewsLetter (Subscribe Info)// -->
 								<p class="text" style="color:#777777; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:12px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:20px; text-transform:none; text-align:center; padding:0; margin:0;" >
 									If you have any questions please contact us at info@massenergize.org.<br>
-									If you no longer wish to receive these emails <a href="api.massenergize.org/v3/subscribers.delete?subscriber_id={{id}}" style="color:#777777;text-decoration:underline;" target="_blank">Unsubscribe</a>
+							 		<!-- As admin you cannot unsubscribe from our emails -->
 								</p>
 							</td>
 						</tr>

@@ -64,13 +64,18 @@ class UserService:
     subject = 'Welcome to the MassEnergize Movement'
     community = 'your community'
     homelink = COMMUNITY_URL_ROOT
+    logo = 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
     actionslink = homelink
     eventslink = homelink
     serviceslink = homelink
     privacylink = homelink
     if len(user.communities.all()) > 0: 
       community = user.communities.all()[0]
+      subject = 'Welcome to %s' %(community)
       homelink = '%s/%s' %(COMMUNITY_URL_ROOT, community)
+      l = community.logo
+      if l and l.file:
+        logo = l.file.url
       actionslink = '%s/actions' %(homelink)
       eventslink = '%s/events' %(homelink)
       serviceslink = '%s/services' %(homelink)
@@ -80,6 +85,7 @@ class UserService:
       'name': user.preferred_name,
       'community': community,
       'homelink':homelink,
+      'logo':logo,
       'actionslink':actionslink,
       'eventslink':eventslink,
       'serviceslink':serviceslink,

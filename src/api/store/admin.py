@@ -4,6 +4,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from .utils import get_community, get_user
 
+import json
+
 class AdminStore:
   def __init__(self):
     self.name = "Admin Store/DB"
@@ -111,7 +113,7 @@ class AdminStore:
         #   admin_group.pending_admins = {"data": data}
 
       admin_group.save()
-      return admin_group, None
+      return user, None
       
     except Exception as e:
       return None, CustomMassenergizeError(e)
