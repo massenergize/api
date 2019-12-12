@@ -4,6 +4,11 @@ from _main_.utils.common import serialize, serialize_all
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 
+from _main_.utils.emailer.send_email import send_massenergize_email
+from _main_.utils.emailer.send_email import send_massenergize_rich_email
+
+from _main_.utils.constants import COMMUNITY_URL_ROOT
+
 class UserService:
   """
   Service Layer for all the users
@@ -54,6 +59,40 @@ class UserService:
     user, err = self.store.create_user(context, args)
     if err:
       return None, err
+    #send email here import the create user email function and hopefully that works
+
+    subject = 'Welcome to the MassEnergize Movement'
+    community = 'your community'
+    homelink = COMMUNITY_URL_ROOT
+    logo = 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+    actionslink = homelink
+    eventslink = homelink
+    serviceslink = homelink
+    privacylink = homelink
+    if len(user.communities.all()) > 0: 
+      community = user.communities.all()[0]
+      subject = 'Welcome to %s' %(community)
+      homelink = '%s/%s' %(COMMUNITY_URL_ROOT, community)
+      l = community.logo
+      if l and l.file:
+        logo = l.file.url
+      actionslink = '%s/actions' %(homelink)
+      eventslink = '%s/events' %(homelink)
+      serviceslink = '%s/services' %(homelink)
+      privacylink = "{0}/policies?name=Privacy%20Policy".format(homelink)
+    
+    content_variables = {
+      'name': user.preferred_name,
+      'community': community,
+      'homelink':homelink,
+      'logo':logo,
+      'actionslink':actionslink,
+      'eventslink':eventslink,
+      'serviceslink':serviceslink,
+      'privacylink':privacylink
+      }
+    send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables)
+
     return serialize(user), None
 
 

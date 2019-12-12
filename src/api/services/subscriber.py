@@ -3,6 +3,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.subscriber import SubscriberStore
 from _main_.utils.context import Context
+from _main_.utils.emailer.send_email import send_massenergize_rich_email
 
 class SubscriberService:
   """
@@ -29,6 +30,15 @@ class SubscriberService:
     subscriber, err = self.store.create_subscriber(community_id, args)
     if err:
       return None, err
+    
+    subject = 'Thank you for subscribing'
+    content_variables = {
+      'name': subscriber.name,
+      'id': subscriber.id,
+      'logo': subscriber.community.logo.url if subscriber.community and subscriber.community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png',
+    }
+    send_massenergize_rich_email(subject, subscriber.email, 'subscriber_registration_email.html', content_variables)
+
     return serialize(subscriber), None
 
 
