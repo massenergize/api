@@ -63,7 +63,7 @@ class HomePageSettingsHandler(RouteHandler):
     def create_home_page_setting_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      home_page_setting_info, err = self.service.create(args)
+      home_page_setting_info, err = self.service.create_home_page_setting(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=home_page_setting_info)
