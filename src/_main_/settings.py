@@ -15,10 +15,10 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = False
+IS_PROD = True
 
-DEPLOY_VERSION = '0.8.7'
-RELEASE_NOTES = 'Admin Messaging routes updates'
+DEPLOY_VERSION = '0.8.9'
+RELEASE_NOTES = 'Switching to https'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -44,7 +44,9 @@ ALLOWED_HOSTS = [
     'api.massenergize.com',
     'apis.massenergize.com',
     'api-prod.massenergize.org',
+    'api.prod.massenergize.org',
     'api-dev.massenergize.org',
+    'api.dev.massenergize.org',
     'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com'
 ]
 
