@@ -2168,3 +2168,4 @@ class Deployment(models.Model):
 
   class Meta:
     db_table = 'deployments'
+    ordering = ('-version',)

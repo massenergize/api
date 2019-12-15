@@ -15,21 +15,16 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = True
-
-DEPLOY_VERSION = '0.8.9'
-RELEASE_NOTES = 'Switching to https'
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
+IS_PROD = True
 path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
 # path_to_config = '/_main_/config/massenergizeProjectConfig.json'
 CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
 os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
-
 
 SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 
