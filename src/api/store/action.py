@@ -16,10 +16,6 @@ class ActionStore:
       if not action:
         return None, InvalidResourceError()
 
-      # if context.is_prod and action.community:
-      #   if (not action.is_published) or not action.community.is_published:
-      #     return None, InvalidResourceError()
-
       return action, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -33,7 +29,7 @@ class ActionStore:
         actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain, is_deleted=False)
       else:
         return [], None
-      
+
       if not context.is_dev:
         actions = actions.filter(is_published=True)
 
