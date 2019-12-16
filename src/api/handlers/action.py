@@ -34,7 +34,6 @@ class ActionHandler(RouteHandler):
     def action_info_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-
       # verify the body of the incoming request
       v: Validator = Validator()
       v.expect("action_id", str, is_required=True)
@@ -55,7 +54,7 @@ class ActionHandler(RouteHandler):
     def create_action_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      success, err = check_length(args, 'title', min_length=4, max_length=40)
+      success, err = check_length(args, 'title', min_length=4, max_length=25)
       if not success:
         return MassenergizeResponse(error=str(err))
       community_id = args.pop('community_id', None)

@@ -51,7 +51,7 @@ class ContactUsPageSettingsHandler(RouteHandler):
     def create_contact_us_page_setting_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      contact_us_page_setting_info, err = self.service.create(args)
+      contact_us_page_setting_info, err = self.service.create_contact_us_page_setting(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=contact_us_page_setting_info)

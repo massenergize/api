@@ -4,6 +4,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from .utils import get_community, get_user
 
+import json
+
 class AdminStore:
   def __init__(self):
     self.name = "Admin Store/DB"
@@ -71,8 +73,8 @@ class AdminStore:
 
   def add_community_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
     try:
-      if not context.user_is_super_admin and  not context.user_is_community_admin:
-        return None, CustomMassenergizeError("You must be a community/super Admin to add another Super Admin")
+      # if not context.user_is_super_admin and  not context.user_is_community_admin:
+      #   return None, CustomMassenergizeError("You must be a community/super Admin to add another Super Admin")
       
       name = args.pop("name", None)
       email = args.pop("email", None)
@@ -111,7 +113,7 @@ class AdminStore:
         #   admin_group.pending_admins = {"data": data}
 
       admin_group.save()
-      return admin_group, None
+      return user, None
       
     except Exception as e:
       return None, CustomMassenergizeError(e)

@@ -50,7 +50,7 @@ class ActionsPageSettingsHandler(RouteHandler):
     def create_actions_page_setting_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      actions_page_setting_info, err = self.service.create(args)
+      actions_page_setting_info, err = self.service.create_actions_page_setting(args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=actions_page_setting_info)
