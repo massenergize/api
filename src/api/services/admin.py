@@ -52,7 +52,7 @@ class AdminService:
       'name': admin.full_name, 
       'adminlink': ADMIN_URL_ROOT,
       'admintype': 'Community',
-      'admintext': 'Now that you are a community admin, you have access the MassEnergize admin website at %s. You now can publish actions and events for your community. You are also in charge of finding service providers in your community and adding them to your community’s site. Just log in to your MassEnergize account on the admin site to get started.' %ADMIN_URL_ROOT
+      'admintext': 'Now that you are a community admin, you have access the MassEnergize admin website at %s. You can customize your community’s home page,  publish actions and events for your community, add service providers and approve testimonials. You will need to log in often to check for messages from users. You can also add other admins - but when you do so, let us know. Just log in to your MassEnergize account on the admin site to get started.' %ADMIN_URL_ROOT
     }
     send_massenergize_rich_email(subject, admin.email, 'new_admin_email.html', content_variables)
     return serialize(admin, full=True), None

@@ -73,8 +73,8 @@ class AdminStore:
 
   def add_community_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
     try:
-      if not context.user_is_super_admin and  not context.user_is_community_admin:
-        return None, CustomMassenergizeError("You must be a community/super Admin to add another Super Admin")
+      # if not context.user_is_super_admin and  not context.user_is_community_admin:
+      #   return None, CustomMassenergizeError("You must be a community/super Admin to add another Super Admin")
       
       name = args.pop("name", None)
       email = args.pop("email", None)

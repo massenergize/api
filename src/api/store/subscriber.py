@@ -30,8 +30,10 @@ class SubscriberStore:
       new_subscriber.save()
       if community_id:
         community = Community.objects.get(id=community_id)
-        community.subscribers.add(new_subscriber)
-        community.save()
+        new_subscriber.community = community
+
+        #community.subscribers.add(new_subscriber)
+        #community.save()
       return new_subscriber, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
