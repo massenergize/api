@@ -462,7 +462,7 @@ class UserProfile(models.Model):
     res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
     res['user_info'] = self.user_info
     res['profile_picture'] = get_json_if_not_none(self.profile_picture)
-    res['communities'] = [c.name for c in self.communities.all()]
+    res['communities'] = [c.community.name for c in CommunityMember.objects.filter(user=self)]
     return res
 
 
