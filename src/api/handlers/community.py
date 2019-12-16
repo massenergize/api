@@ -29,6 +29,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.graphs", self.info())
     self.add("/communities.data", self.info())
     self.add("/communities.join", self.join())
+    self.add("/communities.leave", self.leave())
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list())
@@ -55,6 +56,16 @@ class CommunityHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=community_info)
     return join_community_view
+
+  def leave(self) -> function:
+    def leave_community_view(request) -> None:
+      context: Context = request.context
+      args: dict = context.args
+      community_info, err = self.service.leave_community(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=community_info)
+    return leave_community_view
 
 
   def create(self) -> function:
@@ -120,8 +131,8 @@ class CommunityHandler(RouteHandler):
         if not ok:
           return MassenergizeResponse(error=str(err))
 
-      if(args.get('is_geographically_focused', None)):
-        args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', None))
+      if(args.get('is_geographically_focused', False)):
+        args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', False))
       if(args.get('is_published', None)):
         args['is_published'] = parse_bool(args.pop('is_published', None))
       if(args.get('is_approved', None)):

@@ -467,14 +467,19 @@ class UserProfile(models.Model):
 
 
   def full_json(self):
+    team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
+    community_members = CommunityMember.objects.filter(user=self)
+    communities = [cm.community.info() for cm in community_members]
+    admin_at = [cm.community.info() for cm in CommunityMember.objects.filter(user=self, is_admin=True)]
+    
     data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles'])
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
-    data['communities'] = [c.info() for c in self.communities.all()]
+    data['communities'] = communities
     data['admin_at'] = admin_at
-    data['teams'] = [t.info() for t in self.team_members.all()]
+    data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
     return data
 
@@ -871,7 +876,7 @@ class Vendor(models.Model):
     return self.name
 
   def info(self):
-    return model_to_dict(self, ['id', 'name', 'service_area'])
+    return model_to_dict(self, ['id', 'name', 'service_area', 'key_contact', 'phone_number', 'email' ])
 
   def simple_json(self):
     data = model_to_dict(self, exclude=[
@@ -956,6 +961,9 @@ class Action(models.Model):
   def __str__(self): 
     return self.title
 
+  def info(self):
+    return model_to_dict(self, ['id','title'])
+
   def simple_json(self):
     data =  model_to_dict(self, ['id','is_published', 'is_deleted', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
@@ -964,7 +972,8 @@ class Action(models.Model):
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
-    data['community'] = get_json_if_not_none(self.community)
+    data['community'] = get_summary_info(self.community)
+    data['vendors'] = [v.info() for v in self.vendors.all()]
     return data
 
   def full_json(self):
@@ -1205,6 +1214,9 @@ class Testimonial(models.Model):
 
   def __str__(self):        
     return self.title
+
+  def info(self):
+    return model_to_dict(self, include=['id', 'title', 'community'])
 
   def simple_json(self):
     res = model_to_dict(self, exclude=['image', 'tags'])

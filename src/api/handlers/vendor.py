@@ -90,8 +90,6 @@ class VendorHandler(RouteHandler):
         return MassenergizeResponse(error="Please accept terms the Terms And Conditions to Proceed")
       
       args = parse_location(args)
-      if not args.pop('have_address', None):
-        args.pop('location')
 
       args['key_contact'] = {
         "name": args.pop('key_contact_name', None),
@@ -143,8 +141,6 @@ class VendorHandler(RouteHandler):
         return err
 
       args = parse_location(args)
-      if not args.pop('have_address', None):
-        args.pop('location', None)
 
       args['key_contact'] = {
         "name": args.pop('key_contact_name', None),

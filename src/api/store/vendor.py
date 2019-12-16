@@ -43,7 +43,7 @@ class VendorStore:
       if not community:
         return [], None
       
-      vendors = community.vendor_set.all()
+      vendors = community.vendor_set.filter(is_deleted=False)
 
       if not context.is_dev:
         vendors = vendors.filter(is_published=True)
@@ -66,6 +66,10 @@ class VendorStore:
         "email": key_contact_email
       }
 
+      have_address = args.pop('have_address', False)
+      if not have_address:
+        args['location'] = None
+        
       new_vendor = Vendor.objects.create(**args)
       if image:
         logo = Media(name=f"Logo-{slugify(new_vendor.name)}", file=image)
@@ -97,6 +101,11 @@ class VendorStore:
       vendor = Vendor.objects.get(id=vendor_id)
       if not vendor:
         return None, InvalidResourceError()  
+
+      
+      have_address = args.pop('have_address', False)
+      if not have_address:
+        args['location'] = None
 
       communities = args.pop('communities', [])
       if communities:

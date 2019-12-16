@@ -1,4 +1,4 @@
-from database.models import Community, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -34,18 +34,44 @@ class CommunityStore:
   def join_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       context.logger.add_trace('join_community')
-
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
       user.communities.add(community)
       user.save()
 
+      community_member: CommunityMember = CommunityMember.objects.filter(community=community, user=user).first()
+      if not community_member:
+        community_member = CommunityMember.objects.create(community=community, user=user, is_admin=False)
+
       context.logger.log({
         "user": user,
         "community": community,
       })
-      return None, None
+      return user, None
     except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+  def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      context.logger.add_trace('join_community')
+      community = get_community_or_die(context, args)
+      user = get_user_or_die(context, args)
+      user.communities.remove(community)
+      user.save()
+
+      community_member: CommunityMember = CommunityMember.objects.filter(community=community, user=user).first()
+      if not community_member or (not community_member.is_admin):
+        print(community_member)
+        community_member.delete()
+        
+      context.logger.log({
+        "user": user,
+        "community": community,
+      })
+      return user, None
+    except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -67,6 +93,10 @@ class CommunityStore:
     try:
       logo = args.pop('logo', None)
       new_community = Community.objects.create(**args)
+
+      have_address = args.get('is_geographically_focused', False)
+      if not have_address:
+        args['location'] = None
 
       if logo:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
@@ -175,6 +205,9 @@ class CommunityStore:
       if not community:
         return None, InvalidResourceError()
       
+      if not args.get('is_geographically_focused', False):
+        args['location'] = None
+        
       community.update(**args)
 
       new_community = community.first()

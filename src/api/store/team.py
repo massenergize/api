@@ -119,7 +119,6 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
     
 
-
   def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
     try:
       print(team_id)
@@ -156,23 +155,21 @@ class TeamStore:
     try:
       print(args)
       team_id = args.pop('team_id', None)
-      email = args.pop('email', None) or args.pop('user_email', None)
+      user = get_user_or_die(context, args)
       status = args.pop('is_admin', None) == 'true'
 
-      if not team_id and not email:
-        return None, CustomMassenergizeError("Missing email and team_id")
-      print(email, team_id)
-      team_member: TeamMember = TeamMember.objects.filter(team__id=team_id, user__email=email).first()
+      if not team_id :
+        return None, CustomMassenergizeError("Missing team_id")
+
+      team_member: TeamMember = TeamMember.objects.filter(team__id=team_id, user=user).first()
       if team_member:
         team_member.is_admin = status
         team_member.save()
       else:
         team = Team.objects.filter(pk=team_id).first()
-        user = UserProfile.objects.filter(email=email).first()
-        if not team_id and not email:
+        if not team_id and not user:
           return None, CustomMassenergizeError("Invalid team or user")
         team_member = TeamMember.objects.create(is_admin=status, team=team, user=user)
-
 
       return team_member, None
     except Exception as e:
@@ -182,13 +179,15 @@ class TeamStore:
   def remove_team_member(self, context: Context, args) -> (Team, MassEnergizeAPIError):
     try:
       team_id = args.pop('team_id', None)
-      email = args.pop('email', None)
-      if team_id and email:
-        team_member = TeamMember.objects.filter(team__id=team_id, user__email=email)
-        team_member.delete()
-      return True, None
-    except Exception:
-      return None, InvalidResourceError()
+      user = get_user_or_die(context, args)
+      res = {}
+      if team_id and user:
+        team_member = TeamMember.objects.filter(team__id=team_id, user=user)
+        res = team_member.delete()
+      return res, None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
 
 
   def members(self, context: Context, args) -> (Team, MassEnergizeAPIError):

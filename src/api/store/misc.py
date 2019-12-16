@@ -15,8 +15,8 @@ class MiscellaneousStore:
       return None, CustomMassenergizeError(e)
 
   def backfill(self, context: Context, args) -> (list, CustomMassenergizeError):
-    # return self.backfill_teams(context, args)
-    return self.backfill_community_members(context, args)
+    return self.backfill_teams(context, args)
+    # return self.backfill_community_members(context, args)
 
   def backfill_teams(self, context: Context, args) -> (list, CustomMassenergizeError):
     try:

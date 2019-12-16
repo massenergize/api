@@ -91,7 +91,7 @@ class EventHandler(RouteHandler):
       args['tags'] = parse_list(args.get('tags', []))
       args['is_global'] = parse_bool(args.pop('is_global', None))
 
-      if args.pop('have_address', None):
+      if args.get('have_address', False):
         args = parse_location(args)
 
       event_info, err = self.service.create_event(context, args)
@@ -127,7 +127,7 @@ class EventHandler(RouteHandler):
       args['tags'] = parse_list(args.get('tags', []))
       args['is_global'] = parse_bool(args.pop('is_global', None))
 
-      if args.pop('have_address', None):
+      if args.get('have_address', False):
         args = parse_location(args)
 
       event_info, err = self.service.update_event(context, event_id, args)

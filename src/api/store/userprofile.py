@@ -16,6 +16,16 @@ class UserStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
+  def remove_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      household_id = args.get('household_id', None) or args.get('household_id', None)
+      if not household_id:
+        return None, CustomMassenergizeError("Please provide household_id")
+      return RealEstateUnit.objects.get(pk=household_id).delete(), None
+
+    except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
   def add_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       user = get_user_or_die(context, args)
