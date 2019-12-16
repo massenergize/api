@@ -1,4 +1,4 @@
-from database.models import Community, Action, Testimonial, Event, Team, UserProfile
+from database.models import Community, CommunityMember, Action, Testimonial, Event, Team, UserProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -32,14 +32,9 @@ class SummaryStore:
       upcoming_events = Event.objects.filter(community__id__in=comm_ids).count()
       teams_count = Team.objects.filter(community__id__in=comm_ids).count()
       testimonials_count = Testimonial.objects.filter(community__id__in=comm_ids).count()
-      users = None
-      for c in communities:
-        if not users:
-          users = c.userprofile_set.all()
-        else:
-          users |= c.userprofile_set.all()
+      users_count = CommunityMember.objects.filter(community__id__in=comm_ids).values('user').count()
 
-      users_count = len(users)
+
       summary = [
         self._summarize("Actions", action_count),
         self._summarize("Communities", communities_count),
@@ -50,6 +45,7 @@ class SummaryStore:
       ]
       return summary, None
     except Exception as e:
+      print(e)
       return {}, CustomMassenergizeError(e)
 
 

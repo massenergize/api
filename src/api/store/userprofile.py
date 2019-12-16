@@ -1,4 +1,4 @@
-from database.models import UserProfile, EventAttendee, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -126,18 +126,13 @@ class UserStore:
       if not community and context.user_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
-        users = None
-        for ag in admin_groups:
-          if not users:
-            users = ag.community.userprofile_set.all()
-          else:
-            users |= ag.community.userprofile_set.all()
-        users = users.distinct()
+        comm_ids = [ag.community.id for ag in admin_groups]
+        users = [cm.user for cm in CommunityMember.objects.filter(user=user, community_id__in=comm_ids)]
         return users, None
       elif not community:
         return [], None
 
-      users = community.userprofile_set.filter(is_deleted=False)
+      users = CommunityMember.objects.filter(user=user, community=community, is_deleted=False)
       return users, None
     except Exception as e:
       print(e)
