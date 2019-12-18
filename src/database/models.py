@@ -290,9 +290,10 @@ class Community(models.Model):
       admins = []
 
     # get the community goal
-    goal = get_json_if_not_none(self.goal)
-    goal["attained_number_of_households"] = RealEstateUnit.objects.filter(community=self).count()
-    goal["attained_number_of_actions"] = UserActionRel.objects.filter(action__community__id=self.pk).count()
+    goal = get_json_if_not_none(self.goal) or {}
+    goal["attained_number_of_households"] += CommunityMember.objects.filter(community=self).count()
+    goal["attained_number_of_actions"] += UserActionRel.objects.filter(action__community__id=self.pk).count()
+
 
     return {
       "id": self.id,
@@ -1224,8 +1225,12 @@ class Testimonial(models.Model):
     return model_to_dict(self, include=['id', 'title', 'community'])
 
   def simple_json(self):
+    anonymous = {
+      "full_name": "Anonymous",
+      "email": "anonymous"
+    }
     res = model_to_dict(self, exclude=['image', 'tags'])
-    res["user"] = get_json_if_not_none(self.user)
+    res["user"] = get_json_if_not_none(self.user) or  anonymous
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
@@ -1901,12 +1906,16 @@ class HomePageSettings(models.Model):
 
 
   def full_json(self):
+    goal = get_json_if_not_none(self.community.goal) or {}
+    goal["attained_number_of_households"] += CommunityMember.objects.filter(community=self.community).count()
+    goal["attained_number_of_actions"] += UserActionRel.objects.filter(action__community__id=self.community.pk).count()
+
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     res['community'] = get_json_if_not_none(self.community)
     res['featured_events'] = [i.simple_json() for i in self.featured_events.all()]
     res['featured_stats'] = [i.simple_json() for i in self.featured_stats.all()]
-    res['goal']  = get_json_if_not_none(self.community.goal)
+    res['goal']  = goal
     return res
 
   class Meta:

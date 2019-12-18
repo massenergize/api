@@ -96,13 +96,19 @@ class UserStore:
 
           community_membership = CommunityMember.objects.filter(user=new_user, community=community)
           if not community_membership:
+            # add them as a member to community 
             CommunityMember.objects.create(user=new_user, community=community)
 
+            #create their first household
+            household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community)
+            new_user.real_estate_units.add(household)
+      
       global_community = Community.objects.filter(subdomain="global").first()
-      if not global_community:
+      global_membership = CommunityMember.objects.create(user=new_user, community=global_community)
+      if not global_membership:
         global_membership = CommunityMember.objects.create(user=new_user, community=global_community)
 
-
+      
       res = {
         "user": new_user,
         "community": community or global_community
@@ -262,9 +268,7 @@ class UserStore:
       for t in action.tags.all():
         data = Data.objects.filter(community=action.community, tag=t)
         if data:
-          print(data)
           data.update(value=F("value") + 1)
-          print(data)
 
         else:
           #data for this community, action does not exist so create one
