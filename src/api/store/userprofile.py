@@ -3,7 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
-from .utils import get_community, get_user, get_user_or_die
+from .utils import get_community, get_user, get_user_or_die, get_community_or_die
 
 class UserStore:
   def __init__(self):
@@ -87,13 +87,27 @@ class UserStore:
       else:
         new_user = user.first()
       
+      community = None
       if subdomain:
-        community = Community.objects.filter(subdomain=subdomain)
+        community = Community.objects.filter(subdomain=subdomain).first()
         if community:
           new_user.communities.add(community)
           new_user.save()
 
-      return new_user, None
+          community_membership = CommunityMember.objects.filter(user=new_user, community=community)
+          if not community_membership:
+            CommunityMember.objects.create(user=new_user, community=community)
+
+      global_community = Community.objects.filter(subdomain="global").first()
+      if not global_community:
+        global_membership = CommunityMember.objects.create(user=new_user, community=global_community)
+
+
+      res = {
+        "user": new_user,
+        "community": community or global_community
+      }
+      return res, None
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(e)

@@ -289,6 +289,11 @@ class Community(models.Model):
     else:
       admins = []
 
+    # get the community goal
+    goal = get_json_if_not_none(self.goal)
+    goal["attained_number_of_households"] = RealEstateUnit.objects.filter(community=self).count()
+    goal["attained_number_of_actions"] = UserActionRel.objects.filter(action__community__id=self.pk).count()
+
     return {
       "id": self.id,
       "name": self.name,
@@ -296,7 +301,7 @@ class Community(models.Model):
       "owner_name": self.owner_name,
       "owner_email": self.owner_email,
       "owner_phone_number": self.owner_phone_number,
-      "goal": get_json_if_not_none(self.goal),
+      "goal": goal,
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
       "location":self.location,
