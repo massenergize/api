@@ -28,7 +28,8 @@ class UserHandler(RouteHandler):
     self.add("/users.remove", self.delete())
     self.add("/users.actions.completed.add", self.add_action_completed())
     self.add("/users.actions.todo.add", self.add_action_todo())
-    self.add("/users.actions.list", self.list())
+    self.add("/users.actions.todo.list", self.list_actions_todo())
+    self.add("/users.actions.completed.list", self.list_actions_completed())
     self.add("/users.households.add", self.add_household())
     self.add("/users.households.remove", self.remove_household())
     self.add("/users.households.list", self.list_households())
@@ -44,8 +45,7 @@ class UserHandler(RouteHandler):
     def user_info_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      user_id = args.pop('user_id', None)
-      user_info, err = self.service.get_user_info(user_id)
+      user_info, err = self.service.get_user_info(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -56,7 +56,17 @@ class UserHandler(RouteHandler):
     def create_user_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      print(args)
+      validator: Validator = Validator()
+      args, err = (validator
+        .expect("accepts_terms_and_conditions", bool, is_required=True)
+        .expect("email", str, is_required=True)
+        .expect("full_name", str, is_required=True)
+        .expect("preferred_name", str, is_required=True)
+        .expect("is_vendor", bool, is_required=True)
+        .verify(context.args)
+      )
+      if err:
+        return err
       user_info, err = self.service.create_user(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -75,6 +85,26 @@ class UserHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
     return list_user_view
+
+  def list_actions_todo(self) -> function:
+    def list_actions_todo_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      user_info, err = self.service.list_actions_todo(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return list_actions_todo_view
+
+  def list_actions_completed(self) -> function:
+    def list_actions_completed_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      user_info, err = self.service.list_actions_completed(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return list_actions_completed_view
 
 
   def update(self) -> function:
@@ -125,7 +155,7 @@ class UserHandler(RouteHandler):
   def add_action_todo(self) -> function:
     def add_action_todo_view(request) -> None: 
       context: Context = request.context
-      print(context)
+      
       validator: Validator = Validator()
       args, err = (validator
         .expect("action_id", str, is_required=True)
@@ -144,7 +174,7 @@ class UserHandler(RouteHandler):
   def add_action_completed(self) -> function:
     def add_action_completed_view(request) -> None: 
       context: Context = request.context
-      print(context)
+      
       validator: Validator = Validator()
       args, err = (validator
         .expect("action_id", str, is_required=True)
@@ -196,8 +226,7 @@ class UserHandler(RouteHandler):
     def list_events_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      user_id = args.pop('user_id', None)
-      user_info, err = self.service.get_user_info(user_id)
+      user_info, err = self.service.list_events_for_user(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

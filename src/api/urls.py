@@ -13,6 +13,7 @@ from api.handlers.page_settings__actions import ActionsPageSettingsHandler
 from api.handlers.page_settings__contactus import ContactUsPageSettingsHandler
 from api.handlers.page_settings__donate import DonatePageSettingsHandler
 from api.handlers.page_settings__home import HomePageSettingsHandler
+from api.handlers.misc import MiscellaneousHandler
 from api.handlers.policy import PolicyHandler
 from api.handlers.subscriber import SubscriberHandler
 from api.handlers.summary import SummaryHandler
@@ -38,6 +39,7 @@ urlpatterns.extend(DonatePageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(EventHandler().get_routes_to_views())
 urlpatterns.extend(GoalHandler().get_routes_to_views())
 urlpatterns.extend(GraphHandler().get_routes_to_views())
+urlpatterns.extend(MiscellaneousHandler().get_routes_to_views())
 urlpatterns.extend(PolicyHandler().get_routes_to_views())
 urlpatterns.extend(SubscriberHandler().get_routes_to_views())
 urlpatterns.extend(SummaryHandler().get_routes_to_views())

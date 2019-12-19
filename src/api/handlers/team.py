@@ -23,6 +23,7 @@ class TeamHandler(RouteHandler):
     self.add("/teams.create", self.create())
     self.add("/teams.add", self.create())
     self.add("/teams.list", self.list())
+    self.add("/teams.stats", self.team_stats())
     self.add("/teams.update", self.update())
     self.add("/teams.delete", self.delete())
     self.add("/teams.remove", self.delete())
@@ -43,7 +44,7 @@ class TeamHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       team_id = args.pop('team_id', None)
-      print(args)
+      
       team_info, err = self.team.get_team_info(team_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -68,14 +69,22 @@ class TeamHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       context: Context = request.context
-      args: dict = context.args
-      args = rename_field(args, 'community_id', 'community__id')
-      args = rename_field(args, 'subdomain', 'community__subdomain')
-      team_info, err = self.team.list_teams(args)
+      team_info, err = self.team.list_teams(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
     return list_team_view
+
+  def team_stats(self) -> function:
+    def team_stats_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      context: Context = request.context
+      team_info, err = self.team.team_stats(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_info)
+    return team_stats_view
 
 
   def update(self) -> function:
@@ -161,7 +170,7 @@ class TeamHandler(RouteHandler):
       args: dict = context.args
       team_id = args.pop('team_id', None)
       user_id = args.pop('user_id', None)
-      user_id = args.pop('message', None)
+      message = args.pop('message', None)
       #TODO: implement actual sending of message
       return MassenergizeResponse()
     return message_team_admin_view
@@ -171,8 +180,7 @@ class TeamHandler(RouteHandler):
     def community_admin_list_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      community_id = args.pop('community_id', None)
-      teams, err = self.team.list_teams_for_community_admin(community_id)
+      teams, err = self.team.list_teams_for_community_admin(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=teams)
@@ -183,7 +191,7 @@ class TeamHandler(RouteHandler):
     def super_admin_list_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      teams, err = self.team.list_teams_for_super_admin()
+      teams, err = self.team.list_teams_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=teams)

@@ -49,6 +49,17 @@ class SubscriberHandler(RouteHandler):
     def create_subscriber_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
+
+      validator: Validator = Validator()
+      (validator
+        .add("name", str, is_required=True)
+        .add("email", str, is_required=True)
+      )
+
+      args, err = validator.verify(args)
+      if err:
+        return err
+      
       community_id = args.pop('community_id', None)
       is_global = args.pop('is_global', None)
       if is_global:
@@ -108,7 +119,7 @@ class SubscriberHandler(RouteHandler):
       subscriber_info, err = self.service.delete_subscriber(subscriber_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=subscriber_info)
+      return MassenergizeResponse(data='Sorry to see you go, you have been unsubscribed from our mailing lists')
     return delete_subscriber_view
 
 

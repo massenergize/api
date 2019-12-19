@@ -17,11 +17,12 @@ class PolicyStore:
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
-  def list_policies(self, community_id) -> (list, MassEnergizeAPIError):
-    policies = Policy.objects.filter(community__id=community_id)
-    if not policies:
-      return [], None
-    return policies, None
+  def list_policies(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      policies = Policy.objects.filter(is_deleted=False)
+      return policies, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_policy(self, community_id, args) -> (dict, MassEnergizeAPIError):

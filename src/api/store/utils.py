@@ -39,7 +39,7 @@ def get_community_or_die(context, args):
   
 
 def get_user_or_die(context, args):
-  user_email = args.pop('user_email', None) or context.user_email
+  user_email = args.pop('user_email', None) or args.pop('email', None) or context.user_email
   user_id = args.pop('user_id', None) or context.user_id
   user = None
   if user_id:
@@ -47,5 +47,5 @@ def get_user_or_die(context, args):
   elif user_email:
     return UserProfile.objects.get(email=user_email)
   else:
-    raise CustomMassenergizeError("Please provide a valid user_id or user_email")
+    raise Exception("Please provide a valid user_id or user_email")
 

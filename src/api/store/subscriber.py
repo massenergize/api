@@ -30,8 +30,10 @@ class SubscriberStore:
       new_subscriber.save()
       if community_id:
         community = Community.objects.get(id=community_id)
-        community.subscribers.add(new_subscriber)
-        community.save()
+        new_subscriber.community = community
+
+        #community.subscribers.add(new_subscriber)
+        #community.save()
       return new_subscriber, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -86,11 +88,11 @@ class SubscriberStore:
 
   def list_subscribers_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
-      # if context.user_is_super_admin:
-      #   return self.list_subscribers_for_super_admin(context)
+      if context.user_is_super_admin:
+        return self.list_subscribers_for_super_admin(context)
 
-      # elif not context.user_is_community_admin:
-      #   return None, CustomMassenergizeError("Sign in as a valid community admin")
+      elif not context.user_is_community_admin:
+        return None, CustomMassenergizeError("Sign in as a valid community admin")
 
       if not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
@@ -103,13 +105,10 @@ class SubscriberStore:
           else:
             subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False)
 
-        print(subscribers)
         return subscribers, None
 
       community: Community = Community.objects.get(pk=community_id)
-      print(community)
       subscribers = community.subscriber_set.all().filter(is_deleted=False)
-      print(subscribers)
       return subscribers, None
  
     except Exception as e:

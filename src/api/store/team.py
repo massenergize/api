@@ -1,8 +1,9 @@
 from database.models import Team, UserProfile, Media, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
+from .utils import get_community_or_die, get_user_or_die
 
 class TeamStore:
   def __init__(self):
@@ -15,32 +16,39 @@ class TeamStore:
     return team, None
 
 
-  def list_teams(self, args) -> (list, MassEnergizeAPIError):
+  def list_teams(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      user_id = args.pop('user_id', None)
-      user_email = args.pop('user_email', None)
-      # args['is_published'] = True
-      args['is_deleted'] = False
-      teams = Team.objects.filter(**args)
-      res = []
-      if user_id:
-        user = UserProfile.objects.get(id=user_id)
-        for t in teams:
-          if (user in t.members.all()) or (user in t.admins.all()):
-            res.append(t)
-        return res, None
-      elif user_email:
-        user = UserProfile.objects.get(email=user_email)
-        for t in teams:
-          if (user in t.members.all()) or (user in t.admins.all()):
-            res.append(t)
-        return res, None
-      else:
-        res = teams
-      return res, None
+      community = get_community_or_die(context, args)
+      user = get_user_or_die(context, args)
+      if community:
+        teams = Team.objects.filter(community=community)
+      elif user:
+        teams = user.team_set.all()
+      return teams, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
+
+  def team_stats(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      community = get_community_or_die(context, args)
+      teams = Team.objects.filter(community=community)
+      ans = []
+      for team in teams:
+        res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+        res["team"] = team.simple_json()
+        for m in team.members.all():
+          res["households"] += m.real_estate_units.count()
+          actions = m.useractionrel_set.all()
+          res["actions"] += len(actions)
+          res["actions_completed"] += actions.filter(**{"status":"DONE"}).count()
+          res["actions_todo"] += actions.filter(**{"status":"TODO"}).count()
+
+        ans.append(res)
+
+      return ans, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
@@ -82,7 +90,7 @@ class TeamStore:
 
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
+      
       community_id = args.pop('community_id', None)
       logo = args.pop('logo', None)
       team = Team.objects.filter(id=team_id)
@@ -171,15 +179,37 @@ class TeamStore:
       return None, InvalidResourceError()
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id = community_id)
-    return teams, None
-
-
-  def list_teams_for_super_admin(self):
+  def list_teams_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      teams = Team.objects.all()
+      if context.user_is_super_admin:
+        return self.list_teams_for_super_admin(context)
+
+      elif not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
+      community_id = args.pop('community_id', None)
+
+      if not community_id:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        comm_ids = [ag.community.id for ag in admin_groups]
+        teams = Team.objects.filter(community__id__in = comm_ids, is_deleted=False).select_related('logo', 'community')
+        return teams, None
+
+      teams = Team.objects.filter(community__id = community_id, is_deleted=False).select_related('logo', 'community')
       return teams, None
+
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+  def list_teams_for_super_admin(self, context: Context):
+    try:
+      if not context.user_is_super_admin:
+        return None, NotAuthorizedError()
+      teams = Team.objects.filter(is_deleted=False).select_related('logo', 'community')
+      return teams, None
+
     except Exception as e:
       print(e)
       return None, CustomMassenergizeError(str(e))

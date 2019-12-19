@@ -79,13 +79,8 @@ class Validator:
         else:
           if field_type == 'location':
             args[field_name] = parse_location(args)
-        
-        
-     
-          
 
       return args, None
 
     except Exception as e:
-      print(e)
       return None, CustomMassenergizeError(e)

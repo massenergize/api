@@ -18,11 +18,11 @@ class PolicyService:
       return None, err
     return serialize(policy, full=True), None
 
-  def list_policies(self, policy_id) -> (list, MassEnergizeAPIError):
-    policy, err = self.store.list_policies(policy_id)
+  def list_policies(self, context, args) -> (list, MassEnergizeAPIError):
+    policies, err = self.store.list_policies(context, args)
     if err:
       return None, err
-    return serialize(policy), None
+    return serialize_all(policies), None
 
 
   def create_policy(self, community_id, args) -> (dict, MassEnergizeAPIError):

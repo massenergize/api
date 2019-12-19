@@ -42,7 +42,6 @@ def parse_list(d):
     return res
 
   except Exception as e:
-    print(e)
     return []
 
 def parse_bool(b):
@@ -54,21 +53,18 @@ def parse_string(s):
   try:
     return str(s)
   except Exception as e:
-    print(e)
     return None
 
 def parse_int(b):
   try:
     return int(b)
   except Exception as e:
-    print(e)
     return 1
 
 def parse_date(d):
   try:
     return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d %H:%M'))
   except Exception as e:
-    print(e)
     return timezone.now()
 
 def rename_field(args, old_name, new_name):
