@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
+from django.forms.models import model_to_dict
 from database.utils.constants import SHORT_STR_LEN, TINY_STR_LEN
 from database.utils.common import  json_loader
 # Create your models here.
@@ -9,28 +10,34 @@ MED_STR_LEN = 200
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 
 class CarbonCalculatorMedia(models.Model):
-  """
-  A class used to represent any CarbonCalculatorMedia that is uploaded to this website
+    """
+    A class used to represent any CarbonCalculatorMedia that is uploaded to this website
 
-  Attributes
-  ----------
-  name : SlugField
-    The short name for this media.  It cannot only contain letters, numbers,
-    hypens and underscores.  No spaces allowed.
-  file : File
-    the file that is to be stored.
-  media_type: str
-    the type of this media file whether it is an image, video, pdf etc.
-  """
-  id = models.AutoField(primary_key=True)
-  file = models.FileField(upload_to='cc_media/')
-  is_deleted = models.BooleanField(default=False)
+    Attributes
+    ----------
+    name : SlugField
+        The short name for this media.  It cannot only contain letters, numbers,
+        hypens and underscores.  No spaces allowed.
+    file : File
+        the file that is to be stored.
+    media_type: str
+        the type of this media file whether it is an image, video, pdf etc.
+    """
+    id = models.AutoField(primary_key=True)
+    file = models.FileField(upload_to='cc_media/')
+    is_deleted = models.BooleanField(default=False)
 
-  def __str__(self):      
-    return self.file.name
+    def simple_json(self):
+        return model_to_dict(self)
 
-  class Meta:
-    db_table = "media_files_cc"
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):      
+        return self.file.name
+
+    class Meta:
+        db_table = "media_files_cc"
 
 
 class Action(models.Model):
@@ -54,6 +61,12 @@ class Action(models.Model):
     average_points = models.PositiveIntegerField(default=0)
     questions = JSONField(blank=True)    # list of questions by name
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
 
     def __str__(self):      
         return self.name
@@ -101,6 +114,12 @@ class Question(models.Model):
     response_6 = models.CharField(max_length=SHORT_STR_LEN, null=True)
     skip_6 = JSONField(blank=True, null=True)
 
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
     def __str__(self):      
         return self.name
 
@@ -114,6 +133,12 @@ class Station(models.Model):
     description = models.CharField(max_length=SHORT_STR_LEN)
     icon = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_station_icon')
     actions = JSONField(blank=True, null=True)
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
 
     def __str__(self):      
         return self.displayname
@@ -132,6 +157,12 @@ class Group(models.Model):
     points = models.PositiveIntegerField(default=0)
     savings = models.DecimalField(default=0.0,max_digits=10,decimal_places=2)
     
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
     def __str__(self):      
         return self.displayname
 
@@ -173,74 +204,106 @@ class CalcUser(models.Model):
     cost = models.IntegerField(default = 0)
     savings = models.IntegerField(default = 0)
 
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
     def __str__(self):
         return self.email
-
+#
     class Meta:
         db_table = 'user_profiles_cc' 
 
 class Event(models.Model):
-	id = models.AutoField(primary_key=True)
-	name = models.CharField(max_length=NAME_STR_LEN,unique=True)
-	displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
-	datetime = models.DateTimeField(blank=True)
-	location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-	stationslist = JSONField(null=True, blank=True)
-	groups = models.ManyToManyField(Group,blank=True)
-	host_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-	host_contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-	host_email = models.EmailField()
-	host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
-	host_url = models.URLField(blank=True)
-	host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-		null=True, blank=True, related_name='event_host_logo')
-	sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-	sponsor_url = models.URLField(blank=True)
-	sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-		null=True, blank=True, related_name='event_sponsor_logo')
-	attendees = models.ManyToManyField(CalcUser, blank=True)
-	
-	def __str__(self):
-		return self.displayname
-	
-	class Meta:
-		db_table = 'events_cc'
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=NAME_STR_LEN,unique=True)
+    displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
+    datetime = models.DateTimeField(blank=True)
+    location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+#    stations = models.ForeignKey(Station, on_delete=models.SET_NULL, 
+#        null=True, blank=True, related_name='cc_station_picture')
+    stationslist = JSONField(null=True, blank=True)
+    groups = models.ManyToManyField(Group,blank=True)
+    host_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    host_contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    host_email = models.EmailField()
+    host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
+    host_url = models.URLField(blank=True)
+    host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
+        null=True, blank=True, related_name='event_host_logo')
+    sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    sponsor_url = models.URLField(blank=True)
+    sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
+        null=True, blank=True, related_name='event_sponsor_logo')
+#   updated 11/24
+    attendees = models.ManyToManyField(CalcUser, blank=True)
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):      
+        return self.displayname
+
+    class Meta:
+        db_table = 'events_cc'
+
 
 class ActionPoints(models.Model):
-	"""Class to record choices made for actions - first from the Event Calculator and eventually from"""
-	id = models.AutoField(primary_key=True)
-	user = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
-	created_date = models.DateTimeField(auto_now_add=True)
+    """
+    Class to record choices made for actions - first from the Event Calculator and eventually from  
+    """
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
+    created_date = models.DateTimeField(auto_now_add=True)
+#
+    #action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.SET_NULL)
+    action = models.CharField(max_length=NAME_STR_LEN, blank=True)
+    choices = JSONField(blank=True)
+#    # how to put in the questions and answers?
+#
+    points = models.IntegerField(default = 0) 
+    cost = models.IntegerField(default = 0)
+    savings = models.IntegerField(default = 0)
 
-	#action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.SET_NULL)
-	action = models.CharField(max_length=NAME_STR_LEN, blank=True)
-	choices = JSONField(blank=True)
-	
-	# how to put in the questions and answers?
-	points = models.IntegerField(default = 0) 
-	cost = models.IntegerField(default = 0)
-	savings = models.IntegerField(default = 0)
+    def simple_json(self):
+        return model_to_dict(self)
 
-	def __str__(self):      
-		return "%s-%s-(%s)" % (self.action, self.user, self.created_date)
+    def full_json(self):
+        return self.simple_json()
+#        
+    def __str__(self):      
+        return "%s-%s-(%s)" % (self.action, self.user, self.created_date)
 
-	class Meta:
-		db_table = 'action_points_cc'
-    
+    class Meta:
+        db_table = 'action_points_cc'
+#
+#
 class CalcDefault(models.Model):
-	"""
-	Class to keep track of calculator assumptions by locality
+    """
+    Class to keep track of calculator assumptions by locality
 
-	"""
-	id = models.AutoField(primary_key=True)
-	variable = models.CharField(max_length=NAME_STR_LEN,blank=False)
-	locality = models.CharField(max_length=NAME_STR_LEN)
-	value = models.FloatField(default=0.0)
-	reference = models.CharField(max_length=MED_STR_LEN)
-	updated = models.DateTimeField(auto_now_add=True)
+    """
+    id = models.AutoField(primary_key=True)
+    variable = models.CharField(max_length=NAME_STR_LEN,blank=False)
+    locality = models.CharField(max_length=NAME_STR_LEN)
+    value = models.FloatField(default=0.0)
+    reference = models.CharField(max_length=MED_STR_LEN)
+    updated = models.DateTimeField(auto_now_add=True)
 
-	class Meta:
-		db_table = 'defaults_cc'
+    def simple_json(self):
+        return model_to_dict(self)
 
-	def __str__(self):
-		return "%s : %s = %.3f" % (self.locality,self.variable, self.value)
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):      
+        return "%s : %s = %.3f" % (self.locality,self.variable, self.value)
+
+    class Meta:
+        db_table = 'defaults_cc'
+

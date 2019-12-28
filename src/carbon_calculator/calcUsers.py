@@ -165,7 +165,7 @@ def CreateCalcUser(args):
 
             if groups != []:
                 for group in groups:
-                    group1 = Group.objects.filter(name=group)
+                    group1 = Group.objects.filter(name=group).first()
                     if group1:
                         newUser.groups.add(group1)
 
