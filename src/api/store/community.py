@@ -207,7 +207,7 @@ class CommunityStore:
       
       if not args.get('is_geographically_focused', False):
         args['location'] = None
-        
+
       community.update(**args)
 
       new_community = community.first()
