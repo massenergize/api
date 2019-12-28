@@ -425,7 +425,6 @@ class CalculatorAction:
         self.text = "" # "Explanation for the calculated results."
         self.picture = ""
 #
-#    def load(self,name):
         status, actionInfo = QuerySingleAction(self.name)
         if status == VALID_QUERY:
             self.description = actionInfo["description"]
