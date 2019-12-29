@@ -3,7 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
-from .utils import get_community, get_user, get_user_or_die, get_community_or_die
+from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities
 
 class UserStore:
   def __init__(self):
@@ -144,15 +144,14 @@ class UserStore:
       community, err = get_community(community_id)
 
       if not community and context.user_id:
-        user = UserProfile.objects.get(pk=context.user_id)
-        admin_groups = user.communityadmingroup_set.all()
-        comm_ids = [ag.community.id for ag in admin_groups]
-        users = [cm.user for cm in CommunityMember.objects.filter(user=user, community_id__in=comm_ids)]
+        communities, err =  get_admin_communities(context)
+        comm_ids = [c.id for c in communities]      
+        users = set(cm.user for cm in CommunityMember.objects.filter(community_id__in=comm_ids))
         return users, None
       elif not community:
         return [], None
 
-      users = CommunityMember.objects.filter(user=user, community=community, is_deleted=False)
+      users = CommunityMember.objects.filter(community=community, is_deleted=False)
       return users, None
     except Exception as e:
       print(e)

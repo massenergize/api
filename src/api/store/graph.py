@@ -38,6 +38,8 @@ class GraphStore:
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
+
+
   def graph_actions_completed(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
     try:
       subdomain = args.get('subdomain', None)
@@ -87,8 +89,6 @@ class GraphStore:
     households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
     actions_completed = UserActionRel.objects.filter(action__community__id=community.id, status="DONE").count()
     return {"community": {"id": community.id, "name": community.name}, "actions_completed": actions_completed, "households_engaged": households_engaged}
-
-  
 
 
   def _get_all_households_engaged(self):

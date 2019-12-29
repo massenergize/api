@@ -66,26 +66,29 @@ class VendorHandler(RouteHandler):
       args = context.get_request_body() 
       validator: Validator = Validator()
       (validator
-        .add("accepted_terms_and_conditions", bool)
-        .add("key_contact_name", str)
-        .add("key_contact_email", str)
-        .add("onboarding_contact_email", str)
-        .add("name", str)
-        .add("email", str)
-        .add("is_verified", str)
-        .add("phone_number", str)
-        .add("have_address", bool)
-        .add("is_verified", bool, is_required=False)
-        .add("communities", list, is_required=False)
-        .add("service_area_states", list, is_required=False)
-        .add("properties_serviced", list, is_required=False)
-        .add("tags", list, is_required=False)
+        .expect("accepted_terms_and_conditions", bool)
+        .expect("key_contact_name", str)
+        .expect("key_contact_email", str)
+        .expect("onboarding_contact_email", str)
+        .expect("name", str)
+        .expect("email", str)
+        .expect("phone_number", str)
+        .expect("have_address", bool)
+        .expect("is_verified", bool)
+        .expect("is_published", bool)
+        .expect("communities", list, is_required=False)
+        .expect("service_area_states", list, is_required=False)
+        .expect("properties_serviced", list, is_required=False)
+        .expect("image", "file", is_required=False)
+        .expect("tags", list, is_required=False)
+        .expect("location", "location", is_required=False)
       )
 
       args, err = validator.verify(args)
       if err:
         return err
 
+      print(args)
       if not args.pop('accepted_terms_and_conditions', False):
         return MassenergizeResponse(error="Please accept terms the Terms And Conditions to Proceed")
       
@@ -120,35 +123,38 @@ class VendorHandler(RouteHandler):
       args = context.get_request_body() 
       validator: Validator = Validator()
       (validator
-        .add("id", str)
-        .add("key_contact_name", str, is_required=False)
-        .add("key_contact_email", str, is_required=False)
-        .add("onboarding_contact_email", str, is_required=False)
-        .add("name", str, is_required=False)
-        .add("email", str, is_required=False)
-        .add("is_verified", str, is_required=False)
-        .add("phone_number", str, is_required=False)
-        .add("have_address", bool, is_required=False)
-        .add("is_verified", bool, is_required=False)
-        .add("communities", list, is_required=False)
-        .add("service_area_states", list, is_required=False)
-        .add("properties_serviced", list, is_required=False)
-        .add("tags", list, is_required=False)
+        .expect("vendor_id", int)
+        .expect("key_contact_name", str, is_required=False)
+        .expect("key_contact_email", str, is_required=False)
+        .expect("onboarding_contact_email", str, is_required=False)
+        .expect("name", str, is_required=False)
+        .expect("email", str, is_required=False)
+        .expect("is_verified", bool, is_required=False)
+        .expect("phone_number", str, is_required=False)
+        .expect("have_address", bool, is_required=False)
+        .expect("is_published", bool, is_required=False)
+        .expect("communities", list, is_required=False)
+        .expect("service_area_states", list, is_required=False)
+        .expect("properties_serviced", list, is_required=False)
+        .expect("tags", list, is_required=False)
+        .expect("image", "file", is_required=False)
+        .expect("location", "location", is_required=False)
       )
 
       args, err = validator.verify(args)
       if err:
         return err
 
-      args = parse_location(args)
+      args['key_contact'] = {}
+      key_contact_name = args.pop('key_contact_name', None)
+      key_contact_email = args.pop('key_contact_email', None)
+      if key_contact_name:
+        args['key_contact']["name"] = key_contact_name
+      if key_contact_email:
+        args['key_contact']["email"] = key_contact_email
 
-      args['key_contact'] = {
-        "name": args.pop('key_contact_name', None),
-        "email": args.pop('key_contact_email', None)
-      } 
 
-      vendor_id = args.pop("id", None)
-      vendor_info, err = self.service.update_vendor(vendor_id, args)
+      vendor_info, err = self.service.update_vendor(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)

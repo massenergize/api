@@ -25,15 +25,15 @@ class ActionService:
     return serialize_all(actions), None
 
 
-  def create_action(self, context: Context, community_id, args) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.create_action(context, community_id, args)
+  def create_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.create_action(context, args)
     if err:
       return None, err
     return serialize(action), None
 
 
-  def update_action(self, context: Context, action_id, args) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.update_action(context, action_id, args)
+  def update_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.update_action(context, args)
     if err:
       return None, err
     return serialize(action), None

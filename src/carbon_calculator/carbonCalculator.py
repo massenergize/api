@@ -119,7 +119,8 @@ class CarbonCalculator:
         for action in self.allActions:
             name = self.allActions[action].name
             description = self.allActions[action].description
-            actionList.append( {'name':name, 'description':description} )
+            id = self.allActions[action].id
+            actionList.append( {'id': id, 'name':name, 'description':description} )
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
@@ -412,7 +413,8 @@ class CarbonCalculator:
         return {"status":status}
 
 class CalculatorAction:
-    def __init__(self,name):       
+    def __init__(self,name):
+        self.id = None       
         self.name = name
         self.initialized = False
         self.description = "Action short description"
@@ -427,6 +429,7 @@ class CalculatorAction:
 #
         status, actionInfo = QuerySingleAction(self.name)
         if status == VALID_QUERY:
+            self.id = actionInfo["id"]
             self.description = actionInfo["description"]
             self.helptext = actionInfo["helptext"]
             self.questions = actionInfo["questionInfo"]    # question with list of valid responses.

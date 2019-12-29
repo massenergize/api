@@ -5,7 +5,7 @@ from django.utils.text import slugify
 import random
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_community_or_die
+from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
 class VendorStore:
   def __init__(self):
@@ -96,12 +96,14 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_vendor(self, vendor_id, args) -> (dict, MassEnergizeAPIError):
+  def update_vendor(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      vendor_id = args.pop('vendor_id', None)
       vendor = Vendor.objects.get(id=vendor_id)
       if not vendor:
         return None, InvalidResourceError()  
 
+      print(vendor)
       
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -110,22 +112,18 @@ class VendorStore:
       communities = args.pop('communities', [])
       if communities:
         vendor.communities.set(communities)
-      
+
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       if onboarding_contact_email:
         vendor.onboarding_contact_email = onboarding_contact_email
       
-      key_contact_full_name = args.pop('key_contact_full_name', None)
-      if key_contact_full_name:
-        if not vendor.key_contact:
-          vendor.key_contact = {}
-        vendor.key_contact["name"] = key_contact_full_name
-
-      key_contact_email = args.pop('key_contact_email', None)
-      if key_contact_email:
-        if not vendor.key_contact:
-          vendor.key_contact = {}
-        vendor.key_contact["email"] = key_contact_email
+  
+      key_contact = args.pop('key_contact', {})
+      if key_contact:
+        if vendor.key_contact:
+          vendor.key_contact.update(key_contact)
+        else:
+          vendor.key_contact = args.pop('key_contact', key_contact)
 
       image = args.pop('image', None)
       if image:
@@ -144,11 +142,11 @@ class VendorStore:
 
       vendor.save()
 
-
       updated = Vendor.objects.filter(id=vendor_id).update(**args)
       return vendor, None
 
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -188,8 +186,7 @@ class VendorStore:
 
       if not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
-        admin_groups = user.communityadmingroup_set.all()
-        communities = [ag.community for ag in admin_groups]
+        communities, err = get_admin_communities(context)
         vendors = None
         for c in communities:
           if vendors is not None:
@@ -197,7 +194,7 @@ class VendorStore:
           else:
             vendors = c.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
 
-        return vendors, None
+        return vendors.distinct(), None
 
       community = get_community_or_die(context, {'community_id': community_id})
       vendors = community.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')

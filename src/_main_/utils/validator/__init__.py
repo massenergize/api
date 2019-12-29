@@ -8,10 +8,11 @@ class Validator:
     self.rename_fields = set()
 
 
-  def expect(self, field_name, field_type=str, is_required=True):
+  def expect(self, field_name, field_type=str, is_required=True, options={}):
     self.fields[field_name] = {
       "type": field_type,
-      "is_required": is_required
+      "is_required": is_required,
+      "options": options
     }
     return self
 
@@ -67,7 +68,16 @@ class Validator:
         
         if field_name in args:
           if field_type == str:
-            args[field_name] = parse_string(args[field_name])
+            val = parse_string(args[field_name])
+            options = field_info.get("options", {})
+            min_length = options.get("min_length", None)
+            max_length = options.get("max_length", None)
+            if min_length and len(val) < min_length:
+              return None, CustomMassenergizeError(f"{field_name} must have at least {min_length} characters")
+            if max_length and len(val) > max_length:
+              return None, CustomMassenergizeError(f"{field_name} must have at most {max_length} characters")
+            args[field_name] = val
+            
           elif field_type == int:
             args[field_name] = parse_int(args[field_name])
           elif field_type == bool:
@@ -76,11 +86,19 @@ class Validator:
             args[field_name] = parse_list(args[field_name])
           elif field_type == 'date':
             args[field_name] = parse_date(args[field_name])
+          elif field_type == 'location':
+            parse_location(args)
+          elif field_type == 'file':
+            args[field_name] = args.get(field_name, None) or None
         else:
           if field_type == 'location':
-            args[field_name] = parse_location(args)
+            parse_location(args)
+          elif field_type == 'file':
+            args[field_name] =  args.get(field_name, None) or None
 
       return args, None
 
     except Exception as e:
+      import traceback
+      traceback.print_exc()
       return None, CustomMassenergizeError(e)

@@ -62,6 +62,9 @@ class Action(models.Model):
     questions = JSONField(blank=True)    # list of questions by name
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
 
+    def info(self):
+        return model_to_dict(self, ['id', 'name', 'description', 'average_points'])
+
     def simple_json(self):
         return model_to_dict(self)
 

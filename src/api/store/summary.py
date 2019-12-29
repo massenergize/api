@@ -32,7 +32,7 @@ class SummaryStore:
       upcoming_events = Event.objects.filter(community__id__in=comm_ids).count()
       teams_count = Team.objects.filter(community__id__in=comm_ids).count()
       testimonials_count = Testimonial.objects.filter(community__id__in=comm_ids).count()
-      users_count = CommunityMember.objects.filter(community__id__in=comm_ids).values('user').count()
+      users_count = CommunityMember.objects.filter(community__id__in=comm_ids).values('user').distinct().count()
 
 
       summary = [
