@@ -15,7 +15,7 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = False
+IS_PROD = True
 
 DEPLOY_VERSION = '0.7.8'
 RELEASE_NOTES = 'New routes for community Portal.  Fixed actions.list bug for community portal'
@@ -24,8 +24,8 @@ RELEASE_NOTES = 'New routes for community Portal.  Fixed actions.list bug for co
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-# path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-path_to_config = '/_main_/config/massenergizeProjectConfig.json'
+path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
+# path_to_config = '/_main_/config/massenergizeProjectConfig.json'
 CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
 os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
@@ -34,7 +34,8 @@ os.environ.update(CONFIG_DATA)
 SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = not IS_PROD
+# DEBUG = not IS_PROD
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -161,7 +162,7 @@ DATABASES = {
     },
     'local-default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres',
+        'NAME': 'postgres2',
         'USER': 'Brad',
         'PASSWORD': '',
         'HOST': 'localhost',
