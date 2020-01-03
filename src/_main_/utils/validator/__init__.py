@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location
+from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, resize_image
 
 class Validator:
 
@@ -37,7 +37,7 @@ class Validator:
     return self
 
   def rename(self, old_name, new_name):
-    self.rename_fields.add((old_name, new_name))
+    self.rename_fields.add((old_name, new_name)) 
     return self
 
 

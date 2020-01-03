@@ -4,7 +4,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
 from datetime import datetime
-
+import cv2
 
 def get_request_contents(request):
   try:
@@ -113,6 +113,32 @@ def parse_location(args):
   }
   args['location'] = location
   return args
+
+def extract_location(args):
+  location = {
+    "address": args.pop("address", None),
+    "unit": args.pop("unit", None),
+    "city": args.pop("city", None),
+    "state": args.pop("state", None),
+    "zipcode": args.pop("zipcode", None),
+    "country": args.pop("country", 'United States of America'),
+  }
+  
+  return location
+
+
+def resize_image(img, options={}):
+  if options.get("is_logo", False):
+    size = options.get("size", 500)
+    width = options.get("width", 250)
+    height = options.get("height", 100)
+    dimension = (width, height)
+    new_img = cv2.resize(img, dsize=size, dim=dimension, interpolation = cv2.INTER_AREA)
+    return new_img
+  else:
+    size = options.get("size", 500)
+    new_img = cv2.resize(img, dsize=size, interpolation = cv2.INTER_AREA)
+    return new_img
 
 
 def _common_name(s):

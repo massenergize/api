@@ -121,6 +121,7 @@ class VendorHandler(RouteHandler):
     def update_vendor_view(request) -> None: 
       context: Context  = request.context
       args = context.get_request_body() 
+      args = rename_field(args, 'id', 'vendor_id')
       validator: Validator = Validator()
       (validator
         .expect("vendor_id", int)
