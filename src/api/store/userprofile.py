@@ -32,7 +32,7 @@ class UserStore:
       name = args.pop('name', None)
       unit_type=args.pop('unit_type', None)
       location=args.pop('location', None)
-      community = args.pop('community_id', None)
+      community = args.pop('community_id', None) or args.pop('community', None) 
 
       new_unit = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
       new_unit.save()
@@ -203,19 +203,8 @@ class UserStore:
       if completed:
         #TODO: update action stats
         completed.update(status="TODO")
-        print(completed)
         return completed.first(), None
  
-      # update all data points
-      for t in action.tags.all():
-        data = Data.objects.filter(community=action.community, tag=t)
-        if data:
-          data.update(value=F("value")+1) #we never want to go negative
-
-        else:
-          #data for this community, action does not exist so create one
-          d = Data(tag=t, community=action.community, value=1, name=f"{t.name}")
-          d.save()
       
       # create a new one since we didn't find it existed before
       new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="TODO")
@@ -230,8 +219,6 @@ class UserStore:
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(str(e))
-
-
 
   def add_action_completed(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:

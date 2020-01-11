@@ -56,7 +56,7 @@ class GraphStore:
         if not community.is_published:
           return None, CustomMassenergizeError("Content Available Yet")
 
-      graph = Graph.objects.prefetch_related('data').select_related('community').filter(community=community, title="Number of Actions Completed").first()
+      graph = Graph.objects.prefetch_related('data').select_related('community').filter(community=community, title="Number of Actions Completed by Category").first()
       if not graph:
         graph = Graph.objects.create(community=community, title="Number of Actions Completed")
         graph.save()
@@ -65,7 +65,6 @@ class GraphStore:
       for t in category.tag_set.all():
         d = Data.objects.filter(tag=t, community=community).first()
         if not d:
-          print(t, community)
           d = Data.objects.create(tag=t, community=community, name=f"{t.name}", value=0)
           if not d.pk:
             d.save()

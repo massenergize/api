@@ -291,7 +291,7 @@ class Community(models.Model):
 
     # get the community goal
     goal = get_json_if_not_none(self.goal) or {}
-    solar_actions_count = Data.objects.get(name="Solar", community=self).reported_value
+    solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
     goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count() + solar_actions_count)
     goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self).count() + solar_actions_count)
 
@@ -1403,7 +1403,7 @@ class Data(models.Model):
   reported_value =  models.PositiveIntegerField(default=0)
   denominator =  models.CharField(max_length = SHORT_STR_LEN, blank=True)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
-  tag = models.ForeignKey(Tag, blank=True, on_delete=models.SET_NULL, 
+  tag = models.ForeignKey(Tag, blank=True, on_delete=models.CASCADE, 
     null=True, db_index=True )
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
@@ -1905,8 +1905,8 @@ class HomePageSettings(models.Model):
 
   def full_json(self):
     goal = get_json_if_not_none(self.community.goal) or {}
-    solar_actions_count = Data.objects.get(name="Solar", community=self.community).reported_value
-    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count() + solar_actions_count)
+    solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
+    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
     goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self.community).count() + solar_actions_count)
 
     res =  self.simple_json()
@@ -2195,19 +2195,3 @@ class Deployment(models.Model):
     db_table = 'deployments'
     ordering = ('-version',)
 
-class TagData(models.Model):
-  id = models.AutoField(primary_key=True)
-  tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-  data = models.ForeignKey(Data, on_delete=models.CASCADE)
-
-  def __str__(self):
-    return f"{tag} - {data}"
-
-  def simple_json(self):
-    return  model_to_dict(self)
-
-  def full_json(self):
-    return self.simple_json()
-
-  class Meta:
-    db_table = 'tag_data'

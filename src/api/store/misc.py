@@ -1,4 +1,4 @@
-from database.models import Community, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel
+from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -17,8 +17,9 @@ class MiscellaneousStore:
   def backfill(self, context: Context, args) -> (list, CustomMassenergizeError):
     # return self.backfill_teams(context, args)
     # return self.backfill_community_members(context, args)
-    # return self.backfill_graph_default_data(context, args)
-    return self.backfill_real_estate_units(context, args)
+    return self.backfill_graph_default_data(context, args)
+    # return self.backfill_real_estate_units(context, args)
+    # return self.backfill_tag_data(context, args)
 
   def backfill_teams(self, context: Context, args) -> (list, CustomMassenergizeError):
     try:
@@ -105,7 +106,6 @@ class MiscellaneousStore:
         user_action.real_estate_unit.unit_type = (user_action.real_estate_unit.unit_type or 'residential').lower()
         user_action.real_estate_unit.save()
         if not user_action.real_estate_unit.community:
-          print(user_action.real_estate_unit)
           user_action.real_estate_unit.delete()
 
       return {'backfill_real_estate_units': 'done'}, None
@@ -117,15 +117,15 @@ class MiscellaneousStore:
 
   def backfill_tag_data(self, context: Context, args):
     try:
-      for user_action in UserActionRel.objects.all():
-        print(user_action.real_estate_unit, user_action.action.community)
-        if not user_action.real_estate_unit.community:
-          user_action.real_estate_unit.community = user_action.action.community
-        user_action.real_estate_unit.unit_type = (user_action.real_estate_unit.unit_type or 'residential').lower()
-        user_action.real_estate_unit.save()
-        if not user_action.real_estate_unit.community:
-          print(user_action.real_estate_unit)
-          user_action.real_estate_unit.delete()
+      for data in Data.objects.all():
+        if data.tag and data.tag.name == "Lighting":
+          home_energy_data = Data.objects.filter(community=data.community, tag__name="Home Energy").first()
+          print(data, home_energy_data)
+          if home_energy_data:
+            home_energy_data.value += data.value
+            home_energy_data.reported_value += data.reported_value
+            home_energy_data.save()
+            data.delete()
 
       return {'backfill_real_estate_units': 'done'}, None
 

@@ -61,6 +61,7 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       user_email = args.pop('user_email', None)
+      args["title"] = args.get("title", "Thank You")[:100]
      
       new_testimonial = Testimonial.objects.create(**args)
 
