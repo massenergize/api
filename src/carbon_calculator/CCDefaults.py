@@ -5,12 +5,18 @@ import csv
 
 def getLocality(inputs):
     id = inputs.get("user_id","")
+    community = inputs.get("community","")
     #userID = inputs.get("user_id","")
     locality = "default"
+    
     if id != "":
         user = CalcUser.objects.filter(id=id).first()
         if user:
             locality = user.locality
+
+    elif community != "":
+        locality = community
+
     return locality
 
 
