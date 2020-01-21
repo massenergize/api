@@ -86,7 +86,7 @@ class GraphStore:
 
   def _get_households_engaged(self, community: Community):
     households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
-    actions_completed = UserActionRel.objects.filter(action__community__id=community.id, status="DONE").count()
+    actions_completed = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").count()
     return {"community": {"id": community.id, "name": community.name}, "actions_completed": actions_completed, "households_engaged": households_engaged}
 
 
@@ -95,7 +95,7 @@ class GraphStore:
     actions_completed = UserActionRel.objects.filter(status="DONE").count()
     return {"community": {"id": 0, "name": 'Other'}, "actions_completed": actions_completed, "households_engaged": households_engaged}
 
-  
+
   def graph_communities_impact(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
     try:
       subdomain = args.get('subdomain', None)

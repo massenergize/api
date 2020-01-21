@@ -291,9 +291,10 @@ class Community(models.Model):
 
     # get the community goal
     goal = get_json_if_not_none(self.goal) or {}
-    solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
-    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count() + solar_actions_count)
-    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self).count() + solar_actions_count)
+    # decision not to include state reported solar in this total
+    #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
+    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count())
+    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
     return {
       "id": self.id,
@@ -1905,10 +1906,11 @@ class HomePageSettings(models.Model):
 
   def full_json(self):
     goal = get_json_if_not_none(self.community.goal) or {}
-    solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
+    # decision not to include state reported solar
+    #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
     goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self.community).count() + solar_actions_count)
-
+    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").count())
+  
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     res['community'] = get_json_if_not_none(self.community)

@@ -1330,13 +1330,16 @@ def communities_stats(request):
     ans = []
     for community in communities:
       res = {"households_engaged": 0, "actions_completed": 0, "users_engaged":0}
-      res["community"] = community.simple_json();
+      res["community"] = community.simple_json()
       users, errors = FETCH.all(UserProfile, {"communities": community.id})
-      res["users_engaged"] = len(users);
-      for user in users:
-        actions_completed, errors = FETCH.all(UserActionRel, {"user": user.id, "status": "DONE"})
-        res["actions_completed"] += len(actions_completed)
-        res["households_engaged"] += len(user.real_estate_units.all())
+      res["users_engaged"] = len(users)
+
+      # changed to fix graph inconsistencies
+      communityData = community.full_json()
+      communityGoal = communityData["goal"]
+      res["households_engaged"] = communityGoal["attained_number_of_households"]
+      res["actions_completed"] = communityGoal["attained_number_of_actions"]
+    
       ans.append(res)
   return Json(ans, errors, do_not_serialize=True)
 
@@ -1351,10 +1354,13 @@ def community_stats(request, cid):
       res["community"] = community.simple_json();
       users, errors = FETCH.all(UserProfile, {"communities": community.id})
       res["users_engaged"] = len(users);
-      for user in users:
-        actions_completed, errors = FETCH.all(UserActionRel, {"user": user.id, "status": "DONE"})
-        res["actions_completed"] += len(actions_completed)
-        res["households_engaged"] += len(user.real_estate_units.all())
+
+      # changed to fix graph inconsistencies
+      communityData = community.full_json()
+      communityGoal = communityData["goal"]
+      res["households_engaged"] = communityGoal["attained_number_of_households"]
+      res["actions_completed"] = communityGoal["attained_number_of_actions"]
+
       return Json(res, errors, do_not_serialize=True)
   return Json(None)
 
