@@ -32,13 +32,14 @@ class UserStore:
       name = args.pop('name', None)
       unit_type=args.pop('unit_type', None)
       location=args.pop('location', None)
-      community = args.pop('community_id', None) or args.pop('community', None) 
+      communityId = args.pop('community_id', None) or args.pop('community', None) 
 
       new_unit = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
       new_unit.save()
 
       user.real_estate_units.add(new_unit)
-      if community:
+      if communityId:
+        community = Community.objects.get(id=communityId)
         new_unit.community = community
 
       new_unit.save()

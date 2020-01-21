@@ -211,9 +211,10 @@ class CommunityStore:
       community.update(**args)
 
       new_community = community.first()
-      if logo and new_community.logo:
-        # new_community.logo.file = logo
-        # new_community.logo.save()
+      # if logo and new_community.logo:   # can't update the logo if the community doesn't have one already?
+      #  # new_community.logo.file = logo
+      #  # new_community.logo.save()
+      if logo:   
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
         new_community.logo = cLogo
