@@ -32,8 +32,8 @@ class VendorService:
     return serialize(vendor), None
 
 
-  def update_vendor(self, vendor_id, args) -> (dict, MassEnergizeAPIError):
-    vendor, err = self.store.update_vendor(vendor_id ,args)
+  def update_vendor(self, context, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.update_vendor(context ,args)
     if err:
       return None, err
     return serialize(vendor), None

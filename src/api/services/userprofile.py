@@ -29,6 +29,12 @@ class UserService:
       return None, err
     return serialize(household, full=True), None
 
+  def remove_household(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+    household, err = self.store.remove_household(context, args)
+    if err:
+      return None, err
+    return household, None
+
   def list_users(self, community_id) -> (list, MassEnergizeAPIError):
     user, err = self.store.list_users(community_id)
     if err:
@@ -56,44 +62,32 @@ class UserService:
 
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.create_user(context, args)
+    res, err = self.store.create_user(context, args)
     if err:
       return None, err
-    #send email here import the create user email function and hopefully that works
-
-    subject = 'Welcome to the MassEnergize Movement'
-    community = 'your community'
-    homelink = COMMUNITY_URL_ROOT
-    logo = 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
-    actionslink = homelink
-    eventslink = homelink
-    serviceslink = homelink
-    privacylink = homelink
-    if len(user.communities.all()) > 0: 
-      community = user.communities.all()[0]
-      subject = 'Welcome to %s' %(community)
-      homelink = '%s/%s' %(COMMUNITY_URL_ROOT, community)
-      l = community.logo
-      if l and l.file:
-        logo = l.file.url
-      actionslink = '%s/actions' %(homelink)
-      eventslink = '%s/events' %(homelink)
-      serviceslink = '%s/services' %(homelink)
-      privacylink = "{0}/policies?name=Privacy%20Policy".format(homelink)
+    
+    community = res["community"]
+    user = res["user"]
+    community_name =  community.name if community else "Global Massenergize Community"
+    community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+    subdomain =   community.subdomain if community else "global"
+    subject = f'Welcome to Massenergize, {community_name}'
+    homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
     
     content_variables = {
       'name': user.preferred_name,
-      'community': community,
-      'homelink':homelink,
-      'logo':logo,
-      'actionslink':actionslink,
-      'eventslink':eventslink,
-      'serviceslink':serviceslink,
-      'privacylink':privacylink
+      'community': community_name,
+      'homelink': homelink,
+      'logo': community_logo,
+      'actionslink':f'{homelink}/actions',
+      'eventslink':f'{homelink}/events',
+      'serviceslink': f'{homelink}/services',
+      'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
       }
+    
     send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables)
 
-    return serialize(user), None
+    return serialize(user, full=True), None
 
 
   def update_user(self, args) -> (dict, MassEnergizeAPIError):

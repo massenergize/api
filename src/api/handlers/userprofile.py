@@ -206,7 +206,7 @@ class UserHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
 
-      user_info, err = self.service.get_user_info(context, args)
+      user_info, err = self.service.remove_household(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

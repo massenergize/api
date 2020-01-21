@@ -47,45 +47,56 @@ class TagCollectionStore:
 
 
   def update_tag_collection(self, tag_collection_id, args) -> (dict, MassEnergizeAPIError):
-    
     try:
       tag_collection = TagCollection.objects.filter(id=tag_collection_id).first()
       if not tag_collection:
         return None, InvalidResourceError()
 
-      tags = Tag.objects.filter(tag_collection__id=tag_collection.id)
       name = args.pop('name', None)
-      rank = args.pop('rank', None)
-      tags_to_add = args.pop('tags_to_add', '').split(', ')
-      tags_to_delete = args.pop('tags_to_delete', '').split(', ')
-
       if name:
         tag_collection.name = name
 
+      rank = args.pop('rank', None)
       if rank:
         tag_collection.rank = rank
 
+      tags = Tag.objects.filter(tag_collection=tag_collection)
       for (k,v) in args.items():
         if k.startswith('tag_') and not k.endswith('_rank'):
-          tag_id = int(k.split('_')[-1])
+          tag_id = int(k.split('_')[1])
           tag = tags.filter(id=tag_id).first()
+          
           if tag:
-            tag.name = v
+            if not tag.name.strip():
+              tag.delete()
+              continue
+            tag.name = v.strip()
             tag.save()
-        if k.startswith('tag_') and k.endswith('_rank'):
+        elif k.startswith('tag_') and k.endswith('_rank'):
           tag_id = int(k.split('_')[1])
           tag = tags.filter(id=tag_id).first()
           if tag:
+            if not tag.name.strip():
+              tag.delete()
+              continue
+
             tag.rank = v
             tag.save()
 
-      for i in range(len(tags_to_add)):
-        t = tags_to_add[i]
-        tag = Tag.objects.create(name=t.title(), tag_collection=tag_collection, rank=len(tags)+i+1)
-        tag.save()
+      tags_to_add = args.pop('tags_to_add', '')
+      if tags_to_add:
+        tags_to_add = tags_to_add.strip().split(',')
+        for i in range(len(tags_to_add)):
+          t = tags_to_add[i]
+          tag = Tag.objects.create(name=t.strip().title(), tag_collection=tag_collection, rank=len(tags)+i+1)
+          tag.save()
 
-      for t in tags_to_delete:
-        Tag.objects.filter(name=t.title(), tag_collection=tag_collection).delete()
+
+      tags_to_delete = args.pop('tags_to_delete', '')
+      if tags_to_delete: 
+        tags_to_delete = [t.strip() for t in tags_to_delete.split(',')]
+        ts = tags.filter(name__in=tags_to_delete)
+        ts.delete()
 
       tag_collection.save()
       return tag_collection, None

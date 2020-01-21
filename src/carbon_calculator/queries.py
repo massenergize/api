@@ -189,7 +189,7 @@ def QuerySingleAction(name):
             if q.picture:
                 picture = q.picture.file.url
 
-            return VALID_QUERY, {"name":q.name, "description":q.description, "helptext":q.helptext, "questionInfo":questionInfo, \
+            return VALID_QUERY, {"id": q.pk, "name":q.name, "description":q.description, "helptext":q.helptext, "questionInfo":questionInfo, \
                                 "average_points":q.average_points, "picture":picture}
         else:
             print("ERROR: Action "+name+" was not found")

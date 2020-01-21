@@ -8,9 +8,6 @@ from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 
-#TODO: install middleware to catch authz violations
-#TODO: add logger
-
 class TeamHandler(RouteHandler):
 
   def __init__(self):
@@ -27,12 +24,13 @@ class TeamHandler(RouteHandler):
     self.add("/teams.update", self.update())
     self.add("/teams.delete", self.delete())
     self.add("/teams.remove", self.delete())
-    self.add("/teams.leave", self.leave())
-    self.add("/teams.join", self.join())
-    self.add("/teams.addAdmin", self.add_admin())
-    self.add("/teams.removeAdmin", self.remove_admin())
+    self.add("/teams.leave", self.remove_member())
+    self.add("/teams.join", self.add_member())
+    self.add("/teams.addMember", self.add_member())
+    self.add("/teams.removeMember", self.remove_member())
     self.add("/teams.messageAdmin", self.message_admin())
     self.add("/teams.contactAdmin", self.message_admin())
+    self.add("/teams.members", self.members())
 
     #admin routes
     self.add("/teams.listForCommunityAdmin", self.community_admin_list())
@@ -136,31 +134,25 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(data=team_info)
     return leave_team_view
 
-  def add_admin(self) -> function:
-    def add_team_admin_view(request) -> None: 
+  def add_member(self) -> function:
+    def add_team_member_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      team_id = args.pop('team_id', None)
-      user_id = args.pop('user_id', None)
-      new_admin_email = args.pop('email', None)
-      team_info, err = self.team.add_team_admin(team_id, user_id, new_admin_email)
+      team_info, err = self.team.add_member(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
-    return add_team_admin_view
+    return add_team_member_view
 
-  def remove_admin(self) -> function:
-    def remove_team_admin_view(request) -> None: 
+  def remove_member(self) -> function:
+    def remove_member_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      team_id = args.pop('team_id', None)
-      user_id = args.pop('user_id', None)
-      new_admin_email = args.pop('email', None)
-      team_info, err = self.team.remove_team_admin(team_id, user_id, new_admin_email)
+      team_info, err = self.team.remove_team_member(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)
-    return remove_team_admin_view
+    return remove_member_view
 
 
 
@@ -168,12 +160,21 @@ class TeamHandler(RouteHandler):
     def message_team_admin_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      team_id = args.pop('team_id', None)
-      user_id = args.pop('user_id', None)
-      message = args.pop('message', None)
-      #TODO: implement actual sending of message
-      return MassenergizeResponse()
+      team_info, err = self.team.message_admin(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_info)      
     return message_team_admin_view
+
+  def members(self) -> function:
+    def members_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      team_members_info, err = self.team.members(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_members_info)
+    return members_view
 
 
   def community_admin_list(self) -> function:
