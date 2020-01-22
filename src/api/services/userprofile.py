@@ -29,6 +29,12 @@ class UserService:
       return None, err
     return serialize(household, full=True), None
 
+  def edit_household(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+    household, err = self.store.edit_household(context, args)
+    if err:
+      return None, err
+    return serialize(household, full=True), None
+
   def remove_household(self,context: Context, args) -> (dict, MassEnergizeAPIError):
     household, err = self.store.remove_household(context, args)
     if err:

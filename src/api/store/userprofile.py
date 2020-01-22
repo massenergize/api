@@ -48,6 +48,33 @@ class UserStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
+  def edit_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+      name = args.pop('name', None)
+      household_id = args.get('household_id', None)
+      unit_type=args.pop('unit_type', None)
+      location=args.pop('location', None)
+      communityId = args.pop('community_id', None) or args.pop('community', None) 
+
+      if not household_id:
+        return None, CustomMassenergizeError("Please provide household_id")
+
+      new_unit = RealEstateUnit.objects.get(pk=household_id)
+      new_unit.name = name
+      new_unit.unit_type = unit_type
+      new_unit.location = location
+
+      if communityId:
+        community = Community.objects.get(id=communityId)
+        new_unit.community = community
+
+      new_unit.save()
+
+      return new_unit, None
+    except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
   def list_households(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       user = get_user_or_die(context, args)
