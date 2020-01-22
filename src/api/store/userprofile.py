@@ -105,6 +105,9 @@ class UserStore:
       email = args.get('email', None) 
       subdomain = args.pop('subdomain', None)
 
+      # allow home address to be passed in
+      location = args.pop('location', '')
+
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
       
@@ -128,7 +131,7 @@ class UserStore:
             CommunityMember.objects.create(user=new_user, community=community)
 
             #create their first household
-            household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community)
+            household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
             new_user.real_estate_units.add(household)
       
       global_community = Community.objects.filter(subdomain="global").first()
