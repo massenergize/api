@@ -1,28 +1,86 @@
-from database.models import Community, UserProfile, Media, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from django.db.models import Q
+from .utils import get_community_or_die, get_user_or_die
+import random 
 
 class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
 
-  def get_community_info(self, args) -> (dict, MassEnergizeAPIError):
+  def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      community = Community.objects.filter(**args).first()
+      subdomain = args.get('subdomain', None)
+      community_id = args.get('id', None)
+
+      if not community_id and not subdomain:
+        return None, CustomMassenergizeError("Missing community_id or subdomain field")
+
+      community: Community = Community.objects.select_related('logo', 'goal').filter(Q(pk=community_id)| Q(subdomain=subdomain)).first()
       if not community:
         return None, InvalidResourceError()
+
+      
+      if context.is_prod and not community.is_published and not context.user_is_admin():
+          return None, InvalidResourceError()
+
       return community, None
     except Exception as e:
+      return None, CustomMassenergizeError(e)
+
+
+  def join_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      context.logger.add_trace('join_community')
+      community = get_community_or_die(context, args)
+      user = get_user_or_die(context, args)
+      user.communities.add(community)
+      user.save()
+
+      community_member: CommunityMember = CommunityMember.objects.filter(community=community, user=user).first()
+      if not community_member:
+        community_member = CommunityMember.objects.create(community=community, user=user, is_admin=False)
+
+      context.logger.log({
+        "user": user,
+        "community": community,
+      })
+      return user, None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+  def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      context.logger.add_trace('join_community')
+      community = get_community_or_die(context, args)
+      user = get_user_or_die(context, args)
+      user.communities.remove(community)
+      user.save()
+
+      community_member: CommunityMember = CommunityMember.objects.filter(community=community, user=user).first()
+      if not community_member or (not community_member.is_admin):
+        print(community_member)
+        community_member.delete()
+        
+      context.logger.log({
+        "user": user,
+        "community": community,
+      })
+      return user, None
+    except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(e)
 
 
   def list_communities(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       if context.is_dev:
-        communities = Community.objects.filter(is_deleted=False, is_approved=True)
+        communities = Community.objects.filter(is_deleted=False, is_approved=True).exclude(subdomain='template')
       else:
-        communities = Community.objects.filter(is_deleted=False, is_approved=True, is_published=True)
+        communities = Community.objects.filter(is_deleted=False, is_approved=True, is_published=True).exclude(subdomain='template')
 
       if not communities:
         return [], None
@@ -35,6 +93,10 @@ class CommunityStore:
     try:
       logo = args.pop('logo', None)
       new_community = Community.objects.create(**args)
+
+      have_address = args.get('is_geographically_focused', False)
+      if not have_address:
+        args['location'] = None
 
       if logo:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
@@ -115,6 +177,21 @@ class CommunityStore:
         if owner:
           comm_admin.members.add(owner)
           comm_admin.save()
+
+      
+      #also clone all global actions for this community
+      global_actions = Action.objects.filter(is_global=True)
+      for action_to_copy in global_actions:
+        old_tags = action_to_copy.tags.all()
+        old_vendors = action_to_copy.vendors.all()
+        new_action = action_to_copy
+        new_action.pk = None
+        new_action.community = None
+        new_action.is_published = False
+        new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
+        new_action.save()
+        new_action.tags.set(old_tags)
+        new_action.vendors.set(old_vendors)
       
       return new_community, None
     except Exception as e:
@@ -128,12 +205,16 @@ class CommunityStore:
       if not community:
         return None, InvalidResourceError()
       
+      if not args.get('is_geographically_focused', False):
+        args['location'] = None
+
       community.update(**args)
 
       new_community = community.first()
-      if logo and new_community.logo:
-        # new_community.logo.file = logo
-        # new_community.logo.save()
+      # if logo and new_community.logo:   # can't update the logo if the community doesn't have one already?
+      #  # new_community.logo.file = logo
+      #  # new_community.logo.save()
+      if logo:   
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
         new_community.logo = cLogo
@@ -187,4 +268,15 @@ class CommunityStore:
       communities = Community.objects.filter(is_deleted=False)
       return communities, None
     except Exception as e:
+      return None, CustomMassenergizeError(str(e))
+
+
+  def get_graphs(self, context, community_id):
+    try:
+      if not community_id:
+        return [], None
+      graphs = Graph.objects.filter(is_deleted=False, community__id=community_id)
+      return graphs, None
+    except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(str(e))

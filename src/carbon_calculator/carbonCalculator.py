@@ -3,7 +3,7 @@
 #
 #imports
 from datetime import date,datetime
-from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia
+from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia, CalcUser
 from django.utils import timezone
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
@@ -16,7 +16,7 @@ from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
 from .CCDefaults import getDefault, CCD
 from .queries import QuerySingleAction, QueryAllActions
 from .homeHeating import EvalEnergyAudit, EvalWeatherization, EvalProgrammableThermostats, EvalAirSourceHeatPump, \
-                        EvalGroundSourceHeatPump, EvalHeatingSystemAssessment
+                        EvalGroundSourceHeatPump, EvalHeatingSystemAssessment, EvalEfficientBoilerFurnace
 from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLighting, EvalEnergystarRefrigerator, \
                         EvalEnergystarWasher, EvalInductionStove, EvalHeatPumpDryer, EvalColdWaterWash, EvalLineDry, \
                         EvalRefrigeratorPickup, EvalSmartPowerStrip, EvalElectricityMonitor
@@ -25,6 +25,7 @@ from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolar
 from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
+from .calcUsers import ExportCalcUsers
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -73,8 +74,8 @@ class CarbonCalculator:
                         'hw_assessment':HotWaterAssessment,
                         'hp_water_heater':HeatPumpWaterHeater,
                         'solar_assessment':SolarAssessment,
-                        'install_solarHW':InstallSolarPV,
-                        'install_solarPV':InstallSolarHW,
+                        'install_solarPV':InstallSolarPV,
+                        'install_solarHW':InstallSolarHW,
                         'energystar_fridge':EnergystarRefrigerator,
                         'energystar_washer':EnergystarWasher,
                         'induction_stove':InductionStove,
@@ -118,7 +119,8 @@ class CarbonCalculator:
         for action in self.allActions:
             name = self.allActions[action].name
             description = self.allActions[action].description
-            actionList.append( {'name':name, 'description':description} )
+            id = self.allActions[action].id
+            actionList.append( {'id': id, 'name':name, 'description':description} )
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
@@ -138,15 +140,51 @@ class CarbonCalculator:
         else:    
             return queryFailed
 
+    def Undo(self, action, inputs):
+# inputs is a dictionary of input parameters
+        queryFailed = {'status':INVALID_QUERY}
+        if action in self.allActions:
+            user_id = inputs.pop("user_id",None)
+            if user_id:           
+                records = ActionPoints.objects.filter(user_id=user_id)
+                if records:
+                    record = records.objects.filter(action=action)
+                    if record:
+                        points = record.points
+                        cost = record.cost
+                        savings = record.savings
+                        record.delete()
+
+                        user = CalcUser.objects.filter(id=user_id).first()
+                        if user:
+                            user.points -= points
+                            user.cost -= cost
+                            user.savings -= savings
+                            user.save()
+                            
+                        return {'status':VALID_QUERY}
+        return queryFailed
+
     def RecordActionPoints(self,action, inputs,results):
-        user_id = inputs.pop("UserID",None)            
+        user_id = inputs.pop("user_id",None)  
+        points = results.get("carbon_points",0.) 
+        cost = results.get("cost",0.)
+        savings = results.get("savings",0.)         
         record = ActionPoints(  user_id=user_id,
                                 action=action,
                                 choices=inputs,
-                                points=results.get("carbon_points",0),
-                                cost= results.get("cost",0),
-                                savings = results.get("savings",0))
+                                points=points,
+                                cost= cost,
+                                savings = savings)
         record.save()
+
+        user = CalcUser.objects.filter(id=user_id).first()
+        if user:
+            user.points += points
+            user.cost += cost
+            user.savings += savings
+            user.save()
+
         return results
 
     def Reset(self,inputs):
@@ -367,11 +405,16 @@ class CarbonCalculator:
         defaultsFile = inputs.get('Defaults','')
         if defaultsFile!='':
             status = CCD.exportDefaults(CCD, defaultsFile)
-        
+
+        usersFile = inputs.get('Users','')
+        if usersFile!='':
+            event = inputs.get('Event','')
+            status = ExportCalcUsers(usersFile, event)
         return {"status":status}
 
 class CalculatorAction:
-    def __init__(self,name):       
+    def __init__(self,name):
+        self.id = None       
         self.name = name
         self.initialized = False
         self.description = "Action short description"
@@ -384,16 +427,16 @@ class CalculatorAction:
         self.text = "" # "Explanation for the calculated results."
         self.picture = ""
 #
-#    def load(self,name):
         status, actionInfo = QuerySingleAction(self.name)
         if status == VALID_QUERY:
+            self.id = actionInfo["id"]
             self.description = actionInfo["description"]
             self.helptext = actionInfo["helptext"]
             self.questions = actionInfo["questionInfo"]    # question with list of valid responses.
             self.average_points = actionInfo["average_points"]
             self.picture = actionInfo["picture"]
             self.initialized = True
-            
+
     def Query(self):
         status, actionInfo = QuerySingleAction(self.name)
         return {"status":status, "action":actionInfo}
@@ -407,6 +450,7 @@ class EnergyFair(CalculatorAction):
     # inputs: attend_fair,own_rent,fuel_assistance,activity_group
     def Eval(self, inputs):
         self.points = 0
+        self.text = "You didn't attend the energy fair.  No points earned."
         if inputs.get('attend_fair',NO) == YES:
             self.points = ENERGY_FAIR_POINTS
             self.text = "Thank you for participating!"
@@ -532,76 +576,62 @@ class ElectricityMonitor(CalculatorAction):
         self.points, self.cost, self.savings, self.text = EvalElectricityMonitor(inputs)
         return super().Eval(inputs)
 
-CAR_POINTS = 8000
 class ReplaceCar(CalculatorAction):
-    #transportation_car_type,replace_car,car_annual_miles,car_mpg,car_model_new
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalReplaceCar(inputs)
         return super().Eval(inputs)
 
 class ReduceMilesDriven(CalculatorAction):
-    #reduce_total_mileage,car_annual_miles,car_mpg,transportation_public,transportation_public_amount,transportation_commute_bike_walk,transportation_commute_bike_walk_amount,transportation_telecommute,transportation_telecommute_amount
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalReduceMilesDriven(inputs)
         return super().Eval(inputs)
 
 class EliminateCar(CalculatorAction):
-    #eliminate_car,transportation_car_type,car_annual_miles,car_mpg
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalEliminateCar(inputs)
         return super().Eval(inputs)
 
-FLIGHT_POINTS = 2000
 class ReduceFlights(CalculatorAction):
-    #flights_amount,transportation_flights
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalReduceFlights(inputs)
         return super().Eval(inputs)
 
 class OffsetFlights(CalculatorAction):
-    #flights_amount,offset_flights
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalOffsetFlights(inputs)
         return super().Eval(inputs)
 
 class LowCarbonDiet(CalculatorAction):
-    #eating_switch_meals,family_size,meat_frequency,eating_switch_meals_amount
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalLowCarbonDiet(inputs)
         return super().Eval(inputs)
 
 class ReduceWaste(CalculatorAction):
-    #reduce_waste,reuse_containers,buy_sell_used,buy_bulk,buy_recycled
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalReduceWaste(inputs)
         return super().Eval(inputs)
 
 class Compost(CalculatorAction):
-    #compost_food_waste,compost_pickup
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalCompost(inputs)
         return super().Eval(inputs)
 
 class ReduceLawnSize(CalculatorAction):
-    #lawn_size,reduce_lawn_size,mower_type,mowing_frequency
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalReduceLawnSize(inputs)
         return super().Eval(inputs)
 
 class ReduceLawnCare(CalculatorAction):
-    #lawn_size,lawn_service,mowing_frequency,mower_type,fertilizer,fertilizer_applications
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalReduceLawnCare(inputs)
         return super().Eval(inputs)
 
 class ElectricMower(CalculatorAction):
-    #lawn_size,mower_type,mower_switch
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalElectricMower(inputs)
         return super().Eval(inputs)
 
 class RakeOrElecBlower(CalculatorAction):
-    #leaf_cleanup_gas_blower,leaf_cleanup_blower_switch
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalRakeOrElecBlower(inputs)
         return super().Eval(inputs)

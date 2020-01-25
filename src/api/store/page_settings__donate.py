@@ -1,6 +1,7 @@
 from database.models import DonatePageSettings, UserProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
 
 class DonatePageSettingsStore:
   def __init__(self):
@@ -36,7 +37,7 @@ class DonatePageSettingsStore:
     try:
       donate_page_id= args.get('id', None)
       if donate_page_id:
-        print(args)
+        
         donate_page_setting = DonatePageSettings.objects.filter(id=donate_page_id)
         donate_page_setting.update(**args)
         if not donate_page_setting:

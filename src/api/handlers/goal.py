@@ -6,6 +6,8 @@ from api.services.goal import GoalService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.utils import get_models_and_field_types
+from _main_.utils.context import Context
+from _main_.utils.validator import Validator
 
 #TODO: install middleware to catch authz violations
 #TODO: add logger
@@ -36,7 +38,9 @@ class GoalHandler(RouteHandler):
 
   def info(self) -> function:
     def goal_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
+      
       goal_id = args.get('goal_id')
       goal_info, err = self.service.get_goal_info(goal_id)
       if err:
@@ -47,7 +51,8 @@ class GoalHandler(RouteHandler):
 
   def create(self) -> function:
     def create_goal_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       team_id = args.pop('team_id', None) 
       community_id = args.pop('community_id', None)
       user_id = args.pop('user_id', None)
@@ -60,7 +65,8 @@ class GoalHandler(RouteHandler):
 
   def list(self) -> function:
     def list_goal_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       team_id = args.pop('team_id', None) 
       community_id = args.pop("community_id", None)
       subdomain = args.pop("subdomain", None)
@@ -74,7 +80,8 @@ class GoalHandler(RouteHandler):
 
   def update(self) -> function:
     def update_goal_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       goal_id = args.pop('goal_id', None)
       goal_info, err = self.service.update_goal(goal_id, args)
       if err:
@@ -85,7 +92,8 @@ class GoalHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_goal_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       goal_id = args.pop('goal_id', None)
       goal_info, err = self.service.delete_goal(goal_id)
       if err:
@@ -96,7 +104,8 @@ class GoalHandler(RouteHandler):
 
   def copy(self) -> function:
     def copy_goal_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       goal_id = args.pop('goal_id', None)
       goal_info, err = self.service.copy_goal(goal_id)
       if err:
@@ -107,9 +116,10 @@ class GoalHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
-      goals, err = self.service.list_goals_for_community_admin(community_id)
+      goals, err = self.service.list_goals_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=goals)
@@ -118,7 +128,8 @@ class GoalHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       goals, err = self.service.list_goals_for_super_admin()
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -128,7 +139,8 @@ class GoalHandler(RouteHandler):
 
   def increase(self) -> function:
     def increase_field_value(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       goal_id = args.pop('goal_id', None)
       field_name = args.pop('field_name', None)
       goal, err = self.service.increase_value(goal_id, field_name)
@@ -140,7 +152,8 @@ class GoalHandler(RouteHandler):
 
   def decrease(self) -> function:
     def decrease_field_value(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       goal_id = args.pop('goal_id', None)
       field_name = args.pop('field_name', None)
       goal, err = self.service.decrease_value(goal_id, field_name)      

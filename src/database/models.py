@@ -2,7 +2,8 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
 from datetime import date, datetime
-from .utils.common import  json_loader,get_json_if_not_none
+from django.utils import timezone
+from .utils.common import  json_loader,get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 import uuid
@@ -202,15 +203,10 @@ class Goal(models.Model):
     return f"{self.name} {' - Deleted' if self.is_deleted else ''}"
 
   def simple_json(self):
-    res = model_to_dict(self, exclude=['is_deleted'])
-    res['community'] = get_json_if_not_none(Community.objects.filter(goal__id=self.id).first())
-    res['team'] = get_json_if_not_none(Team.objects.filter(goal__id=self.id).first())
-    return res
+    return model_to_dict(self, exclude=['is_deleted'])
 
   def full_json(self):
-    communities = self.community_set.all()
-    res = self.simple_json()
-    res["community"] = None if not communities else get_json_if_not_none(communities[0])
+    return self.simple_json()
 
   class Meta:
     db_table = 'goals'
@@ -277,6 +273,9 @@ class Community(models.Model):
   def __str__(self):      
     return self.name
 
+  def info(self):
+    return model_to_dict(self, ['id', 'name', 'subdomain'])
+
   def simple_json(self):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
       'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
@@ -290,6 +289,13 @@ class Community(models.Model):
     else:
       admins = []
 
+    # get the community goal
+    goal = get_json_if_not_none(self.goal) or {}
+    # decision not to include state reported solar in this total
+    #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
+    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count())
+    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+
     return {
       "id": self.id,
       "name": self.name,
@@ -297,7 +303,7 @@ class Community(models.Model):
       "owner_name": self.owner_name,
       "owner_email": self.owner_email,
       "owner_phone_number": self.owner_phone_number,
-      "goal": get_json_if_not_none(self.goal),
+      "goal": goal,
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
       "location":self.location,
@@ -339,6 +345,7 @@ class RealEstateUnit(models.Model):
     max_length=TINY_STR_LEN, 
     choices=CHOICES["REAL_ESTATE_TYPES"].items()
   )
+  community = models.ForeignKey(Community, null=True, on_delete=models.SET_NULL, blank=True)
   location = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -351,9 +358,7 @@ class RealEstateUnit(models.Model):
     return self.unit_type == 'R'
 
   def __str__(self):
-    return '%s - Location: %s ' % (
-      self.unit_type, str(self.location)
-    )
+    return f"{self.community}|{self.unit_type}|{self.name}"
 
   def simple_json(self):
     return model_to_dict(self)
@@ -455,29 +460,86 @@ class UserProfile(models.Model):
   def __str__(self):
     return self.email
 
+  def info(self):
+    return model_to_dict(self, ['id', 'email', 'full_name'])
+
   def simple_json(self):
-    res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email'])
+    res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
     res['user_info'] = self.user_info
     res['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    res['communities'] = [c.community.name for c in CommunityMember.objects.filter(user=self)]
     return res
 
 
   def full_json(self):
+    team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
+    community_members = CommunityMember.objects.filter(user=self)
+    communities = [cm.community.info() for cm in community_members]
+    admin_at = [cm.community.info() for cm in CommunityMember.objects.filter(user=self, is_admin=True)]
+    
     data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles'])
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
-    data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['communities'] = communities
     data['admin_at'] = admin_at
-    data['teams'] = [t.simple_json() for t in self.team_members.all()]
+    data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
-    admin = []
     return data
 
   class Meta:
     db_table = 'user_profiles' 
 
+
+class CommunityMember(models.Model):
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+  is_admin = models.BooleanField(blank=True, default=False)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+
+
+  def __str__(self):
+    return f"{self.user} is {'an ADMIN' if self.is_admin else 'a MEMBER'} in Community({self.community})"
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['id', 'is_admin'])
+    res['community'] = get_summary_info(self.community)
+    res['user'] = get_summary_info(self.user)
+    return res
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'community_members_and_admins'
+    unique_together = [['community', 'user']]
+
+
+class Subdomain(models.Model):
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, related_name="subdomain_community")
+  in_use = models.BooleanField(default=False, blank=True)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return f"{self.community} - {self.name}"
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['id', 'in_use', 'name', 'created_at', 'updated_at'])
+    res['community'] = get_summary_info(self.community)
+    return res
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'subdomains'
 
 class Team(models.Model):
   """
@@ -533,8 +595,11 @@ class Team(models.Model):
   def __str__(self):
     return self.name
 
+  def info(self):
+    return model_to_dict(self, ['id', 'name', 'description'])
+
   def simple_json(self):
-    res =  model_to_dict(self, ['id', 'name', 'description'])
+    res =  self.info()
     res['community'] = get_json_if_not_none(self.community)
     res['logo'] = get_json_if_not_none(self.logo)
     return res
@@ -553,6 +618,31 @@ class Team(models.Model):
     db_table = 'teams'
     unique_together = [['community', 'name']]
 
+class TeamMember(models.Model):
+  id = models.AutoField(primary_key=True)
+  team = models.ForeignKey(Team, on_delete=models.CASCADE)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+  is_admin = models.BooleanField(blank=True, default=False)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+
+
+  def __str__(self):
+    return f"{self.user} is {'an ADMIN' if self.is_admin else 'a MEMBER'} in Team({self.team})"
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['id', 'is_admin'])
+    res['team'] = get_summary_info(self.team)
+    res['user'] = get_summary_info(self.user)
+    return res
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'team_members_and_admins'
+    unique_together = [['team', 'user']]
 
 class Service(models.Model):
   """
@@ -601,6 +691,117 @@ class Service(models.Model):
 
   class Meta:
     db_table = 'services'
+
+
+
+
+class ActionProperty(models.Model):
+  """
+  A class used to represent an Action property.
+
+  Attributes
+  ----------
+  name : str
+    name of the Vendor
+  """
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  is_published = models.BooleanField(default=False, blank=True)
+
+
+  def __str__(self): 
+    return self.name
+
+  def simple_json(self):
+    return model_to_dict(self)
+
+  def full_json(self):
+    return self.full_json()
+
+  class Meta:
+    verbose_name_plural = "Properties"
+    ordering = ('id',)
+    db_table = 'action_properties'
+
+
+class TagCollection(models.Model):
+  """
+  A class used to represent a collection of Tags.
+
+  Attributes
+  ----------
+  name : str
+    name of the Tag Collection
+  """
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length = SHORT_STR_LEN, unique=True)
+  is_global = models.BooleanField(default=False, blank=True)
+  allow_multiple = models.BooleanField(default=False)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  is_published = models.BooleanField(default=False, blank=True)
+  rank = models.PositiveIntegerField(default=0)
+
+
+  def __str__(self):
+    return self.name
+
+
+  def simple_json(self):
+    res =  model_to_dict(self)
+    res['tags'] = [t.simple_json() for t in self.tag_set.all()]
+    return res
+
+
+  def full_json(self):
+    return self.simple_json()
+
+
+  class Meta:
+    ordering = ('name',)
+    db_table = 'tag_collections'
+
+
+class Tag(models.Model):
+  """
+  A class used to represent an Tag.  It is essentially a string that can be 
+  used to describe or group items, actions, etc
+  
+  Attributes
+  ----------
+  name : str
+    name of the Tag
+  """
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length = SHORT_STR_LEN)
+  points = models.PositiveIntegerField(null=True, blank=True)
+  icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
+  tag_collection = models.ForeignKey(TagCollection, null=True, 
+    on_delete=models.CASCADE, blank=True)
+  rank = models.PositiveIntegerField(default=0)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  is_published = models.BooleanField(default=False, blank=True)
+
+  def __str__(self):
+    return "%s - %s" % (self.name, self.tag_collection)
+
+  def simple_json(self):
+    res = model_to_dict(self)
+    res['order'] = self.rank
+    res['tag_collection_name'] = None if not self.tag_collection else self.tag_collection.name
+    return res
+
+
+  def full_json(self):
+    data = self.simple_json()
+    data['tag_collection'] = get_json_if_not_none(self.tag_collection)
+    return data
+
+  class Meta:
+    ordering = ('rank',)
+    db_table = 'tags'
+    unique_together = [['rank', 'name', 'tag_collection']]
 
 
 
@@ -662,7 +863,7 @@ class Vendor(models.Model):
   service_area_states = JSONField(blank=True, null=True)
   services = models.ManyToManyField(Service, blank=True)
   properties_serviced = JSONField(blank=True, null=True) 
-  onboarding_date = models.DateTimeField(default=datetime.now)
+  onboarding_date = models.DateTimeField(auto_now_add=True)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True, 
     null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
   verification_checklist = JSONField(blank=True, null=True) 
@@ -672,11 +873,15 @@ class Vendor(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   communities = models.ManyToManyField(Community, blank=True)
+  tags = models.ManyToManyField(Tag, related_name='vendor_tags', blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
 
   def __str__(self):             
     return self.name
+
+  def info(self):
+    return model_to_dict(self, ['id', 'name', 'service_area', 'key_contact', 'phone_number', 'email' ])
 
   def simple_json(self):
     data = model_to_dict(self, exclude=[
@@ -684,6 +889,7 @@ class Vendor(models.Model):
     ])
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['logo'] = get_json_if_not_none(self.logo)
     return data
 
@@ -692,6 +898,7 @@ class Vendor(models.Model):
     data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
     data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
     data['logo'] = get_json_if_not_none(self.logo)
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['banner']  = get_json_if_not_none(self.banner)
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
@@ -699,110 +906,6 @@ class Vendor(models.Model):
 
   class Meta:
     db_table = 'vendors'
-
-
-class ActionProperty(models.Model):
-  """
-  A class used to represent an Action property.
-
-  Attributes
-  ----------
-  name : str
-    name of the Vendor
-  """
-  id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-  short_description = models.CharField(max_length=LONG_STR_LEN, blank = True)
-  is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False, blank=True)
-
-
-  def __str__(self): 
-    return self.name
-
-  def simple_json(self):
-    return model_to_dict(self)
-
-  def full_json(self):
-    return self.full_json()
-
-  class Meta:
-    verbose_name_plural = "Properties"
-    ordering = ('id',)
-    db_table = 'action_properties'
-
-
-class TagCollection(models.Model):
-  """
-  A class used to represent a collection of Tags.
-
-  Attributes
-  ----------
-  name : str
-    name of the Tag Collection
-  """
-  id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length = SHORT_STR_LEN, unique=True)
-  is_global = models.BooleanField(default=False, blank=True)
-  allow_multiple = models.BooleanField(default=False)
-  is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False, blank=True)
-
-
-  def __str__(self):
-    return self.name
-
-
-  def simple_json(self):
-    res =  model_to_dict(self)
-    res['tags'] = [t.simple_json() for t in self.tag_set.all()]
-    return res
-
-
-  def full_json(self):
-    return self.simple_json()
-
-
-  class Meta:
-    ordering = ('name',)
-    db_table = 'tag_collections'
-
-
-class Tag(models.Model):
-  """
-  A class used to represent an Tag.  It is essentially a string that can be 
-  used to describe or group items, actions, etc
-  
-  Attributes
-  ----------
-  name : str
-    name of the Tag
-  """
-  id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length = SHORT_STR_LEN)
-  icon = models.CharField(max_length = SHORT_STR_LEN, blank = True)
-  tag_collection = models.ForeignKey(TagCollection, null=True, 
-    on_delete=models.CASCADE, blank=True)
-  order = models.PositiveIntegerField(default=0)
-  is_deleted = models.BooleanField(default=False, blank=True)
-  is_published = models.BooleanField(default=False, blank=True)
-
-  def __str__(self):
-    return "%s - %s" % (self.name, self.tag_collection)
-
-  def simple_json(self):
-    return model_to_dict(self)
-
-
-  def full_json(self):
-    data = self.simple_json()
-    data['tag_collection'] = get_json_if_not_none(self.tag_collection)
-    return data
-
-  class Meta:
-    ordering = ('order',)
-    db_table = 'tags'
-    unique_together = [['order', 'name', 'tag_collection']]
 
 
 class Action(models.Model):
@@ -863,14 +966,19 @@ class Action(models.Model):
   def __str__(self): 
     return self.title
 
+  def info(self):
+    return model_to_dict(self, ['id','title'])
+
   def simple_json(self):
-    data =  model_to_dict(self, ['id', 'title', 'icon', 'rank', 
+    data =  model_to_dict(self, ['id','is_published', 'is_deleted', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
+    data['calculator_action'] = get_summary_info(self.calculator_action)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
-    data['community'] = get_json_if_not_none(self.community)
+    data['community'] = get_summary_info(self.community)
+    data['vendors'] = [v.info() for v in self.vendors.all()]
     return data
 
   def full_json(self):
@@ -918,12 +1026,13 @@ class Event(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name  = models.CharField(max_length = SHORT_STR_LEN)
+  featured_summary = models.TextField(max_length = LONG_STR_LEN, blank=True, null=True)
   description = models.TextField(max_length = LONG_STR_LEN)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   invited_communities = models.ManyToManyField(Community, 
     related_name="invited_communites", blank=True)
-  start_date_and_time  = models.DateTimeField(db_index=True, default=datetime.now)
-  end_date_and_time  = models.DateTimeField(default=datetime.now)
+  start_date_and_time  = models.DateTimeField(db_index=True, auto_now_add=True)
+  end_date_and_time  = models.DateTimeField(auto_now_add=True)
   location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
@@ -942,6 +1051,8 @@ class Event(models.Model):
 
   def simple_json(self):
     data = model_to_dict(self, exclude=['tags', 'image', 'community'])
+    data['start_date_and_time'] = self.start_date_and_time
+    data['end_date_and_time'] = self.end_date_and_time
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['community'] = get_json_if_not_none(self.community)
     data['image'] = None if not self.image else self.image.full_json()
@@ -954,7 +1065,7 @@ class Event(models.Model):
 
 
   class Meta:
-    ordering = ('-start_date_and_time',)
+    ordering = ('rank', '-start_date_and_time',)
     db_table = 'events'
 
 
@@ -1109,18 +1220,27 @@ class Testimonial(models.Model):
   def __str__(self):        
     return self.title
 
+  def info(self):
+    return model_to_dict(self, include=['id', 'title', 'community'])
+
   def simple_json(self):
+    anonymous = {
+      "full_name": "Anonymous",
+      "email": "anonymous"
+    }
     res = model_to_dict(self, exclude=['image', 'tags'])
-    res["user"] = get_json_if_not_none(self.user)
+    res["user"] = get_json_if_not_none(self.user) or  anonymous
     res["action"] = get_json_if_not_none(self.action)
-    res["vendor"] = get_json_if_not_none(self.vendor)
+    res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
     res["created_at"] = self.created_at
+    res['file'] = get_json_if_not_none(self.image)
+    res['tags'] = [t.simple_json() for t in self.tags.all()]
     return res
 
   def full_json(self):
     data = self.simple_json() 
-    data['image'] = get_json_if_not_none(self.image)
+    data['image'] = data.get('file', None)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     return data
 
@@ -1281,9 +1401,10 @@ class Data(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length = SHORT_STR_LEN, db_index=True)
   value =  models.PositiveIntegerField(default=0)
+  reported_value =  models.PositiveIntegerField(default=0)
   denominator =  models.CharField(max_length = SHORT_STR_LEN, blank=True)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
-  tag = models.ForeignKey(Tag, blank=True, on_delete=models.SET_NULL, 
+  tag = models.ForeignKey(Tag, blank=True, on_delete=models.CASCADE, 
     null=True, db_index=True )
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
@@ -1292,10 +1413,10 @@ class Data(models.Model):
   is_published = models.BooleanField(default=True)
 
   def __str__(self):         
-    return "%s (%d)" % (self.name, self.value)
+    return "%s | %s (%d) |(%s)" % (self.community, self.name, self.value,  self.tag)
 
   def simple_json(self):
-    return model_to_dict(self)
+    return model_to_dict(self, fields=["id", "name", "value", "reported_value"])
 
   def full_json(self):
     data = self.simple_json()
@@ -1332,17 +1453,12 @@ class Graph(models.Model):
 
 
   def simple_json(self):
-    return {
-      "id": self.id,
-      "title": self.title,
-      "graph_type": self.graph_type,
-      "community": get_json_if_not_none(self.community)
-    }
+    return model_to_dict(self, fields=["title", "community", "is_published"])
 
 
   def full_json(self):
     res =  self.simple_json()
-    res["data"] = [d.full_json() for d in self.data.all()]
+    res["data"] = [d.simple_json() for d in self.data.all()]
     return res
 
 
@@ -1671,7 +1787,8 @@ class Subscriber(models.Model):
 
   def simple_json(self):
     res = model_to_dict(self)
-    res['community'] = get_json_if_not_none(self.community)
+    res['community'] = None if not self.community else self.community.info()
+    return res
 
   def full_json(self):
     return self.simple_json()
@@ -1788,12 +1905,18 @@ class HomePageSettings(models.Model):
 
 
   def full_json(self):
+    goal = get_json_if_not_none(self.community.goal) or {}
+    # decision not to include state reported solar
+    #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
+    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
+    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").count())
+  
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     res['community'] = get_json_if_not_none(self.community)
     res['featured_events'] = [i.simple_json() for i in self.featured_events.all()]
     res['featured_stats'] = [i.simple_json() for i in self.featured_stats.all()]
-    res['goal']  = get_json_if_not_none(self.community.goal)
+    res['goal']  = goal
     return res
 
   class Meta:
@@ -1869,6 +1992,7 @@ class DonatePageSettings(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE,  db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  donation_link = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
@@ -1961,3 +2085,115 @@ class ImpactPageSettings(models.Model):
   class Meta:
     db_table = 'impact_page_settings'
     verbose_name_plural = "ImpactPageSettings"
+
+
+class Message(models.Model):
+  """
+  A class used to represent  Role for users on the MassEnergize Platform
+
+  Attributes
+  ----------
+  name : str
+    name of the role
+  """
+  id = models.AutoField(primary_key=True)
+  user_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True) 
+  title = models.CharField(max_length=SHORT_STR_LEN) 
+  uploaded_file = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL) 
+  email = models.EmailField(blank=True) 
+  user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True) 
+  body = models.TextField(max_length=LONG_STR_LEN)
+  community = models.ForeignKey(Community, blank=True, on_delete=models.SET_NULL, null=True)
+  team = models.ForeignKey(Team, blank=True, on_delete=models.SET_NULL, null=True)
+  have_replied = models.BooleanField(default=False, blank=True)
+  have_forwarded = models.BooleanField(default=False, blank=True)
+  is_team_admin_message = models.BooleanField(default=False, blank=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  archive = models.BooleanField(default=False, blank=True)
+  starred = models.BooleanField(default=False, blank=True)
+  response = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True) 
+  created_at = models.DateTimeField(auto_now_add=True, null=True)
+
+
+  def __str__(self):
+    return f"{self.title}"
+
+  def simple_json(self):
+    res = model_to_dict(self)
+    res["community"] = get_summary_info(self.community)
+    res["team"] = get_summary_info(self.team)
+    return res
+
+  def full_json(self):
+    res = self.simple_json()
+    res["uploaded_file"] = get_json_if_not_none(self.uploaded_file)
+    return res
+
+
+  class Meta:
+    ordering = ('title',)
+    db_table = 'messages'
+
+
+class ActivityLog(models.Model):
+  """
+  A class used to represent  Activity Log on the MassEnergize Platform
+
+  Attributes
+  ----------
+  """
+  id = models.AutoField(primary_key=True)
+  path = models.CharField(max_length=SHORT_STR_LEN, default='/') 
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True) 
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True) 
+  created_at = models.DateTimeField(auto_now_add=True)
+  status = models.CharField(max_length=SHORT_STR_LEN, default='success', blank=True) 
+  trace = JSONField(blank=True, null=True) 
+  request_body = JSONField(blank=True, null=True) 
+  # add response or error field
+
+  def __str__(self):
+    return self.path
+
+  def simple_json(self):
+    return  model_to_dict(self)
+
+  def full_json(self):
+    res = self.simple_json()
+    res["user"] = get_json_if_not_none(self.user)
+    res["community"] = get_json_if_not_none(self.community)
+    return res
+
+
+  class Meta:
+    ordering = ('path',)
+    db_table = 'activity_logs'
+
+
+class Deployment(models.Model):
+  """
+  A class used to represent  Activity Log on the MassEnergize Platform
+
+  Attributes
+  ----------
+  """
+  id = models.AutoField(primary_key=True)
+  version = models.CharField(max_length=SHORT_STR_LEN, default='') 
+  deploy_commander = models.CharField(max_length=SHORT_STR_LEN, default='', blank=True) 
+  notes = models.CharField(max_length=LONG_STR_LEN, default='', blank=True) 
+  created_at = models.DateTimeField(auto_now_add=True)
+
+  def __str__(self):
+    return self.version
+
+  def simple_json(self):
+    return  model_to_dict(self)
+
+  def full_json(self):
+    return self.simple_json()
+
+
+  class Meta:
+    db_table = 'deployments'
+    ordering = ('-version',)
+

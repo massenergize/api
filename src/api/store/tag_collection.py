@@ -1,6 +1,7 @@
 from database.models import TagCollection, UserProfile, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
 
 class TagCollectionStore:
   def __init__(self):
@@ -19,11 +20,12 @@ class TagCollectionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_tag_collections(self, community_id) -> (list, MassEnergizeAPIError):
-    tag_collections = TagCollection.objects.filter(community__id=community_id)
-    if not tag_collections:
-      return [], None
-    return tag_collections, None
+  def list_tag_collections(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try:
+      tag_collections = TagCollection.objects.filter(is_deleted=False)
+      return tag_collections, None
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
 
 
   def create_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
@@ -33,8 +35,9 @@ class TagCollectionStore:
       new_tag_collection = TagCollection.objects.create(name=name, is_global=True)
       new_tag_collection.save()
       tags = []
-      for t in tmp_tags:
-        tag = Tag.objects.create(name=t.title(), tag_collection=new_tag_collection)
+      for i in range(len(tmp_tags)):
+        t = tmp_tags[i]
+        tag = Tag.objects.create(name=t.title(), tag_collection=new_tag_collection,rank=i+1)
         tag.save()
         # new_tag_collection.tags.add(t)
 
@@ -44,35 +47,58 @@ class TagCollectionStore:
 
 
   def update_tag_collection(self, tag_collection_id, args) -> (dict, MassEnergizeAPIError):
-    
     try:
       tag_collection = TagCollection.objects.filter(id=tag_collection_id).first()
       if not tag_collection:
         return None, InvalidResourceError()
 
-      tags = Tag.objects.filter(tag_collection__id=tag_collection.id)
       name = args.pop('name', None)
-      tags_to_add = args.pop('tags_to_add', '').split(', ')
-      tags_to_delete = args.pop('tags_to_delete', '').split(', ')
-
       if name:
         tag_collection.name = name
 
+      rank = args.pop('rank', None)
+      if rank:
+        tag_collection.rank = rank
+
+      tags = Tag.objects.filter(tag_collection=tag_collection)
       for (k,v) in args.items():
-        if k.startswith('tag_'):
-          tag_id = int(k.split('_')[-1])
+        if k.startswith('tag_') and not k.endswith('_rank'):
+          tag_id = int(k.split('_')[1])
+          tag = tags.filter(id=tag_id).first()
+          
+          if tag:
+            if not tag.name.strip():
+              tag.delete()
+              continue
+            tag.name = v.strip()
+            tag.save()
+        elif k.startswith('tag_') and k.endswith('_rank'):
+          tag_id = int(k.split('_')[1])
           tag = tags.filter(id=tag_id).first()
           if tag:
-            tag.name = v
+            if not tag.name.strip():
+              tag.delete()
+              continue
+
+            tag.rank = v
             tag.save()
 
-      for t in tags_to_add:
-        tag = Tag.objects.create(name=t.title(), tag_collection=tag_collection)
-        tag.save()
+      tags_to_add = args.pop('tags_to_add', '')
+      if tags_to_add:
+        tags_to_add = tags_to_add.strip().split(',')
+        for i in range(len(tags_to_add)):
+          t = tags_to_add[i]
+          tag = Tag.objects.create(name=t.strip().title(), tag_collection=tag_collection, rank=len(tags)+i+1)
+          tag.save()
 
-      for t in tags_to_delete:
-        Tag.objects.filter(name=t.title(), tag_collection=tag_collection).delete()
 
+      tags_to_delete = args.pop('tags_to_delete', '')
+      if tags_to_delete: 
+        tags_to_delete = [t.strip() for t in tags_to_delete.split(',')]
+        ts = tags.filter(name__in=tags_to_delete)
+        ts.delete()
+
+      tag_collection.save()
       return tag_collection, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -90,8 +116,7 @@ class TagCollectionStore:
 
 
   def list_tag_collections_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    tag_collections = TagCollection.objects.filter(community__id = community_id)
-    return tag_collections, None
+    return self.list_tag_collections_for_super_admin()
 
 
   def list_tag_collections_for_super_admin(self):

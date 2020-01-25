@@ -4,41 +4,44 @@ import timeit
 import csv
 
 def getLocality(inputs):
-    userID = inputs.get("user_id","")
+    id = inputs.get("user_id","")
+    #userID = inputs.get("user_id","")
     locality = "default"
-    if userID != "":
-        user = CalcUser.objects.get(id=userID).first()
+    if id != "":
+        user = CalcUser.objects.filter(id=id).first()
         if user:
             locality = user.locality
     return locality
 
 
-def getDefault(locality, variable, defaultValue):
-    return CCD.getDefault(CCD,locality, variable, defaultValue)
+def getDefault(locality, variable, defaultValue, noUpdate=False):
+    return CCD.getDefault(CCD,locality, variable, defaultValue, noUpdate)
 
 class CCD():
     DefaultsByLocality = {"default":{}} # the class variable
-
-    num = CalcDefault.objects.all().count()
-    msg = "Initializing %d Carbon Calc defaults from db" % num
-    print(msg)
-    start = time.time()
-    startcpu = timeit.timeit()
-    cq = CalcDefault.objects.all()
-    for c in cq:
-        if c.locality not in DefaultsByLocality:
-            DefaultsByLocality[c.locality] = {}
-        DefaultsByLocality[c.locality][c.variable] = c.value
-    endcpu = timeit.timeit()
-    end = time.time()
-    msg = "Elapsed = %.3f sec, CPU = %.3f sec" % (end - start, endcpu - startcpu)
-    print(msg)
+    try:
+        num = CalcDefault.objects.all().count()
+        msg = "Initializing %d Carbon Calc defaults from db" % num
+        print(msg)
+        start = time.time()
+        startcpu = timeit.timeit()
+        cq = CalcDefault.objects.all()
+        for c in cq:
+            if c.locality not in DefaultsByLocality:
+                DefaultsByLocality[c.locality] = {}
+            DefaultsByLocality[c.locality][c.variable] = c.value
+        endcpu = timeit.timeit()
+        end = time.time()
+        msg = "Elapsed = %.3f sec, CPU = %.3f sec" % (end - start, endcpu - startcpu)
+        print(msg)
+    except:
+        print("CalcDefault initialization skipped")
 
     def __init__(self):
         print("CCD __init__ called")
 
 
-    def getDefault(self,locality,variable,defaultValue):
+    def getDefault(self,locality,variable,defaultValue, noUpdate=False):
         if locality in self.DefaultsByLocality:
             if variable in self.DefaultsByLocality[locality]:
                 return self.DefaultsByLocality[locality][variable]
@@ -47,8 +50,9 @@ class CCD():
         # no defaults found.  Store the default estiamte in the database
 
         self.DefaultsByLocality["default"][variable] = defaultValue
-        d = CalcDefault(locality="default", variable=variable, value=defaultValue, reference="Default value without reference")
-        d.save()
+        if not noUpdate:
+            d = CalcDefault(locality="default", variable=variable, value=defaultValue, reference="Default value without reference")
+            d.save()
 
         return defaultValue
 
@@ -74,7 +78,7 @@ class CCD():
             status = False
 
         if csvfile:
-            csvfile.close(csvfile)
+            csvfile.close()
         return status
     def importDefaults(self,fileName):
         try:

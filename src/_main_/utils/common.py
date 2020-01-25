@@ -4,7 +4,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
 from datetime import datetime
-
+import cv2
 
 def get_request_contents(request):
   try:
@@ -29,14 +29,19 @@ def get_request_contents(request):
 
 def parse_list(d):
   try:
+    tmp = []
     if isinstance(d, str):
-      return d.strip().split(',') if d else []
+      tmp = d.strip().split(',') if d else []
     elif isinstance(d, dict):
-      return list(d.values())
-    else:
-      return []
+      tmp = list(d.values())
+    
+    res = []
+    for i in tmp:
+      if i.isnumeric():
+        res.append(i)
+    return res
+
   except Exception as e:
-    print(e)
     return []
 
 def parse_bool(b):
@@ -48,21 +53,18 @@ def parse_string(s):
   try:
     return str(s)
   except Exception as e:
-    print(e)
     return None
 
 def parse_int(b):
   try:
     return int(b)
   except Exception as e:
-    print(e)
     return 1
 
 def parse_date(d):
   try:
     return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d %H:%M'))
   except Exception as e:
-    print(e)
     return timezone.now()
 
 def rename_field(args, old_name, new_name):
@@ -90,7 +92,7 @@ def serialize(data, full=False):
     return data.full_json()
   return data.simple_json()
 
-def check_length(args, field,  min_length=5, max_length=25):
+def check_length(args, field,  min_length=5, max_length=40):
   data = args.get(field, None)
   if not data:
     return False, CustomMassenergizeError(f"Please provide a {field} field")
@@ -107,10 +109,36 @@ def parse_location(args):
     "city": args.pop("city", None),
     "state": args.pop("state", None),
     "zipcode": args.pop("zipcode", None),
-    "country": args.pop("country", None),
+    "country": args.pop("country", 'United States of America'),
   }
   args['location'] = location
   return args
+
+def extract_location(args):
+  location = {
+    "address": args.pop("address", None),
+    "unit": args.pop("unit", None),
+    "city": args.pop("city", None),
+    "state": args.pop("state", None),
+    "zipcode": args.pop("zipcode", None),
+    "country": args.pop("country", 'United States of America'),
+  }
+  
+  return location
+
+
+def resize_image(img, options={}):
+  if options.get("is_logo", False):
+    size = options.get("size", 500)
+    width = options.get("width", 250)
+    height = options.get("height", 100)
+    dimension = (width, height)
+    new_img = cv2.resize(img, dsize=size, dim=dimension, interpolation = cv2.INTER_AREA)
+    return new_img
+  else:
+    size = options.get("size", 500)
+    new_img = cv2.resize(img, dsize=size, interpolation = cv2.INTER_AREA)
+    return new_img
 
 
 def _common_name(s):

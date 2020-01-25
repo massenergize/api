@@ -15,36 +15,33 @@ import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
 
-IS_PROD = True
-
-DEPLOY_VERSION = '0.0.1'
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-# path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-path_to_config = '/_main_/config/massenergizeProjectConfig.json'
+IS_PROD = True
+path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
 CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
 os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
-
 SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = not IS_PROD
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    '*', #TODO: remove later
-    '10.0.0.187:8000',
     'localhost',
     '127.0.0.1',
     'api.massenergize.org',
     'apis.massenergize.org',
     'api.massenergize.com',
     'apis.massenergize.com',
-    'energizewayland.org',
+    'api-prod.massenergize.org',
+    'api.prod.massenergize.org',
+    'api-dev.massenergize.org',
+    'api.dev.massenergize.org',
+    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
@@ -76,39 +73,6 @@ MIDDLEWARE = [
     'authentication.middleware.MassenergizeJWTAuthMiddleware'
 ]
 
-# -------- CORS CONFIGURATION ---------------#
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
-# CSRF_COOKIE_SECURE = False
-# SESSION_COOKIE_SECURE = False
-
-CORS_ORIGIN_WHITELIST = [
-    "https://massenergize.org",
-    "http://massenergize.org",
-    "https://energizewayland.org",
-    "https://energizewayland.org",
-    "http://127.0.0.1:8000",
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001"
-]
-CORS_ORIGIN_REGEX_WHITELIST = [
-    r"^https://\w+\.massenergize\.org$",
-    r"^https://\w+\.massenergize\.com$",
-    r"^https://\w+\.energizewayland\.org$",
-    r"^http://\w+\.massenergize\.org$",
-    r"^http://\w+\.massenergize\.com$",
-    r"^http://\w+\.energizewayland\.org$",
-]
-# -------- END CORS CONFIGURATION ---------------#
-
-CSRF_TRUSTED_ORIGINS = [
-    '.massenergize.org',
-    '.energizewayland.org'
-    'http://localhost:3001',
-    'http://localhost:3000'
-]
 
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
@@ -124,6 +88,10 @@ AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
 #--------END AWS CONFIGURATION ---------------------#
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
 
 ROOT_URLCONF = '_main_.urls'
@@ -171,17 +139,8 @@ DATABASES = {
     },
 }
 
-
-FIREBASE_CREDENTIALS = credentials.Certificate(BASE_DIR + '/_main_/config/massenergizeFirebaseServiceAccount.json')
-FIREBASE_CONFIG = {
-    'apiKey': os.environ.get('FIREBASE_API_KEY'),
-    'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN'),
-    'projectId': os.environ.get('FIREBASE_PROJECT_ID'),
-    "databaseURL": os.environ.get('FIREBASE_DATABASE_URL'),
-    "storageBucket": os.environ.get('FIREBASE_STORAGE_URL'),
-    "messagingSenderId": os.environ.get('FIREBASE_MESSAGE_SENDER_ID'),
-    "appId": os.environ.get('FIREBASE_APP_ID'),
-}
+firebase_service_account_path = '/_main_/config/massenergizeProdFirebaseServiceAccount.json' if IS_PROD else '/_main_/config/massenergizeFirebaseServiceAccount.json'
+FIREBASE_CREDENTIALS = credentials.Certificate(BASE_DIR + firebase_service_account_path)
 firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
 
 # Password validation
@@ -235,6 +194,3 @@ MEDIA_URL = '/media/'
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-
-
-

@@ -5,7 +5,14 @@ from django.views.decorators.csrf import csrf_exempt
 from database.utils.common import get_request_contents
 
 from .carbonCalculator import CarbonCalculator
-from .queries import QueryEvents, QueryStations, QueryGroups
+from .queries import QueryEvents, QueryStations, QueryGroups, QueryEventSummary
+from .calcUsers import QueryCalcUsers, CreateCalcUser
+
+#from database.utils.create_factory import CreateFactory
+#from database.utils.database_reader import DatabaseReader
+
+#FACTORY = CreateFactory("Data Creator")
+#FETCH = DatabaseReader("Database Reader")
 
 # Create your views here.
 CALC = CarbonCalculator()
@@ -26,21 +33,34 @@ def actioninfo(request, action):
 def eventinfo(request, event=None):
     return JsonResponse(QueryEvents(event))
 
+def eventsummary(request, event=None):
+    return JsonResponse(QueryEventSummary(event))
+
 def groupinfo(request, group=None):
     return JsonResponse(QueryGroups(group))
 
 def stationinfo(request, station=None):
     return JsonResponse(QueryStations(station))
 
-# these requests should be POSTs, not GETs
+def userinfo(request, user=None):
+    return JsonResponse(QueryCalcUsers(user, request))
+
+# these requests should be POSTs or GETs
 def estimate(request, action):
-	print("views.estimate")
 	inputs = get_request_contents(request)
 	if request.method == "POST":
 		save = True
 	else:
 		save = False
 	return JsonResponse(CALC.Estimate(action, inputs, save))
+
+# these requests should be POSTs
+def undo(request, action):
+	inputs = get_request_contents(request)
+	if request.method == "POST":
+		return JsonResponse(CALC.Undo(action, inputs))
+	else:
+		return Json(None)
 
 def reset(request):
 	inputs = get_request_contents(request)
@@ -53,3 +73,14 @@ def importcsv(request):
 def exportcsv(request):
 	inputs = get_request_contents(request)
 	return JsonResponse(CALC.Export(inputs))
+
+def users(request):
+  args = get_request_contents(request)
+  if request.method == 'GET':
+    users = QueryCalcUsers(args, {})
+    return Json(users)
+  elif request.method == 'POST':
+    #about to create a new User instance
+    user = CreateCalcUser(args)
+    return Json(user)
+  return Json(None)

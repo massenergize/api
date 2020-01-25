@@ -49,7 +49,8 @@ class VendorHandler(RouteHandler):
 
   def publish(self) -> function:
     def vendor_info_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'vendor_id', 'id')
       args['is_published'] =True
       vendor_info, err = self.service.update(args)
@@ -65,31 +66,33 @@ class VendorHandler(RouteHandler):
       args = context.get_request_body() 
       validator: Validator = Validator()
       (validator
-        .add("accepted_terms_and_conditions", bool)
-        .add("key_contact_name", str)
-        .add("key_contact_email", str)
-        .add("onboarding_contact_email", str)
-        .add("name", str)
-        .add("email", str)
-        .add("is_verified", str)
-        .add("phone_number", str)
-        .add("have_address", bool)
-        .add("is_verified", bool, is_required=False)
-        .add("communities", list, is_required=False)
-        .add("service_area_states", list, is_required=False)
-        .add("properties_serviced", list, is_required=False)
+        .expect("accepted_terms_and_conditions", bool)
+        .expect("key_contact_name", str)
+        .expect("key_contact_email", str)
+        .expect("onboarding_contact_email", str)
+        .expect("name", str)
+        .expect("email", str)
+        .expect("phone_number", str)
+        .expect("have_address", bool)
+        .expect("is_verified", bool)
+        .expect("is_published", bool)
+        .expect("communities", list, is_required=False)
+        .expect("service_area_states", list, is_required=False)
+        .expect("properties_serviced", list, is_required=False)
+        .expect("image", "file", is_required=False)
+        .expect("tags", list, is_required=False)
+        .expect("location", "location", is_required=False)
       )
 
       args, err = validator.verify(args)
       if err:
         return err
 
+      print(args)
       if not args.pop('accepted_terms_and_conditions', False):
         return MassenergizeResponse(error="Please accept terms the Terms And Conditions to Proceed")
       
       args = parse_location(args)
-      if not args.pop('have_address', None):
-        args.pop('location')
 
       args['key_contact'] = {
         "name": args.pop('key_contact_name', None),
@@ -106,10 +109,8 @@ class VendorHandler(RouteHandler):
   def list(self) -> function:
     def list_vendor_view(request) -> None: 
       context: Context  = request.context
-      args = context.get_request_body()
-      community_id = args.pop('community_id', None)
-      
-      vendor_info, err = self.service.list_vendors(context, community_id)
+      args = context.get_request_body()      
+      vendor_info, err = self.service.list_vendors(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)
@@ -120,38 +121,41 @@ class VendorHandler(RouteHandler):
     def update_vendor_view(request) -> None: 
       context: Context  = request.context
       args = context.get_request_body() 
+      args = rename_field(args, 'id', 'vendor_id')
       validator: Validator = Validator()
       (validator
-        .add("id", str)
-        .add("key_contact_name", str, is_required=False)
-        .add("key_contact_email", str, is_required=False)
-        .add("onboarding_contact_email", str, is_required=False)
-        .add("name", str, is_required=False)
-        .add("email", str, is_required=False)
-        .add("is_verified", str, is_required=False)
-        .add("phone_number", str, is_required=False)
-        .add("have_address", bool, is_required=False)
-        .add("is_verified", bool, is_required=False)
-        .add("communities", list, is_required=False)
-        .add("service_area_states", list, is_required=False)
-        .add("properties_serviced", list, is_required=False)
+        .expect("vendor_id", int)
+        .expect("key_contact_name", str, is_required=False)
+        .expect("key_contact_email", str, is_required=False)
+        .expect("onboarding_contact_email", str, is_required=False)
+        .expect("name", str, is_required=False)
+        .expect("email", str, is_required=False)
+        .expect("is_verified", bool, is_required=False)
+        .expect("phone_number", str, is_required=False)
+        .expect("have_address", bool, is_required=False)
+        .expect("is_published", bool, is_required=False)
+        .expect("communities", list, is_required=False)
+        .expect("service_area_states", list, is_required=False)
+        .expect("properties_serviced", list, is_required=False)
+        .expect("tags", list, is_required=False)
+        .expect("image", "file", is_required=False)
+        .expect("location", "location", is_required=False)
       )
 
       args, err = validator.verify(args)
       if err:
         return err
 
-      args = parse_location(args)
-      if not args.pop('have_address', None):
-        args.pop('location', None)
+      args['key_contact'] = {}
+      key_contact_name = args.pop('key_contact_name', None)
+      key_contact_email = args.pop('key_contact_email', None)
+      if key_contact_name:
+        args['key_contact']["name"] = key_contact_name
+      if key_contact_email:
+        args['key_contact']["email"] = key_contact_email
 
-      args['key_contact'] = {
-        "name": args.pop('key_contact_name', None),
-        "email": args.pop('key_contact_email', None)
-      } 
 
-      vendor_id = args.pop("id", None)
-      vendor_info, err = self.service.update_vendor(vendor_id, args)
+      vendor_info, err = self.service.update_vendor(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendor_info)
@@ -160,7 +164,8 @@ class VendorHandler(RouteHandler):
 
   def delete(self) -> function:
     def delete_vendor_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'vendor_id', 'id')
       vendor_id = args.pop('id', None)
       if not vendor_id:
@@ -174,7 +179,8 @@ class VendorHandler(RouteHandler):
 
   def copy(self) -> function:
     def copy_vendor_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       args = rename_field(args, 'vendor_id', 'id')
       vendor_id = args.pop('id', None)
       if not vendor_id:
@@ -188,9 +194,10 @@ class VendorHandler(RouteHandler):
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
-      args = request.context.args
+      context: Context = request.context
+      args: dict = context.args
       community_id = args.pop("community_id", None)
-      vendors, err = self.service.list_vendors_for_community_admin(community_id)
+      vendors, err = self.service.list_vendors_for_community_admin(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendors)
@@ -199,8 +206,9 @@ class VendorHandler(RouteHandler):
 
   def super_admin_list(self) -> function:
     def super_admin_list_view(request) -> None: 
-      args = request.context.args
-      vendors, err = self.service.list_vendors_for_super_admin()
+      context: Context = request.context
+      args: dict = context.args
+      vendors, err = self.service.list_vendors_for_super_admin(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=vendors)

@@ -93,6 +93,18 @@ def get_json_if_not_none(obj, full_json=False) -> dict:
     return obj.simple_json() if not full_json else obj.full_json()
   return None
 
+def get_summary_info(obj) -> dict:
+  """
+  Takes an object and returns the json/serialized form of the obj if it is 
+  not None.
+  """
+  try:
+    if obj:
+      return obj.info()
+    return None
+  except Exception as e:
+    return {'id': obj.pk}
+
 
 def ensure_required_fields(required_fields, args):
   errors = []

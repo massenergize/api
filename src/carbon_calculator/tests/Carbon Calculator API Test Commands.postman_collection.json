@@ -1,0 +1,4055 @@
+{
+	"info": {
+		"_postman_id": "0483274c-6258-4898-8939-cc3aa12d40c7",
+		"name": "Carbon Calculator API Test Commands",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get action list",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						""
+					]
+				},
+				"description": "General info on the carbon calculator"
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on weatherization",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Defaults=carbon_calculator/content/Defaults.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Defaults",
+							"value": "carbon_calculator/content/Defaults.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "export Defaults",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/export?Defaults=carbon_calculator/content/exportdefaults.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"export"
+					],
+					"query": [
+						{
+							"key": "Defaults",
+							"value": "carbon_calculator/content/exportdefaults.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Questions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Questions=carbon_calculator/content/Questions.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Questions",
+							"value": "carbon_calculator/content/Questions.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Actions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Actions=carbon_calculator/content/Actions.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Actions",
+							"value": "carbon_calculator/content/Actions.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Stations",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Stations=carbon_calculator/content/Stations.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Stations",
+							"value": "carbon_calculator/content/Stations.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Groups",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Groups=carbon_calculator/content/Groups.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Groups",
+							"value": "carbon_calculator/content/Groups.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Events",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Events=carbon_calculator/content/Events.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Events",
+							"value": "carbon_calculator/content/Events.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on energy_fair action",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/energy_fair",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"energy_fair"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_fair action, Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_fair?attend_fair=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_fair"
+					],
+					"query": [
+						{
+							"key": "attend_fair",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_fair action, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_fair?attend_fair=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_fair"
+					],
+					"query": [
+						{
+							"key": "attend_fair",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on energy_audit action",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/energy_audit",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"energy_audit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_audit, Yes, recent=Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=Yes&energy_audit_recently=Yes&heating_system_fuel=Fuel Oil&electric_utility=cmlp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_audit"
+					],
+					"query": [
+						{
+							"key": "energy_audit",
+							"value": "Yes"
+						},
+						{
+							"key": "energy_audit_recently",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_system_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "cmlp"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_audit, Yes, recent=No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=Yes&energy_audit_recently=No&heating_system_fuel=Fuel%20Oil&electric_utility=cmlp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_audit"
+					],
+					"query": [
+						{
+							"key": "energy_audit",
+							"value": "Yes"
+						},
+						{
+							"key": "energy_audit_recently",
+							"value": "No"
+						},
+						{
+							"key": "heating_system_fuel",
+							"value": "Fuel%20Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "cmlp"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energy_audit, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energy_audit?energy_audit=No&energy_audit_recently=No&heating_system_fuel=Fuel%20Oil&electric_utility=cmlp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energy_audit"
+					],
+					"query": [
+						{
+							"key": "energy_audit",
+							"value": "No"
+						},
+						{
+							"key": "energy_audit_recently",
+							"value": "No"
+						},
+						{
+							"key": "heating_system_fuel",
+							"value": "Fuel%20Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "cmlp"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on prog_thermostats",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/prog_thermostats",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"prog_thermostats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Fuel Oil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Fuel Oil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Natural Gas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Natural Gas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Natural Gas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Propane",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Propane",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Propane"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Wood",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Wood",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Wood"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Electric",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Conventional Electric",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Conventional Electric"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, HeatPump",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Heat Pump",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Heat Pump"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, Geothermal",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=No&pstats_programmed=No&heating_fuel=Geothermal",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "No"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Geothermal"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate prog_thermostats, Yes, have_pstats=Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/prog_thermostats?install_pstats=Yes&have_pstats=Yes&pstats_programmed=No&heating_fuel=Fuel Oil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"prog_thermostats"
+					],
+					"query": [
+						{
+							"key": "install_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "have_pstats",
+							"value": "Yes"
+						},
+						{
+							"key": "pstats_programmed",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on weatherization",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/weatherization",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"weatherization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate weatherization, Yes, weatherized",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/weatherization?weatherize_home=Yes&weatherized=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"weatherization"
+					],
+					"query": [
+						{
+							"key": "weatherize_home",
+							"value": "Yes"
+						},
+						{
+							"key": "weatherized",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate weatherization, Yes, not weatherized",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/weatherization?weatherize_home=Yes&weatherized=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"weatherization"
+					],
+					"query": [
+						{
+							"key": "weatherize_home",
+							"value": "Yes"
+						},
+						{
+							"key": "weatherized",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate weatherization, No, not weatherized",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/weatherization?weatherize_home=No&weatherized=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"weatherization"
+					],
+					"query": [
+						{
+							"key": "weatherize_home",
+							"value": "No"
+						},
+						{
+							"key": "weatherized",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on heating_assessment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/heating_assessment",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"heating_assessment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate heating_assessment, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/heating_assessment?heating_system_assessment=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"heating_assessment"
+					],
+					"query": [
+						{
+							"key": "heating_system_assessment",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate heating_assessment, Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/heating_assessment?heating_system_assessment=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"heating_assessment"
+					],
+					"query": [
+						{
+							"key": "heating_system_assessment",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on efficient_fossil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/efficient_fossil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"efficient_fossil"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate efficient_fossil, Yes, Fuel Oil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/efficient_fossil?upgrade_heating_system_efficiency=Yes&heating_fuel=Fuel Oil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"efficient_fossil"
+					],
+					"query": [
+						{
+							"key": "upgrade_heating_system_efficiency",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate efficient_fossil, Yes, Natural Gas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/efficient_fossil?upgrade_heating_system_efficiency=Yes&heating_fuel=Natural Gas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"efficient_fossil"
+					],
+					"query": [
+						{
+							"key": "upgrade_heating_system_efficiency",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Natural Gas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate efficient_fossil, Yes, Wood",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/efficient_fossil?upgrade_heating_system_efficiency=Yes&heating_fuel=Wood",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"efficient_fossil"
+					],
+					"query": [
+						{
+							"key": "upgrade_heating_system_efficiency",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Wood"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate efficient_fossil, Yes, Propane",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/efficient_fossil?upgrade_heating_system_efficiency=Yes&heating_fuel=Propane",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"efficient_fossil"
+					],
+					"query": [
+						{
+							"key": "upgrade_heating_system_efficiency",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Propane"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on air_source_hp",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/air_source_hp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"air_source_hp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, Yes, Fuel Oil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=Yes&heating_fuel=Fuel Oil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, Yes, Natural Gas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=Yes&heating_fuel=Natural Gas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Natural Gas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, Yes, Conventional Electric",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=Yes&heating_fuel=Conventional Electric",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Conventional Electric"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate air_source_hp, Yes, Propane",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/air_source_hp?install_ashp=Yes&heating_fuel=Propane",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"air_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_ashp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Propane"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on ground_source_hp",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/ground_source_hp",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"ground_source_hp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate ground_source_hp, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/ground_source_hp?install_gshp=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"ground_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_gshp",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate ground_source_hp, Yes, Fuel Oil",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/ground_source_hp?install_gshp=Yes&heating_fuel=Fuel Oil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"ground_source_hp"
+					],
+					"query": [
+						{
+							"key": "install_gshp",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on hw_assessment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/hw_assessment",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"hw_assessment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate hw_assessment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/hw_assessment?hot_water_assessment=Yes&water_heater_type=Propane",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"hw_assessment"
+					],
+					"query": [
+						{
+							"key": "hot_water_assessment",
+							"value": "Yes"
+						},
+						{
+							"key": "water_heater_type",
+							"value": "Propane"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on hp_water_heater",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/hp_water_heater",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"hp_water_heater"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate hp_water_heater",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/hp_water_heater?replace_water_heater=Yes&water_heater_type=Heat pump",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"hp_water_heater"
+					],
+					"query": [
+						{
+							"key": "replace_water_heater",
+							"value": "Yes"
+						},
+						{
+							"key": "water_heater_type",
+							"value": "Heat pump"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on solar_assessment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/solar_assessment",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"solar_assessment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate solar_assessment",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/solar_assessment?solar_assessment=Yes&solar_potential=OK",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"solar_assessment"
+					],
+					"query": [
+						{
+							"key": "solar_assessment",
+							"value": "Yes"
+						},
+						{
+							"key": "solar_potential",
+							"value": "OK"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on install_solarPV",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/install_solarPV",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"install_solarPV"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate install_solarPV",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/install_solarPV?install_solar_panels=Yes&solar_potential=OK&solar_array_size=2",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"install_solarPV"
+					],
+					"query": [
+						{
+							"key": "install_solar_panels",
+							"value": "Yes"
+						},
+						{
+							"key": "solar_potential",
+							"value": "OK"
+						},
+						{
+							"key": "solar_array_size",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on install_solarHW",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/install_solarHW",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"install_solarHW"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate install_solarHW",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/install_solarHW?install_solar_hw=Yes&water_heater_type=Fuel Oil",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"install_solarHW"
+					],
+					"query": [
+						{
+							"key": "install_solar_hw",
+							"value": "Yes"
+						},
+						{
+							"key": "water_heater_type",
+							"value": "Fuel Oil"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on community_solar",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/community_solar",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"community_solar"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate community_solar, Yes, Eversource",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/community_solar?community_solar=Yes&heating_fuel=Fuel Oil&electric_utility=Eversource",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"community_solar"
+					],
+					"query": [
+						{
+							"key": "community_solar",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "Eversource"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate community_solar, Yes, CMLP",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/community_solar?community_solar=Yes&monthly_elec_bill=250&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"community_solar"
+					],
+					"query": [
+						{
+							"key": "community_solar",
+							"value": "Yes"
+						},
+						{
+							"key": "monthly_elec_bill",
+							"value": "250"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate community_solar, Yes, NationalGrid",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/community_solar?community_solar=Yes&monthly_elec_bill=250&electric_utility=NationalGrid",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"community_solar"
+					],
+					"query": [
+						{
+							"key": "community_solar",
+							"value": "Yes"
+						},
+						{
+							"key": "monthly_elec_bill",
+							"value": "250"
+						},
+						{
+							"key": "electric_utility",
+							"value": "NationalGrid"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on renewable_elec",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/renewable_elec",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"renewable_elec"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate renewable_elec, Yes, Eversource",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/renewable_elec?choose_renewable=Yes&heating_fuel=Fuel Oil&electric_utility=Eversource",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"renewable_elec"
+					],
+					"query": [
+						{
+							"key": "choose_renewable",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "Eversource"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate renewable_elec, Yes, CMLP",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/renewable_elec?choose_renewable=Yes&heating_fuel=Fuel Oil&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"renewable_elec"
+					],
+					"query": [
+						{
+							"key": "choose_renewable",
+							"value": "Yes"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate renewable_elec, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/renewable_elec?choose_renewable=No&heating_fuel=Fuel Oil&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"renewable_elec"
+					],
+					"query": [
+						{
+							"key": "choose_renewable",
+							"value": "No"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on led_lighting",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/led_lighting",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"led_lighting"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, None",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=None&heating_fuel=Fuel Oil&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "None"
+						},
+						{
+							"key": "heating_fuel",
+							"value": "Fuel Oil"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, Some",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Some&number_nonefficient_bulbs=50&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Some"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "50"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, Half",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Half&number_nonefficient_bulbs=50&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Half"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "50"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, Most 0",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Most&number_nonefficient_bulbs=0&electric_utility=CMLP",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Most"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "0"
+						},
+						{
+							"key": "electric_utility",
+							"value": "CMLP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, Most 100",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=Most&number_nonefficient_bulbs=100&electric_utility=Eversource",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "Most"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "100"
+						},
+						{
+							"key": "electric_utility",
+							"value": "Eversource"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate led_lighting, YES, All 77",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/led_lighting?fraction_led_replacement=All&number_nonefficient_bulbs=77&electric_utility=Eversource",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"led_lighting"
+					],
+					"query": [
+						{
+							"key": "fraction_led_replacement",
+							"value": "All"
+						},
+						{
+							"key": "number_nonefficient_bulbs",
+							"value": "77"
+						},
+						{
+							"key": "electric_utility",
+							"value": "Eversource"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on energystar_fridge",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/energystar_fridge",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"energystar_fridge"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energystar_fridge >20",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energystar_fridge?replace_refrigerator=Yes&extra_refrigerator=Yes&refrigerator_age=>20 years",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energystar_fridge"
+					],
+					"query": [
+						{
+							"key": "replace_refrigerator",
+							"value": "Yes"
+						},
+						{
+							"key": "extra_refrigerator",
+							"value": "Yes"
+						},
+						{
+							"key": "refrigerator_age",
+							"value": ">20 years"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energystar_fridge 15-20",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energystar_fridge?replace_refrigerator=Yes&refrigerator_age=15-20 years",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energystar_fridge"
+					],
+					"query": [
+						{
+							"key": "replace_refrigerator",
+							"value": "Yes"
+						},
+						{
+							"key": "extra_refrigerator",
+							"value": "Yes",
+							"disabled": true
+						},
+						{
+							"key": "refrigerator_age",
+							"value": "15-20 years"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energystar_fridge 10-15",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energystar_fridge?replace_refrigerator=Yes&refrigerator_age=10-15 years",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energystar_fridge"
+					],
+					"query": [
+						{
+							"key": "replace_refrigerator",
+							"value": "Yes"
+						},
+						{
+							"key": "extra_refrigerator",
+							"value": "Yes",
+							"disabled": true
+						},
+						{
+							"key": "refrigerator_age",
+							"value": "10-15 years"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energystar_fridge 0-10",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energystar_fridge?replace_refrigerator=Yes&refrigerator_age=0-10 years",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energystar_fridge"
+					],
+					"query": [
+						{
+							"key": "replace_refrigerator",
+							"value": "Yes"
+						},
+						{
+							"key": "extra_refrigerator",
+							"value": "Yes",
+							"disabled": true
+						},
+						{
+							"key": "refrigerator_age",
+							"value": "0-10 years"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on energystar_washer",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/energystar_washer",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"energystar_washer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate energystar_washer",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/energystar_washer?replace_washer=Yes&washer_age=10-15 years&washer_energystar=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"energystar_washer"
+					],
+					"query": [
+						{
+							"key": "replace_washer",
+							"value": "Yes"
+						},
+						{
+							"key": "washer_age",
+							"value": "10-15 years"
+						},
+						{
+							"key": "washer_energystar",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on induction_stove",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/induction_stove",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"induction_stove"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate induction_stove",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/induction_stove?induction_stove=Yes&stove_type=Gas",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"induction_stove"
+					],
+					"query": [
+						{
+							"key": "induction_stove",
+							"value": "Yes"
+						},
+						{
+							"key": "stove_type",
+							"value": "Gas"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on hp_dryer",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/hp_dryer",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"hp_dryer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate hp_dryer",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/hp_dryer?replace_dryer=Yes&dryer_type=Gas&dryer_loads=8",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"hp_dryer"
+					],
+					"query": [
+						{
+							"key": "replace_dryer",
+							"value": "Yes"
+						},
+						{
+							"key": "dryer_type",
+							"value": "Gas"
+						},
+						{
+							"key": "dryer_loads",
+							"value": "8"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on coldwater_wash",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/coldwater_wash",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"coldwater_wash"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate coldwater_wash",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/coldwater_wash?cold_water_wash=Yes&washer_loads=2&washer_age=0-10 years&washer_energystar=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"coldwater_wash"
+					],
+					"query": [
+						{
+							"key": "cold_water_wash",
+							"value": "Yes"
+						},
+						{
+							"key": "washer_loads",
+							"value": "2"
+						},
+						{
+							"key": "washer_age",
+							"value": "0-10 years"
+						},
+						{
+							"key": "washer_energystar",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate coldwater_wash Warm",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/coldwater_wash?cold_water_wash=Yes, warm&washer_loads=2&washer_age=0-10 years&washer_energystar=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"coldwater_wash"
+					],
+					"query": [
+						{
+							"key": "cold_water_wash",
+							"value": "Yes, warm"
+						},
+						{
+							"key": "washer_loads",
+							"value": "2"
+						},
+						{
+							"key": "washer_age",
+							"value": "0-10 years"
+						},
+						{
+							"key": "washer_energystar",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on line_dry",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/line_dry",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"line_dry"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate line_dry",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/line_dry?line_or_rack_dry=Yes&dryer_type=Electric&washer_loads=10",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"line_dry"
+					],
+					"query": [
+						{
+							"key": "line_or_rack_dry",
+							"value": "Yes"
+						},
+						{
+							"key": "dryer_type",
+							"value": "Electric"
+						},
+						{
+							"key": "washer_loads",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on fridge_pickup",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/fridge_pickup",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"fridge_pickup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate fridge_pickup",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/fridge_pickup?extra_refrigerator_pickup=Yes&extra_refrigerator=Yes&extra_refrigerator_age=>20 years",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"fridge_pickup"
+					],
+					"query": [
+						{
+							"key": "extra_refrigerator_pickup",
+							"value": "Yes"
+						},
+						{
+							"key": "extra_refrigerator",
+							"value": "Yes"
+						},
+						{
+							"key": "extra_refrigerator_age",
+							"value": ">20 years"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on smart_power_strip",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/smart_power_strip",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"smart_power_strip"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate smart_power_strip",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/smart_power_strip?smart_power_strips=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"smart_power_strip"
+					],
+					"query": [
+						{
+							"key": "smart_power_strips",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on electricity_monitor",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/electricity_monitor",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"electricity_monitor"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate electricity_monitor Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/electricity_monitor?electricity_monitor=Yes&monthly_elec_bill=500",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"electricity_monitor"
+					],
+					"query": [
+						{
+							"key": "electricity_monitor",
+							"value": "Yes"
+						},
+						{
+							"key": "monthly_elec_bill",
+							"value": "500"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on replace_car",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/replace_car",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"replace_car"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate replace_car Electric",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/replace_car?replace_car=Yes&car_new_type=Electric&car_mpg=18.",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"replace_car"
+					],
+					"query": [
+						{
+							"key": "replace_car",
+							"value": "Yes"
+						},
+						{
+							"key": "car_new_type",
+							"value": "Electric"
+						},
+						{
+							"key": "car_mpg",
+							"value": "18."
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate replace_car Plug-in Hybrid",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/replace_car?replace_car=Yes&car_new_type=Plug-in Hybrid&car_mpg=18.",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"replace_car"
+					],
+					"query": [
+						{
+							"key": "replace_car",
+							"value": "Yes"
+						},
+						{
+							"key": "car_new_type",
+							"value": "Plug-in Hybrid"
+						},
+						{
+							"key": "car_mpg",
+							"value": "18."
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate replace_car Hybrid",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/replace_car?replace_car=Yes&car_new_type=Hybrid&car_mpg=18.",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"replace_car"
+					],
+					"query": [
+						{
+							"key": "replace_car",
+							"value": "Yes"
+						},
+						{
+							"key": "car_new_type",
+							"value": "Hybrid"
+						},
+						{
+							"key": "car_mpg",
+							"value": "18."
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate replace_car 35mpg",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/replace_car?replace_car=Yes&car_new_mpg=35&car_mpg=18.",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"replace_car"
+					],
+					"query": [
+						{
+							"key": "replace_car",
+							"value": "Yes"
+						},
+						{
+							"key": "car_new_mpg",
+							"value": "35"
+						},
+						{
+							"key": "car_mpg",
+							"value": "18."
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_car_miles",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_car_miles",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_car_miles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_car_miles 1000 miles",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_car_miles?reduce_total_milage=1000",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_car_miles"
+					],
+					"query": [
+						{
+							"key": "reduce_total_milage",
+							"value": "1000"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_car_miles 1000 miles public_trans",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_car_miles?reduce_total_milage=2000&transportation_public=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_car_miles"
+					],
+					"query": [
+						{
+							"key": "reduce_total_milage",
+							"value": "2000"
+						},
+						{
+							"key": "transportation_public",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on eliminate_car",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/eliminate_car",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"eliminate_car"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate eliminate_car",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/eliminate_car?eliminate_car=Yes&transportation_public=Yes&transportation_public_amount=20",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"eliminate_car"
+					],
+					"query": [
+						{
+							"key": "eliminate_car",
+							"value": "Yes"
+						},
+						{
+							"key": "transportation_public",
+							"value": "Yes"
+						},
+						{
+							"key": "transportation_public_amount",
+							"value": "20"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_flights",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_flights",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_flights"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_flights flight_amount=10 stop altogether",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_flights?flight_amount=10&transportation_flights=Stop flying altogether",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_flights"
+					],
+					"query": [
+						{
+							"key": "flight_amount",
+							"value": "10"
+						},
+						{
+							"key": "transportation_flights",
+							"value": "Stop flying altogether"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_flights flight_amount=10 50%",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_flights?flight_amount=10&transportation_flights=50% fewer",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_flights"
+					],
+					"query": [
+						{
+							"key": "flight_amount",
+							"value": "10"
+						},
+						{
+							"key": "transportation_flights",
+							"value": "50% fewer"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_flights flight_amount=10 10%",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_flights?flight_amount=10&transportation_flights=10% fewer",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_flights"
+					],
+					"query": [
+						{
+							"key": "flight_amount",
+							"value": "10"
+						},
+						{
+							"key": "transportation_flights",
+							"value": "10% fewer"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on offset_flights",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/offset_flights",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"offset_flights"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate offset_flights Usually",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/offset_flights?flights_amount=10&offset_flights=Usually",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"offset_flights"
+					],
+					"query": [
+						{
+							"key": "flights_amount",
+							"value": "10"
+						},
+						{
+							"key": "offset_flights",
+							"value": "Usually"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on low_carbon_diet",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/low_carbon_diet",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"low_carbon_diet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate low_carbon_diet switch_meal",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/low_carbon_diet?family_size=6.&eating_switch_meals_amount=3&eating_switch_meals=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"low_carbon_diet"
+					],
+					"query": [
+						{
+							"key": "family_size",
+							"value": "6."
+						},
+						{
+							"key": "eating_switch_meals_amount",
+							"value": "3"
+						},
+						{
+							"key": "eating_switch_meals",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_waste",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_waste",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_waste"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_waste no actions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_waste?reduce_waste=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_waste"
+					],
+					"query": [
+						{
+							"key": "reduce_waste",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_waste reuse containers often",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_waste?reduce_waste=Yes&reuse_containers=Often",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_waste"
+					],
+					"query": [
+						{
+							"key": "reduce_waste",
+							"value": "Yes"
+						},
+						{
+							"key": "reuse_containers",
+							"value": "Often"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_waste buy_bulk sometimes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_waste?reduce_waste=Yes&buy_bulk=Sometimes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_waste"
+					],
+					"query": [
+						{
+							"key": "reduce_waste",
+							"value": "Yes"
+						},
+						{
+							"key": "buy_bulk",
+							"value": "Sometimes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_waste buy_recycled always",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_waste?reduce_waste=Yes&buy_recycled=Always",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_waste"
+					],
+					"query": [
+						{
+							"key": "reduce_waste",
+							"value": "Yes"
+						},
+						{
+							"key": "buy_recycled",
+							"value": "Always"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_waste buy_recycled sometimes buy_sell_used often",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_waste?reduce_waste=Yes&buy_recycled=Sometimes&buy_sell_used=Often",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_waste"
+					],
+					"query": [
+						{
+							"key": "reduce_waste",
+							"value": "Yes"
+						},
+						{
+							"key": "buy_recycled",
+							"value": "Sometimes"
+						},
+						{
+							"key": "buy_sell_used",
+							"value": "Often"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on compost",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/compost",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"compost"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate compost Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/compost?compost_food_waste=Yes",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"compost"
+					],
+					"query": [
+						{
+							"key": "compost_food_waste",
+							"value": "Yes"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate compost No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/compost?compost_food_waste=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"compost"
+					],
+					"query": [
+						{
+							"key": "compost_food_waste",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_lawn_size",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_lawn_size",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_lawn_size"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_size, eliminate",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_size?reduce_lawn_size=Eliminate Lawn&lawn_size=Medium (500-2000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_size"
+					],
+					"query": [
+						{
+							"key": "reduce_lawn_size",
+							"value": "Eliminate Lawn"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Medium (500-2000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_size, large change",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_size?reduce_lawn_size=Large Change&lawn_size=Large (>5000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_size"
+					],
+					"query": [
+						{
+							"key": "reduce_lawn_size",
+							"value": "Large Change"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_size, medium change",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_size?reduce_lawn_size=Medium Change&lawn_size=Large (>5000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_size"
+					],
+					"query": [
+						{
+							"key": "reduce_lawn_size",
+							"value": "Medium Change"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_size, small change",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_size?reduce_lawn_size=Small Change&lawn_size=Large (>5000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_size"
+					],
+					"query": [
+						{
+							"key": "reduce_lawn_size",
+							"value": "Small Change"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on reduce_lawn_care",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/reduce_lawn_care",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"reduce_lawn_care"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_care 10 less mows, Large",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_care?mowing_frequency=Ten Less&lawn_size=Large (>5000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_care"
+					],
+					"query": [
+						{
+							"key": "mowing_frequency",
+							"value": "Ten Less"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_care 10 less mows, Large electric",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_care?mowing_frequency=Ten Less&lawn_size=Large (>5000 sq ft)&mower_type=No",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_care"
+					],
+					"query": [
+						{
+							"key": "mowing_frequency",
+							"value": "Ten Less"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						},
+						{
+							"key": "mower_type",
+							"value": "No"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_care 5 less mows, Large",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_care?mowing_frequency=Five Less&lawn_size=Large (>5000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_care"
+					],
+					"query": [
+						{
+							"key": "mowing_frequency",
+							"value": "Five Less"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_care 2 less mows, Large",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_care?mowing_frequency=Two Less&lawn_size=Large (>5000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_care"
+					],
+					"query": [
+						{
+							"key": "mowing_frequency",
+							"value": "Two Less"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate reduce_lawn_care 2 less mows and fertilizier",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/reduce_lawn_care?mowing_frequency=Two Less&lawn_size=Large (>5000 sq ft)&fertilizer_applications=3 less",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"reduce_lawn_care"
+					],
+					"query": [
+						{
+							"key": "mowing_frequency",
+							"value": "Two Less"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						},
+						{
+							"key": "fertilizer_applications",
+							"value": "3 less"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on electric_mower",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/electric_mower",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"electric_mower"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate electric_mower Yes, Large",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/electric_mower?mower_switch=Yes&lawn_size=Large (>5000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"electric_mower"
+					],
+					"query": [
+						{
+							"key": "mower_switch",
+							"value": "Yes"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Large (>5000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate electric_mower Yes, Sizable",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/electric_mower?mower_switch=Yes&lawn_size=Sizable (2000-5000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"electric_mower"
+					],
+					"query": [
+						{
+							"key": "mower_switch",
+							"value": "Yes"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Sizable (2000-5000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate electric_mower Yes, Medium",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/electric_mower?mower_switch=Yes&lawn_size=Medium (500-2000 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"electric_mower"
+					],
+					"query": [
+						{
+							"key": "mower_switch",
+							"value": "Yes"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Medium (500-2000 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate electric_mower Yes, Small",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/electric_mower?mower_switch=Yes&lawn_size=Small (<500 sq ft)",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"electric_mower"
+					],
+					"query": [
+						{
+							"key": "mower_switch",
+							"value": "Yes"
+						},
+						{
+							"key": "lawn_size",
+							"value": "Small (<500 sq ft)"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get info on rake_elec_blower",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/info/action/rake_elec_blower",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"info",
+						"action",
+						"rake_elec_blower"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate rake_elec_blower, Yes, dont currently blow",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/rake_elec_blower?leaf_cleanup_blower_switch=Yes&leaf_cleanup_gas_blower=No&lawn_size=8000",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"rake_elec_blower"
+					],
+					"query": [
+						{
+							"key": "leaf_cleanup_blower_switch",
+							"value": "Yes"
+						},
+						{
+							"key": "leaf_cleanup_gas_blower",
+							"value": "No"
+						},
+						{
+							"key": "lawn_size",
+							"value": "8000"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate rake_elec_blower, Yes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/rake_elec_blower?leaf_cleanup_blower_switch=Yes&leaf_cleanup_gas_blower=Yes&lawn_size=8000",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"rake_elec_blower"
+					],
+					"query": [
+						{
+							"key": "leaf_cleanup_blower_switch",
+							"value": "Yes"
+						},
+						{
+							"key": "leaf_cleanup_gas_blower",
+							"value": "Yes"
+						},
+						{
+							"key": "lawn_size",
+							"value": "8000"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate rake_elec_blower, Yes small lawn",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/rake_elec_blower?leaf_cleanup_blower_switch=Yes&leaf_cleanup_gas_blower=Yes&lawn_size=1000",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"rake_elec_blower"
+					],
+					"query": [
+						{
+							"key": "leaf_cleanup_blower_switch",
+							"value": "Yes"
+						},
+						{
+							"key": "leaf_cleanup_gas_blower",
+							"value": "Yes"
+						},
+						{
+							"key": "lawn_size",
+							"value": "1000"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Estimate rake_elec_blower, No",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/estimate/rake_elec_blower?leaf_cleanup_blower_switch=No&leaf_cleanup_gas_blower=No&lawn_size=8000",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"estimate",
+						"rake_elec_blower"
+					],
+					"query": [
+						{
+							"key": "leaf_cleanup_blower_switch",
+							"value": "No"
+						},
+						{
+							"key": "leaf_cleanup_gas_blower",
+							"value": "No"
+						},
+						{
+							"key": "lawn_size",
+							"value": "8000"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -1,6 +1,7 @@
 from database.models import ActionsPageSettings, UserProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.context import Context
 
 class ActionsPageSettingsStore:
   def __init__(self):
@@ -37,7 +38,7 @@ class ActionsPageSettingsStore:
     try:
       actions_page_id = args.get('id', None)
       if actions_page_id:
-        print(args)
+        
         actions_page_setting = ActionsPageSettings.objects.filter(id=actions_page_id)
         actions_page_setting.update(**args)
         if not actions_page_setting:

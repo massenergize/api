@@ -2,6 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.tag_collection import TagCollectionStore
+from _main_.utils.context import Context
 
 class TagCollectionService:
   """
@@ -17,8 +18,8 @@ class TagCollectionService:
       return None, err
     return serialize(tag_collection), None
 
-  def list_tag_collections(self, tag_collection_id) -> (list, MassEnergizeAPIError):
-    tag_collection, err = self.store.list_tag_collections(tag_collection_id)
+  def list_tag_collections(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    tag_collection, err = self.store.list_tag_collections(context, args)
     if err:
       return None, err
     return serialize_all(tag_collection), None

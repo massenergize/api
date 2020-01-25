@@ -2,6 +2,7 @@ from database.models import Goal, UserProfile, Team, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.db.models import F
+from _main_.utils.context import Context
 
 class GoalStore:
   def __init__(self):
@@ -12,6 +13,7 @@ class GoalStore:
       goal = Goal.objects.get(id=goal_id)
       return goal, None
     except Exception as e:
+      print(e)
       return None, InvalidResourceError()
 
 
@@ -105,7 +107,7 @@ class GoalStore:
       args.pop('more_info', None)
       args.pop('team', None)
 
-      print(args)
+      
       goal.update(**args)
       return goal.first(), None
     except Exception as e:
@@ -139,8 +141,48 @@ class GoalStore:
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
-  def list_goals_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    return self.list_goals(community_id, None, None)
+
+  def _get_goals_from_community(self, community):
+    goals = []
+    if not community:
+      return goals
+
+    if community and community.goal:
+      goals.append(community.goal)
+
+    for t in community.team_set.all():
+      if t.goal is not None:
+        goals.append(t.goal)
+    
+    return goals
+
+
+  def list_goals_for_community_admin(self, context, community_id) -> (list, MassEnergizeAPIError):
+    try:
+      if context.user_is_super_admin:
+        return self.list_goals_for_super_admin()
+
+      elif not context.user_is_community_admin:
+        return None, CustomMassenergizeError("Sign in as a valid community admin")
+
+      goals = []
+
+      if not community_id:
+        user = UserProfile.objects.get(pk=context.user_id)
+        admin_groups = user.communityadmingroup_set.all()
+        for ag in admin_groups:
+          goals.extend(self._get_goals_from_community(ag.community))
+      else:
+        community: Community = Community.objects.get(pk=community_id)
+        goals.extend(self._get_goals_from_community(community))
+      
+      return goals, None
+
+    except Exception as e:
+      print(e)
+      import traceback
+      traceback.print_exc()
+      return None, CustomMassenergizeError(e)
 
 
   def list_goals_for_super_admin(self):

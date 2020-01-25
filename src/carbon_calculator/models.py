@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
-from database.utils.constants import *
+from django.forms.models import model_to_dict
+from database.utils.constants import SHORT_STR_LEN, TINY_STR_LEN
 from database.utils.common import  json_loader
 # Create your models here.
 
@@ -9,28 +10,34 @@ MED_STR_LEN = 200
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 
 class CarbonCalculatorMedia(models.Model):
-  """
-  A class used to represent any CarbonCalculatorMedia that is uploaded to this website
+    """
+    A class used to represent any CarbonCalculatorMedia that is uploaded to this website
 
-  Attributes
-  ----------
-  name : SlugField
-    The short name for this media.  It cannot only contain letters, numbers,
-    hypens and underscores.  No spaces allowed.
-  file : File
-    the file that is to be stored.
-  media_type: str
-    the type of this media file whether it is an image, video, pdf etc.
-  """
-  id = models.AutoField(primary_key=True)
-  file = models.FileField(upload_to='cc_media/')
-  is_deleted = models.BooleanField(default=False)
+    Attributes
+    ----------
+    name : SlugField
+        The short name for this media.  It cannot only contain letters, numbers,
+        hypens and underscores.  No spaces allowed.
+    file : File
+        the file that is to be stored.
+    media_type: str
+        the type of this media file whether it is an image, video, pdf etc.
+    """
+    id = models.AutoField(primary_key=True)
+    file = models.FileField(upload_to='cc_media/')
+    is_deleted = models.BooleanField(default=False)
 
-  def __str__(self):      
-    return self.file.name
+    def simple_json(self):
+        return model_to_dict(self)
 
-  class Meta:
-    db_table = "cc_media_files"
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):      
+        return self.file.name
+
+    class Meta:
+        db_table = "media_files_cc"
 
 
 class Action(models.Model):
@@ -55,11 +62,20 @@ class Action(models.Model):
     questions = JSONField(blank=True)    # list of questions by name
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
 
+    def info(self):
+        return model_to_dict(self, ['id', 'name', 'description', 'average_points'])
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
     def __str__(self):      
         return self.name
 
     class Meta:
-        db_table = 'cc_actions'
+        db_table = 'actions_cc'
 
 
 class Question(models.Model):
@@ -101,11 +117,17 @@ class Question(models.Model):
     response_6 = models.CharField(max_length=SHORT_STR_LEN, null=True)
     skip_6 = JSONField(blank=True, null=True)
 
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
     def __str__(self):      
         return self.name
 
     class Meta:
-        db_table = 'cc_questions'
+        db_table = 'questions_cc'
 
 class Station(models.Model):
     id = models.AutoField(primary_key=True)
@@ -115,11 +137,19 @@ class Station(models.Model):
     icon = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_station_icon')
     actions = JSONField(blank=True, null=True)
 
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
     def __str__(self):      
         return self.displayname
 
     class Meta:
-        db_table = 'cc_stations'
+        db_table = 'stations_cc'
+
+
 
 class Group(models.Model):
     id = models.AutoField(primary_key=True)
@@ -130,11 +160,64 @@ class Group(models.Model):
     points = models.PositiveIntegerField(default=0)
     savings = models.DecimalField(default=0.0,max_digits=10,decimal_places=2)
     
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
     def __str__(self):      
         return self.displayname
 
     class Meta:
-        db_table = 'cc_groups'
+        db_table = 'groups_cc'
+
+
+class CalcUser(models.Model):
+    """
+    A class used to represent a Calculator User
+
+    Note: Authentication is handled by firebase so we just need emails
+
+    Attributes
+    ----------
+    email : str
+      email of the user.  Should be unique.
+      created_at: DateTime
+      The date and time that this goal was added 
+    created_at: DateTime
+      The date and time of the last time any updates were made to the information
+      about this goal
+
+    """
+    id = models.AutoField(primary_key=True)
+    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    first_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    last_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    email = models.EmailField(max_length=SHORT_STR_LEN, 
+      unique=True, db_index=True)
+    locality = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    groups = models.ManyToManyField(Group, blank=True)
+    minimum_age = models.BooleanField(default=False, blank=True)
+    accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    #updated 12/1
+    points = models.IntegerField(default = 0) 
+    cost = models.IntegerField(default = 0)
+    savings = models.IntegerField(default = 0)
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):
+        return self.email
+#
+    class Meta:
+        db_table = 'user_profiles_cc' 
 
 class Event(models.Model):
     id = models.AutoField(primary_key=True)
@@ -157,66 +240,21 @@ class Event(models.Model):
     sponsor_url = models.URLField(blank=True)
     sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
         null=True, blank=True, related_name='event_sponsor_logo')
+#   updated 11/24
+    attendees = models.ManyToManyField(CalcUser, blank=True)
 
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
 
     def __str__(self):      
         return self.displayname
 
     class Meta:
-        db_table = 'cc_events'
+        db_table = 'events_cc'
 
-class CalcUser(models.Model):
-    """
-    A class used to represent a Calculator User
-
-    Note: Authentication is handled by firebase so we just need emails
-
-    Attributes
-    ----------
-    email : str
-      email of the user.  Should be unique.
-      created_at: DateTime
-      The date and time that this goal was added 
-    created_at: DateTime
-      The date and time of the last time any updates were made to the information
-      about this goal
-
-    """
-    id = models.AutoField(primary_key=True)
-    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-    first_name = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    last_name = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    email = models.EmailField(max_length=SHORT_STR_LEN, 
-      unique=True, db_index=True)
-    locality = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    groups = models.ManyToManyField(Group, blank=True)
-    minimum_age = models.BooleanField(default=False, blank=True)
-    accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.email
-#
-#def simple_json(self):
-#  res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email'])
-#  res['user_info'] = self.user_info
-#  res['profile_picture'] = get_json_if_not_none(self.profile_picture)
-#  return res
-#
-#
-#def full_json(self):
-#  data = model_to_dict(self, exclude=['real_estate_units', 
-#    'communities', 'roles'])
-#  data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
-#  data['goal'] = get_json_if_not_none(self.goal)
-#  data['communities'] = [c.simple_json() for c in self.communities.all()]
-#  data['teams'] = [t.simple_json() for t in self.team_members.all()]
-#  data['profile_picture'] = get_json_if_not_none(self.profile_picture)
-#  return data
-#
-    class Meta:
-        db_table = 'cc_user_profiles' 
 
 class ActionPoints(models.Model):
     """
@@ -234,12 +272,18 @@ class ActionPoints(models.Model):
     points = models.IntegerField(default = 0) 
     cost = models.IntegerField(default = 0)
     savings = models.IntegerField(default = 0)
-#
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+#        
     def __str__(self):      
         return "%s-%s-(%s)" % (self.action, self.user, self.created_date)
 
     class Meta:
-        db_table = 'cc_action_points'
+        db_table = 'action_points_cc'
 #
 #
 class CalcDefault(models.Model):
@@ -254,8 +298,15 @@ class CalcDefault(models.Model):
     reference = models.CharField(max_length=MED_STR_LEN)
     updated = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        db_table = 'cc_defaults'
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
 
     def __str__(self):      
         return "%s : %s = %.3f" % (self.locality,self.variable, self.value)
+
+    class Meta:
+        db_table = 'defaults_cc'
+
