@@ -39,9 +39,10 @@ class TeamStore:
       teams = Team.objects.filter(community=community)
       ans = []
       for team in teams:
-        res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+        res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
         res["team"] = team.simple_json()
         for m in team.members.all():
+          res["members"] += 1
           res["households"] += m.real_estate_units.count()
           actions = m.useractionrel_set.all()
           res["actions"] += len(actions)

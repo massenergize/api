@@ -82,7 +82,8 @@ class MiscellaneousStore:
           d = Data.objects.filter(community=community, name=tag.name).first()
           if d:
             val = 0
-            user_actions = UserActionRel.objects.filter(action__community=community, status="DONE")
+#            user_actions = UserActionRel.objects.filter(action__community=community, status="DONE")
+            user_actions = UserActionRel.objects.filter(real_estate_unit__community=community, status="DONE")
             for user_action in user_actions:
               if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
                 val += 1

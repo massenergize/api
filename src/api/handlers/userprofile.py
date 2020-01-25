@@ -31,6 +31,7 @@ class UserHandler(RouteHandler):
     self.add("/users.actions.todo.list", self.list_actions_todo())
     self.add("/users.actions.completed.list", self.list_actions_completed())
     self.add("/users.households.add", self.add_household())
+    self.add("/users.households.edit", self.edit_household())
     self.add("/users.households.remove", self.remove_household())
     self.add("/users.households.list", self.list_households())
     self.add("/users.events.list", self.list_events())
@@ -221,6 +222,16 @@ class UserHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
     return add_household_view
+
+  def edit_household(self) -> function:
+    def edit_household_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      user_info, err = self.service.edit_household(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return edit_household_view
 
   def list_events(self) -> function:
     def list_events_view(request) -> None: 
