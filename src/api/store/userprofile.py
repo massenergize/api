@@ -102,8 +102,10 @@ class UserStore:
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+
       email = args.get('email', None) 
-      subdomain = args.pop('subdomain', None)
+      community = get_community_or_die(context, args)
+
 
       # allow home address to be passed in
       location = args.pop('location', '')
@@ -111,34 +113,28 @@ class UserStore:
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
       
-      user = UserProfile.objects.filter(email=email)
+      user = UserProfile.objects.filter(email=email).first()
       if not user:
-        new_user = UserProfile.objects.create(**args)
-        new_user.save()
+        new_user: UserProfile = UserProfile.objects.create(
+          full_name = args.get('full_name'), 
+          preferred_name = args.get('preferred_name', None), 
+          email = args.get('email'), 
+          is_vendor = args.get('is_vendor', False), 
+          accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+        )
       else:
-        new_user = user.first()
-      
-      community = None
-      if subdomain:
-        community = Community.objects.filter(subdomain=subdomain).first()
-        if community:
-          new_user.communities.add(community)
-          new_user.save()
+        new_user: UserProfile = user.first()
 
-          community_membership = CommunityMember.objects.filter(user=new_user, community=community)
-          if not community_membership:
-            # add them as a member to community 
-            CommunityMember.objects.create(user=new_user, community=community)
 
-            #create their first household
-            household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
-            new_user.real_estate_units.add(household)
-      
-      global_community = Community.objects.filter(subdomain="global").first()
-      global_membership = CommunityMember.objects.create(user=new_user, community=global_community)
-      if not global_membership:
-        global_membership = CommunityMember.objects.create(user=new_user, community=global_community)
+      community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
+      if not community_member_exists:
+        # add them as a member to community 
+        CommunityMember.objects.create(user=new_user, community=community)
 
+        #create their first household
+        household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
+        new_user.real_estate_units.add(household)
+    
       
       res = {
         "user": new_user,
