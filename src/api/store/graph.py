@@ -1,4 +1,4 @@
-from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel
+from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel,RealEstateUnit
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -75,7 +75,7 @@ class GraphStore:
         graph.data.add(d)
       graph.save()
 
-      res = graph.full_json()
+      res = graph.full_json()     
       res['community'] = community.info()
       return res, None
       
@@ -87,7 +87,9 @@ class GraphStore:
 
   def _get_households_engaged(self, community: Community):
     households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
-    actions_completed = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").count()
+    households_engaged += (RealEstateUnit.objects.filter(community=community).count())
+    actions_completed = 0 if not community.goal else community.goal.attained_number_of_actions
+    actions_completed += UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").count()
     return {"community": {"id": community.id, "name": community.name}, "actions_completed": actions_completed, "households_engaged": households_engaged}
 
 
@@ -114,7 +116,6 @@ class GraphStore:
 
         if c.id != community.id:
           res.append(self._get_households_engaged(c))
-
       return {
         "id": 1,
         "title": "Communities Impact",
