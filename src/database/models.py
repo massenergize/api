@@ -295,8 +295,8 @@ class Community(models.Model):
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
     # 
     # For Wayland launch, insisting that we show large numbers so people feel good about it.
-    # goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count())
-    # goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+    goal["attained_number_of_households"] += (RealEstateUnit.objects.filter(community=self).count())
+    goal["attained_number_of_actions"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
     return {
       "id": self.id,
@@ -1912,8 +1912,8 @@ class HomePageSettings(models.Model):
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
     # 
     # For Wayland launch, insisting that we show large numbers so people feel good about it.
-    # goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    # goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").count())
+    goal["attained_number_of_households"] += (RealEstateUnit.objects.filter(community=self.community).count())
+    goal["attained_number_of_actions"] += (UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").count())
   
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
