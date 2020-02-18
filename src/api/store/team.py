@@ -41,10 +41,14 @@ class TeamStore:
       for team in teams:
         res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
         res["team"] = team.simple_json()
-        for m in team.members.all():
-          res["members"] += 1
-          res["households"] += m.real_estate_units.count()
-          actions = m.useractionrel_set.all()
+        # team.members deprecated
+        # for m in team.members.all():
+        members = TeamMember.objects.filter(team=team)
+        res["members"] = members.count()
+        for m in members:
+          user = m.user
+          res["households"] += user.real_estate_units.count()
+          actions = user.useractionrel_set.all()
           res["actions"] += len(actions)
           res["actions_completed"] += actions.filter(**{"status":"DONE"}).count()
           res["actions_todo"] += actions.filter(**{"status":"TODO"}).count()
@@ -81,10 +85,14 @@ class TeamStore:
         new_team.logo = logo
 
       new_team.save()
+
       if user_id:
-        new_team.members.add(user_id)
-        new_team.admins.add(user_id)
-      new_team.save()
+        # team.members deprecated
+        teamMember = TeamMember.create(team=team,user=user,is_admin=True)
+        #new_team.members.add(user_id)
+        #new_team.admins.add(user_id)
+        teamMember.save()
+      #new_team.save()
       return new_team, None
     except Exception as e:
       print(e)
@@ -126,7 +134,16 @@ class TeamStore:
       teams = Team.objects.filter(id=team_id)
       if not teams:
         return None, InvalidResourceError()
-      teams.delete()
+
+
+      # team.members deprecated.  Delete TeamMembers separate step
+      team = teams.first()
+      members = TeamMembers.objects.filter(team=team)
+      msg = "delete_team:  Team %s deleting %d members" % (team.name,members.count())
+      print(msg)
+      members.delete()
+      teams.delete()  # or should that be team.delete()?
+
       return teams.first(), None
     except Exception as e:
       print(e)
@@ -136,8 +153,12 @@ class TeamStore:
   def join_team(self, team_id, user_id) -> (Team, MassEnergizeAPIError):
     try:
       team = Team.objects.get(id=team_id)
-      team.members.add(user_id)
-      team.save()
+      user = UserProfile.objects.get(id=user_id)
+      teamMember = TeamMember.create(team=team, user=user)
+      teamMember.save()
+      print("join_team")
+      #team.members.add(user_id)
+      #team.save()
       return team, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
@@ -145,9 +166,13 @@ class TeamStore:
   def leave_team(self, team_id, user_id) -> (Team, MassEnergizeAPIError):
     try:
       team = Team.objects.get(id=team_id)
-      team.members.remove(user_id)
-      team.admins.remove(user_id)
-      team.save()
+      user = UserProfile.objects.get(id=user_id)
+      teamMembers = TeamMember.objects.filter(team=team, user=user)
+      teamMembers.delete()
+      print("leave_team")
+      #team.members.remove(user_id)
+      #team.admins.remove(user_id)
+      #team.save()
       return team, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
