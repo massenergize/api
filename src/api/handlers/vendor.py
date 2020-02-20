@@ -66,7 +66,6 @@ class VendorHandler(RouteHandler):
       args = context.get_request_body() 
       validator: Validator = Validator()
       (validator
-        .expect("accepted_terms_and_conditions", bool)
         .expect("key_contact_name", str)
         .expect("key_contact_email", str)
         .expect("onboarding_contact_email", str)
@@ -88,10 +87,6 @@ class VendorHandler(RouteHandler):
       if err:
         return err
 
-      print(args)
-      if not args.pop('accepted_terms_and_conditions', False):
-        return MassenergizeResponse(error="Please accept terms the Terms And Conditions to Proceed")
-      
       args = parse_location(args)
 
       args['key_contact'] = {
