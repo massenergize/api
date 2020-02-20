@@ -31,6 +31,11 @@ class EventStore:
       new_event = event_to_copy 
       new_event.name = f"{event_to_copy.name}-Copy-{randint(1, 1000)}"
       new_event.is_published=False
+      new_event.start_date_and_time = event_to_copy.start_date_and_time
+      new_event.end_date_and_time = event_to_copy.end_date_and_time
+      new_event.description = event_to_copy.description
+      new_event.featured_summary = event_to_copy.featured_summary
+      new_event.location = event_to_copy.location
       new_event.save()
 
       #copy tags over

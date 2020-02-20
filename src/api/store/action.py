@@ -101,7 +101,6 @@ class ActionStore:
 
   def update_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
       action_id = args.pop('action_id', None)
       action = Action.objects.filter(id=action_id)
       if not action:
@@ -112,7 +111,6 @@ class ActionStore:
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
-      print(args)
       action.update(**args)
 
       action = action.first()
