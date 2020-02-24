@@ -1,4 +1,5 @@
 from database.models import Action, UserProfile, Community, Media, CommunityAdminGroup
+from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -16,10 +17,6 @@ class ActionStore:
       if not action:
         return None, InvalidResourceError()
 
-      # if context.is_prod and action.community:
-      #   if (not action.is_published) or not action.community.is_published:
-      #     return None, InvalidResourceError()
-
       return action, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -33,7 +30,7 @@ class ActionStore:
         actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain, is_deleted=False)
       else:
         return [], None
-      
+
       if not context.is_dev:
         actions = actions.filter(is_published=True)
 
@@ -42,12 +39,15 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_action(self, context: Context,community_id, args) -> (dict, MassEnergizeAPIError):
+  def create_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
+      calculator_action = args.pop('calculator_action', None)
       new_action = Action.objects.create(**args)
+
       
       if community_id and not args.get('is_global', False):
         community = Community.objects.get(id=community_id)
@@ -65,7 +65,13 @@ class ActionStore:
 
       if vendors:
         new_action.vendors.set(vendors)
-    
+
+      if calculator_action:
+        ccAction = CCAction.objects.filter(pk=calculator_action).first()
+        if ccAction:
+          print(ccAction)
+          new_action.calculator_action = ccAction
+
       new_action.save()
       return new_action, None
 
@@ -93,8 +99,10 @@ class ActionStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def update_action(self, context: Context, action_id, args) -> (dict, MassEnergizeAPIError):
+  def update_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      print(args)
+      action_id = args.pop('action_id', None)
       action = Action.objects.filter(id=action_id)
       if not action:
         return None, InvalidResourceError()
@@ -103,7 +111,8 @@ class ActionStore:
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
-      
+      calculator_action = args.pop('calculator_action', None)
+      print(args)
       action.update(**args)
 
       action = action.first()
@@ -121,21 +130,25 @@ class ActionStore:
         community = Community.objects.filter(id=community_id).first()
         if community:
           action.community = community
-    
+
+      if calculator_action:
+        ccAction = CCAction.objects.filter(pk=calculator_action).first()
+        if ccAction:
+          action.calculator_action = ccAction
+        
       action.save()
       return action, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_action(self, context: Context,action_id) -> (Action, MassEnergizeAPIError):
+  def delete_action(self, context: Context, action_id) -> (Action, MassEnergizeAPIError):
     try:
       #find the action
-      actions_to_delete = Action.objects.filter(id=action_id)
-      actions_to_delete.update(is_deleted=True)
-      if not actions_to_delete:
-        return None, InvalidResourceError()
-      return actions_to_delete.first(), None
+      action_to_delete = Action.objects.get(id=action_id)
+      action_to_delete.is_deleted = True 
+      action_to_delete.save()
+      return action_to_delete.first(), None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 

@@ -289,6 +289,15 @@ class Community(models.Model):
     else:
       admins = []
 
+    # get the community goal
+    goal = get_json_if_not_none(self.goal) or {}
+    # decision not to include state reported solar in this total
+    #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
+    # 
+    # For Wayland launch, insisting that we show large numbers so people feel good about it.
+    goal["attained_number_of_households"] += (RealEstateUnit.objects.filter(community=self).count())
+    goal["attained_number_of_actions"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+
     return {
       "id": self.id,
       "name": self.name,
@@ -296,7 +305,7 @@ class Community(models.Model):
       "owner_name": self.owner_name,
       "owner_email": self.owner_email,
       "owner_phone_number": self.owner_phone_number,
-      "goal": get_json_if_not_none(self.goal),
+      "goal": goal,
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
       "location":self.location,
@@ -351,9 +360,7 @@ class RealEstateUnit(models.Model):
     return self.unit_type == 'R'
 
   def __str__(self):
-    return '%s - Location: %s ' % (
-      self.unit_type, str(self.location)
-    )
+    return f"{self.community}|{self.unit_type}|{self.name}"
 
   def simple_json(self):
     return model_to_dict(self)
@@ -456,25 +463,30 @@ class UserProfile(models.Model):
     return self.email
 
   def info(self):
-    return model_to_dict(self, ['id', 'email', 'subdomain'])
+    return model_to_dict(self, ['id', 'email', 'full_name'])
 
   def simple_json(self):
     res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
     res['user_info'] = self.user_info
     res['profile_picture'] = get_json_if_not_none(self.profile_picture)
-    res['communities'] = [c.name for c in self.communities.all()]
+    res['communities'] = [c.community.name for c in CommunityMember.objects.filter(user=self)]
     return res
 
 
   def full_json(self):
+    team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
+    community_members = CommunityMember.objects.filter(user=self)
+    communities = [cm.community.info() for cm in community_members]
+    admin_at = [cm.community.info() for cm in CommunityMember.objects.filter(user=self, is_admin=True)]
+    
     data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles'])
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
-    data['communities'] = [c.info() for c in self.communities.all()]
+    data['communities'] = communities
     data['admin_at'] = admin_at
-    data['teams'] = [t.info() for t in self.team_members.all()]
+    data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
     return data
 
@@ -871,7 +883,7 @@ class Vendor(models.Model):
     return self.name
 
   def info(self):
-    return model_to_dict(self, ['id', 'name', 'service_area'])
+    return model_to_dict(self, ['id', 'name', 'service_area', 'key_contact', 'phone_number', 'email' ])
 
   def simple_json(self):
     data = model_to_dict(self, exclude=[
@@ -956,15 +968,19 @@ class Action(models.Model):
   def __str__(self): 
     return self.title
 
+  def info(self):
+    return model_to_dict(self, ['id','title'])
+
   def simple_json(self):
     data =  model_to_dict(self, ['id','is_published', 'is_deleted', 'title', 'is_global', 'icon', 'rank', 
       'average_carbon_score', 'featured_summary'])
     data['image'] = get_json_if_not_none(self.image)
-    data['calculator_action'] = self.calculator_action
+    data['calculator_action'] = get_summary_info(self.calculator_action)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
     data['about'] = self.about
-    data['community'] = get_json_if_not_none(self.community)
+    data['community'] = get_summary_info(self.community)
+    data['vendors'] = [v.info() for v in self.vendors.all()]
     return data
 
   def full_json(self):
@@ -1206,9 +1222,16 @@ class Testimonial(models.Model):
   def __str__(self):        
     return self.title
 
+  def info(self):
+    return model_to_dict(self, include=['id', 'title', 'community'])
+
   def simple_json(self):
+    anonymous = {
+      "full_name": "Anonymous",
+      "email": "anonymous"
+    }
     res = model_to_dict(self, exclude=['image', 'tags'])
-    res["user"] = get_json_if_not_none(self.user)
+    res["user"] = get_json_if_not_none(self.user) or  anonymous
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
@@ -1383,7 +1406,7 @@ class Data(models.Model):
   reported_value =  models.PositiveIntegerField(default=0)
   denominator =  models.CharField(max_length = SHORT_STR_LEN, blank=True)
   symbol = models.CharField(max_length = LONG_STR_LEN, blank=True)
-  tag = models.ForeignKey(Tag, blank=True, on_delete=models.SET_NULL, 
+  tag = models.ForeignKey(Tag, blank=True, on_delete=models.CASCADE, 
     null=True, db_index=True )
   community = models.ForeignKey(Community, blank=True,  
     on_delete=models.SET_NULL, null=True, db_index=True)
@@ -1884,12 +1907,20 @@ class HomePageSettings(models.Model):
 
 
   def full_json(self):
+    goal = get_json_if_not_none(self.community.goal) or {}
+    # decision not to include state reported solar
+    #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
+    # 
+    # For Wayland launch, insisting that we show large numbers so people feel good about it.
+    goal["attained_number_of_households"] += (RealEstateUnit.objects.filter(community=self.community).count())
+    goal["attained_number_of_actions"] += (UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").count())
+  
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     res['community'] = get_json_if_not_none(self.community)
     res['featured_events'] = [i.simple_json() for i in self.featured_events.all()]
     res['featured_stats'] = [i.simple_json() for i in self.featured_stats.all()]
-    res['goal']  = get_json_if_not_none(self.community.goal)
+    res['goal']  = goal
     return res
 
   class Meta:
@@ -1965,6 +1996,7 @@ class DonatePageSettings(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE,  db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  donation_link = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
@@ -2076,7 +2108,10 @@ class Message(models.Model):
   user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True) 
   body = models.TextField(max_length=LONG_STR_LEN)
   community = models.ForeignKey(Community, blank=True, on_delete=models.SET_NULL, null=True)
-  is_read = models.BooleanField(default=False, blank=True)
+  team = models.ForeignKey(Team, blank=True, on_delete=models.SET_NULL, null=True)
+  have_replied = models.BooleanField(default=False, blank=True)
+  have_forwarded = models.BooleanField(default=False, blank=True)
+  is_team_admin_message = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   archive = models.BooleanField(default=False, blank=True)
   starred = models.BooleanField(default=False, blank=True)
@@ -2089,7 +2124,8 @@ class Message(models.Model):
 
   def simple_json(self):
     res = model_to_dict(self)
-    res["community"] = None if not self.community else self.community.info()
+    res["community"] = get_summary_info(self.community)
+    res["team"] = get_summary_info(self.team)
     return res
 
   def full_json(self):
@@ -2163,3 +2199,5 @@ class Deployment(models.Model):
 
   class Meta:
     db_table = 'deployments'
+    ordering = ('-version',)
+

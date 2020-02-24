@@ -2,6 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.team import TeamStore
+from api.store.message import MessageStore
 from _main_.utils.context import Context
 
 class TeamService:
@@ -11,6 +12,7 @@ class TeamService:
 
   def __init__(self):
     self.store =  TeamStore()
+    self.message_store = MessageStore()
 
   def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
     team, err = self.store.get_team_info(team_id)
@@ -62,17 +64,29 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def add_team_admin(self, team_id, user_id, email) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.add_team_admin(team_id, user_id, email)
+  def add_member(self, context, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.add_team_member(context, args)
     if err:
       return None, err
     return serialize(team), None
 
-  def remove_team_admin(self, team_id, user_id, email) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.remove_team_admin(team_id, user_id, email)
+  def remove_team_member(self, context, args) -> (dict, MassEnergizeAPIError):
+    res, err = self.store.remove_team_member(context, args)
     if err:
       return None, err
-    return serialize(team), None
+    return res, None
+
+  def members(self, context, args) -> (dict, MassEnergizeAPIError):
+    members, err = self.store.members(context, args)
+    if err:
+      return None, err
+    return serialize_all(members), None
+
+  def message_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    message_info, err = self.message_store.message_team_admin(context, args)
+    if err:
+      return None, err
+    return serialize(message_info), None
 
 
   def list_teams_for_community_admin(self, context:Context, args) -> (list, MassEnergizeAPIError):

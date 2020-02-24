@@ -1,4 +1,4 @@
-from database.models import Team, UserProfile, Media, Community
+from database.models import Team, UserProfile, Media, Community, TeamMember
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
@@ -15,6 +15,10 @@ class TeamStore:
       return None, InvalidResourceError()
     return team, None
 
+  def get_team_admins(self, context, team_id):
+    if not team_id:
+      return []
+    return [a.user for a in TeamMember.objects.filter(is_admin=True, is_deleted=False) if a.user is not None]
 
   def list_teams(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
@@ -35,11 +39,16 @@ class TeamStore:
       teams = Team.objects.filter(community=community)
       ans = []
       for team in teams:
-        res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+        res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
         res["team"] = team.simple_json()
-        for m in team.members.all():
-          res["households"] += m.real_estate_units.count()
-          actions = m.useractionrel_set.all()
+        # team.members deprecated
+        # for m in team.members.all():
+        members = TeamMember.objects.filter(team=team)
+        res["members"] = members.count()
+        for m in members:
+          user = m.user
+          res["households"] += user.real_estate_units.count()
+          actions = user.useractionrel_set.all()
           res["actions"] += len(actions)
           res["actions_completed"] += actions.filter(**{"status":"DONE"}).count()
           res["actions_todo"] += actions.filter(**{"status":"TODO"}).count()
@@ -76,10 +85,14 @@ class TeamStore:
         new_team.logo = logo
 
       new_team.save()
+
       if user_id:
-        new_team.members.add(user_id)
-        new_team.admins.add(user_id)
-      new_team.save()
+        # team.members deprecated
+        teamMember = TeamMember.create(team=team,user=user,is_admin=True)
+        #new_team.members.add(user_id)
+        #new_team.admins.add(user_id)
+        teamMember.save()
+      #new_team.save()
       return new_team, None
     except Exception as e:
       print(e)
@@ -115,14 +128,22 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
     
 
-
   def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
     try:
       print(team_id)
       teams = Team.objects.filter(id=team_id)
       if not teams:
         return None, InvalidResourceError()
-      teams.delete()
+
+
+      # team.members deprecated.  Delete TeamMembers separate step
+      team = teams.first()
+      members = TeamMembers.objects.filter(team=team)
+      msg = "delete_team:  Team %s deleting %d members" % (team.name,members.count())
+      print(msg)
+      members.delete()
+      teams.delete()  # or should that be team.delete()?
+
       return teams.first(), None
     except Exception as e:
       print(e)
@@ -132,8 +153,12 @@ class TeamStore:
   def join_team(self, team_id, user_id) -> (Team, MassEnergizeAPIError):
     try:
       team = Team.objects.get(id=team_id)
-      team.members.add(user_id)
-      team.save()
+      user = UserProfile.objects.get(id=user_id)
+      teamMember = TeamMember.create(team=team, user=user)
+      teamMember.save()
+      print("join_team")
+      #team.members.add(user_id)
+      #team.save()
       return team, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
@@ -141,40 +166,66 @@ class TeamStore:
   def leave_team(self, team_id, user_id) -> (Team, MassEnergizeAPIError):
     try:
       team = Team.objects.get(id=team_id)
-      team.members.remove(user_id)
-      team.admins.remove(user_id)
-      team.save()
+      user = UserProfile.objects.get(id=user_id)
+      teamMembers = TeamMember.objects.filter(team=team, user=user)
+      teamMembers.delete()
+      print("leave_team")
+      #team.members.remove(user_id)
+      #team.admins.remove(user_id)
+      #team.save()
       return team, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
-  def add_team_admin(self, team_id, user_id, email) -> (Team, MassEnergizeAPIError):
+  def add_team_member(self, context: Context, args) -> (Team, MassEnergizeAPIError):
     try:
-      team = Team.objects.get(id=team_id)
-      if email:
-        user = UserProfile.objects.get(email=email)
-      elif user_id:
-        user = UserProfile.objects.get(pk=user_id)
-      team.admins.add(user)
-      
-      if user not in team.members.all():
-        team.members.add(user)
+      print(args)
+      team_id = args.pop('team_id', None)
+      user = get_user_or_die(context, args)
+      status = args.pop('is_admin', None) == 'true'
 
-      team.save()
-      return team, None
-    except Exception:
-      return None, InvalidResourceError()
+      if not team_id :
+        return None, CustomMassenergizeError("Missing team_id")
 
-  def remove_team_admin(self, team_id, user_id, email) -> (Team, MassEnergizeAPIError):
+      team_member: TeamMember = TeamMember.objects.filter(team__id=team_id, user=user).first()
+      if team_member:
+        team_member.is_admin = status
+        team_member.save()
+      else:
+        team = Team.objects.filter(pk=team_id).first()
+        if not team_id and not user:
+          return None, CustomMassenergizeError("Invalid team or user")
+        team_member = TeamMember.objects.create(is_admin=status, team=team, user=user)
+
+      return team_member, None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+  def remove_team_member(self, context: Context, args) -> (Team, MassEnergizeAPIError):
     try:
-      team = Team.objects.get(id=team_id)
-      if email:
-        user = UserProfile.objects.get(email=email)
-      elif user_id:
-        user = UserProfile.objects.get(pk=user_id)
-      team.admins.remove(user)
-      team.save()
-      return team, None
+      team_id = args.pop('team_id', None)
+      user = get_user_or_die(context, args)
+      res = {}
+      if team_id and user:
+        team_member = TeamMember.objects.filter(team__id=team_id, user=user)
+        res = team_member.delete()
+      return res, None
+    except Exception as e:
+      print(e)
+      return None, CustomMassenergizeError(e)
+
+
+  def members(self, context: Context, args) -> (Team, MassEnergizeAPIError):
+    try:
+      if not context.user_is_admin():
+        return None, NotAuthorizedError()
+      team_id = args.get('team_id', None)
+      if not team_id:
+        return [], CustomMassenergizeError('Please provide a valid team_id')
+
+      members = TeamMember.objects.filter(is_deleted=False, team__id=team_id)
+      return members, None
     except Exception:
       return None, InvalidResourceError()
 

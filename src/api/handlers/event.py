@@ -90,9 +90,8 @@ class EventHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       args['tags'] = parse_list(args.get('tags', []))
       args['is_global'] = parse_bool(args.pop('is_global', None))
-
-      if args.pop('have_address', None):
-        args = parse_location(args)
+      args['have_address'] =  parse_bool(args.pop('have_address', False))
+      args = parse_location(args)
 
       event_info, err = self.service.create_event(context, args)
       if err:
@@ -126,9 +125,8 @@ class EventHandler(RouteHandler):
 
       args['tags'] = parse_list(args.get('tags', []))
       args['is_global'] = parse_bool(args.pop('is_global', None))
-
-      if args.pop('have_address', None):
-        args = parse_location(args)
+      args['have_address'] =  parse_bool(args.pop('have_address', False))
+      args = parse_location(args)
 
       event_info, err = self.service.update_event(context, event_id, args)
       if err:

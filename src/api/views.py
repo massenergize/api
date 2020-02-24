@@ -1276,8 +1276,12 @@ def team_member(request, team_id, member_id):
     team, errors = FETCH.get_one(Team, {'id': team_id})
     team_member, errors = FETCH.get_one(UserProfile, {'id': member_id})
     if(team and team_member):
-      team.members.remove(team_member)
-      team.save()
+      teamMember = TeamMember.objects.filter(team=team,user=team_member)
+      teamMember.delete()
+      # team.members being deprecated.  Does this call get used?
+      print("views/team_member")
+      #team.members.remove(team_member)
+      #team.save()
       return Json(team, errors)
   return Json(None)
 
@@ -1291,12 +1295,17 @@ def team_stats(request, id):
     if team:
       res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
       res["team"] = team.simple_json()
-      for m in team.members.all():
-        res["households"] = len(m.real_estate_units.all())
-        actions = m.useractionrel_set.all()
-        res["actions"] = len(actions)
-        res["actions_completed"] = len(actions.filter(**{"status":"DONE"}))
-        res["actions_todo"] = len(actions.filter(**{"status":"TODO"}))
+      #Team.member deprecated
+      #for m in team.members.all():
+      teamMembers = TeamMember.objects.filter(team=team)
+      res["members"] = teamMembers.count()
+      for m in teamMembers:
+        user = m.user
+        res["households"] += len(user.real_estate_units.all())
+        actions = user.useractionrel_set.all()
+        res["actions"] += len(actions)
+        res["actions_completed"] += len(actions.filter(**{"status":"DONE"}))
+        res["actions_todo"] += len(actions.filter(**{"status":"TODO"}))
       return Json(res, errors)
 
   return Json(None)
@@ -1311,9 +1320,13 @@ def teams_stats(request):
     for team in teams:
       res = {"households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
       res["team"] = team.simple_json()
-      for m in team.members.all():
-        res["households"] += len(m.real_estate_units.all())
-        actions = m.useractionrel_set.all()
+      #Team.member deprecated
+      #for m in team.members.all():
+      teamMembers = TeamMember.objects.filter(team=team)
+      res["members"] = teamMembers.count()
+      for m in teamMembers:
+        res["households"] += len(user.real_estate_units.all())
+        actions = user.useractionrel_set.all()
         res["actions"] += len(actions)
         res["actions_completed"] += len(actions.filter(**{"status":"DONE"}))
         res["actions_todo"] += len(actions.filter(**{"status":"TODO"}))
@@ -1330,13 +1343,16 @@ def communities_stats(request):
     ans = []
     for community in communities:
       res = {"households_engaged": 0, "actions_completed": 0, "users_engaged":0}
-      res["community"] = community.simple_json();
+      res["community"] = community.simple_json()
       users, errors = FETCH.all(UserProfile, {"communities": community.id})
-      res["users_engaged"] = len(users);
-      for user in users:
-        actions_completed, errors = FETCH.all(UserActionRel, {"user": user.id, "status": "DONE"})
-        res["actions_completed"] += len(actions_completed)
-        res["households_engaged"] += len(user.real_estate_units.all())
+      res["users_engaged"] = len(users)
+
+      # changed to fix graph inconsistencies
+      communityData = community.full_json()
+      communityGoal = communityData["goal"]
+      res["households_engaged"] = communityGoal["attained_number_of_households"]
+      res["actions_completed"] = communityGoal["attained_number_of_actions"]
+    
       ans.append(res)
   return Json(ans, errors, do_not_serialize=True)
 
@@ -1351,10 +1367,13 @@ def community_stats(request, cid):
       res["community"] = community.simple_json();
       users, errors = FETCH.all(UserProfile, {"communities": community.id})
       res["users_engaged"] = len(users);
-      for user in users:
-        actions_completed, errors = FETCH.all(UserActionRel, {"user": user.id, "status": "DONE"})
-        res["actions_completed"] += len(actions_completed)
-        res["households_engaged"] += len(user.real_estate_units.all())
+
+      # changed to fix graph inconsistencies
+      communityData = community.full_json()
+      communityGoal = communityData["goal"]
+      res["households_engaged"] = communityGoal["attained_number_of_households"]
+      res["actions_completed"] = communityGoal["attained_number_of_actions"]
+
       return Json(res, errors, do_not_serialize=True)
   return Json(None)
 

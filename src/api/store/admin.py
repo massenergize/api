@@ -2,7 +2,7 @@ from database.models import UserProfile, CommunityAdminGroup, Community, Media, 
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from .utils import get_community, get_user
+from .utils import get_community, get_user, get_community_or_die
 
 import json
 
@@ -73,26 +73,23 @@ class AdminStore:
 
   def add_community_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
     try:
-      # if not context.user_is_super_admin and  not context.user_is_community_admin:
-      #   return None, CustomMassenergizeError("You must be a community/super Admin to add another Super Admin")
+      if not context.user_is_super_admin and  not context.user_is_community_admin:
+        return None, CustomMassenergizeError("You must be a community/super Admin to add another Super Admin")
       
       name = args.pop("name", None)
       email = args.pop("email", None)
       user_id = args.pop("user_id", None)
-      community_id = args.pop("community_id", None)
-      subdomain = args.pop("subdomain", None)
+      community = get_community_or_die(context, args)
 
-      if community_id:
-        admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community__id=community_id).first()
-      elif subdomain:
-        admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community__subdomain=subdomain).first()
-      else:
+      if not community:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
+
+      admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community=community).first()
 
       if email:
         user: UserProfile = UserProfile.objects.filter(email=email).first()
       elif user_id:
-        user: UserProfile = UserProfile.objects.filter(email=email).first()
+        user: UserProfile = UserProfile.objects.filter(user_id=user_id).first()
       else:
         user: UserProfile = None
 
@@ -105,15 +102,17 @@ class AdminStore:
       else:
         return None, CustomMassenergizeError("The user you are trying to add does not have an account yet")
       
-        # if not admin_group.pending_admins:
-        #   admin_group.pending_admins = {"data": [{"name": name, "email": email}]}
-        # else:
-        #   data = admin_group.pending_admins.get("data", []) 
-        #   data.append({"name": name, "email": email})
-        #   admin_group.pending_admins = {"data": data}
 
       admin_group.save()
-      return user, None
+
+      res = {
+        "name": user.preferred_name,
+        "email": user.email,
+        "subdomain": community.subdomain,
+        "community_name": community.name
+      }
+
+      return res, None
       
     except Exception as e:
       return None, CustomMassenergizeError(e)

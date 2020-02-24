@@ -68,6 +68,11 @@ class EventStore:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
+
+      have_address = args.pop('have_address', False)
+      if not have_address:
+        args['location'] = None
+
       if community:
         community = Community.objects.get(pk=community)
         if not community:
@@ -97,6 +102,10 @@ class EventStore:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       events = Event.objects.filter(id=event_id)
+
+      have_address = args.pop('have_address', False)
+      if not have_address:
+        args['location'] = None
 
       community = args.pop("community_id", None)
       if community:

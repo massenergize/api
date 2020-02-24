@@ -1,5 +1,6 @@
 from database.models import Community, UserProfile
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
+from _main_.utils.context import Context
 from django.db.models import Q
 
 def get_community(community_id=None, subdomain=None):
@@ -49,3 +50,11 @@ def get_user_or_die(context, args):
   else:
     raise Exception("Please provide a valid user_id or user_email")
 
+
+def get_admin_communities(context: Context):
+  if not context.user_is_logged_in and context.user_is_admin():
+    return []
+  user = UserProfile.objects.get(pk=context.user_id)
+  admin_groups = user.communityadmingroup_set.all()
+  communities = [ag.community for ag in admin_groups]
+  return communities, None

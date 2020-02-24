@@ -53,16 +53,25 @@ class ActionHandler(RouteHandler):
   def create(self) -> function:
     def create_action_view(request) -> None: 
       context: Context = request.context
-      args: dict = context.args
-      success, err = check_length(args, 'title', min_length=4, max_length=25)
-      if not success:
-        return MassenergizeResponse(error=str(err))
-      community_id = args.pop('community_id', None)
-      args['tags'] = parse_list(args.pop('tags', []))
-      args['vendors'] = parse_list(args.pop('vendors', []))
-      args['is_global'] = parse_bool(args.pop('is_global', False))
-      args['is_published'] = parse_bool(args.pop('is_published', False))
-      action_info, err = self.service.create_action(context, community_id, args)
+      args = context.get_request_body() 
+      validator: Validator = Validator()
+      (validator
+        .expect("community_id", int, is_required=False)
+        .expect("calculator_action", int, is_required=False)
+        .expect("image", "file", is_required=False, options={"is_logo": True})
+        .expect("title", str, is_required=False, options={"min_length": 4, "max_length": 40})
+        .expect("rank", int, is_required=False)
+        .expect("is_global", bool, is_required=False)
+        .expect("is_published", bool, is_required=False)
+        .expect("tags", list, is_required=False)
+        .expect("vendors", list, is_required=False)
+      )
+
+      args, err = validator.verify(args)
+      if err:
+        return err
+
+      action_info, err = self.service.create_action(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=action_info)
@@ -85,17 +94,25 @@ class ActionHandler(RouteHandler):
   def update(self) -> function:
     def update_action_view(request) -> None: 
       context: Context = request.context
-      args: dict = context.args
-      success, err = check_length(args, 'title', min_length=4, max_length=40)
-      if not success:
-        return MassenergizeResponse(error=str(err))
-      args = rename_field(args, 'action_id', 'id')
-      args['tags'] = parse_list(args.pop('tags', []))
-      args['vendors'] = parse_list(args.pop('vendors', []))
-      args['is_global'] = parse_bool(args.pop('is_global', False))
-      args['is_published'] = parse_bool(args.pop('is_published', False))
-      action_id = args.pop('id', None)
-      action_info, err = self.service.update_action(context, action_id, args)
+      args = context.get_request_body() 
+      validator: Validator = Validator()
+      (validator
+        .expect("action_id", int, is_required=True)
+        .expect("title", str, is_required=False, options={"min_length": 4, "max_length": 40})
+        .expect("calculator_action", int, is_required=False)
+        .expect("image", "file", is_required=False, options={"is_logo": True})
+        .expect("rank", int, is_required=False)
+        .expect("is_global", bool, is_required=False)
+        .expect("is_published", bool, is_required=False)
+        .expect("tags", list, is_required=False)
+        .expect("vendors", list, is_required=False)
+      )
+
+      args, err = validator.verify(args)
+      if err:
+        return err
+      
+      action_info, err = self.service.update_action(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)      
         

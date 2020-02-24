@@ -1,8 +1,9 @@
-from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel
+from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel,RealEstateUnit
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
+from .utils import get_community
 
 class GraphStore:
   def __init__(self):
@@ -38,6 +39,8 @@ class GraphStore:
     except Exception as e:
       return None, CustomMassenergizeError(e)
 
+
+
   def graph_actions_completed(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
     try:
       subdomain = args.get('subdomain', None)
@@ -54,7 +57,7 @@ class GraphStore:
         if not community.is_published:
           return None, CustomMassenergizeError("Content Available Yet")
 
-      graph = Graph.objects.prefetch_related('data').select_related('community').filter(community=community, title="Number of Actions Completed").first()
+      graph = Graph.objects.prefetch_related('data').select_related('community').filter(community=community, title="Number of Actions Completed by Category").first()
       if not graph:
         graph = Graph.objects.create(community=community, title="Number of Actions Completed")
         graph.save()
@@ -63,8 +66,7 @@ class GraphStore:
       for t in category.tag_set.all():
         d = Data.objects.filter(tag=t, community=community).first()
         if not d:
-          print(t, community)
-          d = Data.objects.create(tag=t, community=community, name=f"{t.name}", value=10)
+          d = Data.objects.create(tag=t, community=community, name=f"{t.name}", value=0)
           if not d.pk:
             d.save()
         if d.name != t.name:
@@ -73,7 +75,7 @@ class GraphStore:
         graph.data.add(d)
       graph.save()
 
-      res = graph.full_json()
+      res = graph.full_json()     
       res['community'] = community.info()
       return res, None
       
@@ -85,10 +87,10 @@ class GraphStore:
 
   def _get_households_engaged(self, community: Community):
     households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
-    actions_completed = UserActionRel.objects.filter(action__community__id=community.id, status="DONE").count()
+    households_engaged += (RealEstateUnit.objects.filter(community=community).count())
+    actions_completed = 0 if not community.goal else community.goal.attained_number_of_actions
+    actions_completed += UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").count()
     return {"community": {"id": community.id, "name": community.name}, "actions_completed": actions_completed, "households_engaged": households_engaged}
-
-  
 
 
   def _get_all_households_engaged(self):
@@ -96,7 +98,7 @@ class GraphStore:
     actions_completed = UserActionRel.objects.filter(status="DONE").count()
     return {"community": {"id": 0, "name": 'Other'}, "actions_completed": actions_completed, "households_engaged": households_engaged}
 
-  
+
   def graph_communities_impact(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
     try:
       subdomain = args.get('subdomain', None)
@@ -114,7 +116,6 @@ class GraphStore:
 
         if c.id != community.id:
           res.append(self._get_households_engaged(c))
-
       return {
         "id": 1,
         "title": "Communities Impact",

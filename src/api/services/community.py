@@ -29,7 +29,15 @@ class CommunityService:
       return None, err
 
     #send an email to the community admin
-    return serialize(community, full=True), None
+    return serialize(community), None
+
+  def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    community, err = self.store.leave_community(context, args)
+    if err:
+      return None, err
+
+    #send an email to the community admin
+    return serialize(community), None
 
   def list_communities(self, context, args) -> (list, MassEnergizeAPIError):
     communities, err = self.store.list_communities(context, args)
