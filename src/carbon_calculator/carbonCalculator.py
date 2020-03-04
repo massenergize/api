@@ -145,11 +145,11 @@ class CarbonCalculator:
         queryFailed = {'status':INVALID_QUERY}
         if action in self.allActions:
             user_id = inputs.pop("user_id",None)
-            if user_id:           
-                records = ActionPoints.objects.filter(user_id=user_id)
-                if records:
-                    record = records.objects.filter(action=action)
-                    if record:
+            if user_id:         
+                record = ActionPoints.objects.filter(user_id=user_id,action=action).first()
+                #if records:
+                #    record = records.objects.filter(action=action).first()
+                if record:
                         points = record.points
                         cost = record.cost
                         savings = record.savings
@@ -162,7 +162,7 @@ class CarbonCalculator:
                             user.savings -= savings
                             user.save()
                             
-                        return {'status':VALID_QUERY}
+                        return {'status':VALID_QUERY, 'carbon_points':-points, 'cost':-cost, 'savings':-savings, 'explanation':"Undoing action"}
         return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
