@@ -281,7 +281,6 @@ class AdminStore:
         return [], None
 
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
-      print(messages)
       return messages, None
     except Exception as e:
       print(e)
