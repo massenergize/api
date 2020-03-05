@@ -207,7 +207,7 @@ class AdminStore:
 
   def message_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      print(args)
+
       community_id = args.pop("community_id", None)
       subdomain = args.pop("subdomain", None)
       user_name = args.pop("user_name", None)
