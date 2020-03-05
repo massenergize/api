@@ -2,9 +2,9 @@ from database.models import UserProfile, CommunityAdminGroup, Community, Media, 
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from .utils import get_community, get_user, get_community_or_die
-
+from .utils import get_community, get_user, get_community_or_die, send_slack_message
 import json
+from _main_.utils.constants import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
 
 class AdminStore:
   def __init__(self):
@@ -207,7 +207,7 @@ class AdminStore:
 
   def message_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      
+      print(args)
       community_id = args.pop("community_id", None)
       subdomain = args.pop("subdomain", None)
       user_name = args.pop("user_name", None)
@@ -237,9 +237,22 @@ class AdminStore:
         new_message.uploaded_file = media
 
       new_message.save()
+
+      send_slack_message(
+        SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+          "name": user_name,
+          "email":email,
+          "subject": title,
+          "message": body,
+          "url": f"https://admin{ '-dev' if context.is_dev else '' }.massenergize.org/admin/edit/{new_message.id}/message",
+          "community": community.name
+      }) 
+
+
       return new_message, None 
 
     except Exception as e:
+      print(e)
       return None, CustomMassenergizeError(e)
 
   def list_admin_messages(self, context: Context, args) -> (list, MassEnergizeAPIError):

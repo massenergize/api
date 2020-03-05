@@ -16,7 +16,6 @@ class ActionStore:
       action: Action = actions_retrieved.first()
       if not action:
         return None, InvalidResourceError()
-
       return action, None
     except Exception as e:
       return None, CustomMassenergizeError(e)

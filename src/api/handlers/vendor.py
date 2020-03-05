@@ -89,6 +89,9 @@ class VendorHandler(RouteHandler):
 
       args = parse_location(args)
 
+      #TODO: remove this after deploy
+      args.pop('accept_terms_and_conditions', None)
+
       args['key_contact'] = {
         "name": args.pop('key_contact_name', None),
         "email": args.pop('key_contact_email', None)
