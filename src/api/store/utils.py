@@ -2,6 +2,8 @@ from database.models import Community, UserProfile
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
 from _main_.utils.context import Context
 from django.db.models import Q
+import requests 
+import json
 
 def get_community(community_id=None, subdomain=None):
   try:
@@ -58,3 +60,8 @@ def get_admin_communities(context: Context):
   admin_groups = user.communityadmingroup_set.all()
   communities = [ag.community for ag in admin_groups]
   return communities, None
+
+
+def send_slack_message(webhook, body):
+  r = requests.post(url = webhook, data = json.dumps(body)) 
+  return r

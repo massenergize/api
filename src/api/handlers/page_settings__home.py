@@ -132,6 +132,9 @@ class HomePageSettingsHandler(RouteHandler):
         'target_number_of_households': parse_int(args.pop('target_number_of_households', 0))
       }
 
+      args.pop('organic_attained_number_of_households', None)
+      args.pop('organic_attained_number_of_actions', None)
+
       home_page_setting_info, err = self.service.update_home_page_setting(args)
 
       if err:
