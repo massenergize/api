@@ -13,7 +13,7 @@ from django.core import files
 from io import BytesIO
 import requests
 from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
-from .CCDefaults import getDefault, CCD
+from .CCDefaults import getDefault, getLocality, CCD
 from .queries import QuerySingleAction, QueryAllActions
 from .homeHeating import EvalEnergyAudit, EvalWeatherization, EvalProgrammableThermostats, EvalAirSourceHeatPump, \
                         EvalGroundSourceHeatPump, EvalHeatingSystemAssessment, EvalEfficientBoilerFurnace
@@ -145,11 +145,11 @@ class CarbonCalculator:
         queryFailed = {'status':INVALID_QUERY}
         if action in self.allActions:
             user_id = inputs.pop("user_id",None)
-            if user_id:           
-                records = ActionPoints.objects.filter(user_id=user_id)
-                if records:
-                    record = records.objects.filter(action=action)
-                    if record:
+            if user_id:         
+                record = ActionPoints.objects.filter(user_id=user_id,action=action).first()
+                #if records:
+                #    record = records.objects.filter(action=action).first()
+                if record:
                         points = record.points
                         cost = record.cost
                         savings = record.savings
@@ -162,7 +162,7 @@ class CarbonCalculator:
                             user.savings -= savings
                             user.save()
                             
-                        return {'status':VALID_QUERY}
+                        return {'status':VALID_QUERY, 'carbon_points':-points, 'cost':-cost, 'savings':-savings, 'explanation':"Undoing action"}
         return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
@@ -444,7 +444,6 @@ class CalculatorAction:
     def Eval(self, inputs):
         return {'status':VALID_QUERY, 'carbon_points':round(self.points,0), 'cost':round(self.cost,0), 'savings':round(self.savings,0), 'explanation':self.text}
 
-ENERGY_FAIR_POINTS = 50
 class EnergyFair(CalculatorAction):
     # a trivial bonus points action, part of registering for the energy fair
     # inputs: attend_fair,own_rent,fuel_assistance,activity_group
@@ -452,7 +451,11 @@ class EnergyFair(CalculatorAction):
         self.points = 0
         self.text = "You didn't attend the energy fair.  No points earned."
         if inputs.get('attend_fair',NO) == YES:
-            self.points = ENERGY_FAIR_POINTS
+            #self.points = ENERGY_FAIR_POINTS
+
+            locality = getLocality(inputs)
+            self.points = getDefault(locality, 'energy_fair_average_points', 50)
+
             self.text = "Thank you for participating!"
         return super().Eval(inputs)
 

@@ -131,7 +131,7 @@ DATABASES = {
     },
     'local-default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres',
+        'NAME': 'postgres2',
         'USER': 'Brad',
         'PASSWORD': '',
         'HOST': 'localhost',
