@@ -55,15 +55,18 @@ class TestimonialStore:
 
   def create_testimonial(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      print(args)
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       user_email = args.pop('user_email', None)
+      anonymous = args.pop('anonymous', False)
+      
       args["title"] = args.get("title", "Thank You")[:100]
      
-      new_testimonial = Testimonial.objects.create(**args)
+      new_testimonial: Testimonial = Testimonial.objects.create(**args)
 
       if user_email:
         user = UserProfile.objects.filter(email=user_email).first()
@@ -85,6 +88,12 @@ class TestimonialStore:
       if community:
         testimonial_community = Community.objects.get(id=community)
         new_testimonial.community = testimonial_community
+      else:
+        testimonial_community = None
+
+      new_testimonial.anonymous = anonymous
+      if not anonymous:
+        new_testimonial.preferred_name = user.full_name + ' from ' + ('' if not testimonial_community else testimonial_community.name)
 
       
       new_testimonial.save()
