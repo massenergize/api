@@ -90,6 +90,8 @@ class EventHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       args['tags'] = parse_list(args.get('tags', []))
       args['is_global'] = parse_bool(args.pop('is_global', None))
+      args['archive'] = parse_bool(args.pop('archive', None))
+      args['is_published'] = parse_bool(args.pop('is_published', None))
       args['have_address'] =  parse_bool(args.pop('have_address', False))
       args = parse_location(args)
 
@@ -125,6 +127,8 @@ class EventHandler(RouteHandler):
 
       args['tags'] = parse_list(args.get('tags', []))
       args['is_global'] = parse_bool(args.pop('is_global', None))
+      args['archive'] = parse_bool(args.pop('archive', None))
+      args['is_published'] = parse_bool(args.pop('is_published', None))
       args['have_address'] =  parse_bool(args.pop('have_address', False))
       args = parse_location(args)
 

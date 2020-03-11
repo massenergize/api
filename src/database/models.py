@@ -1033,8 +1033,8 @@ class Event(models.Model):
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   invited_communities = models.ManyToManyField(Community, 
     related_name="invited_communites", blank=True)
-  start_date_and_time  = models.DateTimeField(db_index=True, auto_now_add=True)
-  end_date_and_time  = models.DateTimeField(auto_now_add=True)
+  start_date_and_time  = models.DateTimeField(db_index=True)
+  end_date_and_time  = models.DateTimeField(db_index=True)
   location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
