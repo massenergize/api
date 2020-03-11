@@ -42,8 +42,6 @@ class EventStore:
       for t in old_tags:
         new_event.tags.add(t)
 
-      print(old_tags, new_event.tags.all())
-
       return new_event, None
     except Exception as e:
       print(e)

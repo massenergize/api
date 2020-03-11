@@ -63,9 +63,9 @@ class TeamStore:
   def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
     team = None
     try:
-      print(args, user_id)
       community_id = args.pop('community_id', None)
       image = args.pop('image', None)
+      admin_emails = args.pop('admin_emails', "").split(",")
 
       if community_id:
         community = Community.objects.filter(pk=community_id).first()
@@ -86,12 +86,21 @@ class TeamStore:
 
       new_team.save()
 
+      for admin_email in admin_emails:
+        user = UserProfile.objects.filter(email=admin_email).first()
+        if user:
+          teamMember, ok = TeamMember.objects.get_or_create(team=team,user=user)
+          teamMember.is_admin = True
+          teamMember.save()
+
+  
       if user_id:
         # team.members deprecated
-        teamMember = TeamMember.create(team=team,user=user,is_admin=True)
+        teamMember = TeamMember.objects.create(team=team,user=user_id, is_admin=True)
         #new_team.members.add(user_id)
         #new_team.admins.add(user_id)
         teamMember.save()
+
       #new_team.save()
       return new_team, None
     except Exception as e:

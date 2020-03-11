@@ -221,7 +221,7 @@ class AdminStore:
       if err:
         return None, err
       
-      new_message = Message.objects.create(user_name=user_name, title=title, body=body, community=community)
+      new_message = Message.objects.create(user_name=user_name, email=email, title=title, body=body, community=community)
       new_message.save()
       user, err = get_user(context.user_id, email)
       if err:

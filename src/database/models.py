@@ -945,6 +945,7 @@ class Action(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   featured_summary = models.TextField(max_length = LONG_STR_LEN, blank=True, null=True)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
+  deep_dive = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
   tags = models.ManyToManyField(Tag, related_name='action_tags', blank=True)
@@ -978,6 +979,7 @@ class Action(models.Model):
     data['calculator_action'] = get_summary_info(self.calculator_action)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
+    data['deep_dive'] = self.deep_dive
     data['about'] = self.about
     data['community'] = get_summary_info(self.community)
     data['vendors'] = [v.info() for v in self.vendors.all()]
@@ -1033,8 +1035,8 @@ class Event(models.Model):
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   invited_communities = models.ManyToManyField(Community, 
     related_name="invited_communites", blank=True)
-  start_date_and_time  = models.DateTimeField(db_index=True, auto_now_add=True)
-  end_date_and_time  = models.DateTimeField(auto_now_add=True)
+  start_date_and_time  = models.DateTimeField(db_index=True)
+  end_date_and_time  = models.DateTimeField(db_index=True)
   location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
@@ -1218,6 +1220,9 @@ class Testimonial(models.Model):
   updated_at = models.DateTimeField(auto_now=True, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
+  anonymous = models.BooleanField(default=False, blank=True)
+  preferred_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+  other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
 
   def __str__(self):        
     return self.title
@@ -1238,6 +1243,9 @@ class Testimonial(models.Model):
     res["created_at"] = self.created_at
     res['file'] = get_json_if_not_none(self.image)
     res['tags'] = [t.simple_json() for t in self.tags.all()]
+    res['anonymous'] = self.anonymous
+    res['preferred_name'] = self.preferred_name
+    res['other_vendor'] = self.other_vendor
     return res
 
   def full_json(self):
