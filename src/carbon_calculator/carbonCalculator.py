@@ -207,10 +207,11 @@ class CarbonCalculator:
                             #header = item
                             first = False
                         else:
-                            if item[0] == '':
+                            name = item[0]
+                            if name == '':
                                 continue
 
-                            qs = Action.objects.filter(name=item[0])
+                            qs = Action.objects.filter(name=name)
                             if qs:
                                 qs[0].delete()
 
@@ -218,7 +219,7 @@ class CarbonCalculator:
                             #    import this media filt
                             #    actionPicture = Media()
                             picture = None
-                            if len(item)>=4 and item[0]!='':
+                            if len(item)>=4 and name!='':
                                 picture = SavePic2Media(item[5])
 
                                 action = Action(name=item[0],
@@ -227,8 +228,11 @@ class CarbonCalculator:
                                     average_points=int(eval(item[3])),
                                     questions=item[4].split(","),
                                     picture = picture)
-                                print('Importing Action ',action.name,': ',action.description)
                                 action.save()
+                                
+                                if name in self.allActions:
+                                    self.allActions[name].__init__()
+                                print('Importing Action ',action.name,': ',action.description)
                     csvfile.close()
                     status = True
 
