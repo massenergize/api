@@ -120,7 +120,8 @@ class CarbonCalculator:
             name = self.allActions[action].name
             description = self.allActions[action].description
             id = self.allActions[action].id
-            actionList.append( {'id': id, 'name':name, 'description':description} )
+            points = self.allActions[action].average_points
+            actionList.append( {'id': id, 'name':name, 'description':description, 'average_points':points} )
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response

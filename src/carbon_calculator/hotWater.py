@@ -14,7 +14,7 @@ def EvalHotWaterAssessment(inputs):
     if inputs.get('hot_water_assessment', YES) == YES:
         co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
 
-        gallons_per_person = getDefault(locality,'water_hw_use_per_person', 13.)
+        gallons_per_person = getDefault(locality,'water_hw_gal_per_person', 13.)
         default_size = float(getDefault(locality,'general_household_size_default', 4.))
         people = inputs.get("household_members",default_size)
         daily_hw_use = people * gallons_per_person
@@ -27,7 +27,7 @@ def EvalHotWaterAssessment(inputs):
         co2_per_btu = co2_per_kwh / BTU_per_kwh
 
         # calculations for heat pump water heater
-        wh_efficiency = getDefault(locality,'water_heater_heatpump_efficiency', 2.5)
+        wh_efficiency = getDefault(locality,'water_heater_heatpump_efficiency', 3.)
         btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
         co2_hp = btu * co2_per_btu
 

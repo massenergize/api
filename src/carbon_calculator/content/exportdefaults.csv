@@ -1,166 +1,167 @@
-Variable,Locality,Value,Reference,Updated
-elec_energystar_fridge_cost_low,default,750.0,"Frigidaire 18cf top freezer, Crane's appliance online",2019-10-26 10:59:12.550088+00:00
-elec_refrig_annual_kwh_age10-15,default,651.0,"Cooler Concord fair, needs reference",2019-10-26 12:02:38.814089+00:00
-elec_refrig_annual_kwh_age0-10,default,440.0,"Cooler Concord fair, needs reference",2019-10-26 12:01:41.232260+00:00
-elec_refrig_annual_kwh_age15-20,default,1031.0,"Cooler Concord fair, needs reference",2019-10-26 12:03:53.010102+00:00
-elec_refrig_annual_kwh_age20+,default,1539.0,"Cooler Concord fair, needs reference",2019-10-26 12:04:16.804370+00:00
-water_price_per_scf,default,0.0564,"Concord utility water price, July 2019 bill",2019-10-26 12:45:38.322889+00:00
-water_price_per_scf,ConcordMA,0.0564,"Concord utility water price, July 2019 bill",2019-10-26 12:46:23.340981+00:00
-elec_cooking_therm_gas,default,110.0,Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week,2019-10-27 10:51:06.977457+00:00
-water_kwh_per_MG,default,2000.0,"CarbonFootprintofWater-RiverNetwork-2009.pdf: For most utilities, energy use from 1250 kWh/MG to 6,500 kWh/MG.1",2019-10-26 16:52:20.364243+00:00
-elec_energystar_refrig_kwh_usage,default,404.0,"Frigidaire FFTR1821TB 18cf top freezer, product spec",2019-10-26 11:09:39.558209+00:00
-elec_energystar_washer_water_use,default,14.0,Gallons per load: https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 16:57:52.703050+00:00
-elec_washer_average_annual_loads,default,300.0,Average loads per year: https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 17:00:18.035389+00:00
-elec_energystar_washer_water_saved_frac,default,0.33,https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 17:26:07.511632+00:00
-elec_energystar_washer_elec_saved_frac,default,0.25,https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 17:26:34.666651+00:00
-elec_energystar_elec_per_load,default,1.053,2019: https://www.energystar.gov/products/appliances/clothes_washers,2019-10-26 17:36:29.724064+00:00
-water_price_per_scf,WaylandMA,0.0729,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:56:57.259108+00:00
-water_price_per_scf,FraminghamMA,0.0654,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:58:02.251135+00:00
-water_price_per_scf,ActonMA,0.0283,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:58:32.979862+00:00
-water_price_per_scf,LincolnMA,0.0442,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:59:16.166847+00:00
-water_price_per_scf,SudburyMA,0.0425,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 15:59:59.793991+00:00
-water_price_per_scf,BedfordMA,0.0559,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,2019-10-26 16:00:23.075825+00:00
-elec_energystar_washer_cost_low,default,700.0,Samsung 4.2 cf - Crane's Appliances 2019,2019-10-26 18:06:49.528887+00:00
-elec_cooking_kwh_induction,default,801.0,Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week,2019-10-27 10:49:28.863219+00:00
-elec_cooking_kwh_conventional,default,1144.0,Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week,2019-10-27 10:50:34.974911+00:00
-natgas_price_per_therm,default,1.52,Web: https://www.mass.gov/info-details/household-heating-costs Winter 2018-19,2019-10-27 10:54:34.075492+00:00
-elec_cost_induction_stove_low,default,1600.0,Web: Crane's appliances - Fridgidaire Gallery + $300 for cookware,2019-10-27 11:15:31.223845+00:00
-natgas_fraction_methane_leakage,default,0.028,survey report from 2015 - 2.8% fugitive emissions,2019-10-27 11:19:34.591447+00:00
-natgas_lbs_co2_per_therm,default,11.7,Standard combustion CO2 for Natural Gas,2019-10-27 11:18:22.107851+00:00
-natgas_ch4_global_warming_potential,default,86.0,IPCC 2014 report - low end GWP for Natural Gas on 20 yr timescale,2019-10-27 11:20:50.923598+00:00
-"elec_cost_heatpump_dryer_low""",default,1200.0,https://www.greenbuildingadvisor.com/article/heat-pump-clothes-dryers - LG dryer,2019-10-27 11:28:34.437922+00:00
-elec_bulb_average_wattage,default,60.0,Default value without reference,2019-10-27 13:23:37.184695+00:00
-elec_bulb_average_ontime_hours,default,3.0,Default value without reference,2019-10-27 13:23:37.194600+00:00
-elec_bulb_relative_LED_consumption,default,0.12,Default value without reference,2019-10-27 13:23:37.197856+00:00
-elec_dryer_load_kwh,default,3.3,Default value without reference,2019-10-27 16:03:33.369317+00:00
-elec_heatpump_dryer_energy_reduction,default,0.4,Default value without reference,2019-10-27 16:03:33.377909+00:00
-elec_cost_heatpump_dryer_low,default,1250.0,Default value without reference,2019-10-27 16:04:44.832775+00:00
-elec_dryerload_therm_gas,default,0.24,Default value without reference,2019-10-27 16:09:19.710653+00:00
-elec_typical_monthly_bill,default,150.0,Default value without reference,2019-11-02 01:23:42.565069+00:00
-elec_price_per_kwh,default,0.2209,Default value without reference,2019-11-02 01:23:42.571029+00:00
-elec_monthly_fixed_charge,default,7.0,Default value without reference,2019-11-02 01:23:42.576330+00:00
-elec_price_per_kwh,ConcordMA,0.148,BHN CMLP Utility Bill Sep 2019,2019-11-02 01:23:42.585991+00:00
-elec_renewable_additional_kwh_cost,default,0.038,Default value without reference,2019-11-02 01:23:42.593366+00:00
-elec_lbs_co2_per_kwh,default,0.682,"ISO-NE average, 2017 from their report",2019-11-02 01:23:42.603079+00:00
-elec_community_solar_average_savings,default,0.07,7% on utility bill from one company (range from 5-10%),2019-11-02 01:23:42.608595+00:00
-heating_parasitics_kwh,default,150.0,Default value without reference,2019-11-02 01:30:34.593785+00:00
-heating_default_load_mmbtu,default,114.3,Default value without reference,2019-11-02 01:30:34.599913+00:00
-fueloil_price_per_gallon,default,2.92,Default value without reference,2019-11-02 01:30:34.601001+00:00
-fueloil_co2_per_gallon,default,22.4,Default value without reference,2019-11-02 01:30:34.602342+00:00
-fueloil_btu_per_gallon,default,137619.0,Default value without reference,2019-11-02 01:30:34.603738+00:00
-heating_default_fueloil_efficiency,default,0.8,Default value without reference,2019-11-02 01:30:34.604992+00:00
-elec_pstat_fractional_savings,default,0.15,Default value without reference,2019-11-02 01:30:34.606261+00:00
-heating_default_natgas_efficiency,default,0.87,Default value without reference,2019-11-02 13:00:12.732734+00:00
-propane_price_per_gallon,default,3.09,Default value without reference,2019-11-02 13:04:03.169497+00:00
-propane_co2_per_gallon,default,12.7,Default value without reference,2019-11-02 13:04:03.180598+00:00
-propane_btu_per_gallon,default,91333.0,Default value without reference,2019-11-02 13:04:03.182980+00:00
-heating_default_propane_efficiency,default,0.82,Default value without reference,2019-11-02 13:04:03.189398+00:00
-wood_price_per_cord,default,320.0,Default value without reference,2019-11-02 13:04:40.832682+00:00
-wood_btu_per_cord,default,23.7,Default value without reference,2019-11-02 13:04:40.846646+00:00
-wood_co2_per_mmbtu,default,255.2,Default value without reference,2019-11-02 13:04:40.848177+00:00
-heating_default_wood_efficiency,default,0.7,Default value without reference,2019-11-02 13:04:40.850449+00:00
-elec_btu_per_kwh,default,3414.0,Default value without reference,2019-11-02 13:06:02.425189+00:00
-heating_default_electric_efficiency,default,1.0,Default value without reference,2019-11-02 13:08:23.274148+00:00
-heating_default_ashp_efficiency,default,3.0,Default value without reference,2019-11-02 13:09:19.139840+00:00
-weatherize_fractional_savings,default,0.15,Default value without reference,2019-11-02 13:54:35.358821+00:00
-heating_typical_weatherization_cost,default,500.0,Default value without reference,2019-11-02 13:54:35.368765+00:00
-weatherize_fractional_savings_2,default,0.5,Default value without reference,2019-11-02 13:59:37.444328+00:00
-weatherize_incremental_savings,default,0.05,Default value without reference,2019-11-02 14:01:17.072934+00:00
-heating_fueloil_high_efficiency,default,0.9,Default value without reference,2019-11-02 14:13:34.120227+00:00
-heating_standard_hieff_boiler_cost,default,8000.0,Default value without reference,2019-11-02 14:13:34.136929+00:00
-heating_hieff_boiler_fed_tax_credit,default,0.0,Default value without reference,2019-11-02 14:13:34.139725+00:00
-heating_hieff_boiler_utility_rebate,default,2000.0,Default value without reference,2019-11-02 14:13:34.141792+00:00
-heating_natgas_high_efficiency,default,0.95,Default value without reference,2019-11-02 14:15:14.148661+00:00
-heating_wood_high_efficiency,default,0.88,Default value without reference,2019-11-02 14:20:43.575874+00:00
-heating_propane_high_efficiency,default,0.95,Default value without reference,2019-11-02 14:21:53.860484+00:00
-heating_default_ashp_fraction,default,0.8,Default value without reference,2019-11-02 21:29:51.573408+00:00
-heating_standard_ashp_cost,default,15000.0,Default value without reference,2019-11-02 21:29:51.601824+00:00
-heating_ashp_fed_tax_credit,default,0.0,Default value without reference,2019-11-02 21:29:51.602759+00:00
-heating_ashp_utility_rebate,default,2500.0,Default value without reference,2019-11-02 21:29:51.603654+00:00
-heating_default_gshp_efficiency,default,4.5,Default value without reference,2019-11-02 22:01:27.035534+00:00
-heating_standard_geothermal_cost,default,60000.0,Default value without reference,2019-11-02 22:01:27.046433+00:00
-heating_geothermal_fed_tax_credit,default,0.26,Default value without reference,2019-11-02 22:01:27.048454+00:00
-heating_geothermal_utility_rebate,default,5000.0,Default value without reference,2019-11-02 22:01:27.049570+00:00
-lawn_default_size,default,4000.0,Default value without reference,2019-11-03 13:07:20.370195+00:00
-lawn_blower_typical_hours,default,10.0,Default value without reference,2019-11-03 13:07:20.384608+00:00
-gasoline_co2_per_gal,default,17.68,Default value without reference,2019-11-03 13:07:20.386172+00:00
-lawn_blower_gal_per_hour,default,0.5,Default value without reference,2019-11-03 13:07:20.387590+00:00
-lawn_average_yearly_mows,default,22.0,Default value without reference,2019-11-03 13:10:49.639568+00:00
-lawn_mow_gas_5000sf,default,0.5,Default value without reference,2019-11-03 13:10:49.641898+00:00
-lawn_mow_kwh_5000sf,default,2.0,Default value without reference,2019-11-03 13:10:49.644606+00:00
-lawn_cost_elec_mower,default,400.0,Default value without reference,2019-11-03 13:10:49.645630+00:00
-lawn_cost_per_mow,default,50.0,Default value without reference,2019-11-03 13:30:20.008840+00:00
-lawn_fertilizer_applications_average,default,4.0,Default value without reference,2019-11-03 13:38:23.181388+00:00
-lawn_fertilzer_bag_size,default,14.0,Default value without reference,2019-11-03 13:38:23.189530+00:00
-lawn_fertilizer_bag_sqft,default,5000.0,Default value without reference,2019-11-03 13:38:23.191292+00:00
-lawn_fertilizer_nitrogen_concentration,default,0.1,Default value without reference,2019-11-03 13:38:23.192933+00:00
-nitrogen_co2_factor,default,0.02,Default value without reference,2019-11-03 13:38:23.195138+00:00
-compost_co2,default,2000.0,Default value without reference,2019-11-03 14:02:27.635225+00:00
-reuse_containers_co2,default,100.0,Default value without reference,2019-11-03 14:07:51.395827+00:00
-buy_bulk_co2,default,100.0,Default value without reference,2019-11-03 14:09:40.306507+00:00
-buy_recycled_co2,default,200.0,Default value without reference,2019-11-03 14:18:29.151190+00:00
-buy_sell_used_co2,default,2000.0,Default value without reference,2019-11-03 14:19:55.469790+00:00
-buy_sell_use_savings,default,4000.0,Default value without reference,2019-11-03 14:19:55.472782+00:00
-general_household_size_default,default,4.0,Default value without reference,2019-11-03 14:25:10.649840+00:00
-food_meat_co2_serving,default,4.75,Default value without reference,2019-11-03 14:25:10.654395+00:00
-food_vegetarian_co2_serving,default,0.88,Default value without reference,2019-11-03 14:25:10.655490+00:00
-flights_default_annual_family,default,12.0,Default value without reference,2019-11-03 14:35:30.856151+00:00
-filghts_default_co2,default,2288.0,Default value without reference,2019-11-03 14:36:15.434833+00:00
-fights_default_cost,default,500.0,Default value without reference,2019-11-03 14:36:15.441056+00:00
-fights_default_offset_cost_per_ton,default,12.0,Default value without reference,2019-11-03 14:40:59.187688+00:00
-car_default_miles,default,15000.0,Default value without reference,2019-11-03 16:58:29.499839+00:00
-car_default_mpg,default,25.0,Default value without reference,2019-11-03 16:58:29.512987+00:00
-car_annual_service_gas,default,500.0,Default value without reference,2019-11-03 16:58:29.514345+00:00
-gasoline_price,default,2.7,Default value without reference,2019-11-03 16:58:29.515513+00:00
-car_new_electric_mpg,default,100.0,Default value without reference,2019-11-03 17:01:02.314323+00:00
-car_annual_service_electric,default,200.0,Default value without reference,2019-11-03 17:01:02.317885+00:00
-car_electric_kwh_per_mile,default,0.25,Default value without reference,2019-11-03 17:01:02.318940+00:00
-car_BEV_federal_credit,default,7500.0,Default value without reference,2019-11-03 17:01:02.320668+00:00
-car_BEV_state_credit,default,2500.0,Default value without reference,2019-11-03 17:01:02.321676+00:00
-car_BEV_local_rebate,default,0.0,Default value without reference,2019-11-03 17:01:02.323563+00:00
-car_BEV_price,default,30000.0,Default value without reference,2019-11-03 17:01:02.325384+00:00
-car_plugin_electric_fraction,default,0.8,Default value without reference,2019-11-03 17:37:08.800920+00:00
-car_new_hybrid_mpg,default,40.0,Default value without reference,2019-11-03 17:37:08.807815+00:00
-car_annual_service_hybrid,default,300.0,Default value without reference,2019-11-03 17:37:08.809683+00:00
-car_PHEV_federal_credit,default,4500.0,Default value without reference,2019-11-03 17:38:12.341290+00:00
-car_PHEV_state_credit,default,0.0,Default value without reference,2019-11-03 17:38:12.345429+00:00
-car_PHEV_local_rebate,default,0.0,Default value without reference,2019-11-03 17:38:12.351618+00:00
-car_PHEV_price,default,27750.0,Default value without reference,2019-11-03 17:38:12.353994+00:00
-car_hybrid_price,default,26000.0,Default value without reference,2019-11-03 17:40:03.931158+00:00
-car_default_price,default,22000.0,Default value without reference,2019-11-03 17:43:32.653676+00:00
-transportation_public_daily_cost,default,25.0,Default value without reference,2019-11-03 20:28:43.265001+00:00
-transportation_public_monthly_cost,default,301.0,Default value without reference,2019-11-03 20:28:43.278356+00:00
-car_annual_insurance,default,1000.0,Default value without reference,2019-11-03 20:38:27.380591+00:00
-elec_electricity_monitor_average_savings,default,0.1,Default value without reference,2019-11-03 20:43:42.401190+00:00
-elec_electricity_monitor_cost,default,400.0,Default value without reference,2019-11-03 20:43:42.410813+00:00
-elec_kwh_savings_smart_power_strips,default,100.0,Default value without reference,2019-11-04 10:56:39.762824+00:00
-elec_cost_smart_power_strip,default,15.0,Default value without reference,2019-11-04 10:56:39.809969+00:00
-elec_cost_drying_rack,default,50.0,Default value without reference,2019-11-04 12:44:01.629394+00:00
-water_hw_use_per_person,default,13.0,Default value without reference,2019-11-04 12:59:39.134929+00:00
-water_heater_settemp,default,120.0,Default value without reference,2019-11-04 12:59:39.157071+00:00
-water_input_temp,default,50.0,Default value without reference,2019-11-04 12:59:39.158021+00:00
-water_heater_heatpump_efficiency,default,2.5,Default value without reference,2019-11-04 12:59:39.158870+00:00
-water_heater_natgas_efficiency,default,0.7,Default value without reference,2019-11-04 12:59:39.159695+00:00
-water_hw_assessment_conversion_rate,default,0.2,Default value without reference,2019-11-04 13:00:43.995855+00:00
-water_heater_electric_efficiency,default,0.9,Default value without reference,2019-11-04 13:05:56.530301+00:00
-water_heater_fueloil_efficiency,default,0.55,Default value without reference,2019-11-04 13:06:14.946207+00:00
-water_heater_propane_efficiency,default,0.7,Default value without reference,2019-11-04 13:06:32.144339+00:00
-water_hpwh_installed_price,default,2500.0,Default value without reference,2019-11-04 13:08:02.278793+00:00
-water_hpwh_rebate,default,750.0,Default value without reference,2019-11-04 13:08:02.282700+00:00
-general_decent_home_investment_payback,default,10.0,Default value without reference,2019-11-04 13:08:02.285179+00:00
-solar_default_pv_size,default,7.0,Default value without reference,2019-11-04 13:14:29.344539+00:00
-solar_annual_kwh_per_kw,default,1100.0,Default value without reference,2019-11-04 13:14:29.351619+00:00
-solar_assessment_convertion_fraction,default,0.2,Default value without reference,2019-11-04 13:14:29.352589+00:00
-solar_srec_payment_per_mwh,default,200.0,Default value without reference,2019-11-04 13:21:24.159797+00:00
-solar_local_price_factor,default,1.0,Default value without reference,2019-11-04 13:21:24.165573+00:00
-solar_federal_tax_credit,default,0.26,Default value without reference,2019-11-04 13:21:24.167557+00:00
-solar_state_tax_credit,default,0.0,Default value without reference,2019-11-04 13:21:24.171043+00:00
-solar_state_rebate,default,1000.0,Default value without reference,2019-11-04 13:21:24.172621+00:00
-solar_utility_rebate,default,3000.0,Default value without reference,2019-11-04 13:21:24.182523+00:00
-solar_pv_kw_cost,default,3500.0,Default value without reference,2019-11-04 13:21:24.184498+00:00
-solar_wh_system_fraction,default,0.8,Default value without reference,2019-11-04 13:26:39.236229+00:00
-solar_hw_federal_tax_credit,default,0.26,Default value without reference,2019-11-04 13:27:11.990112+00:00
-solar_hw_state_tax_credit,default,0.0,Default value without reference,2019-11-04 13:27:11.992602+00:00
-solar_hw_state_rebate,default,1000.0,Default value without reference,2019-11-04 13:27:11.993395+00:00
-solar_hw_utility_rebate,default,0.0,Default value without reference,2019-11-04 13:27:11.994255+00:00
-solar_hw_system_average_cost,default,9000.0,Default value without reference,2019-11-04 13:27:12.003928+00:00
+Variable	Locality	Value	Reference	Updated
+elec_dryer_average_annual_loads	default	439	Average loads per year: https://neep.org/file/2766/download?token=wn4kylsO	
+elec_energystar_fridge_cost_low	default	750	"Frigidaire 18cf top freezer, Crane's appliance online"	2019-10-26 10:59:12.550088+00:00
+elec_refrig_annual_kwh_age10-15	default	651	"Cooler Concord fair, needs reference"	2019-10-26 12:02:38.814089+00:00
+elec_refrig_annual_kwh_age0-10	default	440	"Cooler Concord fair, needs reference"	2019-10-26 12:01:41.232260+00:00
+elec_refrig_annual_kwh_age15-20	default	1031	"Cooler Concord fair, needs reference"	2019-10-26 12:03:53.010102+00:00
+elec_refrig_annual_kwh_age20+	default	1539	"Cooler Concord fair, needs reference"	2019-10-26 12:04:16.804370+00:00
+water_price_per_scf	default	0.0564	"Concord utility water price, July 2019 bill"	2019-10-26 12:45:38.322889+00:00
+water_price_per_scf	ConcordMA	0.0564	"Concord utility water price, July 2019 bill"	2019-10-26 12:46:23.340981+00:00
+elec_cooking_therm_gas	default	110	Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week	2019-10-27 10:51:06.977457+00:00
+water_kwh_per_MG	default	2000	"CarbonFootprintofWater-RiverNetwork-2009.pdf: For most utilities, energy use from 1250 kWh/MG to 6,500 kWh/MG.1"	2019-10-26 16:52:20.364243+00:00
+elec_energystar_refrig_kwh_usage	default	404	"Frigidaire FFTR1821TB 18cf top freezer, product spec"	2019-10-26 11:09:39.558209+00:00
+elec_energystar_washer_water_use	default	14	Gallons per load: https://www.energystar.gov/products/appliances/clothes_washers	2019-10-26 16:57:52.703050+00:00
+elec_washer_average_annual_loads	default	300	Average loads per year: https://www.energystar.gov/products/appliances/clothes_washers	2019-10-26 17:00:18.035389+00:00
+elec_energystar_washer_water_saved_frac	default	0.33	https://www.energystar.gov/products/appliances/clothes_washers	2019-10-26 17:26:07.511632+00:00
+elec_energystar_washer_elec_saved_frac	default	0.25	https://www.energystar.gov/products/appliances/clothes_washers	2019-10-26 17:26:34.666651+00:00
+elec_energystar_elec_per_load	default	1.053	2019: https://www.energystar.gov/products/appliances/clothes_washers	2019-10-26 17:36:29.724064+00:00
+water_price_per_scf	WaylandMA	0.0729	Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard	2019-10-26 15:56:57.259108+00:00
+water_price_per_scf	FraminghamMA	0.0654	Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard	2019-10-26 15:58:02.251135+00:00
+water_price_per_scf	ActonMA	0.0283	Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard	2019-10-26 15:58:32.979862+00:00
+water_price_per_scf	LincolnMA	0.0442	Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard	2019-10-26 15:59:16.166847+00:00
+water_price_per_scf	SudburyMA	0.0425	Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard	2019-10-26 15:59:59.793991+00:00
+water_price_per_scf	BedfordMA	0.0559	Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard	2019-10-26 16:00:23.075825+00:00
+elec_energystar_washer_cost_low	default	700	Samsung 4.2 cf - Crane's Appliances 2019	2019-10-26 18:06:49.528887+00:00
+elec_cooking_kwh_induction	default	801	Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week	2019-10-27 10:49:28.863219+00:00
+elec_cooking_kwh_conventional	default	1144	Web: michaelbluejay.com/electricity/cooking.html assuming 30min/day 5-7days/week	2019-10-27 10:50:34.974911+00:00
+natgas_price_per_therm	default	1.52	Web: https://www.mass.gov/info-details/household-heating-costs Winter 2018-19	2019-10-27 10:54:34.075492+00:00
+elec_cost_induction_stove_low	default	1600	Web: Crane's appliances - Fridgidaire Gallery + $300 for cookware	2019-10-27 11:15:31.223845+00:00
+natgas_fraction_methane_leakage	default	0.028	survey report from 2015 - 2.8% fugitive emissions	2019-10-27 11:19:34.591447+00:00
+natgas_lbs_co2_per_therm	default	11.7	Standard combustion CO2 for Natural Gas	2019-10-27 11:18:22.107851+00:00
+natgas_ch4_global_warming_potential	default	86	IPCC 2014 report - low end GWP for Natural Gas on 20 yr timescale	2019-10-27 11:20:50.923598+00:00
+"elec_cost_heatpump_dryer_low"""	default	1200	https://www.greenbuildingadvisor.com/article/heat-pump-clothes-dryers - LG dryer	2019-10-27 11:28:34.437922+00:00
+elec_bulb_average_wattage	default	60	Default value without reference	2019-10-27 13:23:37.184695+00:00
+elec_bulb_average_ontime_hours	default	3	Default value without reference	2019-10-27 13:23:37.194600+00:00
+elec_bulb_relative_LED_consumption	default	0.12	Default value without reference	2019-10-27 13:23:37.197856+00:00
+elec_dryer_load_kwh	default	3.3	Default value without reference	2019-10-27 16:03:33.369317+00:00
+elec_heatpump_dryer_energy_reduction	default	0.4	Default value without reference	2019-10-27 16:03:33.377909+00:00
+elec_cost_heatpump_dryer_low	default	1250	Default value without reference	2019-10-27 16:04:44.832775+00:00
+elec_dryerload_therm_gas	default	0.24	Default value without reference	2019-10-27 16:09:19.710653+00:00
+elec_typical_monthly_bill	default	150	Default value without reference	2019-11-02 01:23:42.565069+00:00
+elec_price_per_kwh	default	0.2209	Default value without reference	2019-11-02 01:23:42.571029+00:00
+elec_monthly_fixed_charge	default	7	Default value without reference	2019-11-02 01:23:42.576330+00:00
+elec_price_per_kwh	ConcordMA	0.148	BHN CMLP Utility Bill Sep 2019	2019-11-02 01:23:42.585991+00:00
+elec_renewable_additional_kwh_cost	default	0.038	Default value without reference	2019-11-02 01:23:42.593366+00:00
+elec_lbs_co2_per_kwh	default	0.682	"ISO-NE average, 2017 from their report"	2019-11-02 01:23:42.603079+00:00
+elec_community_solar_average_savings	default	0.07	7% on utility bill from one company (range from 5-10%)	2019-11-02 01:23:42.608595+00:00
+heating_parasitics_kwh	default	150	Default value without reference	2019-11-02 01:30:34.593785+00:00
+heating_default_load_mmbtu	default	114.3	Default value without reference	2019-11-02 01:30:34.599913+00:00
+fueloil_price_per_gallon	default	2.92	Default value without reference	2019-11-02 01:30:34.601001+00:00
+fueloil_co2_per_gallon	default	22.4	Default value without reference	2019-11-02 01:30:34.602342+00:00
+fueloil_btu_per_gallon	default	137619	Default value without reference	2019-11-02 01:30:34.603738+00:00
+heating_default_fueloil_efficiency	default	0.8	Default value without reference	2019-11-02 01:30:34.604992+00:00
+elec_pstat_fractional_savings	default	0.15	Default value without reference	2019-11-02 01:30:34.606261+00:00
+heating_default_natgas_efficiency	default	0.87	Default value without reference	2019-11-02 13:00:12.732734+00:00
+propane_price_per_gallon	default	3.09	Default value without reference	2019-11-02 13:04:03.169497+00:00
+propane_co2_per_gallon	default	12.7	Default value without reference	2019-11-02 13:04:03.180598+00:00
+propane_btu_per_gallon	default	91333	Default value without reference	2019-11-02 13:04:03.182980+00:00
+heating_default_propane_efficiency	default	0.82	Default value without reference	2019-11-02 13:04:03.189398+00:00
+wood_price_per_cord	default	320	Default value without reference	2019-11-02 13:04:40.832682+00:00
+wood_btu_per_cord	default	23.7	Default value without reference	2019-11-02 13:04:40.846646+00:00
+wood_co2_per_mmbtu	default	255.2	Default value without reference	2019-11-02 13:04:40.848177+00:00
+heating_default_wood_efficiency	default	0.7	Default value without reference	2019-11-02 13:04:40.850449+00:00
+elec_btu_per_kwh	default	3414	Default value without reference	2019-11-02 13:06:02.425189+00:00
+heating_default_electric_efficiency	default	1	Default value without reference	2019-11-02 13:08:23.274148+00:00
+heating_default_ashp_efficiency	default	3	Default value without reference	2019-11-02 13:09:19.139840+00:00
+weatherize_fractional_savings	default	0.15	Default value without reference	2019-11-02 13:54:35.358821+00:00
+heating_typical_weatherization_cost	default	500	Default value without reference	2019-11-02 13:54:35.368765+00:00
+weatherize_fractional_savings_2	default	0.5	Default value without reference	2019-11-02 13:59:37.444328+00:00
+weatherize_incremental_savings	default	0.05	Default value without reference	2019-11-02 14:01:17.072934+00:00
+heating_fueloil_high_efficiency	default	0.9	Default value without reference	2019-11-02 14:13:34.120227+00:00
+heating_standard_hieff_boiler_cost	default	8000	Default value without reference	2019-11-02 14:13:34.136929+00:00
+heating_hieff_boiler_fed_tax_credit	default	0	Default value without reference	2019-11-02 14:13:34.139725+00:00
+heating_hieff_boiler_utility_rebate	default	2000	Default value without reference	2019-11-02 14:13:34.141792+00:00
+heating_natgas_high_efficiency	default	0.95	Default value without reference	2019-11-02 14:15:14.148661+00:00
+heating_wood_high_efficiency	default	0.88	Default value without reference	2019-11-02 14:20:43.575874+00:00
+heating_propane_high_efficiency	default	0.95	Default value without reference	2019-11-02 14:21:53.860484+00:00
+heating_default_ashp_fraction	default	0.8	Default value without reference	2019-11-02 21:29:51.573408+00:00
+heating_standard_ashp_cost	default	15000	Default value without reference	2019-11-02 21:29:51.601824+00:00
+heating_ashp_fed_tax_credit	default	0	Default value without reference	2019-11-02 21:29:51.602759+00:00
+heating_ashp_utility_rebate	default	2500	Default value without reference	2019-11-02 21:29:51.603654+00:00
+heating_default_gshp_efficiency	default	4.5	Default value without reference	2019-11-02 22:01:27.035534+00:00
+heating_standard_geothermal_cost	default	60000	Default value without reference	2019-11-02 22:01:27.046433+00:00
+heating_geothermal_fed_tax_credit	default	0.26	Default value without reference	2019-11-02 22:01:27.048454+00:00
+heating_geothermal_utility_rebate	default	5000	Default value without reference	2019-11-02 22:01:27.049570+00:00
+lawn_default_size	default	4000	Default value without reference	2019-11-03 13:07:20.370195+00:00
+lawn_blower_typical_hours	default	10	Default value without reference	2019-11-03 13:07:20.384608+00:00
+gasoline_co2_per_gal	default	17.68	Default value without reference	2019-11-03 13:07:20.386172+00:00
+lawn_blower_gal_per_hour	default	0.5	Default value without reference	2019-11-03 13:07:20.387590+00:00
+lawn_average_yearly_mows	default	22	Default value without reference	2019-11-03 13:10:49.639568+00:00
+lawn_mow_gas_5000sf	default	0.5	Default value without reference	2019-11-03 13:10:49.641898+00:00
+lawn_mow_kwh_5000sf	default	2	Default value without reference	2019-11-03 13:10:49.644606+00:00
+lawn_cost_elec_mower	default	400	Default value without reference	2019-11-03 13:10:49.645630+00:00
+lawn_cost_per_mow	default	50	Default value without reference	2019-11-03 13:30:20.008840+00:00
+lawn_fertilizer_applications_average	default	4	Default value without reference	2019-11-03 13:38:23.181388+00:00
+lawn_fertilzer_bag_size	default	14	Default value without reference	2019-11-03 13:38:23.189530+00:00
+lawn_fertilizer_bag_sqft	default	5000	Default value without reference	2019-11-03 13:38:23.191292+00:00
+lawn_fertilizer_nitrogen_concentration	default	0.1	Default value without reference	2019-11-03 13:38:23.192933+00:00
+nitrogen_co2_factor	default	0.02	Default value without reference	2019-11-03 13:38:23.195138+00:00
+compost_co2	default	2000	Default value without reference	2019-11-03 14:02:27.635225+00:00
+reuse_containers_co2	default	100	Default value without reference	2019-11-03 14:07:51.395827+00:00
+buy_bulk_co2	default	100	Default value without reference	2019-11-03 14:09:40.306507+00:00
+buy_recycled_co2	default	200	Default value without reference	2019-11-03 14:18:29.151190+00:00
+buy_sell_used_co2	default	2000	Default value without reference	2019-11-03 14:19:55.469790+00:00
+buy_sell_use_savings	default	4000	Default value without reference	2019-11-03 14:19:55.472782+00:00
+general_household_size_default	default	4	Default value without reference	2019-11-03 14:25:10.649840+00:00
+food_meat_co2_serving	default	4.75	Default value without reference	2019-11-03 14:25:10.654395+00:00
+food_vegetarian_co2_serving	default	0.88	Default value without reference	2019-11-03 14:25:10.655490+00:00
+flights_default_annual_family	default	12	Default value without reference	2019-11-03 14:35:30.856151+00:00
+filghts_default_co2	default	2288	Default value without reference	2019-11-03 14:36:15.434833+00:00
+fights_default_cost	default	500	Default value without reference	2019-11-03 14:36:15.441056+00:00
+fights_default_offset_cost_per_ton	default	12	Default value without reference	2019-11-03 14:40:59.187688+00:00
+car_default_miles	default	15000	Default value without reference	2019-11-03 16:58:29.499839+00:00
+car_default_mpg	default	25	Default value without reference	2019-11-03 16:58:29.512987+00:00
+car_annual_service_gas	default	500	Default value without reference	2019-11-03 16:58:29.514345+00:00
+gasoline_price	default	2.7	Default value without reference	2019-11-03 16:58:29.515513+00:00
+car_new_electric_mpg	default	100	Default value without reference	2019-11-03 17:01:02.314323+00:00
+car_annual_service_electric	default	200	Default value without reference	2019-11-03 17:01:02.317885+00:00
+car_electric_kwh_per_mile	default	0.25	Default value without reference	2019-11-03 17:01:02.318940+00:00
+car_BEV_federal_credit	default	7500	Default value without reference	2019-11-03 17:01:02.320668+00:00
+car_BEV_state_credit	default	2500	Default value without reference	2019-11-03 17:01:02.321676+00:00
+car_BEV_local_rebate	default	0	Default value without reference	2019-11-03 17:01:02.323563+00:00
+car_BEV_price	default	30000	Default value without reference	2019-11-03 17:01:02.325384+00:00
+car_plugin_electric_fraction	default	0.8	Default value without reference	2019-11-03 17:37:08.800920+00:00
+car_new_hybrid_mpg	default	40	Default value without reference	2019-11-03 17:37:08.807815+00:00
+car_annual_service_hybrid	default	300	Default value without reference	2019-11-03 17:37:08.809683+00:00
+car_PHEV_federal_credit	default	4500	Default value without reference	2019-11-03 17:38:12.341290+00:00
+car_PHEV_state_credit	default	0	Default value without reference	2019-11-03 17:38:12.345429+00:00
+car_PHEV_local_rebate	default	0	Default value without reference	2019-11-03 17:38:12.351618+00:00
+car_PHEV_price	default	27750	Default value without reference	2019-11-03 17:38:12.353994+00:00
+car_hybrid_price	default	26000	Default value without reference	2019-11-03 17:40:03.931158+00:00
+car_default_price	default	22000	Default value without reference	2019-11-03 17:43:32.653676+00:00
+transportation_public_daily_cost	default	25	Default value without reference	2019-11-03 20:28:43.265001+00:00
+transportation_public_monthly_cost	default	301	Default value without reference	2019-11-03 20:28:43.278356+00:00
+car_annual_insurance	default	1000	Default value without reference	2019-11-03 20:38:27.380591+00:00
+elec_electricity_monitor_average_savings	default	0.1	Default value without reference	2019-11-03 20:43:42.401190+00:00
+elec_electricity_monitor_cost	default	400	Default value without reference	2019-11-03 20:43:42.410813+00:00
+elec_kwh_savings_smart_power_strips	default	28.2	assume set-top-box digital cable plus DVD player https://standby.lbl.gov/data/summary-table/	2019-11-04 10:56:39.762824+00:00
+elec_cost_smart_power_strip	default	15	Default value without reference	2019-11-04 10:56:39.809969+00:00
+elec_cost_drying_rack	default	50	Default value without reference	2019-11-04 12:44:01.629394+00:00
+water_hw_use_per_person	default	13	Default value without reference	2019-11-04 12:59:39.134929+00:00
+water_heater_settemp	default	120	Default value without reference	2019-11-04 12:59:39.157071+00:00
+water_input_temp	default	50	Default value without reference	2019-11-04 12:59:39.158021+00:00
+water_heater_heatpump_efficiency	default	2.5	Default value without reference	2019-11-04 12:59:39.158870+00:00
+water_heater_natgas_efficiency	default	0.7	Default value without reference	2019-11-04 12:59:39.159695+00:00
+water_hw_assessment_conversion_rate	default	0.2	Default value without reference	2019-11-04 13:00:43.995855+00:00
+water_heater_electric_efficiency	default	0.9	Default value without reference	2019-11-04 13:05:56.530301+00:00
+water_heater_fueloil_efficiency	default	0.55	Default value without reference	2019-11-04 13:06:14.946207+00:00
+water_heater_propane_efficiency	default	0.7	Default value without reference	2019-11-04 13:06:32.144339+00:00
+water_hpwh_installed_price	default	2500	Default value without reference	2019-11-04 13:08:02.278793+00:00
+water_hpwh_rebate	default	750	Default value without reference	2019-11-04 13:08:02.282700+00:00
+general_decent_home_investment_payback	default	10	Default value without reference	2019-11-04 13:08:02.285179+00:00
+solar_default_pv_size	default	7	Default value without reference	2019-11-04 13:14:29.344539+00:00
+solar_annual_kwh_per_kw	default	1100	Default value without reference	2019-11-04 13:14:29.351619+00:00
+solar_assessment_convertion_fraction	default	0.2	Default value without reference	2019-11-04 13:14:29.352589+00:00
+solar_srec_payment_per_mwh	default	200	Default value without reference	2019-11-04 13:21:24.159797+00:00
+solar_local_price_factor	default	1	Default value without reference	2019-11-04 13:21:24.165573+00:00
+solar_federal_tax_credit	default	0.26	Default value without reference	2019-11-04 13:21:24.167557+00:00
+solar_state_tax_credit	default	0	Default value without reference	2019-11-04 13:21:24.171043+00:00
+solar_state_rebate	default	1000	Default value without reference	2019-11-04 13:21:24.172621+00:00
+solar_utility_rebate	default	3000	Default value without reference	2019-11-04 13:21:24.182523+00:00
+solar_pv_kw_cost	default	3500	Default value without reference	2019-11-04 13:21:24.184498+00:00
+solar_wh_system_fraction	default	0.8	Default value without reference	2019-11-04 13:26:39.236229+00:00
+solar_hw_federal_tax_credit	default	0.26	Default value without reference	2019-11-04 13:27:11.990112+00:00
+solar_hw_state_tax_credit	default	0	Default value without reference	2019-11-04 13:27:11.992602+00:00
+solar_hw_state_rebate	default	1000	Default value without reference	2019-11-04 13:27:11.993395+00:00
+solar_hw_utility_rebate	default	0	Default value without reference	2019-11-04 13:27:11.994255+00:00
+solar_hw_system_average_cost	default	9000	Default value without reference	2019-11-04 13:27:12.003928+00:00
