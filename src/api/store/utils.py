@@ -44,7 +44,6 @@ def get_community_or_die(context, args):
 def get_user_or_die(context, args):
   user_email = args.pop('user_email', None) or args.pop('email', None) or context.user_email
   user_id = args.pop('user_id', None) or context.user_id
-  user = None
   if user_id:
     return UserProfile.objects.get(pk=user_id)
   elif user_email:
