@@ -36,5 +36,3 @@ reduce_lawn_size,Reduce the size of your lawn,Reducing your lawn size can save m
 reduce_lawn_care,"Reduce mowing, fertilizing or other lawn care","Mowing, fertilizing or watering your lawn less reduces emissions and saves money.",,300,"lawn_size,lawn_service,mowing_frequency,mower_type,fertilizer,fertilizer_applications",,Yard_Landscaping_1
 electric_mower,Replace gasoline mower with electric,"Switching from gasoline to electric mower reduces pollution, noise and emissions.",,500,"lawn_size,mower_type,mower_switch",,Yard_Landscaping_1
 rake_elec_blower,Replace gasoline blower with rake or electric,Raking or using an electric instead of gasoline blower reduces pollution and noise.,,300,"leaf_cleanup_gas_blower,leaf_cleanup_blower_switch",,Yard_Landscaping_1
-,,,,,,,
-low_carbon_fashion,We need to know more about this,to be determined,,,,,
