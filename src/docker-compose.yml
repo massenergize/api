@@ -1,8 +1,9 @@
   version: '3'
     
   services:
-    web:
+    api-dev:
       build: .
+      image: massenergize/api-dev
       command: python manage.py runserver 0.0.0.0:8000
       volumes:
         - .:/src

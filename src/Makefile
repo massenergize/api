@@ -20,6 +20,6 @@ docker-migrate:
 	docker-compose run web src/manage.py migrate
 .PHONY: docker-migrate
 
-docker-build:
+build:
 	docker-compose build
 .PHONY: docker-migrate
