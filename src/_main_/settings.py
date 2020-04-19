@@ -29,7 +29,7 @@ IS_PROD = False
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -43,7 +43,8 @@ ALLOWED_HOSTS = [
     'api-dev.massenergize.org',
     'api.dev.massenergize.org',
     'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-production.us-east-2.elasticbeanstalk.com'
+    'massenergize-api-production.us-east-2.elasticbeanstalk.com',
+    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
