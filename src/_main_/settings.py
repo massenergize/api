@@ -14,18 +14,19 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-IS_PROD = True
-path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
-os.environ.update(CONFIG_DATA)
+IS_PROD = False
+
+# os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
-SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
+SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False

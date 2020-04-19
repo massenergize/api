@@ -15,3 +15,11 @@ deploy-dev:
 	python prepare-for-deploy.py --dev
 	eb deploy
 .PHONY: deploy-dev
+
+docker-migrate:
+	docker-compose run web src/manage.py migrate
+.PHONY: docker-migrate
+
+docker-build:
+	docker-compose build
+.PHONY: docker-migrate
