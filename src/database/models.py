@@ -897,13 +897,15 @@ class Vendor(models.Model):
 
 
   def full_json(self):
-    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
+    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact'])
     data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
     data['logo'] = get_json_if_not_none(self.logo)
+    data['more_info'] = self.more_info
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['banner']  = get_json_if_not_none(self.banner)
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['website'] = self.more_info and self.more_info.get('website', None)
     return data
 
   class Meta:
@@ -1230,13 +1232,27 @@ class Testimonial(models.Model):
   def info(self):
     return model_to_dict(self, include=['id', 'title', 'community'])
 
+  def _get_user_info(self):
+    if(self.anonymous):
+      return {
+        "full_name": "Anonymous",
+        "email": "anonymous"
+      }
+    elif(self.preferred_name):
+      return {
+        "full_name": self.preferred_name,
+        "email": "anonymous"
+      }
+    else:
+      return get_json_if_not_none(self.user) or {
+        "full_name": "Anonymous",
+        "email": "anonymous"
+      }
+
+
   def simple_json(self):
-    anonymous = {
-      "full_name": "Anonymous",
-      "email": "anonymous"
-    }
     res = model_to_dict(self, exclude=['image', 'tags'])
-    res["user"] = get_json_if_not_none(self.user) or  anonymous
+    res["user"] = self._get_user_info()
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
