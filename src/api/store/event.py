@@ -61,8 +61,10 @@ class EventStore:
       events = EventAttendee.objects.filter(attendee=user_id)
     else:
       events = []
-    if not events:
-      return [], None
+    
+    if not context.is_dev and events:
+      events = events.filter(is_published=True)
+  
     return events, None
 
 
