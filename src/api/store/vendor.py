@@ -61,6 +61,7 @@ class VendorStore:
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       key_contact_full_name = args.pop('key_contact_full_name', None)
       key_contact_email = args.pop('key_contact_email', None)
+      website = args.pop('website', None)
       args["key_contact"] = {
         "name": key_contact_full_name,
         "email": key_contact_email
@@ -80,6 +81,9 @@ class VendorStore:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
         if onboarding_contact:
           new_vendor.onboarding_contact = onboarding_contact
+
+      if website:
+        new_vendor.more_info = {'website': website}
       
       new_vendor.save()
 
@@ -102,8 +106,6 @@ class VendorStore:
       vendor = Vendor.objects.get(id=vendor_id)
       if not vendor:
         return None, InvalidResourceError()  
-
-      print(vendor)
       
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -116,7 +118,9 @@ class VendorStore:
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       if onboarding_contact_email:
         vendor.onboarding_contact_email = onboarding_contact_email
-      
+
+      website = args.pop('website', None)
+
   
       key_contact = args.pop('key_contact', {})
       if key_contact:
@@ -140,6 +144,8 @@ class VendorStore:
       if tags:
         vendor.tags.set(tags)
 
+      if website:
+        vendor.more_info = {'website': website}
       vendor.save()
 
       updated = Vendor.objects.filter(id=vendor_id).update(**args)
