@@ -905,6 +905,7 @@ class Vendor(models.Model):
     data['banner']  = get_json_if_not_none(self.banner)
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['website'] = self.more_info and self.more_info.get('website', None)
     return data
 
   class Meta:
