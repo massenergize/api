@@ -1231,13 +1231,27 @@ class Testimonial(models.Model):
   def info(self):
     return model_to_dict(self, include=['id', 'title', 'community'])
 
+  def _get_user_info(self):
+    if(self.anonymous):
+      return {
+        "full_name": "Anonymous",
+        "email": "anonymous"
+      }
+    elif(self.preferred_name):
+      return {
+        "full_name": self.preferred_name,
+        "email": "anonymous"
+      }
+    else:
+      return get_json_if_not_none(self.user) or {
+        "full_name": "Anonymous",
+        "email": "anonymous"
+      }
+
+
   def simple_json(self):
-    anonymous = {
-      "full_name": "Anonymous",
-      "email": "anonymous"
-    }
     res = model_to_dict(self, exclude=['image', 'tags'])
-    res["user"] = get_json_if_not_none(self.user) or  anonymous
+    res["user"] = self._get_user_info()
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
