@@ -4,6 +4,5 @@
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 .env
-
 .ebextensions/securelistener-clb.config
 prepare-for-deploy.py

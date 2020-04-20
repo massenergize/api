@@ -14,18 +14,19 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
-path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
-os.environ.update(CONFIG_DATA)
+
+# os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
-SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
+SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -41,7 +42,9 @@ ALLOWED_HOSTS = [
     'api.prod.massenergize.org',
     'api-dev.massenergize.org',
     'api.dev.massenergize.org',
-    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com'
+    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
+    'massenergize-api-production.us-east-2.elasticbeanstalk.com',
+    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
