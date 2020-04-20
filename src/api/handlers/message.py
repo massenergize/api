@@ -80,8 +80,7 @@ class MessageHandler(RouteHandler):
   def team_admin_list(self) -> function:
     def team_admin_list_view(request) -> None: 
       context: Context = request.context
-      args: dict = context.args
-      messages, err = self.service.list_team_admin_messages_for_super_admin(context, args)
+      messages, err = self.service.list_team_admin_messages_for_community_admin(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=messages)
