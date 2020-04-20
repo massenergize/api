@@ -74,6 +74,7 @@ class VendorHandler(RouteHandler):
         .expect("phone_number", str)
         .expect("have_address", bool)
         .expect("is_verified", bool)
+        .expect("website", str)
         .expect("is_published", bool)
         .expect("communities", list, is_required=False)
         .expect("service_area_states", list, is_required=False)
@@ -128,6 +129,7 @@ class VendorHandler(RouteHandler):
         .expect("onboarding_contact_email", str, is_required=False)
         .expect("name", str, is_required=False)
         .expect("email", str, is_required=False)
+        .expect("website", str)
         .expect("is_verified", bool, is_required=False)
         .expect("phone_number", str, is_required=False)
         .expect("have_address", bool, is_required=False)
@@ -151,7 +153,6 @@ class VendorHandler(RouteHandler):
         args['key_contact']["name"] = key_contact_name
       if key_contact_email:
         args['key_contact']["email"] = key_contact_email
-
 
       vendor_info, err = self.service.update_vendor(context, args)
       if err:
