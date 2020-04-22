@@ -182,7 +182,6 @@ class GraphStore:
           if data_id.isnumeric() and v.isnumeric():
             data = Data.objects.filter(pk=data_id).first()
             if data:
-              print(data)
               data.reported_value = v
               data.save()
       

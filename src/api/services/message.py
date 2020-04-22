@@ -70,8 +70,8 @@ class MessageService:
     return serialize_all(messages), None
 
 
-  def list_team_admin_messages_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
-    messages, err = self.store.list_team_admin_messages(context, args)
+  def list_team_admin_messages_for_community_admin(self, context: Context) -> (list, MassEnergizeAPIError):
+    messages, err = self.store.list_team_admin_messages(context)
     if err:
       return None, err
     return serialize_all(messages), None

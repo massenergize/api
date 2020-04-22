@@ -88,7 +88,6 @@ class MiscellaneousStore:
               if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
                 val += 1
             
-            print(val, d)
             d.value = val
             d.save()
       return {'graph_default_data': 'done'}, None
@@ -101,7 +100,6 @@ class MiscellaneousStore:
   def backfill_real_estate_units(self, context: Context, args):
     try:
       for user_action in UserActionRel.objects.all():
-        print(user_action.real_estate_unit, user_action.action.community)
         if not user_action.real_estate_unit.community:
           user_action.real_estate_unit.community = user_action.action.community
         user_action.real_estate_unit.unit_type = (user_action.real_estate_unit.unit_type or 'residential').lower()
@@ -121,7 +119,6 @@ class MiscellaneousStore:
       for data in Data.objects.all():
         if data.tag and data.tag.name == "Lighting":
           home_energy_data = Data.objects.filter(community=data.community, tag__name="Home Energy").first()
-          print(data, home_energy_data)
           if home_energy_data:
             home_energy_data.value += data.value
             home_energy_data.reported_value += data.reported_value
