@@ -895,6 +895,8 @@ class Vendor(models.Model):
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['logo'] = get_json_if_not_none(self.logo)
+    data['website'] = self.more_info and self.more_info.get('website', None)
+    data['key_contact'] = self.key_contact
     return data
 
 
@@ -908,6 +910,7 @@ class Vendor(models.Model):
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['website'] = self.more_info and self.more_info.get('website', None)
+    data['key_contact'] = self.key_contact
     return data
 
   class Meta:
@@ -2152,6 +2155,7 @@ class Message(models.Model):
     res = model_to_dict(self)
     res["community"] = get_summary_info(self.community)
     res["team"] = get_summary_info(self.team)
+    res["user"] = get_summary_info(self.user)
     return res
 
   def full_json(self):

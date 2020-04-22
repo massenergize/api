@@ -139,7 +139,6 @@ class TeamStore:
 
   def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
     try:
-      print(team_id)
       teams = Team.objects.filter(id=team_id)
       if not teams:
         return None, InvalidResourceError()
@@ -149,7 +148,6 @@ class TeamStore:
       team = teams.first()
       members = TeamMembers.objects.filter(team=team)
       msg = "delete_team:  Team %s deleting %d members" % (team.name,members.count())
-      print(msg)
       members.delete()
       teams.delete()  # or should that be team.delete()?
 
@@ -165,7 +163,6 @@ class TeamStore:
       user = UserProfile.objects.get(id=user_id)
       teamMember = TeamMember.create(team=team, user=user)
       teamMember.save()
-      print("join_team")
       #team.members.add(user_id)
       #team.save()
       return team, None
@@ -178,17 +175,13 @@ class TeamStore:
       user = UserProfile.objects.get(id=user_id)
       teamMembers = TeamMember.objects.filter(team=team, user=user)
       teamMembers.delete()
-      print("leave_team")
-      #team.members.remove(user_id)
-      #team.admins.remove(user_id)
-      #team.save()
+
       return team, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 
   def add_team_member(self, context: Context, args) -> (Team, MassEnergizeAPIError):
     try:
-      print(args)
       team_id = args.pop('team_id', None)
       user = get_user_or_die(context, args)
       status = args.pop('is_admin', None) == 'true'

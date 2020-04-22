@@ -16,7 +16,7 @@ def get_community(community_id=None, subdomain=None):
 
   return None, CustomMassenergizeError("Missing community_id or subdomain field")
 
-def get_user(user_id, email):
+def get_user(user_id, email=None):
   try:
     if email: 
       return UserProfile.objects.filter(email=email).first(), None

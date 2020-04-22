@@ -107,7 +107,6 @@ class TagCollectionStore:
   def delete_tag_collection(self, tag_collection_id) -> (dict, MassEnergizeAPIError):
     try:
       tag_collections = TagCollection.objects.filter(id=tag_collection_id)
-      print(tag_collection_id, tag_collections)
       if not tag_collections:
         return None, InvalidResourceError()
       tag_collections.delete()
