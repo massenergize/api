@@ -94,7 +94,7 @@ class GraphStore:
 
     carbon_footprint_reduction = 0 if not community.goal or not community.goal.attained_carbon_footprint_reduction else community.goal.attained_carbon_footprint_reduction
     # loop over actions completed
-    while actionRel = done_actions.next():
+    for actionRel in done_actions:
       if actionRel.action and actionRel.action.calculator_action :
         carbon_footprint_reduction += actionRel.action.calculator_action.average_points
 
@@ -108,7 +108,7 @@ class GraphStore:
     done_actions = UserActionRel.objects.filter(status="DONE")
     actions_completed = done_actions.count()
     carbon_footprint_reduction = 0
-    while actionRel = done_actions.next():
+    for actionRel in done_actions:
       if actionRel.action and actionRel.action.calculator_action :
         carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
 

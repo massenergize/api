@@ -129,7 +129,7 @@ class HomePageSettingsHandler(RouteHandler):
         'attained_number_of_actions': parse_int(args.pop('attained_number_of_actions', 0)),
         'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
         'attained_number_of_households': parse_int(args.pop('attained_number_of_households', 0)),
-        'target_number_of_households': parse_int(args.pop('target_number_of_households', 0))
+        'target_number_of_households': parse_int(args.pop('target_number_of_households', 0)),
         'attained_carbon_footprint_reduction': parse_int(args.pop('attained_carbon_footprint_reduction', 0)),
         'target_carbon_footprint_reduction': parse_int(args.pop('target_carbon_footprint_reduction', 0))
       }

@@ -195,7 +195,6 @@ class Goal(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
 
-``# BHN - not currently implemented
   #def get_status(self):
   #  return CHOICES["GOAL_STATUS"][self.status]
 
@@ -1942,7 +1941,13 @@ class HomePageSettings(models.Model):
     # 
     # For Wayland launch, insisting that we show large numbers so people feel good about it.
     goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    goal["organic_attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").count())
+    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE")
+    goal["organic_attained_number_of_actions"] = (done_actions.count())
+    carbon_footprint_reduction = 0
+    for actionRel in done_actions:
+      if actionRel.action and actionRel.action.calculator_action:
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_carbon_score
+    goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
