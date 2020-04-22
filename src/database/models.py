@@ -1946,7 +1946,7 @@ class HomePageSettings(models.Model):
     carbon_footprint_reduction = 0
     for actionRel in done_actions:
       if actionRel.action and actionRel.action.calculator_action:
-        carbon_footprint_reduction += actionRel.action.calculator_action.average_carbon_score
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
     goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
     res =  self.simple_json()

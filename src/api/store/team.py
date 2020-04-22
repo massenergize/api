@@ -39,7 +39,7 @@ class TeamStore:
       teams = Team.objects.filter(community=community)
       ans = []
       for team in teams:
-        res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0}
+        res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0, "carbon_footprint_reduction": 0}
         res["team"] = team.simple_json()
         # team.members deprecated
         # for m in team.members.all():
@@ -50,8 +50,12 @@ class TeamStore:
           res["households"] += user.real_estate_units.count()
           actions = user.useractionrel_set.all()
           res["actions"] += len(actions)
-          res["actions_completed"] += actions.filter(**{"status":"DONE"}).count()
+          done_actions = actions.filter(**{"status":"DONE"})
+          res["actions_completed"] += done_actions.count()
           res["actions_todo"] += actions.filter(**{"status":"TODO"}).count()
+          for done_action in done_actions:
+            if done_action.action and done_action.action.calculator_action:
+              res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
 
         ans.append(res)
 
