@@ -21,7 +21,7 @@ from pathlib import Path  # python3 only
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-IS_PROD = True
+IS_PROD = False
 
 env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
 load_dotenv(dotenv_path=env_path, verbose=True)

@@ -893,6 +893,7 @@ class Vendor(models.Model):
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['logo'] = get_json_if_not_none(self.logo)
+    data['website'] = self.more_info and self.more_info.get('website', None)
     return data
 
 
