@@ -2150,6 +2150,7 @@ class Message(models.Model):
     res = model_to_dict(self)
     res["community"] = get_summary_info(self.community)
     res["team"] = get_summary_info(self.team)
+    res["user"] = get_summary_info(self.user)
     return res
 
   def full_json(self):
