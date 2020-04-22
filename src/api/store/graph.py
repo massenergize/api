@@ -89,14 +89,32 @@ class GraphStore:
     households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
     households_engaged += (RealEstateUnit.objects.filter(community=community).count())
     actions_completed = 0 if not community.goal else community.goal.attained_number_of_actions
-    actions_completed += UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").count()
-    return {"community": {"id": community.id, "name": community.name}, "actions_completed": actions_completed, "households_engaged": households_engaged}
+    done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE")
+    actions_completed += done_actions.count()
+
+    carbon_footprint_reduction = 0 if not community.goal or not community.goal.attained_carbon_footprint_reduction else community.goal.attained_carbon_footprint_reduction
+    # loop over actions completed
+    while actionRel = done_actions.next():
+      if actionRel.action and actionRel.action.calculator_action :
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+
+    return {"community": {"id": community.id, "name": community.name}, 
+            "actions_completed": actions_completed, "households_engaged": households_engaged, 
+            "carbon_footprint_reduction": carbon_footprint_reduction}
 
 
   def _get_all_households_engaged(self):
     households_engaged = UserProfile.objects.filter(is_deleted=False).count()
-    actions_completed = UserActionRel.objects.filter(status="DONE").count()
-    return {"community": {"id": 0, "name": 'Other'}, "actions_completed": actions_completed, "households_engaged": households_engaged}
+    done_actions = UserActionRel.objects.filter(status="DONE")
+    actions_completed = done_actions.count()
+    carbon_footprint_reduction = 0
+    while actionRel = done_actions.next():
+      if actionRel.action and actionRel.action.calculator_action :
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
+
+    return {"community": {"id": 0, "name": 'Other'}, 
+            "actions_completed": actions_completed, "households_engaged": households_engaged,
+            "carbon_footprint_reduction": carbon_footprint_reduction}
 
 
   def graph_communities_impact(self, context: Context, args) -> (Graph, MassEnergizeAPIError):

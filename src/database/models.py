@@ -195,9 +195,9 @@ class Goal(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
 
-
-  def get_status(self):
-    return CHOICES["GOAL_STATUS"][self.status]
+``# BHN - not currently implemented
+  #def get_status(self):
+  #  return CHOICES["GOAL_STATUS"][self.status]
 
   def __str__(self):
     return f"{self.name} {' - Deleted' if self.is_deleted else ''}"
@@ -297,6 +297,8 @@ class Community(models.Model):
     # For Wayland launch, insisting that we show large numbers so people feel good about it.
     goal["attained_number_of_households"] += (RealEstateUnit.objects.filter(community=self).count())
     goal["attained_number_of_actions"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+    #BHN - TODO
+    #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
     return {
       "id": self.id,
