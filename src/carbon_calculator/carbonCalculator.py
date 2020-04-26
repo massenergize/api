@@ -365,7 +365,8 @@ class CarbonCalculator:
                                 host_logo = host_logo,
                                 sponsor_org = item[12],
                                 sponsor_url = item[13],
-                                sponsor_logo = sponsor_logo
+                                sponsor_logo = sponsor_logo,
+                                question_group = item[15]
                                 )
                             event.save()
                             if groupslist:
