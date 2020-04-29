@@ -7,14 +7,14 @@ class CalculatorQuestion:
         self.name = name
 
         qs = None
-        # first look for specific question
+        # first look for specific question with tag
         if event_tag and len(event_tag)>0:
             suffix = '<' + event_tag + '>'
             qs = Question.objects.filter(name=name+suffix)
 
         if not qs:
            qs = Question.objects.filter(name=name)
-           
+
         if qs:
             q = qs[0]
             self.category = q.category
@@ -191,7 +191,9 @@ def QuerySingleAction(name,event_tag):
             questionInfo = []
             for question in q.questions:
                 qq = CalculatorQuestion(question, event_tag)
-                questionInfo.append(jsons.dump(qq))
+                # a question with no text is not to be included; this is how depending on the event_tag some questions would not be asked.
+                if len(qq.QuestionText)>0:
+                    questionInfo.append(jsons.dump(qq))
 
             picture = ""
             if q.picture:
