@@ -354,7 +354,6 @@ class CarbonCalculator:
 
                             event = Event(name=item[0],
                                 displayname=item[1],
-                                datetime = dt,
                                 location = item[3],
                                 stationslist = item[4].split(","),
                                 host_org = item[6],
@@ -366,8 +365,11 @@ class CarbonCalculator:
                                 sponsor_org = item[12],
                                 sponsor_url = item[13],
                                 sponsor_logo = sponsor_logo,
-                                question_group = item[15]
+                                event_tag = item[15]
                                 )
+                            if dt != '':
+                                event.datetime = dt
+
                             event.save()
                             if groupslist:
                                 for group in groupslist:

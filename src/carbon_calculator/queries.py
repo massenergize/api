@@ -182,7 +182,7 @@ def QuerySingleEventSummary(event):
 def QueryAllActions():
     pass
 
-def QuerySingleAction(name,event_tag):
+def QuerySingleAction(name,event_tag=""):
     try:
         qs = Action.objects.filter(name=name)
         if qs:
@@ -192,7 +192,7 @@ def QuerySingleAction(name,event_tag):
             for question in q.questions:
                 qq = CalculatorQuestion(question, event_tag)
                 # a question with no text is not to be included; this is how depending on the event_tag some questions would not be asked.
-                if len(qq.QuestionText)>0:
+                if len(qq.questionText)>0:
                     questionInfo.append(jsons.dump(qq))
 
             picture = ""
