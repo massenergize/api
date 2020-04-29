@@ -117,7 +117,7 @@ class HomePageSettingsHandler(RouteHandler):
       #checks for length
       for t in args["featured_links"]:
         if len(t["description"]) >  40:
-          return MassenergizeResponse(error=f"Please description text for {t['title']} should be less than 40 characters")
+          return MassenergizeResponse(error=f"Description text for {t['title']} should be less than 40 characters")
 
       # events
       args['show_featured_events'] = parse_bool(args.pop('show_featured_events', True))
@@ -129,7 +129,9 @@ class HomePageSettingsHandler(RouteHandler):
         'attained_number_of_actions': parse_int(args.pop('attained_number_of_actions', 0)),
         'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
         'attained_number_of_households': parse_int(args.pop('attained_number_of_households', 0)),
-        'target_number_of_households': parse_int(args.pop('target_number_of_households', 0))
+        'target_number_of_households': parse_int(args.pop('target_number_of_households', 0)),
+        'attained_carbon_footprint_reduction': parse_int(args.pop('attained_carbon_footprint_reduction', 0)),
+        'target_carbon_footprint_reduction': parse_int(args.pop('target_carbon_footprint_reduction', 0))
       }
 
       args.pop('organic_attained_number_of_households', None)
