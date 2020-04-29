@@ -134,8 +134,8 @@ replace_dryer<ME>,ME,Will you replace your dryer with a heat pump dryer?,Choice,
 dryer_type<ME>,ME,What type of clothes dryer do you have currently?,Choice,Gas,,Electric,,Heat pump,,Not sure,,,,,,"hp_dryer,line_dry"
 car_mpg<ME>,ME,How many miles per gallon does the car get?,Number,,,,,,,,,,,,,"replace_car,reduce_car_miles,eliminate_car"
 car_annual_miles<ME>,ME,About how many miles is the car driven each year?,Number,,,,,,,,,,,,,"replace_car,reduce_car_miles,eliminate_car"
-car_model_new<ME>,ME,What type of car are you thinking of getting?,Text,,,,,,,,,,,,,replace_car
-replace_car<ME>,ME,Will you replace your car with a more efficient model?,Choice,No,car_model_new,Electric/Plug-in hybrid,,Hybrid,,,,,,,,
+car_new_type<ME>,ME,What type of car are you thinking of getting?,Choice,Electric,,Plug-in Hybrid,,Hybrid,,Gasoline,,Diesel,,,,replace_car
+replace_car<ME>,ME,Will you replace your car with a more efficient model?,Choice,No,car_new_type,Electric/Plug-in hybrid,,Hybrid,,,,,,,,
 eliminate_car<ME>,ME,Will you choose to eliminate your car?,Choice,Yes,,No,,,,,,,,,,
 flights_amount<ME>,ME,How many flights typically do you and your family members take (3 hours or more)?,Number,,,,,,,,,,,,,"reduce_flights,offset_flights"
 offset_flights<ME>,ME,Would you purchase offsets for the flights you take?,Choice,No,,Sometimes,,Usually,,Always,,,,,,offset_flights
@@ -176,8 +176,8 @@ transportation_commute_bike_walk_amount,Transportation,if so how much?,Number,,,
 transportation_flights,Transportation,"Can you take fewer flights per year, and how many?",Choice,No,,10% fewer,,25% fewer,,50% fewer,,75% fewer,,Stop flying altogether,,reduce_flights
 car_mpg,Transportation,How many miles per gallon does the car get?,Number,,,,,,,,,,,,,"replace_car,reduce_car_miles,eliminate_car"
 car_annual_miles,Transportation,About how many miles is the car driven each year?,Number,,,,,,,,,,,,,"replace_car,reduce_car_miles,eliminate_car"
-car_model_new,Transportation,What type of car are you thinking of getting?,Text,,,,,,,,,,,,,replace_car
-replace_car,Transportation,Will you replace your car with a more efficient model?,Choice,No,car_model_new,Electric/Plug-in hybrid,,Hybrid,,,,,,,,
+car_new_type,Transportation,What type of car are you thinking of getting?,Choice,Electric,,Plug-in Hybrid,,Hybrid,,Gasoline,,Diesel,,,,replace_car
+replace_car,Transportation,Will you replace your car with a more efficient model?,Choice,No,car_new_type,Electric/Plug-in hybrid,,Hybrid,,,,,,,,
 eliminate_car,Transportation,Will you choose to eliminate your car?,Choice,Yes,,No,,,,,,,,,,
 flights_amount,Transportation,How many flights typically do you and your family members take (3 hours or more)?,Number,,,,,,,,,,,,,"reduce_flights,offset_flights"
 offset_flights,Transportation,Would you purchase offsets for the flights you take?,Choice,No,,Sometimes,,Usually,,Always,,,,,,offset_flights
