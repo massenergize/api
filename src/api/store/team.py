@@ -50,9 +50,9 @@ class TeamStore:
           res["households"] += user.real_estate_units.count()
           actions = user.useractionrel_set.all()
           res["actions"] += len(actions)
-          done_actions = actions.filter(**{"status":"DONE"})
+          done_actions = actions.filter(status="DONE")
           res["actions_completed"] += done_actions.count()
-          res["actions_todo"] += actions.filter(**{"status":"TODO"}).count()
+          res["actions_todo"] += actions.filter(status="TODO").count()
           for done_action in done_actions:
             if done_action.action and done_action.action.calculator_action:
               res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points

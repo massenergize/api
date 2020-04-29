@@ -1,7 +1,3 @@
-#from django.urls import path, re_path
-#from django.conf.urls import url
-#from .views import *
-
 from api.handlers.action import ActionHandler
 from api.handlers.admin import AdminHandler
 from api.handlers.community import CommunityHandler
@@ -24,9 +20,6 @@ from api.handlers.team import TeamHandler
 from api.handlers.testimonial import TestimonialHandler
 from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
-
-
-
 
 
 urlpatterns = []

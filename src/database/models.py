@@ -195,9 +195,6 @@ class Goal(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
 
-  #def get_status(self):
-  #  return CHOICES["GOAL_STATUS"][self.status]
-
   def __str__(self):
     return f"{self.name} {' - Deleted' if self.is_deleted else ''}"
 
