@@ -4,57 +4,42 @@ from carbon_calculator.views import importcsv
 from database.models import Vendor
 import jsons
 
-#from carbon_calculator.carbonCalculator import CarbonCalculator
-
 IMPORT_SUCCESS = {"status": True}
 # Create your tests here.
 class CarbonCalculatorTest(TestCase):
-    have_imported = False
-    #@classmethod
-    def setUp(self): #CHANGE TO SETUPCLASS LATER
+    @classmethod
+    def setUpClass(self): #CHANGE TO SETUPCLASS LATER
         self.client = Client()
-        self.importdata()
-
-        #CalcUser.objects.create(first_name='first_name',
-        #                    last_name = 'name',
-        #                    email ='name@gmail.com',
-        #                    locality = 'SometownMA',
-        #                    minimum_age = True,
-        #                    accepts_terms_and_conditions = True)
-        #Animal.objects.create(name="cat", sound="meow")
-
-    def importdata(self):
-        if CarbonCalculatorTest.have_imported:
-            return
-        CarbonCalculatorTest.have_imported = True
-        response = self.client.post('/cc/import',
+        self.client.post('/cc/import',
             {   "Confirm": "Yes",
                 "Actions":"carbon_calculator/content/Actions.csv",
                 "Questions":"carbon_calculator/content/Questions.csv",
                 "Stations":"carbon_calculator/content/Stations.csv",
                 "Groups":"carbon_calculator/content/Groups.csv",
-                "Events":"carbon_calculator/content/Events.csv"
-                })
-        self.assertEqual(response.status_code, 200)
-
-        response = self.client.post('/cc/import',
-            {   "Confirm": "Yes",
+                "Events":"carbon_calculator/content/Events.csv",
                 "Defaults":"carbon_calculator/content/exportdefaults.csv"
                 })
-        self.assertEqual(response.status_code, 200)
+
+    @classmethod
+    def tearDownClass(self):
+        pass
 
     def test_info_actions(self):
         response = self.client.post('/cc/info/actions')
         self.assertEqual(response.status_code, 200)
 
-    def test_solarPV(self):
+    def test_solarPVNoArgs(self):
+        response = self.client.post('/cc/estimate/install_solarPV', {})
+        data = jsons.loads(response.content)
+        self.assertEqual(data['status'], 0)
+
+    def test_solarPVGreat(self):
         response = self.client.post('/cc/estimate/install_solarPV',
-        {
+            {
             'solar_potential': 'Great'
             }
         )
         data = jsons.loads(response.content)
-        print(data)
         self.assertEqual(data['status'], 0) #If there was an internal error
 
         """Results from run with above settings:

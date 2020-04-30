@@ -28,7 +28,7 @@ os.environ.update(CONFIG_DATA)
 SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -121,21 +121,21 @@ SESSION_COOKIE_SECURE = False
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': os.environ.get('DATABASE_NAME'),
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': os.environ.get('DATABASE_PORT')
+    'remote-default': {
+        'ENGINE'   : os.environ.get('DATABASE_ENGINE'),
+        'NAME'     : os.environ.get('DATABASE_NAME'),
+        'USER'     : os.environ.get('DATABASE_USER'),
+        'PASSWORD' : os.environ.get('DATABASE_PASSWORD'),
+        'HOST'     : os.environ.get('DATABASE_HOST'),
+        'PORT'     : os.environ.get('DATABASE_PORT')
     },
-    'local-default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres2',
-        'USER': 'Brad',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432'
+    'default': {
+        'ENGINE'   :  os.environ.get('DATABASE_ENGINE'),
+        'NAME'     : 'jpeirce21',
+        'USER'     : '',
+        'PASSWORD' : '',
+        'HOST'     : 'localhost',
+        'PORT'     : '5555'
     },
 }
 

@@ -551,7 +551,6 @@ class SolarAssessment(CalculatorAction):
 
 class InstallSolarPV(CalculatorAction):
     def Eval(self, inputs):
-        print("Inputs to EvalSolarPV:", inputs)
         self.points, self.cost, self.savings, self.text = EvalSolarPV(inputs)
         return super().Eval(inputs)
 
