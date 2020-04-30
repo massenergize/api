@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from carbon_calculator.models import CalcUser, Event, Station, Action, Group, Question
 from carbon_calculator.views import importcsv
 from database.models import Vendor
+import json
 
 #from carbon_calculator.carbonCalculator import CarbonCalculator
 
@@ -41,3 +42,9 @@ class CarbonCalculatorTest(TestCase):
     def test_info_actions(self):
         response = self.client.post('/cc/info/actions')
         self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content.decode('utf8'))
+        self.assertGreaterEqual(len(data["actions"]),37)
+
+        points = data["actions"][0]["average_points"]
+        self.assertEqual(points,51)
