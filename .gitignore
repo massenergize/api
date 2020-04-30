@@ -5,4 +5,8 @@ src/_main_/config/*json
 timelog.csv
 **/.DS_Store
 
+src/*.png
+src/*.jpg
+src/*.jpeg
+
 \.vscode/

@@ -55,7 +55,7 @@ ELEC_UTILITY = 'elec_utility'
 
 def EvalEnergyAudit(inputs):
     points = cost = savings = 0.
-    locality = getLocality(inputs)
+    #locality = getLocality(inputs)
 
     explanation = "Didn't choose to sign up for an energy audit."
     # inputs: energy_audit_recently,energy_audit,heating_fuel,electric_utility
@@ -136,14 +136,16 @@ def EvalHeatingSystemAssessment(inputs):
     #heating_system_assessment,heating_fuel,heating_system_type,heating_system_age,air_conditioning_type,air_conditioning_age
     explanation = "Didn't sign up for a heating system assessment."
     points = cost = savings = 0.
-    #locality = getLocality(inputs)
+    locality = getLocality(inputs)
+
+    heating_assessment_conversion = getDefault(locality,"heating_assessment_conversion", 0.1)
 
     heating_system_assessment = inputs.get('heating_system_assessment',YES)
     if heating_system_assessment == YES:
         co2, operating_cost = HeatingLoad(inputs)
 
-        points = co2 * 0.1
-        savings = operating_cost * 0.1
+        points = co2 * heating_assessment_conversion
+        savings = operating_cost * heating_assessment_conversion
         explanation = "A free heating system assessment can help you plan to reduce costs and emissions. Assuming average 10 percent reduction."
 
     return points, cost, savings, explanation
@@ -212,8 +214,8 @@ def EvalAirSourceHeatPump(inputs):
 
         new_co2, new_cost = HeatingLoad(new_inputs)
 
-        points = old_co2 - ((1 - fraction) * old_co2 + fraction * new_co2)
-        savings = old_cost - ((1 - fraction) * old_cost + fraction * new_cost)
+        points = fraction * (old_co2 - new_co2)
+        savings = fraction * (old_cost - new_cost)
         cost = getDefault(locality,'heating_standard_ashp_cost', 15000)
         tax_credit = getDefault(locality,'heating_ashp_fed_tax_credit', 0)
         utility_rebates = getDefault(locality,'heating_ashp_utility_rebate', 2500.)
@@ -235,15 +237,18 @@ def EvalGroundSourceHeatPump(inputs):
 
     install_gshp = inputs.get('install_gshp',YES)
     if install_gshp == YES:
+        default_hp_heating_fraction = getDefault(locality,'heating_default_gshp_fraction', 1.0)
+        fraction = inputs.get('heat_pump_heating_fraction', default_hp_heating_fraction)
+
         old_co2, old_cost = HeatingLoad(inputs)
         new_inputs = inputs
         new_inputs["heating_fuel"] = "Geothermal"
 
         new_co2, new_cost = HeatingLoad(new_inputs)
 
-        points = old_co2 - new_co2
-        savings = old_cost - new_cost
-        cost = getDefault(locality,'heating_standard_geothermal_cost', 60000)
+        points = fraction * (old_co2 - new_co2)
+        savings = fraction * (old_cost - new_cost)
+        cost = getDefault(locality,'heating_standard_geothermal_cost', 50000)
         tax_credit = getDefault(locality,'heating_geothermal_fed_tax_credit', 0.26)
         utility_rebates = getDefault(locality,'heating_geothermal_utility_rebate', 5000.)
 
@@ -351,7 +356,7 @@ def HeatingLoad(inputs):
     elif heating_fuel == "Heat Pump":
         btu_per_kwh = getDefault(locality, 'elec_btu_per_kwh', 3414.)
 
-        default_efficiency = getDefault(locality,'heating_default_ashp_efficiency', 3.)
+        default_efficiency = getDefault(locality,'heating_default_ashp_efficiency', 2.5)
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
         kwh = heating_load / btu_per_kwh * 1e6 / efficiency
