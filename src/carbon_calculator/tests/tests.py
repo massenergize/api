@@ -9,6 +9,7 @@ import json
 IMPORT_SUCCESS = {"status": True}
 # Create your tests here.
 class CarbonCalculatorTest(TestCase):
+    have_imported = False
     def setUp(self):
         self.client = Client()
         self.importdata()
@@ -22,6 +23,9 @@ class CarbonCalculatorTest(TestCase):
         #Animal.objects.create(name="cat", sound="meow")
 
     def importdata(self):
+        if CarbonCalculatorTest.have_imported:
+            return
+        CarbonCalculatorTest.have_imported = True
 
         response = self.client.post('/cc/import', 
             {   "Confirm": "Yes", 
@@ -40,11 +44,22 @@ class CarbonCalculatorTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_info_actions(self):
+        # test routes function
+        # test there are actions
+        # test that one action has the average_points
+
+        response = self.client.post('/cc')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post('/cc/info')
+        self.assertEqual(response.status_code, 200)
         response = self.client.post('/cc/info/actions')
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content.decode('utf8'))
         self.assertGreaterEqual(len(data["actions"]),37)
 
+        name= data["actions"][0]["name"]
+        self.assertEqual(name,"energy_fair")
+
         points = data["actions"][0]["average_points"]
-        self.assertEqual(points,51)
+        self.assertEqual(points,50)
