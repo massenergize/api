@@ -155,10 +155,12 @@ class UserStore:
 
 
   def delete_user(self, user_id) -> (dict, MassEnergizeAPIError):
-    users = UserProfile.objects.filter(id=user_id)
-    if not users:
+    user = UserProfile.objects.get(id=user_id)
+    if not user:
       return None, InvalidResourceError()
-
+    user.is_deleted = True
+    user.save()
+    return user, None
 
   def list_users_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
@@ -190,6 +192,7 @@ class UserStore:
       # if not context.user_is_super_admin:
       #   return None, NotAuthorizedError()
       users = UserProfile.objects.filter(is_deleted=False)
+      print(users)
       return users, None
     except Exception as e:
       print(e)
