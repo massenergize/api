@@ -1,0 +1,1 @@
+{'Action': 'install_solarPV', 'user_id': '', 'community': '', 'install_solar_panels': 'Yes', 'solar_array_size': 7.0, 'solar_potential': 'Not sure'}

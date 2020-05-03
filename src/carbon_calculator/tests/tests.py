@@ -8,7 +8,7 @@ IMPORT_SUCCESS = {"status": True}
 # Create your tests here.
 class CarbonCalculatorTest(TestCase):
     @classmethod
-    def setUpClass(self): #CHANGE TO SETUPCLASS LATER
+    def setUpClass(self):
         self.client = Client()
         self.client.post('/cc/import',
             {   "Confirm": "Yes",
@@ -29,20 +29,34 @@ class CarbonCalculatorTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_solarPVNoArgs(self):
-        response = self.client.post('/cc/estimate/install_solarPV', {})
+        response = self.client.post('/cc/getInputs/install_solarPV', {})
         data = jsons.loads(response.content)
-        self.assertEqual(data['status'], 0)
+        outputInputs(data)
 
     def test_solarPVGreat(self):
-        response = self.client.post('/cc/estimate/install_solarPV',
+        response = self.client.post('/cc/getInputs/install_solarPV',
             {
             'solar_potential': 'Great'
             }
         )
         data = jsons.loads(response.content)
-        self.assertEqual(data['status'], 0) #If there was an internal error
 
-        """Results from run with above settings:
+def getInputs(action_name):
+    outputInputs(
+        jsons.loads(
+            self.client.post('/cc/getInputs/{}'.format(
+                action_name
+                )
+            ).content
+        )
+    )
+
+def outputInputs(data):
+    f = open("carbon_calculator/tests/Inputs.txt", "a")
+    f.write(str(data) + "\n")
+    f.close()
+
+"""Results from run with above settings:
 Inputs to EvalSolarPV: {'solar_potential': 'Great'}
 {'status': 0, 'carbon_points': 5251.0, 'cost': 14130.0, 'savings': 3241.0, 'explanation': 'installing a solar PV array on your home would pay back in around 5 years and save 26.3 tons of CO2 over 10 years.'}
 .    """
