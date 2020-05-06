@@ -22,7 +22,7 @@ class CarbonCalculatorTest(TestCase):
 
     @classmethod
     def tearDownClass(self):
-        pass
+        populate_inputs_file()
 
     def test_info_actions(self):
         response = self.client.post('/cc/info/actions')
@@ -31,7 +31,7 @@ class CarbonCalculatorTest(TestCase):
     def test_solarPVNoArgs(self):
         response = self.client.post('/cc/getInputs/install_solarPV', {})
         data = jsons.loads(response.content)
-        outputInputs(data)
+        #outputInputs(data)
 
     def test_solarPVGreat(self):
         response = self.client.post('/cc/getInputs/install_solarPV',
@@ -41,20 +41,29 @@ class CarbonCalculatorTest(TestCase):
         )
         data = jsons.loads(response.content)
 
-def getInputs(action_name):
-    outputInputs(
-        jsons.loads(
-            self.client.post('/cc/getInputs/{}'.format(
-                action_name
-                )
-            ).content
-        )
-    )
-
 def outputInputs(data):
     f = open("carbon_calculator/tests/Inputs.txt", "a")
     f.write(str(data) + "\n")
     f.close()
+
+def populate_inputs_file():
+    client      = Client()
+    response    = client.get("/cc/info/actions")
+    data        = jsons.loads(response.content)["actions"]
+    #print(data)
+    names       = [i["name"] for i in data]
+    #print(names)
+    for name in names:
+        try:
+            outputInputs(
+                jsons.loads(
+                    client.post(
+                        "/cc/getInputs/{}".format(name), {}
+                        ).content
+                    )
+                )
+        except:
+            pass
 
 """Results from run with above settings:
 Inputs to EvalSolarPV: {'solar_potential': 'Great'}
