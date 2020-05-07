@@ -192,7 +192,6 @@ class UserStore:
       # if not context.user_is_super_admin:
       #   return None, NotAuthorizedError()
       users = UserProfile.objects.filter(is_deleted=False)
-      print(users)
       return users, None
     except Exception as e:
       print(e)
