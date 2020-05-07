@@ -62,7 +62,6 @@ class CommunityStore:
 
       community_member: CommunityMember = CommunityMember.objects.filter(community=community, user=user).first()
       if not community_member or (not community_member.is_admin):
-        print(community_member)
         community_member.delete()
         
       context.logger.log({

@@ -14,21 +14,26 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
+from dotenv import load_dotenv
+from pathlib import Path  # python3 only
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-IS_PROD = True
-path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
-os.environ.update(CONFIG_DATA)
+IS_PROD = False
+
+env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
+load_dotenv(dotenv_path=env_path, verbose=True)
+
+
+# os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
-SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
+SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -41,7 +46,9 @@ ALLOWED_HOSTS = [
     'api.prod.massenergize.org',
     'api-dev.massenergize.org',
     'api.dev.massenergize.org',
-    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com'
+    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
+    'massenergize-api-production.us-east-2.elasticbeanstalk.com',
+    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
@@ -131,7 +138,7 @@ DATABASES = {
     },
     'local-default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres',
+        'NAME': 'postgres2',
         'USER': 'Brad',
         'PASSWORD': '',
         'HOST': 'localhost',
@@ -179,10 +186,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True 
 EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 587 
-EMAIL_HOST_USER = os.environ.get('EMAIL') 
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL')
+EMAIL_HOST_USER = os.environ.get('EMAIL')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/

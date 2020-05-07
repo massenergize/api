@@ -195,10 +195,6 @@ class Goal(models.Model):
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
 
-
-  def get_status(self):
-    return CHOICES["GOAL_STATUS"][self.status]
-
   def __str__(self):
     return f"{self.name} {' - Deleted' if self.is_deleted else ''}"
 
@@ -293,8 +289,12 @@ class Community(models.Model):
     goal = get_json_if_not_none(self.goal) or {}
     # decision not to include state reported solar in this total
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
-    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count())
-    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+    # 
+    # For Wayland launch, insisting that we show large numbers so people feel good about it.
+    goal["attained_number_of_households"] += (RealEstateUnit.objects.filter(community=self).count())
+    goal["attained_number_of_actions"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+    #BHN - TODO
+    #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
     return {
       "id": self.id,
@@ -891,17 +891,22 @@ class Vendor(models.Model):
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['logo'] = get_json_if_not_none(self.logo)
+    data['website'] = self.more_info and self.more_info.get('website', None)
+    data['key_contact'] = self.key_contact
     return data
 
 
   def full_json(self):
-    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact', 'more_info'])
+    data =  model_to_dict(self, exclude=['logo', 'banner', 'services', 'onboarding_contact'])
     data['onboarding_contact'] = get_json_if_not_none(self.onboarding_contact)
     data['logo'] = get_json_if_not_none(self.logo)
+    data['more_info'] = self.more_info
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['banner']  = get_json_if_not_none(self.banner)
     data['services'] = [s.simple_json() for s in self.services.all()]
     data['communities'] = [c.simple_json() for c in self.communities.all()]
+    data['website'] = self.more_info and self.more_info.get('website', None)
+    data['key_contact'] = self.key_contact
     return data
 
   class Meta:
@@ -943,6 +948,7 @@ class Action(models.Model):
   is_global = models.BooleanField(default=False, blank=True)
   featured_summary = models.TextField(max_length = LONG_STR_LEN, blank=True, null=True)
   steps_to_take = models.TextField(max_length = LONG_STR_LEN, blank=True)
+  deep_dive = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
   tags = models.ManyToManyField(Tag, related_name='action_tags', blank=True)
@@ -976,6 +982,7 @@ class Action(models.Model):
     data['calculator_action'] = get_summary_info(self.calculator_action)
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['steps_to_take'] = self.steps_to_take
+    data['deep_dive'] = self.deep_dive
     data['about'] = self.about
     data['community'] = get_summary_info(self.community)
     data['vendors'] = [v.info() for v in self.vendors.all()]
@@ -1031,8 +1038,8 @@ class Event(models.Model):
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   invited_communities = models.ManyToManyField(Community, 
     related_name="invited_communites", blank=True)
-  start_date_and_time  = models.DateTimeField(db_index=True, auto_now_add=True)
-  end_date_and_time  = models.DateTimeField(auto_now_add=True)
+  start_date_and_time  = models.DateTimeField(db_index=True)
+  end_date_and_time  = models.DateTimeField(db_index=True)
   location = JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True,blank=True)
@@ -1216,6 +1223,9 @@ class Testimonial(models.Model):
   updated_at = models.DateTimeField(auto_now=True, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
+  anonymous = models.BooleanField(default=False, blank=True)
+  preferred_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+  other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
 
   def __str__(self):        
     return self.title
@@ -1223,19 +1233,36 @@ class Testimonial(models.Model):
   def info(self):
     return model_to_dict(self, include=['id', 'title', 'community'])
 
+  def _get_user_info(self):
+    if(self.anonymous):
+      return {
+        "full_name": "Anonymous",
+        "email": "anonymous"
+      }
+    elif(self.preferred_name):
+      return {
+        "full_name": self.preferred_name,
+        "email": "anonymous"
+      }
+    else:
+      return get_json_if_not_none(self.user) or {
+        "full_name": "Anonymous",
+        "email": "anonymous"
+      }
+
+
   def simple_json(self):
-    anonymous = {
-      "full_name": "Anonymous",
-      "email": "anonymous"
-    }
     res = model_to_dict(self, exclude=['image', 'tags'])
-    res["user"] = get_json_if_not_none(self.user) or  anonymous
+    res["user"] = self._get_user_info()
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
     res["created_at"] = self.created_at
     res['file'] = get_json_if_not_none(self.image)
     res['tags'] = [t.simple_json() for t in self.tags.all()]
+    res['anonymous'] = self.anonymous
+    res['preferred_name'] = self.preferred_name
+    res['other_vendor'] = self.other_vendor
     return res
 
   def full_json(self):
@@ -1908,9 +1935,17 @@ class HomePageSettings(models.Model):
     goal = get_json_if_not_none(self.community.goal) or {}
     # decision not to include state reported solar
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
-    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").count())
-  
+    # 
+    # For Wayland launch, insisting that we show large numbers so people feel good about it.
+    goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
+    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE")
+    goal["organic_attained_number_of_actions"] = (done_actions.count())
+    carbon_footprint_reduction = 0
+    for actionRel in done_actions:
+      if actionRel.action and actionRel.action.calculator_action:
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+    goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
+
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     res['community'] = get_json_if_not_none(self.community)
@@ -2122,6 +2157,7 @@ class Message(models.Model):
     res = model_to_dict(self)
     res["community"] = get_summary_info(self.community)
     res["team"] = get_summary_info(self.team)
+    res["user"] = get_summary_info(self.user)
     return res
 
   def full_json(self):

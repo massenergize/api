@@ -16,7 +16,6 @@ class ActionStore:
       action: Action = actions_retrieved.first()
       if not action:
         return None, InvalidResourceError()
-
       return action, None
     except Exception as e:
       return None, CustomMassenergizeError(e)
@@ -101,7 +100,6 @@ class ActionStore:
 
   def update_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      print(args)
       action_id = args.pop('action_id', None)
       action = Action.objects.filter(id=action_id)
       if not action:
@@ -112,7 +110,6 @@ class ActionStore:
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
-      print(args)
       action.update(**args)
 
       action = action.first()
@@ -142,14 +139,13 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_action(self, context: Context,action_id) -> (Action, MassEnergizeAPIError):
+  def delete_action(self, context: Context, action_id) -> (Action, MassEnergizeAPIError):
     try:
       #find the action
-      actions_to_delete = Action.objects.filter(id=action_id)
-      actions_to_delete.update(is_deleted=True)
-      if not actions_to_delete:
-        return None, InvalidResourceError()
-      return actions_to_delete.first(), None
+      action_to_delete = Action.objects.get(id=action_id)
+      action_to_delete.is_deleted = True 
+      action_to_delete.save()
+      return action_to_delete.first(), None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))
 

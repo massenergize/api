@@ -61,10 +61,12 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       user_email = args.pop('user_email', None)
+      
       args["title"] = args.get("title", "Thank You")[:100]
      
-      new_testimonial = Testimonial.objects.create(**args)
+      new_testimonial: Testimonial = Testimonial.objects.create(**args)
 
+      user = None
       if user_email:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
@@ -85,8 +87,9 @@ class TestimonialStore:
       if community:
         testimonial_community = Community.objects.get(id=community)
         new_testimonial.community = testimonial_community
+      else:
+        testimonial_community = None
 
-      
       new_testimonial.save()
 
       tags_to_set = []

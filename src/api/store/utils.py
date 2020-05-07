@@ -2,6 +2,8 @@ from database.models import Community, UserProfile
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
 from _main_.utils.context import Context
 from django.db.models import Q
+import requests 
+import json
 
 def get_community(community_id=None, subdomain=None):
   try:
@@ -14,7 +16,7 @@ def get_community(community_id=None, subdomain=None):
 
   return None, CustomMassenergizeError("Missing community_id or subdomain field")
 
-def get_user(user_id, email):
+def get_user(user_id, email=None):
   try:
     if email: 
       return UserProfile.objects.filter(email=email).first(), None
@@ -42,7 +44,6 @@ def get_community_or_die(context, args):
 def get_user_or_die(context, args):
   user_email = args.pop('user_email', None) or args.pop('email', None) or context.user_email
   user_id = args.pop('user_id', None) or context.user_id
-  user = None
   if user_id:
     return UserProfile.objects.get(pk=user_id)
   elif user_email:
@@ -58,3 +59,8 @@ def get_admin_communities(context: Context):
   admin_groups = user.communityadmingroup_set.all()
   communities = [ag.community for ag in admin_groups]
   return communities, None
+
+
+def send_slack_message(webhook, body):
+  r = requests.post(url = webhook, data = json.dumps(body)) 
+  return r

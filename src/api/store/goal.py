@@ -117,7 +117,6 @@ class GoalStore:
     try:
       #find the goal
       goals_to_delete = Goal.objects.filter(id=goal_id)
-      print(goal_id, goals_to_delete)
       # goals_to_delete.delete()
       goals_to_delete.update(is_deleted=True)
       if not goals_to_delete:
@@ -188,7 +187,6 @@ class GoalStore:
   def list_goals_for_super_admin(self):
     try:
       goals = Goal.objects.filter(is_deleted=False)
-      print(len(goals))
       return goals, None
     except Exception as e:
       return None, CustomMassenergizeError(str(e))

@@ -96,14 +96,14 @@ class UserService:
     return serialize(user, full=True), None
 
 
-  def update_user(self, args) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.update_user(args)
+  def update_user(self, user_id, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.update_user(user_id, args)
     if err:
       return None, err
     return serialize(user), None
 
-  def delete_user(self, args) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.delete_user(args)
+  def delete_user(self, user_id) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.delete_user(user_id)
     if err:
       return None, err
     return serialize(user), None

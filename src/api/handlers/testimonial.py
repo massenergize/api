@@ -51,6 +51,7 @@ class TestimonialHandler(RouteHandler):
       args = rename_field(args, 'community_id', 'community')
       args = rename_field(args, 'action_id', 'action')
       args = rename_field(args, 'vendor_id', 'vendor')
+      args = rename_field(args, 'preferredName', 'preferred_name')
       args['tags'] = parse_list(args.get('tags', []))
 
       is_approved = args.pop("is_approved", None)
@@ -59,6 +60,10 @@ class TestimonialHandler(RouteHandler):
       is_published = args.get("is_published", None)
       if is_published:
         args["is_published"] = parse_bool(is_published)
+
+      anonymous = args.get("anonymous", None)
+      if anonymous:
+        args["anonymous"] = parse_bool(anonymous)
       
       testimonial_info, err = self.service.create_testimonial(context, args)
       if err:
