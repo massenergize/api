@@ -34,12 +34,12 @@ jobs:
         AWS_STORAGE_BUCKET_NAME: ${{ secrets.DEV_AWS_STORAGE_BUCKET_NAME }}
         AWS_S3_SIGNATURE_VERSION: ${{ secrets.AWS_S3_SIGNATURE_VERSION }}
         AWS_S3_REGION_NAME: ${{ secrets.DEV_AWS_S3_REGION_NAME }}
-        DATABASE_ENGINE: ${{ secrets.DEV_DATABASE_ENGINE }}
+        DATABASE_ENGINE: django.db.backends.postgresql_psycopg2
         DATABASE_NAME: ${{ secrets.DEV_DATABASE_NAME }}
         DATABASE_USER: ${{ secrets.DEV_DATABASE_USER }}
         DATABASE_PASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
         DATABASE_HOST: ${{ secrets.DEV_DATABASE_HOST }}
-        DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+        DATABASE_PORT: 5432
         EMAIL: ${{ secrets.DEV_EMAIL }}
         EMAIL_PASSWORD: ${{ secrets.DEV_EMAIL_PASSWORD }}
         EMAIL_PORT: 527
