@@ -145,7 +145,7 @@ DATABASES = {
         'PORT': '5432'
     },
 }
-
+print(len(os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL', '')))
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",
   "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
