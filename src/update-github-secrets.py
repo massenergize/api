@@ -40,6 +40,8 @@ KEYS = [
   "FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL",
   "FIREBASE_SERVICE_ACCOUNT_CLIENT_URL",
 ]
+
+
 env_path = Path('.') / ('dev.env')
 load_dotenv(dotenv_path=env_path, verbose=True)
 AUTH = ('massenergize-admin', os.environ.get('GITHUB_TOKEN'))
