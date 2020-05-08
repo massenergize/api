@@ -14,7 +14,7 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -23,8 +23,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
 
-# env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
-# load_dotenv(dotenv_path=env_path, verbose=True)
+env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
+try:
+    load_dotenv(dotenv_path=env_path, verbose=True)
+except Exception:
+    load_dotenv()
 
 
 # os.environ.update(CONFIG_DATA)
@@ -145,7 +148,7 @@ DATABASES = {
         'PORT': '5432'
     },
 }
-print(len(os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL', '')))
+
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",
   "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
