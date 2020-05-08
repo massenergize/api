@@ -1,11 +1,6 @@
 name: Tests
 
-on:
-  push:
-    branches: [ development ]
-  pull_request:
-    branches: [ development ]
-
+on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
