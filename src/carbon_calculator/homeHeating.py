@@ -188,7 +188,10 @@ def EvalEfficientBoilerFurnace(inputs):
         utility_rebates = getDefault(locality,'heating_hieff_boiler_utility_rebate', 2000.)
         cost = cost * (1 - tax_credit) - utility_rebates
 
-        payback = cost / savings
+        payback = 100
+        if savings > 0:
+            payback = cost / savings
+            
         if payback > 0 and payback < 10:
             explanation = "Upgrading to a higher efficiency boiler or furnace could save %.1f tons of CO2 per year, and pay for itself in around %d years." % (points/2000, int(payback))
         else:
