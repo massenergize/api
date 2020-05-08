@@ -27,7 +27,7 @@ jobs:
         pip install -r src/requirements.txt
     - name: Run Tests
       run: |
-        echo 1
+        python src/manage.py test
       env:
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
