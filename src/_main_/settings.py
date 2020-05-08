@@ -23,8 +23,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
 
-env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
 try:
+    env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
     load_dotenv(dotenv_path=env_path, verbose=True)
 except Exception:
     load_dotenv()
@@ -156,10 +156,10 @@ FIREBASE_CREDENTIALS = credentials.Certificate({
   "private_key": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'),
   "client_email": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL'),
   "client_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_ID'),
+  "client_x509_cert_url": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL'),
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://oauth2.googleapis.com/token",
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL')
 })
 firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
 
