@@ -124,7 +124,6 @@ class UserHandler(RouteHandler):
     def delete_user_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      #user_id = args.get("id", None)
       user_info, err = self.service.delete_user(args.get("id", None))
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

@@ -12,8 +12,14 @@ class ActionStore:
 
   def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
     try:
-      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id, is_deleted=False)
+      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
+
+      # may want to add a filter on is_deleted, switched on context
+      # if context.not_if_deleted:
+      #   actions_retrieved = actions_retrieved.filter(is_deleted=False)
+
       action: Action = actions_retrieved.first()
+
       if not action:
         return None, InvalidResourceError()
       return action, None
@@ -24,14 +30,18 @@ class ActionStore:
     try:
       actions = []
       if community_id:
-        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
+        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id)
       elif subdomain:
-        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain, is_deleted=False)
+        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain)
       else:
         return [], None
 
       if not context.is_dev:
         actions = actions.filter(is_published=True)
+
+      # may want to add a filter on is_deleted, switched on context
+      # if context.not_if_deleted:
+      #   actions = actions.filter(is_deleted=False)
 
       return actions, None
     except Exception as e:

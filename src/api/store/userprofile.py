@@ -155,10 +155,12 @@ class UserStore:
 
 
   def delete_user(self, user_id) -> (dict, MassEnergizeAPIError):
-    users = UserProfile.objects.filter(id=user_id)
-    if not users:
+    user = UserProfile.objects.get(id=user_id)
+    if not user:
       return None, InvalidResourceError()
-
+    user.is_deleted = True
+    user.save()
+    return user, None
 
   def list_users_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
