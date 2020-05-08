@@ -14,7 +14,7 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -23,8 +23,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
 
-env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
-load_dotenv(dotenv_path=env_path, verbose=True)
+# env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
+# load_dotenv(dotenv_path=env_path, verbose=True)
 
 
 # os.environ.update(CONFIG_DATA)
