@@ -1,11 +1,6 @@
 name: Tests
 
-on:
-  push:
-    branches: [ development ]
-  pull_request:
-    branches: [ development ]
-
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,7 +23,7 @@ jobs:
       run: |
         python src/manage.py test
       env:
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        SECRET_KEY: ${{ secrets.DEV_SECRET_KEY }}
         AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
         AWS_STORAGE_BUCKET_NAME: ${{ secrets.DEV_AWS_STORAGE_BUCKET_NAME }}
@@ -57,4 +52,4 @@ jobs:
         FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY }}
         FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL }}
         FIREBASE_SERVICE_ACCOUNT_CLIENT_ID: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT_CLIENT_ID }}
-        FIREBASE_SERVICE_ACCOUNT_CLIENT_URL: ${{ secrets.DEV__FIREBASE_SERVICE_ACCOUNT_CLIENT_URL }}
+        FIREBASE_SERVICE_ACCOUNT_CLIENT_URL: ${{ secrets.DEV_FIREBASE_SERVICE_ACCOUNT_CLIENT_URL }}
