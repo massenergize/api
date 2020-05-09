@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
 path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-CONFIG_DATA = load_json(BASE_DIR + path_to_config) 
+CONFIG_DATA = load_json(BASE_DIR + path_to_config)
 os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
@@ -62,7 +62,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -76,17 +76,17 @@ MIDDLEWARE = [
 
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE  = 'storages.backends.s3boto3.S3Boto3Storage'
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 
 
 #-------- AWS CONFIGURATION ---------------------#
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_ACCESS_KEY_ID        = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY    = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME  = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-AWS_DEFAULT_ACL  = None
+AWS_S3_REGION_NAME       = os.environ.get('AWS_S3_REGION_NAME')
+AWS_DEFAULT_ACL          = None
 #--------END AWS CONFIGURATION ---------------------#
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -122,12 +122,20 @@ SESSION_COOKIE_SECURE = False
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
     'remote-default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': os.environ.get('DATABASE_NAME'),
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': os.environ.get('DATABASE_PORT')
+        'ENGINE'   : os.environ.get('DATABASE_ENGINE'),
+        'NAME'     : os.environ.get('DATABASE_NAME'),
+        'USER'     : os.environ.get('DATABASE_USER'),
+        'PASSWORD' : os.environ.get('DATABASE_PASSWORD'),
+        'HOST'     : os.environ.get('DATABASE_HOST'),
+        'PORT'     : os.environ.get('DATABASE_PORT')
+    },
+    'default': {
+        'ENGINE'   :  os.environ.get('DATABASE_ENGINE'),
+        'NAME'     : 'jpeirce21',
+        'USER'     : '',
+        'PASSWORD' : '',
+        'HOST'     : 'localhost',
+        'PORT'     : '5555'
     },
     'default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
@@ -175,11 +183,11 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
-EMAIL_USE_TLS = True 
-EMAIL_HOST = 'smtp.gmail.com' 
-EMAIL_PORT = 587 
-EMAIL_HOST_USER = os.environ.get('EMAIL') 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get('EMAIL')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
