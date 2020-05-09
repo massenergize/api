@@ -39,9 +39,9 @@ class ActionStore:
       if not context.is_dev:
         actions = actions.filter(is_published=True)
 
-      # may want to add a filter on is_deleted, switched on context
-      # if context.not_if_deleted:
-      #   actions = actions.filter(is_deleted=False)
+      # by default, exclude deleted actions
+      #if not context.include_deleted:
+      actions = actions.filter(is_deleted=False)
 
       return actions, None
     except Exception as e:
