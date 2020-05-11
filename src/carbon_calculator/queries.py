@@ -3,10 +3,18 @@ from .CCConstants import VALID_QUERY, INVALID_QUERY
 from .models import Question, Event, Action, Station, Group
 
 class CalculatorQuestion:
-    def __init__(self, name):
+    def __init__(self, name, event_tag=None):
         self.name = name
 
-        qs = Question.objects.filter(name=name)
+        qs = None
+        # first look for specific question with tag
+        if event_tag and len(event_tag)>0:
+            suffix = '<' + event_tag + '>'
+            qs = Question.objects.filter(name=name+suffix)
+
+        if not qs:
+           qs = Question.objects.filter(name=name)
+
         if qs:
             q = qs[0]
             self.category = q.category
@@ -84,7 +92,7 @@ def QuerySingleEvent(event):
 
         stationsList = []
         for station in q.stationslist:
-            stat, stationInfo = QuerySingleStation(station)
+            stat, stationInfo = QuerySingleStation(station, q.event_tag)
             if stat == VALID_QUERY:
                 stationsList.append(stationInfo)
 
@@ -174,7 +182,7 @@ def QuerySingleEventSummary(event):
 def QueryAllActions():
     pass
 
-def QuerySingleAction(name):
+def QuerySingleAction(name,event_tag=""):
     try:
         qs = Action.objects.filter(name=name)
         if qs:
@@ -182,8 +190,10 @@ def QuerySingleAction(name):
 
             questionInfo = []
             for question in q.questions:
-                qq = CalculatorQuestion(question)
-                questionInfo.append(jsons.dump(qq))
+                qq = CalculatorQuestion(question, event_tag)
+                # a question with no text is not to be included; this is how depending on the event_tag some questions would not be asked.
+                if len(qq.questionText)>0:
+                    questionInfo.append(jsons.dump(qq))
 
             picture = ""
             if q.picture:
@@ -223,14 +233,14 @@ def QueryAllStations():
     else:
         return INVALID_QUERY, []
 
-def QuerySingleStation(station):
+def QuerySingleStation(station, event_tag=None):
     qs = Station.objects.filter(name=station)
     if qs:
         q = qs[0]
 
         actionsList = []
         for action in q.actions:
-            stat, actionInfo = QuerySingleAction(action)
+            stat, actionInfo = QuerySingleAction(action, event_tag)
             if stat == VALID_QUERY:
                 actionsList.append(actionInfo)
 

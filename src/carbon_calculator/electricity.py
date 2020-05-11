@@ -415,7 +415,7 @@ def EvalLineDry(inputs):
         elif old_dryer != "Heat pump":
             drying_cost = kwh_electric_dryer * kwh_price
             co2_drying = kwh_electric_dryer * co2_per_kwh
-            explanation = "Drying %s of your loads on the line would save %.0f kwh." % (sfraction, (kwh_electric_dryer - kwh_heatpump) * loads * 52)
+            explanation = "Drying %s of your loads on the line would save %.0f kwh." % (sfraction, (kwh_electric_dryer - kwh_heatpump) * annual_loads)
         else:
             drying_cost = kwh_heatpump * kwh_price
             co2_drying = kwh_heatpump * co2_per_kwh
