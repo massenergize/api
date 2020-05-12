@@ -15,3 +15,7 @@ deploy-dev:
 	python prepare-for-deploy.py --dev
 	eb deploy
 .PHONY: deploy-dev
+
+lint:
+	git-lint
+.PHONY: lint
