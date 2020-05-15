@@ -3,7 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
-from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities
+from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups
 
 class UserStore:
   def __init__(self):
@@ -182,13 +182,18 @@ class UserStore:
 
       if not community and context.user_id:
         communities, err =  get_admin_communities(context)
-        comm_ids = [c.id for c in communities]      
-        users = set(cm.user for cm in CommunityMember.objects.filter(community_id__in=comm_ids, user__is_deleted=False))
+        comm_ids = [c.id for c in communities] 
+        users = [cm.user for cm in CommunityMember.objects.filter(community_id__in=comm_ids, user__is_deleted=False)]
+
+        #now remove all duplicates
+        users = remove_dups(users)
+
         return users, None
       elif not community:
         return [], None
 
-      users = CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)
+      users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
+      users = remove_dups(users)
       return users, None
     except Exception as e:
       print(e)
