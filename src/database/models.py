@@ -1234,21 +1234,25 @@ class Testimonial(models.Model):
     return model_to_dict(self, include=['id', 'title', 'community'])
 
   def _get_user_info(self):
-    if(self.anonymous):
-      return {
-        "full_name": "Anonymous",
-        "email": "anonymous"
-      }
-    elif(self.preferred_name):
-      return {
-        "full_name": self.preferred_name,
-        "email": "anonymous"
-      }
-    else:
-      return get_json_if_not_none(self.user) or {
-        "full_name": "Anonymous",
-        "email": "anonymous"
-      }
+    return get_json_if_not_none(self.user) or {
+      "full_name": "User unknown",
+      "email": "e-mail address not provided"
+    }
+    #if(self.anonymous):
+    #  return {
+    #    "full_name": "Anonymous",
+    #    "email": "anonymous"
+    #  }
+    #elif(self.preferred_name):
+    #  return {
+    #    "full_name": self.preferred_name,
+    #    "email": "anonymous"
+    #  }
+    #else:
+    #  return get_json_if_not_none(self.user) or {
+    #    "full_name": "Anonymous",
+    #    "email": "anonymous"
+    #  }
 
 
   def simple_json(self):
