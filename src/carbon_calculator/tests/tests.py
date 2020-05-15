@@ -3,6 +3,7 @@ from carbon_calculator.models import CalcUser, Event, Station, Action, Group, Qu
 from carbon_calculator.views import importcsv
 from database.models import Vendor
 import jsons
+from carbon_calculator.solar import EvalSolarPV
 
 IMPORT_SUCCESS = {"status": True}
 # Create your tests here.
@@ -57,7 +58,16 @@ class CarbonCalculatorTest(TestCase):
             'solar_potential': 'Great'
             }
         )
+        points, cost, savings, explanation = EvalSolarPV(response)
+        outputs = {'points' : points,
+                   'cost' : cost,
+                   'savings' : savings,
+                   'explanation' : explanation}
         data = jsons.loads(response.content)
+        print(response)
+        print(data)
+        print(outputs)
+        self.assertEqual(outputs['points'], 50)
 
 def outputInputs(data, filename, new=False):
     tag = "a"

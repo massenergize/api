@@ -131,19 +131,11 @@ DATABASES = {
     },
     'default': {
         'ENGINE'   :  os.environ.get('DATABASE_ENGINE'),
-        'NAME'     : 'jpeirce21',
+        'NAME'     : 'gchekler21',
         'USER'     : '',
         'PASSWORD' : '',
         'HOST'     : 'localhost',
         'PORT'     : '5555'
-    },
-    'default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres2',
-        'USER': 'Brad',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432'
     },
 }
 

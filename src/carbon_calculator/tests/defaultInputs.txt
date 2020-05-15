@@ -3,8 +3,8 @@
 {'Action': 'energy_audit', 'energy_audit': 'Yes', 'energy_audit_recently': 'Yes'}
 {'Action': 'prog_thermostats', 'user_id': '', 'community': '', 'install_pstats': 'Yes', 'have_pstats': 'No', 'heating_fuel': 'Fuel Oil', 'heating_system_efficiency': 0.8}
 {'Action': 'weatherization', 'user_id': '', 'community': '', 'weatherize_home': 'Yes', 'weatherized': 'Yes', 'heating_fuel': 'Fuel Oil', 'heating_system_efficiency': 0.8}
-{'Action': 'community_solar', 'user_id': '', 'community': '', 'community_solar': 'Yes', 'monthly_elec_bill': 150.0, 'electric_utility': ''}
-{'Action': 'renewable_elec', 'user_id': '', 'community': '', 'choose_renewable': 'Yes', 'monthly_elec_bill': 150.0, 'electric_utility': ''}
+{'Action': 'community_solar', 'user_id': '', 'community': '', 'community_solar': 'Yes', 'monthly_elec_bill': 150, 'electric_utility': ''}
+{'Action': 'renewable_elec', 'user_id': '', 'community': '', 'choose_renewable': 'Yes', 'monthly_elec_bill': 150, 'electric_utility': ''}
 {'Action': 'led_lighting', 'user_id': '', 'community': '', 'number_nonefficient_bulbs': 10, 'fraction_led_replacement': '', 'numeric_fraction_led_replacement': 0.0}
 {'Action': 'heating_assessment', 'user_id': '', 'community': '', 'heating_system_assessment': 'Yes', 'heating_fuel': 'Fuel Oil', 'heating_system_efficiency': 0.8}
 {'Action': 'efficient_fossil', 'user_id': '', 'community': '', 'upgrade_heating_system_efficiency': 'Yes', 'heating_fuel': 'Fuel Oil', 'heating_system_efficiency': 0.8}
@@ -23,7 +23,7 @@
 {'Action': 'line_dry', 'user_id': '', 'community': '', 'line_or_rack_dry': 'Yes', 'dryer_type': '', 'washer_loads': 0.0, 'fraction_line_dry': 'Half'}
 {'Action': 'fridge_pickup', 'user_id': '', 'community': '', 'extra_refrigerator_pickup': 'Yes', 'extra_refrigerator': 'No', 'extra_refrigerator_age': ''}
 {'Action': 'smart_power_strip', 'user_id': '', 'community': '', 'smart_power_strips': 'Yes'}
-{'Action': 'electricity_monitor', 'user_id': '', 'community': '', 'electricity_monitor': 'Yes', 'monthly_elec_bill': 150.0}
+{'Action': 'electricity_monitor', 'user_id': '', 'community': '', 'electricity_monitor': 'Yes', 'monthly_elec_bill': 150}
 {'Action': 'replace_car', 'user_id': '', 'community': '', 'replace_car': 'Yes', 'car_annual_miles': 15000.0, 'car_mpg': 25.0, 'car_new_type': '', 'car_new_mpg': 0}
 {'Action': 'reduce_car_miles', 'user_id': '', 'community': '', 'reduce_total_milage': 0.0}
 {'Action': 'eliminate_car', 'user_id': '', 'community': '', 'eliminate_car': 'Yes', 'car_annual_miles': 15000.0, 'car_mpg': 25.0, 'transportation_public': 'No'}

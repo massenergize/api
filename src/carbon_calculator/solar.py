@@ -40,7 +40,8 @@ def EvalSolarAssessment(inputs):
             explanation = "A solar PV array on your home might save %.1f tons of CO2 over 10 years." % (points/200./assessment_conversion)
         else:
             explanation = "With poor solar potential, we don't necessarily recommend having an assessment."
-    return points, cost, savings, explanation
+    outputs = [points, cost, savings, explanation]
+    return outputs
 
 ARRAY_SIZE = 'solar_pv_size'
 def EvalSolarPV(inputs):
@@ -77,7 +78,6 @@ def EvalSolarPV(inputs):
             explanation = "installing a solar PV array on your home would pay back in around %d years and save %.1f tons of CO2 over 10 years." % (payback, points/200.)
         else:
             explanation = "installing a solar PV array on your home could pay back in over %d years but save %.1f tons of CO2 over 10 years." % (decent_payback, points/200.)
-
     return points, cost, savings, explanation
 
 def SolarPotential(inputs):
