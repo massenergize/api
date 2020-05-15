@@ -154,13 +154,21 @@ class UserStore:
     return user, None
 
 
-  def delete_user(self, user_id) -> (dict, MassEnergizeAPIError):
-    user = UserProfile.objects.get(id=user_id)
-    if not user:
+  def delete_user(self, context: Context, user_id) -> (dict, MassEnergizeAPIError):
+    if not user_id:
       return None, InvalidResourceError()
-    user.is_deleted = True
-    user.save()
-    return user, None
+
+    #check to make sure the one deleting is an admin
+    if not context.user_is_admin():
+
+      # if they are not an admin make sure they can only delete themselves
+      if not context.user_id != user_id:
+        return None, NotAuthorizedError()
+
+    users = UserProfile.objects.filter(id=user_id)
+    users.update(is_deleted=True)
+    return users.first(), None
+
 
   def list_users_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
@@ -175,12 +183,12 @@ class UserStore:
       if not community and context.user_id:
         communities, err =  get_admin_communities(context)
         comm_ids = [c.id for c in communities]      
-        users = set(cm.user for cm in CommunityMember.objects.filter(community_id__in=comm_ids))
+        users = set(cm.user for cm in CommunityMember.objects.filter(community_id__in=comm_ids, user__is_deleted=False))
         return users, None
       elif not community:
         return [], None
 
-      users = CommunityMember.objects.filter(community=community, is_deleted=False)
+      users = CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)
       return users, None
     except Exception as e:
       print(e)
@@ -189,8 +197,8 @@ class UserStore:
 
   def list_users_for_super_admin(self, context: Context):
     try:
-      # if not context.user_is_super_admin:
-      #   return None, NotAuthorizedError()
+      if not context.user_is_super_admin:
+        return None, NotAuthorizedError()
       users = UserProfile.objects.filter(is_deleted=False)
       return users, None
     except Exception as e:
@@ -200,8 +208,6 @@ class UserStore:
 
   def add_action_todo(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      # if not context.user_is_logged_in:
-      #   return CustomMassenergizeError("Sign in required")
       user = get_user_or_die(context, args)
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
@@ -251,10 +257,6 @@ class UserStore:
 
   def add_action_completed(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-
-      # if not context.user_is_logged_in:
-      #   return None, CustomMassenergizeError("Sign in required")
-      
       user_id = context.user_id or args.get('user_id')
       user_email = context.user_email or args.get('user_email')
       action_id = args.get("action_id", None)
