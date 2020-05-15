@@ -123,7 +123,7 @@ class UserStore:
           accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
         )
       else:
-        new_user: UserProfile = user.first()
+        new_user: UserProfile = user
 
 
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
@@ -138,7 +138,7 @@ class UserStore:
       
       res = {
         "user": new_user,
-        "community": community or global_community
+        "community": community
       }
       return res, None
     except Exception as e:
