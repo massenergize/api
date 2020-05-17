@@ -16,6 +16,13 @@ class CarbonCalculatorTest(TestCase):
     @classmethod
     def setUpClass(self):
         self.client = Client()
+        self.differences = []
+        self.got_outputs = True
+
+    @classmethod
+    def tearDownClass(self):
+        """Prints the differences after the .s, Es, and Fs of the tests"""
+        self.pretty_print_diffs(self, self.differences)
 
     def get_consistency_files(self):
         """Return content needed for the consistency test"""
@@ -68,20 +75,17 @@ class CarbonCalculatorTest(TestCase):
         ("Value difference", NEW_VALUE, OLD_VALUE)
         """
         differences = []
-        new_time    = new.pop("Timestamp")
-        old_time    = old.pop("Timestamp")
         new_actions = [i for i in new.keys()]
         old_actions = [i for i in old.keys()]
         shared_actions = [] #Actions that are in both lists, and can be compared
         for action in new_actions:
-            if action in old_actions:
-                shared_actions.append(action)
-            else:
-                differences.append((NEW_ACTION, action))
+            if action is not "Timestamp":
+                if action in old_actions:
+                        shared_actions.append(action)
+                else:
+                    differences.append((NEW_ACTION, action))
         for action in old_actions:
-            if action in new_actions:
-                shared_actions.append(action)
-            else:
+            if not action in new_actions and action is not "Timestamp":
                 differences.append((REMOVED_ACTION, action))
         for action in shared_actions:
             for result_aspect in new[action].keys(): #status, points, cost, etc
@@ -99,7 +103,7 @@ class CarbonCalculatorTest(TestCase):
         f.close()
 
     def pretty_print_diffs(self, diffs):
-        print("Differences: " + str(diffs)) #Not pretty yet
+        print("\nDifferences: " + str(diffs)) #Not pretty yet
 
     def test_consistency(self):
         """
@@ -112,15 +116,14 @@ class CarbonCalculatorTest(TestCase):
         between this test run and the last one. Don't return anything.
         """
         #Check for required files
-        got_inputs, got_outputs, inputs, prev_outputs = self.get_consistency_files()
+        got_inputs, self.got_outputs, inputs, prev_outputs = self.get_consistency_files()
         if not got_inputs:
             return
         #Run evals for all values
         outputs = self.eval_all_actions(inputs)
         #Compare
-        if got_outputs:
-            diffs = self.compare(outputs, prev_outputs)
-            self.pretty_print_diffs(diffs)
+        if self.got_outputs:
+            self.differences = self.compare(outputs, prev_outputs)
         self.dump_outputs(outputs)
 
 def outputInputs(data):
