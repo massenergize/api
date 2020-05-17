@@ -150,7 +150,7 @@ class TeamStore:
 
       # team.members deprecated.  Delete TeamMembers separate step
       team = teams.first()
-      members = TeamMembers.objects.filter(team=team)
+      members = TeamMember.objects.filter(team=team)
       msg = "delete_team:  Team %s deleting %d members" % (team.name,members.count())
       members.delete()
       teams.delete()  # or should that be team.delete()?
