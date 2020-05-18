@@ -5,6 +5,7 @@ from database.models import Vendor
 from django.utils import timezone #For keeping track of when the consistency was last checked
 import jsons
 from carbon_calculator.solar import EvalSolarPV
+import pprint
 
 OUTPUTS_FILE   = "carbon_calculator/tests/expected_outputs.txt"
 INPUTS_FILE    = "carbon_calculator/tests/Inputs.txt"
@@ -125,7 +126,7 @@ class CarbonCalculatorTest(TestCase):
         #Compare
         if self.got_outputs:
             self.differences = self.compare(outputs, prev_outputs)
-        self.dump_outputs(outputs)
+        self.dump_outputs(pprint.pformat(outputs))
 
 def outputInputs(data):
     #print("Inputs Data: " + str(data))
