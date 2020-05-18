@@ -27,7 +27,7 @@ class MessageHandler(RouteHandler):
     self.add("/messages.listForCommunityAdmin", self.community_admin_list()) 
     self.add("/messages.listTeamAdminMessages", self.team_admin_list()) 
     self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin())
-    self.add("/messages.forwardToTeamAdmins", self.reply_from_team_admin())
+    self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins())
 
   def info(self) -> function:
     def message_info_view(request) -> None: 
@@ -41,15 +41,15 @@ class MessageHandler(RouteHandler):
     return message_info_view
 
 
-  def reply_from_team_admin(self) -> function:
-    def reply_from_team_admin_view(request) -> None: 
+  def forward_to_team_admins(self) -> function:
+    def forward_to_team_admins_view(request) -> None: 
       context: Context  = request.context
       args = context.get_request_body()
-      message_info, err = self.service.reply_from_team_admin(context, args)
+      message_info, err = self.service.forward_to_team_admins(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=message_info)
-    return reply_from_team_admin_view
+    return forward_to_team_admins_view
 
   def reply_from_community_admin(self) -> function:
     def reply_from_community_admin_view(request) -> None: 

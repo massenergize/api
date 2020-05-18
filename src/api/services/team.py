@@ -33,8 +33,8 @@ class TeamService:
     return stats, None
 
 
-  def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(user_id, args)
+  def create_team(self, context, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.create_team(context, args)
     if err:
       return None, err
     return serialize(team), None
