@@ -24,6 +24,8 @@ def getDefault(locality, variable, defaultValue, noUpdate=False):
     return CCD.getDefault(CCD,locality, variable, defaultValue, noUpdate)
 
 class CCD():
+
+
     DefaultsByLocality = {"default":{}} # the class variable
     try:
         num = CalcDefault.objects.all().count()

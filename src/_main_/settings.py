@@ -137,6 +137,14 @@ DATABASES = {
         'HOST'     : 'localhost',
         'PORT'     : '5555'
     },
+    'default': {
+        'ENGINE': os.environ.get('DATABASE_ENGINE'),
+        'NAME': 'postgres2',
+        'USER': 'Brad',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '5432'
+    },
 }
 
 firebase_service_account_path = '/_main_/config/massenergizeProdFirebaseServiceAccount.json' if IS_PROD else '/_main_/config/massenergizeFirebaseServiceAccount.json'

@@ -53,7 +53,103 @@ air_conditioning_age,Home Heating and Cooling,How old is your air conditioning s
 upgrade_heating_system_efficiency,Home Heating and Cooling,Will you upgrade your boiler or furnace with a high efficiency model?,Choice,Yes,,No,,,,,,,,,,
 heat_pump_heating_fraction,Home Heating and Cooling,What fraction of your heating will be from the heat pump?,Choice,Some,,Half,,Most,,All,,,,,,
 install_gshp,Home Heating and Cooling,Will you replace your heating with a ground-source (geothermal) heat pump?,Choice,Yes,upgrade_heating_system_efficiency,No,,,,,,,,,,
-,Home Heating and Cooling,,,,,,,,,,,,,,,
+eating_switch_meals<ME>,ME,Would you change some family meals to lower emissions (vegetarian or vegan)?  ,Choice,No,"eating_switch_meals_amount,family_size",Yes,,,,,,,,,,
+eating_switch_meals_amount<ME>,ME,"How many meals per week are you willing to switch from meat to  Vegetarian (w/ cheese, eggs) or Vegan (non-dairy)?",Number,,,,,,,,,,,,,
+reduce_lawn_size<ME>,ME,Will you choose to reduce the size of your lawn?,Choice,Small Change (~ 10% reduction),,Medium Change (~20% reduction),,"Large Change ~ 1,000 sq ft reduction",,Eliminate Lawn,,No,,,,
+own_rent<ME>,ME,Do you own or rent your home? ,Choice,Rent,,Own,,,,,,,,,,
+fuel_assistance<ME>,ME,Do you receive or qualify for fuel assistance?,Choice,No,,Yes,,,,,,,,,,
+mower_type<ME>,ME,Do you use a gas mower?,Choice,Yes,,No,mower_switch,,,,,,,,,
+mower_switch<ME>,ME,Will you choose to switch away from a gas mower?,Choice,No,,Yes,,,,,,,,,,
+mowing_frequency<ME>,ME,Will you choose to mow your lawn less in the summer?,Choice,No,,Two  Less,,Five Less ,,Ten Less,,,,,,
+fertilizer<ME>,ME,Do you use fertilizer on your yard?,Choice,No,fertilizer_applications,Yes,,,,,,,,,,
+fertilizer_applications<ME>,ME,Will you choose to reduce your fertilizer applications this year?,Choice,No,,1 less,,2 less,,3 less ,,,,,,
+leaf_cleanup_gas_blower<ME>,ME,Do you use a gas blower to clean leaves?,Choice,No,leaf_cleanup_blower_switch,Yes,,,,,,,,,,
+leaf_cleanup_blower_switch<ME>,ME,Will you choose to switch from gas blower to rake or electric blower?,Choice,No,,Yes,,,,,,,,,,
+heating_fuel<ME>,ME,What is the primary heating system type in your home?,Choice,Fuel Oil,,Nat Gas,,Propane,,Wood,,Conventional Electric,heating_system_type,Heat Pump,"heating_system_assessment,install_ashp,heating_system_type",
+heating_system_assessment<ME>,ME,Will you choose to sign up for a heating system assessment?,Choice,No,,Yes,,,,,,,,,,
+install_ashp<ME>,ME,Will you choose to upgrade with air-source heat pump(s)? ,Choice,No,heat_pump_heating_fraction,Yes,upgrade_heating_system_efficiency,,,,,,,,,
+weatherized<ME>,ME,Is your home adequately weatherized (well insulated and not drafty)?,Choice,No,,Yes,,Not sure,,,,,,,,
+weatherize_home<ME>,ME,Will you choose to better insulate and/or air-seal your home?,Choice,No,,Yes,,,,,,,,,,
+energy_audit<ME>,ME,Will you choose to sign up for a free energy audit?,Choice,No,,Yes,,,,,,,,,,
+electric_utility<ME>,ME,What is the name of your electric utility?,Text,,,,,,,,,,,,,
+install_pstats<ME>,ME,Will you choose to install programmable thermostats?,Choice,Yes,,No,,,,,,,,,,
+water_heater_type<ME>,ME,What type of water heater do you have in your home?  ,Choice,Fuel Oil,,Nat Gas,,Propane,,Electric,,Heat Pump,replace_water_heater,Not sure,,
+water_heater_age<ME>,ME,How old is your water heater?,Choice,0-10 years,,10-20 years,,>20 years,,Not sure,,,,,,
+replace_water_heater<ME>,ME,Will you choose to replace your current water heater w/ heat pump?,Choice,Yes,,No,,,,,,,,,,
+hot_water_assessment<ME>,ME,Will you choose to sign up for a free hot water assessment?,Choice,Yes,,No,,,,,,,,,,
+solar_panels<ME>,ME,Do you have a solar panel array?,Choice,No,,Yes,"install_solar_panels,solar_assessment",,,,,,,,,
+install_solar_panels<ME>,ME,Will you choose to install a solar panel array?,Choice,Yes,,No,,,,,,,,,,
+solar_assessment<ME>,ME,Will you choose to sign up for a free solar assessment?,Choice,Yes,,No,,,,,,,,,,
+bulbs_incandescent<ME>,ME,How many old inefficient bulbs do you have?,Choice,Less than 10,,10 to 20,,20 to 40,,More than 40,,,,,,
+bulbs_replace_leds<ME>,ME,How many of your old bulbs would you replace with LED bulbs?,Choice,Some,,Half,,Most,,All,,,,,,
+bulbs_swap<ME>,ME,Will you choose to sign up for a free light bulb swap?,Choice,Yes,,No,,,,,,,,,,
+replace_refrigerator<ME>,ME,Will you replace your refrigerator with an EnergyStar model?,Choice,I already use a Energy Star Product,,No,refrigerator_age,Yes,,,,,,,,
+replace_washer<ME>,ME,Will you choose to upgrade to an Energy Star model Washer?,Choice,I already use a Energy Star Product,,No,"washer_age,washer_loads,washer_energystar",Yes,,,,,,,,
+cold_water_wash<ME>,ME,Will you choose to wash some clothes with cold or warm water instead of hot?,Choice,No,,"Yes, cold",,"Yes, warm",,,,,,,,
+line_or_rack_dry<ME>,ME,Will you dry some clothes loads on a clothes line or rack instead of a dryer?,Choice,No,,Yes,,,,,,,,,,
+extra_refrigerator_age<ME>,ME,What is the age of your extra refrigerator?,Choice,0-10 years,,10-20 years,,>20 years,,Not sure,,,,,,
+extra_refrigerator_pickup<ME>,ME,Will you sign up for a free extra refrigerator pick-up?,Choice,No,,Yes,unplug_refrigerator,,,,,,,,,
+unplug_refrigerator<ME>,ME,Will you unplug your extra fridge temporarily?,Choice,No,,Yes,,,,,,,,,,
+smart_power_strips<ME>,ME,Will you install smart power strips to kill phantom loads?,Choice,No,,Yes,,,,,,,,,,
+install_electricity_monitor<ME>,ME,Will you install an electricity monitor to find energy hogs?,Choice,No,,Yes,,,,,,,,,,
+transportation_car_type<ME>,ME,What kind of car do you drive?,Choice,Electric,,Plug-in Hybrid,,Hybrid,,Gasoline,,Diesel,,,,
+reduce_total_mileage<ME>,ME,By how many miles are you willing to reduce the miles you travel by car/auto each year?,Number,,,,,,,,,,,,,
+carpooling_increase<ME>,ME,Can you choose to carpool more often?,Choice,No,carpooling_amount,Yes,,,,,,,,,,
+carpooling_amount<ME>,ME,How many times per month would you carpool?,Number,,,,,,,,,,,,,
+transportation_public<ME>,ME,Can you choose public/train/bus transportation more often?,Choice,No,transportation_public_amount,Yes,,,,,,,,,,
+transportation_public_amount<ME>,ME,How many times per month would you go on public transportation?,Number,,,,,,,,,,,,,
+telecommute<ME>,ME,Can you commit to telecommuting more often? ,Choice,No,telecommute_amount,Yes,,,,,,,,,,
+telecommute_amount<ME>,ME,How many times per month could you telecommute?,Number,,,,,,,,,,,,,
+commute_bike_walk<ME>,ME,Can you choose to bike or walk your commute more often?,Choice,No,commute_bike_walk_amount,Yes,,,,,,,,,,
+commute_bike_walk_amount<ME>,ME,if so how much?,Number,,,,,,,,,,,,,
+transportation_flights<ME>,ME,"Can you take fewer flights per year, and how many?",Choice,No,,10% fewer,,25% fewer,,50% fewer,,75% fewer,,Stop flying altogether,,
+buy_sell_used<ME>,ME,"When possible, will you buy or sell used goods rather than new?",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,
+family_size<ME>,ME,"To estimate servings, how many members of your family are there?",Number,Blank,,,,,,,,,,,,
+reuse_containers<ME>,ME,"When possible, will you use refillable containers (bags,mugs,bottles)",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,
+buy_bulk<ME>,ME,"When possible, will you buy in bulk to minimize packaging?",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,
+buy_recycled<ME>,ME,"When possible, will you buy items made from recycled materials?",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,
+attend_fair<ME>,ME,Will you attend an energy fair and find ways to take sustainable action? ,Choice,No,,Yes,,,,,,,,,,
+activity_group<ME>,ME,Name of group or activity you're considering:,Text,,,,,,,,,,,,,
+energy_audit_recently<ME>,ME,Have you had an energy audit in the last three years?,Choice,Yes,,No,,Not sure,,,,,,,,
+have_pstats<ME>,ME,Do you already have programmable thermostats in your home?,Choice,Yes,install_pstats,No,pstats_programmed,,,,,,,,,
+pstats_programmed<ME>,ME,Are the thermostats programmed to save energy while you are away or asleep?,Choice,Yes,,No,,,,,,,,,,
+community_solar<ME>,ME,Will you sign up for a community solar project?,Choice,Yes,,No,monthly_elec,Not sure,,,,,,,,
+monthly_elec<ME>,ME,"What is your average montly electricity bill, in dollars?",Number,,,,,,,,,,,,,
+choose_renewable<ME>,ME,Will you sign up for renewable electricity?,Choice,Yes,,No,"renewable_percentage,monthly_elec,electric_utility",,,,,,,,,
+renewable_percentage<ME>,ME,What percentage of renewable power will you choose,Number,,,,,,,,,,,,,
+heating_system_type<ME>,ME,What type of heating system do you have in your home?,Choice,Furnace,,Boiler,,Not sure,,,,,,,,
+heating_system_age<ME>,ME,How old is your heating system?,Choice,0-10 years,,10-20 years,,>20 years,,Not sure,,,,,,
+air_conditioning_type<ME>,ME,"Do you have air conditioning, and if so what type?",Choice,None,air_conditioning_age,Central,,Window units,,Ductless mini-split,,,,,,
+air_conditioning_age<ME>,ME,How old is your air conditioning system?,Choice,0-10 years,,10-20 years,,>20 years,,Not sure,,,,,,
+upgrade_heating_system_efficiency<ME>,ME,Will you upgrade your boiler or furnace with a high efficiency model?,Choice,Yes,,No,,,,,,,,,,
+heat_pump_heating_fraction<ME>,ME,What fraction of your heating will be from the heat pump?,Choice,Some,,Half,,Most,,All,,,,,,
+install_gshp<ME>,ME,Will you replace your heating with a ground-source (geothermal) heat pump?,Choice,Yes,upgrade_heating_system_efficiency,No,,,,,,,,,,
+install_solar_hw<ME>,ME,Will you install a solar hot water system?,Choice,Yes,,No,,,,,,,,,,
+refrigerator_age<ME>,ME,About how old is your refrigerator?,Choice,0-10 years,,10-15 years,,15-20 years,,>20 years,,Not sure,,,,
+washer_age<ME>,ME,How old is your washing machine?,Choice,0-10 years,,10-15 years,,15-20 years,,>20 years,,Not sure,,,,
+washer_loads<ME>,ME,How many loads of laundry do you do each week on average?,Number,,,,,,,,,,,,,
+induction_stove<ME>,ME,Will you replace your stove with an induction stove?,Choice,Yes,,No,,,,,,,,,,
+stove_type<ME>,ME,What type of oven/stove do you currently have?,Choice,Induction,,Electric (non-induction),,Gas,,Gas+Electric,,,,,,
+replace_dryer<ME>,ME,Will you replace your dryer with a heat pump dryer?,Choice,Yes,,No,dryer_type,,,,,,,,,
+dryer_type<ME>,ME,What type of clothes dryer do you have currently?,Choice,Gas,,Electric,,Heat pump,,Not sure,,,,,,
+car_mpg<ME>,ME,How many miles per gallon does the car get?,Number,,,,,,,,,,,,,
+car_annual_miles<ME>,ME,About how many miles is the car driven each year?,Number,,,,,,,,,,,,,
+car_new_type<ME>,ME,What type of car are you thinking of getting?,Choice,Electric,,Plug-in Hybrid,,Hybrid,,Gasoline,,Diesel,,,,
+replace_car<ME>,ME,Will you replace your car with a more efficient model?,Choice,No,car_new_type,Electric/Plug-in hybrid,,Hybrid,,,,,,,,
+eliminate_car<ME>,ME,Will you choose to eliminate your car?,Choice,Yes,,No,,,,,,,,,,
+flights_amount<ME>,ME,How many flights typically do you and your family members take (3 hours or more)?,Number,,,,,,,,,,,,,
+offset_flights<ME>,ME,Would you purchase offsets for the flights you take?,Choice,No,,Sometimes,,Usually,,Always,,,,,,
+meat_frequency<ME>,ME,How many meals per week do you eat meat (beef/lamb/pork/poultry/fish)?,Number,,,,,,,,,,,,,
+favorite_cookbook<ME>,ME,Do you have a healthy foods cookbook that you like?,Text,,,,,,,,,,,,,
+reduce_waste<ME>,ME,Would you make an effort to reduce waste from packaging or consumption?,Choice,Yes,,No,"buy_bulk,buy_recycled,buy_sell_used,reuse_containers",,,,,,,,,
+compost_food_waste<ME>,ME,Would you start composting food waste in your home?,Choice,Already composting,,Yes,,No,compost_pickup,,,,,,,
+compost_pickup<ME>,ME,"For your home would it be preferable to have compost pickup, or an onsite compost bin?",Choice,Compost pickup,,Compost bin,,Not sure,,,,,,,,
+lawn_service<ME>,ME,Do you use a landscape service to take care of your lawn?,Choice,Yes,,No,,,,,,,,,,
+lawn_size<ME>,ME,How large is your lawn?,Choice,Small (<500 sq ft),,Medium (500-2000 sq ft),,Sizable (2000-5000 sq ft),,Large (>5000 sq ft),,,,,,
+refrigerator_energystar<ME>,ME,Is the current refrigerator an EnergyStar model?,Choice,Yes,,No,,Not sure,,,,,,,,
+washer_energystar<ME>,ME,Is the current washer an EnergyStar model?,Choice,Yes,,No,,Not sure,,,,,,,,
+dryer_loads<ME>,ME,How many dryer loads do you do each week on average?,Number,,,,,,,,,,,,,
+fraction_line_dry<ME>,ME,What fraction of wash loads would you dry on the line or drying rack?,Choice,None,,Some,,Half,,Most,,All,,,,
 buy_sell_used,Reduce/Reuse,"When possible, will you buy or sell used goods rather than new?",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,reduce_waste
 reuse_containers,Reduce/Reuse,"When possible, will you use refillable containers (bags,mugs,bottles)",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,reduce_waste
 buy_bulk,Reduce/Reuse,"When possible, will you buy in bulk to minimize packaging?",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,reduce_waste
@@ -73,24 +169,22 @@ carpooling_increase,Transportation,Can you choose to carpool more often?,Choice,
 carpooling_amount,Transportation,How many times per month would you carpool?,Number,,,,,,,,,,,,,
 transportation_public,Transportation,Can you choose public/train/bus transportation more often?,Choice,No,transportation_public_amount,Yes,,,,,,,,,,reduce_car_miles
 transportation_public_amount,Transportation,How many times per month would you go on public transportation?,Number,,,,,,,,,,,,,reduce_car_miles
-transportation_telecommute,Transportation,Can you commit to telecommuting more often? ,Choice,No,transportation_telecommute_amount,Yes,,,,,,,,,,reduce_car_miles
-transportation_telecommute_amount,Transportation,How many times per month could you telecommute?,Number,,,,,,,,,,,,,reduce_car_miles
-transportation_commute_bike_walk,Transportation,Can you choose to bike or walk your commute more often?,Choice,No,transportation_commute_bike_walk_amount,Yes,,,,,,,,,,reduce_car_miles
-transportation_commute_bike_walk_amount,Transportation,if so how much?,Number,,,,,,,,,,,,,reduce_car_miles
+telecommute,Transportation,Can you commit to telecommuting more often? ,Choice,No,telecommute_amount,Yes,,,,,,,,,,reduce_car_miles
+telecommute_amount,Transportation,How many times per month could you telecommute?,Number,,,,,,,,,,,,,reduce_car_miles
+commute_bike_walk,Transportation,Can you choose to bike or walk your commute more often?,Choice,No,commute_bike_walk_amount,Yes,,,,,,,,,,reduce_car_miles
+commute_bike_walk_amount,Transportation,if so how much?,Number,,,,,,,,,,,,,reduce_car_miles
 transportation_flights,Transportation,"Can you take fewer flights per year, and how many?",Choice,No,,10% fewer,,25% fewer,,50% fewer,,75% fewer,,Stop flying altogether,,reduce_flights
 car_mpg,Transportation,How many miles per gallon does the car get?,Number,,,,,,,,,,,,,"replace_car,reduce_car_miles,eliminate_car"
 car_annual_miles,Transportation,About how many miles is the car driven each year?,Number,,,,,,,,,,,,,"replace_car,reduce_car_miles,eliminate_car"
-car_model_new,Transportation,What type of car are you thinking of getting?,Text,,,,,,,,,,,,,replace_car
-replace_car,Transportation,Will you replace your car with a more efficient model?,Choice,No,car_model_new,Electric/Plug-in hybrid,,Hybrid,,,,,,,,
+car_new_type,Transportation,What type of car are you thinking of getting?,Choice,Electric,,Plug-in Hybrid,,Hybrid,,Gasoline,,Diesel,,,,replace_car
+replace_car,Transportation,Will you replace your car with a more efficient model?,Choice,No,car_new_type,Electric/Plug-in hybrid,,Hybrid,,,,,,,,
 eliminate_car,Transportation,Will you choose to eliminate your car?,Choice,Yes,,No,,,,,,,,,,
 flights_amount,Transportation,How many flights typically do you and your family members take (3 hours or more)?,Number,,,,,,,,,,,,,"reduce_flights,offset_flights"
 offset_flights,Transportation,Would you purchase offsets for the flights you take?,Choice,No,,Sometimes,,Usually,,Always,,,,,,offset_flights
-,Transportation,,,,,,,,,,,,,,,
 water_heater_type,Water Heating,What type of water heater do you have in your home?  ,Choice,Fuel Oil,,Nat Gas,,Propane,,Electric,,Heat Pump,replace_water_heater,Not sure,,"hw_assessment,hp_water_heater"
 water_heater_age,Water Heating,How old is your water heater?,Choice,0-10 years,,10-20 years,,>20 years,,Not sure,,,,,,"hw_assessment,hp_water_heater"
 replace_water_heater,Water Heating,Will you choose to replace your current water heater w/ heat pump?,Choice,Yes,,No,,,,,,,,,,
 hot_water_assessment,Water Heating,Will you choose to sign up for a free hot water assessment?,Choice,Yes,,No,,,,,,,,,,
-,Water Heating,,,,,,,,,,,,,,,
 reduce_lawn_size,Yard/Landscaping,Will you choose to reduce the size of your lawn?,Choice,Small Change (~ 10% reduction),,Medium Change (~20% reduction),,"Large Change ~ 1,000 sq ft reduction",,Eliminate Lawn,,No,,,,reduce_lawn_size
 mower_type,Yard/Landscaping,Do you use a gas mower?,Choice,Yes,,No,mower_switch,,,,,,,,,"reduce_lawn_size,reduce_lawn_care,electric_mower"
 mower_switch,Yard/Landscaping,Will you choose to switch away from a gas mower?,Choice,No,,Yes,,,,,,,,,,electric_mower
@@ -101,4 +195,3 @@ leaf_cleanup_gas_blower,Yard/Landscaping,Do you use a gas blower to clean leaves
 leaf_cleanup_blower_switch,Yard/Landscaping,Will you choose to switch from gas blower to rake or electric blower?,Choice,No,,Yes,,,,,,,,,,rake_elec_blower
 lawn_service,Yard/Landscaping,Do you use a landscape service to take care of your lawn?,Choice,Yes,,No,,,,,,,,,,reduce_lawn_care
 lawn_size,Yard/Landscaping,How large is your lawn?,Choice,Small (<500 sq ft),,Medium (500-2000 sq ft),,Sizable (2000-5000 sq ft),,Large (>5000 sq ft),,,,,,"reduce_lawn_size,reduce_lawn_care,electric_mower"
-,Yard/Landscaping,,,,,,,,,,,,,,,

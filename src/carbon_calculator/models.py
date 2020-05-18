@@ -223,7 +223,7 @@ class Event(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN,unique=True)
     displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
-    datetime = models.DateTimeField(blank=True)
+    datetime = models.DateTimeField(blank=True, null=True)
     location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
 #    stations = models.ForeignKey(Station, on_delete=models.SET_NULL, 
 #        null=True, blank=True, related_name='cc_station_picture')
@@ -240,7 +240,9 @@ class Event(models.Model):
     sponsor_url = models.URLField(blank=True)
     sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
         null=True, blank=True, related_name='event_sponsor_logo')
-#   updated 11/24
+#   updated 4/24/20
+#   for a given event, campaign or purpose (platform default or community sites)
+    event_tag = models.CharField(max_length=TINY_STR_LEN,blank=True)
     attendees = models.ManyToManyField(CalcUser, blank=True)
 
     def simple_json(self):
