@@ -131,7 +131,7 @@ DATABASES = {
     },
     'default': {
         'ENGINE'   :  os.environ.get('DATABASE_ENGINE'),
-        'NAME'     : 'gchekler21',
+        'NAME'     : 'jpeirce21',
         'USER'     : '',
         'PASSWORD' : '',
         'HOST'     : 'localhost',

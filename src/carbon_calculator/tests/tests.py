@@ -23,8 +23,7 @@ class CarbonCalculatorTest(TestCase):
 
     @classmethod
     def tearDownClass(self):
-        """Prints the differences after the .s, Es, and Fs of the tests"""
-        self.pretty_print_diffs(self, self.differences)
+        pass
 
     def get_consistency_files(self):
         """Return content needed for the consistency test"""
@@ -58,7 +57,7 @@ class CarbonCalculatorTest(TestCase):
                 output_data.update(
                     {aip["Action"] : jsons.loads( #Response of estimate in dict form
                         self.client.post(
-                            "/cc/estimate/{}".format(aip['Action']), {}
+                            "/cc/estimate/{}".format(aip['Action']), aip["inputs"]
                                 ).content)}) #Throwing errors, need a better inputs file
             except Exception as e: #Some may throw errors w/o inputs
                 pass #Don't clutter the screen
@@ -76,26 +75,35 @@ class CarbonCalculatorTest(TestCase):
         For a differing value between the two aggregates
         ("Value difference", NEW_VALUE, OLD_VALUE)
         """
+        #print(new, old)
         differences = []
         new_actions = [i for i in new.keys()]
         old_actions = [i for i in old.keys()]
+        print(new_actions, old_actions)
         shared_actions = [] #Actions that are in both lists, and can be compared
         for action in new_actions:
             if action is not "Timestamp":
                 if action in old_actions:
                         shared_actions.append(action)
+                        print("Shared action:", action)
                 else:
                     differences.append((NEW_ACTION, action))
+                    print("Not shared action:", action)
+                    print(differences)
         for action in old_actions:
             if not action in new_actions and action is not "Timestamp":
                 differences.append((REMOVED_ACTION, action))
+                print(differences)
+        print("Shared actions:", shared_actions)
         for action in shared_actions:
             for result_aspect in new[action].keys(): #status, points, cost, etc
                 if not new[action][result_aspect] == old[action][result_aspect]:
                     differences.append((
                         VALUE_DIFF,
+                        result_aspect,
                         new[action][result_aspect],
                         old[action][result_aspect]))
+        print("Differences in compare:", differences)
         return differences
 
     def dump_outputs(self, outputs):
@@ -104,7 +112,7 @@ class CarbonCalculatorTest(TestCase):
         f.write(str(outputs))
         f.close()
 
-    def pretty_print_diffs(self, diffs):
+    def pretty_print_diffs(self, diffs, oldtime, newtime):
         print("\nDifferences: " + str(diffs)) #Not pretty yet
 
     def test_consistency(self):
@@ -126,11 +134,16 @@ class CarbonCalculatorTest(TestCase):
         #Compare
         if self.got_outputs:
             self.differences = self.compare(outputs, prev_outputs)
+        print("Differences in test_consistency: ", self.differences)
         self.dump_outputs(pprint.pformat(outputs))
+        self.pretty_print_diffs(
+            self.differences,
+            prev_outputs["Timestamp"],
+            outputs["Timestamp"])
 
-def outputInputs(data):
+def outputInputs(data, file=INPUTS_FILE, tag="w"):
     #print("Inputs Data: " + str(data))
-    f = open(INPUTS_FILE, "a")
+    f = open("/carbon_calculator/tests/{}".format(file), tag)
     f.write(str(data) + "\n")
     f.close()
 
@@ -144,8 +157,9 @@ def populate_inputs_file():
     print("populating the inputs file")
     client = Client()
     names  = get_all_action_names()
-    for name in names:
+    for name in names[1:]:
         # get info on the action to find allowed parameter values
+        print("URL: /cc/info/action/{}".format(name))
         response = client.get("/cc/info/action/{}".format(name))
         data = response.json() #jsons.loads(response.content, {})
         actionName = data["action"]["name"]
@@ -179,7 +193,7 @@ def populate_inputs_file():
                     if qTot[q] == 1:
                         actionPars[question["name"]] = 0
 
-            outputInputs(actionPars, "allPossibleInputs.txt")
+            outputInputs(actionPars, file="allPossibleInputs.txt")
             np += 1
             ni += 1
 
@@ -195,25 +209,7 @@ def populate_inputs_file():
                     done = True
 
         msg = "Action '%s', %d possible inputs" % (actionName, ni)
-        print(msg)            
-
-        #generate the default values list
-        try:
-            outputInputs(
-                jsons.loads(
-                    client.post(
-                        "/cc/getInputs/{}".format(name), {}
-                        ).content
-                    ),
-                    'defaultInputs.txt'
-                )
-        except Exception as e:
-            print(e)
+        print(msg)
 
     msg = "Number possible calculator inputs with all choices = %d" % np
     print(msg)
-
-"""Results from run with above settings:
-Inputs to EvalSolarPV: {'solar_potential': 'Great'}
-{'status': 0, 'carbon_points': 5251.0, 'cost': 14130.0, 'savings': 3241.0, 'explanation': 'installing a solar PV array on your home would pay back in around 5 years and save 26.3 tons of CO2 over 10 years.'}
-.    """

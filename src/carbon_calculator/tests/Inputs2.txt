@@ -1,0 +1,1 @@
+{'Action': 'heating_assessment', 'heating_fuel': 'Nat Gas', 'heating_system_type': 'Boiler', 'heating_system_age': '>20 years', 'air_conditioning_type': 'None', 'air_conditioning_age': '>20 years'}
