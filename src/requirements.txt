@@ -7,6 +7,7 @@ Pillow==7.1.1
 django-storages==1.9.1
 boto3==1.12.41
 django-cors-headers==3.2.1
+grpcio==1.28.1
 firebase-admin==4.0.1
 jsons==1.1.2
 querystring-parser==1.2.4

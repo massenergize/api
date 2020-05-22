@@ -21,7 +21,7 @@ from pathlib import Path  # python3 only
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-IS_PROD = False
+IS_PROD = True
 
 try:
     env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
@@ -51,7 +51,10 @@ ALLOWED_HOSTS = [
     'api.dev.massenergize.org',
     'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
     'massenergize-api-production.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com'
+    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com',
+    'Prod-env.eba-cg9aw8pt.us-east-2.elasticbeanstalk.com',
+    'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
+    '0.0.0.0'
 ]
 
 INSTALLED_APPS = [
