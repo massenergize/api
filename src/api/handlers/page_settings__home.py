@@ -136,6 +136,7 @@ class HomePageSettingsHandler(RouteHandler):
 
       args.pop('organic_attained_number_of_households', None)
       args.pop('organic_attained_number_of_actions', None)
+      args.pop('organic_attained_carbon_footprint_reduction', None)
 
       home_page_setting_info, err = self.service.update_home_page_setting(args)
 
