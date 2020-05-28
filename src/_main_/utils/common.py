@@ -44,6 +44,15 @@ def parse_list(d):
   except Exception as e:
     return []
 
+def parse_str_list(d):
+  try:
+    if d and isinstance(d, str):
+      tmp = [t.strip() for t in d.strip().split(',') if t.strip()]
+      return tmp
+    return []
+  except Exception as e:
+    return []
+
 def parse_bool(b):
   if not b:
     return False

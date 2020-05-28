@@ -102,8 +102,8 @@ class UserService:
       return None, err
     return serialize(user), None
 
-  def delete_user(self, user_id) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.delete_user(user_id)
+  def delete_user(self, context: Context, user_id) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.delete_user(context, user_id)
     if err:
       return None, err
     return serialize(user), None

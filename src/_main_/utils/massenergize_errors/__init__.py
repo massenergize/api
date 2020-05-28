@@ -10,7 +10,7 @@ class MassEnergizeAPIError(MassenergizeResponse):
     super().__init__(error=msg, status=200)
 
   def __str__(self):
-    return f"Error: {self.msg}, Status: {self.status}"
+    return f"Error: {self.msg}"
 
 
 class ResourceNotFoundError(MassEnergizeAPIError):

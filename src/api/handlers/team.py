@@ -7,6 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from _main_.utils.common import parse_str_list
 
 class TeamHandler(RouteHandler):
 
@@ -54,8 +55,11 @@ class TeamHandler(RouteHandler):
     def create_team_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      user_id = args.pop('user_id', None)
-      team_info, err = self.team.create_team(user_id, args)
+
+      admin_emails = args.pop('admin_emails', '')
+      print(admin_emails, parse_str_list(admin_emails))
+      args["admin_emails"] = parse_str_list(admin_emails)
+      team_info, err = self.team.create_team(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=team_info)

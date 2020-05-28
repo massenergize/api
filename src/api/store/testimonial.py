@@ -61,13 +61,19 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       user_email = args.pop('user_email', None)
-      
+
       args["title"] = args.get("title", "Thank You")[:100]
      
       new_testimonial: Testimonial = Testimonial.objects.create(**args)
 
       user = None
       if user_email:
+        user_email = user_email.strip()
+        #verify that provided emails are valid user
+        if not UserProfile.objects.filter(email=user_email).exists():
+          return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
+        
+
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_testimonial.user = user

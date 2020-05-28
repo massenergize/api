@@ -490,6 +490,7 @@ class UserProfile(models.Model):
 
   class Meta:
     db_table = 'user_profiles' 
+    ordering = ('-created_at',)
 
 
 class CommunityMember(models.Model):
@@ -517,6 +518,7 @@ class CommunityMember(models.Model):
   class Meta:
     db_table = 'community_members_and_admins'
     unique_together = [['community', 'user']]
+    ordering = ('-created_at',)
 
 
 class Subdomain(models.Model):

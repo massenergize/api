@@ -4,7 +4,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
 from .utils import get_community_or_die, get_user_or_die
-
+from database.models import Team, UserProfile
 class TeamStore:
   def __init__(self):
     self.name = "Team Store/DB"
@@ -64,12 +64,25 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
+  def create_team(self, context:Context, args) -> (dict, MassEnergizeAPIError):
     team = None
     try:
       community_id = args.pop('community_id', None)
       image = args.pop('image', None)
-      admin_emails = args.pop('admin_emails', "").split(",")
+      admin_emails = args.pop('admin_emails', [])
+
+      verified_admins = []
+      #verify that provided emails are valid user
+      for email in admin_emails:
+        admin =  UserProfile.objects.filter(email=email).first()
+        print(email, admin)
+        if admin:
+          verified_admins.append(admin)
+        else:
+          return None, CustomMassenergizeError(f"Email: {email} is not registered with us")
+      
+      if not verified_admins:
+        return None, CustomMassenergizeError(f"Please provide at least one admin's email")
 
       if community_id:
         community = Community.objects.filter(pk=community_id).first()
@@ -90,22 +103,11 @@ class TeamStore:
 
       new_team.save()
 
-      for admin_email in admin_emails:
-        user = UserProfile.objects.filter(email=admin_email).first()
-        if user:
-          teamMember, ok = TeamMember.objects.get_or_create(team=team,user=user)
-          teamMember.is_admin = True
-          teamMember.save()
-
-  
-      if user_id:
-        # team.members deprecated
-        teamMember = TeamMember.objects.create(team=team,user=user_id, is_admin=True)
-        #new_team.members.add(user_id)
-        #new_team.admins.add(user_id)
+      for admin in verified_admins:
+        teamMember, _ = TeamMember.objects.get_or_create(team=team,user=admin)
+        teamMember.is_admin = True
         teamMember.save()
 
-      #new_team.save()
       return new_team, None
     except Exception as e:
       print(e)
@@ -150,7 +152,7 @@ class TeamStore:
 
       # team.members deprecated.  Delete TeamMembers separate step
       team = teams.first()
-      members = TeamMembers.objects.filter(team=team)
+      members = TeamMember.objects.filter(team=team)
       msg = "delete_team:  Team %s deleting %d members" % (team.name,members.count())
       members.delete()
       teams.delete()  # or should that be team.delete()?
@@ -245,7 +247,6 @@ class TeamStore:
         return None, NotAuthorizedError()
 
       community_id = args.pop('community_id', None)
-
       if not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
