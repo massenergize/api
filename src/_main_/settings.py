@@ -54,7 +54,8 @@ ALLOWED_HOSTS = [
     'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com',
     'Prod-env.eba-cg9aw8pt.us-east-2.elasticbeanstalk.com',
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
-    '0.0.0.0'
+    '0.0.0.0',
+    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
