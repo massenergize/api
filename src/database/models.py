@@ -1240,6 +1240,7 @@ class Testimonial(models.Model):
       "full_name": "User unknown",
       "email": "e-mail address not provided"
     }
+    # Cadmins need to see e-mails
     #if(self.anonymous):
     #  return {
     #    "full_name": "Anonymous",
@@ -1255,7 +1256,6 @@ class Testimonial(models.Model):
     #    "full_name": "Anonymous",
     #    "email": "anonymous"
     #  }
-
 
   def simple_json(self):
     res = model_to_dict(self, exclude=['image', 'tags'])

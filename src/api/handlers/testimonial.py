@@ -61,9 +61,11 @@ class TestimonialHandler(RouteHandler):
       if is_published:
         args["is_published"] = parse_bool(is_published)
 
-      anonymous = args.get("anonymous", None)
-      if anonymous:
-        args["anonymous"] = parse_bool(anonymous)
+      # eliminating anonymous option
+      args["anonymous"] = False
+      #anonymous = args.get("anonymous", None)
+      #if anonymous:
+      #  args["anonymous"] = parse_bool(anonymous)
       
       testimonial_info, err = self.service.create_testimonial(context, args)
       if err:
