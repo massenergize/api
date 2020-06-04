@@ -61,6 +61,7 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       user_email = args.pop('user_email', None)
+      preferred_name = args.pop('preferred_name', None)
 
       args["title"] = args.get("title", "Thank You")[:100]
      
@@ -72,7 +73,6 @@ class TestimonialStore:
         #verify that provided emails are valid user
         if not UserProfile.objects.filter(email=user_email).exists():
           return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
-        
 
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
@@ -95,6 +95,16 @@ class TestimonialStore:
         new_testimonial.community = testimonial_community
       else:
         testimonial_community = None
+
+      # eliminating anonymous testimonias
+      new_testimonial.anonymous = False
+      if not preferred_name:
+        if user:
+          if user.preferred_name:
+            preferred_name = user.preferred_name
+          else:
+            preferred_name =  user.full_name + ' from ' + ('' if not testimonial_community else testimonial_community.name)
+      new_testimonial.preferred_name = preferred_name
 
       new_testimonial.save()
 
@@ -122,15 +132,8 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      user_email = args.pop('user_email', None)
-     
+      
       new_testimonial = testimonial.first()
-
-      # if user_email:
-      #   user = UserProfile.objects.filter(email=user_email).first()
-      #   if not user:
-      #     return None, CustomMassenergizeError("No user with that email")
-      #   new_testimonial.user = user
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
