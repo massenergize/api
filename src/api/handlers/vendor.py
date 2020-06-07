@@ -129,7 +129,7 @@ class VendorHandler(RouteHandler):
         .expect("onboarding_contact_email", str, is_required=False)
         .expect("name", str, is_required=False)
         .expect("email", str, is_required=False)
-        .expect("website", str)
+        .expect("website", str, is_required=False)
         .expect("is_verified", bool, is_required=False)
         .expect("phone_number", str, is_required=False)
         .expect("have_address", bool, is_required=False)
