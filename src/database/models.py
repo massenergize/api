@@ -33,7 +33,7 @@ class Location(models.Model):
   """
   id = models.AutoField(primary_key=True)
   location_type = models.CharField(max_length=TINY_STR_LEN, 
-    choices=CHOICES["LOCATION_TYPES"].items())
+    choices=CHOICES.get("LOCATION_TYPES", {}).items())
   street = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   unit_number = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   zipcode = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -343,7 +343,7 @@ class RealEstateUnit(models.Model):
   name = models.CharField(max_length=SHORT_STR_LEN)
   unit_type =  models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=CHOICES["REAL_ESTATE_TYPES"].items()
+    choices=CHOICES.get("REAL_ESTATE_TYPES", {}).items()
   )
   community = models.ForeignKey(Community, null=True, on_delete=models.SET_NULL, blank=True)
   location = JSONField(blank=True, null=True)
@@ -382,7 +382,7 @@ class Role(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=TINY_STR_LEN, 
-    choices=CHOICES["ROLE_TYPES"].items(), 
+    choices=CHOICES.get("ROLE_TYPES", {}).items(), 
     unique=True
   ) 
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
@@ -390,7 +390,7 @@ class Role(models.Model):
 
 
   def __str__(self):
-    return CHOICES["ROLE_TYPES"][self.name] 
+    return CHOICES.get("ROLE_TYPES", {})[self.name] 
 
   def simple_json(self):
     return model_to_dict(self)
@@ -490,6 +490,7 @@ class UserProfile(models.Model):
 
   class Meta:
     db_table = 'user_profiles' 
+    ordering = ('-created_at',)
 
 
 class CommunityMember(models.Model):
@@ -517,6 +518,7 @@ class CommunityMember(models.Model):
   class Meta:
     db_table = 'community_members_and_admins'
     unique_together = [['community', 'user']]
+    ordering = ('-created_at',)
 
 
 class Subdomain(models.Model):
@@ -1095,13 +1097,13 @@ class EventAttendee(models.Model):
   event =  models.ForeignKey(Event,on_delete=models.CASCADE)
   status = models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=CHOICES["EVENT_CHOICES"].items()
+    choices=CHOICES.get("EVENT_CHOICES", {}).items()
   )
   is_deleted = models.BooleanField(default=False, blank=True)
 
   def __str__(self):
     return '%s | %s | %s' % (
-      self.attendee, CHOICES["EVENT_CHOICES"][self.status], self.event)
+      self.attendee, CHOICES.get("EVENT_CHOICES", {})[self.status], self.event)
   
   def simple_json(self):
     data =  model_to_dict(self, ['id', 'status'])
@@ -1135,7 +1137,7 @@ class Permission(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(
     max_length=TINY_STR_LEN, 
-    choices=CHOICES["PERMISSION_TYPES"].items(), 
+    choices=CHOICES.get("PERMISSION_TYPES", {}).items(), 
     db_index=True
   )
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
@@ -1144,7 +1146,7 @@ class Permission(models.Model):
 
 
   def __str__(self):
-    return CHOICES["PERMISSION_TYPES"][self.name] 
+    return CHOICES.get("PERMISSION_TYPES", {})[self.name] 
 
   def simple_json(self):
     return model_to_dict(self)
@@ -1234,22 +1236,26 @@ class Testimonial(models.Model):
     return model_to_dict(self, include=['id', 'title', 'community'])
 
   def _get_user_info(self):
-    if(self.anonymous):
-      return {
-        "full_name": "Anonymous",
-        "email": "anonymous"
-      }
-    elif(self.preferred_name):
-      return {
-        "full_name": self.preferred_name,
-        "email": "anonymous"
-      }
-    else:
-      return get_json_if_not_none(self.user) or {
-        "full_name": "Anonymous",
-        "email": "anonymous"
-      }
-
+    return get_json_if_not_none(self.user) or {
+      "full_name": "User unknown",
+      "email": "e-mail address not provided"
+    }
+    # Cadmins need to see e-mails
+    #if(self.anonymous):
+    #  return {
+    #    "full_name": "Anonymous",
+    #    "email": "anonymous"
+    #  }
+    #elif(self.preferred_name):
+    #  return {
+    #    "full_name": self.preferred_name,
+    #    "email": "anonymous"
+    #  }
+    #else:
+    #  return get_json_if_not_none(self.user) or {
+    #    "full_name": "Anonymous",
+    #    "email": "anonymous"
+    #  }
 
   def simple_json(self):
     res = model_to_dict(self, exclude=['image', 'tags'])
@@ -1305,7 +1311,7 @@ class UserActionRel(models.Model):
   vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, 
     null=True, blank=True)
   status  = models.CharField(max_length=SHORT_STR_LEN, 
-    choices = CHOICES["USER_ACTION_STATUS"].items(), 
+    choices = CHOICES.get("USER_ACTION_STATUS", {}).items(), 
     db_index=True, default='TODO')
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -1472,7 +1478,7 @@ class Graph(models.Model):
   id = models.AutoField(primary_key=True)
   title = models.CharField(max_length = LONG_STR_LEN, db_index=True)
   graph_type = models.CharField(max_length=TINY_STR_LEN, 
-    choices=CHOICES["GRAPH_TYPES"].items())
+    choices=CHOICES.get("GRAPH_TYPES", {}).items())
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True,blank=True)
   data = models.ManyToManyField(Data,  blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)

@@ -64,3 +64,14 @@ def get_admin_communities(context: Context):
 def send_slack_message(webhook, body):
   r = requests.post(url = webhook, data = json.dumps(body)) 
   return r
+
+def remove_dups(lst):
+  final_lst = []
+  tracking_set = set()
+  
+  for u in lst:
+    if u not in tracking_set:
+      final_lst.append(u)
+      tracking_set.add(u)
+  
+  return final_lst

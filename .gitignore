@@ -8,3 +8,8 @@ timelog.csv
 \.vscode/
 
 *.env
+
+src/*.jpg
+src/*.jpeg
+src/*.png
+
