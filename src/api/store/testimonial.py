@@ -29,24 +29,23 @@ class TestimonialStore:
 
       if context.is_dev:
         if subdomain:
-          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False)
+          testimonials = Testimonial.objects.select_related('image', 'action', 'vendor', 'user').prefetch_related('tags').filter(community__subdomain=subdomain, is_deleted=False)
         elif community_id:
-          testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False)
+          testimonials = Testimonial.objects.select_related('image', 'action', 'vendor', 'user').prefetch_related('tags').filter(community__id=community_id, is_deleted=False)
         elif user_id:
-          testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False)
+          testimonials = Testimonial.objects.select_related('image', 'action', 'vendor', 'user').prefetch_related('tags').filter(user__id=user_id, is_deleted=False)
         elif user_email:
-          testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False)
+          testimonials = Testimonial.objects.select_related('image', 'action', 'vendor', 'user').prefetch_related('tags').filter(user__email=subdomain, is_deleted=False)
 
       else:
         if subdomain:
-          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False, is_published=True)
+          testimonials = Testimonial.objects.select_related('image', 'action', 'vendor', 'user').prefetch_related('tags').filter(community__subdomain=subdomain, is_deleted=False, is_published=True)
         elif community_id:
-          testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
+          testimonials = Testimonial.objects.select_related('image', 'action', 'vendor', 'user').prefetch_related('tags').filter(community__id=community_id, is_deleted=False, is_published=True)
         elif user_id:
-          testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False, is_published=True)
+          testimonials = Testimonial.objects.select_related('image', 'action', 'vendor', 'user').prefetch_related('tags').filter(user__id=user_id, is_deleted=False, is_published=True)
         elif user_email:
-          testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False, is_published=True)
-
+          testimonials = Testimonial.objects.select_related('image', 'action', 'vendor', 'user').prefetch_related('tags').filter(user__email=subdomain, is_deleted=False, is_published=True)
 
       return testimonials, None
     except Exception as e:

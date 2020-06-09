@@ -43,7 +43,7 @@ class TeamStore:
         res["team"] = team.simple_json()
         # team.members deprecated
         # for m in team.members.all():
-        members = TeamMember.objects.filter(team=team)
+        members = TeamMember.objects.select_related('team', 'user').filter(team=team)
         res["members"] = members.count()
         for m in members:
           user = m.user
