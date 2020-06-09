@@ -4,6 +4,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community
+import time
+import timeit
 
 class GraphStore:
   def __init__(self):
@@ -86,17 +88,29 @@ class GraphStore:
 
 
   def _get_households_engaged(self, community: Community):
+
     households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
     households_engaged += (RealEstateUnit.objects.filter(community=community).count())
     actions_completed = 0 if not community.goal else community.goal.attained_number_of_actions
+
     done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE")
     actions_completed += done_actions.count()
-
     carbon_footprint_reduction = 0 if not community.goal or not community.goal.attained_carbon_footprint_reduction else community.goal.attained_carbon_footprint_reduction
+
+    # this is where all the time was
+    #start = time.time()
+    #startcpu = timeit.timeit()
+
     # loop over actions completed
-    for actionRel in done_actions:
-      if actionRel.action and actionRel.action.calculator_action :
-        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+    #for actionRel in done_actions:
+    #  if actionRel.action and actionRel.action.calculator_action :
+    #    carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+
+    #stop = time.time()
+    #stopcpu = timeit.timeit()
+    #msg = "_get_househods_engaged: Community %s time %.3f" % (community.name, stop-start)
+    #print(msg)
+
 
     return {"community": {"id": community.id, "name": community.name}, 
             "actions_completed": actions_completed, "households_engaged": households_engaged, 

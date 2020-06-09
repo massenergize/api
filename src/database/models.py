@@ -7,6 +7,7 @@ from .utils.common import  json_loader,get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 import uuid
+import time
 
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 ZIP_CODE_AND_STATES = json_loader('./database/raw_data/other/states.json')
@@ -1947,9 +1948,14 @@ class HomePageSettings(models.Model):
     done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE")
     goal["organic_attained_number_of_actions"] = (done_actions.count())
     carbon_footprint_reduction = 0
-    for actionRel in done_actions:
-      if actionRel.action and actionRel.action.calculator_action:
-        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+# commenting out temporarily until database access speeded up
+#    start = time.time()
+#    for actionRel in done_actions:
+#      if actionRel.action and actionRel.action.calculator_action:
+#        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+#    stop = time.time()
+#    msg = "carbon footprint reduction time : %.3f" % (stop-start)
+#    print(msg)
     goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
     res =  self.simple_json()
