@@ -1,4 +1,4 @@
-from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel,RealEstateUnit
+from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel,RealEstateUnit, Team, TeamMember
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -81,6 +81,58 @@ class GraphStore:
       res['community'] = community.info()
       return res, None
       
+    except Exception as e:
+      import traceback
+      traceback.print_exc()
+      return None, CustomMassenergizeError(e)
+
+
+  def graph_actions_completed_by_team(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
+    try:
+
+      team_id = args.get('team_id', None)
+
+      if not team_id:
+        return None, CustomMassenergizeError("Missing team_id field")
+
+      team: Team = Team.objects.get(id=team_id)
+
+      if not team:
+        return None, InvalidResourceError()
+
+      #TODO: addresss the commented-out code below (was not letting me do calls in testing)
+      #TODO: do time testing
+
+      # if context.is_prod and not context.user_is_admin():
+      #   if not team.is_published:
+      #     return None, CustomMassenergizeError("Content Available Yet")
+
+      community_id = team.community.id
+
+      users = [member.user for member in TeamMember.objects.filter(team=team)]
+
+      completed_actions = UserActionRel.objects.filter(action__community__id=community_id, user__in=users, status="DONE")
+      
+      categories, _ = TagCollection.objects.get_or_create(name="Category")
+
+      res = {
+        "data": sorted([
+          {
+            "id"   : category.id,
+            "name" : category.name,
+            "value": sum([(category in completed_action.action.tags.all())
+                        for completed_action in completed_actions.all()])
+          }
+          for category in categories.tag_set.all()
+        ], key=lambda entry : entry["name"]),
+        "title": "Actions Completed By Members Of Team",
+        "team": team.info()
+      }
+
+      print(res)
+   
+      return res, None
+        
     except Exception as e:
       import traceback
       traceback.print_exc()
