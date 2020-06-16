@@ -101,30 +101,44 @@ class GraphStore:
         return None, InvalidResourceError()
 
       #TODO: addresss the commented-out code below (was not letting me do calls in testing)
-      #TODO: do time testing
+      #TODO: optimize! very slow at the moment
+      #TODO: fix miscounting:
+      # - for Wayland Happy Hollow 2, counting 15 instead of 16 total actions
+      # - for funny ones, counting 31 instead of 30 total actions
 
       # if context.is_prod and not context.user_is_admin():
       #   if not team.is_published:
       #     return None, CustomMassenergizeError("Content Available Yet")
 
+      start = time.perf_counter()
+
       community_id = team.community.id
 
       members = TeamMember.objects.filter(team=team).all()
-      
-      completed_action_rels = []
-      for member in members:
-        completed_action_rels.extend(member.user.useractionrel_set.all().filter(status="DONE"))
 
-      categories, new = TagCollection.objects.get_or_create(name="Category")
+      completed_actions = []
+      for member in members:
+        completed_actions.extend([action_rel.action
+                        for action_rel in member.user.useractionrel_set.filter(status="DONE").all().iterator()])
+
+      categories = list(TagCollection.objects.get(name="Category").tag_set.all().iterator())
+
+      end = time.perf_counter()
+      print("variable setup: %f" % (end - start))
+
+      start = time.perf_counter()
 
       data = [
       {
         "id"   : category.id,
         "name" : category.name,
-        "value": sum([(category in completed_action_rel.action.tags.all())
-                    for completed_action_rel in completed_action_rels])
-      }
-      for category in categories.tag_set.all()]
+        "value": len(list(filter(lambda action : category in set(action.tags.all()), completed_actions)))
+      } for category in categories]
+
+      end = time.perf_counter()
+      print("category fitlering: %f" % (end - start))
+
+      start = time.perf_counter()
 
       res = {
         "data": sorted(data, key=lambda entry : entry["name"]),
@@ -132,6 +146,9 @@ class GraphStore:
         "team": team.info()
       }
    
+      end = time.perf_counter()
+      print("sorting: %f" % (end - start))
+
       return res, None
         
     except Exception as e:
