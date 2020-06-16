@@ -109,27 +109,28 @@ class GraphStore:
 
       community_id = team.community.id
 
-      users = [member.user for member in TeamMember.objects.filter(team=team)]
-
-      completed_actions = UserActionRel.objects.filter(action__community__id=community_id, user__in=users, status="DONE")
+      members = TeamMember.objects.filter(team=team).all()
       
-      categories, _ = TagCollection.objects.get_or_create(name="Category")
+      completed_action_rels = []
+      for member in members:
+        completed_action_rels.extend(member.user.useractionrel_set.all().filter(status="DONE"))
+
+      categories, new = TagCollection.objects.get_or_create(name="Category")
+
+      data = [
+      {
+        "id"   : category.id,
+        "name" : category.name,
+        "value": sum([(category in completed_action_rel.action.tags.all())
+                    for completed_action_rel in completed_action_rels])
+      }
+      for category in categories.tag_set.all()]
 
       res = {
-        "data": sorted([
-          {
-            "id"   : category.id,
-            "name" : category.name,
-            "value": sum([(category in completed_action.action.tags.all())
-                        for completed_action in completed_actions.all()])
-          }
-          for category in categories.tag_set.all()
-        ], key=lambda entry : entry["name"]),
+        "data": sorted(data, key=lambda entry : entry["name"]),
         "title": "Actions Completed By Members Of Team",
         "team": team.info()
       }
-
-      print(res)
    
       return res, None
         
