@@ -2,7 +2,7 @@ from database.models import Graph, UserProfile, Media, Vendor, Action, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from django.db.models import Q
+from django.db.models import Q, prefetch_related_objects
 from .utils import get_community
 import time
 import timeit
@@ -101,7 +101,6 @@ class GraphStore:
         return None, InvalidResourceError()
 
       #TODO: addresss the commented-out code below (was not letting me do calls in testing)
-      #TODO: optimize! very slow at the moment
       #TODO: fix miscounting:
       # - for Wayland Happy Hollow 2, counting 15 instead of 16 total actions
       # - for funny ones, counting 31 instead of 30 total actions
@@ -109,9 +108,7 @@ class GraphStore:
       # if context.is_prod and not context.user_is_admin():
       #   if not team.is_published:
       #     return None, CustomMassenergizeError("Content Available Yet")
-
-      start = time.perf_counter()
-
+  
       community_id = team.community.id
 
       members = TeamMember.objects.filter(team=team).all()
@@ -122,10 +119,7 @@ class GraphStore:
 
       categories = TagCollection.objects.get(name="Category").tag_set.all()
 
-      end = time.perf_counter()
-      print("variable setup: %f" % (end - start))
-
-      start = time.perf_counter()
+      prefetch_related_objects(completed_action_rels, "action__tags")
 
       data = [
       {
@@ -134,20 +128,12 @@ class GraphStore:
         "value": len(list(filter(lambda action_rel : category in action_rel.action.tags.all(), completed_action_rels)))
       } for category in categories]
 
-      end = time.perf_counter()
-      print("category fitlering: %f" % (end - start))
-
-      start = time.perf_counter()
-
       res = {
         "data": sorted(data, key=lambda entry : entry["name"]),
         "title": "Actions Completed By Members Of Team",
         "team": team.info()
       }
    
-      end = time.perf_counter()
-      print("sorting: %f" % (end - start))
-
       return res, None
         
     except Exception as e:
