@@ -57,7 +57,7 @@ class GraphStore:
 
       if context.is_prod and not context.user_is_admin():
         if not community.is_published:
-          return None, CustomMassenergizeError("Content Available Yet")
+          return None, CustomMassenergizeError("Content Not Available Yet")
 
       graph = Graph.objects.prefetch_related('data').select_related('community').filter(community=community, title="Number of Actions Completed by Category").first()
       if not graph:
@@ -103,33 +103,39 @@ class GraphStore:
       #TODO: addresss the commented-out code below (was not letting me do calls in testing)
       #TODO: fix miscounting:
       # - for Wayland Happy Hollow 2, counting 15 instead of 16 total actions
-      # - for funny ones, counting 31 instead of 30 total actions
+      # - for funny ones, counting 39 instead of 35 total actions
+
+      # print(context.is_prod, context.user_is_admin(), team.is_published)
 
       # if context.is_prod and not context.user_is_admin():
       #   if not team.is_published:
-      #     return None, CustomMassenergizeError("Content Available Yet")
+      #     return None, CustomMassenergizeError("Content Not Available Yet")
   
-      community_id = team.community.id
-
       members = TeamMember.objects.filter(team=team).all()
 
       completed_action_rels = []
       for member in members:
         completed_action_rels.extend(member.user.useractionrel_set.filter(status="DONE").all())
 
-      categories = TagCollection.objects.get(name="Category").tag_set.all()
-
       prefetch_related_objects(completed_action_rels, "action__tags")
 
+      categories = TagCollection.objects.get(name="Category").tag_set.all()
+
       data = [
-      {
-        "id"   : category.id,
-        "name" : category.name,
-        "value": len(list(filter(lambda action_rel : category in action_rel.action.tags.all(), completed_action_rels)))
-      } for category in categories]
+        {
+          "id"   : category.id,
+          "name" : category.name,
+          "value": len(list(filter(lambda action_rel : category in action_rel.action.tags.all(), completed_action_rels)))
+        }
+        for category in sorted(categories, key=lambda category: category.name)
+      ]
+
+      print("completed actions: %s\n" % completed_action_rels, "amount: %s\n" % len(completed_action_rels))
+      print("categories: %s\n" % categories)
+      print("data: %s\n" % data, "sum of values: %s\n" % (sum([entry["value"] for entry in data])))
 
       res = {
-        "data": sorted(data, key=lambda entry : entry["name"]),
+        "data": data,
         "title": "Actions Completed By Members Of Team",
         "team": team.info()
       }
