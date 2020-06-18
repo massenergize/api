@@ -116,12 +116,11 @@ class GraphStore:
 
       members = TeamMember.objects.filter(team=team).all()
 
-      completed_actions = []
+      completed_action_rels = []
       for member in members:
-        completed_actions.extend([action_rel.action
-                        for action_rel in member.user.useractionrel_set.filter(status="DONE").all().iterator()])
+        completed_action_rels.extend(member.user.useractionrel_set.filter(status="DONE").all())
 
-      categories = list(TagCollection.objects.get(name="Category").tag_set.all().iterator())
+      categories = TagCollection.objects.get(name="Category").tag_set.all()
 
       end = time.perf_counter()
       print("variable setup: %f" % (end - start))
@@ -132,7 +131,7 @@ class GraphStore:
       {
         "id"   : category.id,
         "name" : category.name,
-        "value": len(list(filter(lambda action : category in set(action.tags.all()), completed_actions)))
+        "value": len(list(filter(lambda action_rel : category in action_rel.action.tags.all(), completed_action_rels)))
       } for category in categories]
 
       end = time.perf_counter()
