@@ -122,9 +122,9 @@ class GraphStore:
     done_actions = UserActionRel.objects.filter(status="DONE")
     actions_completed = done_actions.count()
     carbon_footprint_reduction = 0
-    for actionRel in done_actions:
-      if actionRel.action and actionRel.action.calculator_action :
-        carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
+    #for actionRel in done_actions:
+    #  if actionRel.action and actionRel.action.calculator_action :
+    #    carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
 
     return {"community": {"id": 0, "name": 'Other'}, 
             "actions_completed": actions_completed, "households_engaged": households_engaged,

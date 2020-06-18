@@ -53,9 +53,9 @@ class TeamStore:
           done_actions = actions.filter(status="DONE")
           res["actions_completed"] += done_actions.count()
           res["actions_todo"] += actions.filter(status="TODO").count()
-          for done_action in done_actions:
-            if done_action.action and done_action.action.calculator_action:
-              res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
+          #for done_action in done_actions:
+          #  if done_action.action and done_action.action.calculator_action:
+          #    res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
 
         ans.append(res)
 
