@@ -104,7 +104,7 @@ class GraphStore:
         if not team.is_published:
           return None, CustomMassenergizeError("Content Not Available Yet")
   
-      members = TeamMember.objects.filter(team=team).all()
+      members = TeamMember.objects.filter(team=team)
 
       completed_action_rels = []
       for member in members:
@@ -113,14 +113,13 @@ class GraphStore:
       categories = TagCollection.objects.get(name="Category").tag_set.order_by("name").all()
 
       prefetch_related_objects(completed_action_rels, "action__tags")
-      data = [
-        {
+      data = []
+      for category in categories:
+        data.append({
           "id"   : category.id,
           "name" : category.name,
           "value": len(list(filter(lambda action_rel : category in action_rel.action.tags.all(), completed_action_rels)))
-        }
-        for category in categories
-      ]
+        })
 
       res = {
         "data": data,
