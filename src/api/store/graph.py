@@ -100,16 +100,9 @@ class GraphStore:
       if not team:
         return None, InvalidResourceError()
 
-      #TODO: addresss the commented-out code below (was not letting me do calls in testing)
-      #TODO: fix miscounting:
-      # - for Wayland Happy Hollow 2, counting 15 instead of 16 total actions
-      # - for funny ones, counting 39 instead of 35 total actions
-
-      # print(context.is_prod, context.user_is_admin(), team.is_published)
-
-      # if context.is_prod and not context.user_is_admin():
-      #   if not team.is_published:
-      #     return None, CustomMassenergizeError("Content Not Available Yet")
+      if context.is_prod and not context.user_is_admin():
+        if not team.is_published:
+          return None, CustomMassenergizeError("Content Not Available Yet")
   
       members = TeamMember.objects.filter(team=team).all()
 
@@ -117,10 +110,9 @@ class GraphStore:
       for member in members:
         completed_action_rels.extend(member.user.useractionrel_set.filter(status="DONE").all())
 
-      prefetch_related_objects(completed_action_rels, "action__tags")
-
       categories = TagCollection.objects.get(name="Category").tag_set.all()
 
+      prefetch_related_objects(completed_action_rels, "action__tags")
       data = [
         {
           "id"   : category.id,
@@ -129,10 +121,6 @@ class GraphStore:
         }
         for category in sorted(categories, key=lambda category: category.name)
       ]
-
-      print("completed actions: %s\n" % completed_action_rels, "amount: %s\n" % len(completed_action_rels))
-      print("categories: %s\n" % categories)
-      print("data: %s\n" % data, "sum of values: %s\n" % (sum([entry["value"] for entry in data])))
 
       res = {
         "data": data,
