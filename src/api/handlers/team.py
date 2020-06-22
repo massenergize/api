@@ -32,6 +32,7 @@ class TeamHandler(RouteHandler):
     self.add("/teams.messageAdmin", self.message_admin())
     self.add("/teams.contactAdmin", self.message_admin())
     self.add("/teams.members", self.members())
+    self.add("/teams.members.preferredNames", self.members_preferred_names())
 
     #admin routes
     self.add("/teams.listForCommunityAdmin", self.community_admin_list())
@@ -180,6 +181,15 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(data=team_members_info)
     return members_view
 
+  def members_preferred_names(self) -> function:
+    def members_preferred_names_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      team_members_preferred_names_info, err = self.team.members_preferred_names(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=team_members_preferred_names_info)
+    return members_preferred_names_view
 
   def community_admin_list(self) -> function:
     def community_admin_list_view(request) -> None: 
