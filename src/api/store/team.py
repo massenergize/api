@@ -238,6 +238,23 @@ class TeamStore:
       return None, InvalidResourceError()
 
 
+  def members_preferred_names(self, context: Context, args) -> (Team, MassEnergizeAPIError):
+    try:
+      team_id = args.get('team_id', None)
+      if not team_id:
+        return [], CustomMassenergizeError('Please provide a valid team_id')
+
+      members = TeamMember.objects.filter(is_deleted=False, team__id=team_id).select_related("user")
+      res = []
+      for member in members:
+        res.append({"id": member.id, "preferred_name": member.user.preferred_name})
+
+      return res, None
+    except Exception as e:
+      print(e)
+      return None, InvalidResourceError()
+
+
   def list_teams_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       if context.user_is_super_admin:
