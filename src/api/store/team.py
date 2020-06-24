@@ -247,7 +247,7 @@ class TeamStore:
       members = TeamMember.objects.filter(is_deleted=False, team__id=team_id).select_related("user")
       res = []
       for member in members:
-        res.append({"id": member.id, "preferred_name": member.user.preferred_name})
+        res.append({"id": member.id, "preferred_name": member.user.preferred_name, "is_admin": member.is_admin})
 
       return res, None
     except Exception as e:
