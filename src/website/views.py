@@ -25,13 +25,15 @@ def home(request):
   )
 
 def handler400(request, exception):
-  return MassenergizeResponse(error="Error: BadRequest")
+  return MassenergizeResponse(error="bad_request")
 
 def handler403(request, exception):
-  return MassenergizeResponse(error="Error: PermissionDenied")
+  return MassenergizeResponse(error="permission_denied")
 
 def handler404(request, exception):
-  return MassenergizeResponse(data=f"path: {request.build_absolute_uri()}", error="Error: ResourceNotFound")
+  if request.path.startswith("/v2"):
+    return MassenergizeResponse(error="method_deprecated")
+  return MassenergizeResponse(error="resource_not_found")
 
 def handler500(request):
-  return MassenergizeResponse(error="Error: ServerError")
+  return MassenergizeResponse(error="server_error")
