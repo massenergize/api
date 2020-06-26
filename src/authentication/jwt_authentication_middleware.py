@@ -4,7 +4,7 @@ Middle ware for authorization for users before they access specific resources
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from _main_.settings import SECRET_KEY
-from firebase_admin import auth
+
 import json, jwt
 
 

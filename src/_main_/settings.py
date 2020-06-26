@@ -49,12 +49,8 @@ ALLOWED_HOSTS = [
     'api.prod.massenergize.org',
     'api-dev.massenergize.org',
     'api.dev.massenergize.org',
-    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-production.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com',
     'Prod-env.eba-cg9aw8pt.us-east-2.elasticbeanstalk.com',
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
-    '0.0.0.0',
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
 ]
 
@@ -78,13 +74,14 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     #custom middlewares
-    'authentication.middleware.MassenergizeJWTAuthMiddleware'
+    'authentication.jwt_authentication_middleware.MassenergizeJWTAuthMiddleware'
+    'authentication.entity_authorization_middleware.EntityAuthorizationMiddleware'
 ]
 
 
@@ -145,11 +142,11 @@ DATABASES = {
     },
     'local-default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres2',
-        'USER': 'Brad',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432'
+        'NAME': os.environ.get('DATABASE_NAME_LOCAL'),
+        'USER': os.environ.get('DATABASE_USER_LOCAL'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD_LOCAL'),
+        'HOST': os.environ.get('DATABASE_HOST_LOCAL'),
+        'PORT': os.environ.get('DATABASE_PORT_LOCAL')
     },
 }
 
