@@ -23,16 +23,24 @@ class CarbonCalculatorTest(TestCase):
         self.differences = []
         self.got_outputs = True
 
-
-        self.input_data = read_inputs(os.getenv('TEST_INPUTS',default=INPUTS_FILE))
+        filename = os.getenv('TEST_INPUTS',default=INPUTS_FILE)
+        print(filename)
+        self.input_data = read_inputs(filename)
         self.output_data = []
 
     @classmethod
     def tearDownClass(self):
         print("tearDownClass")
         #populate_inputs_file()
+        filename = os.getenv('TEST_OUTPUTS',default=OUTPUTS_FILE)
+        self.write_outputs(self,filename)
 
-        write_outputs(os.getenv('TEST_OUTPUTS',default=OUTPUTS_FILE))
+    def write_outputs(self,filename):
+        data = "# Output testing file for carbon_calculator\n"
+        outputLine(data,filename,True)
+
+        for line in self.output_data:
+            outputLine(line,filename,True)
 
     def test_info_actions(self):
         # test routes function
@@ -144,17 +152,6 @@ class CarbonCalculatorTest(TestCase):
     def pretty_print_diffs(self, diffs, oldtime, newtime):
         print("\nDifferences: " + str(diffs)) #Not pretty yet
 
-    #def test_solarPVNoArgs(self):
-    #    response = self.client.post('/cc/getInputs/install_solarPV', {})
-    #    data = jsons.loads(response.content)
-    #    #outputInputs(data)
-    #def test_solarPVGreat(self):
-    #    response = self.client.post('/cc/getInputs/install_solarPV',
-    #        {
-    #        'solar_potential': 'Great'
-    #        }
-    #    )
-    #    data = jsons.loads(response.content)
     def test_consistency(self):
         """
         Test if the results of all estimation calls match those of the last run.
@@ -180,6 +177,9 @@ class CarbonCalculatorTest(TestCase):
             self.differences,
             prev_outputs["Timestamp"],
             outputs["Timestamp"])
+
+
+
 def outputLine(data, filename, new=False):
     tag = "a"
     if new:
@@ -189,13 +189,17 @@ def outputLine(data, filename, new=False):
     f.write(str(data) + "\n")
     f.close()
 
-def read_inputs(filename):
-    data = []
-    return data
 
-def write_outputs(filename):
-    outputLine(data,filename,True)
-    pass
+def read_inputs(filename):
+        try:
+            f = open(filename, 'r')
+            inputs = [eval(i.strip()) for i in f.readlines()]
+            f.close()
+        except:
+            inputs = []
+            print("Exception from read_inputs")
+        return inputs
+        
 
 
 def get_all_action_names():
