@@ -131,8 +131,8 @@ DATABASES = {
     },
     'default': {
         'ENGINE'   :  os.environ.get('DATABASE_ENGINE'),
-        'NAME'     : 'jpeirce21',
-        'USER'     : '',
+        'NAME'     : 'postgres2',
+        'USER'     : 'Brad',
         'PASSWORD' : '',
         'HOST'     : 'localhost',
         'PORT'     : '5555'

@@ -4,8 +4,9 @@ from carbon_calculator.views import importcsv
 from database.models import Vendor
 from django.utils import timezone #For keeping track of when the consistency was last checked
 import jsons
-import OpenSSL
-from carbon_calculator.solar import EvalSolarPV
+import os
+#import OpenSSL
+#from carbon_calculator.solar import EvalSolarPV
 import pprint
 
 OUTPUTS_FILE   = "carbon_calculator/tests/expected_outputs.txt"
@@ -23,7 +24,7 @@ class CarbonCalculatorTest(TestCase):
         self.got_outputs = True
 
 
-        self.input_data = self.read_inputs(os.environ(TEST_INPUTS))
+        self.input_data = read_inputs(os.getenv('TEST_INPUTS',default=INPUTS_FILE))
         self.output_data = []
 
     @classmethod
@@ -31,12 +32,28 @@ class CarbonCalculatorTest(TestCase):
         print("tearDownClass")
         #populate_inputs_file()
 
-        write_outputs(os.environ(TEST_OUTPUTS))
+        write_outputs(os.getenv('TEST_OUTPUTS',default=OUTPUTS_FILE))
 
     def test_info_actions(self):
         # test routes function
         # test there are actions
         # test that one action has the average_points
+        response = self.client.post('/cc')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post('/cc/info')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post('/cc/info/actions')
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content.decode('utf8'))
+        self.assertGreaterEqual(len(data["actions"]),37)
+
+        name= data["actions"][0]["name"]
+        self.assertEqual(name,"energy_fair")
+
+        points = data["actions"][0]["average_points"]
+        self.assertEqual(points,50)
+
     def get_consistency_files(self):
         """Return content needed for the consistency test"""
         got_inputs  = True
@@ -124,13 +141,13 @@ class CarbonCalculatorTest(TestCase):
         f.write(str(outputs))
         f.close()
 
+    def pretty_print_diffs(self, diffs, oldtime, newtime):
+        print("\nDifferences: " + str(diffs)) #Not pretty yet
+
     #def test_solarPVNoArgs(self):
     #    response = self.client.post('/cc/getInputs/install_solarPV', {})
     #    data = jsons.loads(response.content)
     #    #outputInputs(data)
-    def pretty_print_diffs(self, diffs, oldtime, newtime):
-        print("\nDifferences: " + str(diffs)) #Not pretty yet
-
     #def test_solarPVGreat(self):
     #    response = self.client.post('/cc/getInputs/install_solarPV',
     #        {
