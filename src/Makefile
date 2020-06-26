@@ -15,3 +15,12 @@ deploy-dev:
 	python prepare-for-deploy.py --dev
 	eb deploy
 .PHONY: deploy-dev
+
+test:	
+	package = carbon_calculator
+	infile = $(package)/tests/standard_inputs.json
+	outfile = $(package)/tests/standard_outputs.json
+	export TEST_INPUTS=$(infile)
+	export TEST_OUTPUTS=$(outfile)
+	python manage.py test $(package)
+.PHONY: test

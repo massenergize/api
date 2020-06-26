@@ -3,6 +3,7 @@ from carbon_calculator.models import CalcUser, Event, Station, Action, Group, Qu
 from carbon_calculator.views import importcsv
 from database.models import Vendor
 import jsons
+import OpenSSL
 
 IMPORT_SUCCESS = {"status": True}
 # Create your tests here.
@@ -20,10 +21,16 @@ class CarbonCalculatorTest(TestCase):
                 "Defaults":"carbon_calculator/content/exportdefaults.csv"
                 })
 
+
+        self.input_data = self.read_inputs(os.environ(TEST_INPUTS))
+        self.output_data = []
+
     @classmethod
     def tearDownClass(self):
         print("tearDownClass")
-        populate_inputs_file()
+        #populate_inputs_file()
+
+        write_outputs(os.environ(TEST_OUTPUTS))
 
     def test_info_actions(self):
         # test routes function
@@ -46,27 +53,36 @@ class CarbonCalculatorTest(TestCase):
         points = data["actions"][0]["average_points"]
         self.assertEqual(points,50)
 
-    def test_solarPVNoArgs(self):
-        response = self.client.post('/cc/getInputs/install_solarPV', {})
-        data = jsons.loads(response.content)
-        #outputInputs(data)
+    #def test_solarPVNoArgs(self):
+    #    response = self.client.post('/cc/getInputs/install_solarPV', {})
+    #    data = jsons.loads(response.content)
+    #    #outputInputs(data)
 
-    def test_solarPVGreat(self):
-        response = self.client.post('/cc/getInputs/install_solarPV',
-            {
-            'solar_potential': 'Great'
-            }
-        )
-        data = jsons.loads(response.content)
+    #def test_solarPVGreat(self):
+    #    response = self.client.post('/cc/getInputs/install_solarPV',
+    #        {
+    #        'solar_potential': 'Great'
+    #        }
+    #    )
+    #    data = jsons.loads(response.content)
 
-def outputInputs(data, filename, new=False):
+def outputLine(data, filename, new=False):
     tag = "a"
     if new:
         tag = "w"
 
-    f = open("carbon_calculator/tests/"+filename, tag)
+    f = open(filename, tag)
     f.write(str(data) + "\n")
     f.close()
+
+def read_inputs(filename):
+    data = []
+    return data
+
+def write_outputs(filename):
+    outputLine(data,filename,True)
+    pass
+
 
 def populate_inputs_file():
     client      = Client()
@@ -74,8 +90,10 @@ def populate_inputs_file():
     data        = jsons.loads(response.content)["actions"]
     names       = [i["name"] for i in data]
 
-    outputInputs("# All Possible Calculator Inputs", "allPossibleInputs.txt", True)
-    outputInputs("# Default Calculator Inputs", "defaultInputs.txt", True)
+    filename_all = "carbon_calculator/tests/" + "allPossibleInputs.txt"
+    outputInputs("# All Possible Calculator Inputs", filename_all, True)
+    filename_def = "carbon_calculator/tests/" + "defaultInputs.txt"
+    outputInputs("# Default Calculator Inputs", filename_def, True)
     np = 0    
     for name in names:
         # get info on the action to find allowed parameter values
@@ -112,7 +130,7 @@ def populate_inputs_file():
                     if qTot[q] == 1:
                         actionPars[question["name"]] = 0
 
-            outputInputs(actionPars, "allPossibleInputs.txt")
+            outputInputs(actionPars, filename_all)
             np += 1
             ni += 1
 
@@ -138,7 +156,7 @@ def populate_inputs_file():
                         "/cc/getInputs/{}".format(name), {}
                         ).content
                     ),
-                    'defaultInputs.txt'
+                    filename_def
                 )
         except:
             pass
