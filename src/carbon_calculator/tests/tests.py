@@ -5,7 +5,7 @@ from database.models import Vendor
 from django.utils import timezone #For keeping track of when the consistency was last checked
 import jsons
 from carbon_calculator.solar import EvalSolarPV
-import pprint
+import pprint, sys
 
 OUTPUTS_FILE   = "carbon_calculator/tests/expected_outputs.txt"
 INPUTS_FILE    = "carbon_calculator/tests/Inputs.txt"
@@ -85,16 +85,11 @@ class CarbonCalculatorTest(TestCase):
             if action is not "Timestamp":
                 if action in old_actions:
                         shared_actions.append(action)
-                        print("Shared action:", action)
                 else:
                     differences.append((NEW_ACTION, action))
-                    print("Not shared action:", action)
-                    print(differences)
         for action in old_actions:
             if not action in new_actions and action is not "Timestamp":
                 differences.append((REMOVED_ACTION, action))
-                print(differences)
-        print("Shared actions:", shared_actions)
         for action in shared_actions:
             for result_aspect in new[action].keys(): #status, points, cost, etc
                 if not new[action][result_aspect] == old[action][result_aspect]:
@@ -103,7 +98,6 @@ class CarbonCalculatorTest(TestCase):
                         result_aspect,
                         new[action][result_aspect],
                         old[action][result_aspect]))
-        print("Differences in compare:", differences)
         return differences
 
     def dump_outputs(self, outputs):
@@ -134,8 +128,7 @@ class CarbonCalculatorTest(TestCase):
         #Compare
         if self.got_outputs:
             self.differences = self.compare(outputs, prev_outputs)
-        print("Differences in test_consistency: ", self.differences)
-        self.dump_outputs(pprint.pformat(outputs))
+        self.dump_outputs(pprint.pformat(inputs, outputs))
         self.pretty_print_diffs(
             self.differences,
             prev_outputs["Timestamp"],
