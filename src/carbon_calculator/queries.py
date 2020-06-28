@@ -21,6 +21,7 @@ class CalculatorQuestion:
             self.questionText = q.question_text
             self.questionType = q.question_type
             self.responses = []
+            self.numeric_values = {}
             if q.question_type == 'Choice':
                 if q.response_1 != '':
                     response = {'text':q.response_1}
@@ -52,6 +53,14 @@ class CalculatorQuestion:
                     if len(q.skip_6)>0:
                         response['skip']=q.skip_6
                     self.responses.append(response)
+                    
+            elif q.question_type == 'Number':
+                if q.minimum_value!=None:
+                    self.numeric_values['minimum_value'] = q.minimum_value
+                if q.maximum_value!=None:
+                    self.numeric_values['maximum_value'] = q.maximum_value
+                if q.typical_value!=None:
+                    self.numeric_values['typical_value'] = q.typical_value
         else:
             print("ERROR: Question "+name+" was not found")
 

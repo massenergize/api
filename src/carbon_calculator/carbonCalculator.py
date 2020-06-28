@@ -225,6 +225,7 @@ class CarbonCalculator:
                                 ii = 5+2*i
                                 if item[ii]!='' :
                                     skip[i] = item[ii].split(",")
+
                             question = Question(name=item[0],
                                 category=item[1],
                                 question_text=item[2],
@@ -236,6 +237,15 @@ class CarbonCalculator:
                                 response_5=item[12], skip_5=skip[4],
                                 response_6=item[14], skip_6=skip[5])
                             #print('Importing Question ',question.name,': ',question.question_text)
+
+                            if len(items)>19:
+                                if items[16].length>0:
+                                    question.minimum_value = eval(items[16])
+                                if items[17].length>0:
+                                    question.maximum_value = eval(items[17])
+                                if items[18].length>0:
+                                    question.typical_value = eval(items[18])
+
                             question.save()
                             num+=1
                     msg = "Imported %d Carbon Calculator Questions" % num

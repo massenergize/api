@@ -128,7 +128,10 @@ def populate_inputs_file():
                     actionPars[question["name"]] = question["responses"][qInd[q]]["text"]
                 else:
                     if qTot[q] == 1:
-                        actionPars[question["name"]] = 0
+                        val = 0.
+                        if question.numeric_values and question.numeric_values.typical_value:
+                            val = question.numeric_values.typical_value
+                        actionPars[question["name"]] = val
 
             outputInputs(actionPars, filename_all)
             np += 1

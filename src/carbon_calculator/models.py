@@ -24,7 +24,7 @@ class CarbonCalculatorMedia(models.Model):
         the type of this media file whether it is an image, video, pdf etc.
     """
     id = models.AutoField(primary_key=True)
-    file = models.FileField(upload_to='cc_media/')
+    file = models.FileField(upload_to='media/')
     is_deleted = models.BooleanField(default=False)
 
     def simple_json(self):
@@ -56,7 +56,8 @@ class Action(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN, unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
-    description = models.CharField(max_length=SHORT_STR_LEN, blank=True) #"Action short description"
+    tltle = models.CharField(max_length=NAME_STR_LEN, blank=True)
+    description = models.CharField(max_length=MED_STR_LEN, blank=True) #"Action short description"
     helptext = models.CharField(max_length=MED_STR_LEN, blank=True) #"This text explains what the action is about, in 20 words or less."
     average_points = models.PositiveIntegerField(default=0)
     questions = JSONField(blank=True)    # list of questions by name
@@ -116,6 +117,9 @@ class Question(models.Model):
     skip_5 = JSONField(blank=True, null=True)
     response_6 = models.CharField(max_length=SHORT_STR_LEN, null=True)
     skip_6 = JSONField(blank=True, null=True)
+    minimum_value = models.FloatField(null=True)
+    maximum_value = models.FloatField(null=True)
+    typical_value = models.FloatField(null=True)
 
     def simple_json(self):
         return model_to_dict(self)
