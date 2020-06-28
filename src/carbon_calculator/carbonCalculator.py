@@ -43,11 +43,14 @@ def SavePic2Media(picURL):
             print("ERROR: Unable to import action photo from "+picURL)
             return None
         else:
-            file_name = picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
+            file_name =  "~/Downloads/" + picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
+
             fp = open(file_name,"wb")
             fp.write(resp.content)
             fp.close()
-            media=CarbonCalculatorMedia(file = file_name)
+            #media = CarbonCalculatorMedia(file = file_name)
+            media = CarbonCalculatorMedia.objects.create(file=file_name)
+
             if media:
                 media.save()
                 return media
@@ -261,7 +264,9 @@ class CarbonCalculator:
                     num = 0
                     for item in inputlist:
                         if first:
-                            #header = item
+                            t = {}
+                            for i in range(len(item)):
+                                t[item] = i
                             first = False
                         else:
                             name = item[0]
@@ -277,13 +282,13 @@ class CarbonCalculator:
                             #    actionPicture = Media()
                             picture = None
                             if len(item)>=4 and name!='':
-                                picture = SavePic2Media(item[6])
-
+                                picture = SavePic2Media(item[t["Picture"]])
                                 action = Action(name=item[0],
-                                    description=item[1],
-                                    helptext=item[2],
-                                    average_points=int(eval(item[4])),
-                                    questions=item[5].split(","),
+                                    title = item[t["Title]"]],
+                                    description=item[t["Description"]],
+                                    helptext=item[t["Helptext"]],
+                                    average_points=int(eval(item[t["Avg points"]])),
+                                    questions=item[t["Questions"]].split(","),
                                     picture = picture)
                                 action.save()
 
