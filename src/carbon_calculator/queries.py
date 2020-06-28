@@ -53,7 +53,7 @@ class CalculatorQuestion:
                     if len(q.skip_6)>0:
                         response['skip']=q.skip_6
                     self.responses.append(response)
-                    
+
             elif q.question_type == 'Number':
                 if q.minimum_value!=None:
                     self.numeric_values['minimum_value'] = q.minimum_value
@@ -208,7 +208,7 @@ def QuerySingleAction(name,event_tag=""):
             if q.picture:
                 picture = q.picture.file.url
 
-            return VALID_QUERY, {"id": q.pk, "name":q.name, "description":q.description, "helptext":q.helptext, "questionInfo":questionInfo, \
+            return VALID_QUERY, {"id": q.pk, "name":q.name, "title":q.title, "description":q.description, "helptext":q.helptext, "questionInfo":questionInfo, \
                                 "average_points":q.average_points, "picture":picture}
         else:
             print("ERROR: Action "+name+" was not found")

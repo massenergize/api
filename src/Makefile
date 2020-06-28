@@ -16,11 +16,14 @@ deploy-dev:
 	eb deploy
 .PHONY: deploy-dev
 
+package = carbon_calculator
+infile = $(package)/tests/standard_inputs.txt
+outfile = $(package)/tests/standard_outputs.txt
+generate_inputs = 0
+export TEST_INPUTS=$(infile)
+export TEST_OUTPUTS=$(outfile)
+export GENERATE_INPUTS=$(generate_inputs)
+
 test:	
-	package = carbon_calculator
-	infile = $(package)/tests/standard_inputs.json
-	outfile = $(package)/tests/standard_outputs.json
-	export TEST_INPUTS=$(infile)
-	export TEST_OUTPUTS=$(outfile)
 	python manage.py test $(package)
 .PHONY: test

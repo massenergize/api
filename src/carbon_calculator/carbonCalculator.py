@@ -43,13 +43,12 @@ def SavePic2Media(picURL):
             print("ERROR: Unable to import action photo from "+picURL)
             return None
         else:
-            file_name =  "~/Downloads/" + picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
-
+            file_name =  "carbon_calculator/assets/" + picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
             fp = open(file_name,"wb")
             fp.write(resp.content)
             fp.close()
-            #media = CarbonCalculatorMedia(file = file_name)
-            media = CarbonCalculatorMedia.objects.create(file=file_name)
+            media = CarbonCalculatorMedia(file = file_name)
+            #media = CarbonCalculatorMedia.objects.create(file=file_name)
 
             if media:
                 media.save()
@@ -121,10 +120,11 @@ class CarbonCalculator:
         actionList = []
         for action in self.allActions:
             name = self.allActions[action].name
+            title = self.allActions[action].title
             description = self.allActions[action].description
             id = self.allActions[action].id
             points = self.allActions[action].average_points
-            actionList.append( {'id': id, 'name':name, 'description':description, 'average_points':points} )
+            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points} )
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
@@ -460,6 +460,7 @@ class CalculatorAction:
         self.id = None
         self.name = name
         self.initialized = False
+        self.title = "Action title"
         self.description = "Action short description"
         self.helptext = "This text explains what the action is about, in 20 words or less."
         self.questions = []    # question with list of valid responses.
@@ -473,6 +474,7 @@ class CalculatorAction:
         status, actionInfo = QuerySingleAction(self.name)
         if status == VALID_QUERY:
             self.id = actionInfo["id"]
+            self.title = actionInfo["title"]
             self.description = actionInfo["description"]
             self.helptext = actionInfo["helptext"]
             self.questions = actionInfo["questionInfo"]    # question with list of valid responses.
