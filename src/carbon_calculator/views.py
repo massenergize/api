@@ -92,13 +92,13 @@ def getInputs(request, action):
     else:
         save = False
     CALC.Estimate(action, inputs, save)
-    response = JsonResponse(inputs.inputs)
+    response = JsonResponse({"Action" : action, "inputs" : inputs.inputs})
     return response
 
 class ShowKeys(dict):
     def __init__(self, data, action):
         self.data = data
-        self.inputs = {"Action" : action}
+        self.inputs = {}
 
     def get(self, key, default):
         self.inputs.update({key : default})

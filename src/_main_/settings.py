@@ -134,12 +134,12 @@ DATABASES = {
         'PORT'     : os.environ.get('DATABASE_PORT')
     },
     'default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres2',
-        'USER': 'Brad',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5555'
+        'ENGINE'   :  os.environ.get('DATABASE_ENGINE'),
+        'NAME'     : 'postgres2',
+        'USER'     : 'Brad',
+        'PASSWORD' : '',
+        'HOST'     : 'localhost',
+        'PORT'     : '5555'
     },
 }
 
