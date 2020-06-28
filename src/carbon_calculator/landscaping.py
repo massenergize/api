@@ -33,9 +33,9 @@ def EvalReduceLawnSize(inputs):
         if reduction > 0:
             # mowing
             total_mows = getDefault(locality,'lawn_average_yearly_mows', 22)    # EPA, assumed weekly over summer
+            co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
             gas_mower = inputs.get('mower_type',YES)
             if gas_mower == YES:
-                co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
                 gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf', 0.5) * lawn_size / 5000
                 co2_per_mow = gal_per_mow * co2_per_gal_gas
             else:

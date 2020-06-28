@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from carbon_calculator.models import CalcUser, Event, Station, Action, Group, Question
 from carbon_calculator.views import importcsv
+import json
 import jsons
 import os
 
@@ -41,11 +42,13 @@ class CarbonCalculatorTest(TestCase):
         # test there are actions
         # test that one action has the average_points
 
-        response = self.client.post('/cc')
+        response = self.client.get('/cc')
         self.assertEqual(response.status_code, 200)
-        response = self.client.post('/cc/info')
+
+        response = self.client.get('/cc/info')
         self.assertEqual(response.status_code, 200)
-        response = self.client.post('/cc/info/actions')
+
+        response = self.client.get('/cc/info/actions')
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content.decode('utf8'))
@@ -137,6 +140,10 @@ def populate_inputs_file():
                             val = typ
                         actionPars["inputs"][question["name"]] = val
 
+            outputs = client.get("/cc/estimate/{}".format(actionPars['Action']), actionPars["inputs"]).content.decode("utf-8")
+            if ni<10:
+                print(outputs)
+            actionPars["outputs"] = eval(outputs)
             outputLine(actionPars, filename_all)
             np += 1
             ni += 1

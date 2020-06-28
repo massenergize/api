@@ -89,6 +89,10 @@ AWS_S3_REGION_NAME       = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL          = None
 #--------END AWS CONFIGURATION ---------------------#
 
+
+# @Sam - does this cause any problems? 
+APPEND_SLASH = False
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 

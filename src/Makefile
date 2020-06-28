@@ -25,5 +25,5 @@ export TEST_OUTPUTS=$(outfile)
 export GENERATE_INPUTS=$(generate_inputs)
 
 test:	
-	python manage.py test $(package)
+	python -W ignore manage.py test $(package)
 .PHONY: test

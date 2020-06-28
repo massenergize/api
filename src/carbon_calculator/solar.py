@@ -72,7 +72,9 @@ def EvalSolarPV(inputs):
         cost = array_cost_per_kw * size * (1. - tax_credit) * (1. - state_credit) - state_rebate - utility_rebate
 
         decent_payback = getDefault(locality,'general_decent_home_investment_payback',10.)
-        payback = int(cost/savings) + 1
+        payback = 100.
+        if savings > 0:
+            payback = int(cost/savings) + 1
         if (payback < decent_payback):
             explanation = "installing a solar PV array on your home would pay back in around %d years and save %.1f tons of CO2 over 10 years." % (payback, points/200.)
         else:
