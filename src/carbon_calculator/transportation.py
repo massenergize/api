@@ -11,7 +11,7 @@ def EvalReplaceCar(inputs):
     if inputs.get('replace_car', YES) ==YES:
 
         default_miles = getDefault(locality, 'car_default_miles', 15000.)
-        miles_est = inputs.get('car_annual_miles', default_miles)
+        miles_est = float(inputs.get('car_annual_miles', default_miles))
         
         default_mpg = getDefault(locality, 'car_default_mpg', 25.)
         old_mpg = float(inputs.get('car_mpg', default_mpg))
@@ -170,10 +170,10 @@ def EvalEliminateCar(inputs):
     if inputs.get('eliminate_car', YES) == YES:
 
         default_miles = getDefault(locality, 'car_default_miles', 15000.)
-        miles_est = inputs.get('car_annual_miles', default_miles)
+        miles_est = float(inputs.get('car_annual_miles', default_miles))
         
         default_mpg = getDefault(locality, 'car_default_mpg', 25.)
-        old_mpg = inputs.get('car_mpg', default_mpg)
+        old_mpg = float(inputs.get('car_mpg', default_mpg))
 
         annual_insurance = getDefault(locality,'car_annual_insurance', 1000.)
         annual_service_gas = getDefault(locality,'car_annual_service_gas', 500.)

@@ -43,11 +43,13 @@ def SavePic2Media(picURL):
             print("ERROR: Unable to import action photo from "+picURL)
             return None
         else:
-            file_name = picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
+            file_name =  "carbon_calculator/assets/" + picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
             fp = open(file_name,"wb")
             fp.write(resp.content)
             fp.close()
-            media=CarbonCalculatorMedia(file = file_name)
+            media = CarbonCalculatorMedia(file = file_name)
+            #media = CarbonCalculatorMedia.objects.create(file=file_name)
+
             if media:
                 media.save()
                 return media
@@ -118,10 +120,11 @@ class CarbonCalculator:
         actionList = []
         for action in self.allActions:
             name = self.allActions[action].name
+            title = self.allActions[action].title
             description = self.allActions[action].description
             id = self.allActions[action].id
             points = self.allActions[action].average_points
-            actionList.append( {'id': id, 'name':name, 'description':description, 'average_points':points} )
+            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points} )
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
@@ -225,6 +228,7 @@ class CarbonCalculator:
                                 ii = 5+2*i
                                 if item[ii]!='' :
                                     skip[i] = item[ii].split(",")
+
                             question = Question(name=item[0],
                                 category=item[1],
                                 question_text=item[2],
@@ -236,6 +240,15 @@ class CarbonCalculator:
                                 response_5=item[12], skip_5=skip[4],
                                 response_6=item[14], skip_6=skip[5])
                             #print('Importing Question ',question.name,': ',question.question_text)
+
+                            if len(item)>19:
+                                if len(item[16]):
+                                    question.minimum_value = eval(item[16])
+                                if len(item[17])>0:
+                                    question.maximum_value = eval(item[17])
+                                if len(item[18])>0:
+                                    question.typical_value = eval(item[18])
+
                             question.save()
                             num+=1
                     msg = "Imported %d Carbon Calculator Questions" % num
@@ -251,7 +264,9 @@ class CarbonCalculator:
                     num = 0
                     for item in inputlist:
                         if first:
-                            #header = item
+                            t = {}
+                            for i in range(len(item)):
+                                t[item[i]] = i
                             first = False
                         else:
                             name = item[0]
@@ -267,13 +282,13 @@ class CarbonCalculator:
                             #    actionPicture = Media()
                             picture = None
                             if len(item)>=4 and name!='':
-                                picture = SavePic2Media(item[6])
-
+                                picture = SavePic2Media(item[t["Picture"]])
                                 action = Action(name=item[0],
-                                    description=item[1],
-                                    helptext=item[2],
-                                    average_points=int(eval(item[4])),
-                                    questions=item[5].split(","),
+                                    title = item[t["Title"]],
+                                    description=item[t["Description"]],
+                                    helptext=item[t["Helptext"]],
+                                    average_points=int(eval(item[t["Avg points"]])),
+                                    questions=item[t["Questions"]].split(","),
                                     picture = picture)
                                 action.save()
 
@@ -445,6 +460,7 @@ class CalculatorAction:
         self.id = None
         self.name = name
         self.initialized = False
+        self.title = "Action title"
         self.description = "Action short description"
         self.helptext = "This text explains what the action is about, in 20 words or less."
         self.questions = []    # question with list of valid responses.
@@ -458,6 +474,7 @@ class CalculatorAction:
         status, actionInfo = QuerySingleAction(self.name)
         if status == VALID_QUERY:
             self.id = actionInfo["id"]
+            self.title = actionInfo["title"]
             self.description = actionInfo["description"]
             self.helptext = actionInfo["helptext"]
             self.questions = actionInfo["questionInfo"]    # question with list of valid responses.

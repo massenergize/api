@@ -406,7 +406,7 @@ def EvalLineDry(inputs):
             annual_energy_gas_kwh = getDefault(locality,"elec_dryer_annual_kwh_gas", 687.)
             btu_per_therm = 100000.
             btu_per_kwh = 3414.
-            annual_therm_gas = annual_energy_gas_kwh * btu_per_kwh / btu_per_therm
+            therm_gas = annual_energy_gas_kwh * btu_per_kwh / btu_per_therm
             therm_price = getDefault(locality,"natgas_price_per_therm", 1.25)
             co2_per_therm = NatGasFootprint(locality)
             co2_drying = therm_gas * co2_per_therm

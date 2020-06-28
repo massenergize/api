@@ -1,9 +1,9 @@
 from django.test import TestCase, Client
 from carbon_calculator.models import CalcUser, Event, Station, Action, Group, Question
 from carbon_calculator.views import importcsv
-from database.models import Vendor
+import json
 import jsons
-import OpenSSL
+import os
 
 IMPORT_SUCCESS = {"status": True}
 # Create your tests here.
@@ -22,26 +22,33 @@ class CarbonCalculatorTest(TestCase):
                 })
 
 
-        self.input_data = self.read_inputs(os.environ(TEST_INPUTS))
+        self.input_data = read_inputs(os.getenv("TEST_INPUTS"))
         self.output_data = []
 
     @classmethod
     def tearDownClass(self):
         print("tearDownClass")
-        #populate_inputs_file()
 
-        write_outputs(os.environ(TEST_OUTPUTS))
+        generate_inputs = eval(os.getenv("GENERATE_INPUTS"))
+        if generate_inputs > 0:
+            print("Generating Carbon Calculator input files")
+            populate_inputs_file()
+
+        else:
+            write_outputs(os.getenv("TEST_OUTPUTS"))
 
     def test_info_actions(self):
         # test routes function
         # test there are actions
         # test that one action has the average_points
 
-        response = self.client.post('/cc')
+        response = self.client.get('/cc')
         self.assertEqual(response.status_code, 200)
-        response = self.client.post('/cc/info')
+
+        response = self.client.get('/cc/info')
         self.assertEqual(response.status_code, 200)
-        response = self.client.post('/cc/info/actions')
+
+        response = self.client.get('/cc/info/actions')
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content.decode('utf8'))
@@ -81,7 +88,6 @@ def read_inputs(filename):
 
 def write_outputs(filename):
     outputLine(data,filename,True)
-    pass
 
 
 def populate_inputs_file():
@@ -91,9 +97,9 @@ def populate_inputs_file():
     names       = [i["name"] for i in data]
 
     filename_all = "carbon_calculator/tests/" + "allPossibleInputs.txt"
-    outputInputs("# All Possible Calculator Inputs", filename_all, True)
+    outputLine("# All Possible Calculator Inputs", filename_all, True)
     filename_def = "carbon_calculator/tests/" + "defaultInputs.txt"
-    outputInputs("# Default Calculator Inputs", filename_def, True)
+    outputLine("# Default Calculator Inputs", filename_def, True)
     np = 0    
     for name in names:
         # get info on the action to find allowed parameter values
@@ -120,17 +126,25 @@ def populate_inputs_file():
         done = False
         ni = 0
         while not done:
-            actionPars = {"Action": actionName}
+            actionPars = {"Action": actionName, "inputs":{}}
             q = 0
             for q in qr:
                 question = questions[q]
                 if qTot[q] > 1:
-                    actionPars[question["name"]] = question["responses"][qInd[q]]["text"]
+                    actionPars["inputs"][question["name"]] = question["responses"][qInd[q]]["text"]
                 else:
                     if qTot[q] == 1:
-                        actionPars[question["name"]] = 0
+                        val = 0.
+                        typ = question["numeric_values"].get("typical_value",-999)
+                        if typ > 0:
+                            val = typ
+                        actionPars["inputs"][question["name"]] = val
 
-            outputInputs(actionPars, filename_all)
+            outputs = client.get("/cc/estimate/{}".format(actionPars['Action']), actionPars["inputs"]).content.decode("utf-8")
+            if ni<10:
+                print(outputs)
+            actionPars["outputs"] = eval(outputs)
+            outputLine(actionPars, filename_all)
             np += 1
             ni += 1
 
@@ -150,7 +164,7 @@ def populate_inputs_file():
 
         #generate the default values list
         try:
-            outputInputs(
+            outputLine(
                 jsons.loads(
                     client.post(
                         "/cc/getInputs/{}".format(name), {}
