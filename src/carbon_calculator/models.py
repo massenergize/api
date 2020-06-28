@@ -56,7 +56,7 @@ class Action(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN, unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
-    tltle = models.CharField(max_length=NAME_STR_LEN, blank=True)
+    title = models.CharField(max_length=NAME_STR_LEN, blank=True)
     description = models.CharField(max_length=MED_STR_LEN, blank=True) #"Action short description"
     helptext = models.CharField(max_length=MED_STR_LEN, blank=True) #"This text explains what the action is about, in 20 words or less."
     average_points = models.PositiveIntegerField(default=0)

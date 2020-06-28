@@ -241,13 +241,13 @@ class CarbonCalculator:
                                 response_6=item[14], skip_6=skip[5])
                             #print('Importing Question ',question.name,': ',question.question_text)
 
-                            if len(items)>19:
-                                if items[16].length>0:
-                                    question.minimum_value = eval(items[16])
-                                if items[17].length>0:
-                                    question.maximum_value = eval(items[17])
-                                if items[18].length>0:
-                                    question.typical_value = eval(items[18])
+                            if len(item)>19:
+                                if len(item[16]):
+                                    question.minimum_value = eval(item[16])
+                                if len(item[17])>0:
+                                    question.maximum_value = eval(item[17])
+                                if len(item[18])>0:
+                                    question.typical_value = eval(item[18])
 
                             question.save()
                             num+=1
@@ -266,7 +266,7 @@ class CarbonCalculator:
                         if first:
                             t = {}
                             for i in range(len(item)):
-                                t[item] = i
+                                t[item[i]] = i
                             first = False
                         else:
                             name = item[0]
@@ -284,7 +284,7 @@ class CarbonCalculator:
                             if len(item)>=4 and name!='':
                                 picture = SavePic2Media(item[t["Picture"]])
                                 action = Action(name=item[0],
-                                    title = item[t["Title]"]],
+                                    title = item[t["Title"]],
                                     description=item[t["Description"]],
                                     helptext=item[t["Helptext"]],
                                     average_points=int(eval(item[t["Avg points"]])),
