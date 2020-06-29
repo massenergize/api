@@ -8,9 +8,7 @@ import pprint, sys
 from django.utils import timezone #For keeping track of when the consistency was last checked
 
 OUTPUTS_FILE   = "carbon_calculator/tests/expected_outputs.txt"
-INPUTS_FILE    = "carbon_calculator/tests/Inputs.txt"
-NEW_ACTION     = "New action"
-REMOVED_ACTION = "Removed action"
+INPUTS_FILE    = "carbon_calculator/tests/allPossibleInputs.txt"
 VALUE_DIFF     = "Value difference"
 
 # Create your tests here.
@@ -35,8 +33,9 @@ class CarbonCalculatorTest(TestCase):
             populate_inputs_file()
             self.input_data = []
         else:
-            self.input_data = self.read_inputs(os.getenv(self, "TEST_INPUTS"))
-            print(self.input_data)
+            infile = os.getenv("TEST_INPUTS",default=INPUTS_FILE)
+            print("Using input file: "+infile)
+            self.input_data = self.read_inputs(self,infile)
 
         self.output_data = []
         self.differences = []
@@ -83,22 +82,20 @@ class CarbonCalculatorTest(TestCase):
         if len(self.input_data) <= 0:
             return
 
-        #got_inputs, self.got_outputs, inputs, prev_outputs = self.get_consistency_files()
-        #if not got_inputs:
-        #    return
-        #Run evals for all values
-            
         self.output_data = self.eval_all_actions(self.input_data)
+
         #Compare
-        self.differences = self.compare(self.output_data, self.input_data)
-        #self.dump_outputs(pprint.pformat(self.input_data, self.output_data))
+        self.differences = self.compare(self.input_data, self.output_data)
+
         self.pretty_print_diffs(
             self.differences,
-            self.input_timestamp,
-            self.output_timestamp)
+            self.input_timestamp)
 
-        if len(self.differences)>0:
-            self.write_outputs(os.getenv("TEST_OUTPUTS"))
+        numDifferences = len(self.differences)
+        if numDifferences > 0:
+            self.write_outputs(os.getenv("TEST_OUTPUTS",default=OUTPUTS_FILE))
+
+        self.assertEqual(numDifferences,0)
 
     def read_inputs(self,filename):
         try:
@@ -119,37 +116,14 @@ class CarbonCalculatorTest(TestCase):
         for line in self.output_data:
             outputLine(line,filename,False)
 
-    #def get_consistency_files(self):
-    #   """Return content needed for the consistency test"""
-    #    got_inputs  = True
-    #    got_outputs = True
-    #    try:
-    #        f = open(INPUTS_FILE, 'r')
-    #        inputs = [eval(i.strip()) for i in f.readlines()]
-    #        f.close()
-    #    except FileNotFoundError:
-    #        print("Could not find inputs file, aborting consistency check")
-    #        got_inputs = False
-    #        inputs = {}
-    #    try:
-    ##        f = open(OUTPUTS_FILE, 'r')
-    #        raw_prev_outputs = f.read() #No code to ensure this isn't empty yet
-    #        prev_outputs = eval(raw_prev_outputs)
-    #        f.close()
-    #    except FileNotFoundError:
-    #        f = open(OUTPUTS_FILE, "w")
-    ##        f.close()
-    #        got_outputs = False
-    #        prev_outputs = {}
-    #    return got_inputs, got_outputs, inputs, prev_outputs
-
     def eval_all_actions(self, inputs):
         """Run the estimate method of all the actions of the Carbon Calculator."""
         self.output_timestamp = {"Timestamp" : timezone.now().isoformat(" ")} #Time of last test
+        output_data = []
         for aip in inputs: #aip = action inputs pair
             try:
-                output_data.update(
-                    {aip["Action"] : jsons.loads( #Response of estimate in dict form
+                output_data.append(
+                    { "Action" : aip['Action'], "inputs" : aip['inputs'], 'outputs' : jsons.loads( #Response of estimate in dict form
                         self.client.post(
                             "/cc/estimate/{}".format(aip['Action']), aip["inputs"]
                                 ).content)}) #Throwing errors, need a better inputs file
@@ -157,7 +131,7 @@ class CarbonCalculatorTest(TestCase):
                 pass #Don't clutter the screen
         return output_data
 
-    def compare(self, new, old):
+    def compare(self, old, new):
         """
         Compare the old set of results with the new set.
 
@@ -169,41 +143,31 @@ class CarbonCalculatorTest(TestCase):
         For a differing value between the two aggregates
         ("Value difference", NEW_VALUE, OLD_VALUE)
         """
-        #print(new, old)
         differences = []
-        new_actions = [i for i in new.keys()]
-        old_actions = [i for i in old.keys()]
-        print(new_actions, old_actions)
-        shared_actions = [] #Actions that are in both lists, and can be compared
-        for action in new_actions:
-            if action is not "Timestamp":
-                if action in old_actions:
-                        shared_actions.append(action)
-                else:
-                    differences.append((NEW_ACTION, action))
-        for action in old_actions:
-            if not action in new_actions and action is not "Timestamp":
-                differences.append((REMOVED_ACTION, action))
-        for action in shared_actions:
-            for result_aspect in new[action].keys(): #status, points, cost, etc
-                if not new[action][result_aspect] == old[action][result_aspect]:
-                    differences.append((
-                        VALUE_DIFF,
-                        result_aspect,
-                        new[action][result_aspect],
-                        old[action][result_aspect]))
+
+        for i in range(len(old)):
+            action = old[i]["Action"]
+            inputs = old[i]["inputs"]
+            outputs_old = old[i]["outputs"]
+            outputs_new = new[i]["outputs"]
+
+            for key in ["status", "carbon_points", "cost", "savings"]:
+                if not outputs_new[key] == outputs_old[key]:
+                    differences.append((action, inputs,
+                        key,
+                        outputs_old[key],
+                        outputs_new[key]))
         return differences
 
-    #def dump_outputs(self, outputs):
-    #    """Dump the outputs of all the CC method calls into the OUTPUTS_FILE"""
-    #    f = open(OUTPUTS_FILE, "w")
-    #    f.write(str(output_data))
-    #    f.close()
-
-    def pretty_print_diffs(self, diffs, oldtime, newtime):
-        print("\nDifferences: " + str(diffs)) #Not pretty yet
-
-
+    def pretty_print_diffs(self, diffs, oldtime):
+        if len(diffs) > 0:
+            hdr = "\ncarbon_calculator results inconsistent with input data from "+str(oldtime) + "\n# differences: %d\n======================================================" % len(diffs)
+            print(hdr)
+            for diff in diffs:
+                print(str(diff)) #Not pretty yet
+            print("\n")
+        else:
+            print("carbon_calculator results consistent with input data from "+str(oldtime))
 
 def outputLine(data, filename, new=False):
     tag = "a"
@@ -213,12 +177,6 @@ def outputLine(data, filename, new=False):
     f = open(filename, tag)
     f.write(str(data) + "\n")
     f.close()
-
-#def get_all_action_names():
-#    client   = Client()
-#    response = client.get("/cc/info/actions")
-#    data     = jsons.loads(response.content)["actions"]
-#    return [i["name"] for i in data]
 
 def populate_inputs_file():
     client      = Client()
@@ -292,19 +250,6 @@ def populate_inputs_file():
 
         msg = "Action '%s', %d possible inputs" % (actionName, ni)
         print(msg)
-
-        #generate the default values list
-        #try:
-        #    outputLine(
-        #        jsons.loads(
-        #            client.post(
-        #                "/cc/getInputs/{}".format(name), {}
-        #                ).content
-        #            ),
-        #            filename_def
-        #        )
-        #except:
-        #    pass
 
     msg = "Number possible calculator inputs with all choices = %d" % np
     print(msg)
