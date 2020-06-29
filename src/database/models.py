@@ -551,7 +551,7 @@ class Team(models.Model):
   Attributes
   ----------
   name : str
-    name of the team
+    name of the team.  Need not be unique
   description: str
     description of this team 
   admins: ManyToMany
@@ -571,14 +571,26 @@ class Team(models.Model):
     about this goal
   """
   id = models.AutoField(primary_key=True)
-  #Team names should be unique globally
+  #Team names should be unique globally (Not!)
   name = models.CharField(max_length=SHORT_STR_LEN)
+  tagline = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
+
+
   admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
     blank=True) 
   members = models.ManyToManyField(UserProfile, related_name='team_members', 
     blank=True) 
-  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+
+  # change this from ForeignKey to ManyToManyField.  Change on_delete to SET_NULL and allow null for community
+  community = models.ManyToManyField(Community, null=True, on_delete=models.SET_NULL)
+  # new fields
+  images = models.ManyToManyField(Media, blank=True)                        # 0 or more photos - could be a slide show
+  video = model.ForeignKey(Media, blank=True)                               # allow one video
+  is_closed_team = models.BooleanField(default=False, blank=True)           # by default, teams are open
+  team_page_options = models.JSONField(blank=True)                          # settable team page options
+  parent = models.ForeignKey(Team, null=True, on_delete=models.SET_NULL)    # for the case of sub-teams
+
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='team_logo')
