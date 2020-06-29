@@ -145,7 +145,7 @@ def EvalElectricMower(inputs):
         kwh_per_mow = getDefault(locality,'lawn_mow_kwh_5000sf', 2.)        # guesstimate
         co2_per_elec_mow = kwh_per_mow * co2_per_kwh
 
-        print(total_mows, lawn_size/STANDARD_LAWNSIZE)
+        #print(total_mows, lawn_size/STANDARD_LAWNSIZE)
         points = total_mows * (lawn_size/STANDARD_LAWNSIZE) * (co2_per_gas_mow - co2_per_elec_mow)
         cost = getDefault(locality,'lawn_cost_elec_mower', 400.)
         explanation = "Switching your gas mower with electric is cleaner and less noisy, besides reducing emissions."

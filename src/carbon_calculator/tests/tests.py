@@ -5,6 +5,7 @@ import json
 import jsons
 import os
 import pprint, sys
+from django.utils import timezone #For keeping track of when the consistency was last checked
 
 OUTPUTS_FILE   = "carbon_calculator/tests/expected_outputs.txt"
 INPUTS_FILE    = "carbon_calculator/tests/Inputs.txt"
@@ -28,23 +29,22 @@ class CarbonCalculatorTest(TestCase):
                 "Defaults":"carbon_calculator/content/exportdefaults.csv"
                 })
 
-        self.differences = []
-        self.got_outputs = True
+        generate_inputs = eval(os.getenv("GENERATE_INPUTS"))
+        if generate_inputs > 0:
+            print("Generating Carbon Calculator input files")
+            populate_inputs_file()
+            self.input_data = []
+        else:
+            self.input_data = self.read_inputs(os.getenv(self, "TEST_INPUTS"))
+            print(self.input_data)
 
-        self.input_data = read_inputs(os.getenv("TEST_INPUTS"))
         self.output_data = []
+        self.differences = []
 
     @classmethod
     def tearDownClass(self):
         print("tearDownClass")
 
-        generate_inputs = eval(os.getenv("GENERATE_INPUTS"))
-        if generate_inputs > 0:
-            print("Generating Carbon Calculator input files")
-            populate_inputs_file()
-
-        else:
-            write_outputs(os.getenv("TEST_OUTPUTS"))
 
     def test_info_actions(self):
         # test routes function
@@ -69,33 +69,83 @@ class CarbonCalculatorTest(TestCase):
         points = data["actions"][0]["average_points"]
         self.assertEqual(points,50)
 
-    def get_consistency_files(self):
-        """Return content needed for the consistency test"""
-        got_inputs  = True
-        got_outputs = True
+    def test_consistency(self):
+        """
+        Test if the results of all estimation calls match those of the last run.
+
+        Get the inputs to each method from the INPUTS_FILE, as well as the
+        previous outputs from the OUTPUTS_FILE. Call all methods of the carbon
+        calculator with the inputs retrieved earlier, and compare the results
+        with the results of the last run. Finally, pretty print the differences
+        between this test run and the last one. Don't return anything.
+        """
+        #Check for required data
+        if len(self.input_data) <= 0:
+            return
+
+        #got_inputs, self.got_outputs, inputs, prev_outputs = self.get_consistency_files()
+        #if not got_inputs:
+        #    return
+        #Run evals for all values
+            
+        self.output_data = self.eval_all_actions(self.input_data)
+        #Compare
+        self.differences = self.compare(self.output_data, self.input_data)
+        #self.dump_outputs(pprint.pformat(self.input_data, self.output_data))
+        self.pretty_print_diffs(
+            self.differences,
+            self.input_timestamp,
+            self.output_timestamp)
+
+        if len(self.differences)>0:
+            self.write_outputs(os.getenv("TEST_OUTPUTS"))
+
+    def read_inputs(self,filename):
         try:
-            f = open(INPUTS_FILE, 'r')
+            f = open(filename, 'r')
+            header = eval(f.readline().strip())
+            self.input_timestamp = header["Timestamp"]
             inputs = [eval(i.strip()) for i in f.readlines()]
             f.close()
-        except FileNotFoundError:
-            print("Could not find inputs file, aborting consistency check")
-            got_inputs = False
-            inputs = {}
-        try:
-            f = open(OUTPUTS_FILE, 'r')
-            raw_prev_outputs = f.read() #No code to ensure this isn't empty yet
-            prev_outputs = eval(raw_prev_outputs)
-            f.close()
-        except FileNotFoundError:
-            f = open(OUTPUTS_FILE, "w")
-            f.close()
-            got_outputs = False
-            prev_outputs = {}
-        return got_inputs, got_outputs, inputs, prev_outputs
+        except:
+            inputs = []
+            print("Exception from read_inputs")
+        return inputs
+
+    def write_outputs(self, filename):
+        data = {"Timestamp": self.output_timestamp}
+        outputLine(data,filename,True)
+
+        for line in self.output_data:
+            outputLine(line,filename,False)
+
+    #def get_consistency_files(self):
+    #   """Return content needed for the consistency test"""
+    #    got_inputs  = True
+    #    got_outputs = True
+    #    try:
+    #        f = open(INPUTS_FILE, 'r')
+    #        inputs = [eval(i.strip()) for i in f.readlines()]
+    #        f.close()
+    #    except FileNotFoundError:
+    #        print("Could not find inputs file, aborting consistency check")
+    #        got_inputs = False
+    #        inputs = {}
+    #    try:
+    ##        f = open(OUTPUTS_FILE, 'r')
+    #        raw_prev_outputs = f.read() #No code to ensure this isn't empty yet
+    #        prev_outputs = eval(raw_prev_outputs)
+    #        f.close()
+    #    except FileNotFoundError:
+    #        f = open(OUTPUTS_FILE, "w")
+    ##        f.close()
+    #        got_outputs = False
+    #        prev_outputs = {}
+    #    return got_inputs, got_outputs, inputs, prev_outputs
 
     def eval_all_actions(self, inputs):
         """Run the estimate method of all the actions of the Carbon Calculator."""
-        output_data = {"Timestamp" : timezone.now().isoformat(" ")} #Time of last test
+        self.output_timestamp = {"Timestamp" : timezone.now().isoformat(" ")} #Time of last test
         for aip in inputs: #aip = action inputs pair
             try:
                 output_data.update(
@@ -144,39 +194,14 @@ class CarbonCalculatorTest(TestCase):
                         old[action][result_aspect]))
         return differences
 
-    def dump_outputs(self, outputs):
-        """Dump the outputs of all the CC method calls into the OUTPUTS_FILE"""
-        f = open(OUTPUTS_FILE, "w")
-        f.write(str(outputs))
-        f.close()
+    #def dump_outputs(self, outputs):
+    #    """Dump the outputs of all the CC method calls into the OUTPUTS_FILE"""
+    #    f = open(OUTPUTS_FILE, "w")
+    #    f.write(str(output_data))
+    #    f.close()
 
     def pretty_print_diffs(self, diffs, oldtime, newtime):
         print("\nDifferences: " + str(diffs)) #Not pretty yet
-
-    def test_consistency(self):
-        """
-        Test if the results of all estimation calls match those of the last run.
-
-        Get the inputs to each method from the INPUTS_FILE, as well as the
-        previous outputs from the OUTPUTS_FILE. Call all methods of the carbon
-        calculator with the inputs retrieved earlier, and compare the results
-        with the results of the last run. Finally, pretty print the differences
-        between this test run and the last one. Don't return anything.
-        """
-        #Check for required files
-        got_inputs, self.got_outputs, inputs, prev_outputs = self.get_consistency_files()
-        if not got_inputs:
-            return
-        #Run evals for all values
-        outputs = self.eval_all_actions(inputs)
-        #Compare
-        if self.got_outputs:
-            self.differences = self.compare(outputs, prev_outputs)
-        self.dump_outputs(pprint.pformat(inputs, outputs))
-        self.pretty_print_diffs(
-            self.differences,
-            prev_outputs["Timestamp"],
-            outputs["Timestamp"])
 
 
 
@@ -189,26 +214,11 @@ def outputLine(data, filename, new=False):
     f.write(str(data) + "\n")
     f.close()
 
-
-def read_inputs(filename):
-        try:
-            f = open(filename, 'r')
-            inputs = [eval(i.strip()) for i in f.readlines()]
-            f.close()
-        except:
-            inputs = []
-            print("Exception from read_inputs")
-        return inputs
-        
-
-def write_outputs(filename):
-    outputLine(data,filename,True)
-
-def get_all_action_names():
-    client   = Client()
-    response = client.get("/cc/info/actions")
-    data     = jsons.loads(response.content)["actions"]
-    return [i["name"] for i in data]
+#def get_all_action_names():
+#    client   = Client()
+#    response = client.get("/cc/info/actions")
+#    data     = jsons.loads(response.content)["actions"]
+#    return [i["name"] for i in data]
 
 def populate_inputs_file():
     client      = Client()
@@ -217,13 +227,15 @@ def populate_inputs_file():
     names       = [i["name"] for i in data]
 
     filename_all = "carbon_calculator/tests/" + "allPossibleInputs.txt"
-    outputLine("# All Possible Calculator Inputs", filename_all, True)
+    data = {"Timestamp" : timezone.now().isoformat(" "), "Contents" : "All Possible Calculator Inputs"}
+    outputLine(data, filename_all, True)
     filename_def = "carbon_calculator/tests/" + "defaultInputs.txt"
-    outputLine("# Default Calculator Inputs", filename_def, True)
+    data = {"Timestamp" : timezone.now().isoformat(" "), "Contents" : "Default Calculator Inputs"}
+    outputLine(data, filename_def, True)
     np = 0    
     for name in names:
         # get info on the action to find allowed parameter values
-        print("URL: /cc/info/action/{}".format(name))
+        #print("URL: /cc/info/action/{}".format(name))
         response = client.get("/cc/info/action/{}".format(name))
         data = response.json() #jsons.loads(response.content, {})
         actionName = data["action"]["name"]
@@ -262,8 +274,6 @@ def populate_inputs_file():
                         actionPars["inputs"][question["name"]] = val
 
             outputs = client.get("/cc/estimate/{}".format(actionPars['Action']), actionPars["inputs"]).content.decode("utf-8")
-            if ni<10:
-                print(outputs)
             actionPars["outputs"] = eval(outputs)
             outputLine(actionPars, filename_all)
             np += 1
@@ -284,17 +294,17 @@ def populate_inputs_file():
         print(msg)
 
         #generate the default values list
-        try:
-            outputLine(
-                jsons.loads(
-                    client.post(
-                        "/cc/getInputs/{}".format(name), {}
-                        ).content
-                    ),
-                    filename_def
-                )
-        except:
-            pass
+        #try:
+        #    outputLine(
+        #        jsons.loads(
+        #            client.post(
+        #                "/cc/getInputs/{}".format(name), {}
+        #                ).content
+        #            ),
+        #            filename_def
+        #        )
+        #except:
+        #    pass
 
     msg = "Number possible calculator inputs with all choices = %d" % np
     print(msg)
