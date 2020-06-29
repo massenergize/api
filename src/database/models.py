@@ -585,9 +585,9 @@ class Team(models.Model):
   # change this from ForeignKey to ManyToManyField.  Change on_delete to SET_NULL and allow null for community
   community = models.ManyToManyField(Community, null=True, on_delete=models.SET_NULL)
   # new fields
-  images = models.ManyToManyField(Media, blank=True)                        # 0 or more photos - could be a slide show
+  image = models.ManyToManyField(Media, blank=True)                         # 0 or more photos - could be a slide show
   video = model.ForeignKey(Media, blank=True)                               # allow one video
-  is_closed_team = models.BooleanField(default=False, blank=True)           # by default, teams are open
+  is_closed = models.BooleanField(default=False, blank=True)                # by default, teams are open
   team_page_options = models.JSONField(blank=True)                          # settable team page options
   parent = models.ForeignKey(Team, null=True, on_delete=models.SET_NULL)    # for the case of sub-teams
 
@@ -611,12 +611,14 @@ class Team(models.Model):
     return self.name
 
   def info(self):
-    return model_to_dict(self, ['id', 'name', 'description'])
+    return model_to_dict(self, ['id', 'name', 'tagline', 'description'])
 
   def simple_json(self):
     res =  self.info()
     res['community'] = get_json_if_not_none(self.community)
     res['logo'] = get_json_if_not_none(self.logo)
+    res['is_closed'] = get_json_if_not_none(self.is_closed)
+    res['parent'] = get_json_if_not_none(self.parent)
     return res
 
   def full_json(self):
@@ -626,7 +628,6 @@ class Team(models.Model):
     data['goal'] = get_json_if_not_none(self.goal)
     data['banner'] = get_json_if_not_none(self.banner)
     return data
-
 
   class Meta:
     ordering = ('name',)
