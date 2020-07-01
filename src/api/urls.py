@@ -1,6 +1,7 @@
 from api.handlers.action import ActionHandler
 from api.handlers.admin import AdminHandler
 from api.handlers.community import CommunityHandler
+from api.handlers.download import DownloadHandler
 from api.handlers.event import EventHandler
 from api.handlers.goal import GoalHandler
 from api.handlers.graph import GraphHandler
@@ -28,6 +29,7 @@ urlpatterns.extend(ActionHandler().get_routes_to_views())
 urlpatterns.extend(ActionsPageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(AdminHandler().get_routes_to_views())
 urlpatterns.extend(CommunityHandler().get_routes_to_views())
+urlpatterns.extend(DownloadHandler().get_routes_to_views())
 urlpatterns.extend(ContactUsPageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(DonatePageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(EventHandler().get_routes_to_views())
