@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from urllib.parse import urlencode
-from database.models import Team, Community, UserProfile, Action, UserActionRel, TeamMember
+from database.models import Team, Community, UserProfile, Action, UserActionRel, TeamMember, RealEstateUnit
 from carbon_calculator.models import Action as CCAction
 
 class TeamsTestCase(TestCase):
@@ -34,24 +34,30 @@ class TeamsTestCase(TestCase):
     self.ADMIN2.is_admin = True
     self.ADMIN2.save()
 
-  #TODO: add assert for success being true before other asserts?
 
   def test_info(self):
     info_response = self.client.post('/v3/teams.info', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
+
+    self.assertTrue(info_response["success"])
 
     self.assertEqual(self.TEAM1.name, info_response['data']['name'])
 
 
   def test_create(self): # same as add
-    create_response = self.client.post('/v3/teams.create', urlencode({"community_id": self.COMMUNITY.id, "name": "Blah Blah", "admin_emails": self.USER1.email}), content_type="application/x-www-form-urlencoded").toDict()
+    name = "Foo Bar"
+    create_response = self.client.post('/v3/teams.create', urlencode({"community_id": self.COMMUNITY.id, "name": name, "admin_emails": self.USER1.email}), content_type="application/x-www-form-urlencoded").toDict()
 
-    self.assertEqual("Blah Blah", create_response['data']['name'])
+    self.assertTrue(create_response["success"])
+
+    self.assertEqual(name, create_response['data']['name'])
+
 
   # TODO: doesn't test providing no community id in order to list the teams for the user only
+  # TODO: test published/unpublished teams
   def test_list(self):
     list_response = self.client.post('/v3/teams.list', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
 
-    print(list_response)
+    self.assertTrue(list_response["success"])
 
     self.assertIs(2, len(list_response['data']))
 
@@ -65,25 +71,21 @@ class TeamsTestCase(TestCase):
     cca2 = CCAction.objects.create(name="CC Action 2", average_points=100, questions="bar")
     action1 = Action.objects.create(calculator_action=cca1)
     action2 = Action.objects.create(calculator_action=cca2)
-    
-    '''
-    Fix error arising somewhere in the below code:
-      django.db.utils.IntegrityError: null value in column "real_estate_unit_id" violates not-null  constraint
-      DETAIL:  Failing row contains (1, DONE, 2020-06-29 23:56:36.842465+00, 2020-06-29 23:56:36. 842499+00, 1, null, 45b6314f-fc3d-4ac8-b5de-ad2f2d5ce7e1, null, f).
-    '''
-
-    UserActionRel.objects.create(user=self.USER1, action=action1, status="DONE")
-    UserActionRel.objects.create(user=self.USER2, action=action1, status="DONE")
-    UserActionRel.objects.create(user=self.USER2, action=action2, status="DONE")
+    reu = RealEstateUnit.objects.create(name="Josh's House", unit_type="RESIDENTIAL")
+    UserActionRel.objects.create(user=self.USER1, action=action1, status="DONE", real_estate_unit=reu)
+    UserActionRel.objects.create(user=self.USER2, action=action1, status="DONE", real_estate_unit=reu)
+    UserActionRel.objects.create(user=self.USER2, action=action2, status="DONE", real_estate_unit=reu)
 
     stats_response = self.client.post('/v3/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+
+    self.assertTrue(stats_response["success"])
 
     self.assertIs(2, len(stats_response['data']))
 
     team1stats, team2stats = stats_response['data'][0], stats_response['data'][1]
 
     self.assertEqual(self.TEAM1.name, team1stats['team']['name'])
-    self.assertEqual(self.TEAM1.name, team2stats['team']['name'])
+    self.assertEqual(self.TEAM2.name, team2stats['team']['name'])
 
     self.assertIs(1, team1stats['members'])
     self.assertIs(1, team2stats['members'])
@@ -96,10 +98,17 @@ class TeamsTestCase(TestCase):
     
 
   def test_update(self):
-    pass
+    new_name = "Arlingtonians"
+    update_response = self.client.post('/v3/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+
+    self.assertTrue(update_response["success"])
+
+    self.assertEqual(new_name, update_response["data"]["name"])
+    self.assertEqual(self.TEAM1.community.id, update_response["data"]["community"]["id"])
 
 
-  def test_delete(self): # same as remove
+  # TODO: figure out what the expected return behaviour is for the delete route
+  def test_delete(self):  # same as remove
     pass
 
 
@@ -107,7 +116,7 @@ class TeamsTestCase(TestCase):
     pass
 
 
-  def test_join(self): # same as addMembers
+  def test_join(self): # same as addMember
     pass
 
 
