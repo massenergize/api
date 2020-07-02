@@ -1,4 +1,4 @@
-from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -101,13 +101,11 @@ class CommunityStore:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
         new_community.logo = cLogo
-      
 
       #create a goal for this community
       community_goal = Goal.objects.create(name=f"{new_community.name}-Goal")
       new_community.goal = community_goal
       new_community.save()
-
 
       #now create all the pages
       aboutUsPage = AboutUsPageSettings.objects.filter(is_template=True).first()
@@ -160,6 +158,16 @@ class CommunityStore:
         impactPage.community = new_community
         impactPage.is_template = False
         impactPage.save()
+
+      # by adding TeamsPageSettings - since this doesn't exist for all communities, will it cause a problem? 
+      # Create it when TeamsPageSettings in admin portal
+      teamsPage = TeamsPageSettings.objects.filter(is_template=True).first()
+      if teamsPage:
+        teamsPage.pk = None 
+        teamsPage.title = f"Teams in this community"
+        teamsPage.community = new_community
+        teamsPage.is_template = False
+        teamsPage.save()
 
       comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=f"{new_community.name}-Admin-Group", community=new_community)
       comm_admin.save()

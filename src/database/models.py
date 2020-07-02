@@ -1919,6 +1919,8 @@ class SubscriberEmailPreference(models.Model):
   class Meta:
     db_table = 'subscriber_email_preferences'
 
+
+
 class HomePageSettings(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
@@ -2116,8 +2118,7 @@ class AboutUsPageSettings(models.Model):
 
 class ImpactPageSettings(models.Model):
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, 
-   db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
@@ -2146,6 +2147,47 @@ class ImpactPageSettings(models.Model):
     db_table = 'impact_page_settings'
     verbose_name_plural = "ImpactPageSettings"
 
+class PageSettings(models.Model):
+  """
+  Represents the basic page settings.
+
+  Attributes
+  ----------
+  subscriber: int
+    Foreign Key to a subscriber 
+  email_category: int
+    Foreign key to an email category
+  """
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+  title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  more_info = JSONField(blank=True, null=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
+    return res
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images.all()]
+    return res
+
+class TeamsPageSettings(PageSettings):
+
+  def __str__(self):             
+    return "TeamsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'teams_page_settings'
+    verbose_name_plural = "TeamsPageSettings"
 
 class Message(models.Model):
   """
