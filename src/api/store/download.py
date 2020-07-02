@@ -8,4 +8,16 @@ class DownloadStore:
   def __init__(self):
     self.name = "Download Store/DB"
 
-  # TODO: implement store methods
+  # TODO: implement
+
+  def users_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    try:
+      pass
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
+
+  def actions_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    try:
+      pass
+    except Exception as e:
+      return None, CustomMassenergizeError(e)
