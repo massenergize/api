@@ -189,7 +189,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Sentry Logging Initialization
 sentry_sdk.init(
-    dsn=os.environ.get('SENTRY_DNS'),
+    dsn=os.environ.get('SENTRY_DSN'),
     integrations=[DjangoIntegration()],
 
     # If you wish to associate users to errors (assuming you are using
