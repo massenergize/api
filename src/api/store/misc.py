@@ -2,6 +2,7 @@ from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMem
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
 
 class MiscellaneousStore:
   def __init__(self):
@@ -12,6 +13,7 @@ class MiscellaneousStore:
       main_menu = Menu.objects.all()
       return main_menu, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def backfill(self, context: Context, args) -> (list, CustomMassenergizeError):
@@ -45,6 +47,7 @@ class MiscellaneousStore:
 
       return {'teams_member_backfill': 'done'}, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -73,6 +76,7 @@ class MiscellaneousStore:
 
       return {'name':'community_member_backfill', 'status': 'done'}, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def backfill_graph_default_data(self, context: Context, args):
@@ -94,6 +98,7 @@ class MiscellaneousStore:
 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -111,6 +116,7 @@ class MiscellaneousStore:
 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -129,4 +135,5 @@ class MiscellaneousStore:
 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

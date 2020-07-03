@@ -5,6 +5,7 @@ from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die
 import random 
+from sentry_sdk import capture_message
 
 class CommunityStore:
   def __init__(self):
@@ -28,6 +29,7 @@ class CommunityStore:
 
       return community, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -49,6 +51,7 @@ class CommunityStore:
       })
       return user, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -70,6 +73,7 @@ class CommunityStore:
       })
       return user, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -85,6 +89,7 @@ class CommunityStore:
         return [], None
       return communities, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -194,6 +199,7 @@ class CommunityStore:
       
       return new_community, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -221,6 +227,7 @@ class CommunityStore:
 
       return new_community, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -238,6 +245,7 @@ class CommunityStore:
       # communities.update(is_deleted=True)
       return communities, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -255,6 +263,7 @@ class CommunityStore:
         return [], None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -267,6 +276,7 @@ class CommunityStore:
       communities = Community.objects.filter(is_deleted=False)
       return communities, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -277,5 +287,6 @@ class CommunityStore:
       graphs = Graph.objects.filter(is_deleted=False, community__id=community_id)
       return graphs, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(str(e))

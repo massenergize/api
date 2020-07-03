@@ -8,6 +8,7 @@ from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
 from .utils import get_community, get_user
+from sentry_sdk import capture_message
 
 class MessageStore:
   def __init__(self):
@@ -26,6 +27,7 @@ class MessageStore:
 
       return message, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -42,6 +44,7 @@ class MessageStore:
 
       return message, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -77,6 +80,7 @@ class MessageStore:
       return new_message, None 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def message_team_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
@@ -105,6 +109,7 @@ class MessageStore:
       return new_message, None 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -124,6 +129,7 @@ class MessageStore:
 
       return message, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -135,6 +141,7 @@ class MessageStore:
       #TODO: also remove it from all places that it was ever set in many to many or foreign key
       return messages.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -150,6 +157,7 @@ class MessageStore:
 
       return messages, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(str(e))
 
@@ -165,5 +173,6 @@ class MessageStore:
 
       return messages, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(str(e))

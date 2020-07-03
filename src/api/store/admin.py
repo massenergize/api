@@ -5,6 +5,7 @@ from _main_.utils.context import Context
 from .utils import get_community, get_user, get_community_or_die, send_slack_message
 import json
 from _main_.utils.constants import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from sentry_sdk import capture_message
 
 class AdminStore:
   def __init__(self):
@@ -33,6 +34,7 @@ class AdminStore:
       return user, None
       
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -59,6 +61,7 @@ class AdminStore:
       return user, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -67,6 +70,7 @@ class AdminStore:
       admins = UserProfile.objects.filter(is_super_admin=True)
       return admins, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -114,6 +118,7 @@ class AdminStore:
       return res, None
       
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -166,6 +171,7 @@ class AdminStore:
       return admin_group, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -201,6 +207,7 @@ class AdminStore:
 
       return community_admin_group, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -251,6 +258,7 @@ class AdminStore:
       return new_message, None 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -281,5 +289,6 @@ class AdminStore:
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
       return messages, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)

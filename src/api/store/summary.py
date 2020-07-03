@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models.query import QuerySet
+from sentry_sdk import capture_message
 
 class SummaryStore:
   def __init__(self):
@@ -45,6 +46,7 @@ class SummaryStore:
       ]
       return summary, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return {}, CustomMassenergizeError(e)
 
@@ -68,5 +70,6 @@ class SummaryStore:
       return summary, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(str(e))

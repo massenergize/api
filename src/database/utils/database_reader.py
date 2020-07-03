@@ -5,6 +5,7 @@ This is a factory dedicated to reading objects in the Massenergize Database
 from _main_.utils.constants import READ_ERROR_MSG
 from _main_.utils.utils import get_models_and_field_types
 from database import models
+from sentry_sdk import capture_message
 
 MODELS_AND_FIELDS = get_models_and_field_types(models)
 
@@ -44,6 +45,7 @@ class DatabaseReader:
         return (data, errors)
       return [], errors
     except Exception as e:
+      capture_message(str(e), level="error")
       return  None, [READ_ERROR_MSG, str(e)]
     
 

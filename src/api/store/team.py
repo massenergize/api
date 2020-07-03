@@ -5,6 +5,9 @@ from django.utils.text import slugify
 from _main_.utils.context import Context
 from .utils import get_community_or_die, get_user_or_die
 from database.models import Team, UserProfile
+from sentry_sdk import capture_message
+
+
 class TeamStore:
   def __init__(self):
     self.name = "Team Store/DB"
@@ -30,6 +33,7 @@ class TeamStore:
         teams = user.team_set.all()
       return teams, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -61,6 +65,7 @@ class TeamStore:
 
       return ans, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -110,6 +115,7 @@ class TeamStore:
 
       return new_team, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       if team:
         team.delete()
@@ -140,6 +146,7 @@ class TeamStore:
 
       return team, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
 
@@ -159,6 +166,7 @@ class TeamStore:
 
       return teams.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -173,6 +181,7 @@ class TeamStore:
       #team.save()
       return team, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def leave_team(self, team_id, user_id) -> (Team, MassEnergizeAPIError):
@@ -184,6 +193,7 @@ class TeamStore:
 
       return team, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def add_team_member(self, context: Context, args) -> (Team, MassEnergizeAPIError):
@@ -207,6 +217,7 @@ class TeamStore:
 
       return team_member, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -220,6 +231,7 @@ class TeamStore:
         res = team_member.delete()
       return res, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -251,6 +263,7 @@ class TeamStore:
 
       return res, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, InvalidResourceError()
 
@@ -275,6 +288,7 @@ class TeamStore:
       return teams, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(e)
 
@@ -286,5 +300,6 @@ class TeamStore:
       return teams, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(str(e))

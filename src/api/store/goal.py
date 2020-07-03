@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.db.models import F
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
 
 class GoalStore:
   def __init__(self):
@@ -13,6 +14,7 @@ class GoalStore:
       goal = Goal.objects.get(id=goal_id)
       return goal, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, InvalidResourceError()
 
@@ -55,6 +57,7 @@ class GoalStore:
 
       return goals, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -94,6 +97,7 @@ class GoalStore:
 
       return new_goal, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def update_goal(self, goal_id, args) -> (Goal, MassEnergizeAPIError):
@@ -111,6 +115,7 @@ class GoalStore:
       goal.update(**args)
       return goal.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def delete_goal(self, goal_id) -> (Goal, MassEnergizeAPIError):
@@ -123,6 +128,7 @@ class GoalStore:
         return None, InvalidResourceError()
       return goals_to_delete.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def copy_goal(self, goal_id) -> (Goal, MassEnergizeAPIError):
@@ -138,6 +144,7 @@ class GoalStore:
       new_goal.save()
       return new_goal, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -178,6 +185,7 @@ class GoalStore:
       return goals, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       import traceback
       traceback.print_exc()
@@ -189,6 +197,7 @@ class GoalStore:
       goals = Goal.objects.filter(is_deleted=False)
       return goals, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -200,6 +209,7 @@ class GoalStore:
         return None, InvalidResourceError()
       return goals_to_incr.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -211,4 +221,5 @@ class GoalStore:
         return None, InvalidResourceError()
       return goals_to_decrease.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

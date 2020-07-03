@@ -2,6 +2,7 @@ from database.models import ActionsPageSettings, UserProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
 
 class ActionsPageSettingsStore:
   def __init__(self):
@@ -14,6 +15,7 @@ class ActionsPageSettingsStore:
         return None, InvalidResourceError()
       return page, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -48,6 +50,7 @@ class ActionsPageSettingsStore:
       else:
         return None, CustomMassenergizeError("Please provide an id")
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -67,5 +70,6 @@ class ActionsPageSettingsStore:
       actions_page_settings = ActionsPageSettings.objects.all()
       return actions_page_settings, None
     except Exception as e:
+      capture_message(str(e), level="error")
       print(e)
       return None, CustomMassenergizeError(str(e))
