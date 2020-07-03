@@ -80,7 +80,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     #custom middlewares
-    'authentication.jwt_authentication_middleware.MassenergizeJWTAuthMiddleware'
+    'authentication.jwt_auth_middleware.MassenergizeJWTAuthMiddleware',
     'authentication.entity_authorization_middleware.EntityAuthorizationMiddleware'
 ]
 
