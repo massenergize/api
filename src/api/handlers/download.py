@@ -19,11 +19,9 @@ class DownloadHandler(RouteHandler):
   def registerRoutes(self) -> None:
     self.add("/downloads.users", self.users_download()) 
     self.add("/downloads.actions", self.actions_download())
-    
-  # TODO: a list of community ids instead? So super admins have the choice of doing some subset of communities?
 
   def users_download(self) -> function:
-    def users_download_view(request) -> None: 
+    def users_download_view(request) -> None:
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop('community_id', None)
@@ -31,10 +29,12 @@ class DownloadHandler(RouteHandler):
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       response = HttpResponse(content_type="text/csv")
-      response['Content-Disposition'] = 'attachment; filename="user-data.csv"'
+      filename = "community-%s-user-data.csv" % community_id if community_id else "all-community-user-data.csv"
+      response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+      response['Content-Disposition'] = 'attachment; filename="%s"' % filename
       writer = csv.writer(response)
       for row in users_download:
-        writer.write_row(row)
+        writer.writerow(row)
       return response
     return users_download_view
 
@@ -47,9 +47,11 @@ class DownloadHandler(RouteHandler):
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       response = HttpResponse(content_type="text/csv")
-      response['Content-Disposition'] = 'attachment; filename="user-data.csv"'
+      filename = "community-%s-action-data.csv" % community_id if community_id else "all-community-action-data.csv"
+      response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+      response['Content-Disposition'] = 'attachment; filename="%s"' % filename
       writer = csv.writer(response)
       for row in actions_download:
-        writer.write_row(row)
+        writer.writerow(row)
       return response
     return actions_download_view
