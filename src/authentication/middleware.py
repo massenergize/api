@@ -28,26 +28,16 @@ class MassenergizeJWTAuthMiddleware:
   
 
   def _get_auth_token(self, request):
-    try:
-      authz = request.headers.get('Authorization', None)
-      cleaned_path = request.path.split('/')[-1]
-      if (authz is None) and (cleaned_path in self.restricted_paths):
-        return None, NotAuthorizedError()
-      elif authz:
-        id_token = authz.split(' ')[-1]
-        return id_token, None
-      return None, None
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
-
+    if 'token' in request.COOKIES:
+      return request.COOKIES.get('token', None)
+    return None
 
 
   def process_view(self, request, view_func, *view_args, **view_kwargs):
 
     try:
       #extract JWT auth token
-      id_token, err = self._get_auth_token(request)
+      token, err = self._get_auth_token(request)
       if err:
         return err
       
@@ -57,8 +47,8 @@ class MassenergizeJWTAuthMiddleware:
       #set request body
       ctx.set_request_body(request)
 
-      if id_token:
-        decoded_token = jwt.decode(id_token, SECRET_KEY, algorithm='HS256')
+      if token:
+        decoded_token = jwt.decode(token, SECRET_KEY, algorithm='HS256')
         # at this point the user has an active session
         ctx.set_user_credentials(decoded_token)
         

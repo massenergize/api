@@ -69,7 +69,8 @@ def verify(request):
       }
 
       massenergize_jwt_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
-      return MassenergizeResponse(data={"idToken": str(massenergize_jwt_token)})
+      response = MassenergizeResponse(data=payload)
+      response.set_cookie("token", str(massenergize_jwt_token))
 
     else:
       return CustomMassenergizeError("Invalid Auth")
