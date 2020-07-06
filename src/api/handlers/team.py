@@ -58,7 +58,6 @@ class TeamHandler(RouteHandler):
       args: dict = context.args
 
       admin_emails = args.pop('admin_emails', '')
-      print(admin_emails, parse_str_list(admin_emails))
       args["admin_emails"] = parse_str_list(admin_emails)
       team_info, err = self.team.create_team(context, args)
       if err:

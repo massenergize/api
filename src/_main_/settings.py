@@ -16,6 +16,8 @@ from firebase_admin import credentials
 from .utils.utils import load_json
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -184,6 +186,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+# Sentry Logging Initialization
+sentry_sdk.init(
+    dsn=os.environ.get('SENTRY_DSN'),
+    integrations=[DjangoIntegration()],
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'

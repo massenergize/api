@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
+from sentry_sdk import capture_message
 
 class PolicyStore:
   def __init__(self):
@@ -15,6 +16,7 @@ class PolicyStore:
         return None, InvalidResourceError()
       return policy, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def list_policies(self, context: Context, args) -> (list, MassEnergizeAPIError):
@@ -22,6 +24,7 @@ class PolicyStore:
       policies = Policy.objects.filter(is_deleted=False)
       return policies, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -35,6 +38,7 @@ class PolicyStore:
         community.save()
       return new_policy, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -54,6 +58,7 @@ class PolicyStore:
           community.save()
       return policy, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -66,6 +71,7 @@ class PolicyStore:
         return None, InvalidResourceError()
       return policies_to_delete.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def copy_policy(self, policy_id) -> (Policy, MassEnergizeAPIError):
@@ -81,7 +87,7 @@ class PolicyStore:
       new_policy.save()
       return new_policy, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -112,7 +118,7 @@ class PolicyStore:
       return policies, None
  
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -121,4 +127,5 @@ class PolicyStore:
       policies = Policy.objects.filter(is_deleted=False)
       return policies, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
