@@ -42,8 +42,6 @@ class ActivityLogger:
     except Exception as e:
       capture_message(str(e), level="error")
     
-      print("Could not log messsage")
-  
     
   def log(self, params):
     threading.Thread(target=self.save_to_db, args=(params,)).start()

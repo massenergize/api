@@ -76,8 +76,6 @@ class DatabaseReader:
     
     if items:
       res = items.delete()
-      print(res)
-      pass
       return res[1], None
     return items, errors
     

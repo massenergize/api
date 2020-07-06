@@ -69,7 +69,6 @@ class UserHandler(RouteHandler):
       if err:
         return err
       user_info, err = self.service.create_user(context, args)
-      print(user_info, err)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

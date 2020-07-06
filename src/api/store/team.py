@@ -80,7 +80,6 @@ class TeamStore:
       #verify that provided emails are valid user
       for email in admin_emails:
         admin =  UserProfile.objects.filter(email=email).first()
-        print(email, admin)
         if admin:
           verified_admins.append(admin)
         else:

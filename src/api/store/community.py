@@ -233,7 +233,6 @@ class CommunityStore:
     try:
       communities = Community.objects.filter(**args)
       if len(communities) > 1:
-        print('here')
         return None, CustomMassenergizeError("You cannot delete more than one community at once")
       for c in communities:
         if "template" in c.name.lower():
