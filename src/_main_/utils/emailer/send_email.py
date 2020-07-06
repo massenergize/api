@@ -43,7 +43,6 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
   )
 
   if not ok:
-    print(f"Error occurred in sending some emails")
     capture_message("Error occurred in sending some emails", level="error")
 
     return False

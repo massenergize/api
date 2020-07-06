@@ -82,7 +82,6 @@ class ActionStore:
       if calculator_action:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
         if ccAction:
-          print(ccAction)
           new_action.calculator_action = ccAction
 
       new_action.save()
