@@ -37,10 +37,8 @@ class MassenergizeJWTAuthMiddleware:
 
     try:
       #extract JWT auth token
-      token, err = self._get_auth_token(request)
-      if err:
-        return err
-      
+      token = self._get_auth_token(request)
+ 
       # add a context: (this will contain all info about this user's session info)
       ctx = Context()
 
@@ -59,4 +57,6 @@ class MassenergizeJWTAuthMiddleware:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      return CustomMassenergizeError(e)
+      response =  CustomMassenergizeError(e)
+      response.delete_cookie("token")
+      return response
