@@ -30,6 +30,12 @@ class GraphService:
       return None, err
     return graph, None
 
+  def graph_actions_completed_by_team(self, context, args) -> (list, MassEnergizeAPIError):
+    graph, err = self.store.graph_actions_completed_by_team(context, args)
+    if err:
+      return None, err
+    return graph, None
+
   def graph_community_impact(self, context, args) -> (list, MassEnergizeAPIError):
     graph, err = self.store.graph_communities_impact(context, args)
     if err:

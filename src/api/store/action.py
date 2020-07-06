@@ -5,6 +5,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 import random
+from sentry_sdk import capture_message
+
 
 class ActionStore:
   def __init__(self):
@@ -24,6 +26,7 @@ class ActionStore:
         return None, InvalidResourceError()
       return action, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def list_actions(self, context: Context,community_id, subdomain) -> (list, MassEnergizeAPIError):
@@ -45,6 +48,7 @@ class ActionStore:
 
       return actions, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -78,14 +82,13 @@ class ActionStore:
       if calculator_action:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
         if ccAction:
-          print(ccAction)
           new_action.calculator_action = ccAction
 
       new_action.save()
       return new_action, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def copy_action(self, context: Context, action_id) -> (Action, MassEnergizeAPIError):
@@ -105,6 +108,8 @@ class ActionStore:
       new_action.vendors.set(old_vendors)
       return new_action, None
     except Exception as e:
+      capture_message(str(e), level="error")
+    
       return None, CustomMassenergizeError(str(e))
 
 
@@ -146,6 +151,7 @@ class ActionStore:
       action.save()
       return action, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -157,6 +163,7 @@ class ActionStore:
       action_to_delete.save()
       return action_to_delete.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def list_actions_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
@@ -178,7 +185,7 @@ class ActionStore:
       return actions, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -189,5 +196,5 @@ class ActionStore:
       actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
       return actions, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

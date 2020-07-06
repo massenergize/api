@@ -7,6 +7,9 @@ from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
+
+
 class VendorStore:
   def __init__(self):
     self.name = "Vendor Store/DB"
@@ -24,7 +27,7 @@ class VendorStore:
 
       return vendor, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -50,6 +53,7 @@ class VendorStore:
 
       return vendors, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -97,6 +101,7 @@ class VendorStore:
 
       return new_vendor, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -152,7 +157,7 @@ class VendorStore:
       return vendor, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -163,6 +168,7 @@ class VendorStore:
       #TODO: also remove it from all places that it was ever set in many to many or foreign key
       return vendors.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -179,6 +185,7 @@ class VendorStore:
       vendor.save()
       return vendor, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -206,7 +213,7 @@ class VendorStore:
       vendors = community.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
       return vendors, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -215,5 +222,5 @@ class VendorStore:
       vendors = Vendor.objects.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
       return vendors, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
