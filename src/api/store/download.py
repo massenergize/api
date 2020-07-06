@@ -4,6 +4,7 @@ from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, UserActionRel, Testimonial, TeamMember
 from django.db.models import Q
 import traceback
+import time
 
 # TODO: proper logging/error handling to match Sam's work
 
@@ -19,18 +20,23 @@ class DownloadStore:
 
   def _community_users_download(self, community_id):
 
+    start_time = time.perf_counter()
+
+
     # TODO: figure out which of these two queries I should use...
+    # if the first one, make sure to select_related for the user
     users = [cm.user for cm in CommunityMember.objects.filter(community__id=community_id, is_deleted=False, user__is_deleted=False)]
-    print(users)
+    # print(users)
     users = UserProfile.objects.filter(communities__in=[community_id]).distinct()
-    print(users)
+    # print(users)
+
 
     # TODO: update actions query based on what works for the community actions query
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
-    teams = Team.objects.filter(community__id=community_id)
+    teams = Team.objects.filter(community__id=community_id, is_deleted=False)
 
-    # TODO: figure out what to prefetch/select to speed this up!!!
+    # TODO: how to speed up? select_related doesn't improve much
 
     columns = ['full_name',
                 'email',
@@ -39,14 +45,27 @@ class DownloadStore:
                 + [team.name for team in teams]
 
     data = [columns]
+
+    end_time = time.perf_counter()
+    print("setup: %f" % (end_time-start_time))
+
     for user in users:
+
+      start_time = time.perf_counter()
+
 
       row = [user.full_name,
             user.email,
             'super admin' if user.is_super_admin else
-                'community admin' if user.is_super_admin else
+                'community admin' if user.is_community_admin else
                 'vendor' if user.is_vendor else
                 'community member']
+
+
+      end_time = time.perf_counter()
+      print("user: %f" % (end_time-start_time))
+
+      start_time = time.perf_counter()
 
       for action in actions:
         user_action_status = ''
@@ -57,7 +76,14 @@ class DownloadStore:
           if action_rel:
             user_action_status = action_rel.status
         row.append(user_action_status)
+
+
+      end_time = time.perf_counter()
+      print("actions: %f" % (end_time-start_time))
       
+      start_time = time.perf_counter()
+      
+      # this teams loop is taking up the most time BY FAR!
       for team in teams:
         user_team_status = ''
         team_member = TeamMember.objects.filter(user=user, team=team).first()
@@ -68,9 +94,14 @@ class DownloadStore:
             user_team_status = 'member'
         row.append(user_team_status)
 
+      end_time = time.perf_counter()
+      print("teams: %f" % (end_time-start_time))
+
       data.append(row)
     
-    print(data)
+    # print(data)
+
+
     return data
 
 
