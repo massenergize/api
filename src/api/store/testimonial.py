@@ -168,7 +168,6 @@ class TestimonialStore:
       return new_testimonial, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -201,7 +200,6 @@ class TestimonialStore:
       return testimonials, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -213,5 +211,4 @@ class TestimonialStore:
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))

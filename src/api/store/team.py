@@ -116,7 +116,6 @@ class TeamStore:
       return new_team, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       if team:
         team.delete()
       return None, CustomMassenergizeError(str(e))
@@ -167,7 +166,6 @@ class TeamStore:
       return teams.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -218,7 +216,6 @@ class TeamStore:
       return team_member, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
   def remove_team_member(self, context: Context, args) -> (Team, MassEnergizeAPIError):
@@ -232,7 +229,6 @@ class TeamStore:
       return res, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -264,7 +260,6 @@ class TeamStore:
       return res, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, InvalidResourceError()
 
 
@@ -289,7 +284,6 @@ class TeamStore:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
   def list_teams_for_super_admin(self, context: Context):
@@ -301,5 +295,4 @@ class TeamStore:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))

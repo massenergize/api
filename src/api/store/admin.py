@@ -259,7 +259,6 @@ class AdminStore:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
   def list_admin_messages(self, context: Context, args) -> (list, MassEnergizeAPIError):
@@ -290,5 +289,4 @@ class AdminStore:
       return messages, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)

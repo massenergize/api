@@ -15,7 +15,6 @@ class GoalStore:
       return goal, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, InvalidResourceError()
 
 
@@ -186,7 +185,6 @@ class GoalStore:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(e)

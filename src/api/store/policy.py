@@ -88,7 +88,6 @@ class PolicyStore:
       return new_policy, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))
 
 
@@ -120,7 +119,6 @@ class PolicyStore:
  
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 

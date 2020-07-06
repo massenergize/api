@@ -28,7 +28,6 @@ class MessageStore:
       return message, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
   def reply_from_team_admin(self, context, args) -> (dict, MassEnergizeAPIError):
@@ -45,7 +44,6 @@ class MessageStore:
       return message, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
   def message_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
@@ -130,7 +128,6 @@ class MessageStore:
       return message, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -158,7 +155,6 @@ class MessageStore:
       return messages, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))
 
   def list_team_admin_messages(self, context: Context):
@@ -174,5 +170,4 @@ class MessageStore:
       return messages, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))

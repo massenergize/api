@@ -48,7 +48,6 @@ class EventStore:
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -103,7 +102,6 @@ class EventStore:
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -160,7 +158,6 @@ class EventStore:
       return events.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -183,7 +180,6 @@ class EventStore:
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -195,5 +191,4 @@ class EventStore:
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))

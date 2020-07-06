@@ -52,7 +52,6 @@ class CommunityStore:
       return user, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
   def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -74,7 +73,6 @@ class CommunityStore:
       return user, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -264,7 +262,6 @@ class CommunityStore:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -288,5 +285,4 @@ class CommunityStore:
       return graphs, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))

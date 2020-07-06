@@ -150,7 +150,6 @@ class UserStore:
       return res, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -205,7 +204,6 @@ class UserStore:
       return users, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -217,7 +215,6 @@ class UserStore:
       return users, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))
 
 

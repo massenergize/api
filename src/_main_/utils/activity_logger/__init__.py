@@ -43,7 +43,6 @@ class ActivityLogger:
       capture_message(str(e), level="error")
     
       print("Could not log messsage")
-      print(e)
   
     
   def log(self, params):

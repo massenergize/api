@@ -123,7 +123,6 @@ class HomePageSettingsStore:
       return home_page_setting, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(e)
 
 
@@ -144,5 +143,4 @@ class HomePageSettingsStore:
       return home_page_settings, None
     except Exception as e:
       capture_message(str(e), level="error")
-      print(e)
       return None, CustomMassenergizeError(str(e))
