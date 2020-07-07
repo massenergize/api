@@ -3,11 +3,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, UserActionRel, Testimonial, TeamMember
 from django.db.models import Q
+from sentry_sdk import capture_message
 
-import traceback
-import time
-
-# TODO: proper logging/error handling to match Sam's work
 # TODO: actions queries seem to be returning extra actions with "copy" at the end of their title
 # TODO: verify that the correct users are being fetched for _community_users_download
 
@@ -214,7 +211,7 @@ class DownloadStore:
       else:
         return None, NotAuthorizedError()
     except Exception as e:
-      print(traceback.format_exc())
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -230,5 +227,5 @@ class DownloadStore:
       else:
           return None, NotAuthorizedError()
     except Exception as e:
-      print(traceback.format_exc())
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
