@@ -16,9 +16,25 @@ class DownloadHandler(RouteHandler):
     self.service = DownloadService()
     self.registerRoutes()
 
+
   def registerRoutes(self) -> None:
     self.add("/downloads.users", self.users_download()) 
     self.add("/downloads.actions", self.actions_download())
+
+
+  def _get_csv_response(self, data, name, community_id):
+    response = HttpResponse(content_type="text/csv")
+    if not community_id:
+      filename = "all-community-%s-data.csv" % name
+    else:
+      filename = "community-%s-%s-data.csv" % (community_id, name)
+    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+    response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+    writer = csv.writer(response)
+    for row in data:
+      writer.writerow(row)
+    return response
+
 
   def users_download(self) -> function:
     def users_download_view(request) -> None:
@@ -28,15 +44,9 @@ class DownloadHandler(RouteHandler):
       users_download, err = self.service.users_download(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      response = HttpResponse(content_type="text/csv")
-      filename = "community-%s-user-data.csv" % community_id if community_id else "all-community-user-data.csv"
-      response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-      response['Content-Disposition'] = 'attachment; filename="%s"' % filename
-      writer = csv.writer(response)
-      for row in users_download:
-        writer.writerow(row)
-      return response
+      return self._get_csv_response(users_download, 'users', community_id)
     return users_download_view
+
 
   def actions_download(self) -> function:
     def actions_download_view(request) -> None: 
@@ -46,12 +56,5 @@ class DownloadHandler(RouteHandler):
       actions_download, err = self.service.actions_download(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      response = HttpResponse(content_type="text/csv")
-      filename = "community-%s-action-data.csv" % community_id if community_id else "all-community-action-data.csv"
-      response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-      response['Content-Disposition'] = 'attachment; filename="%s"' % filename
-      writer = csv.writer(response)
-      for row in actions_download:
-        writer.writerow(row)
-      return response
+      return self._get_csv_response(actions_download, 'actions', community_id)
     return actions_download_view
