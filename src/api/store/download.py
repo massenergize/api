@@ -2,7 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, UserActionRel, Testimonial, TeamMember
-from django.db.models import Q
+from django.db.models import Q, prefetch_related_objects
 import traceback
 import time
 
@@ -19,10 +19,6 @@ class DownloadStore:
 
 
   def _community_users_download(self, community_id):
-
-    start_time = time.perf_counter()
-
-
     # TODO: figure out which of these two queries I should use...
     # if the first one, make sure to select_related for the user
     users = [cm.user for cm in CommunityMember.objects.filter(community__id=community_id, is_deleted=False, user__is_deleted=False)]
@@ -30,13 +26,10 @@ class DownloadStore:
     users = UserProfile.objects.filter(communities__in=[community_id]).distinct()
     # print(users)
 
-
     # TODO: update actions query based on what works for the community actions query
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
     teams = Team.objects.filter(community__id=community_id, is_deleted=False)
-
-    # TODO: how to speed up? select_related doesn't improve much
 
     columns = ['full_name',
                 'email',
@@ -46,13 +39,7 @@ class DownloadStore:
 
     data = [columns]
 
-    end_time = time.perf_counter()
-    print("setup: %f" % (end_time-start_time))
-
     for user in users:
-
-      start_time = time.perf_counter()
-
 
       row = [user.full_name,
             user.email,
@@ -61,32 +48,29 @@ class DownloadStore:
                 'vendor' if user.is_vendor else
                 'community member']
 
-
-      end_time = time.perf_counter()
-      print("user: %f" % (end_time-start_time))
-
-      start_time = time.perf_counter()
+      # create collections with constant-time lookup. VERY much worth the up-front compute.
+      user_testimonial_action_ids = set([testimonial.action.id if testimonial.action else None
+                                  for testimonial in Testimonial.objects.filter(user=user)])
+      action_id_to_action_rel = {user_action_rel.action.id: user_action_rel
+                                  for user_action_rel in UserActionRel.objects.filter(user=user)}
 
       for action in actions:
         user_action_status = ''
-        if Testimonial.objects.filter(user=user, action=action).exists():
+        if action.id in user_testimonial_action_ids:
           user_action_status = 'testimonial'
+          end_time_1 = time.perf_counter()
         else:
-          action_rel = UserActionRel.objects.filter(user=user, action=action).first()
-          if action_rel:
-            user_action_status = action_rel.status
+          user_action_rel = action_id_to_action_rel.get(action.id, None)
+          if user_action_rel:
+            user_action_status = user_action_rel.status
+          end_time_1 = time.perf_counter()
         row.append(user_action_status)
 
+      user_team_members = TeamMember.objects.filter(user=user).select_related('team')
 
-      end_time = time.perf_counter()
-      print("actions: %f" % (end_time-start_time))
-      
-      start_time = time.perf_counter()
-      
-      # this teams loop is taking up the most time BY FAR!
       for team in teams:
         user_team_status = ''
-        team_member = TeamMember.objects.filter(user=user, team=team).first()
+        team_member = user_team_members.filter(team=team).first()
         if team_member:
           if team_member.is_admin:
             user_team_status = 'admin'
@@ -94,13 +78,7 @@ class DownloadStore:
             user_team_status = 'member'
         row.append(user_team_status)
 
-      end_time = time.perf_counter()
-      print("teams: %f" % (end_time-start_time))
-
       data.append(row)
-    
-    # print(data)
-
 
     return data
 
@@ -140,7 +118,6 @@ class DownloadStore:
                   cost.name if cost else '',
                   impact.name if impact else ''])
 
-    print(data)
     return data
 
 
