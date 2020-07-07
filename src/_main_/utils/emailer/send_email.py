@@ -1,6 +1,7 @@
 from django.core.mail import send_mail, EmailMessage, send_mass_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from sentry_sdk import capture_message
 
 FROM_EMAIL = 'no-reply@massenergize.org'
 
@@ -14,7 +15,7 @@ def send_massenergize_email(subject, msg, to):
   )
 
   if not ok:
-    print(f"Error Occurred in Sending Email to {to}")
+    capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
 
@@ -27,7 +28,7 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
   ok = msg.send(fail_silently=True)
 
   if not ok:
-    print(f"Error Occurred in Sending Email to {to}")
+    capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
 
@@ -42,8 +43,8 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
   )
 
   if not ok:
-    print(f"Error occurred in sending some emails")
+    capture_message("Error occurred in sending some emails", level="error")
+
     return False
 
-  print(f"{ok} sent emails")
   return True

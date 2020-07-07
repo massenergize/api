@@ -4,6 +4,7 @@ from _main_.utils.context import Context
 from django.db.models import Q
 import requests 
 import json
+from sentry_sdk import capture_message
 
 def get_community(community_id=None, subdomain=None):
   try:
@@ -12,6 +13,7 @@ def get_community(community_id=None, subdomain=None):
     elif subdomain: 
       return Community.objects.filter(subdomain=subdomain).first(), None
   except Exception as e:
+    capture_message(str(e), level="error")
     return None, CustomMassenergizeError(e)
 
   return None, CustomMassenergizeError("Missing community_id or subdomain field")
@@ -24,6 +26,7 @@ def get_user(user_id, email=None):
       return UserProfile.objects.filter(pk=user_id).first(), None
     return None, CustomMassenergizeError("Missing user_id or email field")
   except Exception as e:
+    capture_message(str(e), level="error")
     return None, CustomMassenergizeError(e)
 
 

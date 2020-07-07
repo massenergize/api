@@ -5,6 +5,7 @@ import pytz
 from django.utils import timezone
 from datetime import datetime
 import cv2
+from sentry_sdk import capture_message
 
 def get_request_contents(request):
   try:
@@ -24,7 +25,8 @@ def get_request_contents(request):
     
     return args
 
-  except Exception as e:
+  except Exception as e:    
+    capture_message(str(e), level="error")
     return {}
 
 def parse_list(d):
@@ -41,7 +43,8 @@ def parse_list(d):
         res.append(i)
     return res
 
-  except Exception as e:
+  except Exception as e:    
+    capture_message(str(e), level="error")
     return []
 
 def parse_str_list(d):
@@ -51,6 +54,7 @@ def parse_str_list(d):
       return tmp
     return []
   except Exception as e:
+    capture_message(str(e), level="error")
     return []
 
 def parse_bool(b):
@@ -62,18 +66,21 @@ def parse_string(s):
   try:
     return str(s)
   except Exception as e:
+    capture_message(str(e), level="error")
     return None
 
 def parse_int(b):
   try:
     return int(b)
   except Exception as e:
+    capture_message(str(e), level="error")
     return 1
 
 def parse_date(d):
   try:
     return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d %H:%M'))
   except Exception as e:
+    capture_message(str(e), level="error")
     return timezone.now()
 
 def rename_field(args, old_name, new_name):

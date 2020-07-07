@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
+from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups
 
 class UserStore:
@@ -14,6 +15,7 @@ class UserStore:
       user = get_user_or_die(context, args)
       return user, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def remove_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -24,6 +26,7 @@ class UserStore:
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def add_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -46,6 +49,7 @@ class UserStore:
 
       return new_unit, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def edit_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -73,6 +77,7 @@ class UserStore:
 
       return new_unit, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def list_households(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -81,6 +86,7 @@ class UserStore:
 
       return user.real_estate_units.all(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def list_users(self, community_id) -> (list, MassEnergizeAPIError):
@@ -97,6 +103,7 @@ class UserStore:
         return []
       return EventAttendee.objects.filter(attendee=user), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -142,7 +149,7 @@ class UserStore:
       }
       return res, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -196,7 +203,7 @@ class UserStore:
       users = remove_dups(users)
       return users, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -207,7 +214,7 @@ class UserStore:
       users = UserProfile.objects.filter(is_deleted=False)
       return users, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -256,6 +263,7 @@ class UserStore:
 
       return new_user_action_rel, None
     except Exception as e:
+      capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(str(e))
@@ -315,6 +323,7 @@ class UserStore:
 
       return new_user_action_rel, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -334,6 +343,7 @@ class UserStore:
 
       return todo, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -353,4 +363,5 @@ class UserStore:
       
       return todo, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

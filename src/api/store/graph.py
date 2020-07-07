@@ -6,6 +6,7 @@ from django.db.models import Q, prefetch_related_objects
 from .utils import get_community
 import time
 import timeit
+from sentry_sdk import capture_message
 
 class GraphStore:
   def __init__(self):
@@ -18,6 +19,7 @@ class GraphStore:
         return None, InvalidResourceError()
       return graph, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -39,6 +41,7 @@ class GraphStore:
 
       return graphs, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -82,6 +85,7 @@ class GraphStore:
       return res, None
       
     except Exception as e:
+      capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(e)
@@ -130,6 +134,7 @@ class GraphStore:
       return res, None
         
     except Exception as e:
+      capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(e)
@@ -203,6 +208,7 @@ class GraphStore:
         "data": res
       }, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -251,6 +257,7 @@ class GraphStore:
     
       return new_graph, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -268,7 +275,7 @@ class GraphStore:
 
       return None, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -278,6 +285,7 @@ class GraphStore:
       graphs.update(is_deleted=True, is_published=False)
       return graphs.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -310,6 +318,7 @@ class GraphStore:
       }, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -334,5 +343,5 @@ class GraphStore:
       }, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
