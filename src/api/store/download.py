@@ -81,8 +81,8 @@ class DownloadStore:
 
       row = [primary_community,
             secondary_community,
-            user.preferred_name if user.preferred_name else '',
             user.full_name,
+            user.preferred_name if user.preferred_name else '',
             user.email,
             'super admin' if user.is_super_admin else
                 'community admin' if user.is_community_admin else
