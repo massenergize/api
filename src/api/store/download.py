@@ -5,9 +5,6 @@ from database.models import UserProfile, CommunityMember, Action, Team, UserActi
 from django.db.models import Q
 from sentry_sdk import capture_message
 
-# TODO: actions queries seem to be returning extra actions with "copy" at the end of their title
-# TODO: verify that the correct users are being fetched for _community_users_download
-
 class DownloadStore:
 
   def __init__(self):
@@ -101,8 +98,8 @@ class DownloadStore:
 
 
   def _community_users_download(self, community_id):
-    users = [cm.user for cm in CommunityMember.objects.filter(community__id=community_id, is_deleted=False).select_related('user')]
-
+    users = [cm.user for cm in CommunityMember.objects.filter(community__id=community_id, \
+            is_deleted=False, user__is_deleted=False).select_related('user')]
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
     teams = Team.objects.filter(community__id=community_id, is_deleted=False)
