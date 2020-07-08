@@ -48,9 +48,7 @@ class DownloadStore:
 
 
   def _all_users_download(self):
-
     users = UserProfile.objects.filter(is_deleted=False)
-
     actions = Action.objects.filter(is_deleted=False)
     teams = Team.objects.filter(is_deleted=False)
 
@@ -132,8 +130,8 @@ class DownloadStore:
 
 
   def _all_actions_download(self):
-    actions = Action.objects.filter(is_deleted=False) \
-              .select_related('calculator_action', 'community').prefetch_related('tags')
+    actions = Action.objects.select_related('calculator_action', 'community') \
+            .prefetch_related('tags').filter(is_deleted=False)
 
     columns = ['community',
               'title',
@@ -146,8 +144,10 @@ class DownloadStore:
 
     for action in actions:
 
-      if action.community:
-        community = action.community.name if not action.is_global else 'global'
+      if action.is_global:
+        community = 'global'
+      elif action.community:
+        community = action.community.name
       average_carbon_points = action.calculator_action.average_points \
                           if action.calculator_action else action.average_carbon_score
       category = action.tags.filter(tag_collection__name='Category').first()
@@ -169,9 +169,10 @@ class DownloadStore:
 
   def _community_actions_download(self, community_id):
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
-      .filter(is_deleted=False).select_related('calculator_action').prefetch_related('tags')
+      .select_related('calculator_action').prefetch_related('tags').filter(is_deleted=False)
 
     columns = ['title',
+              'is_global',
               'average_carbon_points',
               'category',
               'cost',
@@ -188,6 +189,7 @@ class DownloadStore:
       impact = action.tags.filter(tag_collection__name='Impact').first()
 
       data.append([action.title,
+                  str(action.is_global),
                   average_carbon_points,
                   category.name if category else '',
                   cost.name if cost else '',

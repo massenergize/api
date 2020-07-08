@@ -7,7 +7,7 @@ from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 import csv
 
-# see: https://docs.djangoproject.com/en/3.0/howto/outputting-csv/#streaming-csv-files
+# see: https://docs.djangoproject.com/en/3.0/howto/outputting-csv
 
 class DownloadHandler(RouteHandler):
 
