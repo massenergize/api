@@ -1,7 +1,8 @@
 from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from database.models import UserProfile, CommunityMember, Action, Team, UserActionRel, Testimonial, TeamMember, Community
+from database.models import UserProfile, CommunityMember, Action, Team, \
+UserActionRel, Testimonial, TeamMember, Community, Subscriber
 from django.db.models import Q
 from sentry_sdk import capture_message
 
@@ -11,7 +12,23 @@ class DownloadStore:
     self.name = "Download Store/DB"
 
 
+  def _get_user_info_cells(self, user):
+    if (isinstance(user, Subscriber)):
+        return [user.name, '', user.email, 'subscriber',]
+    else:
+        return [user.full_name,
+            user.preferred_name if user.preferred_name else '',
+            user.email,
+            'super admin' if user.is_super_admin else
+                'community admin' if user.is_community_admin else
+                'vendor' if user.is_vendor else
+                'community member']
+
+
   def _get_user_actions_cells(self, user, actions):
+    if (isinstance(user, Subscriber)):
+      return ['' for _ in range(len(actions))]
+
     cells = []
     # create collections with constant-time lookup. VERY much worth the up-front compute.
     user_testimonial_action_ids = set([testimonial.action.id if testimonial.action else None
@@ -32,9 +49,11 @@ class DownloadStore:
 
 
   def _get_user_teams_cells(self, user, teams):
+    if (isinstance(user, Subscriber)):
+      return ['' for _ in range(len(teams))]
+
     cells = []
     user_team_members = TeamMember.objects.filter(user=user).select_related('team')
-
     for team in teams:
       user_team_status = ''
       team_member = user_team_members.filter(team=team).first()
@@ -48,7 +67,8 @@ class DownloadStore:
 
 
   def _all_users_download(self):
-    users = UserProfile.objects.filter(is_deleted=False)
+    users = list(UserProfile.objects.filter(is_deleted=False)) \
+        + list(Subscriber.objects.filter(is_deleted=False))
     actions = Action.objects.filter(is_deleted=False)
     teams = Team.objects.filter(is_deleted=False)
 
@@ -64,28 +84,24 @@ class DownloadStore:
     data = []
 
     for user in users:
-
-      user_communities = user.communities.all()
-
-      if len(user_communities) > 1:
-        primary_community, secondary_community = user_communities[0].name, user_communities[1].name
-      elif len(user_communities) == 1:
-        primary_community, secondary_community = user_communities[0].name, ''
+      if (isinstance(user, Subscriber)):
+        if user.community:
+          primary_community, secondary_community = user.community.name, ''
+        else:
+          primary_community, secondary_community = '', ''
       else:
-        primary_community, secondary_community = '', ''
+        user_communities = user.communities.all()
+        if len(user_communities) > 1:
+          primary_community, secondary_community = user_communities[0].name, user_communities[1].name
+        elif len(user_communities) == 1:
+          primary_community, secondary_community = user_communities[0].name, ''
+        else:
+          primary_community, secondary_community = '', ''
 
-      row = [primary_community,
-            secondary_community,
-            user.full_name,
-            user.preferred_name if user.preferred_name else '',
-            user.email,
-            'super admin' if user.is_super_admin else
-                'community admin' if user.is_community_admin else
-                'vendor' if user.is_vendor else
-                'community member']
-
-      row += self._get_user_actions_cells(user, actions)
-      row += self._get_user_teams_cells(user, teams)
+      row = [primary_community, secondary_community] \
+      + self._get_user_info_cells(user) \
+      + self._get_user_actions_cells(user, actions) \
+      + self._get_user_teams_cells(user, teams)
 
       data.append(row)
 
@@ -97,7 +113,8 @@ class DownloadStore:
 
   def _community_users_download(self, community_id):
     users = [cm.user for cm in CommunityMember.objects.filter(community__id=community_id, \
-            is_deleted=False, user__is_deleted=False).select_related('user')]
+            is_deleted=False, user__is_deleted=False).select_related('user')] \
+              + list(Subscriber.objects.filter(community__id=community_id, is_deleted=False))
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
     teams = Team.objects.filter(community__id=community_id, is_deleted=False)
@@ -113,16 +130,9 @@ class DownloadStore:
 
     for user in users:
 
-      row = [user.full_name,
-            user.preferred_name if user.preferred_name else '',
-            user.email,
-            'super admin' if user.is_super_admin else
-                'community admin' if user.is_community_admin else
-                'vendor' if user.is_vendor else
-                'community member']
-
-      row += self._get_user_actions_cells(user, actions)
-      row += self._get_user_teams_cells(user, teams)
+      row = self._get_user_info_cells(user) \
+      + self._get_user_actions_cells(user, actions) \
+      + self._get_user_teams_cells(user, teams)
 
       data.append(row)
 
