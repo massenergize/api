@@ -22,12 +22,12 @@ class DownloadHandler(RouteHandler):
     self.add("/downloads.actions", self.actions_download())
 
 
-  def _get_csv_response(self, data, name, community_id):
+  def _get_csv_response(self, data, download_type, community_name):
     response = HttpResponse(content_type="text/csv")
-    if not community_id:
-      filename = "all-community-%s-data.csv" % name
+    if not community_name:
+      filename = "all-community-%s-data.csv" % download_type
     else:
-      filename = "community-%s-%s-data.csv" % (community_id, name)
+      filename = "%s-%s-data.csv" % (community_name, download_type)
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
     writer = csv.writer(response)
@@ -41,10 +41,10 @@ class DownloadHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop('community_id', None)
-      users_download, err = self.service.users_download(context, community_id)
+      (users_data, community_name), err = self.service.users_download(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return self._get_csv_response(users_download, 'users', community_id)
+      return self._get_csv_response(data=users_data, download_type='users', community_name=community_name)
     return users_download_view
 
 
@@ -53,8 +53,8 @@ class DownloadHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop('community_id', None)
-      actions_download, err = self.service.actions_download(context, community_id)
+      (actions_data, community_name), err = self.service.actions_download(context, community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
-      return self._get_csv_response(actions_download, 'actions', community_id)
+      return self._get_csv_response(data=actions_data, download_type='actions', community_name=community_name)
     return actions_download_view

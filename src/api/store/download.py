@@ -1,7 +1,7 @@
 from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from database.models import UserProfile, CommunityMember, Action, Team, UserActionRel, Testimonial, TeamMember
+from database.models import UserProfile, CommunityMember, Action, Team, UserActionRel, Testimonial, TeamMember, Community
 from django.db.models import Q
 from sentry_sdk import capture_message
 
@@ -200,13 +200,15 @@ class DownloadStore:
 
   def users_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
+      if community_id:
+        community_name = Community.objects.get(id=community_id).name
       if context.user_is_super_admin:
         if community_id:
-          return self._community_users_download(community_id), None
+          return (self._community_users_download(community_id), community_name), None
         else:
-          return self._all_users_download(), None
+          return (self._all_users_download(), None), None
       elif context.user_is_community_admin and community_id:
-        return self._community_users_download(community_id), None
+        return (self._community_users_download(community_id), community_name), None
       else:
         return None, NotAuthorizedError()
     except Exception as e:
@@ -216,13 +218,15 @@ class DownloadStore:
 
   def actions_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
+      if community_id:
+        community_name = Community.objects.get(id=community_id).name
       if context.user_is_super_admin:
           if community_id:
-            return self._community_actions_download(community_id), None
+            return (self._community_actions_download(community_id), community_name), None
           else:
-            return self._all_actions_download(), None
+            return (self._all_actions_download(), None), None
       elif context.user_is_community_admin and community_id:
-          return self._community_actions_download(community_id), None
+          return (self._community_actions_download(community_id), community_name), None
       else:
           return None, NotAuthorizedError()
     except Exception as e:
