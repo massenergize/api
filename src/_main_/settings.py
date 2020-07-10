@@ -21,7 +21,7 @@ from pathlib import Path  # python3 only
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-IS_PROD = True
+IS_PROD = False
 
 try:
     env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
@@ -36,7 +36,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
