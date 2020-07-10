@@ -94,7 +94,7 @@ def EvalReplaceCar(inputs):
             new_cost = cost_gas + annual_service
 
             car_price = getDefault(locality,'car_hybrid_price', 26000.)   # current price of Kia Optima
-            car_price = car_price
+
             explanation = "A standard hybrid would save %.0f gallons of gas over 10 years." % (10 * (gallons - gal_gas))
 
         elif new_mpg_specified > 0.:
@@ -109,7 +109,7 @@ def EvalReplaceCar(inputs):
             new_cost = cost_gas + annual_service
 
             car_price = getDefault(locality,'car_default_price', 22000.)   # current price of some car or other
-            car_price = car_price
+
             explanation = "The new car would save %.0f gallons of gas over 10 years." % (10 * (gallons - gal_gas))
         else:
             explanation = "Didn't specify milage or type of car to replace it with."

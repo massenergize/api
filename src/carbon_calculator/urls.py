@@ -23,7 +23,7 @@ urlpatterns = [
     path('import', importcsv ),
     path('export', exportcsv ),
     path('users', users),
-    path('getInputs/<action>', getInputs)
+#    path('getInputs/<action>', getInputs)
 #    path('summary',summary),
 
 ]
