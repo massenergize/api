@@ -79,8 +79,6 @@ class RemoveHeaders:
 
   def __call__(self, request):
     response = self.get_response(request)
-    return response
-
-  def process_response(self, request, response):
     response['Server'] = ''
     return response
+
