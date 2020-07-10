@@ -32,7 +32,6 @@ except Exception:
     load_dotenv()
 
 
-# os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
 SECRET_KEY =  os.environ.get("SECRET_KEY")
@@ -41,22 +40,14 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'api.massenergize.org',
-    'apis.massenergize.org',
-    'api.massenergize.com',
-    'apis.massenergize.com',
-    'api-prod.massenergize.org',
-    'api.prod.massenergize.org',
-    'api-dev.massenergize.org',
-    'api.dev.massenergize.org',
-    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-production.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com',
-    'Prod-env.eba-cg9aw8pt.us-east-2.elasticbeanstalk.com',
-    'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
     '0.0.0.0',
+    '127.0.0.1',
+    'localhost',
+
+    '.massenergize.org',
+    '.massenergize.com',
+
+    'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
 ]
 
