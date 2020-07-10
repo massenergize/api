@@ -6,23 +6,48 @@ UserActionRel, Testimonial, TeamMember, Community, Subscriber
 from django.db.models import Q
 from sentry_sdk import capture_message
 
+import traceback
+# TODO: add CAdmin and Super Admin route for teams download
+# TODO: add Super Admin-only route for communities download
+
 class DownloadStore:
 
   def __init__(self):
     self.name = "Download Store/DB"
 
+    self.action_info_columns = ['title', 'category', 'done_count', 'average_carbon_points', 'testimonials_count', 'impact', 'cost', 'is_global']
+
+    self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'testimonials_count']
+
+
+  def _get_cells_from_dict(self, columns, data):
+    cells = ['' for _ in range(len(columns))]
+    for key, value in data.items():
+      if not value:
+        continue
+      cells[columns.index(key)] = value
+    return cells
+
 
   def _get_user_info_cells(self, user):
+    user_cells = {}
+  
     if (isinstance(user, Subscriber)):
-        return [user.name, '', user.email, 'subscriber',]
+        user_cells = {'name': user.name, 'email': user.email, 'role': 'subscriber'}
     else:
-        return [user.full_name,
-            user.preferred_name if user.preferred_name else '',
-            user.email,
-            'super admin' if user.is_super_admin else
-                'community admin' if user.is_community_admin else
-                'vendor' if user.is_vendor else
-                'community member']
+        user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
+        testimonials_count = user_testimonials.count() if user_testimonials else '0'
+
+        user_cells = {'name': user.full_name,
+                      'preferred_name': user.preferred_name,
+                      'email': user.email,
+                      'role' : 'super admin' if user.is_super_admin else
+                          'community admin' if user.is_community_admin else
+                          'vendor' if user.is_vendor else
+                          'community member',
+                      'testimonials_count': testimonials_count}
+
+    return self._get_cells_from_dict(self.user_info_columns, user_cells)
 
 
   def _get_user_actions_cells(self, user, actions):
@@ -31,10 +56,10 @@ class DownloadStore:
 
     cells = []
     # create collections with constant-time lookup. VERY much worth the up-front compute.
-    user_testimonial_action_ids = set([testimonial.action.id if testimonial.action else None
-                                for testimonial in Testimonial.objects.filter(user=user)])
+    user_testimonial_action_ids = {testimonial.action.id if testimonial.action else None
+                                for testimonial in Testimonial.objects.filter(is_deleted=False,user=user)}
     action_id_to_action_rel = {user_action_rel.action.id: user_action_rel
-                                for user_action_rel in UserActionRel.objects.filter(user=user)}
+                                for user_action_rel in UserActionRel.objects.filter(is_deleted=False,user=user)}
 
     for action in actions:
       user_action_status = ''
@@ -66,6 +91,33 @@ class DownloadStore:
     return cells
 
 
+  def _get_action_info_cells(self, action):
+    average_carbon_points = action.calculator_action.average_points \
+                          if action.calculator_action else action.average_carbon_score
+
+    category_obj = action.tags.filter(tag_collection__name='Category').first()
+    category = category_obj.name if category_obj else None
+    cost_obj = action.tags.filter(tag_collection__name='Cost').first()
+    cost = cost_obj.name if cost_obj else None
+    impact_obj = action.tags.filter(tag_collection__name='Impact').first()
+    impact = impact_obj.name if impact_obj else None
+
+    done_actions = UserActionRel.objects.filter(is_deleted=False, action=action, status="DONE")
+    done_count = done_actions.count() if done_actions else '0'
+
+    action_testimonials = Testimonial.objects.filter(is_deleted=False, action=action)
+    testimonials_count = action_testimonials.count() if action_testimonials else '0'
+    
+    action_cells = {
+      'title': action.title, 'average_carbon_points': average_carbon_points,
+      'category': category,  'impact': impact,
+      'cost': cost, 'is_global': action.is_global,
+      'testimonials_count': testimonials_count, 'done_count': done_count
+    }
+    
+    return self._get_cells_from_dict(self.action_info_columns, action_cells)
+
+
   def _all_users_download(self):
     users = list(UserProfile.objects.filter(is_deleted=False)) \
         + list(Subscriber.objects.filter(is_deleted=False))
@@ -73,14 +125,12 @@ class DownloadStore:
     teams = Team.objects.filter(is_deleted=False)
 
     columns = ['primary community',
-                'secondary community',
-                'full_name',
-                'preferred_name',
-                'email',
-                'role'] \
+                'secondary community' ] \
+                + self.user_info_columns \
                 + [action.title for action in actions] \
                 + [team.name for team in teams]
-
+    sub_columns = ['', ''] + ['' for _ in range(len(self.user_info_columns))] \
+            + ["ACTION" for _ in range(len(actions))] + ["TEAM" for _ in range(len(teams))]
     data = []
 
     for user in users:
@@ -105,8 +155,11 @@ class DownloadStore:
 
       data.append(row)
 
-    data = sorted(data, key=lambda row : row[0]) # sort by community
-    data.insert(0, columns) # insert the column names
+    # sort by community
+    data = sorted(data, key=lambda row: row[0])
+    # insert the columns
+    data.insert(0, sub_columns)
+    data.insert(0, columns) 
 
     return data
 
@@ -119,14 +172,12 @@ class DownloadStore:
                                                       .filter(is_deleted=False)
     teams = Team.objects.filter(community__id=community_id, is_deleted=False)
 
-    columns = ['full_name',
-                'preferred_name',
-                'email',
-                'role'] \
+    columns = self.user_info_columns \
                 + [action.title for action in actions] \
                 + [team.name for team in teams]
-
-    data = [columns]
+    sub_columns = ['' for _ in range(len(self.user_info_columns))] \
+            + ["ACTION" for _ in range(len(actions))] + ["TEAM" for _ in range(len(teams))]
+    data = [columns, sub_columns]
 
     for user in users:
 
@@ -143,33 +194,16 @@ class DownloadStore:
     actions = Action.objects.select_related('calculator_action', 'community') \
             .prefetch_related('tags').filter(is_deleted=False)
 
-    columns = ['community',
-              'title',
-              'average_carbon_points',
-              'category',
-              'cost',
-              'impact']
-
+    columns = ['community'] + self.action_info_columns
     data = []
 
     for action in actions:
 
-      if action.is_global:
-        community = 'global'
-      elif action.community:
+      if action.community:
         community = action.community.name
-      average_carbon_points = action.calculator_action.average_points \
-                          if action.calculator_action else action.average_carbon_score
-      category = action.tags.filter(tag_collection__name='Category').first()
-      cost = action.tags.filter(tag_collection__name='Cost').first()
-      impact = action.tags.filter(tag_collection__name='Impact').first()
 
-      data.append([community if community else '',
-                  action.title,
-                  average_carbon_points,
-                  category.name if category else '',
-                  cost.name if cost else '',
-                  impact.name if impact else ''])
+      data.append([community if community else ''] \
+        + self._get_action_info_cells(action))
 
     data = sorted(data, key=lambda row : row[0]) # sort by community
     data.insert(0, columns) # insert the column names
@@ -181,29 +215,11 @@ class DownloadStore:
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
       .select_related('calculator_action').prefetch_related('tags').filter(is_deleted=False)
 
-    columns = ['title',
-              'is_global',
-              'average_carbon_points',
-              'category',
-              'cost',
-              'impact']
-    
+    columns = self.action_info_columns
     data = [columns]
 
     for action in actions:
-
-      average_carbon_points = action.calculator_action.average_points \
-                          if action.calculator_action else action.average_carbon_score
-      category = action.tags.filter(tag_collection__name='Category').first()
-      cost = action.tags.filter(tag_collection__name='Cost').first()
-      impact = action.tags.filter(tag_collection__name='Impact').first()
-
-      data.append([action.title,
-                  str(action.is_global),
-                  average_carbon_points,
-                  category.name if category else '',
-                  cost.name if cost else '',
-                  impact.name if impact else ''])
+      data.append(self._get_action_info_cells(action))
 
     return data
 
@@ -222,6 +238,7 @@ class DownloadStore:
       else:
         return None, NotAuthorizedError()
     except Exception as e:
+      traceback.print_exc()
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
@@ -240,5 +257,6 @@ class DownloadStore:
       else:
           return None, NotAuthorizedError()
     except Exception as e:
+      traceback.print_exc()
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
