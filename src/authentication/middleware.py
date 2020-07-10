@@ -28,35 +28,59 @@ class MassenergizeJWTAuthMiddleware:
   
 
   def _get_auth_token(self, request):
-    if 'token' in request.COOKIES:
-      return request.COOKIES.get('token', None)
-    return None
+    try:
+      authz = request.headers.get('Authorization', None)
+      cleaned_path = request.path.split('/')[-1]
+      if (authz is None) and (cleaned_path in self.restricted_paths):
+        return None, NotAuthorizedError()
+      elif authz:
+        id_token = authz.split(' ')[-1]
+        return id_token, None
+      return None, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
 
 
   def process_view(self, request, view_func, *view_args, **view_kwargs):
 
     try:
       #extract JWT auth token
-      token = self._get_auth_token(request)
- 
+      id_token, err = self._get_auth_token(request)
+      if err:
+        return err
+      
       # add a context: (this will contain all info about this user's session info)
       ctx = Context()
 
       #set request body
       ctx.set_request_body(request)
 
-      if token:
-        decoded_token = jwt.decode(token, SECRET_KEY, algorithm='HS256')
+      if id_token:
+        decoded_token = jwt.decode(id_token, SECRET_KEY, algorithm='HS256')
         # at this point the user has an active session
         ctx.set_user_credentials(decoded_token)
         
-      
+
       request.context = ctx
 
       #TODO: enforce all requests accessing resources are always logged in first
 
     except Exception as e:
       capture_message(str(e), level="error")
-      response =  CustomMassenergizeError(e)
-      response.delete_cookie("token")
-      return response
+      return CustomMassenergizeError(e)
+
+
+class RemoveHeaders:
+
+  def __init__(self, get_response):
+    self.get_response = get_response
+
+  def __call__(self, request):
+    response = self.get_response(request)
+    return response
+
+  def process_response(self, request, response):
+    response['Server'] = ''
+    return response

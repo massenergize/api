@@ -67,6 +67,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  
@@ -120,7 +121,14 @@ TEMPLATES = [
     },
 ]
 
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 3600
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+USE_X_FORWARDED_HOST = True
 WSGI_APPLICATION = '_main_.wsgi.application'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
