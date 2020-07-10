@@ -1275,7 +1275,7 @@ class Testimonial(models.Model):
   def full_json(self):
     data = self.simple_json() 
     data['image'] = data.get('file', None)
-    data['tags'] = [t.simple_json() for t in self.tags.all()]
+    #data['tags'] = [t.simple_json() for t in self.tags.all()]
     return data
 
   class Meta:
@@ -1943,19 +1943,13 @@ class HomePageSettings(models.Model):
     # decision not to include state reported solar
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
     # 
-    # For Wayland launch, insisting that we show large numbers so people feel good about it.
     goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE")
+    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").prefetch_related('action__calculator_action')
     goal["organic_attained_number_of_actions"] = (done_actions.count())
     carbon_footprint_reduction = 0
-# commenting out temporarily until database access speeded up
-#    start = time.time()
-#    for actionRel in done_actions:
-#      if actionRel.action and actionRel.action.calculator_action:
-#        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
-#    stop = time.time()
-#    msg = "carbon footprint reduction time : %.3f" % (stop-start)
-#    print(msg)
+    for actionRel in done_actions:
+      if actionRel.action and actionRel.action.calculator_action:
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
     goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
     res =  self.simple_json()

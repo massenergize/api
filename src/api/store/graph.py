@@ -4,8 +4,6 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community
-import time
-import timeit
 
 class GraphStore:
   def __init__(self):
@@ -93,24 +91,14 @@ class GraphStore:
     households_engaged += (RealEstateUnit.objects.filter(community=community).count())
     actions_completed = 0 if not community.goal else community.goal.attained_number_of_actions
 
-    done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE")
+    done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").prefetch_related('action__calculator_action')
     actions_completed += done_actions.count()
     carbon_footprint_reduction = 0 if not community.goal or not community.goal.attained_carbon_footprint_reduction else community.goal.attained_carbon_footprint_reduction
 
-    # this is where all the time was
-    #start = time.time()
-    #startcpu = timeit.timeit()
-
     # loop over actions completed
-    #for actionRel in done_actions:
-    #  if actionRel.action and actionRel.action.calculator_action :
-    #    carbon_footprint_reduction += actionRel.action.calculator_action.average_points
-
-    #stop = time.time()
-    #stopcpu = timeit.timeit()
-    #msg = "_get_househods_engaged: Community %s time %.3f" % (community.name, stop-start)
-    #print(msg)
-
+    for actionRel in done_actions:
+      if actionRel.action and actionRel.action.calculator_action :
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
 
     return {"community": {"id": community.id, "name": community.name}, 
             "actions_completed": actions_completed, "households_engaged": households_engaged, 
@@ -119,12 +107,12 @@ class GraphStore:
 
   def _get_all_households_engaged(self):
     households_engaged = UserProfile.objects.filter(is_deleted=False).count()
-    done_actions = UserActionRel.objects.filter(status="DONE")
+    done_actions = UserActionRel.objects.filter(status="DONE").prefetch_related('action__calculator_action')
     actions_completed = done_actions.count()
     carbon_footprint_reduction = 0
-    #for actionRel in done_actions:
-    #  if actionRel.action and actionRel.action.calculator_action :
-    #    carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
+    for actionRel in done_actions:
+      if actionRel.action and actionRel.action.calculator_action :
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
 
     return {"community": {"id": 0, "name": 'Other'}, 
             "actions_completed": actions_completed, "households_engaged": households_engaged,
@@ -148,6 +136,7 @@ class GraphStore:
 
         if c.id != community.id:
           res.append(self._get_households_engaged(c))
+
       return {
         "id": 1,
         "title": "Communities Impact",

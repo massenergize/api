@@ -121,7 +121,7 @@ class GraphHandler(RouteHandler):
       args, err = v.verify(args, strict=True)
       if err:
         return err
-      
+     
       graph_info, err = self.service.graph_community_impact(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
