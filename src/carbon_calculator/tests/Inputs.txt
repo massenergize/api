@@ -1,1 +1,0 @@
-{'Action': 'air_source_hp', 'inputs' : {'heating_fuel': 'Heat Pump', 'heating_system_type': 'Not sure', 'heating_system_age': 'Not sure', 'air_conditioning_type': 'None', 'air_conditioning_age': '0-10 years'}}

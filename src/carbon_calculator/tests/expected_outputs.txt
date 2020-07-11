@@ -1,9 +1,0 @@
-{'Timestamp': '2020-05-20 02:29:34.880998+00:00',
- 'air_source_hp': {'carbon_points': 0.0,
-                   'cost': 12500.0,
-                   'explanation': 'Installing an air-source heat pump system '
-                                  'for your home could save 0 tons of CO2 per '
-                                  'year, but the payback time would be >10 '
-                                  'years.',
-                   'savings': 0.0,
-                   'status': 0}}
