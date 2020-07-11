@@ -12,10 +12,11 @@ def EvalReplaceCar(inputs):
     if inputs.get('replace_car', YES) == YES:
 
         default_miles = getDefault(locality, 'car_default_miles', CAR_DEFAULT_MILES)
-        miles_est = inputs.get('car_annual_miles', default_miles)
-        
+        miles_est = float(inputs.get('car_annual_miles', default_miles))
+
         default_mpg = getDefault(locality, 'car_default_mpg', 25.)
         specified_mpg = float(inputs.get('car_mpg', 0.))
+
         if specified_mpg > 0.:
             old_mpg = specified_mpg
         else:
@@ -80,6 +81,7 @@ def CarImpact(locality, annual_miles, mpg, car_type, new=False):
     elif car_type == 'Plug-in Hybrid':
         electric_fraction = getDefault(locality,'car_plugin_electric_fraction', 0.8)
         if mpg == 0.:
+            kwh_per_mile = getDefault(locality,'car_electric_kwh_per_mile', 0.25)
             hybrid_mpg = getDefault(locality,'car_new_hybrid_mpg', 40.)
             gal = (1. - electric_fraction) * annual_miles / hybrid_mpg
             kwh = kwh_per_mile * annual_miles * electric_fraction
@@ -145,8 +147,7 @@ def EvalReduceMilesDriven(inputs):
     if miles_reduction > 0. or miles_reduction_percent > 0:
 
         default_miles = getDefault(locality, 'car_default_miles', CAR_DEFAULT_MILES)
-        old_miles = inputs.get('car_annual_miles', default_miles)
-
+        old_miles = float(inputs.get('car_annual_miles', default_miles))
 
         if miles_reduction_percent > 0:
             miles_reduction = miles_reduction_percent * old_miles / 100.
@@ -154,7 +155,7 @@ def EvalReduceMilesDriven(inputs):
             miles_reduction_percent = 100. * miles_reduction / old_miles
 
         default_mpg = getDefault(locality, 'car_default_mpg', 25.)
-        old_mpg = inputs.get('car_mpg', default_mpg)
+        old_mpg = float(inputs.get('car_mpg', default_mpg))
 
         old_type = inputs.get('car_type','')
         new = False
@@ -184,7 +185,7 @@ def EvalEliminateCar(inputs):
     if inputs.get('eliminate_car', YES) == YES:
 
         default_miles = getDefault(locality, 'car_default_miles', CAR_DEFAULT_MILES)
-        miles_est = inputs.get('car_annual_miles', default_miles)
+        miles_est = float(inputs.get('car_annual_miles', default_miles))
         
         default_mpg = getDefault(locality, 'car_default_mpg', 25.)
         specified_mpg = float(inputs.get('car_mpg', 0.))

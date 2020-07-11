@@ -42,7 +42,8 @@ class CarbonCalculatorTest(TestCase):
 
     @classmethod
     def tearDownClass(self):
-        print("tearDownClass")
+        pass
+        #print("tearDownClass")
 
 
     def test_info_actions(self):
@@ -85,6 +86,10 @@ class CarbonCalculatorTest(TestCase):
         self.output_data = self.eval_all_actions(self.input_data)
 
         #Compare
+        if len(self.input_data) != len(self.output_data):
+            
+            msg = "Consistency test: vector length mismatch, input = %d, output = %d" % (len(self.input_data), len(self.output_data))
+            print(msg)
         self.differences = self.compare(self.input_data, self.output_data)
 
         self.pretty_print_diffs(
@@ -118,7 +123,7 @@ class CarbonCalculatorTest(TestCase):
 
     def eval_all_actions(self, inputs):
         """Run the estimate method of all the actions of the Carbon Calculator."""
-        self.output_timestamp = {"Timestamp" : timezone.now().isoformat(" ")} #Time of last test
+        self.output_timestamp = timezone.now().isoformat(" ")   #Time of last test
         output_data = []
         for aip in inputs: #aip = action inputs pair
             try:
@@ -128,7 +133,9 @@ class CarbonCalculatorTest(TestCase):
                             "/cc/estimate/{}".format(aip['Action']), aip["inputs"]
                                 ).content)}) #Throwing errors, need a better inputs file
             except Exception as e: #Some may throw errors w/o inputs
-                pass #Don't clutter the screen
+                print('eval_all_inputs exception')
+                print(e)
+                print(aip)
         return output_data
 
     def compare(self, old, new):

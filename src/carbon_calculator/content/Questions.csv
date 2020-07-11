@@ -176,7 +176,7 @@ commute_bike_walk,Transportation,Can you choose to bike or walk your commute mor
 commute_bike_walk_amount,Transportation,if so how much?,Number,,,,,,,,,,,,,0.0,20.0,4.0,reduce_car_miles
 transportation_flights,Transportation,"Can you take fewer flights per year, and how many?",Choice,No,,10% fewer,,25% fewer,,50% fewer,,75% fewer,,Stop flying altogether,,,,,reduce_flights
 car_mpg,Transportation,How many miles per gallon does the car get?,Number,,,,,,,,,,,,,5.0,100.0,25.0,"replace_car,reduce_car_miles,eliminate_car"
-car_annual_miles,Transportation,About how many miles is the car driven each year?,Number,,,,,,,,,,,,,,,,"replace_car,reduce_car_miles,eliminate_car"
+car_annual_miles,Transportation,About how many miles is the car driven each year?,Number,,,,,,,,,,,,,0.0,30000.0,15000.0,"replace_car,reduce_car_miles,eliminate_car"
 car_new_type,Transportation,What type of car are you thinking of getting?,Choice,Electric,,Plug-in Hybrid,,Hybrid,,Gasoline,,Diesel,,,,,,,replace_car
 replace_car,Transportation,Will you replace your car with a more efficient model?,Choice,No,car_new_type,Electric/Plug-in hybrid,,Hybrid,,,,,,,,,,,
 eliminate_car,Transportation,Will you choose to eliminate your car?,Choice,Yes,,No,,,,,,,,,,,,,
