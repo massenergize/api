@@ -7,6 +7,7 @@ from database.utils.common import  json_loader
 
 NAME_STR_LEN = 40
 MED_STR_LEN = 200
+LONG_STR_LEN = 1000
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 
 class CarbonCalculatorMedia(models.Model):
@@ -223,6 +224,42 @@ class CalcUser(models.Model):
     class Meta:
         db_table = 'user_profiles_cc' 
 
+class Org(models.Model):
+    """
+    A class used to represent an organization
+
+    Attributes
+    ----------
+    email : str
+      email of the user.  Should be unique.
+      created_at: DateTime
+      The date and time that this goal was added 
+    created_at: DateTime
+      The date and time of the last time any updates were made to the information
+      about this goal
+
+    """
+    name = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    email = models.EmailField()
+    phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
+    about = models.CharField(max_length=LONG_STR_LEN, blank=True)
+    url = models.URLField(blank=True)
+    logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
+        null=True, blank=True, related_name='event_host_logo')
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'organization_cc' 
+
 class Event(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN,unique=True)
@@ -233,19 +270,11 @@ class Event(models.Model):
 #        null=True, blank=True, related_name='cc_station_picture')
     stationslist = JSONField(null=True, blank=True)
     groups = models.ManyToManyField(Group,blank=True)
-    host_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    host_contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    host_email = models.EmailField()
-    host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
-    host_url = models.URLField(blank=True)
-    host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-        null=True, blank=True, related_name='event_host_logo')
-    sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    sponsor_url = models.URLField(blank=True)
-    sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-        null=True, blank=True, related_name='event_sponsor_logo')
+    host_org = models.ManyToManyField(Org,blank=True,related_name='host_orgs')
+    sponsor_org = models.ManyToManyField(Org,blank=True,related_name='sponsor_orgs')
 #   updated 4/24/20
 #   for a given event, campaign or purpose (platform default or community sites)
+    visible = models.BooleanField(default=True)
     event_tag = models.CharField(max_length=TINY_STR_LEN,blank=True)
     attendees = models.ManyToManyField(CalcUser, blank=True)
 
@@ -260,7 +289,6 @@ class Event(models.Model):
 
     class Meta:
         db_table = 'events_cc'
-
 
 class ActionPoints(models.Model):
     """

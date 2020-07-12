@@ -1,6 +1,6 @@
 import jsons
 from .CCConstants import VALID_QUERY, INVALID_QUERY
-from .models import Question, Event, Action, Station, Group
+from .models import Question, Event, Action, Station, Group, Org
 
 class CalculatorQuestion:
     def __init__(self, name, event_tag=None):
@@ -93,11 +93,11 @@ def QuerySingleEvent(event):
     qs = Event.objects.filter(name=event)
     if qs:
         q = qs[0]
-        host_logo_url = sponsor_logo_url = ""
-        if q.host_logo:
-            host_logo_url = q.host_logo.file.url
-        if q.sponsor_logo:
-            sponsor_logo_url = q.sponsor_logo.file.url
+        host_org = sponsor_org = {}
+        if q.host_org:
+            host_org = q.host_org.first().simple_json()
+        if q.sponsor_org:
+            sponsor_org = q.sponsor_org.first().simple_json()
 
         stationsList = []
         for station in q.stationslist:
@@ -125,8 +125,7 @@ def QuerySingleEvent(event):
         return VALID_QUERY, {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":stationsList,
                 "groups":groupsList,"communities":communitiesList,
                 "attendees":attendees.count(),"points":totalPoints, "savings":totalSavings,
-                "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":host_logo_url,
-                "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":sponsor_logo_url}
+                "host_org":host_org, "sponsor_org":sponsor_org}
     else:
         return INVALID_QUERY, {}
 
