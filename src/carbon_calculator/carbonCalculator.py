@@ -3,7 +3,7 @@
 # Updated April 3
 #imports
 from datetime import date,datetime
-from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia, CalcUser
+from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia, CalcUser, Org
 from django.utils import timezone
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
@@ -335,70 +335,6 @@ class CarbonCalculator:
                     csvfile.close()
                     status = True
 
-            eventsFile = inputs.get('Events','')
-            if eventsFile!='':
-                with open(eventsFile, newline='') as csvfile:
-                    inputlist = csv.reader(csvfile)
-                    first = True
-                    num = 0
-                    for item in inputlist:
-                        if first:
-                            #header = item
-                            first = False
-                        else:
-                            if item[0] == '':
-                                continue
-                            qs = Event.objects.filter(name=item[0])
-                            if qs:
-                                qs[0].delete()
-
-                            host_logo = None
-                            sponsor_logo = None
-                            eventdate = item[2]
-                            if eventdate != '':
-                                dt = datetime.strptime(item[2].upper(), '%m/%d/%Y %H:%M%p')
-                                current_tz = timezone.get_current_timezone()
-                                dt = current_tz.localize(dt)
-                            else:
-                                dt= ''
-                            host_logo = SavePic2Media(item[11])
-                            sponsor_logo = SavePic2Media(item[14])
-                            groupslist = None
-                            if item[5]!='':
-                                groupslist = item[5].split(",")
-
-                            event = Event(name=item[0],
-                                displayname=item[1],
-                                location = item[3],
-                                stationslist = item[4].split(","),
-                                host_org = item[6],
-                                host_contact = item[7],
-                                host_email = item[8],
-                                host_phone = item[9],
-                                host_url = item[10],
-                                host_logo = host_logo,
-                                sponsor_org = item[12],
-                                sponsor_url = item[13],
-                                sponsor_logo = sponsor_logo,
-                                event_tag = item[15]
-                                )
-                            if dt != '':
-                                event.datetime = dt
-
-                            event.save()
-                            if groupslist:
-                                for group in groupslist:
-                                    g = Group.objects.filter(name=group)
-                                    if g:
-                                        gg = g[0]
-                                        event.groups.add(gg)
-                            #print('Importing Event ',event.name,' at ',event.location,' on ',event.datetime)
-                            event.save()
-                            num+=1
-                    msg = "Imported %d CarbonSaver Events" % num
-                    print(msg)
-                    csvfile.close()
-                    status = True
             groupsFile = inputs.get('Groups','')
             if groupsFile!='':
                 with open(groupsFile, newline='') as csvfile:
@@ -431,6 +367,121 @@ class CarbonCalculator:
                             group.save()
                             num+=1
                     msg = "Imported %d CarbonSaver Groups" % num
+                    print(msg)
+                    csvfile.close()
+                    status = True
+
+            orgsFile = inputs.get('Organizations','')
+            if orgsFile!='':
+                with open(orgsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    num = 0
+                    for item in inputlist:
+                        if first:
+                            #header = item
+                            first = False
+                        else:
+                            if item[0] == '':
+                                continue
+                            qs = Org.objects.filter(name=item[0])
+                            if qs:
+                                qs[0].delete()
+
+                            logo = None
+                            logo = SavePic2Media(item[6])
+ 
+                             #if action[5]!='':
+                            #    import this media filt
+                            #    actionPicture = Media()
+                            org = Org(name=item[0],
+                                contact=item[1],
+                                email = item[2],
+                                phone = item[3],
+                                about = item[4],
+                                url = item[5],
+                                logo = logo
+                                )
+
+                            #print('Importing Group ',group.displayname)
+                            org.save()
+                            num+=1
+                    msg = "Imported %d CarbonSaver Orgs" % num
+                    print(msg)
+                    csvfile.close()
+                    status = True
+
+            eventsFile = inputs.get('Events','')
+            if eventsFile!='':
+                with open(eventsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    num = 0
+                    for item in inputlist:
+                        if first:
+                            #header = item
+                            first = False
+                        else:
+                            if item[0] == '':
+                                continue
+                            qs = Event.objects.filter(name=item[0])
+                            if qs:
+                                qs[0].delete()
+
+                            eventdate = item[2]
+                            if eventdate != '':
+                                dt = datetime.strptime(item[2].upper(), '%m/%d/%Y %H:%M%p')
+                                current_tz = timezone.get_current_timezone()
+                                dt = current_tz.localize(dt)
+                            else:
+                                dt= ''
+                            groupslist = None
+                            if item[5]!='':
+                                groupslist = item[5].split(",")
+
+                            # for now assume just one host org and one sponsor org
+                            host_orgs = Org.objects.filter(name=item[6])
+                            host_org = None
+                            if host_orgs:
+                                host_org = host_orgs[0]
+
+                                
+                            sponsor_orgs = Org.objects.filter(name=item[7])
+                            sponsor_org = None
+                            if sponsor_orgs:
+                                sponsor_org = sponsor_orgs[0]
+
+                            visible = False
+                            if item[8]=="checked":
+                                visible = True
+
+                            event = Event(name=item[0],
+                                displayname=item[1],
+                                location = item[3],
+                                stationslist = item[4].split(","),
+                                visible = visible,
+                                event_tag = item[9]
+                                )
+                            if dt != '':
+                                event.datetime = dt
+
+                            event.save()
+                            if groupslist:
+                                for group in groupslist:
+                                    g = Group.objects.filter(name=group)
+                                    if g:
+                                        gg = g[0]
+                                        event.groups.add(gg)
+
+                            if host_org:
+                                event.host_org.add(host_org)
+                            if sponsor_org:
+                                event.sponsor_org.add(sponsor_org)
+
+                            #print('Importing Event ',event.name,' at ',event.location,' on ',event.datetime)
+                            event.save()
+                            num+=1
+                    msg = "Imported %d CarbonSaver Events" % num
                     print(msg)
                     csvfile.close()
                     status = True
