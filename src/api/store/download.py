@@ -2,7 +2,7 @@ from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPI
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
-UserActionRel, Testimonial, TeamMember, Community, Subscriber
+UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit
 from django.db.models import Q
 from sentry_sdk import capture_message
 
@@ -14,13 +14,13 @@ class DownloadStore:
   def __init__(self):
     self.name = "Download Store/DB"
 
-    self.action_info_columns = ['title', 'category', 'done_count', 'average_carbon_points', 'testimonials_count', 'impact', 'cost', 'is_global']
+    self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'carbon_points', 'total_carbon_points', 'testimonials_count', 'impact', 'cost', 'is_global']
 
     self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'testimonials_count']
     
-    self.team_info_columns = ['name', 'members_count', 'total_carbon_points', 'events_count', 'testimonials_count']
+    self.team_info_columns = ['name', 'members_count', 'total_carbon_points', 'testimonials_count']
 
-    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_carbon_points', 'actions_done', 'actions_per_member', 'testimonials_count', 'events_count', '#1_action', '#2_action', '#3_action']
+    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_carbon_points', 'actions_done', 'actions_per_member', 'testimonials_count', 'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action']
 
 
   def _get_cells_from_dict(self, columns, data):
@@ -60,9 +60,9 @@ class DownloadStore:
     cells = []
     # create collections with constant-time lookup. VERY much worth the up-front compute.
     user_testimonial_action_ids = {testimonial.action.id if testimonial.action else None
-                                for testimonial in Testimonial.objects.filter(is_deleted=False,user=user)}
+                                for testimonial in Testimonial.objects.filter(is_deleted=False, user=user)}
     action_id_to_action_rel = {user_action_rel.action.id: user_action_rel
-                                for user_action_rel in UserActionRel.objects.filter(is_deleted=False,user=user)}
+                                for user_action_rel in UserActionRel.objects.filter(is_deleted=False, user=user)}
 
     for action in actions:
       user_action_status = ''
@@ -97,6 +97,8 @@ class DownloadStore:
   def _get_action_info_cells(self, action):
     average_carbon_points = action.calculator_action.average_points \
                           if action.calculator_action else action.average_carbon_score
+    
+    cc_action = action.calculator_action.name if action.calculator_action else ''
 
     category_obj = action.tags.filter(tag_collection__name='Category').first()
     category = category_obj.name if category_obj else None
@@ -105,14 +107,16 @@ class DownloadStore:
     impact_obj = action.tags.filter(tag_collection__name='Impact').first()
     impact = impact_obj.name if impact_obj else None
 
-    done_actions = UserActionRel.objects.filter(is_deleted=False, action=action, status="DONE")
-    done_count = done_actions.count() if done_actions else '0'
+    done_count = UserActionRel.objects.filter(is_deleted=False, action=action, status="DONE").count()
+    total_carbon_points = str(average_carbon_points * done_count)
+    done_count = str(done_count)
 
-    action_testimonials = Testimonial.objects.filter(is_deleted=False, action=action)
-    testimonials_count = action_testimonials.count() if action_testimonials else '0'
+    testimonials_count = str(Testimonial.objects.filter(is_deleted=False, action=action).count())
     
     action_cells = {
-      'title': action.title, 'average_carbon_points': average_carbon_points,
+      'title': action.title, 'carbon_points': average_carbon_points,
+      'total_carbon_points': total_carbon_points,
+      'carbon_calculator_action' : cc_action,
       'category': category,  'impact': impact,
       'cost': cost, 'is_global': action.is_global,
       'testimonials_count': testimonials_count, 'done_count': done_count
@@ -121,17 +125,78 @@ class DownloadStore:
     return self._get_cells_from_dict(self.action_info_columns, action_cells)
 
 
-  # TODO: implement. gets cells according to team_info_columns, using _get_cells_from_dict
   def _get_team_info_cells(self, team):
-     pass
+    members = TeamMember.objects.filter(is_deleted=False, team=team).select_related('user')
 
-  # TODO: implement. gets the count of action done by members of team for each action
+    members_count = str(members.count())
+
+    total_carbon_points = 0
+    for m in members:
+      user = m.user
+      actions = user.useractionrel_set.all()
+      done_actions = actions.filter(status="DONE")
+      for done_action in done_actions:
+        if done_action.action and done_action.action.calculator_action:
+          total_carbon_points += done_action.action.calculator_action.average_points
+    total_carbon_points = str(total_carbon_points)
+
+    testimonials_count = 0
+    for m in members:
+      testimonials_count += Testimonial.objects.filter(is_deleted=False, user=m.user).count()
+    testimonials_count = str(testimonials_count)
+
+    team_cells = {
+      'name': team.name, 'members_count': members_count,
+      'total_carbon_points': total_carbon_points, 'testimonials_count': testimonials_count
+    }
+    return self._get_cells_from_dict(self.team_info_columns, team_cells)
+
+  # TODO: in DIRE need of optimization
   def _get_team_action_cells(self, team, actions):
-    pass
+    cells = []
 
-# TODO: implement. gets cells according to community_info_columns, using _get_cells_from_dict
+    team_users = [tm.user for tm in TeamMember.objects.filter(is_deleted=False, team=team).select_related('user')]
+    for action in actions:
+      cells.append(sum([UserActionRel.objects.filter(action=action, user=user, status='DONE').count()
+                                                  for user in team_users]))
+    return cells
+
+
   def _get_community_info_cells(self, community):
-    pass
+    community_members = CommunityMember.objects.filter(is_deleted=False, community=community)\
+                                          .select_related('user')
+    users = [cm.user for cm in community_members]
+
+    members_count = community_members.count()
+    households_count = str(RealEstateUnit.objects.filter(is_deleted=False, community=community).count())
+    teams_count = str(Team.objects.filter(is_deleted=False, community=community).count())
+    events_count = str(Event.objects.filter(is_deleted=False, community=community).count())
+    testimonials_count = str(Testimonial.objects.filter(is_deleted=False, community=community).count())
+
+    done_action_rels = UserActionRel.objects.filter(user__in=users, status='DONE').select_related('action__calculator_action')
+
+    actions_done = len(done_action_rels)
+    total_carbon_points = sum([action_rel.action.calculator_action.average_points
+                            if action_rel.action.calculator_action else 0
+                            for action_rel in done_action_rels])
+    actions_per_member = str(round(actions_done / members_count, 2)) if members_count != 0 else '0'
+
+    # TODO: https://stackoverflow.com/questions/844591/how-to-do-select-max-in-django
+    most_done_action = ''
+    second_most_done_action = ''
+    highest_impact_action = ''
+    second_highest_impact_action = ''
+
+    community_cells = {
+      'name': community.name, 'members_count': str(members_count), 'households_count': households_count,
+      'teams_count' : teams_count, 'total_carbon_points' : total_carbon_points,
+      'actions_done': str(actions_done), 'actions_per_member': actions_per_member,
+      'testimonials_count' : testimonials_count, 'events_count': events_count,
+      'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action, 'highest_impact_action': highest_impact_action, 'second_highest_imapct_action': second_highest_impact_action
+    }
+
+    return self._get_cells_from_dict(self.community_info_columns, community_cells)
+
 
 
   def _all_users_download(self):

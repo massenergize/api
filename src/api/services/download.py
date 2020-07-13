@@ -1,6 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.common import serialize, serialize_all
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
 
@@ -21,8 +20,8 @@ class DownloadService:
         return None, err
       return actions_download, None
 
-    def communities_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
-      communities_download, err = self.store.communities_download(context, community_id)
+    def communities_download(self, context: Context) -> (list, MassEnergizeAPIError):
+      communities_download, err = self.store.communities_download(context)
       if err:
         return None, err
       return communities_download, None

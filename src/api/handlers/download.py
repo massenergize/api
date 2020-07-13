@@ -24,10 +24,10 @@ class DownloadHandler(RouteHandler):
     self.add("/downloads.teams", self.teams_download())
 
 
-  def _get_csv_response(self, data, download_type, community_name):
+  def _get_csv_response(self, data, download_type, community_name=None):
     response = HttpResponse(content_type="text/csv")
     if not community_name:
-      filename = "all-community-%s-data.csv" % download_type
+      filename = "all-%s-data.csv" % download_type
     else:
       filename = "%s-%s-data.csv" % (community_name, download_type)
     response['Access-Control-Expose-Headers'] = 'Content-Disposition'
@@ -66,7 +66,7 @@ class DownloadHandler(RouteHandler):
     def communities_download_view(request) -> None:
       context: Context = request.context
       args: dict = context.args
-      (communities_data, community_name), err = self.service.communities_download(context)
+      (communities_data, _), err = self.service.communities_download(context)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return self._get_csv_response(data=communities_data, download_type='communities')
