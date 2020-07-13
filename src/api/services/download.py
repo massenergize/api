@@ -20,3 +20,15 @@ class DownloadService:
       if err:
         return None, err
       return actions_download, None
+
+    def communities_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+      communities_download, err = self.store.communities_download(context, community_id)
+      if err:
+        return None, err
+      return communities_download, None
+
+    def teams_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+      teams_download, err = self.store.teams_download(context, community_id)
+      if err:
+        return None, err
+      return teams_download, None

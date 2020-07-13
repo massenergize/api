@@ -6,9 +6,8 @@ UserActionRel, Testimonial, TeamMember, Community, Subscriber
 from django.db.models import Q
 from sentry_sdk import capture_message
 
+# TODO: remove traceback calls before PR
 import traceback
-# TODO: add CAdmin and Super Admin route for teams download
-# TODO: add Super Admin-only route for communities download
 
 class DownloadStore:
 
@@ -18,6 +17,10 @@ class DownloadStore:
     self.action_info_columns = ['title', 'category', 'done_count', 'average_carbon_points', 'testimonials_count', 'impact', 'cost', 'is_global']
 
     self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'testimonials_count']
+    
+    self.team_info_columns = ['name', 'members_count', 'total_carbon_points', 'events_count', 'testimonials_count']
+
+    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_carbon_points', 'actions_done', 'actions_per_member', 'testimonials_count', 'events_count', '#1_action', '#2_action', '#3_action']
 
 
   def _get_cells_from_dict(self, columns, data):
@@ -116,6 +119,19 @@ class DownloadStore:
     }
     
     return self._get_cells_from_dict(self.action_info_columns, action_cells)
+
+
+  # TODO: implement. gets cells according to team_info_columns, using _get_cells_from_dict
+  def _get_team_info_cells(self, team):
+     pass
+
+  # TODO: implement. gets the count of action done by members of team for each action
+  def _get_team_action_cells(self, team, actions):
+    pass
+
+# TODO: implement. gets cells according to community_info_columns, using _get_cells_from_dict
+  def _get_community_info_cells(self, community):
+    pass
 
 
   def _all_users_download(self):
@@ -224,6 +240,61 @@ class DownloadStore:
     return data
 
 
+  def _all_communities_download(self):
+    communities = Community.objects.filter(is_deleted=False)
+
+    columns = self.community_info_columns
+    data = [columns]
+
+    for community in communities:
+      data.append(self._get_community_info_cells(community))
+
+    return data
+  
+
+  def _all_teams_download(self):
+    teams = Team.objects.filter(is_deleted=False)
+    actions = Action.objects.filter(is_deleted=False)
+
+    columns = ['community'] + self.team_info_columns + [action.title for action in actions]
+    sub_columns = [''] + ['' for _ in range(len(self.team_info_columns))] \
+            + ["ACTION" for _ in range(len(actions))]
+    data = []
+
+    for team in teams:
+
+      if team.community:
+        community = team.community.name
+
+      data.append([community if community else ''] \
+        + self._get_team_info_cells(team) \
+        + self._get_team_action_cells(team, actions))
+
+    # sort by community
+    data = sorted(data, key=lambda row: row[0])
+    # insert the column names
+    data.insert(0, sub_columns)
+    data.insert(0, columns)
+
+    return data
+
+
+  def _community_teams_download(self, community_id):
+    teams = Team.objects.filter(community__id=community_id, is_deleted=False)
+    actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)).filter(is_deleted=False)
+
+    columns = self.team_info_columns + [action.title for action in actions]
+    sub_columns = ['' for _ in range(len(self.team_info_columns))] \
+            + ["ACTION" for _ in range(len(actions))]
+    data = [columns, sub_columns]
+
+    for team in teams:
+      data.append(self._get_team_info_cells(team) \
+        + self._get_team_action_cells(team, actions))
+
+    return data
+
+
   def users_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
       if community_id:
@@ -254,6 +325,36 @@ class DownloadStore:
             return (self._all_actions_download(), None), None
       elif context.user_is_community_admin and community_id:
           return (self._community_actions_download(community_id), community_name), None
+      else:
+          return None, NotAuthorizedError()
+    except Exception as e:
+      traceback.print_exc()
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def communities_download(self, context: Context) -> (list, MassEnergizeAPIError):
+    try:
+      if not context.user_is_super_admin:
+        return None, NotAuthorizedError()
+      return (self._all_communities_download(), None), None          
+    except Exception as e:
+      traceback.print_exc()
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def teams_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    try:
+      if community_id:
+        community_name = Community.objects.get(id=community_id).name
+      if context.user_is_super_admin:
+          if community_id:
+            return (self._community_teams_download(community_id), community_name), None
+          else:
+            return (self._all_teams_download(), None), None
+      elif context.user_is_community_admin and community_id:
+          return (self._community_teams_download(community_id), community_name), None
       else:
           return None, NotAuthorizedError()
     except Exception as e:
