@@ -284,8 +284,10 @@ class DownloadStore:
 
       if not action.is_global and action.community:
         community = action.community.name
+      else:
+        community = ''
 
-      data.append([community if community else ''] \
+      data.append([community] \
         + self._get_action_info_cells(action))
 
     data = sorted(data, key=lambda row : row[0]) # sort by community
