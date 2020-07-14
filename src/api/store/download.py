@@ -1,4 +1,4 @@
-from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPIError
+from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPIError, InvalidResourceError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
@@ -151,14 +151,12 @@ class DownloadStore:
     }
     return self._get_cells_from_dict(self.team_info_columns, team_cells)
 
-  # TODO: in DIRE need of optimization
+
   def _get_team_action_cells(self, team, actions):
     cells = []
-
     team_users = [tm.user for tm in TeamMember.objects.filter(is_deleted=False, team=team).select_related('user')]
     for action in actions:
-      cells.append(sum([UserActionRel.objects.filter(action=action, user=user, status='DONE').count()
-                                                  for user in team_users]))
+      cells.append(str(UserActionRel.objects.filter(action=action, user__in=team_users, status='DONE').count()))
     return cells
 
 
@@ -315,33 +313,6 @@ class DownloadStore:
       data.append(self._get_community_info_cells(community))
 
     return data
-  
-
-  def _all_teams_download(self):
-    teams = Team.objects.filter(is_deleted=False)
-    actions = Action.objects.filter(is_deleted=False)
-
-    columns = ['community'] + self.team_info_columns + [action.title for action in actions]
-    sub_columns = [''] + ['' for _ in range(len(self.team_info_columns))] \
-            + ["ACTION" for _ in range(len(actions))]
-    data = []
-
-    for team in teams:
-
-      if team.community:
-        community = team.community.name
-
-      data.append([community if community else ''] \
-        + self._get_team_info_cells(team) \
-        + self._get_team_action_cells(team, actions))
-
-    # sort by community
-    data = sorted(data, key=lambda row: row[0])
-    # insert the column names
-    data.insert(0, sub_columns)
-    data.insert(0, columns)
-
-    return data
 
 
   def _community_teams_download(self, community_id):
@@ -411,15 +382,12 @@ class DownloadStore:
 
   def teams_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
-      if community_id:
-        community_name = Community.objects.get(id=community_id).name
-      if context.user_is_super_admin:
-          if community_id:
-            return (self._community_teams_download(community_id), community_name), None
+      if context.user_is_community_admin or context.user_is_super_admin:
+          community = Community.objects.get(id=community_id)
+          if community:
+            return (self._community_teams_download(community.id), community.name), None
           else:
-            return (self._all_teams_download(), None), None
-      elif context.user_is_community_admin and community_id:
-          return (self._community_teams_download(community_id), community_name), None
+            return None, InvalidResourceError()
       else:
           return None, NotAuthorizedError()
     except Exception as e:
