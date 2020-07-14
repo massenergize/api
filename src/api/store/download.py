@@ -171,7 +171,9 @@ class DownloadStore:
     events_count = str(Event.objects.filter(is_deleted=False, community=community).count())
     testimonials_count = str(Testimonial.objects.filter(is_deleted=False, community=community).count())
 
-    done_action_rels = UserActionRel.objects.filter(user__in=users, status='DONE').select_related('action__calculator_action')
+    actions = Action.objects.filter(Q(community=community) | Q(is_global=True)).filter(is_deleted=False).select_related('calculator_action')
+
+    done_action_rels = UserActionRel.objects.filter(action__in=actions, user__in=users, is_deleted=False, status='DONE').select_related('action__calculator_action')
 
     actions_done = len(done_action_rels)
     total_carbon_points = sum([action_rel.action.calculator_action.average_points
@@ -179,11 +181,14 @@ class DownloadStore:
                             for action_rel in done_action_rels])
     actions_per_member = str(round(actions_done / members_count, 2)) if members_count != 0 else '0'
 
-    # TODO: https://stackoverflow.com/questions/844591/how-to-do-select-max-in-django
-    most_done_action = ''
-    second_most_done_action = ''
-    highest_impact_action = ''
-    second_highest_impact_action = ''
+    action_done_count_map = {action.title: done_action_rels.filter(action=action).count() for action in actions}
+    actions_by_done_count = sorted(action_done_count_map.items(), key=lambda item : item[1], reverse=True)
+    most_done_action = actions_by_done_count[0][0] if (len(actions_by_done_count) > 0 and actions_by_done_count[0][1] != 0) else ''
+    second_most_done_action = actions_by_done_count[1][0] if (len(actions_by_done_count) > 1 and actions_by_done_count[1][1] != 0) else ''
+
+    actions_by_impact = actions.order_by('calculator_action__average_points')
+    highest_impact_action = actions_by_impact[0] if len(actions_by_impact) > 0 else ''
+    second_highest_impact_action = actions_by_impact[1] if len(actions_by_impact) > 1 else ''
 
     community_cells = {
       'name': community.name, 'members_count': str(members_count), 'households_count': households_count,
@@ -194,7 +199,6 @@ class DownloadStore:
     }
 
     return self._get_cells_from_dict(self.community_info_columns, community_cells)
-
 
 
   def _all_users_download(self):
@@ -278,7 +282,7 @@ class DownloadStore:
 
     for action in actions:
 
-      if action.community:
+      if not action.is_global and action.community:
         community = action.community.name
 
       data.append([community if community else ''] \
