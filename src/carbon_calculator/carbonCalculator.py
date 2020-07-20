@@ -287,6 +287,7 @@ class CarbonCalculator:
                                     title = item[t["Title"]],
                                     description=item[t["Description"]],
                                     helptext=item[t["Helptext"]],
+                                    category=item[t["Category"]],
                                     average_points=int(eval(item[t["Avg points"]])),
                                     questions=item[t["Questions"]].split(","),
                                     picture = picture)

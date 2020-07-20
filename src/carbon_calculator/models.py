@@ -58,6 +58,7 @@ class Action(models.Model):
     name = models.CharField(max_length=NAME_STR_LEN, unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=NAME_STR_LEN, blank=True)
+    category = models.CharField(max_length=NAME_STR_LEN, blank=True)
     description = models.CharField(max_length=MED_STR_LEN, blank=True) #"Action short description"
     helptext = models.CharField(max_length=MED_STR_LEN, blank=True) #"This text explains what the action is about, in 20 words or less."
     average_points = models.PositiveIntegerField(default=0)
@@ -65,7 +66,7 @@ class Action(models.Model):
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
 
     def info(self):
-        return model_to_dict(self, ['id', 'name', 'title', 'description', 'average_points'])
+        return model_to_dict(self, ['id', 'name', 'title', 'category', 'description', 'average_points'])
 
     def simple_json(self):
         return model_to_dict(self)
@@ -73,8 +74,9 @@ class Action(models.Model):
     def full_json(self):
         return self.simple_json()
 
-    def __str__(self):      
-        return self.name
+    def __str__(self): 
+        s = self.category + ':' + self.title     
+        return s
 
     class Meta:
         db_table = 'actions_cc'
