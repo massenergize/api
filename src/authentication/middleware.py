@@ -7,13 +7,13 @@ from _main_.settings import SECRET_KEY
 from firebase_admin import auth
 import json, jwt
 from sentry_sdk import capture_message
-
+from api.urls import ROUTE_HANDLERS
 
 class MassenergizeJWTAuthMiddleware:
 
   # List of routes that do not require sign-in
   WHITLISTED_ROUTES = set([
-
+    # h.get_white_listed_routes() for h in ROUTE_HANDLERS
   ])
 
   def __init__(self, get_response):
