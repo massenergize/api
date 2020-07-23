@@ -223,11 +223,11 @@ class DownloadStore:
         else:
           primary_community, secondary_community = '', ''
       else:
-        user_communities = user.communities.all()
-        if len(user_communities) > 1:
-          primary_community, secondary_community = user_communities[0].name, user_communities[1].name
-        elif len(user_communities) == 1:
-          primary_community, secondary_community = user_communities[0].name, ''
+        communities = [cm.community.name for cm in CommunityMember.objects.filter(user=user).select_related('community')]
+        if len(communities) > 1:
+          primary_community, secondary_community = communities[0], communities[1]
+        elif len(communities) == 1:
+          primary_community, secondary_community = communities[0], ''
         else:
           primary_community, secondary_community = '', ''
 
