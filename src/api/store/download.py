@@ -14,13 +14,13 @@ class DownloadStore:
   def __init__(self):
     self.name = "Download Store/DB"
 
-    self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'carbon_points', 'total_carbon_points', 'testimonials_count', 'impact', 'cost', 'is_global']
+    self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon', 'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
 
     self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'testimonials_count']
     
-    self.team_info_columns = ['name', 'members_count', 'total_carbon_points', 'testimonials_count']
+    self.team_info_columns = ['name', 'members_count', 'total_yearly_lbs_carbon', 'testimonials_count']
 
-    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_carbon_points', 'actions_done', 'actions_per_member', 'testimonials_count', 'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action']
+    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count', 'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action']
 
 
   def _get_cells_from_dict(self, columns, data):
@@ -67,7 +67,7 @@ class DownloadStore:
     for action in actions:
       user_action_status = ''
       if action.id in user_testimonial_action_ids:
-        user_action_status = 'testimonial'
+        user_action_status = 'TESTIMONIAL'
       else:
         user_action_rel = action_id_to_action_rel.get(action.id, None)
         if user_action_rel:
@@ -87,9 +87,9 @@ class DownloadStore:
       team_member = user_team_members.filter(team=team).first()
       if team_member:
         if team_member.is_admin:
-          user_team_status = 'admin'
+          user_team_status = 'ADMIN'
         else:
-          user_team_status = 'member'
+          user_team_status = 'MEMBER'
       cells.append(user_team_status)
     return cells
 
@@ -114,8 +114,8 @@ class DownloadStore:
     testimonials_count = str(Testimonial.objects.filter(is_deleted=False, action=action).count())
     
     action_cells = {
-      'title': action.title, 'carbon_points': average_carbon_points,
-      'total_carbon_points': total_carbon_points,
+      'title': action.title, 'yearly_lbs_carbon': average_carbon_points,
+      'total_yearly_lbs_carbon': total_carbon_points,
       'carbon_calculator_action' : cc_action,
       'category': category,  'impact': impact,
       'cost': cost, 'is_global': action.is_global,
@@ -147,7 +147,7 @@ class DownloadStore:
 
     team_cells = {
       'name': team.name, 'members_count': members_count,
-      'total_carbon_points': total_carbon_points, 'testimonials_count': testimonials_count
+      'total_yearly_lbs_carbon': total_carbon_points, 'testimonials_count': testimonials_count
     }
     return self._get_cells_from_dict(self.team_info_columns, team_cells)
 
@@ -192,7 +192,7 @@ class DownloadStore:
 
     community_cells = {
       'name': community.name, 'members_count': str(members_count), 'households_count': households_count,
-      'teams_count' : teams_count, 'total_carbon_points' : total_carbon_points,
+      'teams_count' : teams_count, 'total_yearly_lbs_carbon' : total_carbon_points,
       'actions_done': str(actions_done), 'actions_per_member': actions_per_member,
       'testimonials_count' : testimonials_count, 'events_count': events_count,
       'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action, 'highest_impact_action': highest_impact_action, 'second_highest_imapct_action': second_highest_impact_action
