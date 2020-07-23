@@ -37,7 +37,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
@@ -95,13 +95,24 @@ AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
-#--------END AWS CONFIGURATION ---------------------#
+
+#-------- OTHER CONFIGURATION ---------------------#
+SECURE_SSL_REDIRECT = False # if debugging then don't enforce
+SECURE_HSTS_SECONDS = 3600
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+USE_X_FORWARDED_HOST = True
+WSGI_APPLICATION = '_main_.wsgi.application'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
-
 ROOT_URLCONF = '_main_.urls'
 
 
@@ -121,17 +132,8 @@ TEMPLATES = [
     },
 ]
 
-SECURE_SSL_REDIRECT = DEBUG # if debugging then don't enforce
-SECURE_HSTS_SECONDS = 3600
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-USE_X_FORWARDED_HOST = True
-WSGI_APPLICATION = '_main_.wsgi.application'
-X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases

@@ -1,9 +1,5 @@
 import logging
 from _main_.utils.common import get_request_contents
-from _main_.utils.activity_logger import ActivityLogger
-
-# Get an instance of a logger
-logger = logging.getLogger(__name__)
 
 
 class Context:
@@ -23,7 +19,6 @@ class Context:
     self.args = {}
     self.is_dev = False
     self.is_prod = False
-    self.logger = ActivityLogger()
     self.user_is_logged_in = False
     self.user_id = None
     self.user_email = None
@@ -41,18 +36,11 @@ class Context:
   def set_request_body(self, request):
     #get the request args
     self.args = get_request_contents(request)
-
-    # add path and req body to logger
-    self.logger.add_trace('Context::set_request_body')
-    self.logger.add_path(request.path)
-    self.logger.add_request_body(self.args)
-
     
     #set the is_dev field
     self.is_dev = self.args.pop('is_dev', False)
     if not self.is_dev:
       self.is_prod = True
-
 
 
   def get_request_body(self):
