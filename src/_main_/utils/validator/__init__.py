@@ -17,15 +17,6 @@ class Validator:
     }
     return self
 
-  def expect_either(self, field_names, field_type=str, is_required=True):
-    # for f in field_names:
-
-    # self.fields[field_name] = {
-    #   "type": field_type,
-    #   "is_required": is_required
-    # }
-    return self
-
   def add(self, field_name, field_type=str, is_required=True):
     return self.expect(field_name, field_type, is_required)
 
@@ -102,7 +93,7 @@ class Validator:
       # now clear the  dictionary
       self.fields = {}
       self.rename_fields = set()
-      
+
       return args, None
 
     except Exception as e:
