@@ -49,9 +49,11 @@ class Validator:
     try:
       # when in strict mode remove all unexpected fields
       if strict:
+        tmp_args = args
         for f in args:
           if f not in self.fields:
-            del args[f]
+            del tmp_args[f]
+        args = tmp_args
 
       #first rename all fields that need renaming
       for (old_name, new_name) in self.rename_fields:
@@ -97,6 +99,10 @@ class Validator:
           elif field_type == 'file':
             args[field_name] =  args.get(field_name, None) or None
 
+      # now clear the  dictionary
+      self.fields = {}
+      self.rename_fields = set()
+      
       return args, None
 
     except Exception as e:
