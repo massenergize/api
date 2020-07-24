@@ -1,9 +1,10 @@
-from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel,RealEstateUnit
+from database.models import Graph, UserProfile, Media, Vendor, Action, Community, Data, Tag, TagCollection, UserActionRel,RealEstateUnit, Team, TeamMember
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from django.db.models import Q
+from django.db.models import Q, prefetch_related_objects
 from .utils import get_community
+from sentry_sdk import capture_message
 
 class GraphStore:
   def __init__(self):
@@ -16,6 +17,7 @@ class GraphStore:
         return None, InvalidResourceError()
       return graph, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -37,6 +39,7 @@ class GraphStore:
 
       return graphs, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -55,7 +58,7 @@ class GraphStore:
 
       if context.is_prod and not context.user_is_admin():
         if not community.is_published:
-          return None, CustomMassenergizeError("Content Available Yet")
+          return None, CustomMassenergizeError("Content Not Available Yet")
 
       graph = Graph.objects.prefetch_related('data').select_related('community').filter(community=community, title="Number of Actions Completed by Category").first()
       if not graph:
@@ -80,6 +83,56 @@ class GraphStore:
       return res, None
       
     except Exception as e:
+      capture_message(str(e), level="error")
+      import traceback
+      traceback.print_exc()
+      return None, CustomMassenergizeError(e)
+
+
+  def graph_actions_completed_by_team(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
+    try:
+
+      team_id = args.get('team_id', None)
+
+      if not team_id:
+        return None, CustomMassenergizeError("Missing team_id field")
+
+      team: Team = Team.objects.get(id=team_id)
+
+      if not team:
+        return None, InvalidResourceError()
+
+      if context.is_prod and not context.user_is_admin():
+        if not team.is_published:
+          return None, CustomMassenergizeError("Content Not Available Yet")
+  
+      members = TeamMember.objects.filter(team=team)
+
+      completed_action_rels = []
+      for member in members:
+        completed_action_rels.extend(member.user.useractionrel_set.filter(status="DONE").all())
+
+      categories = TagCollection.objects.get(name="Category").tag_set.order_by("name").all()
+
+      prefetch_related_objects(completed_action_rels, "action__tags")
+      data = []
+      for category in categories:
+        data.append({
+          "id"   : category.id,
+          "name" : category.name,
+          "value": len(list(filter(lambda action_rel : category in action_rel.action.tags.all(), completed_action_rels)))
+        })
+
+      res = {
+        "data": data,
+        "title": "Actions Completed By Members Of Team",
+        "team": team.info()
+      }
+   
+      return res, None
+        
+    except Exception as e:
+      capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(e)
@@ -144,6 +197,7 @@ class GraphStore:
         "data": res
       }, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -192,6 +246,7 @@ class GraphStore:
     
       return new_graph, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -209,7 +264,7 @@ class GraphStore:
 
       return None, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -219,6 +274,7 @@ class GraphStore:
       graphs.update(is_deleted=True, is_published=False)
       return graphs.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -251,6 +307,7 @@ class GraphStore:
       }, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -275,5 +332,5 @@ class GraphStore:
       }, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

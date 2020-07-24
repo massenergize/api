@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, resize_image
+from sentry_sdk import capture_message
 
 class Validator:
 
@@ -99,6 +100,5 @@ class Validator:
       return args, None
 
     except Exception as e:
-      import traceback
-      traceback.print_exc()
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

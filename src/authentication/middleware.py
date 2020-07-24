@@ -6,6 +6,7 @@ from _main_.utils.context import Context
 from _main_.settings import SECRET_KEY
 from firebase_admin import auth
 import json, jwt
+from sentry_sdk import capture_message
 
 
 class MassenergizeJWTAuthMiddleware:
@@ -37,6 +38,7 @@ class MassenergizeJWTAuthMiddleware:
         return id_token, None
       return None, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -66,4 +68,5 @@ class MassenergizeJWTAuthMiddleware:
       #TODO: enforce all requests accessing resources are always logged in first
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return CustomMassenergizeError(e)

@@ -82,6 +82,12 @@ class TeamService:
       return None, err
     return serialize_all(members), None
 
+  def members_preferred_names(self, context, args) -> (dict, MassEnergizeAPIError):
+    preferred_names, err = self.store.members_preferred_names(context, args)
+    if err:
+      return None, err
+    return preferred_names, None
+
   def message_admin(self, context, args) -> (dict, MassEnergizeAPIError):
     message_info, err = self.message_store.message_team_admin(context, args)
     if err:

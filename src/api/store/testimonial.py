@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
+from sentry_sdk import capture_message
 
 class TestimonialStore:
   def __init__(self):
@@ -15,6 +16,7 @@ class TestimonialStore:
         return None, InvalidResourceError()
       return testimonial, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -50,6 +52,7 @@ class TestimonialStore:
 
       return testimonials, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -118,6 +121,7 @@ class TestimonialStore:
     
       return new_testimonial, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -163,7 +167,7 @@ class TestimonialStore:
       testimonial.update(**args)
       return new_testimonial, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -173,6 +177,7 @@ class TestimonialStore:
       testimonials.update(is_deleted=True, is_published=False)
       return testimonials.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -194,7 +199,7 @@ class TestimonialStore:
       testimonials = Testimonial.objects.filter(community__id = community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return testimonials, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -205,5 +210,5 @@ class TestimonialStore:
       events = Testimonial.objects.filter(is_deleted=False).select_related('image', 'community', 'vendor').prefetch_related('tags')
       return events, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
