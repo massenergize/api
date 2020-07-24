@@ -41,14 +41,14 @@ class TestimonialStore:
 
       else:
         if subdomain:
-          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False, is_published=True)
+          # testimonials touch many things through foreign key relationships
+          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False, is_published=True).prefetch_related('tags__tag_collection','action__tags','vendor','community')
         elif community_id:
           testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
         elif user_id:
           testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False, is_published=True)
         elif user_email:
           testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False, is_published=True)
-
 
       return testimonials, None
     except Exception as e:
