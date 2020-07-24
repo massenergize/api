@@ -6,9 +6,6 @@ UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstate
 from django.db.models import Q
 from sentry_sdk import capture_message
 
-# TODO: remove traceback calls before PR
-import traceback
-
 class DownloadStore:
 
   def __init__(self):
@@ -31,7 +28,6 @@ class DownloadStore:
       cells[columns.index(key)] = value
     return cells
 
-
   def _get_user_info_cells(self, user):
     user_cells = {}
   
@@ -52,7 +48,6 @@ class DownloadStore:
 
     return self._get_cells_from_dict(self.user_info_columns, user_cells)
 
-
   def _get_user_actions_cells(self, user, actions):
     if (isinstance(user, Subscriber)):
       return ['' for _ in range(len(actions))]
@@ -60,9 +55,9 @@ class DownloadStore:
     cells = []
     # create collections with constant-time lookup. VERY much worth the up-front compute.
     user_testimonial_action_ids = {testimonial.action.id if testimonial.action else None
-                                for testimonial in Testimonial.objects.filter(is_deleted=False, user=user)}
+                                for testimonial in Testimonial.objects.filter(is_deleted=False, user=user).select_related('action')}
     action_id_to_action_rel = {user_action_rel.action.id: user_action_rel
-                                for user_action_rel in UserActionRel.objects.filter(is_deleted=False, user=user)}
+                                for user_action_rel in UserActionRel.objects.filter(is_deleted=False, user=user).select_related('action')}
 
     for action in actions:
       user_action_status = ''
@@ -74,7 +69,6 @@ class DownloadStore:
           user_action_status = user_action_rel.status
       cells.append(user_action_status)
     return cells
-
 
   def _get_user_teams_cells(self, user, teams):
     if (isinstance(user, Subscriber)):
@@ -351,7 +345,6 @@ class DownloadStore:
       else:
         return None, NotAuthorizedError()
     except Exception as e:
-      traceback.print_exc()
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
@@ -370,7 +363,6 @@ class DownloadStore:
       else:
           return None, NotAuthorizedError()
     except Exception as e:
-      traceback.print_exc()
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
@@ -381,7 +373,6 @@ class DownloadStore:
         return None, NotAuthorizedError()
       return (self._all_communities_download(), None), None          
     except Exception as e:
-      traceback.print_exc()
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
@@ -397,6 +388,5 @@ class DownloadStore:
       else:
           return None, NotAuthorizedError()
     except Exception as e:
-      traceback.print_exc()
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
