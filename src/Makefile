@@ -17,8 +17,8 @@ deploy-dev:
 .PHONY: deploy-dev
 
 package = carbon_calculator
-infile = $(package)/tests/standard_inputs.txt
-outfile = $(package)/tests/standard_outputs.txt
+infile = $(package)/tests/allPossibleInputs.txt
+outfile = $(package)/tests/allPossibleOutputs.txt
 generate_inputs = 0
 export TEST_INPUTS=$(infile)
 export TEST_OUTPUTS=$(outfile)

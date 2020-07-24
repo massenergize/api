@@ -330,6 +330,7 @@ class CalcDefault(models.Model):
     id = models.AutoField(primary_key=True)
     variable = models.CharField(max_length=NAME_STR_LEN,blank=False)
     locality = models.CharField(max_length=NAME_STR_LEN)
+    valid_date = models.DateField(null=True)
     value = models.FloatField(default=0.0)
     reference = models.CharField(max_length=MED_STR_LEN)
     updated = models.DateTimeField(auto_now_add=True)
@@ -340,8 +341,11 @@ class CalcDefault(models.Model):
     def full_json(self):
         return self.simple_json()
 
-    def __str__(self):      
-        return "%s : %s = %.3f" % (self.locality,self.variable, self.value)
+    def __str__(self):
+        message = "%s : %s = %.3f" % (self.locality,self.variable, self.value)
+        if self.valid_date:
+            message += "-" + str(self.valid_date)
+        return message
 
     class Meta:
         db_table = 'defaults_cc'

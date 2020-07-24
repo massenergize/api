@@ -20,8 +20,8 @@ def getLocality(inputs):
     return locality
 
 
-def getDefault(locality, variable, defaultValue, noUpdate=False):
-    return CCD.getDefault(CCD,locality, variable, defaultValue, noUpdate)
+def getDefault(locality, variable, defaultValue, date=None, noUpdate=False):
+    return CCD.getDefault(CCD,locality, variable, defaultValue, date, noUpdate)
 
 class CCD():
 
@@ -31,17 +31,11 @@ class CCD():
         num = CalcDefault.objects.all().count()
         msg = "Initializing %d Carbon Calc defaults from db" % num
         print(msg)
-        start = time.time()
-        startcpu = timeit.timeit()
         cq = CalcDefault.objects.all()
         for c in cq:
             if c.locality not in DefaultsByLocality:
                 DefaultsByLocality[c.locality] = {}
             DefaultsByLocality[c.locality][c.variable] = c.value
-        endcpu = timeit.timeit()
-        end = time.time()
-        msg = "Elapsed = %.3f sec, CPU = %.3f sec" % (end - start, endcpu - startcpu)
-        print(msg)
     except:
         print("CalcDefault initialization skipped")
 
@@ -49,7 +43,7 @@ class CCD():
         print("CCD __init__ called")
 
 
-    def getDefault(self,locality,variable,defaultValue, noUpdate=False):
+    def getDefault(self,locality,variable,defaultValue, date, noUpdate=False):
         if locality in self.DefaultsByLocality:
             if variable in self.DefaultsByLocality[locality]:
                 return self.DefaultsByLocality[locality][variable]
@@ -95,22 +89,32 @@ class CCD():
                 first = True
                 for item in inputlist:
                     if first:
-                        #header = item
+                        t = {}
+                        for i in range(len(item)):
+                            t[item[i]] = i
                         first = False
                     else:
-                        if len(item)<5 or item[0] == '' or item[1] == '':
+                        if len(item)<6 or item[0] == '' or item[1] == '':
                             continue
-                        qs = CalcDefault.objects.filter(variable=item[0], locality=item[1])
-                        if not qs:
-                            print("No "+item[0]+" for "+item[1])
-                        else:    
-                            qs[0].delete()
+                        variable = item[t["Variable"]]
+                        locality = item[t["Locality"]]
+                        valid_date = item[t["Valid Date"]]
+                        value = eval(item[t["Value"]])
+                        reference = item[t["Reference"]]
+                        updated = item[t["Updated"]]
+                        if not valid_date or valid_date=="":
+                            qs = CalcDefault.objects.filter(variable=variable, locality=locality)
+                            if not qs:
+                                print("No "+item[0]+" for "+item[1])
+                            else:    
+                                qs[0].delete()
 
-                        cd = CalcDefault(variable=item[0],
-                                locality=item[1],
-                                value=eval(item[2]),
-                                reference=item[3],
-                                updated=item[4])
+                        cd = CalcDefault(variable=variable,
+                                locality=locality,
+                                value=value,
+                                reference=reference,
+                                valid_date = valid_date,
+                                updated=updated)
                         cd.save()
             status = True
         except:
