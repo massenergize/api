@@ -265,7 +265,6 @@ def community(request, cid=None, subdomain=None):
     #updating the Community resource with this <id>
     #TODO: create pages for this community, etc
     community, errors = FACTORY.update(Community, args)
-    # print(community.simple_json())
     return Json(community, errors)
   elif request.method == 'DELETE':
     items_deleted, errors = FETCH.delete(Community, args)
@@ -1352,6 +1351,7 @@ def communities_stats(request):
       communityGoal = communityData["goal"]
       res["households_engaged"] = communityGoal["attained_number_of_households"]
       res["actions_completed"] = communityGoal["attained_number_of_actions"]
+      res["carbon_footprint_reduction"] = communityGoal["attained_carbon_footprint_reduction"]
     
       ans.append(res)
   return Json(ans, errors, do_not_serialize=True)
@@ -1364,15 +1364,16 @@ def community_stats(request, cid):
     community, errors = FETCH.one(Community, args)
     if community:
       res = {"households_engaged": 0, "actions_completed": 0, "users_engaged":0}
-      res["community"] = community.simple_json();
+      res["community"] = community.simple_json()
       users, errors = FETCH.all(UserProfile, {"communities": community.id})
-      res["users_engaged"] = len(users);
+      res["users_engaged"] = len(users)
 
       # changed to fix graph inconsistencies
       communityData = community.full_json()
       communityGoal = communityData["goal"]
       res["households_engaged"] = communityGoal["attained_number_of_households"]
       res["actions_completed"] = communityGoal["attained_number_of_actions"]
+      res["carbon_footprint_reduction"] = communityGoal["attained_carbon_footprint_reduction"]
 
       return Json(res, errors, do_not_serialize=True)
   return Json(None)

@@ -5,6 +5,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 import random
+from sentry_sdk import capture_message
+
 
 class ActionStore:
   def __init__(self):
@@ -12,29 +14,41 @@ class ActionStore:
 
   def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
     try:
-      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id, is_deleted=False)
+      actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
+
+      # may want to add a filter on is_deleted, switched on context
+      # if context.not_if_deleted:
+      #   actions_retrieved = actions_retrieved.filter(is_deleted=False)
+
       action: Action = actions_retrieved.first()
+
       if not action:
         return None, InvalidResourceError()
       return action, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def list_actions(self, context: Context,community_id, subdomain) -> (list, MassEnergizeAPIError):
     try:
       actions = []
       if community_id:
-        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id, is_deleted=False)
+        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id)
       elif subdomain:
-        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain, is_deleted=False)
+        actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__subdomain=subdomain)
       else:
         return [], None
 
       if not context.is_dev:
         actions = actions.filter(is_published=True)
 
+      # by default, exclude deleted actions
+      #if not context.include_deleted:
+      actions = actions.filter(is_deleted=False)
+
       return actions, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -68,14 +82,13 @@ class ActionStore:
       if calculator_action:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
         if ccAction:
-          print(ccAction)
           new_action.calculator_action = ccAction
 
       new_action.save()
       return new_action, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def copy_action(self, context: Context, action_id) -> (Action, MassEnergizeAPIError):
@@ -95,6 +108,8 @@ class ActionStore:
       new_action.vendors.set(old_vendors)
       return new_action, None
     except Exception as e:
+      capture_message(str(e), level="error")
+    
       return None, CustomMassenergizeError(str(e))
 
 
@@ -136,6 +151,7 @@ class ActionStore:
       action.save()
       return action, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -147,6 +163,7 @@ class ActionStore:
       action_to_delete.save()
       return action_to_delete.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def list_actions_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
@@ -168,7 +185,7 @@ class ActionStore:
       return actions, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -179,5 +196,5 @@ class ActionStore:
       actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
       return actions, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

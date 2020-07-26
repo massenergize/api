@@ -7,6 +7,9 @@ from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
+
+
 class VendorStore:
   def __init__(self):
     self.name = "Vendor Store/DB"
@@ -24,7 +27,7 @@ class VendorStore:
 
       return vendor, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -50,6 +53,7 @@ class VendorStore:
 
       return vendors, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -61,6 +65,7 @@ class VendorStore:
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       key_contact_full_name = args.pop('key_contact_full_name', None)
       key_contact_email = args.pop('key_contact_email', None)
+      website = args.pop('website', None)
       args["key_contact"] = {
         "name": key_contact_full_name,
         "email": key_contact_email
@@ -80,6 +85,9 @@ class VendorStore:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
         if onboarding_contact:
           new_vendor.onboarding_contact = onboarding_contact
+
+      if website:
+        new_vendor.more_info = {'website': website}
       
       new_vendor.save()
 
@@ -93,6 +101,7 @@ class VendorStore:
 
       return new_vendor, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -102,8 +111,6 @@ class VendorStore:
       vendor = Vendor.objects.get(id=vendor_id)
       if not vendor:
         return None, InvalidResourceError()  
-
-      print(vendor)
       
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -116,7 +123,9 @@ class VendorStore:
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       if onboarding_contact_email:
         vendor.onboarding_contact_email = onboarding_contact_email
-      
+
+      website = args.pop('website', None)
+
   
       key_contact = args.pop('key_contact', {})
       if key_contact:
@@ -140,13 +149,15 @@ class VendorStore:
       if tags:
         vendor.tags.set(tags)
 
+      if website:
+        vendor.more_info = {'website': website}
       vendor.save()
 
       updated = Vendor.objects.filter(id=vendor_id).update(**args)
       return vendor, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -157,6 +168,7 @@ class VendorStore:
       #TODO: also remove it from all places that it was ever set in many to many or foreign key
       return vendors.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -173,6 +185,7 @@ class VendorStore:
       vendor.save()
       return vendor, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -200,7 +213,7 @@ class VendorStore:
       vendors = community.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
       return vendors, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -209,5 +222,5 @@ class VendorStore:
       vendors = Vendor.objects.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
       return vendors, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

@@ -22,6 +22,7 @@ class GraphHandler(RouteHandler):
     self.add("/graphs.add", self.create())
     self.add("/graphs.list", self.list())
     self.add("/graphs.actions.completed", self.graph_actions_completed())
+    self.add("/graphs.actions.completed.byTeam", self.graph_actions_completed_by_team())
     self.add("/graphs.communities.impact", self.graph_community_impact())
     self.add("/graphs.update", self.update())
     self.add("/graphs.data.update", self.update())
@@ -108,6 +109,23 @@ class GraphHandler(RouteHandler):
       return MassenergizeResponse(data=graph_info)
     return graph_actions_completed_view
 
+  def graph_actions_completed_by_team(self) -> function:
+    def graph_actions_completed_by_team_view(request) -> None:
+      context: Context = request.context
+      args: dict = context.args
+
+      v: Validator = Validator()
+      v.expect("team_id", str, False)
+      args, err = v.verify(args, strict=True)
+      if err:
+        return err
+
+      graph_info, err = self.service.graph_actions_completed_by_team(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=graph_info)
+    return graph_actions_completed_by_team_view
+
   def graph_community_impact(self) -> function:
     def graph_community_impact_view(request) -> None: 
       context: Context = request.context
@@ -121,7 +139,7 @@ class GraphHandler(RouteHandler):
       args, err = v.verify(args, strict=True)
       if err:
         return err
-      
+     
       graph_info, err = self.service.graph_community_impact(context, args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

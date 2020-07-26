@@ -14,18 +14,28 @@ import os
 import firebase_admin
 from firebase_admin import credentials
 from .utils.utils import load_json
+from dotenv import load_dotenv
+from pathlib import Path  # python3 only
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
-path_to_config = '/_main_/config/massenergizeProdConfig.json' if IS_PROD else '/_main_/config/massenergizeProjectConfig.json'
-CONFIG_DATA = load_json(BASE_DIR + path_to_config)
-os.environ.update(CONFIG_DATA)
+
+try:
+    env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
+    load_dotenv(dotenv_path=env_path, verbose=True)
+except Exception:
+    load_dotenv()
+
+
+# os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
-SECRET_KEY =  CONFIG_DATA["SECRET_KEY"]
+SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,7 +51,13 @@ ALLOWED_HOSTS = [
     'api.prod.massenergize.org',
     'api-dev.massenergize.org',
     'api.dev.massenergize.org',
-    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com'
+    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
+    'massenergize-api-production.us-east-2.elasticbeanstalk.com',
+    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com',
+    'Prod-env.eba-cg9aw8pt.us-east-2.elasticbeanstalk.com',
+    'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
+    '0.0.0.0',
+    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
@@ -143,13 +159,22 @@ DATABASES = {
     },
 }
 
-firebase_service_account_path = '/_main_/config/massenergizeProdFirebaseServiceAccount.json' if IS_PROD else '/_main_/config/massenergizeFirebaseServiceAccount.json'
-FIREBASE_CREDENTIALS = credentials.Certificate(BASE_DIR + firebase_service_account_path)
+FIREBASE_CREDENTIALS = credentials.Certificate({
+  "type": "service_account",
+  "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
+  "private_key_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY_ID'),
+  "private_key": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'),
+  "client_email": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL'),
+  "client_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_ID'),
+  "client_x509_cert_url": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL'),
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+})
 firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
 
-# Password validation
-# https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -166,9 +191,17 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/2.1/topics/i18n/
+# Sentry Logging Initialization
+sentry_sdk.init(
+    dsn=os.environ.get('SENTRY_DSN'),
+    integrations=[DjangoIntegration()],
 
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)
+
+# Internationalization
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -179,18 +212,15 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
+EMAIL_USE_TLS = True 
+EMAIL_HOST = 'smtp.gmail.com' 
+EMAIL_PORT = 587 
 EMAIL_HOST_USER = os.environ.get('EMAIL')
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.1/howto/static-files/
-
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 

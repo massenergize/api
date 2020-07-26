@@ -3,7 +3,8 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
-from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities
+from sentry_sdk import capture_message
+from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups
 
 class UserStore:
   def __init__(self):
@@ -14,6 +15,7 @@ class UserStore:
       user = get_user_or_die(context, args)
       return user, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def remove_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -24,6 +26,7 @@ class UserStore:
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def add_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -46,6 +49,7 @@ class UserStore:
 
       return new_unit, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def edit_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -73,6 +77,7 @@ class UserStore:
 
       return new_unit, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def list_households(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -81,6 +86,7 @@ class UserStore:
 
       return user.real_estate_units.all(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def list_users(self, community_id) -> (list, MassEnergizeAPIError):
@@ -97,6 +103,7 @@ class UserStore:
         return []
       return EventAttendee.objects.filter(attendee=user), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -123,7 +130,7 @@ class UserStore:
           accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
         )
       else:
-        new_user: UserProfile = user.first()
+        new_user: UserProfile = user
 
 
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
@@ -138,11 +145,11 @@ class UserStore:
       
       res = {
         "user": new_user,
-        "community": community or global_community
+        "community": community
       }
       return res, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -154,10 +161,20 @@ class UserStore:
     return user, None
 
 
-  def delete_user(self, user_id) -> (dict, MassEnergizeAPIError):
-    users = UserProfile.objects.filter(id=user_id)
-    if not users:
+  def delete_user(self, context: Context, user_id) -> (dict, MassEnergizeAPIError):
+    if not user_id:
       return None, InvalidResourceError()
+
+    #check to make sure the one deleting is an admin
+    if not context.user_is_admin():
+
+      # if they are not an admin make sure they can only delete themselves
+      if not context.user_id != user_id:
+        return None, NotAuthorizedError()
+
+    users = UserProfile.objects.filter(id=user_id)
+    users.update(is_deleted=True)
+    return users.first(), None
 
 
   def list_users_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
@@ -172,34 +189,37 @@ class UserStore:
 
       if not community and context.user_id:
         communities, err =  get_admin_communities(context)
-        comm_ids = [c.id for c in communities]      
-        users = set(cm.user for cm in CommunityMember.objects.filter(community_id__in=comm_ids))
+        comm_ids = [c.id for c in communities] 
+        users = [cm.user for cm in CommunityMember.objects.filter(community_id__in=comm_ids, user__is_deleted=False)]
+
+        #now remove all duplicates
+        users = remove_dups(users)
+
         return users, None
       elif not community:
         return [], None
 
-      users = CommunityMember.objects.filter(community=community, is_deleted=False)
+      users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
+      users = remove_dups(users)
       return users, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
   def list_users_for_super_admin(self, context: Context):
     try:
-      # if not context.user_is_super_admin:
-      #   return None, NotAuthorizedError()
+      if not context.user_is_super_admin:
+        return None, NotAuthorizedError()
       users = UserProfile.objects.filter(is_deleted=False)
       return users, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
   def add_action_todo(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      # if not context.user_is_logged_in:
-      #   return CustomMassenergizeError("Sign in required")
       user = get_user_or_die(context, args)
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
@@ -243,16 +263,13 @@ class UserStore:
 
       return new_user_action_rel, None
     except Exception as e:
+      capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(str(e))
 
   def add_action_completed(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-
-      # if not context.user_is_logged_in:
-      #   return None, CustomMassenergizeError("Sign in required")
-      
       user_id = context.user_id or args.get('user_id')
       user_email = context.user_email or args.get('user_email')
       action_id = args.get("action_id", None)
@@ -306,6 +323,7 @@ class UserStore:
 
       return new_user_action_rel, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -325,6 +343,7 @@ class UserStore:
 
       return todo, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -344,4 +363,5 @@ class UserStore:
       
       return todo, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
+from sentry_sdk import capture_message
 
 class TestimonialStore:
   def __init__(self):
@@ -15,6 +16,7 @@ class TestimonialStore:
         return None, InvalidResourceError()
       return testimonial, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -39,7 +41,8 @@ class TestimonialStore:
 
       else:
         if subdomain:
-          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False, is_published=True)
+          # testimonials touch many things through foreign key relationships
+          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False, is_published=True).prefetch_related('tags__tag_collection','action__tags','vendor','community')
         elif community_id:
           testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
         elif user_id:
@@ -47,9 +50,9 @@ class TestimonialStore:
         elif user_email:
           testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False, is_published=True)
 
-
       return testimonials, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -61,14 +64,19 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       user_email = args.pop('user_email', None)
-      anonymous = args.pop('anonymous', False)
-      
+      preferred_name = args.pop('preferred_name', None)
+
       args["title"] = args.get("title", "Thank You")[:100]
      
       new_testimonial: Testimonial = Testimonial.objects.create(**args)
 
       user = None
       if user_email:
+        user_email = user_email.strip()
+        #verify that provided emails are valid user
+        if not UserProfile.objects.filter(email=user_email).exists():
+          return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
+
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_testimonial.user = user
@@ -91,11 +99,16 @@ class TestimonialStore:
       else:
         testimonial_community = None
 
-      new_testimonial.anonymous = anonymous
-      if not anonymous and user:
-        new_testimonial.preferred_name = user.full_name + ' from ' + ('' if not testimonial_community else testimonial_community.name)
+      # eliminating anonymous testimonias
+      new_testimonial.anonymous = False
+      if not preferred_name:
+        if user:
+          if user.preferred_name:
+            preferred_name = user.preferred_name
+          else:
+            preferred_name =  user.full_name + ' from ' + ('' if not testimonial_community else testimonial_community.name)
+      new_testimonial.preferred_name = preferred_name
 
-      
       new_testimonial.save()
 
       tags_to_set = []
@@ -108,6 +121,7 @@ class TestimonialStore:
     
       return new_testimonial, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -122,15 +136,8 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      user_email = args.pop('user_email', None)
-     
+      
       new_testimonial = testimonial.first()
-
-      # if user_email:
-      #   user = UserProfile.objects.filter(email=user_email).first()
-      #   if not user:
-      #     return None, CustomMassenergizeError("No user with that email")
-      #   new_testimonial.user = user
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
@@ -160,7 +167,7 @@ class TestimonialStore:
       testimonial.update(**args)
       return new_testimonial, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -170,6 +177,7 @@ class TestimonialStore:
       testimonials.update(is_deleted=True, is_published=False)
       return testimonials.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -191,7 +199,7 @@ class TestimonialStore:
       testimonials = Testimonial.objects.filter(community__id = community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return testimonials, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -202,5 +210,5 @@ class TestimonialStore:
       events = Testimonial.objects.filter(is_deleted=False).select_related('image', 'community', 'vendor').prefetch_related('tags')
       return events, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

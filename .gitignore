@@ -11,6 +11,5 @@ src/*.jpeg
 
 \.vscode/
 
-src/dev.env
-
-src/prod.env
+*.env
+env

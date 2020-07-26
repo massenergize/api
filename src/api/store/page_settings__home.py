@@ -2,6 +2,7 @@ from database.models import HomePageSettings, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
 
 class HomePageSettingsStore:
   def __init__(self):
@@ -14,6 +15,7 @@ class HomePageSettingsStore:
         return None, InvalidResourceError()
       return home_page_setting, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -58,7 +60,6 @@ class HomePageSettingsStore:
           if attained_number_of_actions:
             community_goal.attained_number_of_actions = attained_number_of_actions
           
-
           target_number_of_actions = goal_updates.get('target_number_of_actions', None)
           if target_number_of_actions:
             community_goal.target_number_of_actions = target_number_of_actions
@@ -68,10 +69,19 @@ class HomePageSettingsStore:
           if attained_number_of_households:
             community_goal.attained_number_of_households = attained_number_of_households
           
-
           target_number_of_households = goal_updates.get('target_number_of_households', None)
-          if attained_number_of_actions:
+          if target_number_of_actions:
             community_goal.target_number_of_households = target_number_of_households
+
+
+          attained_carbon_footprint_reduction = goal_updates.get('attained_carbon_footprint_reduction', None)
+          if attained_carbon_footprint_reduction:
+            community_goal.attained_carbon_footprint_reduction = attained_carbon_footprint_reduction
+          
+          target_carbon_footprint_reduction = goal_updates.get('target_carbon_footprint_reduction', None)
+          if target_carbon_footprint_reduction:
+            community_goal.target_carbon_footprint_reduction = target_carbon_footprint_reduction
+
 
           community_goal.save()
       
@@ -112,7 +122,7 @@ class HomePageSettingsStore:
       HomePageSettings.objects.filter(id=home_page_id).update(**args)
       return home_page_setting, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -132,5 +142,5 @@ class HomePageSettingsStore:
       home_page_settings = HomePageSettings.objects.all()
       return home_page_settings, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

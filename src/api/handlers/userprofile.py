@@ -69,7 +69,6 @@ class UserHandler(RouteHandler):
       if err:
         return err
       user_info, err = self.service.create_user(context, args)
-      print(user_info, err)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
@@ -81,7 +80,7 @@ class UserHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
+      #user_id = args.pop('user_id', None)
       user_info, err = self.service.list_users(community_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -124,8 +123,8 @@ class UserHandler(RouteHandler):
     def delete_user_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      user_id = args.get("id", None)
-      user_info, err = self.service.delete_user(args.get("id", None))
+      user_id = args.get("id", None) or args.get("user_id", None)
+      user_info, err = self.service.delete_user(context, user_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

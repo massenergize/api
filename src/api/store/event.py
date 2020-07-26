@@ -4,6 +4,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from django.db.models import Q
 from _main_.utils.context import Context
 from random import randint
+from sentry_sdk import capture_message
+
 
 class EventStore:
   def __init__(self):
@@ -17,6 +19,7 @@ class EventStore:
         return None, InvalidResourceError()
       return event, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def copy_event(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
@@ -44,7 +47,7 @@ class EventStore:
 
       return new_event, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -61,8 +64,10 @@ class EventStore:
       events = EventAttendee.objects.filter(attendee=user_id)
     else:
       events = []
-    if not events:
-      return [], None
+    
+    if not context.is_dev and events:
+      events = events.filter(is_published=True)
+  
     return events, None
 
 
@@ -96,7 +101,7 @@ class EventStore:
       
       return new_event, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -136,6 +141,7 @@ class EventStore:
       
       return event, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -151,7 +157,7 @@ class EventStore:
       events.delete()
       return events.first(), None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -173,7 +179,7 @@ class EventStore:
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True), is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -184,5 +190,5 @@ class EventStore:
       events = Event.objects.filter(is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

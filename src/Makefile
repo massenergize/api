@@ -8,14 +8,24 @@ start:
 
 deploy-prod:
 	python prepare-for-deploy.py --prod
-	eb deploy
+	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
+	docker build -t massenergize/api .
+	docker tag massenergize/api:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
+	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:latest
 .PHONY: deploy-prod
 
 deploy-dev:
 	python prepare-for-deploy.py --dev
-	eb deploy
+	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
+	docker build -t massenergize/api-dev .
+	docker tag massenergize/api-dev:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:latest
+	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:latest
 .PHONY: deploy-dev
 
+deploy:
+	docker-compose build
+	docker-compose push
+.PHONY: deploy
 package = carbon_calculator
 infile = $(package)/tests/allPossibleInputs.txt
 outfile = $(package)/tests/allPossibleOutputs.txt

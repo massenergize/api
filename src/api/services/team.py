@@ -33,8 +33,8 @@ class TeamService:
     return stats, None
 
 
-  def create_team(self, user_id, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.create_team(user_id, args)
+  def create_team(self, context, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.create_team(context, args)
     if err:
       return None, err
     return serialize(team), None
@@ -81,6 +81,12 @@ class TeamService:
     if err:
       return None, err
     return serialize_all(members), None
+
+  def members_preferred_names(self, context, args) -> (dict, MassEnergizeAPIError):
+    preferred_names, err = self.store.members_preferred_names(context, args)
+    if err:
+      return None, err
+    return preferred_names, None
 
   def message_admin(self, context, args) -> (dict, MassEnergizeAPIError):
     message_info, err = self.message_store.message_team_admin(context, args)

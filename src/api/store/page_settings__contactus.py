@@ -2,6 +2,7 @@ from database.models import ContactUsPageSettings, UserProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
 
 class ContactUsPageSettingsStore:
   def __init__(self):
@@ -14,6 +15,7 @@ class ContactUsPageSettingsStore:
         return None, InvalidResourceError()
       return page, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -57,5 +59,5 @@ class ContactUsPageSettingsStore:
       contact_us_page_settings = ContactUsPageSettings.objects.all()
       return contact_us_page_settings, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

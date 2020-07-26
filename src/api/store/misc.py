@@ -2,6 +2,7 @@ from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMem
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
 
 class MiscellaneousStore:
   def __init__(self):
@@ -12,6 +13,7 @@ class MiscellaneousStore:
       main_menu = Menu.objects.all()
       return main_menu, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def backfill(self, context: Context, args) -> (list, CustomMassenergizeError):
@@ -45,6 +47,7 @@ class MiscellaneousStore:
 
       return {'teams_member_backfill': 'done'}, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -73,6 +76,7 @@ class MiscellaneousStore:
 
       return {'name':'community_member_backfill', 'status': 'done'}, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def backfill_graph_default_data(self, context: Context, args):
@@ -88,20 +92,19 @@ class MiscellaneousStore:
               if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
                 val += 1
             
-            print(val, d)
             d.value = val
             d.save()
       return {'graph_default_data': 'done'}, None
 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
   def backfill_real_estate_units(self, context: Context, args):
     try:
       for user_action in UserActionRel.objects.all():
-        print(user_action.real_estate_unit, user_action.action.community)
         if not user_action.real_estate_unit.community:
           user_action.real_estate_unit.community = user_action.action.community
         user_action.real_estate_unit.unit_type = (user_action.real_estate_unit.unit_type or 'residential').lower()
@@ -113,6 +116,7 @@ class MiscellaneousStore:
 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -121,7 +125,6 @@ class MiscellaneousStore:
       for data in Data.objects.all():
         if data.tag and data.tag.name == "Lighting":
           home_energy_data = Data.objects.filter(community=data.community, tag__name="Home Energy").first()
-          print(data, home_energy_data)
           if home_energy_data:
             home_energy_data.value += data.value
             home_energy_data.reported_value += data.reported_value
@@ -132,4 +135,5 @@ class MiscellaneousStore:
 
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
