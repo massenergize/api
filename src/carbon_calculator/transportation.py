@@ -1,8 +1,6 @@
 from .CCDefaults import getDefault, getLocality
 from .CCConstants import NO,YES, FREQUENCIES
 
-CAR_DEFAULT_MILES = 10557.
-
 def EvalReplaceCar(inputs):
     #car_type,replace_car,car_annual_miles,car_mpg,car_model_new
     explanation = "Didn't choose to replace a car with a hybrid or electric."
@@ -11,10 +9,10 @@ def EvalReplaceCar(inputs):
 
     if inputs.get('replace_car', YES) == YES:
 
-        default_miles = getDefault(locality, 'car_default_miles', CAR_DEFAULT_MILES)
+        default_miles = getDefault(locality, 'car_default_miles')
         miles_est = float(inputs.get('car_annual_miles', default_miles))
 
-        default_mpg = getDefault(locality, 'car_default_mpg', 25.)
+        default_mpg = getDefault(locality, 'car_default_mpg')
         specified_mpg = float(inputs.get('car_mpg', 0.))
 
         if specified_mpg > 0.:
@@ -53,81 +51,81 @@ def EvalReplaceCar(inputs):
 def CarImpact(locality, annual_miles, mpg, car_type, new=False):
     kwh = gal = 0.
 
-    co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
-    co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
-    kwh_price = getDefault(locality,"elec_price_per_kwh",0.2209)            # Eversource current price
+    co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal') # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
+    co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh")    # lbs CO2 per kwh
+    kwh_price = getDefault(locality,"elec_price_per_kwh")            # Eversource current price
 
-    gasoline_price = getDefault(locality,'gasoline_price', 2.70) # current ave MA price Oct 2019
+    gasoline_price = getDefault(locality,'gasoline_price') # current ave MA price Oct 2019
 
     if car_type == 'Electric':
         if mpg == 0.:   #  not specified
-            kwh_per_mile = getDefault(locality,'car_electric_kwh_per_mile', 0.25)
+            kwh_per_mile = getDefault(locality,'car_electric_kwh_per_mile')
             kwh = kwh_per_mile * annual_miles
             gal = 0
         else:
             gal_equiv = annual_miles/mpg
-            btu_per_gal = getDefault('','gasoline_btu_per_gal', 120333.)
-            btu_per_kwh = getDefault('','elec_btu_per_kwh',3412.)
+            btu_per_gal = getDefault('','gasoline_btu_per_gal')
+            btu_per_kwh = getDefault('','elec_btu_per_kwh')
             kwh = gal_equiv * btu_per_gal / btu_per_kwh
-        annual_service = getDefault(locality,'car_annual_service_electric', 200.)
+        annual_service = getDefault(locality,'car_annual_service_electric')
 
-        federal_credit = getDefault(locality,'car_BEV_federal_credit', 7500.)
-        state_credit = getDefault(locality,'car_BEV_state_credit', 2500.)
-        local_incentives = getDefault(locality,'car_BEV_local_rebate', 0.)
+        federal_credit = getDefault(locality,'car_BEV_federal_credit')
+        state_credit = getDefault(locality,'car_BEV_state_credit')
+        local_incentives = getDefault(locality,'car_BEV_local_rebate')
         total_incentives = federal_credit + state_credit + local_incentives
 
-        car_price = getDefault(locality,'car_BEV_price', 30000.)    # current price of Nissan Leaf
+        car_price = getDefault(locality,'car_BEV_price')    # current price of Nissan Leaf
 
     elif car_type == 'Plug-in Hybrid':
-        electric_fraction = getDefault(locality,'car_plugin_electric_fraction', 0.8)
+        electric_fraction = getDefault(locality,'car_plugin_electric_fraction')
         if mpg == 0.:
-            kwh_per_mile = getDefault(locality,'car_electric_kwh_per_mile', 0.25)
-            hybrid_mpg = getDefault(locality,'car_new_hybrid_mpg', 40.)
+            kwh_per_mile = getDefault(locality,'car_electric_kwh_per_mile')
+            hybrid_mpg = getDefault(locality,'car_new_hybrid_mpg')
             gal = (1. - electric_fraction) * annual_miles / hybrid_mpg
             kwh = kwh_per_mile * annual_miles * electric_fraction
         else:
             gal_equiv = annual_miles/mpg
             gal = (1. - electric_fraction) * gal_equiv
-            btu_per_gal = getDefault('','gasoline_btu_per_gal', 120333.)
-            btu_per_kwh = getDefault('','elec_btu_per_kwh',3412.)
+            btu_per_gal = getDefault('','gasoline_btu_per_gal')
+            btu_per_kwh = getDefault('','elec_btu_per_kwh')
             kwh = electric_fraction * gal_equiv * btu_per_gal / btu_per_kwh
-        annual_service = getDefault(locality,'car_annual_service_hybrid', 300.)
+        annual_service = getDefault(locality,'car_annual_service_hybrid')
 
-        federal_credit = getDefault(locality,'car_PHEV_federal_credit', 4500.)
-        state_credit = getDefault(locality,'car_PHEV_state_credit', 0.)
-        local_incentives = getDefault(locality,'car_PHEV_local_rebate', 0.)
+        federal_credit = getDefault(locality,'car_PHEV_federal_credit')
+        state_credit = getDefault(locality,'car_PHEV_state_credit')
+        local_incentives = getDefault(locality,'car_PHEV_local_rebate')
         total_incentives = federal_credit + state_credit + local_incentives
 
-        car_price = getDefault(locality,'car_PHEV_price', 27750.)   # current price of Prius Prime
+        car_price = getDefault(locality,'car_PHEV_price')   # current price of Prius Prime
 
     elif car_type == 'Hybrid':
         if mpg == 0.:
-            mpg = getDefault(locality,'car_new_hybrid_mpg', 40.)
+            mpg = getDefault(locality,'car_new_hybrid_mpg')
         gal = annual_miles / mpg
         kwh = 0.
-        annual_service = getDefault(locality,'car_annual_service_gas', 500.)
-        car_price = getDefault(locality,'car_hybrid_price', 26000.)   # current price of Kia Optima
+        annual_service = getDefault(locality,'car_annual_service_gas')
+        car_price = getDefault(locality,'car_hybrid_price')   # current price of Kia Optima
         total_incentives = 0.
 
     elif car_type == 'Diesel':
         if mpg == 0.:
-            mpg = getDefault(locality,'car_new_diesel_mpg', 40.)
+            mpg = getDefault(locality,'car_new_diesel_mpg')
         gal = annual_miles / mpg
         kwh = 0.
-        annual_service = getDefault(locality,'car_annual_service_gas', 500.)
-        car_price = getDefault(locality,'car_diesel_price', 25000.)   # current price of some car or other
+        annual_service = getDefault(locality,'car_annual_service_gas')
+        car_price = getDefault(locality,'car_diesel_price')   # current price of some car or other
         total_incentives = 0.
 
     else:
         if mpg == 0.:
             if new:
-                mpg = getDefault(locality,'car_new_mpg',29.)
+                mpg = getDefault(locality,'car_new_mpg')
             else:
-                mpg = getDefault(locality,'car_default_mpg', 25.)
+                mpg = getDefault(locality,'car_default_mpg')
         gal = annual_miles / mpg
         kwh = 0.
-        annual_service = getDefault(locality,'car_annual_service_gas', 500.)
-        car_price = getDefault(locality,'car_default_price', 22000.)   # current price of some car or other
+        annual_service = getDefault(locality,'car_annual_service_gas')
+        car_price = getDefault(locality,'car_default_price')   # current price of some car or other
         total_incentives = 0.
         
     cost = gal * gasoline_price + kwh * kwh_price + annual_service
@@ -146,7 +144,7 @@ def EvalReduceMilesDriven(inputs):
     miles_reduction_percent = float(inputs.get('reduce_milage_percent', 20.))
     if miles_reduction > 0. or miles_reduction_percent > 0:
 
-        default_miles = getDefault(locality, 'car_default_miles', CAR_DEFAULT_MILES)
+        default_miles = getDefault(locality, 'car_default_miles')
         old_miles = float(inputs.get('car_annual_miles', default_miles))
 
         if miles_reduction_percent > 0:
@@ -154,7 +152,7 @@ def EvalReduceMilesDriven(inputs):
         else:
             miles_reduction_percent = 100. * miles_reduction / old_miles
 
-        default_mpg = getDefault(locality, 'car_default_mpg', 25.)
+        default_mpg = getDefault(locality, 'car_default_mpg')
         old_mpg = float(inputs.get('car_mpg', default_mpg))
 
         old_type = inputs.get('car_type','')
@@ -163,9 +161,9 @@ def EvalReduceMilesDriven(inputs):
 
         other_cost = 0.
         if inputs.get('transportation_public', NO) == YES:
-            public_trans_daily_cost = getDefault(locality,'transportation_public_daily_cost', 20.) # MBTA Zone 5 (COncord) daily + subway
-            public_trans_monthly_cost = getDefault(locality,'transportation_public_monthly_cost', 301.) # MBTA Zone 5 (COncord) monthly pass
-            public_trans_amount = float(inputs.get('transportation_public_amount', 5.) )                       # once a week
+            public_trans_daily_cost = getDefault(locality,'transportation_public_daily_cost') # MBTA Zone 5 (COncord) daily + subway
+            public_trans_monthly_cost = getDefault(locality,'transportation_public_monthly_cost') # MBTA Zone 5 (COncord) monthly pass
+            public_trans_amount = float(inputs.get('transportation_public_amount') )                       # once a week
             monthly_trans_cost = min(public_trans_amount * public_trans_daily_cost, public_trans_monthly_cost)
             other_cost += 12 * monthly_trans_cost
 
@@ -184,10 +182,10 @@ def EvalEliminateCar(inputs):
 
     if inputs.get('eliminate_car', YES) == YES:
 
-        default_miles = getDefault(locality, 'car_default_miles', CAR_DEFAULT_MILES)
+        default_miles = getDefault(locality, 'car_default_miles')
         miles_est = float(inputs.get('car_annual_miles', default_miles))
         
-        default_mpg = getDefault(locality, 'car_default_mpg', 25.)
+        default_mpg = getDefault(locality, 'car_default_mpg')
         specified_mpg = float(inputs.get('car_mpg', 0.))
         if specified_mpg > 0.:
             old_mpg = specified_mpg
@@ -198,12 +196,12 @@ def EvalEliminateCar(inputs):
         new = False
         old_co2, old_cost, dummy = CarImpact(locality, miles_est, old_mpg, old_type, new)
 
-        annual_insurance = getDefault(locality,'car_annual_insurance', 1000.)
+        annual_insurance = getDefault(locality,'car_annual_insurance')
 
         other_cost = 0.
         if inputs.get('transportation_public', NO) == YES:
-            public_trans_monthly_cost = getDefault(locality,'transportation_public_monthly_cost', 301.) # MBTA Zone 5 (COncord) monthly pass
-            public_trans_amount = float(inputs.get('transportation_public_amount', 5.) )                       # once a week
+            public_trans_monthly_cost = getDefault(locality,'transportation_public_monthly_cost') # MBTA Zone 5 (COncord) monthly pass
+            public_trans_amount = float(inputs.get('transportation_public_amount') )                       # once a week
             public_transit_cost = (public_trans_amount / 20.) * 12 * public_trans_monthly_cost
             other_cost += public_transit_cost
 
@@ -235,12 +233,12 @@ def EvalReduceFlights(inputs):
 
     if  percent_reduction > 0.:
 
-        default_flights = getDefault(locality,'flights_default_annual_family', 12.)     # a wild guess
+        default_flights = getDefault(locality,'flights_default_annual_family')     # a wild guess
         flights_amount = float(inputs.get('flight_amount', default_flights))      
         reduce_flights = percent_reduction * flights_amount
 
-        default_flight_co2 = getDefault(locality,'filghts_default_co2', 1.04*2200)  # online estimate for BOS SFO round trip
-        default_flight_cost = getDefault(locality,'fights_default_cost', 500.)
+        default_flight_co2 = getDefault(locality,'filghts_default_co2')  # online estimate for BOS SFO round trip
+        default_flight_cost = getDefault(locality,'fights_default_cost')
 
         points = reduce_flights * default_flight_co2
         savings = reduce_flights * default_flight_cost
@@ -259,14 +257,14 @@ def EvalOffsetFlights(inputs):
     offset_fraction = FREQUENCIES.get(offset_flights, 0.)
 
     if offset_fraction > 0.:
-        default_flights = getDefault(locality,'flights_default_annual_family', 12.)     # a wild guess
+        default_flights = getDefault(locality,'flights_default_annual_family')     # a wild guess
         flights_amount = inputs.get('flight_amount', default_flights)      
         offset_flights = offset_fraction * flights_amount 
 
-        default_flight_co2 = getDefault(locality,'filghts_default_co2', 1.04*2200)  # online estimate for BOS SFO round trip
+        default_flight_co2 = getDefault(locality,'filghts_default_co2')  # online estimate for BOS SFO round trip
         offset_co2 = offset_flights * default_flight_co2
 
-        default_offset_cost_per_ton = getDefault(locality,'fights_default_offset_cost_per_ton', 12.)
+        default_offset_cost_per_ton = getDefault(locality,'fights_default_offset_cost_per_ton')
         offset_cost = offset_co2/2000. * default_offset_cost_per_ton
         points = offset_co2
         savings = - offset_cost

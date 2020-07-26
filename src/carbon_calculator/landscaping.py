@@ -17,7 +17,7 @@ def EvalReduceLawnSize(inputs):
 
     reduce_lawn_size = inputs.get('reduce_lawn_size', YES)
     if reduce_lawn_size != NO:
-        default_lawn_size = getDefault(locality,'lawn_default_size', 4000)
+        default_lawn_size = getDefault(locality,'lawn_default_size')
         lawn_size = LAWN_SIZES.get(inputs.get('lawn_size', ''), default_lawn_size)
         
         reduction = 0
@@ -32,32 +32,32 @@ def EvalReduceLawnSize(inputs):
 
         if reduction > 0:
             # mowing
-            total_mows = getDefault(locality,'lawn_average_yearly_mows', 22)    # EPA, assumed weekly over summer
-            co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
+            total_mows = getDefault(locality,'lawn_average_yearly_mows')    # EPA, assumed weekly over summer
+            co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal') # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
             gas_mower = inputs.get('mower_type',YES)
             if gas_mower == YES:
-                gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf', 0.5) * lawn_size / 5000
+                gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf') * lawn_size / 5000
                 co2_per_mow = gal_per_mow * co2_per_gal_gas
             else:
-                co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
-                kwh_per_mow = getDefault(locality,'lawn_mow_kwh_5000sf', 2.)        # guesstimate
+                co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh")    # lbs CO2 per kwh
+                kwh_per_mow = getDefault(locality,'lawn_mow_kwh_5000sf')        # guesstimate
                 co2_per_mow = kwh_per_mow * co2_per_kwh
 
             # blowing 
-            blower_hours = getDefault(locality, 'lawn_blower_typical_hours', 10.)     # guesstimate
-            gal_per_blow = getDefault(locality, 'lawn_blower_gal_per_hour', 0.5)    # Echo 58.2cc spec
+            blower_hours = getDefault(locality, 'lawn_blower_typical_hours')     # guesstimate
+            gal_per_blow = getDefault(locality, 'lawn_blower_gal_per_hour')    # Echo 58.2cc spec
             co2_per_blower_hour = gal_per_blow * co2_per_gal_gas
 
             # fertilizing, etc
-            applications = getDefault(locality, 'lawn_fertilizer_applications_average', 4)
-            bag_size = getDefault(locality, 'lawn_fertilzer_bag_size', 14.)    # pounds in a fertilzer bag
-            bag_sqft = getDefault(locality, 'lawn_fertilizer_bag_sqft', 5000.)
-            nitrogen_concentration = getDefault(locality,'lawn_fertilizer_nitrogen_concentration', 0.1)
-            nitrogen_co2 = getDefault(locality,'nitrogen_co2_factor', 0.02)  #https://www.sciencenews.org/article/fertilizer-produces-far-more-greenhouse-gas-expected
+            applications = getDefault(locality, 'lawn_fertilizer_applications_average')
+            bag_size = getDefault(locality, 'lawn_fertilzer_bag_size')    # pounds in a fertilzer bag
+            bag_sqft = getDefault(locality, 'lawn_fertilizer_bag_sqft')
+            nitrogen_concentration = getDefault(locality,'lawn_fertilizer_nitrogen_concentration')
+            nitrogen_co2 = getDefault(locality,'nitrogen_co2_factor')  #https://www.sciencenews.org/article/fertilizer-produces-far-more-greenhouse-gas-expected
             co2_fertilizer = applications * bag_size * (STANDARD_LAWNSIZE / bag_sqft) * nitrogen_concentration * nitrogen_co2
 
             # this may seem high but we're ignoring costs of watering and fertilizer
-            cost_per_mow = getDefault(locality,'lawn_cost_per_mow', 50.)    # if done professionally
+            cost_per_mow = getDefault(locality,'lawn_cost_per_mow')    # if done professionally
 
             lawn_cost = total_mows * cost_per_mow * lawn_size/STANDARD_LAWNSIZE
             lawn_co2 = total_mows * co2_per_mow + blower_hours * co2_per_blower_hour + co2_fertilizer * lawn_size/STANDARD_LAWNSIZE
@@ -78,7 +78,7 @@ def EvalReduceLawnCare(inputs):
     reduce_mowing = inputs.get('mowing_frequency', NO)
     reduce_fertilizer = inputs.get('fertilizer_applications', NO)
 
-    default_lawn_size = getDefault(locality,'lawn_default_size', 4000)
+    default_lawn_size = getDefault(locality,'lawn_default_size')
     lawn_size = LAWN_SIZES.get(inputs.get('lawn_size', ''), default_lawn_size)
 
     if reduce_mowing != NO or reduce_fertilizer != NO:
@@ -94,15 +94,15 @@ def EvalReduceLawnCare(inputs):
         # mowing
         gas_mower = inputs.get('mower_type',YES)
         if gas_mower == YES:
-            co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
-            gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf', 0.5) * lawn_size / 5000
+            co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal') # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
+            gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf') * lawn_size / 5000
             co2_per_mow = gal_per_mow * co2_per_gal_gas
         else:
-            co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
-            kwh_per_mow = getDefault(locality,'lawn_mow_kwh_5000sf', 2.)        # guesstimate
+            co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh")    # lbs CO2 per kwh
+            kwh_per_mow = getDefault(locality,'lawn_mow_kwh_5000sf')        # guesstimate
             co2_per_mow = kwh_per_mow * co2_per_kwh
 
-        cost_per_mow = getDefault(locality,'lawn_cost_per_mow', 50.)    # if done professionally
+        cost_per_mow = getDefault(locality,'lawn_cost_per_mow')    # if done professionally
 
 
         points += mows_skipped * co2_per_mow
@@ -112,13 +112,13 @@ def EvalReduceLawnCare(inputs):
         applications_skipped = REDUCTIONS.get(reduce_fertilizer, 0.)
 
         # fertilizing, etc
-        bag_size = getDefault(locality, 'lawn_fertilzer_bag_size', 14.)    # pounds in a fertilzer bag
-        bag_sqft = getDefault(locality, 'lawn_fertilizer_bag_sqft', 5000.)
-        nitrogen_concentration = getDefault(locality,'lawn_fertilizer_nitrogen_concentration', 0.1)
-        nitrogen_co2 = getDefault(locality,'nitrogen_co2_factor', 0.02)  #https://www.sciencenews.org/article/fertilizer-produces-far-more-greenhouse-gas-expected
+        bag_size = getDefault(locality, 'lawn_fertilzer_bag_size')    # pounds in a fertilzer bag
+        bag_sqft = getDefault(locality, 'lawn_fertilizer_bag_sqft')
+        nitrogen_concentration = getDefault(locality,'lawn_fertilizer_nitrogen_concentration')
+        nitrogen_co2 = getDefault(locality,'nitrogen_co2_factor')  #https://www.sciencenews.org/article/fertilizer-produces-far-more-greenhouse-gas-expected
         points += applications_skipped * bag_size * (STANDARD_LAWNSIZE/ bag_sqft) * nitrogen_concentration * nitrogen_co2
 
-        fertilization_cost = getDefault(locality,'lawn_cost_per_mow', 50.)    # if done professionally
+        fertilization_cost = getDefault(locality,'lawn_cost_per_mow')    # if done professionally
         savings += applications_skipped * fertilization_cost
 
     return points, cost, savings, explanation
@@ -132,22 +132,22 @@ def EvalElectricMower(inputs):
     gas_mower = inputs.get('mower_type',YES)
     if gas_mower == YES and inputs.get('mower_switch', NO) == YES:
 
-        default_lawn_size = getDefault(locality,'lawn_default_size', 4000)
+        default_lawn_size = getDefault(locality,'lawn_default_size')
         lawn_size = LAWN_SIZES.get(inputs.get('lawn_size', ''), default_lawn_size)
-        total_mows = getDefault(locality,'lawn_average_yearly_mows', 22)    # EPA, assumed weekly over summer
+        total_mows = getDefault(locality,'lawn_average_yearly_mows')    # EPA, assumed weekly over summer
 
         # mowing
-        co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
-        gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf', 0.5)
+        co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal') # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
+        gal_per_mow = getDefault(locality,'lawn_mow_gas_5000sf')
         co2_per_gas_mow = gal_per_mow * co2_per_gal_gas
       
-        co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh",0.75)    # lbs CO2 per kwh
-        kwh_per_mow = getDefault(locality,'lawn_mow_kwh_5000sf', 2.)        # guesstimate
+        co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh")    # lbs CO2 per kwh
+        kwh_per_mow = getDefault(locality,'lawn_mow_kwh_5000sf')        # guesstimate
         co2_per_elec_mow = kwh_per_mow * co2_per_kwh
 
         #print(total_mows, lawn_size/STANDARD_LAWNSIZE)
         points = total_mows * (lawn_size/STANDARD_LAWNSIZE) * (co2_per_gas_mow - co2_per_elec_mow)
-        cost = getDefault(locality,'lawn_cost_elec_mower', 400.)
+        cost = getDefault(locality,'lawn_cost_elec_mower')
         explanation = "Switching your gas mower with electric is cleaner and less noisy, besides reducing emissions."
 
     return points, cost, savings, explanation
@@ -162,13 +162,13 @@ def EvalRakeOrElecBlower(inputs):
     if inputs.get('leaf_cleanup_blower_switch', YES) == YES:
         if gas_blower == YES:
 
-            default_lawn_size = getDefault(locality,'lawn_default_size', 4000)
+            default_lawn_size = getDefault(locality,'lawn_default_size')
             lawn_size = LAWN_SIZES.get(inputs.get('lawn_size', ''), default_lawn_size)
 
             # blowing 
-            blower_hours = getDefault(locality, 'lawn_blower_typical_hours', 10.)     # guesstimate
-            co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal', 17.68) # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
-            gal_per_blow = getDefault(locality, 'lawn_blower_gal_per_hour', 0.5)    # Echo 58.2cc spec
+            blower_hours = getDefault(locality, 'lawn_blower_typical_hours')     # guesstimate
+            co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal') # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
+            gal_per_blow = getDefault(locality, 'lawn_blower_gal_per_hour')    # Echo 58.2cc spec
             co2_per_blower_hour = gal_per_blow * co2_per_gal_gas
 
             points = blower_hours * (lawn_size/STANDARD_LAWNSIZE) * co2_per_blower_hour

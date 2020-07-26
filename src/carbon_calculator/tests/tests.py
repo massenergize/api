@@ -24,7 +24,7 @@ class CarbonCalculatorTest(TestCase):
                 "Stations":"carbon_calculator/content/Stations.csv",
                 "Groups":"carbon_calculator/content/Groups.csv",
                 "Events":"carbon_calculator/content/Events.csv",
-                "Defaults":"carbon_calculator/content/exportdefaults.csv"
+                "Defaults":"carbon_calculator/content/Defaults.csv"
                 })
 
         generate_inputs = eval(os.getenv("GENERATE_INPUTS"))
@@ -67,7 +67,7 @@ class CarbonCalculatorTest(TestCase):
         self.assertEqual(name,"energy_fair")
 
         points = data["actions"][0]["average_points"]
-        self.assertEqual(points,50)
+        self.assertEqual(points,15)
 
     def test_consistency(self):
         """
@@ -159,7 +159,14 @@ class CarbonCalculatorTest(TestCase):
             outputs_new = new[i]["outputs"]
 
             for key in ["status", "carbon_points", "cost", "savings"]:
-                if not outputs_new[key] == outputs_old[key]:
+
+                if not key in outputs_old:
+                    print("outputs_old error:")
+                    print(old[i])
+                elif not key in outputs_new:
+                    print("outpus_new error:")
+                    print(new[i])
+                elif not outputs_new[key] == outputs_old[key]:
                     differences.append((action, inputs,
                         key,
                         outputs_old[key],

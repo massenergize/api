@@ -20,11 +20,10 @@ def getLocality(inputs):
     return locality
 
 
-def getDefault(locality, variable, defaultValue, date=None, noUpdate=False):
-    return CCD.getDefault(CCD,locality, variable, defaultValue, date, noUpdate)
+def getDefault(locality, variable, date=None):
+    return CCD.getDefault(CCD,locality, variable, date)
 
 class CCD():
-
 
     DefaultsByLocality = {"default":{}} # the class variable
     try:
@@ -34,7 +33,7 @@ class CCD():
         cq = CalcDefault.objects.all()
         for c in cq:
             # valid date is 0 if not specified
-            date = 0
+            date = '2000-01-01'
             if c.valid_date != None:
                 date = c.valid_date
 
@@ -53,7 +52,7 @@ class CCD():
                         DefaultsByLocality[c.locality][c.variable]["valid_dates"].insert(i,date)
                         DefaultsByLocality[c.locality][c.variable]["values"].insert(i,c.value)
                         break
-                    else if date == valid_date:
+                    elif date == valid_date:
                         # multiple values with one date
                         print('CCDefaults: multiple values with same valid date')
                         f = True
@@ -72,20 +71,24 @@ class CCD():
         print("CCD __init__ called")
 
 
-    def getDefault(self,locality,variable,defaultValue, date, noUpdate=False):
-        if locality in self.DefaultsByLocality:
-            if variable in self.DefaultsByLocality[locality]:
-                return self.DefaultsByLocality[locality][variable]
-        if variable in self.DefaultsByLocality["default"]:
-            return self.DefaultsByLocality["default"][variable]
-        # no defaults found.  Store the default estiamte in the database
-
-        self.DefaultsByLocality["default"][variable] = defaultValue
-        if not noUpdate:
-            d = CalcDefault(locality="default", variable=variable, value=defaultValue, reference="Default value without reference")
-            d.save()
-
-        return defaultValue
+    def getDefault(self, locality, variable, date):
+        if locality not in self.DefaultsByLocality:
+            locality = "default"
+        if variable in self.DefaultsByLocality[locality]:
+            # variable found; get the value appropriate for the date
+            var = self.DefaultsByLocality[locality][variable]    # not a copy
+            if date==None:
+                # if date not specified, use the most recent value
+                value = var["values"][-1]
+            else:
+                for i in range(len(var["valid_dates"])):
+                    valid_date = var["valid_dates"][i]
+                    if valid_date < date:
+                        value = var["values"][i]
+            return value
+        
+        # no defaults found.  Signal this as an error.
+        raise Exception('Carbon Calculator error: value for "'+variable+'" not found in CalcDefaults')        
 
     def exportDefaults(self,fileName):
         try:
@@ -94,18 +97,20 @@ class CCD():
                 qs = CalcDefault.objects.all()
                 msg = "Exporting %d CalcDefaults to csv file %s" % (qs.count(), fileName)
                 print(msg)
-                rowtext = ["Variable","Locality","Value","Reference","Updated"]
+                rowtext = ["Variable","Locality","Value","Reference","Valid Date","Updated"]
                 rows = [rowtext]
 
                 for q in qs:
-                    rowtext =  [q.variable, q.locality,q.value,q.reference,q.updated]
+                    rowtext =  [q.variable, q.locality,q.value,q.reference,q.valid_date,q.updated]
                     rows.append(rowtext)
 
                 csvwriter.writerows(rows)
 
                 status = True
-        except:
+        except Exception as error:
             print("Error exporting Carbon Calculator Defaults from CSV file")
+            print(error)
+            exit()
             status = False
 
         if csvfile:
@@ -120,7 +125,10 @@ class CCD():
                     if first:
                         t = {}
                         for i in range(len(item)):
-                            t[item[i]] = i
+                            it = item[i]
+                            if i == 0:
+                                it = 'Variable'
+                            t[it] = i
                         first = False
                     else:
                         if len(item)<6 or item[0] == '' or item[1] == '':
@@ -131,12 +139,14 @@ class CCD():
                         value = eval(item[t["Value"]])
                         reference = item[t["Reference"]]
                         updated = item[t["Updated"]]
+
                         if not valid_date or valid_date=="":
-                            qs = CalcDefault.objects.filter(variable=variable, locality=locality)
-                            if not qs:
-                                print("No "+item[0]+" for "+item[1])
-                            else:    
-                                qs[0].delete()
+                            valid_date = '2000-01-01'
+
+                        qs = CalcDefault.objects.filter(variable=variable, locality=locality)
+                        if qs:
+                            qs[0].delete()
+
 
                         cd = CalcDefault(variable=variable,
                                 locality=locality,
@@ -145,11 +155,39 @@ class CCD():
                                 valid_date = valid_date,
                                 updated=updated)
                         cd.save()
-            status = True
-        except:
-            print("Error importing Carbon Calculator Defaults from CSV file")
-            status = False
 
-        if csvfile:
-            csvfile.close()
-        return status
+                        if not locality in self.DefaultsByLocality:
+                            self.DefaultsByLocality[locality] = {}
+
+                        if not variable in self.DefaultsByLocality[locality]:
+                            self.DefaultsByLocality[locality][variable] = {}
+
+                            self.DefaultsByLocality[locality][variable]["valid_dates"] = [valid_date]
+                            self.DefaultsByLocality[locality][variable]["values"] = [value]
+                        else:
+                            f = False
+                            var = self.DefaultsByLocality[locality][variable]
+                            for i in range(len(var["valid_dates"])):
+                                if valid_date < var["valid_dates"][i]:
+                                    var["valid_dates"].insert(i,valid_date)
+                                    var["values"].insert(i,value)
+                                    f = True
+                                    break
+                                elif valid_date == var["valid_dates"][i]:
+                                    var["values"][i] = value
+                                    f = True
+                                    break
+                            if not f:
+                                var["valid_dates"].append(valid_date)
+                                var["values"].append(value)
+ 
+            status = True
+        except Exception as error:
+            print("Error importing Carbon Calculator Defaults from CSV file")
+            print(error)
+            exit()
+            status = False
+        finally:
+            if csvfile:
+                csvfile.close()
+            return status

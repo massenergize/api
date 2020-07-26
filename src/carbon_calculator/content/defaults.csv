@@ -12,9 +12,12 @@ water_kwh_per_MG,default,2000,"CarbonFootprintofWater-RiverNetwork-2009.pdf: For
 elec_energystar_refrig_kwh_usage,default,404,"Frigidaire FFTR1821TB 18cf top freezer, product spec",,2019-10-26 11:09
 elec_energystar_washer_water_use,default,14,Gallons per load: https://www.energystar.gov/products/appliances/clothes_washers,,2019-10-26 16:57
 elec_washer_average_annual_loads,default,300,Average loads per year: https://www.energystar.gov/products/appliances/clothes_washers,,2019-10-26 17:00
+elec_washer_water_heated_fraction,default,0.5,"Assuming hot water wash, cold water rinse 50% each",,2019-10-26 17:00
 elec_energystar_washer_water_saved_frac,default,0.33,https://www.energystar.gov/products/appliances/clothes_washers,,2019-10-26 17:26
 elec_energystar_washer_elec_saved_frac,default,0.25,https://www.energystar.gov/products/appliances/clothes_washers,,2019-10-26 17:26
 elec_energystar_elec_per_load,default,1.053,2019: https://www.energystar.gov/products/appliances/clothes_washers,,2019-10-26 17:36
+elec_energyhog_kwh_per_load,default,1.31625,EPA site: 25% more than energystar,,2019-10-26 17:36
+elec_energyhog_washer_water_use,default,20,Gallons per load: https://www.energystar.gov/products/appliances/clothes_washers,,2019-10-26 16:57
 water_price_per_scf,WaylandMA,0.0729,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,,2019-10-26 15:56
 water_price_per_scf,FraminghamMA,0.0654,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,,2019-10-26 15:58
 water_price_per_scf,ActonMA,0.0283,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,,2019-10-26 15:58
@@ -34,7 +37,7 @@ elec_bulb_average_wattage,default,60,Default value without reference,,2019-10-27
 elec_bulb_average_ontime_hours,default,3,Default value without reference,,2019-10-27 13:23
 elec_bulb_relative_LED_consumption,default,0.12,Default value without reference,,2019-10-27 13:23
 elec_dryer_load_kwh,default,3.3,Default value without reference,,2019-10-27 16:03
-elec_heatpump_dryer_energy_reduction,default,0.4,Default value without reference,,2019-10-27 16:03
+elec_dryer_hpwh_energy_factor,default,3.,Typical value for rebate eligible hpwh,,2020-07-25 18:24
 elec_cost_heatpump_dryer_low,default,1250,Default value without reference,,2019-10-27 16:04
 elec_dryerload_therm_gas,default,0.24,Default value without reference,,2019-10-27 16:09
 elec_typical_monthly_bill,default,150,Default value without reference,,2019-11-02 01:23
@@ -44,6 +47,7 @@ elec_price_per_kwh,ConcordMA,0.148,BHN CMLP Utility Bill Sep 2019,,2019-11-02 01
 elec_renewable_additional_kwh_cost,default,0.038,Default value without reference,,2019-11-02 01:23
 elec_lbs_co2_per_kwh,default,0.682,"ISO-NE average, 2017 from their report",,2019-11-02 01:23
 elec_community_solar_average_savings,default,0.07,7% on utility bill from one company (range from 5-10%),,2019-11-02 01:23
+heating_assessment_conversion,default,0.1,Assume 20% of coaching inquiries result in heat pumps,,2019-11-02 01:23
 heating_parasitics_kwh,default,150,Default value without reference,,2019-11-02 01:30
 heating_default_load_mmbtu,default,114.3,Default value without reference,,2019-11-02 01:30
 fueloil_price_per_gallon,default,2.92,Default value without reference,,2019-11-02 01:30
@@ -79,6 +83,7 @@ heating_standard_ashp_cost,default,15000,Default value without reference,,2019-1
 heating_ashp_fed_tax_credit,default,0,Default value without reference,,2019-11-02 21:29
 heating_ashp_utility_rebate,default,2500,Default value without reference,,2019-11-02 21:29
 heating_default_gshp_efficiency,default,4.5,Default value without reference,,2019-11-02 22:01
+heating_default_gshp_fraction,default,1.0,Default value without reference,,2019-11-02 22:01
 heating_standard_geothermal_cost,default,60000,Default value without reference,,2019-11-02 22:01
 heating_geothermal_fed_tax_credit,default,0.26,Default value without reference,,2019-11-02 22:01
 heating_geothermal_utility_rebate,default,5000,Default value without reference,,2019-11-02 22:01
@@ -113,7 +118,11 @@ car_default_miles,default,15000,Default value without reference,,2019-11-03 16:5
 car_default_mpg,default,25,Default value without reference,,2019-11-03 16:58
 car_annual_service_gas,default,500,Default value without reference,,2019-11-03 16:58
 gasoline_price,default,2.7,Default value without reference,,2019-11-03 16:58
+gasoline_btu_per_gal,default,120286,https://www.eia.gov/energyexplained/units-and-calculators/british-thermal-units.php,,2020-07-25 17:50
+car_diesel_price,default,24150,Mazda CX-5 List Price,,2019-11-03 16:58
 car_new_electric_mpg,default,100,Default value without reference,,2019-11-03 17:01
+car_new_mpg,default,29,UCS: average new car MPG,,2019-11-03 17:01
+car_new_diesel_mpg,default,40,Default value without reference,,2019-11-03 17:01
 car_annual_service_electric,default,200,Default value without reference,,2019-11-03 17:01
 car_electric_kwh_per_mile,default,0.25,Default value without reference,,2019-11-03 17:01
 car_BEV_federal_credit,default,7500,Default value without reference,,2019-11-03 17:01

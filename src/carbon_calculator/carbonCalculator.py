@@ -137,10 +137,15 @@ class CarbonCalculator:
             if not theAction.initialized:
                 return queryFailed
 
-            results = theAction.Eval(inputs)
-            if save:
-                results = self.RecordActionPoints(action,inputs,results)
-            return results
+            try:
+                results = theAction.Eval(inputs)
+                if save:
+                    results = self.RecordActionPoints(action,inputs,results)
+                return results
+            except Exception as error:
+                print("Carbon Calculator exception")
+                print(error)
+                return queryFailed
         else:
             return queryFailed
 
@@ -551,7 +556,7 @@ class EnergyFair(CalculatorAction):
             #self.points = ENERGY_FAIR_POINTS
 
             locality = getLocality(inputs)
-            self.points = getDefault(locality, 'energy_fair_average_points', 50)
+            self.points = getDefault(locality, 'energy_fair_average_points')
 
             self.text = "Thank you for participating!"
         return super().Eval(inputs)
