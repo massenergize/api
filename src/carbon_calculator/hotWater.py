@@ -2,7 +2,7 @@
 
 
 from .CCDefaults import getDefault, getLocality
-from .CCConstants import YES, NO
+from .CCConstants import YES, NO, BTU_PER_KWH, BTU_PER_THERM, BTU_PER_GAL_FUELOIL, BTU_PER_GAL_PROPANE
 from .solar import SolarPotential
 from .naturalGas import NatGasFootprint
 
@@ -23,8 +23,7 @@ def EvalHotWaterAssessment(inputs):
         water_deltaT = wh_set_temp - wh_input_water_temp
         water_specific_heat = 8.34   # BTU/gal/degF
 
-        BTU_per_kwh = 3414
-        co2_per_btu = co2_per_kwh / BTU_per_kwh
+        co2_per_btu = co2_per_kwh / BTU_PER_KWH
 
         # calculations for heat pump water heater
         wh_efficiency = getDefault(locality,'water_heater_heatpump_efficiency')
@@ -40,27 +39,24 @@ def EvalHotWaterAssessment(inputs):
 
         elif wh_type == "Propane":
             co2_per_gal = getDefault(locality, "propane_co2_per_gallon") # https://www.eia.gov/environment/emissions/co2_vol_mass.php
-            btu_per_gal = getDefault(locality, "propane_btu_per_gallon") # https://www.eia.gov/energyexplained/units-and-calculators/
 
             wh_efficiency = getDefault(locality,'water_heater_propane_efficiency')
             btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-            co2_old = btu * co2_per_gal / btu_per_gal
+            co2_old = btu * co2_per_gal / BTU_PER_GAL_PROPANE
  
         elif wh_type == "Fuel Oil":
-            co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon") # https://www.eia.gov/environment/emissions/co2_vol_mass.php
-            btu_per_gal = getDefault(locality,"fueloil_btu_per_gallon") # https://www.eia.gov/energyexplained/units-and-calculators/
+            co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon")
 
             wh_efficiency = getDefault(locality,'water_heater_fueloil_efficiency')
             btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-            co2_old = btu * co2_per_gal / btu_per_gal
+            co2_old = btu * co2_per_gal / BTU_PER_GAL_FUELOIL
 
         elif wh_type == "Nat Gas" or wh_type == "Not sure":
             co2_per_therm = NatGasFootprint(locality)
-            btu_per_therm = 100000.
 
             wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency')
             btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-            co2_old = btu * co2_per_therm / btu_per_therm
+            co2_old = btu * co2_per_therm / BTU_PER_THERM
 
         else:
             explanation = "No need for a hot water assessment with a %s water heater." % wh_type
@@ -93,9 +89,8 @@ def EvalHeatPumpWaterHeater(inputs):
         water_deltaT = wh_set_temp - wh_input_water_temp
         water_specific_heat = 8.34   # BTU/gal/degF
 
-        BTU_per_kwh = 3414
-        co2_per_btu = co2_per_kwh / BTU_per_kwh
-        btu_price = kwh_price / BTU_per_kwh
+        co2_per_btu = co2_per_kwh / BTU_PER_KWH
+        btu_price = kwh_price / BTU_PER_KWH
 
         # calculations for heat pump water heater
         wh_efficiency = getDefault(locality,'water_heater_heatpump_efficiency')
@@ -113,33 +108,30 @@ def EvalHeatPumpWaterHeater(inputs):
 
         elif wh_type == "Propane":
             gallon_price = getDefault(locality,"propane_price_per_gallon")
-            co2_per_gal = getDefault(locality, "propane_co2_per_gallon") # https://www.eia.gov/environment/emissions/co2_vol_mass.php
-            btu_per_gal = getDefault(locality, "propane_btu_per_gallon") # https://www.eia.gov/energyexplained/units-and-calculators/
+            co2_per_gal = getDefault(locality, "propane_co2_per_gallon")
 
             wh_efficiency = getDefault(locality,'water_heater_propane_efficiency')
             btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-            co2_old = btu * co2_per_gal / btu_per_gal
-            cost_old = btu * gallon_price / btu_per_gal
+            co2_old = btu * co2_per_gal / BTU_PER_GAL_PROPANE
+            cost_old = btu * gallon_price / BTU_PER_GAL_PROPANE
 
         elif wh_type == "Fuel Oil":
             gallon_price = getDefault(locality,"fueloil_price_per_gallon")
-            co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon") # https://www.eia.gov/environment/emissions/co2_vol_mass.php
-            btu_per_gal = getDefault(locality,"fueloil_btu_per_gallon") # https://www.eia.gov/energyexplained/units-and-calculators/
+            co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon") 
 
             wh_efficiency = getDefault(locality,'water_heater_fueloil_efficiency')
             btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-            co2_old = btu * co2_per_gal / btu_per_gal
-            cost_old = btu * gallon_price / btu_per_gal
+            co2_old = btu * co2_per_gal / BTU_PER_GAL_FUELOIL
+            cost_old = btu * gallon_price / BTU_PER_GAL_FUELOIL
 
         elif wh_type == "Nat Gas" or wh_type == "Not sure":
             therm_price = getDefault(locality,"natgas_price_per_therm")
             co2_per_therm = NatGasFootprint(locality)
-            btu_per_therm = 100000.
 
             wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency')
             btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-            co2_old = btu * co2_per_therm / btu_per_therm
-            cost_old = btu * therm_price / btu_per_therm
+            co2_old = btu * co2_per_therm / BTU_PER_THERM
+            cost_old = btu * therm_price / BTU_PER_THERM
 
         else:
             explanation = "Not recommended to replace %s water heater with heat pump." % wh_type
@@ -180,9 +172,8 @@ def EvalSolarHW(inputs):
         water_deltaT = wh_set_temp - wh_input_water_temp
         water_specific_heat = 8.34   # BTU/gal/degF
 
-        BTU_per_kwh = 3414
-        co2_per_btu = co2_per_kwh / BTU_per_kwh
-        btu_price = kwh_price / BTU_per_kwh
+        co2_per_btu = co2_per_kwh / BTU_PER_KWH
+        btu_price = kwh_price / BTU_PER_KWH
 
         # calculations for heat pump water heater
         wh_efficiency = getDefault(locality,'water_heater_heatpump_efficiency')
@@ -212,33 +203,30 @@ def EvalSolarHW(inputs):
 
             elif wh_type == "Propane":
                 gallon_price = getDefault(locality,"propane_price_per_gallon")
-                co2_per_gal = getDefault(locality, "propane_co2_per_gallon") # https://www.eia.gov/environment/emissions/co2_vol_mass.php
-                btu_per_gal = getDefault(locality, "propane_btu_per_gallon") # https://www.eia.gov/energyexplained/units-and-calculators/
+                co2_per_gal = getDefault(locality, "propane_co2_per_gallon")
 
                 wh_efficiency = getDefault(locality,'water_heater_propane_efficiency')
                 btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-                co2_old = btu * co2_per_gal / btu_per_gal
-                cost_old = btu * gallon_price / btu_per_gal
+                co2_old = btu * co2_per_gal / BTU_PER_GAL_PROPANE
+                cost_old = btu * gallon_price / BTU_PER_GAL_PROPANE
 
             elif wh_type == "Fuel Oil":
                 gallon_price = getDefault(locality,"fueloil_price_per_gallon")
-                co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon") # https://www.eia.gov/environment/emissions/co2_vol_mass.php
-                btu_per_gal = getDefault(locality,"fueloil_btu_per_gallon") # https://www.eia.gov/energyexplained/units-and-calculators/
+                co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon")
 
                 wh_efficiency = getDefault(locality,'water_heater_fueloil_efficiency')
                 btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-                co2_old = btu * co2_per_gal / btu_per_gal
-                cost_old = btu * gallon_price / btu_per_gal
+                co2_old = btu * co2_per_gal / BTU_PER_GAL_FUELOIL
+                cost_old = btu * gallon_price / BTU_PER_GAL_FUELOIL
 
             elif wh_type == "Nat Gas" or wh_type == "Not sure":
                 therm_price = getDefault(locality,"natgas_price_per_therm")
                 co2_per_therm = NatGasFootprint(locality)
-                btu_per_therm = 100000
 
                 wh_efficiency = getDefault(locality,'water_heater_natgas_efficiency')
                 btu = daily_hw_use * water_specific_heat * water_deltaT * 365/ wh_efficiency
-                co2_old = btu * co2_per_therm / btu_per_therm
-                cost_old = btu * therm_price / btu_per_therm
+                co2_old = btu * co2_per_therm / BTU_PER_THERM
+                cost_old = btu * therm_price / BTU_PER_THERM
 
             tax_credit = getDefault(locality,'solar_hw_federal_tax_credit')   # for 2020
             state_credit = getDefault(locality,'solar_hw_state_tax_credit')

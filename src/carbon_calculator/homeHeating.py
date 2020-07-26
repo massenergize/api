@@ -47,7 +47,7 @@
 #    annual_co2_propane = home_annual_heat_load * propane_co2_mmbtu / boiler_efficiency
 from .naturalGas import NatGasFootprint
 from .CCDefaults import getDefault, getLocality
-from .CCConstants import YES, NO
+from .CCConstants import YES, NO, BTU_PER_KWH, BTU_PER_THERM, BTU_PER_GAL_FUELOIL, BTU_PER_GAL_PROPANE
 
 ENERGY_AUDIT_POINTS = 250
 ELEC_UTILITY = 'elec_utility'
@@ -288,13 +288,12 @@ def HeatingLoad(inputs):
 
     if heating_fuel == "Fuel Oil":
         gallon_price = getDefault(locality,"fueloil_price_per_gallon")
-        co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon") # https://www.eia.gov/environment/emissions/co2_vol_mass.php
-        btu_per_gal = getDefault(locality,"fueloil_btu_per_gallon") # https://www.eia.gov/energyexplained/units-and-calculators/
+        co2_per_gal = getDefault(locality,"fueloil_co2_per_gallon") 
 
         default_efficiency = getDefault(locality,'heating_default_fueloil_efficiency')
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        oil_gal = heating_load / btu_per_gal * 1e6 / efficiency
+        oil_gal = heating_load / BTU_PER_GAL_FUELOIL * 1e6 / efficiency
 
         fuel_co2 = oil_gal * co2_per_gal
         fuel_cost = oil_gal * gallon_price
@@ -304,12 +303,11 @@ def HeatingLoad(inputs):
     elif heating_fuel == "Natural Gas":
         therm_price = getDefault(locality,"natgas_price_per_therm")
         co2_per_therm = NatGasFootprint(locality)
-        btu_per_therm = 100000.
-
+    
         default_efficiency = getDefault(locality,'heating_default_natgas_efficiency')
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        therms = heating_load / btu_per_therm * 1e6 / efficiency
+        therms = heating_load / BTU_PER_THERM * 1e6 / efficiency
         fuel_co2 = therms * co2_per_therm
         fuel_cost = therms * therm_price
 
@@ -318,13 +316,12 @@ def HeatingLoad(inputs):
  
     elif heating_fuel == "Propane":
         gallon_price = getDefault(locality,"propane_price_per_gallon")
-        co2_per_gal = getDefault(locality, "propane_co2_per_gallon") # https://www.eia.gov/environment/emissions/co2_vol_mass.php
-        btu_per_gal = getDefault(locality, "propane_btu_per_gallon") # https://www.eia.gov/energyexplained/units-and-calculators/
+        co2_per_gal = getDefault(locality, "propane_co2_per_gallon") 
 
         default_efficiency = getDefault(locality,'heating_default_propane_efficiency')
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        gallons = heating_load / btu_per_gal * 1e6 / efficiency
+        gallons = heating_load / BTU_PER_GAL_PROPANE * 1e6 / efficiency
         fuel_co2 = gallons * co2_per_gal
         fuel_cost = gallons * gallon_price
 
@@ -333,9 +330,8 @@ def HeatingLoad(inputs):
      
     elif heating_fuel == "Wood":
         cord_price = getDefault(locality,"wood_price_per_cord")
-        #pounds_per_cord = getDefault(locality,"wood_pounds_per_cord") # https://chimneysweeponline.com/howood.htm
-        mmbtu_per_cord = getDefault(locality,"wood_btu_per_cord") # https://chimneysweeponline.com/howood.htm
-        co2_per_mmbtu = getDefault(locality,"wood_co2_per_mmbtu")  #https://futuremetrics.info/wp-content/uploads/2013/07/CO2-from-Wood-and-Coal-Combustion.pdf
+        mmbtu_per_cord = getDefault(locality,"wood_btu_per_cord") 
+        co2_per_mmbtu = getDefault(locality,"wood_co2_per_mmbtu")  
 
         default_efficiency = getDefault(locality,'heating_default_wood_efficiency')
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
@@ -348,32 +344,29 @@ def HeatingLoad(inputs):
         heating_cost = fuel_cost + parasitics_cost
      
     elif heating_fuel == "Conventional Electric":
-        btu_per_kwh = getDefault(locality, 'elec_btu_per_kwh')
 
         default_efficiency = getDefault(locality,'heating_default_electric_efficiency')
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        kwh = heating_load / btu_per_kwh * 1e6 / efficiency
+        kwh = heating_load / BTU_PER_KWH * 1e6 / efficiency
         heating_co2 = kwh * co2_per_kwh
         heating_cost = kwh * kwh_price
 
     elif heating_fuel == "Heat Pump":
-        btu_per_kwh = getDefault(locality, 'elec_btu_per_kwh')
 
         default_efficiency = getDefault(locality,'heating_default_ashp_efficiency')
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
 
-        kwh = heating_load / btu_per_kwh * 1e6 / efficiency
+        kwh = heating_load / BTU_PER_KWH * 1e6 / efficiency
         heating_co2 = kwh * co2_per_kwh
         heating_cost = kwh * kwh_price
  
     elif heating_fuel == "Geothermal":
-        btu_per_kwh = getDefault(locality, 'elec_btu_per_kwh')
 
         default_efficiency = getDefault(locality,'heating_default_gshp_efficiency')
         efficiency = inputs.get('heating_system_efficiency', default_efficiency)
  
-        kwh = heating_load / btu_per_kwh * 1e6 / efficiency
+        kwh = heating_load / BTU_PER_KWH * 1e6 / efficiency
         heating_co2 = kwh * co2_per_kwh
         heating_cost = kwh * kwh_price
 

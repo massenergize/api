@@ -1,5 +1,5 @@
 from .CCDefaults import getDefault, getLocality
-from .CCConstants import NO,YES, FREQUENCIES
+from .CCConstants import NO,YES, FREQUENCIES, BTU_PER_KWH, BTU_PER_GAL_GASOLINE
 
 def EvalReplaceCar(inputs):
     #car_type,replace_car,car_annual_miles,car_mpg,car_model_new
@@ -51,7 +51,7 @@ def EvalReplaceCar(inputs):
 def CarImpact(locality, annual_miles, mpg, car_type, new=False):
     kwh = gal = 0.
 
-    co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal') # http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf
+    co2_per_gal_gas = getDefault(locality,'gasoline_co2_per_gal') 
     co2_per_kwh = getDefault(locality,"elec_lbs_co2_per_kwh")    # lbs CO2 per kwh
     kwh_price = getDefault(locality,"elec_price_per_kwh")            # Eversource current price
 
@@ -64,9 +64,7 @@ def CarImpact(locality, annual_miles, mpg, car_type, new=False):
             gal = 0
         else:
             gal_equiv = annual_miles/mpg
-            btu_per_gal = getDefault('','gasoline_btu_per_gal')
-            btu_per_kwh = getDefault('','elec_btu_per_kwh')
-            kwh = gal_equiv * btu_per_gal / btu_per_kwh
+            kwh = gal_equiv * BTU_PER_GAL_GASOLINE / BTU_PER_KWH
         annual_service = getDefault(locality,'car_annual_service_electric')
 
         federal_credit = getDefault(locality,'car_BEV_federal_credit')
@@ -86,9 +84,7 @@ def CarImpact(locality, annual_miles, mpg, car_type, new=False):
         else:
             gal_equiv = annual_miles/mpg
             gal = (1. - electric_fraction) * gal_equiv
-            btu_per_gal = getDefault('','gasoline_btu_per_gal')
-            btu_per_kwh = getDefault('','elec_btu_per_kwh')
-            kwh = electric_fraction * gal_equiv * btu_per_gal / btu_per_kwh
+            kwh = electric_fraction * gal_equiv * BTU_PER_GAL_GASOLINE / BTU_PER_KWH
         annual_service = getDefault(locality,'car_annual_service_hybrid')
 
         federal_credit = getDefault(locality,'car_PHEV_federal_credit')
@@ -237,8 +233,8 @@ def EvalReduceFlights(inputs):
         flights_amount = float(inputs.get('flight_amount', default_flights))      
         reduce_flights = percent_reduction * flights_amount
 
-        default_flight_co2 = getDefault(locality,'filghts_default_co2')  # online estimate for BOS SFO round trip
-        default_flight_cost = getDefault(locality,'fights_default_cost')
+        default_flight_co2 = getDefault(locality,'flights_default_co2')  # online estimate for BOS SFO round trip
+        default_flight_cost = getDefault(locality,'flights_default_cost')
 
         points = reduce_flights * default_flight_co2
         savings = reduce_flights * default_flight_cost
@@ -261,10 +257,10 @@ def EvalOffsetFlights(inputs):
         flights_amount = inputs.get('flight_amount', default_flights)      
         offset_flights = offset_fraction * flights_amount 
 
-        default_flight_co2 = getDefault(locality,'filghts_default_co2')  # online estimate for BOS SFO round trip
+        default_flight_co2 = getDefault(locality,'flights_default_co2')  # online estimate for BOS SFO round trip
         offset_co2 = offset_flights * default_flight_co2
 
-        default_offset_cost_per_ton = getDefault(locality,'fights_default_offset_cost_per_ton')
+        default_offset_cost_per_ton = getDefault(locality,'flights_default_offset_cost_per_ton')
         offset_cost = offset_co2/2000. * default_offset_cost_per_ton
         points = offset_co2
         savings = - offset_cost

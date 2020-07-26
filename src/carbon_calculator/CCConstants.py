@@ -9,3 +9,9 @@ INVALID_QUERY = -1
 HEATING_SYSTEM_POINTS = 10000
 SOLAR_POINTS = 6000
 ELECTRICITY_POINTS = 5000
+
+BTU_PER_KWH = 3414              # https://www.eia.gov/energyexplained/units-and-calculators/
+BTU_PER_THERM = 100000.
+BTU_PER_GAL_FUELOIL = 137619    # https://www.eia.gov/energyexplained/units-and-calculators/
+BTU_PER_GAL_GASOLINE = 120286   # https://www.eia.gov/energyexplained/units-and-calculators/
+BTU_PER_GAL_PROPANE = 91333     # https://www.eia.gov/energyexplained/units-and-calculators/
