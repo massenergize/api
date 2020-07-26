@@ -75,7 +75,7 @@ def CarImpact(locality, annual_miles, mpg, car_type, new=False):
         car_price = getDefault(locality,'car_BEV_price')    # current price of Nissan Leaf
 
     elif car_type == 'Plug-in Hybrid':
-        electric_fraction = getDefault(locality,'car_plugin_electric_fraction')
+        electric_fraction = getDefault(locality,'car_PHEV_electric_fraction')
         if mpg == 0.:
             kwh_per_mile = getDefault(locality,'car_electric_kwh_per_mile')
             hybrid_mpg = getDefault(locality,'car_new_hybrid_mpg')

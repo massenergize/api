@@ -69,7 +69,6 @@ def EvalReduceWaste(inputs):
         explanation = "No actions chosen to reduce waste."
     return points, cost, savings, explanation
 
-COMPOST_POINTS = 200
 def EvalCompost(inputs):
     #compost_food_waste,compost_pickup
     explanation = "Didn't choose to start composting."

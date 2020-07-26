@@ -11,22 +11,22 @@ car_BEV_federal_credit,default,7500,Default value without reference,,2019-11-03 
 car_BEV_local_rebate,default,0,Default value without reference,,2019-11-03 17:01
 car_BEV_price,default,30000,Default value without reference,,2019-11-03 17:01
 car_BEV_state_credit,default,2500,Default value without reference,,2019-11-03 17:01
-car_default_miles,default,15000,Default value without reference,,2019-11-03 16:58
-car_default_mpg,default,25,Default value without reference,,2019-11-03 16:58
+car_default_miles,default,10557,MAPC Q2 Mass average ; Matches conventional and HEV annual miles https://datacommon.mapc.org/browser/datasets/331,,2020-07-26 16:58
+car_default_mpg,default,24.3,https://afdc.energy.gov/vehicles/electric_emissions_sources.html,,2019-11-03 16:58
 car_default_price,default,22000,Default value without reference,,2019-11-03 17:43
 car_diesel_price,default,24150,Mazda CX-5 List Price,,2019-11-03 16:58
-car_electric_kwh_per_mile,default,0.25,Default value without reference,,2019-11-03 17:01
+car_electric_kwh_per_mile,default,0.32,ctric_emissions_sources.html,,2020-07-26 17:01
 car_hybrid_price,default,26000,Default value without reference,,2019-11-03 17:40
 car_new_diesel_mpg,default,40,Default value without reference,,2019-11-03 17:01
 car_new_electric_mpg,default,100,Default value without reference,,2019-11-03 17:01
-car_new_hybrid_mpg,default,40,Default value without reference,,2019-11-03 17:37
+car_new_hybrid_mpg,default,44.4,https://afdc.energy.gov/vehicles/electric_emissions_sources.html,,2019-11-03 17:37
 car_new_mpg,default,29,UCS: average new car MPG,,2019-11-03 17:01
+car_PHEV_electric_fraction,default,0.55,https://afdc.energy.gov/vehicles/electric_emissions_sources.html,,2019-11-03 17:37
 car_PHEV_federal_credit,default,4500,Default value without reference,,2019-11-03 17:38
 car_PHEV_local_rebate,default,0,Default value without reference,,2019-11-03 17:38
 car_PHEV_price,default,27750,Default value without reference,,2019-11-03 17:38
 car_PHEV_state_credit,default,0,Default value without reference,,2019-11-03 17:38
-car_plugin_electric_fraction,default,0.8,Default value without reference,,2019-11-03 17:37
-compost_co2,default,2000,Default value without reference,,2019-11-03 14:02
+compost_co2,default,189,https://www.mass.gov/doc/draft-2030-solid-waste-master-plan/download,,2019-11-03 14:02
 elec_bulb_average_ontime_hours,default,3,Default value without reference,,2019-10-27 13:23
 elec_bulb_average_wattage,default,60,Default value without reference,,2019-10-27 13:23
 elec_bulb_relative_LED_consumption,default,0.12,Default value without reference,,2019-10-27 13:23
