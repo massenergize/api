@@ -36,7 +36,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -135,7 +135,7 @@ SESSION_COOKIE_SECURE = False
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'default': {
+    'remote-default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': os.environ.get('DATABASE_NAME'),
         'USER': os.environ.get('DATABASE_USER'),
@@ -143,13 +143,13 @@ DATABASES = {
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT')
     },
-    'local-default': {
+    'default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE'),
         'NAME': 'postgres2',
         'USER': 'Brad',
         'PASSWORD': '',
         'HOST': 'localhost',
-        'PORT': '5432'
+        'PORT': '5555'
     },
 }
 

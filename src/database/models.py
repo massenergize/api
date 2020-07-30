@@ -585,14 +585,13 @@ class Team(models.Model):
   members = models.ManyToManyField(UserProfile, related_name='team_members', 
     blank=True) 
 
-  # change this from ForeignKey to ManyToManyField.  Change on_delete to SET_NULL and allow null for community
-  community = models.ManyToManyField(Community, null=True, on_delete=models.SET_NULL)
-  # new fields
-  image = models.ManyToManyField(Media, blank=True)                         # 0 or more photos - could be a slide show
-  video = model.ForeignKey(Media, blank=True)                               # allow one video
+  # may change this from ForeignKey to ManyToManyField to allow team to span communities
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  image = models.ManyToManyField(Media, related_name='team_image')                         # 0 or more photos - could be a slide show
+  video = models.ForeignKey(Media, on_delete=models.SET_NULL, related_name='team_video', null=True)                               # allow one video
   is_closed = models.BooleanField(default=False, blank=True)                # by default, teams are open
-  team_page_options = models.JSONField(blank=True)                          # settable team page options
-  parent = models.ForeignKey(Team, null=True, on_delete=models.SET_NULL)    # for the case of sub-teams
+  team_page_options = JSONField(blank=True, null=True)                          # settable team page options
+  parent = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)    # for the case of sub-teams
 
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
@@ -971,7 +970,7 @@ class Action(models.Model):
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
   # this is the singal category which points will be recorded in, though
-  primary_category = models.ForeignKey(Tag,related_name='action_category',null=True)
+  primary_category = models.ForeignKey(Tag,related_name='action_category', on_delete=models.SET_NULL ,null=True)
   # then - an action could have multiple secondary categories
   tags = models.ManyToManyField(Tag, related_name='action_tags', blank=True)
   geographic_area = JSONField(blank=True, null=True)
@@ -1335,7 +1334,7 @@ class UserActionRel(models.Model):
   status  = models.CharField(max_length=SHORT_STR_LEN, 
     choices = CHOICES.get("USER_ACTION_STATUS", {}).items(), 
     db_index=True, default='TODO')
-  date_completed = models.DateField(blank=True)
+  date_completed = models.DateField(blank=True, null=True)
   carbon_impact = models.IntegerField(default=0)  # that which was calculated by the Carbon Calculator
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -1929,6 +1928,7 @@ class SubscriberEmailPreference(models.Model):
   class Meta:
     db_table = 'subscriber_email_preferences'
 
+
 class PageSettings(models.Model):
   """
   Represents the basic page settings.
@@ -1947,7 +1947,7 @@ class PageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  social_media_links = models.CharField(max_length=LONG_STR_LEN)
+  social_media_links = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -1963,13 +1963,16 @@ class PageSettings(models.Model):
     res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
+  class Meta:
+    abstract = True
+
 class HomePageSettings(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  images = models.ManyToManyField(Media, blank=True)
+  images = models.ManyToManyField(Media, related_name='homepage_images', blank=True)
 
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   featured_links = JSONField(blank=True, null=True)
@@ -1989,7 +1992,7 @@ class HomePageSettings(models.Model):
   featured_stats_description = models.CharField(max_length=LONG_STR_LEN, blank=True)
   featured_events_description = models.CharField(max_length=LONG_STR_LEN, blank=True)
   
-  favicon_image = models.ForeignKey(Media, null=True)
+  favicon_image = models.ForeignKey(Media, related_name='favicon', on_delete=models.SET_NULL, null=True)
 
   is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -2099,8 +2102,8 @@ class VendorsPageSettings(PageSettings):
     return "TeamsPageSettings - %s" % (self.community)
 
   class Meta:
-    db_table = 'teams_page_settings'
-    verbose_name_plural = "TeamsPageSettings"
+    db_table = 'vendors_page_settings'
+    verbose_name_plural = "VendorsPageSettings"
 
 class Message(models.Model):
   """
