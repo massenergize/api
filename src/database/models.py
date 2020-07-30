@@ -1313,10 +1313,12 @@ class UserActionRel(models.Model):
     which action they marked 
   vendor:
     which vendor they choose to contact/connect with 
-  testimonial:
-    what they had to say about this action.
   status: 
-    Whether they marked it as todo, done or save for later  
+    Whether they marked it as todo, done or save for later 
+  date_completed:
+    If specified, the date when they completed the action
+  carbon_impact:
+    Carbon reduction calculated by the Carbon Calculator 
   """
   id = models.AutoField(primary_key=True)
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
@@ -1327,6 +1329,8 @@ class UserActionRel(models.Model):
   status  = models.CharField(max_length=SHORT_STR_LEN, 
     choices = CHOICES.get("USER_ACTION_STATUS", {}).items(), 
     db_index=True, default='TODO')
+  date_completed = models.DateField(blank=True)
+  carbon_impact = models.IntegerField(default=0)  # that which was calculated by the Carbon Calculator
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
