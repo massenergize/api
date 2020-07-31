@@ -21,12 +21,4 @@ class RouteHandler:
       res.append(path(p, v))
     return res
 
-  def get_white_listed_routes(self):
-    res = []
-    for (p, v) in self.routes.items():
-      print(v)
-      # if v and v.func_dict.get('login_required')
-      # res.append(path(p, v))
-    return res
-
 

@@ -35,11 +35,11 @@ class ActionHandler(RouteHandler):
   def info(self, request) -> MassenergizeResponse: 
     context: Context = request.context
     args: dict = context.args
+    
     # verify the body of the incoming request
-    v: Validator = Validator()
-    v.expect("action_id", str, is_required=True)
-    v.rename("id", "action_id")
-    args, err = v.verify(args, strict=True)
+    self.validator.expect("action_id", str, is_required=True)
+    self.validator.rename("id", "action_id")
+    args, err = self.validator.verify(args, strict=True)
     if err:
       return err
     

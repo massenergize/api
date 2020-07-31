@@ -11,11 +11,6 @@ from api.urls import ROUTE_HANDLERS
 
 class MassenergizeJWTAuthMiddleware:
 
-  # List of routes that do not require sign-in
-  WHITLISTED_ROUTES = set([
-    # h.get_white_listed_routes() for h in ROUTE_HANDLERS
-  ])
-
   def __init__(self, get_response):
     self.get_response = get_response
 
@@ -31,9 +26,9 @@ class MassenergizeJWTAuthMiddleware:
     return response
   
 
-  def _get_decoded_token(self, request) -> (dict, MassEnergizeAPIError):
+  def _get_decoded_token(self, token) -> (dict, MassEnergizeAPIError):
     try:
-      payload = jwt.decode(id_token, SECRET_KEY, algorithm='HS256')
+      payload = jwt.decode(token, SECRET_KEY, algorithm='HS256')
       return payload, None
     except jwt.ExpiredSignatureError:
       msg = 'session_expired'
@@ -63,22 +58,17 @@ class MassenergizeJWTAuthMiddleware:
 
       path = self._get_clean_path(request)
 
-      if path not in self.WHITLISTED_ROUTES:
+      #extract JWT auth token
+      token = request.COOKIES.get('token', None) 
 
-        #extract JWT auth token
-        token = request.COOKIES.get('token', None) 
+      if token:
+        decoded_token, err = self._get_decoded_token(token)
+        if err:
+          return err
 
-        if token:
-          decoded_token, err = self._get_decoded_token(token)
-          if err:
-            return err
+        # at this point the user has an active session
+        ctx.set_user_credentials(decoded_token)
 
-          # at this point the user has an active session
-          ctx.set_user_credentials(decoded_token)
-
-        else:
-          return CustomMassenergizeError("login_required")
-        
       request.context = ctx
 
     except Exception as e:

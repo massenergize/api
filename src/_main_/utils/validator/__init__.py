@@ -6,10 +6,11 @@ class Validator:
 
   def __init__(self):
     self.fields = {}
+    self.one_of = {}
     self.rename_fields = set()
 
 
-  def expect(self, field_name, field_type=str, is_required=True, options={}):
+  def expect(self, field_name, field_type=str, is_required=False, options={}):
     self.fields[field_name] = {
       "type": field_type,
       "is_required": is_required,
@@ -17,7 +18,15 @@ class Validator:
     }
     return self
 
-  def add(self, field_name, field_type=str, is_required=True):
+  def expect_one_of(self, fields):
+    for (field_name, field_type, is_required) in lst:
+      self.fields[field_name] = {
+        "type": field_type,
+        "is_required": is_required
+      }
+    return self
+
+  def add(self, field_name, field_type=str, is_required=False):
     return self.expect(field_name, field_type, is_required)
 
   def expect_all(self, lst):
