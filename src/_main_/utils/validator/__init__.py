@@ -49,7 +49,7 @@ class Validator:
     try:
       # when in strict mode remove all unexpected fields
       if strict:
-        tmp_args = args
+        tmp_args = args.copy()
         for f in args:
           if f not in self.fields:
             del tmp_args[f]

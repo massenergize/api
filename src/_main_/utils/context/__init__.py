@@ -1,4 +1,3 @@
-import logging
 from _main_.utils.common import get_request_contents
 
 
@@ -54,7 +53,6 @@ class Context:
     return str({
       "args": self.args,
       "is_dev": self.is_dev,
-      "logger": self.logger,
       "user_is_logged_in": self.user_is_logged_in,
       "user_id": self.user_id,
       "user_email": self.user_email,

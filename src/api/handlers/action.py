@@ -32,6 +32,7 @@ class ActionHandler(RouteHandler):
     self.add("/actions.listForSuperAdmin", self.super_admin_list)
 
 
+  @login_required
   def info(self, request) -> MassenergizeResponse: 
     context: Context = request.context
     args: dict = context.args

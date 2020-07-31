@@ -26,17 +26,21 @@ def home(request):
   )
 
 def handler400(request, exception):
+  error_msg = "bad_request"
   # capture_message("Bad Request", level="error")
-  return MassenergizeResponse(error="Error: BadRequest")
+  return MassenergizeResponse(error=error_msg)
 
 def handler403(request, exception):
-  capture_message("Permission Denied", level="error")
-  return MassenergizeResponse(error="Error: PermissionDenied")
+  error_msg = "permission_denied"
+  capture_message(error_msg, level="error")
+  return MassenergizeResponse(error=error_msg)
 
 def handler404(request, exception):
-  capture_message("Page not found!", level="error")
-  return MassenergizeResponse(data=f"path: {request.build_absolute_uri()}", error="Error: ResourceNotFound")
+  error_msg = "page_not_found"
+  capture_message(error_msg, level="error")
+  return MassenergizeResponse(data=f"path: {request.build_absolute_uri()}", error=error_msg)
 
 def handler500(request):
-  capture_message("Server Error", level="error")
-  return MassenergizeResponse(error="Error: ServerError")
+  error_msg = "server_error"
+  capture_message(error_msg, level="error")
+  return MassenergizeResponse(error=error_msg)

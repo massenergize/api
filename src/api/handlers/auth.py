@@ -20,7 +20,7 @@ class AuthHandler(RouteHandler):
   def registerRoutes(self):
     self.add("/auth.login", self.login) 
     self.add("/auth.logout", self.logout)
-    self.add("/auth.verify", self.verify)
+    self.add("/auth.verify", self.whoami)
     self.add("/auth.whoami", self.whoami)
     self.add("/auth.test", self.whoami)
 
@@ -63,17 +63,6 @@ class AuthHandler(RouteHandler):
       return err
 
     auth_info, err = self.service.create_auth(context, args)
-    if err:
-      return err
-    return MassenergizeResponse(data=auth_info)
-
-
-  def verify(self, request) -> MassenergizeResponse: 
-    context: Context = request.context
-    args: dict = context.args
-    community_id = args.pop('community_id', None)
-    subdomain = args.pop('subdomain', None)
-    auth_info, err = self.service.list_auths(context, community_id, subdomain)
     if err:
       return err
     return MassenergizeResponse(data=auth_info)
