@@ -1,5 +1,6 @@
 from api.handlers.action import ActionHandler
 from api.handlers.admin import AdminHandler
+from api.handlers.auth import AuthHandler
 from api.handlers.community import CommunityHandler
 from api.handlers.event import EventHandler
 from api.handlers.goal import GoalHandler
@@ -28,6 +29,7 @@ ROUTE_HANDLERS = [
   ActionHandler(),
   ActionsPageSettingsHandler(),
   AdminHandler(),
+  AuthHandler(),
   CommunityHandler(),
   ContactUsPageSettingsHandler(), 
   DonatePageSettingsHandler(),

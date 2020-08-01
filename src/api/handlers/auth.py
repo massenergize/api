@@ -27,17 +27,7 @@ class AuthHandler(RouteHandler):
 
   def login(self, request) -> MassenergizeResponse: 
     context: Context = request.context
-    args: dict = context.args
-    
-    # verify the body of the incoming request
-    self.validator.expect("auth_id", str, is_required=True)
-    self.validator.rename("id", "auth_id")
-    args, err = self.validator.verify(args, strict=True)
-    if err:
-      return err
-    
-    auth_id = args.pop('auth_id', None)
-    auth_info, err = self.service.get_auth_info(context, auth_id)
+    auth_info, err = self.service.login(context, request)
     if err:
       return err
     return MassenergizeResponse(data=auth_info)
@@ -45,24 +35,7 @@ class AuthHandler(RouteHandler):
 
   def logout(self, request) -> MassenergizeResponse: 
     context: Context = request.context
-    args = context.get_request_body() 
-    (self.validator
-      .expect("community_id", int, is_required=False)
-      .expect("calculator_auth", int, is_required=False)
-      .expect("image", "file", is_required=False, options={"is_logo": True})
-      .expect("title", str, is_required=False, options={"min_length": 4, "max_length": 40})
-      .expect("rank", int, is_required=False)
-      .expect("is_global", bool, is_required=False)
-      .expect("is_published", bool, is_required=False)
-      .expect("tags", list, is_required=False)
-      .expect("vendors", list, is_required=False)
-    )
-
-    args, err = self.validator.verify(args)
-    if err:
-      return err
-
-    auth_info, err = self.service.create_auth(context, args)
+    auth_info, err = self.service.logout(context, request)
     if err:
       return err
     return MassenergizeResponse(data=auth_info)
@@ -70,25 +43,7 @@ class AuthHandler(RouteHandler):
 
   def whoami(self, request) -> MassenergizeResponse: 
     context: Context = request.context
-    args = context.get_request_body() 
-    (self.validator
-      .expect("auth_id", int, is_required=True)
-      .expect("title", str, is_required=False, options={"min_length": 4, "max_length": 40})
-      .expect("calculator_auth", int, is_required=False)
-      .expect("image", "file", is_required=False, options={"is_logo": True})
-      .expect("rank", int, is_required=False)
-      .expect("is_global", bool, is_required=False)
-      .expect("is_published", bool, is_required=False)
-      .expect("tags", list, is_required=False)
-      .expect("vendors", list, is_required=False)
-    )
-
-    args, err = self.validator.verify(args)
-    if err:
-      return err
-    
-    auth_info, err = self.service.update_auth(context, args)
+    auth_info, err = self.service.whoami(context, request)
     if err:
       return err      
-      
     return MassenergizeResponse(data=auth_info)
