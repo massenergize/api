@@ -27,7 +27,7 @@ class AuthHandler(RouteHandler):
 
   def login(self, request) -> MassenergizeResponse: 
     context: Context = request.context
-    auth_info, err = self.service.login(context, request)
+    auth_info, err = self.service.login(context)
     if err:
       return err
     return MassenergizeResponse(data=auth_info)
@@ -35,7 +35,7 @@ class AuthHandler(RouteHandler):
 
   def logout(self, request) -> MassenergizeResponse: 
     context: Context = request.context
-    auth_info, err = self.service.logout(context, request)
+    auth_info, err = self.service.logout(context)
     if err:
       return err
     return MassenergizeResponse(data=auth_info)
@@ -43,7 +43,7 @@ class AuthHandler(RouteHandler):
 
   def whoami(self, request) -> MassenergizeResponse: 
     context: Context = request.context
-    auth_info, err = self.service.whoami(context, request)
+    auth_info, err = self.service.whoami(context)
     if err:
       return err      
     return MassenergizeResponse(data=auth_info)

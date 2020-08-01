@@ -23,8 +23,9 @@ class AuthService:
     self.name = "AuthService"
 
 
-  def login(self, context: Context, request):
+  def login(self, context: Context):
     # This does the same work as verify
+
     try:
       payload = get_request_contents(request)
       firebase_id_token = payload.get('idToken', None)
@@ -48,7 +49,13 @@ class AuthService:
         massenergize_jwt_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = MassenergizeResponse(data=payload)
         response.set_cookie("token", str(massenergize_jwt_token))
-        return response
+
+
+        # we have to tell the session object explicitly that it has been 
+        # modified by setting the modified attribute on the session object
+        context.request.session.modified = True
+
+        return response, None
 
       else:
         return CustomMassenergizeError("Invalid Auth")
@@ -69,7 +76,7 @@ class AuthService:
       if not user_id:
         return CustomMassenergizeError(f"No user exists with ID: {user_id}")
       user = UserProfile.objects.get(pk=user_id)
-      return MassenergizeResponse(user.full_json())
+      return MassenergizeResponse(user.full_json()), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -100,7 +107,7 @@ class AuthService:
         massenergize_jwt_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = MassenergizeResponse(data=payload)
         response.set_cookie("token", str(massenergize_jwt_token))
-        return response
+        return response, None
 
       else:
         return CustomMassenergizeError("Invalid Auth")
