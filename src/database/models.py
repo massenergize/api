@@ -588,7 +588,7 @@ class Team(models.Model):
   # may change this from ForeignKey to ManyToManyField to allow team to span communities
   community = models.ForeignKey(Community, on_delete=models.CASCADE)
   image = models.ManyToManyField(Media, related_name='team_image')                         # 0 or more photos - could be a slide show
-  video = models.ForeignKey(Media, on_delete=models.SET_NULL, related_name='team_video', null=True)                               # allow one video
+  video_link = models.CharField(max_length=LONG_STR_LEN, blank=True)                               # allow one video
   is_closed = models.BooleanField(default=False, blank=True)                # by default, teams are open
   team_page_options = JSONField(blank=True, null=True)                          # settable team page options
   parent = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)    # for the case of sub-teams
