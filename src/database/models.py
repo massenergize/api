@@ -1992,7 +1992,7 @@ class HomePageSettings(models.Model):
   featured_stats_description = models.CharField(max_length=LONG_STR_LEN, blank=True)
   featured_events_description = models.CharField(max_length=LONG_STR_LEN, blank=True)
   
-  favicon_image = models.ForeignKey(Media, related_name='favicon', on_delete=models.SET_NULL, null=True)
+  favicon_image = models.ForeignKey(Media, related_name='favicon', on_delete=models.SET_NULL, null=True, blank=True)
 
   is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)

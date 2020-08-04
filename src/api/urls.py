@@ -8,6 +8,7 @@ from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
 from api.handlers.page_settings__actions import ActionsPageSettingsHandler
 from api.handlers.page_settings__contactus import ContactUsPageSettingsHandler
 from api.handlers.page_settings__donate import DonatePageSettingsHandler
+from api.handlers.page_settings__teams import TeamsPageSettingsHandler
 from api.handlers.page_settings__home import HomePageSettingsHandler
 from api.handlers.message import MessageHandler
 from api.handlers.misc import MiscellaneousHandler
@@ -30,6 +31,7 @@ urlpatterns.extend(AdminHandler().get_routes_to_views())
 urlpatterns.extend(CommunityHandler().get_routes_to_views())
 urlpatterns.extend(ContactUsPageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(DonatePageSettingsHandler().get_routes_to_views())
+urlpatterns.extend(TeamsPageSettingsHandler().get_routes_to_views())
 urlpatterns.extend(EventHandler().get_routes_to_views())
 urlpatterns.extend(GoalHandler().get_routes_to_views())
 urlpatterns.extend(GraphHandler().get_routes_to_views())
