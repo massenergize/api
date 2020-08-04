@@ -1947,8 +1947,6 @@ class PageSettings(models.Model):
     ForeignKeys: Links to one or more Media records
   featured_video_link: str
     A link to a featured video (on YouTube or elsewhere)
-  social_media_links: JSON
-    Links to social media, such as:  ["facebook:www.facebook.com/coolerconcord/","instgram:www.instagram.com/coolerconcord/"]
   more_info: JSON - extraneous information
   is_deleted: boolean - whether this page was deleted from the platform (perhaps with it's community)
   is_published: boolean - whether this page is live
@@ -1961,7 +1959,6 @@ class PageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  social_media_links = JSONField(blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -2018,7 +2015,7 @@ class HomePageSettings(models.Model):
   show_footer_subscribe : Boolean - whether to show newsletter subscribe box
   show_footer_social_media : Boolean - whether to show footer social media icons
   social_media_links: str
-    Links to social media, such as:  "facebook:www.facebook.com/coolerconcord/,instgram:www.instagram.com/coolerconcord/"
+    Links to social media, such as:  ["facebook:www.facebook.com/coolerconcord/,instgram:www.instagram.com/coolerconcord/"]
 
   for the tab on all pages:
   -------------------------
@@ -2119,7 +2116,6 @@ class ActionsPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  social_media_links = JSONField(blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -2158,7 +2154,6 @@ class ContactUsPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  social_media_links = JSONField(blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -2200,7 +2195,6 @@ class DonatePageSettings(models.Model):
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   donation_link = models.CharField(max_length=LONG_STR_LEN, blank=True)
-  social_media_links = JSONField(blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -2238,7 +2232,6 @@ class AboutUsPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  social_media_links = JSONField(blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -2275,7 +2268,6 @@ class ImpactPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
-  social_media_links = JSONField(blank=True, null=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
