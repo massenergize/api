@@ -31,13 +31,13 @@ class MassenergizeJWTAuthMiddleware:
       payload = jwt.decode(token, SECRET_KEY, algorithm='HS256')
       return payload, None
     except jwt.ExpiredSignatureError:
-      msg = 'session_expired'
-      return None, CustomMassenergizeError(msg)
+      return None, CustomMassenergizeError('session_expired')
     except jwt.DecodeError:
-      msg = 'token_decode_error'
-      return None, CustomMassenergizeError(msg)
+      return None, CustomMassenergizeError('token_decode_error')
     except jwt.InvalidTokenError:
-      return None, CustomMassenergizeError('invalid_auth')
+      return None, CustomMassenergizeError('invalid_token')
+    except Exception as e:
+      return None, CustomMassenergizeError('invalid_token')
 
 
   def _get_clean_path(self, request):

@@ -27,91 +27,57 @@ class AuthService:
     # This does the same work as verify
 
     try:
-      payload = get_request_contents(request)
-      firebase_id_token = payload.get('idToken', None)
+      args = context.args or {}
+      firebase_id_token = args.get('idToken', None)
 
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
-        user_email = decoded_token["email"]
+        user_email = decoded_token.get("email")
+
         user = UserProfile.objects.filter(email=user_email).first()
         if (not user):
-          return CustomMassenergizeError("Please create an account")
+          return None, CustomMassenergizeError("Please create an account")
 
         payload = {
           "user_id": str(user.id), 
           "email": user.email,
-          "is_super_admin": user.is_super_admin, 
-          "is_community_admin": user.is_community_admin,
+          "is_super_admin": user.is_super_admin, #TODO: remove in favor of relying on realtime data
+          "is_community_admin": user.is_community_admin, # TODO: remove
           "iat": decoded_token.get("iat"),
           "exp": decoded_token.get("exp"),
         }
 
-        massenergize_jwt_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
-        response = MassenergizeResponse(data=payload)
-        response.set_cookie("token", str(massenergize_jwt_token))
+        massenergize_jwt_token = jwt.encode(
+          payload, 
+          SECRET_KEY, 
+          algorithm='HS256'
+        ).decode('utf-8')
 
-
-        # we have to tell the session object explicitly that it has been 
-        # modified by setting the modified attribute on the session object
-        context.request.session.modified = True
-
-        return response, None
+        return str(massenergize_jwt_token), None
 
       else:
-        return CustomMassenergizeError("Invalid Auth")
+        return None, CustomMassenergizeError("invalid_auth")
 
     except Exception as e:
       capture_message(str(e), level="error")
-      return CustomMassenergizeError(e)
-
-  def logout(self, context: Context):
-    response = MassenergizeResponse(data={"success": True})
-    response.delete_cookie("token")
-    return response
+      return None, CustomMassenergizeError(e)
 
 
   def whoami(self, context: Context):
     try:
-      user_id = request.context.user_id
-      if not user_id:
-        return CustomMassenergizeError(f"No user exists with ID: {user_id}")
-      user = UserProfile.objects.get(pk=user_id)
-      return MassenergizeResponse(user.full_json()), None
+      user_id = context.user_id
+      user_email = context.user_email
+      user = None
+
+      if user_id:
+        user = UserProfile.objects.get(pk=user_id)
+      elif user_email:
+        user = UserProfile.objects.get(pk=user_email)
+      
+      return serialize(user, full=True), None
 
     except Exception as e:
       capture_message(str(e), level="error")
-      return CustomMassenergizeError(e)
+      return None, CustomMassenergizeError(e)
 
 
-  def verify(self, context: Context):
-    try:
-      payload = get_request_contents(request)
-      firebase_id_token = payload.get('idToken', None)
-
-      if firebase_id_token:
-        decoded_token = auth.verify_id_token(firebase_id_token)
-        user_email = decoded_token["email"]
-        user = UserProfile.objects.filter(email=user_email).first()
-        if (not user):
-          return CustomMassenergizeError("Please create an account")
-
-        payload = {
-          "user_id": str(user.id), 
-          "email": user.email,
-          "is_super_admin": user.is_super_admin, 
-          "is_community_admin": user.is_community_admin,
-          "iat": decoded_token.get("iat"),
-          "exp": decoded_token.get("exp"),
-        }
-
-        massenergize_jwt_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
-        response = MassenergizeResponse(data=payload)
-        response.set_cookie("token", str(massenergize_jwt_token))
-        return response, None
-
-      else:
-        return CustomMassenergizeError("Invalid Auth")
-
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return CustomMassenergizeError(e)

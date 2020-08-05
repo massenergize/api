@@ -16,7 +16,8 @@ class Context:
   """
   def __init__(self):
     self.args = {}
-    self.is_dev = False
+    self.is_dev = True
+    self.is_sandbox = False
     self.is_prod = False
     self.user_is_logged_in = False
     self.user_id = None
@@ -35,11 +36,11 @@ class Context:
   def set_request_body(self, request):
     #get the request args
     self.args = get_request_contents(request)
-    
+    self.is_sandbox = self.args.pop('is_sandbox', False)
+
     #set the is_dev field
-    self.is_dev = self.args.pop('is_dev', False)
-    if not self.is_dev:
-      self.is_prod = True
+    self.is_prod = self.args.pop('is_prod', False)
+    self.is_dev = not self.is_prod
 
 
   def get_request_body(self):
@@ -53,6 +54,8 @@ class Context:
     return str({
       "args": self.args,
       "is_dev": self.is_dev,
+      "is_prod": self.is_prod,
+      "is_sandbox": self.is_sandbox,
       "user_is_logged_in": self.user_is_logged_in,
       "user_id": self.user_id,
       "user_email": self.user_email,

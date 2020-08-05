@@ -29,7 +29,7 @@ class TestimonialStore:
 
       testimonials = []
 
-      if context.is_dev:
+      if context.is_sandbox:
         if subdomain:
           testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False)
         elif community_id:

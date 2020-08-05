@@ -65,7 +65,7 @@ class EventStore:
     else:
       events = []
     
-    if not context.is_dev and events:
+    if not context.is_sandbox and events:
       events = events.filter(is_published=True)
   
     return events, None

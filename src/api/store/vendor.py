@@ -48,7 +48,7 @@ class VendorStore:
       
       vendors = community.vendor_set.filter(is_deleted=False)
 
-      if not context.is_dev:
+      if not context.is_sandbox:
         vendors = vendors.filter(is_published=True)
 
       return vendors, None

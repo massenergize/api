@@ -27,23 +27,35 @@ class AuthHandler(RouteHandler):
 
   def login(self, request) -> MassenergizeResponse: 
     context: Context = request.context
-    auth_info, err = self.service.login(context)
+    token, err = self.service.login(context)
+    print(token)
     if err:
       return err
-    return MassenergizeResponse(data=auth_info)
+
+    # create a response
+    response = MassenergizeResponse(data={"idToken": token})
+
+    # set cookie on response before sending
+    # cookie expiration set to 1yr
+    # response.set_cookie("token", token, max_age=31536000)
+    response.set_cookie("token", token, max_age=60)
+
+    return response
 
 
   def logout(self, request) -> MassenergizeResponse: 
-    context: Context = request.context
-    auth_info, err = self.service.logout(context)
-    if err:
-      return err
-    return MassenergizeResponse(data=auth_info)
+    # create a response
+    response = MassenergizeResponse()
+
+    # delete token cookie on it before sending
+    response.delete_cookie("token")
+
+    return response
 
 
   def whoami(self, request) -> MassenergizeResponse: 
     context: Context = request.context
-    auth_info, err = self.service.whoami(context)
+    user_info, err = self.service.whoami(context)
     if err:
-      return err      
-    return MassenergizeResponse(data=auth_info)
+      return err     
+    return MassenergizeResponse(data=user_info)
