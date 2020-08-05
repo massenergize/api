@@ -30,6 +30,7 @@ class UserHandler(RouteHandler):
     self.add("/users.actions.todo.add", self.add_action_todo())
     self.add("/users.actions.todo.list", self.list_actions_todo())
     self.add("/users.actions.completed.list", self.list_actions_completed())
+    self.add("/users.actions.remove", self.list_actions_completed())
     self.add("/users.households.add", self.add_household())
     self.add("/users.households.edit", self.edit_household())
     self.add("/users.households.remove", self.remove_household())
@@ -106,6 +107,17 @@ class UserHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)
     return list_actions_completed_view
+
+
+  def remove_user_action(self) -> function:
+    def remove_user_action_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      user_info, err = self.service.remove_user_action(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=user_info)
+    return remove_user_action_view
 
 
   def update(self) -> function:

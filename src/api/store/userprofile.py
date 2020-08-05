@@ -365,3 +365,21 @@ class UserStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
+
+
+  def remove_user_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+
+      if not context.user_is_logged_in:
+        return [], CustomMassenergizeError("Sign in required")
+      
+      user = get_user_or_die(context, args)
+      id = args.get("id", None)
+      
+      user_action = UserActionRel.objects.get(pk=id)
+      result = user_action.delete() 
+      
+      return result, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(str(e))
