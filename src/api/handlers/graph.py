@@ -29,6 +29,8 @@ class GraphHandler(RouteHandler):
     self.add("/graphs.delete", self.delete())
     self.add("/graphs.remove", self.delete())
 
+    self.add("/data.update", self.update_data())
+
     #admin routes
     self.add("/graphs.listForCommunityAdmin", self.community_admin_list())
     self.add("/graphs.listForSuperAdmin", self.super_admin_list())
@@ -156,6 +158,16 @@ class GraphHandler(RouteHandler):
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=graph_info)
     return update_graph_view
+
+  def update_data(self) -> function:
+    def update_data_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      graph_info, err = self.service.update_data(context, args)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=graph_info)
+    return update_data_view
 
 
   def delete(self) -> function:

@@ -36,6 +36,7 @@ class SubscriberStore:
 
         #community.subscribers.add(new_subscriber)
         #community.save()
+      print(new_subscriber)
       return new_subscriber, None
     except Exception as e:
       capture_message(str(e), level="error")

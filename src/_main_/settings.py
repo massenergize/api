@@ -157,6 +157,16 @@ DATABASES = {
     },
 }
 
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': os.getenv('CACHE_BACKEND'),
+#         'LOCATION': os.getenv('CACHE_LOCATION'),
+#     }
+# }
+
+
+
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",
   "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
