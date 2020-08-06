@@ -60,8 +60,8 @@ class UserService:
       return None, err
     return serialize_all(actions_completed), None
 
-  def remove_user_action(self, context: Context, args) -> (list, MassEnergizeAPIError):
-    result, err = self.store.remove_user_action(context, args)
+  def remove_user_action(self, context: Context, user_action_id) -> (list, MassEnergizeAPIError):
+    result, err = self.store.remove_user_action(context, user_action_id)
     if err:
       return None, err
     return result, None

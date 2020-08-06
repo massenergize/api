@@ -28,6 +28,8 @@ class EventHandler(RouteHandler):
     self.add("/events.delete", self.delete())
     self.add("/events.remove", self.delete())
     self.add("/events.rsvp", self.rsvp())
+    self.add("/events.rsvp.update", self.rsvp())
+    self.add("/events.rsvp.remove.", self.rsvp())
     self.add("/events.todo", self.save_for_later())
 
     #admin routes
@@ -63,7 +65,30 @@ class EventHandler(RouteHandler):
       context: Context = request.context
       args: dict = context.args
       event_id = args.pop('event_id', None)
-      event_info, err = self.service.get_event_info(context, event_id)
+      event_info, err = self.service.rsvp(context, event_id)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=event_info)
+    return rsvp_view
+
+  def rsvp_update(self) -> function:
+    def rsvp_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      event_id = args.pop('event_id', None)
+      status = args.pop('status', "SAVE")
+      event_info, err = self.service.rsvp_update(context, event_id, status)
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=event_info)
+    return rsvp_view
+
+  def rsvp_remove(self) -> function:
+    def rsvp_view(request) -> None: 
+      context: Context = request.context
+      args: dict = context.args
+      rsvp_id = args.pop('rsvp_id', None)
+      event_info, err = self.service.rsvp_remove(context, rsvp_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=event_info)

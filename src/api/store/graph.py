@@ -296,6 +296,14 @@ class GraphStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  def delete_data(self, context:Context, data_id) -> (dict, MassEnergizeAPIError):
+    try:
+      result = Data.objects.filter(pk=data_id).delete()
+      return result, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
 
   def delete_graph(self, context: Context, graph_id) -> (dict, MassEnergizeAPIError):
     try:

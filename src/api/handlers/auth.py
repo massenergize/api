@@ -23,6 +23,7 @@ class AuthHandler(RouteHandler):
     self.add("/auth.verify", self.whoami)
     self.add("/auth.whoami", self.whoami)
     self.add("/auth.test", self.whoami)
+    self.add("/auth.verifyCaptcha", self.verify_captcha)
 
 
   def login(self, request) -> MassenergizeResponse: 
@@ -61,3 +62,15 @@ class AuthHandler(RouteHandler):
     
     print(user_info)
     return MassenergizeResponse(data=user_info)
+
+  def verify_captcha(self, request) -> MassenergizeResponse: 
+    context: Context = request.context
+    captcha_string = context.args.get('captchaString', None)
+
+    verification, err = self.service.verify_captcha(context, captcha_string)
+    if err:
+      return err
+    
+    return MassenergizeResponse(data=verification)
+
+

@@ -30,7 +30,7 @@ class UserHandler(RouteHandler):
     self.add("/users.actions.todo.add", self.add_action_todo())
     self.add("/users.actions.todo.list", self.list_actions_todo())
     self.add("/users.actions.completed.list", self.list_actions_completed())
-    self.add("/users.actions.remove", self.list_actions_completed())
+    self.add("/users.actions.remove", self.remove_user_action())
     self.add("/users.households.add", self.add_household())
     self.add("/users.households.edit", self.edit_household())
     self.add("/users.households.remove", self.remove_household())
@@ -113,7 +113,11 @@ class UserHandler(RouteHandler):
     def remove_user_action_view(request) -> None: 
       context: Context = request.context
       args: dict = context.args
-      user_info, err = self.service.remove_user_action(context, args)
+      user_action_id = args.get('user_action_id', None)
+      if not user_action_id:
+        return MassenergizeResponse(error="invalid_resource")
+
+      user_info, err = self.service.remove_user_action(context, user_action_id)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)
       return MassenergizeResponse(data=user_info)

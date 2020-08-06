@@ -13,6 +13,8 @@ from database.models import UserProfile
 from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
+import requests
+
 
 class AuthService:
   """
@@ -81,3 +83,24 @@ class AuthService:
       return None, CustomMassenergizeError(e)
 
 
+  def verify_captcha(self, context: Context, captcha_string):
+    try:
+      data = {
+        'secret': os.environ.get('RECAPTCHA_SECRET_KEY'),
+        'response': args['captchaString']
+      }
+      r = requests.post(
+        'https://www.google.com/recaptcha/api/siteverify', data=data)
+
+      result = r.json()
+
+      if result['success']:
+        return result, None
+
+      else:
+        return None, CustomMassenergizeError(
+          'Invalid reCAPTCHA. Please try again.')
+          
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
