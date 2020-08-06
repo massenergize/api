@@ -172,7 +172,9 @@ class Goal(models.Model):
   status: str
     the status of this goal whether it has been achieved or not.
   description:
-    More details about this goal 
+    More details about this goal
+  target_date:
+    Date at which goal should be achieved
   created_at: DateTime
     The date and time that this goal was added 
   created_at: DateTime
@@ -190,6 +192,8 @@ class Goal(models.Model):
   attained_number_of_households = models.PositiveIntegerField(default=0, blank=True)
   attained_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
   attained_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
+
+  target_date = models.DateField(null=True)
 
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
@@ -551,7 +555,7 @@ class Team(models.Model):
   Attributes
   ----------
   name : str
-    name of the team
+    name of the team.  Need not be unique
   description: str
     description of this team 
   admins: ManyToMany
@@ -571,14 +575,24 @@ class Team(models.Model):
     about this goal
   """
   id = models.AutoField(primary_key=True)
-  #Team names should be unique globally
+  #Team names should be unique globally (Not!)
   name = models.CharField(max_length=SHORT_STR_LEN)
+  tagline = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
+
   admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
     blank=True) 
   members = models.ManyToManyField(UserProfile, related_name='team_members', 
     blank=True) 
+
+  # may change this from ForeignKey to ManyToManyField to allow team to span communities
   community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  image = models.ManyToManyField(Media, related_name='team_image')                         # 0 or more photos - could be a slide show
+  video_link = models.CharField(max_length=LONG_STR_LEN, blank=True)                               # allow one video
+  is_closed = models.BooleanField(default=False, blank=True)                # by default, teams are open
+  team_page_options = JSONField(blank=True, null=True)                          # settable team page options
+  parent = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)    # for the case of sub-teams
+
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   logo = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='team_logo')
@@ -599,12 +613,14 @@ class Team(models.Model):
     return self.name
 
   def info(self):
-    return model_to_dict(self, ['id', 'name', 'description'])
+    return model_to_dict(self, ['id', 'name', 'tagline', 'description'])
 
   def simple_json(self):
     res =  self.info()
     res['community'] = get_json_if_not_none(self.community)
     res['logo'] = get_json_if_not_none(self.logo)
+    res['is_closed'] = get_json_if_not_none(self.is_closed)
+    res['parent'] = get_json_if_not_none(self.parent)
     return res
 
   def full_json(self):
@@ -614,7 +630,6 @@ class Team(models.Model):
     data['goal'] = get_json_if_not_none(self.goal)
     data['banner'] = get_json_if_not_none(self.banner)
     return data
-
 
   class Meta:
     ordering = ('name',)
@@ -954,6 +969,9 @@ class Action(models.Model):
   deep_dive = models.TextField(max_length = LONG_STR_LEN, blank=True)
   about = models.TextField(max_length = LONG_STR_LEN, 
     blank=True)
+  # this is the singal category which points will be recorded in, though
+  primary_category = models.ForeignKey(Tag,related_name='action_category', on_delete=models.SET_NULL ,null=True)
+  # then - an action could have multiple secondary categories
   tags = models.ManyToManyField(Tag, related_name='action_tags', blank=True)
   geographic_area = JSONField(blank=True, null=True)
   icon = models.CharField(max_length = SHORT_STR_LEN, blank=True)
@@ -1275,7 +1293,7 @@ class Testimonial(models.Model):
   def full_json(self):
     data = self.simple_json() 
     data['image'] = data.get('file', None)
-    data['tags'] = [t.simple_json() for t in self.tags.all()]
+    #data['tags'] = [t.simple_json() for t in self.tags.all()]
     return data
 
   class Meta:
@@ -1300,10 +1318,12 @@ class UserActionRel(models.Model):
     which action they marked 
   vendor:
     which vendor they choose to contact/connect with 
-  testimonial:
-    what they had to say about this action.
   status: 
-    Whether they marked it as todo, done or save for later  
+    Whether they marked it as todo, done or save for later 
+  date_completed:
+    If specified, the date when they completed the action
+  carbon_impact:
+    Carbon reduction calculated by the Carbon Calculator 
   """
   id = models.AutoField(primary_key=True)
   user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, db_index=True)
@@ -1314,6 +1334,8 @@ class UserActionRel(models.Model):
   status  = models.CharField(max_length=SHORT_STR_LEN, 
     choices = CHOICES.get("USER_ACTION_STATUS", {}).items(), 
     db_index=True, default='TODO')
+  date_completed = models.DateField(blank=True, null=True)
+  carbon_impact = models.IntegerField(default=0)  # that which was calculated by the Carbon Calculator
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -1906,13 +1928,111 @@ class SubscriberEmailPreference(models.Model):
   class Meta:
     db_table = 'subscriber_email_preferences'
 
-class HomePageSettings(models.Model):
+
+class PageSettings(models.Model):
+  """
+  Represents the basic page settings.  This is a base class, which contains common attributes to most page settings.
+
+  Attributes
+  ----------
+  Community:
+    Foreign key: Which community this applies to 
+  title: str
+    Title of the page (if different than default)
+  sub_title: str
+    Sub-title or tag-line of the page (if different than default)
+  description: str
+    Description of the page (if different than default)
+  images:
+    ForeignKeys: Links to one or more Media records
+  featured_video_link: str
+    A link to a featured video (on YouTube or elsewhere)
+  more_info: JSON - extraneous information
+  is_deleted: boolean - whether this page was deleted from the platform (perhaps with it's community)
+  is_published: boolean - whether this page is live
+  is_template: boolean - whether this is a template to be copied
+  """
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  more_info = JSONField(blank=True, null=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+  is_published = models.BooleanField(default=True)
+  is_template = models.BooleanField(default=False, blank=True)
+
+  def simple_json(self):
+    res =  model_to_dict(self, exclude=['images'])
+    res['community'] = get_json_if_not_none(self.community)
+    return res
+
+  def full_json(self):
+    res =  self.simple_json()
+    res['images'] = [i.simple_json() for i in self.images.all()]
+    return res
+
+  class Meta:
+    abstract = True
+
+class HomePageSettings(models.Model):
+  """
+  Represents the community's Home page settings.
+
+  Attributes
+  ----------
+  Community:
+    Foreign key: Which community this applies to 
+  title: str
+    Title of the page (if different than default)
+  sub_title: str
+    Sub-title or tag-line of the page (if different than default)
+  description: str
+    Description of the page (if different than default)
+  images:
+    ForeignKeys: Links to one or more Media records
+  featured_video_link: str
+    A link to a featured video (on YouTube or elsewhere)
+
+  specific to home page:
+  ----------------------
+  featured_links : JSON - links to page redirects for the big buttons
+  featured_events : links to one or more Event records
+  featured_stats : lins to one or more Data records
+
+  show_featured_events : boolean - whether to show featured events section
+  show_featured_stats : boolean - whether to show featured stats section
+  show_featured_links : boolean - whether to show featured links section
+  show_featured_video : boolean - whether to show featured video
+
+  featured_stats_description : str - descriptive text on what the stats are about
+  featured_events_description : str - descriptive text on the featured events
+
+  specific to the footer on all pages:
+  ------------------------------------
+  show_footer_subscribe : Boolean - whether to show newsletter subscribe box
+  show_footer_social_media : Boolean - whether to show footer social media icons
+  social_media_links: str
+    Links to social media, such as:  ["facebook:www.facebook.com/coolerconcord/,instgram:www.instagram.com/coolerconcord/"]
+
+  for the tab on all pages:
+  -------------------------
+  favicon_image : ForeignKey to Media file for favicon
+
+  more_info: JSON - extraneous information
+  is_deleted: boolean - whether this page was deleted from the platform (perhaps with it's community)
+  is_published: boolean - whether this page is live
+  is_template: boolean - whether this is a template to be copied
+  
+  """
+  id = models.AutoField(primary_key=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
+  title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  description = models.TextField(max_length=LONG_STR_LEN, blank = True)
+  images = models.ManyToManyField(Media, related_name='homepage_images', blank=True)
 
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   featured_links = JSONField(blank=True, null=True)
@@ -1923,6 +2043,15 @@ class HomePageSettings(models.Model):
   show_featured_stats = models.BooleanField(default=True, blank=True)
   show_featured_links = models.BooleanField(default=True, blank=True)
   show_featured_video = models.BooleanField(default=False, blank=True)
+
+  featured_stats_description = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  featured_events_description = models.CharField(max_length=LONG_STR_LEN, blank=True)
+
+  show_footer_subscribe = models.BooleanField(default=True, blank=True)
+  show_footer_social_media = models.BooleanField(default=True, blank=True)
+  social_media_links = JSONField(blank=True, null=True)
+  
+  favicon_image = models.ForeignKey(Media, related_name='favicon', on_delete=models.SET_NULL, null=True, blank=True)
 
   is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -1943,19 +2072,13 @@ class HomePageSettings(models.Model):
     # decision not to include state reported solar
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
     # 
-    # For Wayland launch, insisting that we show large numbers so people feel good about it.
     goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE")
+    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").prefetch_related('action__calculator_action')
     goal["organic_attained_number_of_actions"] = (done_actions.count())
     carbon_footprint_reduction = 0
-# commenting out temporarily until database access speeded up
-#    start = time.time()
-#    for actionRel in done_actions:
-#      if actionRel.action and actionRel.action.calculator_action:
-#        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
-#    stop = time.time()
-#    msg = "carbon footprint reduction time : %.3f" % (stop-start)
-#    print(msg)
+    for actionRel in done_actions:
+      if actionRel.action and actionRel.action.calculator_action:
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
     goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
     res =  self.simple_json()
@@ -1972,176 +2095,232 @@ class HomePageSettings(models.Model):
 
 
 class ActionsPageSettings(models.Model):
+
+  """
+  Represents the community's Actions page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
-
-  def __str__(self):             
-    return "ActionsPageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
     res['community'] = get_json_if_not_none(self.community)
     return res
 
-
   def full_json(self):
     res =  self.simple_json()
-    res['images'] = [i.simple_json() for i in self.images]
-    res['community'] = get_json_if_not_none(self.community)
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
+
+  def __str__(self):             
+    return "ActionsPageSettings - %s" % (self.community)
 
   class Meta:
     db_table = 'actions_page_settings'
     verbose_name_plural = "ActionsPageSettings"
 
 class ContactUsPageSettings(models.Model):
+
+  """
+  Represents the community's ContactUs page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
-
-  def __str__(self):             
-    return "ContactUsPageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
     res['community'] = get_json_if_not_none(self.community)
     return res
 
-
   def full_json(self):
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     return res
+
+  def __str__(self):             
+    return "ContactUsPageSettings - %s" % (self.community)
 
   class Meta:
     db_table = 'contact_us_page_settings'
     verbose_name_plural = "ContactUsPageSettings"
 
-
 class DonatePageSettings(models.Model):
+  """
+  Represents the communities Donate page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+
+  one additional field:
+  donation_link : str - link to donation url (if not contained within the HTML description)
+  """
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE,  db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
-  donation_link = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
+  donation_link = models.CharField(max_length=LONG_STR_LEN, blank=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
-
-  def __str__(self):             
-    return "DonatePageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
     res['community'] = get_json_if_not_none(self.community)
     return res
 
-
   def full_json(self):
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     return res
+ 
+  def __str__(self):             
+    return "DonatePageSettings - %s" % (self.community)
 
   class Meta:
     db_table = 'donate_page_settings'
     verbose_name_plural = "DonatePageSettings"
 
-
 class AboutUsPageSettings(models.Model):
+  """
+  Represents the community's AboutUs page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE,  db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
-
-
-  def __str__(self):             
-    return "AboutUsPageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
     res['community'] = get_json_if_not_none(self.community)
     return res
 
-
   def full_json(self):
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     return res
+  def __str__(self):             
+    return "AboutUsPageSettings - %s" % (self.community)
 
   class Meta:
     db_table = 'about_us_page_settings'
     verbose_name_plural = "AboutUsPageSettings"
 
-
 class ImpactPageSettings(models.Model):
+  """
+  Represents the community's Impact page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
   id = models.AutoField(primary_key=True)
-  community = models.ForeignKey(Community, on_delete=models.CASCADE, 
-   db_index=True)
+  community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank = True)
-  featured_video_link = models.TextField(max_length=SHORT_STR_LEN, blank = True)
   images = models.ManyToManyField(Media, blank=True)
+  featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank = True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
-
-  def __str__(self):             
-    return "ImpactPageSettings - %s" % (self.community)
 
   def simple_json(self):
     res =  model_to_dict(self, exclude=['images'])
     res['community'] = get_json_if_not_none(self.community)
     return res
 
-
   def full_json(self):
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     return res
 
+  def __str__(self):             
+    return "ImpactPageSettings - %s" % (self.community)
+
   class Meta:
     db_table = 'impact_page_settings'
     verbose_name_plural = "ImpactPageSettings"
 
-
-class Message(models.Model):
+class TeamsPageSettings(PageSettings):
   """
-  A class used to represent  Role for users on the MassEnergize Platform
+  Represents the community's Teams page settings.
 
   Attributes
   ----------
-  name : str
-    name of the role
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "TeamsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'teams_page_settings'
+    verbose_name_plural = "TeamsPageSettings"
+
+class VendorsPageSettings(PageSettings):
+  """
+  Represents the community's Vendors page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "VendorsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'vendors_page_settings'
+    verbose_name_plural = "VendorsPageSettings"
+
+class Message(models.Model):
+  """
+  A class used to represent a Message sent on the MassEnergize Platform
+
+  Attributes
+  ----------
+  
   """
   id = models.AutoField(primary_key=True)
   user_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True) 

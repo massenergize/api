@@ -24,9 +24,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
+IS_LOCAL = True
 
 try:
-    env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
+    env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env' if not IS_LOCAL else 'local.env')
     load_dotenv(dotenv_path=env_path, verbose=True)
 except Exception:
     load_dotenv()
@@ -146,14 +147,6 @@ DATABASES = {
         'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
         'HOST': os.environ.get('DATABASE_HOST'),
         'PORT': os.environ.get('DATABASE_PORT')
-    },
-    'local-default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres2',
-        'USER': 'Brad',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432'
     },
 }
 

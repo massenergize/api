@@ -57,9 +57,9 @@ class TeamStore:
           done_actions = actions.filter(status="DONE")
           res["actions_completed"] += done_actions.count()
           res["actions_todo"] += actions.filter(status="TODO").count()
-          for done_action in done_actions:
-            if done_action.action and done_action.action.calculator_action:
-              res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
+          #for done_action in done_actions:
+          #  if done_action.action and done_action.action.calculator_action:
+          #    res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
 
         ans.append(res)
 
@@ -72,8 +72,14 @@ class TeamStore:
   def create_team(self, context:Context, args) -> (dict, MassEnergizeAPIError):
     team = None
     try:
+      # generally a Team will have one community, but in principle it could span multiple.  If it 
       community_id = args.pop('community_id', None)
-      image = args.pop('image', None)
+      community_ids = args.pop('community_ids', None)   # in case of a team spanning multiple communities
+      logo_file = args.pop('image', None)
+      image_files = args.pop('pictures', None)
+      video = args.pop('video', None)
+      parent_id = args.pop('parent_id', None)
+
       admin_emails = args.pop('admin_emails', [])
 
       verified_admins = []
@@ -92,16 +98,34 @@ class TeamStore:
         community = Community.objects.filter(pk=community_id).first()
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community")
-        
+        args["community"] = community
+        community_list = None
+      elif community_ids:       # the case of multiple communities
+        community_list = []
+        for community_id in community_ids:
+          community = Community.objects.filter(pk=community_id).first()
+          if not community:
+            return None, CustomMassenergizeError("Please provide a valid community in the list")
+          community_list.append(community)
       else:
         return None, CustomMassenergizeError("Please provide a community")
-
-      args["community"] = community
+      
       new_team = Team.objects.create(**args)
       team = new_team
 
-      if image:
-        logo = Media.objects.create(file=image, name=f"{slugify(new_team.name)}-TeamLogo")
+      # add multiple communities if that is the case (generally not)
+      if community_list:
+        for community in community_list:
+          new_team.community.add(community)
+
+      # for the case of a sub-team, record the parent
+      if parent_id:
+        parent = Team.objects.filter(pk=parent_id).first()
+        if parent:
+          new_team.parent.add(parent)
+
+      if logo_file:
+        logo = Media.objects.create(file=logo_file, name=f"{slugify(new_team.name)}-TeamLogo")
         logo.save()
         new_team.logo = logo
 
