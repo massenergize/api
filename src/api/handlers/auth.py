@@ -38,8 +38,7 @@ class AuthHandler(RouteHandler):
 
     # set cookie on response before sending
     # cookie expiration set to 1yr
-    # response.set_cookie("token", token, max_age=31536000)
-    response.set_cookie("token", token, max_age=60)
+    response.set_cookie("token", token, max_age=31536000)
 
     return response
 

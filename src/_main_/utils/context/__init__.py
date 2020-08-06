@@ -39,11 +39,10 @@ class Context:
     self.args = get_request_contents(request)
     self.is_sandbox = self.args.pop('__is_sandbox', False)
     self.community = self.args.pop('__community', None)
-    
+
     #set the is_dev field
     self.is_prod = self.args.pop('__is_prod', False)
     self.is_dev = not self.is_prod
-
 
   def get_request_body(self):
     return self.args
