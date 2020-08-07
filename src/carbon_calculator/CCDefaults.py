@@ -191,3 +191,4 @@ class CCD():
             if csvfile:
                 csvfile.close()
             return status
+            

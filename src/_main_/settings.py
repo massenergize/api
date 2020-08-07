@@ -24,9 +24,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
+IS_LOCAL = True
 
 try:
-    env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
+    env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env' if not IS_LOCAL else 'local.env')
     load_dotenv(dotenv_path=env_path, verbose=True)
 except Exception:
     load_dotenv()
@@ -105,8 +106,6 @@ AWS_S3_REGION_NAME       = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL          = None
 #--------END AWS CONFIGURATION ---------------------#
 
-
-# @Sam - does this cause any problems? 
 APPEND_SLASH = False
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -141,21 +140,13 @@ SESSION_COOKIE_SECURE = False
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'remote-default': {
+    'default': {
         'ENGINE'   : os.environ.get('DATABASE_ENGINE'),
         'NAME'     : os.environ.get('DATABASE_NAME'),
         'USER'     : os.environ.get('DATABASE_USER'),
         'PASSWORD' : os.environ.get('DATABASE_PASSWORD'),
         'HOST'     : os.environ.get('DATABASE_HOST'),
         'PORT'     : os.environ.get('DATABASE_PORT')
-    },
-    'default': {
-        'ENGINE'   :  os.environ.get('DATABASE_ENGINE'),
-        'NAME'     : 'postgres2',
-        'USER'     : 'Brad',
-        'PASSWORD' : '',
-        'HOST'     : 'localhost',
-        'PORT'     : '5555'
     },
 }
 
