@@ -91,7 +91,7 @@ class TeamStore:
       # generally a Team will have one community, but in principle it could span multiple.  If it 
       community_id = args.pop('community_id', None)
       community_ids = args.pop('community_ids', None)   # in case of a team spanning multiple communities
-      logo_file = args.pop('image', None)
+      logo_file = args.pop('logo', None)
       image_files = args.pop('pictures', None)
       video = args.pop('video', None)
       parent_id = args.pop('parent_id', None)
