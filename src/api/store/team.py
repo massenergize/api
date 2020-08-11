@@ -315,8 +315,6 @@ class TeamStore:
 
       return res, None
     except Exception as e:
-      import traceback
-      traceback.print_exc()
       capture_message(str(e), level="error")
       return None, InvalidResourceError()
 
