@@ -14,15 +14,16 @@ def can_set_parent(parent, this_team=None):
     return False
   return True
 
-
-def get_team_members(team):
-  team_members = TeamMember.objects.filter(team=team, is_deleted=False)
+def get_team_users(team):
+  team_users = [tm.user for tm in
+                  TeamMember.objects.filter(team=team, is_deleted=False).select_related('user')]
   if team.parent:
-    return team_members
+    return team_users
   else:
     child_teams = Team.objects.filter(parent=team, is_deleted=False)
-    child_team_members = TeamMember.objects.filter(team__in=child_teams, is_deleted=False)
-    return (team_members | child_team_members).distinct()
+    child_team_users = [tm.user for tm in
+                  TeamMember.objects.filter(team__in=child_teams, is_deleted=False).select_related('user')]
+    return set().union(team_users, child_team_users)
 
 class TeamStore:
   def __init__(self):
@@ -63,10 +64,9 @@ class TeamStore:
         res["team"] = team.simple_json()
         # team.members deprecated
         # for m in team.members.all():
-        members = get_team_members(team)
-        res["members"] = members.count()
-        for m in members:
-          user = m.user
+        users = get_team_users(team)
+        res["members"] = len(users)
+        for user in users:
           res["households"] += user.real_estate_units.count()
           actions = user.useractionrel_set.all()
           res["actions"] += len(actions)
@@ -167,15 +167,10 @@ class TeamStore:
       
       community_id = args.pop('community_id', None)
       logo = args.pop('logo', None)
+      parent_id = args.pop('parent_id', None)
+
       team = Team.objects.filter(id=team_id)
 
-      parent_id = args.pop('parent_id', None)
-      if parent_id:
-        parent = Team.objects.filter(pk=parent_id).first()
-        if parent and can_set_parent(parent, this_team=team.first()):
-          team.parent = parent
-        else:
-          return None, CustomMassenergizeError("Cannot set parent team")
 
       team.update(**args)
       team = team.first()
@@ -185,6 +180,11 @@ class TeamStore:
           community = Community.objects.filter(pk=community_id).first()
           if community:
             team.community = community
+
+        if parent_id:
+          parent = Team.objects.filter(pk=parent_id).first()
+          if parent and can_set_parent(parent, this_team=team):
+            team.parent = parent
         
         if logo:
           logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
@@ -303,13 +303,20 @@ class TeamStore:
         return [], CustomMassenergizeError('Please provide a valid team_id')
 
       team = Team.objects.filter(id=team_id).first()
-      members = get_team_members(team).select_related("user")
+      users = get_team_users(team)
       res = []
-      for member in members:
-        res.append({"id": member.id, "user_id": member.user.id, "preferred_name": member.user.preferred_name, "is_admin": member.is_admin and member.team == team})
+      for user in users:
+        member = TeamMember.objects.filter(user=user, team=team).first()
+        member_obj = {"id": None, "user_id": user.id, "preferred_name": user.preferred_name, "is_admin": False}
+        if member:
+          member_obj['id'] = member.id
+          member_obj['is_admin'] = member.is_admin
+        res.append(member_obj)
 
       return res, None
     except Exception as e:
+      import traceback
+      traceback.print_exc()
       capture_message(str(e), level="error")
       return None, InvalidResourceError()
 
