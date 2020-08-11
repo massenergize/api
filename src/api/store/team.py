@@ -172,7 +172,7 @@ class TeamStore:
       parent_id = args.pop('parent_id', None)
       if parent_id:
         parent = Team.objects.filter(pk=parent_id).first()
-        if parent and can_set_parent(parent, this_team=team):
+        if parent and can_set_parent(parent, this_team=team.first()):
           team.parent = parent
         else:
           return None, CustomMassenergizeError("Cannot set parent team")
