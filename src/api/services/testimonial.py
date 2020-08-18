@@ -3,8 +3,6 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.testimonial import TestimonialStore
 from _main_.utils.context import Context
-#import time
-#import timeit
 
 class TestimonialService:
   """
@@ -25,17 +23,7 @@ class TestimonialService:
     if err:
       return None, err
 
-    #start = time.time()
-    #startcpu = timeit.timeit()
-
     ret = serialize_all(testimonial)
-
-    #stop = time.time()
-    #stopcpu = timeit.timeit()
-
-    #msg = "list_testimonials: elapsed=%.1f, CPU=%.1f" % (stop-start,stopcpu-startcpu)
-    #print(msg)
-
     return ret, None
 
 
