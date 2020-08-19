@@ -54,7 +54,7 @@ class TeamStore:
           res["households"] += user.real_estate_units.count()
           actions = user.useractionrel_set.all()
           res["actions"] += len(actions)
-          done_actions = actions.filter(status="DONE")
+          done_actions = actions.filter(status="DONE").prefetch_related('action__calculator_action')
           res["actions_completed"] += done_actions.count()
           res["actions_todo"] += actions.filter(status="TODO").count()
           for done_action in done_actions:

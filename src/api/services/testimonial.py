@@ -22,7 +22,9 @@ class TestimonialService:
     testimonial, err = self.store.list_testimonials(context, args)
     if err:
       return None, err
-    return serialize_all(testimonial), None
+
+    ret = serialize_all(testimonial)
+    return ret, None
 
 
   def create_testimonial(self, context, args) -> (dict, MassEnergizeAPIError):
