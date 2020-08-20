@@ -1,9 +1,9 @@
 # Carbon Calculator API
 # Brad Hubbard-Nelson (bradhn@mindspring.com)
-#
+# Updated April 3
 #imports
 from datetime import date,datetime
-from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia, CalcUser
+from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia, CalcUser, Org
 from django.utils import timezone
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
@@ -35,7 +35,7 @@ def SavePic2Media(picURL):
     loc2 = picURL.find(')')
     if loc1>0 and loc2>0:
         picURL = picURL[loc1+1:loc2]
-    print("Importing picture from: "+picURL)
+    #print("Importing picture from: "+picURL)
     try:
         resp = requests.get(picURL)
         if resp.status_code != requests.codes.ok:
@@ -43,11 +43,13 @@ def SavePic2Media(picURL):
             print("ERROR: Unable to import action photo from "+picURL)
             return None
         else:
-            file_name = picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
+            file_name =  "carbon_calculator/assets/" + picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
             fp = open(file_name,"wb")
             fp.write(resp.content)
             fp.close()
-            media=CarbonCalculatorMedia(file = file_name)
+            media = CarbonCalculatorMedia(file = file_name)
+            #media = CarbonCalculatorMedia.objects.create(file=file_name)
+
             if media:
                 media.save()
                 return media
@@ -59,7 +61,7 @@ def SavePic2Media(picURL):
 
 class CarbonCalculator:
     def __init__(self) :
-        self.allActions = {  
+        self.allActions = {
                         'energy_fair':EnergyFair,
                         'energy_audit':EnergyAudit,
                         'prog_thermostats':ProgrammableThermostats,
@@ -106,7 +108,7 @@ class CarbonCalculator:
             theClass = self.allActions[name]
             theInstance = theClass(name)
             self.allActions[name] = theInstance
-    # query actions    
+    # query actions
     def Query(self,action=None):
         if action in self.allActions:
             return self.allActions[action].Query()
@@ -118,9 +120,11 @@ class CarbonCalculator:
         actionList = []
         for action in self.allActions:
             name = self.allActions[action].name
+            title = self.allActions[action].title
             description = self.allActions[action].description
             id = self.allActions[action].id
-            actionList.append( {'id': id, 'name':name, 'description':description} )
+            points = self.allActions[action].average_points
+            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points} )
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
@@ -131,13 +135,18 @@ class CarbonCalculator:
         if action in self.allActions:
             theAction = self.allActions[action]
             if not theAction.initialized:
-                return queryFailed            
+                return queryFailed
 
-            results = theAction.Eval(inputs)
-            if save:
-                results = self.RecordActionPoints(action,inputs,results)
-            return results
-        else:    
+            try:
+                results = theAction.Eval(inputs)
+                if save:
+                    results = self.RecordActionPoints(action,inputs,results)
+                return results
+            except Exception as error:
+                print("Carbon Calculator exception")
+                print(error)
+                return queryFailed
+        else:
             return queryFailed
 
     def Undo(self, action, inputs):
@@ -145,7 +154,7 @@ class CarbonCalculator:
         queryFailed = {'status':INVALID_QUERY}
         if action in self.allActions:
             user_id = inputs.pop("user_id",None)
-            if user_id:         
+            if user_id:
                 record = ActionPoints.objects.filter(user_id=user_id,action=action).first()
                 #if records:
                 #    record = records.objects.filter(action=action).first()
@@ -161,15 +170,15 @@ class CarbonCalculator:
                             user.cost -= cost
                             user.savings -= savings
                             user.save()
-                            
+
                         return {'status':VALID_QUERY, 'carbon_points':-points, 'cost':-cost, 'savings':-savings, 'explanation':"Undoing action"}
         return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
-        user_id = inputs.pop("user_id",None)  
-        points = results.get("carbon_points",0.) 
+        user_id = inputs.pop("user_id",None)
+        points = results.get("carbon_points",0.)
         cost = results.get("cost",0.)
-        savings = results.get("savings",0.)         
+        savings = results.get("savings",0.)
         record = ActionPoints(  user_id=user_id,
                                 action=action,
                                 choices=inputs,
@@ -197,46 +206,13 @@ class CarbonCalculator:
     def Import(self,inputs):
         if inputs.get('Confirm',NO) == YES:
             status = False
-            actionsFile = inputs.get('Actions','')
-            if actionsFile!='':
-                with open(actionsFile, newline='') as csvfile:
-                    inputlist = csv.reader(csvfile)
-                    first = True
-                    for item in inputlist:
-                        if first:
-                            #header = item
-                            first = False
-                        else:
-                            if item[0] == '':
-                                continue
 
-                            qs = Action.objects.filter(name=item[0])
-                            if qs:
-                                qs[0].delete()
-
-                            #if action[5]!='':
-                            #    import this media filt
-                            #    actionPicture = Media()
-                            picture = None
-                            if len(item)>=4 and item[0]!='':
-                                picture = SavePic2Media(item[5])
-
-                                action = Action(name=item[0],
-                                    description=item[1],
-                                    helptext=item[2],
-                                    average_points=int(eval(item[3])),
-                                    questions=item[4].split(","),
-                                    picture = picture)
-                                print('Importing Action ',action.name,': ',action.description)
-                                action.save()
-                    csvfile.close()
-                    status = True
-
-            questionsFile = inputs.get('Questions','') 
+            questionsFile = inputs.get('Questions','')
             if questionsFile!='':
                 with open(questionsFile, newline='') as csvfile:
                     inputlist = csv.reader(csvfile)
                     first = True
+                    num = 0
                     for item in inputlist:
                         if first:
                             #header = item
@@ -256,7 +232,8 @@ class CarbonCalculator:
                             for i in range(6):
                                 ii = 5+2*i
                                 if item[ii]!='' :
-                                    skip[i] = item[ii].split(",") 
+                                    skip[i] = item[ii].split(",")
+
                             question = Question(name=item[0],
                                 category=item[1],
                                 question_text=item[2],
@@ -267,17 +244,75 @@ class CarbonCalculator:
                                 response_4=item[10], skip_4=skip[3],
                                 response_5=item[12], skip_5=skip[4],
                                 response_6=item[14], skip_6=skip[5])
-                                
-                            print('Importing Question ',question.name,': ',question.question_text)
+                            #print('Importing Question ',question.name,': ',question.question_text)
+
+                            if len(item)>19:
+                                if len(item[16]):
+                                    question.minimum_value = eval(item[16])
+                                if len(item[17])>0:
+                                    question.maximum_value = eval(item[17])
+                                if len(item[18])>0:
+                                    question.typical_value = eval(item[18])
+
                             question.save()
+                            num+=1
+                    msg = "Imported %d Carbon Calculator Questions" % num
+                    print(msg)
                     csvfile.close()
                     status = True
 
-            stationsFile = inputs.get('Stations','') 
+            actionsFile = inputs.get('Actions','')
+            if actionsFile!='':
+                with open(actionsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    num = 0
+                    for item in inputlist:
+                        if first:
+                            t = {}
+                            for i in range(len(item)):
+                                t[item[i]] = i
+                            first = False
+                        else:
+                            name = item[0]
+                            if name == '':
+                                continue
+
+                            qs = Action.objects.filter(name=name)
+                            if qs:
+                                qs[0].delete()
+
+                            #if action[5]!='':
+                            #    import this media filt
+                            #    actionPicture = Media()
+                            picture = None
+                            if len(item)>=4 and name!='':
+                                picture = SavePic2Media(item[t["Picture"]])
+                                action = Action(name=item[0],
+                                    title = item[t["Title"]],
+                                    description=item[t["Description"]],
+                                    helptext=item[t["Helptext"]],
+                                    category=item[t["Category"]],
+                                    average_points=int(eval(item[t["Avg points"]])),
+                                    questions=item[t["Questions"]].split(","),
+                                    picture = picture)
+                                action.save()
+
+                                if name in self.allActions:
+                                    self.allActions[name].__init__(name)
+                                #print('Importing Action ',action.name,': ',action.description)
+                                num+=1
+                    msg = "Imported %d Carbon Calculator Actions" % num
+                    print(msg)
+                    csvfile.close()
+                    status = True
+
+            stationsFile = inputs.get('Stations','')
             if stationsFile!='':
                 with open(stationsFile, newline='') as csvfile:
                     inputlist = csv.reader(csvfile)
                     first = True
+                    num = 0
                     for item in inputlist:
                         if first:
                             #header = item
@@ -297,74 +332,21 @@ class CarbonCalculator:
                                 description=item[2],
                                 icon = station_icon,
                                 actions=item[5].split(","))
-                                
-                            print('Importing Station ',station.name,': ',station.description)
+
+                            #print('Importing Station ',station.name,': ',station.description)
                             station.save()
+                            num+=1
+                    msg = "Imported %d CarbonSaver Stations" % num
+                    print(msg)
                     csvfile.close()
                     status = True
-            
-            eventsFile = inputs.get('Events','') 
-            if eventsFile!='':
-                with open(eventsFile, newline='') as csvfile:
-                    inputlist = csv.reader(csvfile)
-                    first = True
-                    for item in inputlist:
-                        if first:
-                            #header = item
-                            first = False
-                        else:
-                            if item[0] == '':
-                                continue
-                            qs = Event.objects.filter(name=item[0])
-                            if qs:
-                                qs[0].delete()
 
-                            host_logo = None
-                            sponsor_logo = None
-                            eventdate = item[2]
-                            if eventdate != '':
-                                dt = datetime.strptime(item[2].upper(), '%m/%d/%Y %H:%M%p')
-                                current_tz = timezone.get_current_timezone()
-                                dt = current_tz.localize(dt)
-                            else:
-                                dt= ''
-                            host_logo = SavePic2Media(item[11])
-                            sponsor_logo = SavePic2Media(item[14])
-                            groupslist = None
-                            if item[5]!='':
-                                groupslist = item[5].split(",")
-
-                            event = Event(name=item[0],
-                                displayname=item[1],
-                                datetime = dt,
-                                location = item[3],
-                                stationslist = item[4].split(","),
-                                host_org = item[6],
-                                host_contact = item[7],
-                                host_email = item[8],
-                                host_phone = item[9],
-                                host_url = item[10],
-                                host_logo = host_logo,
-                                sponsor_org = item[12],
-                                sponsor_url = item[13],
-                                sponsor_logo = sponsor_logo
-                                )
-                            event.save()
-                            if groupslist:
-                                for group in groupslist:
-                                    g = Group.objects.filter(name=group)
-                                    if g:
-                                        gg = g[0]
-                                        event.groups.add(gg)
-                            print('Importing Event ',event.name,' at ',event.location,' on ',event.datetime)
-                            event.save()
-                    csvfile.close()
-                    status = True
-            groupsFile = inputs.get('Groups','') 
+            groupsFile = inputs.get('Groups','')
             if groupsFile!='':
                 with open(groupsFile, newline='') as csvfile:
                     inputlist = csv.reader(csvfile)
                     first = True
+                    num = 0
                     for item in inputlist:
                         if first:
                             #header = item
@@ -386,16 +368,134 @@ class CarbonCalculator:
                                 points = item[4],
                                 savings = item[5]
                                 )
-                                
-                            print('Importing Group ',group.displayname)
+
+                            #print('Importing Group ',group.displayname)
                             group.save()
+                            num+=1
+                    msg = "Imported %d CarbonSaver Groups" % num
+                    print(msg)
                     csvfile.close()
                     status = True
-            defaultsFile = inputs.get('Defaults','') 
+
+            orgsFile = inputs.get('Organizations','')
+            if orgsFile!='':
+                with open(orgsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    num = 0
+                    for item in inputlist:
+                        if first:
+                            #header = item
+                            first = False
+                        else:
+                            if item[0] == '':
+                                continue
+                            qs = Org.objects.filter(name=item[0])
+                            if qs:
+                                qs[0].delete()
+
+                            logo = None
+                            logo = SavePic2Media(item[6])
+ 
+                             #if action[5]!='':
+                            #    import this media filt
+                            #    actionPicture = Media()
+                            org = Org(name=item[0],
+                                contact=item[1],
+                                email = item[2],
+                                phone = item[3],
+                                about = item[4],
+                                url = item[5],
+                                logo = logo
+                                )
+
+                            #print('Importing Group ',group.displayname)
+                            org.save()
+                            num+=1
+                    msg = "Imported %d CarbonSaver Orgs" % num
+                    print(msg)
+                    csvfile.close()
+                    status = True
+
+            eventsFile = inputs.get('Events','')
+            if eventsFile!='':
+                with open(eventsFile, newline='') as csvfile:
+                    inputlist = csv.reader(csvfile)
+                    first = True
+                    num = 0
+                    for item in inputlist:
+                        if first:
+                            #header = item
+                            first = False
+                        else:
+                            if item[0] == '':
+                                continue
+                            qs = Event.objects.filter(name=item[0])
+                            if qs:
+                                qs[0].delete()
+
+                            eventdate = item[2]
+                            if eventdate != '':
+                                dt = datetime.strptime(item[2].upper(), '%m/%d/%Y %H:%M%p')
+                                current_tz = timezone.get_current_timezone()
+                                dt = current_tz.localize(dt)
+                            else:
+                                dt= ''
+                            groupslist = None
+                            if item[5]!='':
+                                groupslist = item[5].split(",")
+
+                            # for now assume just one host org and one sponsor org
+                            host_orgs = Org.objects.filter(name=item[6])
+                            host_org = None
+                            if host_orgs:
+                                host_org = host_orgs[0]
+
+                                
+                            sponsor_orgs = Org.objects.filter(name=item[7])
+                            sponsor_org = None
+                            if sponsor_orgs:
+                                sponsor_org = sponsor_orgs[0]
+
+                            visible = False
+                            if item[8]=="checked":
+                                visible = True
+
+                            event = Event(name=item[0],
+                                displayname=item[1],
+                                location = item[3],
+                                stationslist = item[4].split(","),
+                                visible = visible,
+                                event_tag = item[9]
+                                )
+                            if dt != '':
+                                event.datetime = dt
+
+                            event.save()
+                            if groupslist:
+                                for group in groupslist:
+                                    g = Group.objects.filter(name=group)
+                                    if g:
+                                        gg = g[0]
+                                        event.groups.add(gg)
+
+                            if host_org:
+                                event.host_org.add(host_org)
+                            if sponsor_org:
+                                event.sponsor_org.add(sponsor_org)
+
+                            #print('Importing Event ',event.name,' at ',event.location,' on ',event.datetime)
+                            event.save()
+                            num+=1
+                    msg = "Imported %d CarbonSaver Events" % num
+                    print(msg)
+                    csvfile.close()
+                    status = True
+            defaultsFile = inputs.get('Defaults','')
             if defaultsFile!='':
                 status = CCD.importDefaults(CCD,defaultsFile)
 
-            self.__init__()    
+            self.__init__()
             return {"status":status}
         else:
             return {"status":False}
@@ -414,9 +514,10 @@ class CarbonCalculator:
 
 class CalculatorAction:
     def __init__(self,name):
-        self.id = None       
+        self.id = None
         self.name = name
         self.initialized = False
+        self.title = "Action title"
         self.description = "Action short description"
         self.helptext = "This text explains what the action is about, in 20 words or less."
         self.questions = []    # question with list of valid responses.
@@ -430,6 +531,7 @@ class CalculatorAction:
         status, actionInfo = QuerySingleAction(self.name)
         if status == VALID_QUERY:
             self.id = actionInfo["id"]
+            self.title = actionInfo["title"]
             self.description = actionInfo["description"]
             self.helptext = actionInfo["helptext"]
             self.questions = actionInfo["questionInfo"]    # question with list of valid responses.
@@ -454,7 +556,7 @@ class EnergyFair(CalculatorAction):
             #self.points = ENERGY_FAIR_POINTS
 
             locality = getLocality(inputs)
-            self.points = getDefault(locality, 'energy_fair_average_points', 50)
+            self.points = getDefault(locality, 'energy_fair_average_points')
 
             self.text = "Thank you for participating!"
         return super().Eval(inputs)

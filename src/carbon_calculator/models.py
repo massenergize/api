@@ -7,6 +7,7 @@ from database.utils.common import  json_loader
 
 NAME_STR_LEN = 40
 MED_STR_LEN = 200
+LONG_STR_LEN = 1000
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 
 class CarbonCalculatorMedia(models.Model):
@@ -24,7 +25,7 @@ class CarbonCalculatorMedia(models.Model):
         the type of this media file whether it is an image, video, pdf etc.
     """
     id = models.AutoField(primary_key=True)
-    file = models.FileField(upload_to='cc_media/')
+    file = models.FileField(upload_to='media/')
     is_deleted = models.BooleanField(default=False)
 
     def simple_json(self):
@@ -56,14 +57,16 @@ class Action(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN, unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
-    description = models.CharField(max_length=SHORT_STR_LEN, blank=True) #"Action short description"
+    title = models.CharField(max_length=NAME_STR_LEN, blank=True)
+    category = models.CharField(max_length=NAME_STR_LEN, blank=True)
+    description = models.CharField(max_length=MED_STR_LEN, blank=True) #"Action short description"
     helptext = models.CharField(max_length=MED_STR_LEN, blank=True) #"This text explains what the action is about, in 20 words or less."
     average_points = models.PositiveIntegerField(default=0)
     questions = JSONField(blank=True)    # list of questions by name
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
 
     def info(self):
-        return model_to_dict(self, ['id', 'name', 'description', 'average_points'])
+        return model_to_dict(self, ['id', 'name', 'title', 'category', 'description', 'average_points'])
 
     def simple_json(self):
         return model_to_dict(self)
@@ -71,8 +74,9 @@ class Action(models.Model):
     def full_json(self):
         return self.simple_json()
 
-    def __str__(self):      
-        return self.name
+    def __str__(self): 
+        s = self.category + ':' + self.title     
+        return s
 
     class Meta:
         db_table = 'actions_cc'
@@ -116,6 +120,9 @@ class Question(models.Model):
     skip_5 = JSONField(blank=True, null=True)
     response_6 = models.CharField(max_length=SHORT_STR_LEN, null=True)
     skip_6 = JSONField(blank=True, null=True)
+    minimum_value = models.FloatField(null=True)
+    maximum_value = models.FloatField(null=True)
+    typical_value = models.FloatField(null=True)
 
     def simple_json(self):
         return model_to_dict(self)
@@ -219,28 +226,58 @@ class CalcUser(models.Model):
     class Meta:
         db_table = 'user_profiles_cc' 
 
+class Org(models.Model):
+    """
+    A class used to represent an organization
+
+    Attributes
+    ----------
+    email : str
+      email of the user.  Should be unique.
+      created_at: DateTime
+      The date and time that this goal was added 
+    created_at: DateTime
+      The date and time of the last time any updates were made to the information
+      about this goal
+
+    """
+    name = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
+    email = models.EmailField()
+    phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
+    about = models.CharField(max_length=LONG_STR_LEN, blank=True)
+    url = models.URLField(blank=True)
+    logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
+        null=True, blank=True, related_name='event_host_logo')
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'organization_cc' 
+
 class Event(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN,unique=True)
     displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
-    datetime = models.DateTimeField(blank=True)
+    datetime = models.DateTimeField(blank=True, null=True)
     location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
 #    stations = models.ForeignKey(Station, on_delete=models.SET_NULL, 
 #        null=True, blank=True, related_name='cc_station_picture')
     stationslist = JSONField(null=True, blank=True)
     groups = models.ManyToManyField(Group,blank=True)
-    host_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    host_contact = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    host_email = models.EmailField()
-    host_phone = models.CharField(max_length=TINY_STR_LEN, blank=True)
-    host_url = models.URLField(blank=True)
-    host_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-        null=True, blank=True, related_name='event_host_logo')
-    sponsor_org = models.CharField(max_length=SHORT_STR_LEN,blank=True)
-    sponsor_url = models.URLField(blank=True)
-    sponsor_logo = models.ForeignKey(CarbonCalculatorMedia,on_delete=models.SET_NULL, 
-        null=True, blank=True, related_name='event_sponsor_logo')
-#   updated 11/24
+    host_org = models.ManyToManyField(Org,blank=True,related_name='host_orgs')
+    sponsor_org = models.ManyToManyField(Org,blank=True,related_name='sponsor_orgs')
+#   updated 4/24/20
+#   for a given event, campaign or purpose (platform default or community sites)
+    visible = models.BooleanField(default=True)
+    event_tag = models.CharField(max_length=TINY_STR_LEN,blank=True)
     attendees = models.ManyToManyField(CalcUser, blank=True)
 
     def simple_json(self):
@@ -254,7 +291,6 @@ class Event(models.Model):
 
     class Meta:
         db_table = 'events_cc'
-
 
 class ActionPoints(models.Model):
     """
@@ -294,6 +330,7 @@ class CalcDefault(models.Model):
     id = models.AutoField(primary_key=True)
     variable = models.CharField(max_length=NAME_STR_LEN,blank=False)
     locality = models.CharField(max_length=NAME_STR_LEN)
+    valid_date = models.DateField(null=True)
     value = models.FloatField(default=0.0)
     reference = models.CharField(max_length=MED_STR_LEN)
     updated = models.DateTimeField(auto_now_add=True)
@@ -304,8 +341,11 @@ class CalcDefault(models.Model):
     def full_json(self):
         return self.simple_json()
 
-    def __str__(self):      
-        return "%s : %s = %.3f" % (self.locality,self.variable, self.value)
+    def __str__(self):
+        message = "%s : %s = %.3f" % (self.locality,self.variable, self.value)
+        if self.valid_date:
+            message += "-" + str(self.valid_date)
+        return message
 
     class Meta:
         db_table = 'defaults_cc'
