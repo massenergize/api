@@ -43,7 +43,7 @@ def home(request):
   )
 
 def handler400(request, exception):
-  capture_message("Bad Request", level="error")
+  # capture_message("Bad Request", level="error")
   return MassenergizeResponse(error="Error: BadRequest")
 
 def handler403(request, exception):
