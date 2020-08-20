@@ -3,6 +3,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
 UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit
+from api.store.team import get_team_users
 from django.db.models import Q
 from sentry_sdk import capture_message
 
@@ -15,7 +16,7 @@ class DownloadStore:
 
     self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'testimonials_count']
     
-    self.team_info_columns = ['name', 'members_count', 'total_yearly_lbs_carbon', 'testimonials_count']
+    self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
     self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count', 'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action']
 
@@ -120,13 +121,12 @@ class DownloadStore:
 
 
   def _get_team_info_cells(self, team):
-    members = TeamMember.objects.filter(is_deleted=False, team=team).select_related('user')
+    members = get_team_users(team)
 
-    members_count = str(members.count())
+    members_count = str(len(members))
 
     total_carbon_points = 0
-    for m in members:
-      user = m.user
+    for user in members:
       actions = user.useractionrel_set.all()
       done_actions = actions.filter(status="DONE")
       for done_action in done_actions:
@@ -135,14 +135,17 @@ class DownloadStore:
     total_carbon_points = str(total_carbon_points)
 
     testimonials_count = 0
-    for m in members:
-      testimonials_count += Testimonial.objects.filter(is_deleted=False, user=m.user).count()
+    for user in members:
+      testimonials_count += Testimonial.objects.filter(is_deleted=False, user=user).count()
     testimonials_count = str(testimonials_count)
 
     team_cells = {
       'name': team.name, 'members_count': members_count,
       'total_yearly_lbs_carbon': total_carbon_points, 'testimonials_count': testimonials_count
     }
+    if team.parent:
+      team_cells['parent'] = team.parent.name
+    
     return self._get_cells_from_dict(self.team_info_columns, team_cells)
 
 
