@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import firebase_admin
 from firebase_admin import credentials
-from .utils.utils import load_json
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 import sentry_sdk
