@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
-IS_LOCAL = True
+IS_LOCAL = False
 
 try:
     env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env' if not IS_LOCAL else 'local.env')

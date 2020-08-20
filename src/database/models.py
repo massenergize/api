@@ -250,7 +250,7 @@ class Community(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
-  subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
+  subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
   owner_email = models.EmailField(blank=False)
   owner_phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
@@ -587,7 +587,7 @@ class Team(models.Model):
 
   # may change this from ForeignKey to ManyToManyField to allow team to span communities
   community = models.ForeignKey(Community, on_delete=models.CASCADE)
-  image = models.ManyToManyField(Media, related_name='team_image')                         # 0 or more photos - could be a slide show
+  images = models.ManyToManyField(Media, related_name='team_images')                         # 0 or more photos - could be a slide show
   video_link = models.CharField(max_length=LONG_STR_LEN, blank=True)                               # allow one video
   is_closed = models.BooleanField(default=False, blank=True)                # by default, teams are open
   team_page_options = JSONField(blank=True, null=True)                          # settable team page options
