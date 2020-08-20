@@ -53,6 +53,9 @@ def run():
 def get_target_config(target, is_local, is_deploy):
   deploy_notes = load_text_contents(DEPLOY_NOTES)
 
+  if is_deploy:
+    print(colored("!!! Please remember to updates deploy notes in _main_/config/build/deployNotes.txt", 'yellow'))
+
   if target == 'prod':
     return {
       "IS_PROD": True,
