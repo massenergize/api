@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
-IS_LOCAL = True
+IS_LOCAL = False
 
 try:
     env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env' if not IS_LOCAL else 'local.env')
@@ -38,7 +38,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -57,7 +57,8 @@ ALLOWED_HOSTS = [
     'Prod-env.eba-cg9aw8pt.us-east-2.elasticbeanstalk.com',
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
     '0.0.0.0',
-    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
+    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
+    'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
