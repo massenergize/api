@@ -7,6 +7,23 @@ from .utils import get_community_or_die, get_user_or_die
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 
+def can_set_parent(parent, this_team=None):
+  if parent.parent:
+    return False
+  if this_team and Team.objects.filter(parent=this_team, is_deleted=False).exists():
+    return False
+  return True
+
+def get_team_users(team):
+  team_users = [tm.user for tm in
+                  TeamMember.objects.filter(team=team, is_deleted=False).select_related('user')]
+  if team.parent:
+    return team_users
+  else:
+    child_teams = Team.objects.filter(parent=team, is_deleted=False)
+    child_team_users = [tm.user for tm in
+                  TeamMember.objects.filter(team__in=child_teams, is_deleted=False).select_related('user')]
+    return set().union(team_users, child_team_users)
 
 class TeamStore:
   def __init__(self):
@@ -18,10 +35,10 @@ class TeamStore:
       return None, InvalidResourceError()
     return team, None
 
-  def get_team_admins(self, context, team_id):
+  def get_team_admins(self, team_id):
     if not team_id:
       return []
-    return [a.user for a in TeamMember.objects.filter(is_admin=True, is_deleted=False) if a.user is not None]
+    return [a.user for a in TeamMember.objects.filter(is_admin=True, team__id=team_id, is_deleted=False) if a.user is not None]
 
   def list_teams(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
@@ -47,19 +64,18 @@ class TeamStore:
         res["team"] = team.simple_json()
         # team.members deprecated
         # for m in team.members.all():
-        members = TeamMember.objects.filter(team=team)
-        res["members"] = members.count()
-        for m in members:
-          user = m.user
+        users = get_team_users(team)
+        res["members"] = len(users)
+        for user in users:
           res["households"] += user.real_estate_units.count()
           actions = user.useractionrel_set.all()
           res["actions"] += len(actions)
-          done_actions = actions.filter(status="DONE")
+          done_actions = actions.filter(status="DONE").prefetch_related('action__calculator_action')
           res["actions_completed"] += done_actions.count()
           res["actions_todo"] += actions.filter(status="TODO").count()
-          #for done_action in done_actions:
-          #  if done_action.action and done_action.action.calculator_action:
-          #    res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
+          for done_action in done_actions:
+            if done_action.action and done_action.action.calculator_action:
+              res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
 
         ans.append(res)
 
@@ -75,13 +91,13 @@ class TeamStore:
       # generally a Team will have one community, but in principle it could span multiple.  If it 
       community_id = args.pop('community_id', None)
       community_ids = args.pop('community_ids', None)   # in case of a team spanning multiple communities
-      logo_file = args.pop('image', None)
+      logo_file = args.pop('logo', None)
       image_files = args.pop('pictures', None)
       video = args.pop('video', None)
       parent_id = args.pop('parent_id', None)
 
       admin_emails = args.pop('admin_emails', [])
-
+      
       verified_admins = []
       #verify that provided emails are valid user
       for email in admin_emails:
@@ -121,8 +137,10 @@ class TeamStore:
       # for the case of a sub-team, record the parent
       if parent_id:
         parent = Team.objects.filter(pk=parent_id).first()
-        if parent:
-          new_team.parent.add(parent)
+        if parent and can_set_parent(parent):
+          new_team.parent = parent
+        else:
+          return None, CustomMassenergizeError("Cannot set parent team")
 
       if logo_file:
         logo = Media.objects.create(file=logo_file, name=f"{slugify(new_team.name)}-TeamLogo")
@@ -149,7 +167,11 @@ class TeamStore:
       
       community_id = args.pop('community_id', None)
       logo = args.pop('logo', None)
+      parent_id = args.pop('parent_id', None)
+
       team = Team.objects.filter(id=team_id)
+
+
       team.update(**args)
       team = team.first()
 
@@ -158,6 +180,11 @@ class TeamStore:
           community = Community.objects.filter(pk=community_id).first()
           if community:
             team.community = community
+
+        if parent_id:
+          parent = Team.objects.filter(pk=parent_id).first()
+          if parent and can_set_parent(parent, this_team=team):
+            team.parent = parent
         
         if logo:
           logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
@@ -275,10 +302,16 @@ class TeamStore:
       if not team_id:
         return [], CustomMassenergizeError('Please provide a valid team_id')
 
-      members = TeamMember.objects.filter(is_deleted=False, team__id=team_id).select_related("user")
+      team = Team.objects.filter(id=team_id).first()
+      users = get_team_users(team)
       res = []
-      for member in members:
-        res.append({"id": member.id, "preferred_name": member.user.preferred_name, "is_admin": member.is_admin})
+      for user in users:
+        member = TeamMember.objects.filter(user=user, team=team).first()
+        member_obj = {"id": None, "user_id": user.id, "preferred_name": user.preferred_name, "is_admin": False}
+        if member:
+          member_obj['id'] = member.id
+          member_obj['is_admin'] = member.is_admin
+        res.append(member_obj)
 
       return res, None
     except Exception as e:

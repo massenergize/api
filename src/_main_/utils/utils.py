@@ -15,6 +15,13 @@ def load_json(path):
   return {}
 
 
+def load_text_contents(path) -> str:
+  data = {}
+  with open(path) as f:
+    data = f.read()
+
+  return data
+
 
 def get_all_models(models):
   """

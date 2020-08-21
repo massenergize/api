@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q, prefetch_related_objects
+from api.store.team import get_team_users
 from .utils import get_community
 from sentry_sdk import capture_message
 
@@ -106,11 +107,11 @@ class GraphStore:
         if not team.is_published:
           return None, CustomMassenergizeError("Content Not Available Yet")
   
-      members = TeamMember.objects.filter(team=team)
+      users = get_team_users(team)
 
       completed_action_rels = []
-      for member in members:
-        completed_action_rels.extend(member.user.useractionrel_set.filter(status="DONE").all())
+      for user in users:
+        completed_action_rels.extend(user.useractionrel_set.filter(status="DONE").all())
 
       categories = TagCollection.objects.get(name="Category").tag_set.order_by("name").all()
 

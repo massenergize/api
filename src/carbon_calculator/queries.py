@@ -1,18 +1,27 @@
 import jsons
 from .CCConstants import VALID_QUERY, INVALID_QUERY
-from .models import Question, Event, Action, Station, Group
+from .models import Question, Event, Action, Station, Group, Org
 
 class CalculatorQuestion:
-    def __init__(self, name):
+    def __init__(self, name, event_tag=None):
         self.name = name
 
-        qs = Question.objects.filter(name=name)
+        qs = None
+        # first look for specific question with tag
+        if event_tag and len(event_tag)>0:
+            suffix = '<' + event_tag + '>'
+            qs = Question.objects.filter(name=name+suffix)
+
+        if not qs:
+           qs = Question.objects.filter(name=name)
+
         if qs:
             q = qs[0]
             self.category = q.category
             self.questionText = q.question_text
             self.questionType = q.question_type
             self.responses = []
+            self.numeric_values = {}
             if q.question_type == 'Choice':
                 if q.response_1 != '':
                     response = {'text':q.response_1}
@@ -44,6 +53,14 @@ class CalculatorQuestion:
                     if len(q.skip_6)>0:
                         response['skip']=q.skip_6
                     self.responses.append(response)
+
+            elif q.question_type == 'Number':
+                if q.minimum_value!=None:
+                    self.numeric_values['minimum_value'] = q.minimum_value
+                if q.maximum_value!=None:
+                    self.numeric_values['maximum_value'] = q.maximum_value
+                if q.typical_value!=None:
+                    self.numeric_values['typical_value'] = q.typical_value
         else:
             print("ERROR: Question "+name+" was not found")
 
@@ -76,15 +93,15 @@ def QuerySingleEvent(event):
     qs = Event.objects.filter(name=event)
     if qs:
         q = qs[0]
-        host_logo_url = sponsor_logo_url = ""
-        if q.host_logo:
-            host_logo_url = q.host_logo.file.url
-        if q.sponsor_logo:
-            sponsor_logo_url = q.sponsor_logo.file.url
+        host_org = sponsor_org = {}
+        if q.host_org:
+            host_org = q.host_org.first().simple_json()
+        if q.sponsor_org:
+            sponsor_org = q.sponsor_org.first().simple_json()
 
         stationsList = []
         for station in q.stationslist:
-            stat, stationInfo = QuerySingleStation(station)
+            stat, stationInfo = QuerySingleStation(station, q.event_tag)
             if stat == VALID_QUERY:
                 stationsList.append(stationInfo)
 
@@ -108,8 +125,7 @@ def QuerySingleEvent(event):
         return VALID_QUERY, {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location,"stations":stationsList,
                 "groups":groupsList,"communities":communitiesList,
                 "attendees":attendees.count(),"points":totalPoints, "savings":totalSavings,
-                "host_org":q.host_org, "host_contact":q.host_contact, "host_email":q.host_email, "host_phone":q.host_phone,"host_url":q.host_url,"host_logo":host_logo_url,
-                "sponsor_org":q.sponsor_org, "sponsor_url":q.sponsor_url,"sponsor_logo":sponsor_logo_url}
+                "host_org":host_org, "sponsor_org":sponsor_org}
     else:
         return INVALID_QUERY, {}
 
@@ -174,7 +190,7 @@ def QuerySingleEventSummary(event):
 def QueryAllActions():
     pass
 
-def QuerySingleAction(name):
+def QuerySingleAction(name,event_tag=""):
     try:
         qs = Action.objects.filter(name=name)
         if qs:
@@ -182,14 +198,17 @@ def QuerySingleAction(name):
 
             questionInfo = []
             for question in q.questions:
-                qq = CalculatorQuestion(question)
-                questionInfo.append(jsons.dump(qq))
+                qq = CalculatorQuestion(question, event_tag)
+                # a question with no text is not to be included; this is how depending on the event_tag some questions would not be asked.
+                if len(qq.questionText)>0:
+                    questionInfo.append(jsons.dump(qq))
 
             picture = ""
             if q.picture:
                 picture = q.picture.file.url
 
-            return VALID_QUERY, {"id": q.pk, "name":q.name, "description":q.description, "helptext":q.helptext, "questionInfo":questionInfo, \
+            return VALID_QUERY, {"id": q.pk, "name":q.name, "title":q.title, "description":q.description, \
+                                "category":q.category, "helptext":q.helptext, "questionInfo":questionInfo, \
                                 "average_points":q.average_points, "picture":picture}
         else:
             print("ERROR: Action "+name+" was not found")
@@ -223,14 +242,14 @@ def QueryAllStations():
     else:
         return INVALID_QUERY, []
 
-def QuerySingleStation(station):
+def QuerySingleStation(station, event_tag=None):
     qs = Station.objects.filter(name=station)
     if qs:
         q = qs[0]
 
         actionsList = []
         for action in q.actions:
-            stat, actionInfo = QuerySingleAction(action)
+            stat, actionInfo = QuerySingleAction(action, event_tag)
             if stat == VALID_QUERY:
                 actionsList.append(actionInfo)
 

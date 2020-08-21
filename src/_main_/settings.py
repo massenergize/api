@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import firebase_admin
 from firebase_admin import credentials
-from .utils.utils import load_json
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 import sentry_sdk
@@ -38,7 +37,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
@@ -50,6 +49,9 @@ ALLOWED_HOSTS = [
 
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
+    '0.0.0.0',
+    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
+    'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
@@ -71,7 +73,7 @@ MIDDLEWARE = [
     'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -85,14 +87,14 @@ MIDDLEWARE = [
 
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE  = 'storages.backends.s3boto3.S3Boto3Storage'
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 
 
 #-------- AWS CONFIGURATION ---------------------#
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_ACCESS_KEY_ID        = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY    = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME  = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
@@ -110,7 +112,11 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+AWS_S3_REGION_NAME       = os.environ.get('AWS_S3_REGION_NAME')
+AWS_DEFAULT_ACL          = None
+#--------END AWS CONFIGURATION ---------------------#
 
+APPEND_SLASH = False
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
@@ -141,12 +147,12 @@ TEMPLATES = [
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': os.environ.get('DATABASE_NAME'),
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': os.environ.get('DATABASE_PORT')
+        'ENGINE'   : os.environ.get('DATABASE_ENGINE'),
+        'NAME'     : os.environ.get('DATABASE_NAME'),
+        'USER'     : os.environ.get('DATABASE_USER'),
+        'PASSWORD' : os.environ.get('DATABASE_PASSWORD'),
+        'HOST'     : os.environ.get('DATABASE_HOST'),
+        'PORT'     : os.environ.get('DATABASE_PORT')
     },
 }
 
