@@ -36,3 +36,15 @@ deploy:
 	docker-compose build
 	docker-compose push
 .PHONY: deploy
+
+package = carbon_calculator
+infile = $(package)/tests/allPossibleInputs.txt
+outfile = $(package)/tests/allPossibleOutputs.txt
+generate_inputs = 0
+export TEST_INPUTS=$(infile)
+export TEST_OUTPUTS=$(outfile)
+export GENERATE_INPUTS=$(generate_inputs)
+
+test:	
+	python -W ignore manage.py test $(package)
+.PHONY: test 
