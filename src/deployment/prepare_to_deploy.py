@@ -34,9 +34,15 @@ def run():
     is_deploy = False
 
   warning = False
-  if settings.DEBUG and deploy_to_prod:
+  if settings.DEBUG and is_deploy:
     print(colored("!!! Please set DEBUG=False in _main_/settings.py", 'red'))
     warning = False
+
+  if settings.IS_LOCAL:
+    print(colored("!!!Warning: IS_LOCAL=True in _main_/settings.py", 'yellow'))
+    warning = False
+    if is_deploy:
+      return "!!! Please set IS_LOCAL=False in _main_/settings.py if you want to deploy to DEV/PROD", False
 
   if deploy_to_dev and settings.IS_PROD: 
     return "!!! Please set IS_PROD=False in _main_/settings.py if you want to deploy to DEV", False
@@ -45,7 +51,8 @@ def run():
     return "!!! Please set IS_PROD=True in _main_/settings.py if you want to deploy to PROD", False
 
   
-  generate_config(target, is_local, is_deploy)
+  build_version = generate_config(target, is_local, is_deploy)
+  update_aws_docker_config(deploy_to_prod, build_version)
 
   return f"ALL GOOD! - Ready for Launch to {'PROD' if deploy_to_prod else 'DEV'}", True
 
@@ -108,9 +115,14 @@ def load_text_contents(path) -> str:
 
 
 def write_json_contents(path, data) -> bool:
-  with open(path, 'w') as f:
+  with open(path, 'w+') as f:
     json.dump(data, f, indent=2)
   return True
+
+def write_any_content(path, data):
+  f = open(path, "w+")
+  f.write(data)
+  f.close()
 
 
 def generate_config(target, is_local, is_deploy):
@@ -123,9 +135,48 @@ def generate_config(target, is_local, is_deploy):
     write_json_contents(BUILD_VERSION_PATH, build_versions)
 
   if success:
-    return (f'Running ON {"PROD" if new_config.get("IS_PROD") else "DEV" }, \
-        Local={new_config.get("IS_LOCAL") }', True)
-  return ('Updating Config Failed!', False)
+    print (f'Running ON {"PROD" if new_config.get("IS_PROD") else "DEV" }, \
+        Local={new_config.get("IS_LOCAL") }')
+
+  else:
+    print ('Updating Config Failed!')
+
+  return new_config.get("BUILD_VERSION")
+
+
+def update_aws_docker_config(is_prod, build_version):
+  dst_docker_run_aws_file = os.path.join(__location__, '../Dockerrun.aws.json') 
+  dst_secure_listener_file = os.path.join(__location__, '../.ebextensions/securelistener-clb.config') 
+  dst_elastic_bean_stalk = os.path.join(__location__, '../.elasticbeanstalk/config.yml') 
+  dev_version_txt = os.path.join(__location__, '../api_version_dev.txt') 
+  prod_version_txt = os.path.join(__location__, '../api_version_prod.txt') 
+
+  if is_prod:
+    src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.prod.aws.json') 
+    src_secure_listener_file = os.path.join(__location__, '../deployment/aws/prodSecureListener.config') 
+    src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/prodElasticBeanstalkConfig.yml') 
+    write_any_content(prod_version_txt, build_version)
+    
+
+  else:
+    src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.dev.aws.json') 
+    src_secure_listener_file = os.path.join(__location__, '../deployment/aws/prodSecureListener.config') 
+    src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/devElasticBeanstalkConfig.yml') 
+    write_any_content(dev_version_txt, build_version)
+
+  transfer_file_contents(src_docker_run_aws_file, dst_docker_run_aws_file)
+  d = load_json_contents(src_docker_run_aws_file)
+  d["Image"]["Name"] = f"{d['Image']['Name']}:{build_version}"
+  write_json_contents(dst_docker_run_aws_file, d)
+
+  transfer_file_contents(src_secure_listener_file, dst_secure_listener_file)
+  transfer_file_contents(src_elastic_bean_stalk, dst_elastic_bean_stalk)
+
+
+def transfer_file_contents(src, dst):
+  src_content = load_text_contents(src)
+  write_any_content(dst, src_content)
+
 
 
 
