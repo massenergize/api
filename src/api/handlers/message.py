@@ -13,6 +13,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from api.decorators import admins_only, super_admins_only, login_required
 
 class MessageHandler(RouteHandler):
 
@@ -29,6 +30,7 @@ class MessageHandler(RouteHandler):
     self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin())
     self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins())
 
+  @admins_only
   def info(self, request):
     context: Context  = request.context
     args = context.get_request_body()
@@ -38,7 +40,7 @@ class MessageHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=message_info)
 
-
+  @admins_only
   def forward_to_team_admins(self, request):
     context: Context  = request.context
     args = context.get_request_body()
@@ -47,7 +49,7 @@ class MessageHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=message_info)
 
-
+  @admins_only
   def reply_from_community_admin(self, request):
     context: Context  = request.context
     args = context.get_request_body()
@@ -56,7 +58,7 @@ class MessageHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=message_info)
 
-
+  @admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -69,7 +71,7 @@ class MessageHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=message_info)
 
-
+  @admins_only
   def team_admin_list(self, request):
     context: Context = request.context
     messages, err = self.service.list_team_admin_messages_for_community_admin(context)
@@ -77,7 +79,7 @@ class MessageHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=messages)
 
-
+  @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
