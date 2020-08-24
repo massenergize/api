@@ -39,7 +39,7 @@ class ActionStore:
       else:
         return [], None
 
-      if not context.is_dev:
+      if not context.is_sandbox:
         actions = actions.filter(is_published=True)
 
       # by default, exclude deleted actions

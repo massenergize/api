@@ -54,6 +54,7 @@ class SubscriberHandler(RouteHandler):
       (validator
         .add("name", str, is_required=True)
         .add("email", str, is_required=True)
+        .add("community", str, is_required=False)
       )
 
       args, err = validator.verify(args)
@@ -61,9 +62,7 @@ class SubscriberHandler(RouteHandler):
         return err
       
       community_id = args.pop('community_id', None)
-      is_global = args.pop('is_global', None)
-      if is_global:
-        args["is_global"] = parse_bool(is_global)
+
       subscriber_info, err = self.service.create_subscriber(community_id ,args)
       if err:
         return MassenergizeResponse(error=str(err), status=err.status)

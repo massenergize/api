@@ -75,3 +75,15 @@ class GraphService:
     if err:
       return None, err
     return graphs, None
+
+  def update_data(self, context, args) -> (dict, MassEnergizeAPIError):
+    data, err = self.store.update_data(context, args)
+    if err:
+      return None, err
+    return serialize(data), None
+
+  def delete_data(self, context, data_id) -> (dict, MassEnergizeAPIError):
+    result, err = self.store.delete_data(context, data)
+    if err:
+      return None, err
+    return result, None

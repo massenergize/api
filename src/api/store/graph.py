@@ -269,6 +269,32 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
+  def update_data(self, context:Context, args:dict) -> (dict, MassEnergizeAPIError):
+    try:
+      value = args.get('value')
+      data_id = args.get('data_id')
+
+      data = Data.objects.filter(pk=data_id).first()
+      if data:
+        data.value = value
+        data.save()
+        return data, None
+
+
+      return None, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def delete_data(self, context:Context, data_id) -> (dict, MassEnergizeAPIError):
+    try:
+      result = Data.objects.filter(pk=data_id).delete()
+      return result, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
   def delete_graph(self, context: Context, graph_id) -> (dict, MassEnergizeAPIError):
     try:
       graphs = Graph.objects.filter(id=graph_id)

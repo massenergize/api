@@ -16,7 +16,9 @@ def login(request):
   return verify(request)
 
 def logout(request):
-  return Json(None) 
+  response = MassenergizeResponse(data={"success": True})
+  response.delete_cookie("token")
+  return response
 
 def ping(request):
   """
@@ -43,7 +45,6 @@ def who_am_i(request):
 
   except Exception as e:
     capture_message(str(e), level="error")
-    
     return CustomMassenergizeError(e)
 
 
@@ -69,7 +70,9 @@ def verify(request):
       }
 
       massenergize_jwt_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
-      return MassenergizeResponse(data={"idToken": str(massenergize_jwt_token)})
+      response = MassenergizeResponse(data=payload)
+      response.set_cookie("token", str(massenergize_jwt_token))
+      return response
 
     else:
       return CustomMassenergizeError("Invalid Auth")

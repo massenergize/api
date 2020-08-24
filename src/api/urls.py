@@ -1,5 +1,6 @@
 from api.handlers.action import ActionHandler
 from api.handlers.admin import AdminHandler
+from api.handlers.auth import AuthHandler
 from api.handlers.community import CommunityHandler
 from api.handlers.download import DownloadHandler
 from api.handlers.event import EventHandler
@@ -24,29 +25,35 @@ from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
 
 
+ROUTE_HANDLERS = [
+  AboutUsPageSettingsHandler(),
+  ActionsPageSettingsHandler(),
+  ActionHandler(),
+  ActionsPageSettingsHandler(),
+  AdminHandler(),
+  AuthHandler(),
+  CommunityHandler(),
+  ContactUsPageSettingsHandler(), 
+  DonatePageSettingsHandler(),
+  EventHandler(),
+  GoalHandler(),
+  GraphHandler(),
+  MessageHandler(),
+  MiscellaneousHandler(),
+  PolicyHandler(),
+  SubscriberHandler(),
+  SummaryHandler(),
+  HomePageSettingsHandler(),
+  TagHandler(),
+  TagCollectionHandler(),
+  TeamHandler(),
+  TestimonialHandler(),
+  UserHandler(),
+  VendorHandler()
+]
+
 urlpatterns = []
-urlpatterns.extend(AboutUsPageSettingsHandler().get_routes_to_views())
-urlpatterns.extend(ActionHandler().get_routes_to_views())
-urlpatterns.extend(ActionsPageSettingsHandler().get_routes_to_views())
-urlpatterns.extend(AdminHandler().get_routes_to_views())
-urlpatterns.extend(CommunityHandler().get_routes_to_views())
-urlpatterns.extend(DownloadHandler().get_routes_to_views())
-urlpatterns.extend(ContactUsPageSettingsHandler().get_routes_to_views())
-urlpatterns.extend(DonatePageSettingsHandler().get_routes_to_views())
-urlpatterns.extend(TeamsPageSettingsHandler().get_routes_to_views())
-urlpatterns.extend(EventHandler().get_routes_to_views())
-urlpatterns.extend(GoalHandler().get_routes_to_views())
-urlpatterns.extend(GraphHandler().get_routes_to_views())
-urlpatterns.extend(MessageHandler().get_routes_to_views())
-urlpatterns.extend(MiscellaneousHandler().get_routes_to_views())
-urlpatterns.extend(PolicyHandler().get_routes_to_views())
-urlpatterns.extend(SubscriberHandler().get_routes_to_views())
-urlpatterns.extend(SummaryHandler().get_routes_to_views())
-urlpatterns.extend(HomePageSettingsHandler().get_routes_to_views())
-urlpatterns.extend(TagHandler().get_routes_to_views())
-urlpatterns.extend(TagCollectionHandler().get_routes_to_views())
-urlpatterns.extend(TeamHandler().get_routes_to_views())
-urlpatterns.extend(TestimonialHandler().get_routes_to_views())
-urlpatterns.extend(UserHandler().get_routes_to_views())
-urlpatterns.extend(VendorHandler().get_routes_to_views())
+for handler in ROUTE_HANDLERS:
+  urlpatterns.extend(handler.get_routes_to_views())
+
 

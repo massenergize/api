@@ -250,7 +250,7 @@ class Community(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
-  subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True)
+  subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
   owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
   owner_email = models.EmailField(blank=False)
   owner_phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)

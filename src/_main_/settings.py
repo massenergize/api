@@ -32,7 +32,6 @@ except Exception:
     load_dotenv()
 
 
-# os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
 SECRET_KEY =  os.environ.get("SECRET_KEY")
@@ -41,21 +40,15 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'localhost',
+    '0.0.0.0',
     '127.0.0.1',
-    'api.massenergize.org',
-    'apis.massenergize.org',
-    'api.massenergize.com',
-    'apis.massenergize.com',
-    'api-prod.massenergize.org',
-    'api.prod.massenergize.org',
-    'api-dev.massenergize.org',
-    'api.dev.massenergize.org',
-    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-production.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com',
-    'Prod-env.eba-cg9aw8pt.us-east-2.elasticbeanstalk.com',
+    'localhost',
+
+    '.massenergize.org',
+    '.massenergize.com',
+
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
+    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
     '0.0.0.0',
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com'
@@ -77,6 +70,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -102,19 +96,30 @@ AWS_ACCESS_KEY_ID        = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY    = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME  = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
-AWS_S3_REGION_NAME       = os.environ.get('AWS_S3_REGION_NAME')
-AWS_DEFAULT_ACL          = None
-#--------END AWS CONFIGURATION ---------------------#
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+AWS_DEFAULT_ACL  = None
 
+#-------- OTHER CONFIGURATION ---------------------#
+SECURE_SSL_REDIRECT = False # if debugging then don't enforce
+SECURE_HSTS_SECONDS = 3600
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+USE_X_FORWARDED_HOST = True
+WSGI_APPLICATION = '_main_.wsgi.application'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+AWS_DEFAULT_ACL = None
 APPEND_SLASH = False
-
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
-
 ROOT_URLCONF = '_main_.urls'
-
+# SESSION_SAVE_EVERY_REQUEST = True
 
 TEMPLATES = [
     {
@@ -132,10 +137,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = '_main_.wsgi.application'
 
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -149,6 +152,16 @@ DATABASES = {
         'PORT'     : os.environ.get('DATABASE_PORT')
     },
 }
+
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': os.getenv('CACHE_BACKEND'),
+#         'LOCATION': os.getenv('CACHE_LOCATION'),
+#     }
+# }
+
+
 
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",
