@@ -6,7 +6,6 @@ from api.services.community import CommunityService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
 
 
@@ -54,6 +53,7 @@ class CommunityHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
 
+
   @login_required
   def leave(self, request):
     context: Context = request.context
@@ -62,6 +62,7 @@ class CommunityHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
+
 
   @login_required
   def create(self, request):
@@ -140,6 +141,7 @@ class CommunityHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
+
 
   @admins_only
   def delete(self, request) -> function:
