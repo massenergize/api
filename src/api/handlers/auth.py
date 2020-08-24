@@ -59,7 +59,6 @@ class AuthHandler(RouteHandler):
     if err:
       return err
     
-    print(user_info)
     return MassenergizeResponse(data=user_info)
 
   def verify_captcha(self, request) -> MassenergizeResponse: 
