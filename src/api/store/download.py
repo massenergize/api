@@ -2,7 +2,8 @@ from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPI
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
-UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit
+  UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit, \
+  Data, TagCollection
 from api.store.team import get_team_users
 from django.db.models import Q
 from sentry_sdk import capture_message
@@ -12,13 +13,20 @@ class DownloadStore:
   def __init__(self):
     self.name = "Download Store/DB"
 
-    self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon', 'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
+    self.action_categories = TagCollection.objects.get(name="Category").tag_set.all()
+
+    # TODO: add state reported actions as rows based on category
+    # i.e. state reported data, activism, ...
+    self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon',
+    'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
 
     self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'testimonials_count']
     
     self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
-    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count', 'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action']
+    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count'
+    'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action'] \
+    + list(self.action_categories) + ['total_actions_done', 'total_households_count']
 
 
   def _get_cells_from_dict(self, columns, data):
@@ -156,6 +164,22 @@ class DownloadStore:
       cells.append(str(UserActionRel.objects.filter(action=action, user__in=team_users, status='DONE').count()))
     return cells
 
+  # TODO: return a tuple in which the second value is an int for the reported households
+  def _get_community_reported_data(self, community):
+    community = Community.objects.get(pk=community.id)
+    if not community:
+      return None
+    
+    ret = {}
+
+    for action_category in self.action_categories:
+      data = Data.objects.filter(tag=action_category, community=community).first()
+      if not data:
+        continue
+      ret[action_category] = data.reported_value
+
+    return ret
+
 
   def _get_community_info_cells(self, community):
     community_members = CommunityMember.objects.filter(is_deleted=False, community=community)\
@@ -194,9 +218,14 @@ class DownloadStore:
       'testimonials_count' : testimonials_count, 'events_count': events_count,
       'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action, 'highest_impact_action': highest_impact_action, 'second_highest_imapct_action': second_highest_impact_action
     }
+    reported_actions = self._get_community_reported_data(community)
+    community_cells.update(reported_actions)
+    community_cells['total_actions_done'] = str(actions_done + sum(value for action in reported_actions.keys()))
+    community_cells['total_households_count'] = 0 # TODO
+
+    print(community_cells)
 
     return self._get_cells_from_dict(self.community_info_columns, community_cells)
-
 
   def _all_users_download(self):
     users = list(UserProfile.objects.filter(is_deleted=False)) \
@@ -374,7 +403,7 @@ class DownloadStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      return (self._all_communities_download(), None), None          
+      return (self._all_communities_download(), None), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

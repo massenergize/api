@@ -85,8 +85,6 @@ class GraphStore:
       
     except Exception as e:
       capture_message(str(e), level="error")
-      import traceback
-      traceback.print_exc()
       return None, CustomMassenergizeError(e)
 
 
@@ -134,8 +132,6 @@ class GraphStore:
         
     except Exception as e:
       capture_message(str(e), level="error")
-      import traceback
-      traceback.print_exc()
       return None, CustomMassenergizeError(e)
 
 
