@@ -43,20 +43,15 @@ def home(request):
   )
 
 def handler400(request, exception):
-  error_msg = "bad_request"
-  return MassenergizeResponse(error=error_msg)
+  return MassenergizeResponse(error="bad_request")
 
 def handler403(request, exception):
-  error_msg = "permission_denied"
-  capture_message(error_msg, level="error")
-  return MassenergizeResponse(error=error_msg)
+  return MassenergizeResponse(error="permission_denied")
 
 def handler404(request, exception):
-  error_msg = "page_not_found"
-  capture_message(error_msg, level="error")
-  return MassenergizeResponse(data=f"path: {request.build_absolute_uri()}", error=error_msg)
+  if request.path.startswith("/v2"):
+    return MassenergizeResponse(error="method_deprecated")
+  return MassenergizeResponse(error="resource_not_found")
 
 def handler500(request):
-  error_msg = "server_error"
-  capture_message(error_msg, level="error")
-  return MassenergizeResponse(error=error_msg)
+  return MassenergizeResponse(error="server_error")
