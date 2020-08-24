@@ -6,6 +6,7 @@ import json
 from django.core import serializers
 from django.forms.models import model_to_dict
 from collections.abc import Iterable
+from sentry_sdk import capture_message
 
 
 def json_loader(file) -> dict:
@@ -17,6 +18,8 @@ def json_loader(file) -> dict:
       data = my_file.read()
     return json.loads(data)
   except Exception as e:
+    capture_message(str(e), level="error")
+    
     return error_msg("The JSON file you specified does not exist")
 
 def error_msg(msg=None):
@@ -103,6 +106,8 @@ def get_summary_info(obj) -> dict:
       return obj.info()
     return None
   except Exception as e:
+    capture_message(str(e), level="error")
+    
     return {'id': obj.pk}
 
 
@@ -139,5 +144,6 @@ def get_request_contents(request):
     try:
       return json.loads(request.body.decode('utf-8'))
     except Exception as e:
+      capture_message(str(e), level="error")
       return {}
 

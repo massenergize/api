@@ -1,14 +1,16 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, resize_image
+from sentry_sdk import capture_message
 
 class Validator:
 
   def __init__(self):
     self.fields = {}
+    self.one_of = {}
     self.rename_fields = set()
 
 
-  def expect(self, field_name, field_type=str, is_required=True, options={}):
+  def expect(self, field_name, field_type=str, is_required=False, options={}):
     self.fields[field_name] = {
       "type": field_type,
       "is_required": is_required,
@@ -16,16 +18,15 @@ class Validator:
     }
     return self
 
-  def expect_either(self, field_names, field_type=str, is_required=True):
-    # for f in field_names:
-
-    # self.fields[field_name] = {
-    #   "type": field_type,
-    #   "is_required": is_required
-    # }
+  def expect_one_of(self, fields):
+    for (field_name, field_type, is_required) in lst:
+      self.fields[field_name] = {
+        "type": field_type,
+        "is_required": is_required
+      }
     return self
 
-  def add(self, field_name, field_type=str, is_required=True):
+  def add(self, field_name, field_type=str, is_required=False):
     return self.expect(field_name, field_type, is_required)
 
   def expect_all(self, lst):
@@ -48,9 +49,11 @@ class Validator:
     try:
       # when in strict mode remove all unexpected fields
       if strict:
+        tmp_args = args.copy()
         for f in args:
           if f not in self.fields:
-            del args[f]
+            del tmp_args[f]
+        args = tmp_args
 
       #first rename all fields that need renaming
       for (old_name, new_name) in self.rename_fields:
@@ -96,9 +99,12 @@ class Validator:
           elif field_type == 'file':
             args[field_name] =  args.get(field_name, None) or None
 
+      # now clear the  dictionary
+      self.fields = {}
+      self.rename_fields = set()
+
       return args, None
 
     except Exception as e:
-      import traceback
-      traceback.print_exc()
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

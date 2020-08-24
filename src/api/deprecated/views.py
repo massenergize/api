@@ -266,7 +266,6 @@ def community(request, cid=None, subdomain=None):
     #updating the Community resource with this <id>
     #TODO: create pages for this community, etc
     community, errors = FACTORY.update(Community, args)
-    # print(community.simple_json())
     return Json(community, errors)
   elif request.method == 'DELETE':
     items_deleted, errors = FETCH.delete(Community, args)

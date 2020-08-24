@@ -2,6 +2,7 @@ from database.models import DonatePageSettings, UserProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
 
 class DonatePageSettingsStore:
   def __init__(self):
@@ -14,6 +15,7 @@ class DonatePageSettingsStore:
         return None, InvalidResourceError()
       return page, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -47,6 +49,7 @@ class DonatePageSettingsStore:
       else:
         return None, CustomMassenergizeError("Please provide an id")
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -66,4 +69,5 @@ class DonatePageSettingsStore:
       donate_page_settings = DonatePageSettings.objects.all()
       return donate_page_settings, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

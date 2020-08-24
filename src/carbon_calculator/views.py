@@ -18,11 +18,11 @@ from .calcUsers import QueryCalcUsers, CreateCalcUser
 CALC = CarbonCalculator()
 
 def ping(request):
-	"""
-	This view returns a dummy json.  It is meant to be used to check whether
-	the server is alive or not
-	"""
-	return Json(None)
+    """
+    This view returns a dummy json.  It is meant to be used to check whether
+    the server is alive or not
+    """
+    return Json(None)
 
 def index(request):
     return JsonResponse(CALC.AllActionsList())
@@ -47,32 +47,32 @@ def userinfo(request, user=None):
 
 # these requests should be POSTs or GETs
 def estimate(request, action):
-	inputs = get_request_contents(request)
-	if request.method == "POST":
-		save = True
-	else:
-		save = False
-	return JsonResponse(CALC.Estimate(action, inputs, save))
+    inputs = get_request_contents(request)
+    if request.method == "POST":
+        save = True
+    else:
+        save = False
+    return JsonResponse(CALC.Estimate(action, inputs, save))
 
 # these requests should be POSTs
 def undo(request, action):
-	inputs = get_request_contents(request)
-	if request.method == "POST":
-		return JsonResponse(CALC.Undo(action, inputs))
-	else:
-		return Json(None)
+    inputs = get_request_contents(request)
+    if request.method == "POST":
+        return JsonResponse(CALC.Undo(action, inputs))
+    else:
+        return Json(None)
 
 def reset(request):
-	inputs = get_request_contents(request)
-	return JsonResponse(CALC.Reset(inputs))
+    inputs = get_request_contents(request)
+    return JsonResponse(CALC.Reset(inputs))
 
 def importcsv(request):
-	inputs = get_request_contents(request)
-	return JsonResponse(CALC.Import(inputs))
+    inputs = get_request_contents(request)
+    return JsonResponse(CALC.Import(inputs))
 
 def exportcsv(request):
-	inputs = get_request_contents(request)
-	return JsonResponse(CALC.Export(inputs))
+    inputs = get_request_contents(request)
+    return JsonResponse(CALC.Export(inputs))
 
 def users(request):
   args = get_request_contents(request)
@@ -84,3 +84,22 @@ def users(request):
     user = CreateCalcUser(args)
     return Json(user)
   return Json(None)
+
+def getInputs(request, action):
+    inputs = ShowKeys(get_request_contents(request), action)
+    if request.method == "POST":
+        save = True
+    else:
+        save = False
+    CALC.Estimate(action, inputs, save)
+    response = JsonResponse({"Action" : action, "inputs" : inputs.inputs})
+    return response
+
+class ShowKeys(dict):
+    def __init__(self, data, action):
+        self.data = data
+        self.inputs = {}
+
+    def get(self, key, default):
+        self.inputs.update({key : default})
+        return self.data.get(key, default)

@@ -10,8 +10,6 @@ from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 
-#TODO: install middleware to catch authz violations
-#TODO: add logger
 
 class AdminHandler(RouteHandler):
 
@@ -21,167 +19,151 @@ class AdminHandler(RouteHandler):
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
-    self.add("/admins.super.add", self.add_super_admin()) 
-    self.add("/admins.super.remove", self.remove_super_admin()) 
-    self.add("/admins.super.list", self.list_super_admin()) 
-    self.add("/admins.community.add", self.add_community_admin()) 
-    self.add("/admins.community.remove", self.remove_community_admin()) 
-    self.add("/admins.community.list", self.list_community_admin()) 
-    self.add("/admins.messages.add", self.message()) 
-    self.add("/admins.messages.list", self.list_messages()) 
+    self.add("/admins.super.add", self.add_super_admin) 
+    self.add("/admins.super.remove", self.remove_super_admin) 
+    self.add("/admins.super.list", self.list_super_admin) 
+    self.add("/admins.community.add", self.add_community_admin) 
+    self.add("/admins.community.remove", self.remove_community_admin) 
+    self.add("/admins.community.list", self.list_community_admin) 
+    self.add("/admins.messages.add", self.message) 
+    self.add("/admins.messages.list", self.list_messages) 
 
 
-  def add_super_admin(self) -> function:
-    def add_super_admin_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body() 
-      validator: Validator = Validator()
-      (validator
-        .add("name", str, is_required=True)
-        .add("email", str, is_required=True)
-      )
+  def add_super_admin(self) -> MassenergizeResponse:
+    context: Context  = request.context
+    args = context.get_request_body() 
 
-      args, err = validator.verify(args)
-      if err:
-        return err
+    (self.validator
+      .add("name", str, is_required=True)
+      .add("email", str, is_required=True)
+    )
 
-      admin_info, err = self.service.add_super_admin(context, args)
-      if err:
-        return err
-      return MassenergizeResponse(data=admin_info)
-    return add_super_admin_view
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    admin_info, err = self.service.add_super_admin(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=admin_info)
 
 
-  def remove_super_admin(self) -> function:
-    def remove_super_admin_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body() 
-      validator: Validator = Validator()
-      (validator
-        .add("user_id", str, is_required=False)
-        .add("email", str, is_required=False)
-      )
-      args, err = validator.verify(args)
-      if err:
-        return err
+  def remove_super_admin(self, request) -> MassenergizeResponse: 
+    context: Context  = request.context
+    args = context.get_request_body() 
 
-      admin_info, err = self.service.remove_super_admin(context, args)
-      if err:
-        return err
-      return MassenergizeResponse(data=admin_info)
-    return remove_super_admin_view
+    (self.validator
+      .add("user_id", str)
+      .add("email", str)
+    )
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    admin_info, err = self.service.remove_super_admin(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=admin_info)
 
 
-  def list_super_admin(self) -> function:
-    def list_super_admin_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body() 
-      admin_info, err = self.service.list_super_admin(context, args)
-      if err:
-        return err
-      return MassenergizeResponse(data=admin_info)
-    return list_super_admin_view
+  def list_super_admin(self, request) -> MassenergizeResponse: 
+    context: Context  = request.context
+    args = context.get_request_body() 
+    admin_info, err = self.service.list_super_admin(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=admin_info)
 
 
-  def add_community_admin(self) -> function:
-    def add_community_admin_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body() 
-      validator: Validator = Validator()
-      (validator
-        .expect("name", str, is_required=True)
-        .expect("email", str, is_required=True)
-        .expect("community_id", str, is_required=False)
-        .expect("subdomain", str, is_required=False)
-      )
+  def add_community_admin(self, request) -> MassenergizeResponse: 
+    context: Context  = request.context
+    args = context.get_request_body()
 
-      args, err = validator.verify(args)
-      if err:
-        return err
+    (self.validator
+      .expect("name", str, is_required=True)
+      .expect("email", str, is_required=True)
+      .expect("community_id", str)
+      .expect("subdomain", str)
+    )
 
-      admin_info, err = self.service.add_community_admin(context, args)
-      if err:
-        return err
-      return MassenergizeResponse(data=admin_info)
-    return add_community_admin_view
+    args, err = validator.verify(args)
+    if err:
+      return err
+
+    admin_info, err = self.service.add_community_admin(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=admin_info)
 
 
-  def remove_community_admin(self) -> function:
-    def remove_community_admin_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body() 
-      validator: Validator = Validator()
-      (validator
-        .add("user_id", str, is_required=False)
-        .add("email", str, is_required=False)
-        .add("community_id", str, is_required=False)
-        .add("subdomain", str, is_required=False)
-      )
+  def remove_community_admin(self, request) -> MassenergizeResponse: 
+    context: Context  = request.context
+    args = context.get_request_body()
 
-      args, err = validator.verify(args)
-      if err:
-        return err
+    (self.validator
+      .add("user_id", str)
+      .add("email", str)
+      .add("community_id", str)
+      .add("subdomain", str)
+    )
 
-      admin_info, err = self.service.remove_community_admin(context, args)
-      if err:
-        return err
-      return MassenergizeResponse(data=admin_info)
-    return remove_community_admin_view
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    admin_info, err = self.service.remove_community_admin(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=admin_info)
 
 
-  def list_community_admin(self) -> function:
-    def list_community_admin_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body() 
-      validator: Validator = Validator()
-      (validator
-        .add("community_id", str, is_required=False)
-        .add("subdomain", str, is_required=False)
-      )
+  def list_community_admin(self, request) -> MassenergizeResponse: 
+    context: Context  = request.context
+    args = context.get_request_body() 
 
-      args, err = validator.verify(args)
-      if err:
-        return err
+    self.validator.add("community_id", str).add("subdomain", str)
 
-      admin_info, err = self.service.list_community_admin(context, args)
-      if err:
-        return err
+    args, err = self.validator.verify(args)
+    if err:
+      return err
 
-      return MassenergizeResponse(data=admin_info)
-    return list_community_admin_view
+    admin_info, err = self.service.list_community_admin(context, args)
+    if err:
+      return err
 
-  def message(self) -> function:
-    def message_admin_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body() 
-      validator: Validator = Validator()
-      (validator
-        .add("community_id", str, is_required=False)
-        .add("subdomain", str, is_required=False)
-      )
+    return MassenergizeResponse(data=admin_info)
 
-      args, err = validator.verify(args)
-      if err:
-        return err
 
-      admin_info, err = self.service.message_admin(context, args)
-      if err:
-        return err
-      return MassenergizeResponse(data=admin_info)
-    return message_admin_view
+  def message(self, request) -> MassenergizeResponse: 
+    context: Context  = request.context
+    args = context.get_request_body() 
+
+    (self.validator
+      .add("community_id", str)
+      .add("subdomain", str, is_required=False)
+    )
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    admin_info, err = self.service.message_admin(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=admin_info)
 
 
   def list_messages(self) -> function:
-    def list_messages_view(request) -> None: 
+    def list_messages(self, request) -> MassenergizeResponse: 
       context: Context  = request.context
       args = context.get_request_body() 
-      validator: Validator = Validator()
-      (validator
+
+      (self.validator
         .add("community_id", str, is_required=False)
         .add("subdomain", str, is_required=False)
       )
 
-      args, err = validator.verify(args)
+      args, err = self.validator.verify(args)
       if err:
         return err
 

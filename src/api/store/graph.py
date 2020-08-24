@@ -3,9 +3,9 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q, prefetch_related_objects
+from api.store.team import get_team_users
 from .utils import get_community
-import time
-import timeit
+from sentry_sdk import capture_message
 
 class GraphStore:
   def __init__(self):
@@ -18,6 +18,7 @@ class GraphStore:
         return None, InvalidResourceError()
       return graph, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -39,6 +40,7 @@ class GraphStore:
 
       return graphs, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -82,6 +84,7 @@ class GraphStore:
       return res, None
       
     except Exception as e:
+      capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(e)
@@ -104,11 +107,11 @@ class GraphStore:
         if not team.is_published:
           return None, CustomMassenergizeError("Content Not Available Yet")
   
-      members = TeamMember.objects.filter(team=team)
+      users = get_team_users(team)
 
       completed_action_rels = []
-      for member in members:
-        completed_action_rels.extend(member.user.useractionrel_set.filter(status="DONE").all())
+      for user in users:
+        completed_action_rels.extend(user.useractionrel_set.filter(status="DONE").all())
 
       categories = TagCollection.objects.get(name="Category").tag_set.order_by("name").all()
 
@@ -130,6 +133,7 @@ class GraphStore:
       return res, None
         
     except Exception as e:
+      capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(e)
@@ -141,24 +145,14 @@ class GraphStore:
     households_engaged += (RealEstateUnit.objects.filter(community=community).count())
     actions_completed = 0 if not community.goal else community.goal.attained_number_of_actions
 
-    done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE")
+    done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").prefetch_related('action__calculator_action')
     actions_completed += done_actions.count()
     carbon_footprint_reduction = 0 if not community.goal or not community.goal.attained_carbon_footprint_reduction else community.goal.attained_carbon_footprint_reduction
 
-    # this is where all the time was
-    #start = time.time()
-    #startcpu = timeit.timeit()
-
     # loop over actions completed
-    #for actionRel in done_actions:
-    #  if actionRel.action and actionRel.action.calculator_action :
-    #    carbon_footprint_reduction += actionRel.action.calculator_action.average_points
-
-    #stop = time.time()
-    #stopcpu = timeit.timeit()
-    #msg = "_get_househods_engaged: Community %s time %.3f" % (community.name, stop-start)
-    #print(msg)
-
+    for actionRel in done_actions:
+      if actionRel.action and actionRel.action.calculator_action :
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
 
     return {"community": {"id": community.id, "name": community.name}, 
             "actions_completed": actions_completed, "households_engaged": households_engaged, 
@@ -167,7 +161,7 @@ class GraphStore:
 
   def _get_all_households_engaged(self):
     households_engaged = UserProfile.objects.filter(is_deleted=False).count()
-    done_actions = UserActionRel.objects.filter(status="DONE")
+    done_actions = UserActionRel.objects.filter(status="DONE").prefetch_related('action__calculator_action')
     actions_completed = done_actions.count()
     carbon_footprint_reduction = 0
     for actionRel in done_actions:
@@ -196,6 +190,7 @@ class GraphStore:
 
         if c.id != community.id:
           res.append(self._get_households_engaged(c))
+
       return {
         "id": 1,
         "title": "Communities Impact",
@@ -203,6 +198,7 @@ class GraphStore:
         "data": res
       }, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -251,6 +247,7 @@ class GraphStore:
     
       return new_graph, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -268,7 +265,33 @@ class GraphStore:
 
       return None, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def update_data(self, context:Context, args:dict) -> (dict, MassEnergizeAPIError):
+    try:
+      value = args.get('value')
+      data_id = args.get('data_id')
+
+      data = Data.objects.filter(pk=data_id).first()
+      if data:
+        data.value = value
+        data.save()
+        return data, None
+
+
+      return None, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def delete_data(self, context:Context, data_id) -> (dict, MassEnergizeAPIError):
+    try:
+      result = Data.objects.filter(pk=data_id).delete()
+      return result, None
+    except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -278,6 +301,7 @@ class GraphStore:
       graphs.update(is_deleted=True, is_published=False)
       return graphs.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -310,6 +334,7 @@ class GraphStore:
       }, None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -334,5 +359,5 @@ class GraphStore:
       }, None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

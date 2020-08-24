@@ -3,6 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
+from sentry_sdk import capture_message
 
 class SubscriberStore:
   def __init__(self):
@@ -15,6 +16,7 @@ class SubscriberStore:
         return None, InvalidResourceError()
       return subscriber, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def list_subscribers(self, community_id) -> (list, MassEnergizeAPIError):
@@ -34,8 +36,10 @@ class SubscriberStore:
 
         #community.subscribers.add(new_subscriber)
         #community.save()
+      print(new_subscriber)
       return new_subscriber, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -55,6 +59,7 @@ class SubscriberStore:
           community.save()
       return subscriber, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -67,6 +72,7 @@ class SubscriberStore:
         return None, InvalidResourceError()
       return subscribers_to_delete.first(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def copy_subscriber(self, subscriber_id) -> (Subscriber, MassEnergizeAPIError):
@@ -82,7 +88,7 @@ class SubscriberStore:
       new_subscriber.save()
       return new_subscriber, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -112,7 +118,7 @@ class SubscriberStore:
       return subscribers, None
  
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -121,4 +127,5 @@ class SubscriberStore:
       subscribers = Subscriber.objects.filter(is_deleted=False)
       return subscribers, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

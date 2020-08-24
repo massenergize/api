@@ -3,18 +3,53 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
+from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups
 
 class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
 
+
+  def _has_access(self, context: Context, user_id=None, email=None):
+    """
+    Checks to make sure if the user has access to the user profile they want to 
+    access
+    """
+    if (not user_id and not email):
+      return False
+
+    if not context.user_is_logged_in:
+      return False
+
+    if context.user_is_admin():
+      # TODO: update this to only super admins.  Do specific checks for 
+      # community admins to make sure user is in their community first
+      return True
+    
+    if user_id and (context.user_id == user_id):
+      return True 
+    
+    if email and (context.user_email == email):
+      return True 
+    
+    return False 
+
   def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      email = args.get('email', None)
+      user_id = args.get('user_id', None)
+
+      # if not self._has_access(context, user_id, email):
+      #   return None, CustomMassenergizeError("permission_denied")
+
       user = get_user_or_die(context, args)
       return user, None
+
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
+
 
   def remove_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -24,6 +59,7 @@ class UserStore:
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
 
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def add_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -46,6 +82,7 @@ class UserStore:
 
       return new_unit, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def edit_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -73,6 +110,7 @@ class UserStore:
 
       return new_unit, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def list_households(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -81,6 +119,7 @@ class UserStore:
 
       return user.real_estate_units.all(), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
   def list_users(self, community_id) -> (list, MassEnergizeAPIError):
@@ -97,6 +136,7 @@ class UserStore:
         return []
       return EventAttendee.objects.filter(attendee=user), None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -142,32 +182,49 @@ class UserStore:
       }
       return res, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def update_user(self, user_id, args) -> (dict, MassEnergizeAPIError):
-    user = UserProfile.objects.filter(id=user_id)
-    if not user:
-      return None, InvalidResourceError()
-    user.update(**args)
-    return user, None
+  def update_user(self, context: Context, user_id, args) -> (dict, MassEnergizeAPIError):
+    try:
+      email = args.get('email', None)
+      user_id = args.get('user_id', None)
 
+      if not self._has_access(context, user_id, email):
+        return None, CustomMassenergizeError("permission_denied")
+
+      if context.user_is_logged_in and ((context.user_id == user_id) or (context.user_is_admin())):
+        user = UserProfile.objects.filter(id=user_id)
+        if not user:
+          return None, InvalidResourceError()
+        user.update(**args)
+        return user, None
+      else:
+        return None, CustomMassenergizeError('permission_denied')
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def delete_user(self, context: Context, user_id) -> (dict, MassEnergizeAPIError):
-    if not user_id:
-      return None, InvalidResourceError()
+    try:
+      if not user_id:
+        return None, InvalidResourceError()
 
-    #check to make sure the one deleting is an admin
-    if not context.user_is_admin():
+      #check to make sure the one deleting is an admin
+      if not context.user_is_admin():
 
-      # if they are not an admin make sure they can only delete themselves
-      if not context.user_id != user_id:
-        return None, NotAuthorizedError()
+        # if they are not an admin make sure they can only delete themselves
+        if not context.user_id != user_id:
+          return None, NotAuthorizedError()
 
-    users = UserProfile.objects.filter(id=user_id)
-    users.update(is_deleted=True)
-    return users.first(), None
+      users = UserProfile.objects.filter(id=user_id)
+      users.update(is_deleted=True)
+      return users.first(), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def list_users_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
@@ -196,7 +253,7 @@ class UserStore:
       users = remove_dups(users)
       return users, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -207,7 +264,7 @@ class UserStore:
       users = UserProfile.objects.filter(is_deleted=False)
       return users, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -219,7 +276,7 @@ class UserStore:
       vendor_id = args.get("vendor_id", None)
     
       if not user:
-        return None, CustomMassenergizeError("Sign in required / provide user_id or user_email")
+        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
 
       action: Action = Action.objects.get(id=action_id)
       if not action:
@@ -256,6 +313,7 @@ class UserStore:
 
       return new_user_action_rel, None
     except Exception as e:
+      capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
       return None, CustomMassenergizeError(str(e))
@@ -275,7 +333,7 @@ class UserStore:
         user = UserProfile.objects.get(email=user_email)
 
       if not user:
-        return None, CustomMassenergizeError("Sign in required / Provide user_id")
+        return None, CustomMassenergizeError("sign_in_required / Provide user_id")
 
       action = Action.objects.get(id=action_id)
       if not action:
@@ -315,6 +373,7 @@ class UserStore:
 
       return new_user_action_rel, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -322,7 +381,7 @@ class UserStore:
     try:
 
       if not context.user_is_logged_in:
-        return [], CustomMassenergizeError("Sign in required")
+        return [], CustomMassenergizeError("sign_in_required")
       
       user = get_user_or_die(context, args)
       household_id = args.get("household_id", None)
@@ -334,6 +393,7 @@ class UserStore:
 
       return todo, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -341,7 +401,7 @@ class UserStore:
     try:
 
       if not context.user_is_logged_in:
-        return [], CustomMassenergizeError("Sign in required")
+        return [], CustomMassenergizeError("sign_in_required")
       
       user = get_user_or_die(context, args)
       household_id = args.get("household_id", None)
@@ -353,4 +413,19 @@ class UserStore:
       
       return todo, None
     except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(str(e))
+
+
+  def remove_user_action(self, context: Context, user_action_id) -> (dict, MassEnergizeAPIError):
+    try:
+      if not context.user_is_logged_in:
+        return [], CustomMassenergizeError("sign_in_required")
+      
+      user_action = UserActionRel.objects.get(pk=user_action_id)
+      result = user_action.delete() 
+      
+      return result, None
+    except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

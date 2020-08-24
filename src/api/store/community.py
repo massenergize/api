@@ -1,10 +1,11 @@
-from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die
 import random 
+from sentry_sdk import capture_message
 
 class CommunityStore:
   def __init__(self):
@@ -28,6 +29,7 @@ class CommunityStore:
 
       return community, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -49,7 +51,7 @@ class CommunityStore:
       })
       return user, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
   def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -70,13 +72,13 @@ class CommunityStore:
       })
       return user, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
   def list_communities(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
-      if context.is_dev:
+      if context.is_sandbox:
         communities = Community.objects.filter(is_deleted=False, is_approved=True).exclude(subdomain='template')
       else:
         communities = Community.objects.filter(is_deleted=False, is_approved=True, is_published=True).exclude(subdomain='template')
@@ -85,6 +87,7 @@ class CommunityStore:
         return [], None
       return communities, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -101,13 +104,11 @@ class CommunityStore:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
         new_community.logo = cLogo
-      
 
       #create a goal for this community
       community_goal = Goal.objects.create(name=f"{new_community.name}-Goal")
       new_community.goal = community_goal
       new_community.save()
-
 
       #now create all the pages
       aboutUsPage = AboutUsPageSettings.objects.filter(is_template=True).first()
@@ -161,6 +162,16 @@ class CommunityStore:
         impactPage.is_template = False
         impactPage.save()
 
+      # by adding TeamsPageSettings - since this doesn't exist for all communities, will it cause a problem? 
+      # Create it when TeamsPageSettings in admin portal
+      teamsPage = TeamsPageSettings.objects.filter(is_template=True).first()
+      if teamsPage:
+        teamsPage.pk = None 
+        teamsPage.title = f"Teams in this community"
+        teamsPage.community = new_community
+        teamsPage.is_template = False
+        teamsPage.save()
+
       comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=f"{new_community.name}-Admin-Group", community=new_community)
       comm_admin.save()
 
@@ -194,6 +205,7 @@ class CommunityStore:
       
       return new_community, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -221,6 +233,7 @@ class CommunityStore:
 
       return new_community, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -228,7 +241,6 @@ class CommunityStore:
     try:
       communities = Community.objects.filter(**args)
       if len(communities) > 1:
-        print('here')
         return None, CustomMassenergizeError("You cannot delete more than one community at once")
       for c in communities:
         if "template" in c.name.lower():
@@ -238,6 +250,7 @@ class CommunityStore:
       # communities.update(is_deleted=True)
       return communities, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -255,7 +268,7 @@ class CommunityStore:
         return [], None
 
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -267,6 +280,7 @@ class CommunityStore:
       communities = Community.objects.filter(is_deleted=False)
       return communities, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
 
@@ -277,5 +291,5 @@ class CommunityStore:
       graphs = Graph.objects.filter(is_deleted=False, community__id=community_id)
       return graphs, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

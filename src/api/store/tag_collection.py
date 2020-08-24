@@ -2,6 +2,7 @@ from database.models import TagCollection, UserProfile, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from sentry_sdk import capture_message
 
 class TagCollectionStore:
   def __init__(self):
@@ -17,6 +18,7 @@ class TagCollectionStore:
         return None, InvalidResourceError()
       return tag_collection, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -25,6 +27,7 @@ class TagCollectionStore:
       tag_collections = TagCollection.objects.filter(is_deleted=False)
       return tag_collections, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -43,6 +46,7 @@ class TagCollectionStore:
 
       return new_tag_collection, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -101,6 +105,7 @@ class TagCollectionStore:
       tag_collection.save()
       return tag_collection, None
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -111,6 +116,7 @@ class TagCollectionStore:
         return None, InvalidResourceError()
       tag_collections.delete()
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -123,5 +129,5 @@ class TagCollectionStore:
       tag_collections = TagCollection.objects.all()
       return tag_collections, None
     except Exception as e:
-      print(e)
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

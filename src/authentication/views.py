@@ -9,13 +9,16 @@ from _main_.utils.common import get_request_contents
 from database.models import UserProfile
 from _main_.settings import SECRET_KEY
 import json, jwt
+from sentry_sdk import capture_message
 
 def login(request):
   # This does the same work as verify
   return verify(request)
 
 def logout(request):
-  return Json(None) 
+  response = MassenergizeResponse(data={"success": True})
+  response.delete_cookie("token")
+  return response
 
 def ping(request):
   """
@@ -41,6 +44,7 @@ def who_am_i(request):
     return MassenergizeResponse(user.full_json())
 
   except Exception as e:
+    capture_message(str(e), level="error")
     return CustomMassenergizeError(e)
 
 
@@ -66,10 +70,13 @@ def verify(request):
       }
 
       massenergize_jwt_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256').decode('utf-8')
-      return MassenergizeResponse(data={"idToken": str(massenergize_jwt_token)})
+      response = MassenergizeResponse(data=payload)
+      response.set_cookie("token", str(massenergize_jwt_token))
+      return response
 
     else:
       return CustomMassenergizeError("Invalid Auth")
 
   except Exception as e:
+    capture_message(str(e), level="error")
     return CustomMassenergizeError(e)
