@@ -30,8 +30,8 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.leave", self.leave)
 
     #admin routes
-    self.add("/communities.listForCommunityAdmin", self.community_admin_list())
-    self.add("/communities.listForSuperAdmin", self.super_admin_list())
+    self.add("/communities.listForCommunityAdmin", self.community_admin_list)
+    self.add("/communities.listForSuperAdmin", self.super_admin_list)
 
 
   def info(self, request):
