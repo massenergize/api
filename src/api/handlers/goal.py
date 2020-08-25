@@ -14,7 +14,7 @@ from api.decorators import admins_only, super_admins_only, login_required
 
 class GoalHandler(RouteHandler):
 
-  def __init__(self, request):
+  def __init__(self):
     super().__init__()
     self.service = GoalService()
     self.registerRoutes()

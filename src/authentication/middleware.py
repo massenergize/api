@@ -47,7 +47,6 @@ class MassenergizeJWTAuthMiddleware:
       return request.path
 
   def process_view(self, request, view_func, *view_args, **view_kwargs):
-
     try:
       # add a context: (this will contain all info about 
       # the request body, this user's session info, etc)
@@ -64,6 +63,7 @@ class MassenergizeJWTAuthMiddleware:
       if token:
         decoded_token, err = self._get_decoded_token(token)
         if err:
+          err.delete_cookie('token')
           return err
 
         # at this point the user has an active session

@@ -12,7 +12,7 @@ from api.decorators import admins_only, super_admins_only, login_required
 
 class GraphHandler(RouteHandler):
 
-  def __init__(self, request):
+  def __init__(self):
     super().__init__()
     self.service = GraphService()
     self.registerRoutes()

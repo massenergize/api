@@ -27,8 +27,8 @@ class MessageHandler(RouteHandler):
     self.add("/messages.delete", self.delete)
     self.add("/messages.listForCommunityAdmin", self.community_admin_list)
     self.add("/messages.listTeamAdminMessages", self.team_admin_list)
-    self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin())
-    self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins())
+    self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin)
+    self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins)
 
   @admins_only
   def info(self, request):
