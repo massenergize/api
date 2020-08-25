@@ -13,6 +13,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from api.decorators import admins_only, super_admins_only, login_required
 
 class MessageHandler(RouteHandler):
 
@@ -22,76 +23,67 @@ class MessageHandler(RouteHandler):
     self.registerRoutes()
 
   def registerRoutes(self) -> None:
-    self.add("/messages.info", self.info()) 
-    self.add("/messages.delete", self.delete()) 
-    self.add("/messages.listForCommunityAdmin", self.community_admin_list()) 
-    self.add("/messages.listTeamAdminMessages", self.team_admin_list()) 
+    self.add("/messages.info", self.info)
+    self.add("/messages.delete", self.delete)
+    self.add("/messages.listForCommunityAdmin", self.community_admin_list)
+    self.add("/messages.listTeamAdminMessages", self.team_admin_list)
     self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin())
     self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins())
 
-  def info(self) -> function:
-    def message_info_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body()
-      args = rename_field(args, 'message_id', 'id')
-      message_info, err = self.service.get_message_info(context, args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=message_info)
-    return message_info_view
+  @admins_only
+  def info(self, request):
+    context: Context  = request.context
+    args = context.get_request_body()
+    args = rename_field(args, 'message_id', 'id')
+    message_info, err = self.service.get_message_info(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=message_info)
 
+  @admins_only
+  def forward_to_team_admins(self, request):
+    context: Context  = request.context
+    args = context.get_request_body()
+    message_info, err = self.service.forward_to_team_admins(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=message_info)
 
-  def forward_to_team_admins(self) -> function:
-    def forward_to_team_admins_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body()
-      message_info, err = self.service.forward_to_team_admins(context, args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=message_info)
-    return forward_to_team_admins_view
+  @admins_only
+  def reply_from_community_admin(self, request):
+    context: Context  = request.context
+    args = context.get_request_body()
+    message_info, err = self.service.reply_from_community_admin(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=message_info)
 
-  def reply_from_community_admin(self) -> function:
-    def reply_from_community_admin_view(request) -> None: 
-      context: Context  = request.context
-      args = context.get_request_body()
-      message_info, err = self.service.reply_from_community_admin(context, args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=message_info)
-    return reply_from_community_admin_view
+  @admins_only
+  def delete(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    args = rename_field(args, 'message_id', 'id')
+    message_id = args.pop('id', None)
+    if not message_id:
+      return CustomMassenergizeError("Please Provide Message Id")
+    message_info, err = self.service.delete_message(message_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=message_info)
 
+  @admins_only
+  def team_admin_list(self, request):
+    context: Context = request.context
+    messages, err = self.service.list_team_admin_messages_for_community_admin(context)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=messages)
 
-  def delete(self) -> function:
-    def delete_message_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      args = rename_field(args, 'message_id', 'id')
-      message_id = args.pop('id', None)
-      if not message_id:
-        return CustomMassenergizeError("Please Provide Message Id")
-      message_info, err = self.service.delete_message(message_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=message_info)
-    return delete_message_view
-
-
-  def team_admin_list(self) -> function:
-    def team_admin_list_view(request) -> None: 
-      context: Context = request.context
-      messages, err = self.service.list_team_admin_messages_for_community_admin(context)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=messages)
-    return team_admin_list_view
-
-  def community_admin_list(self) -> function:
-    def community_admin_list_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=messages)
-    return community_admin_list_view
+  @admins_only
+  def community_admin_list(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=messages)

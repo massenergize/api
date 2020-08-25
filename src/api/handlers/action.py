@@ -32,7 +32,7 @@ class ActionHandler(RouteHandler):
     self.add("/actions.listForSuperAdmin", self.super_admin_list)
 
 
-  def info(self, request) -> MassenergizeResponse: 
+  def info(self, request): 
     context: Context = request.context
     args: dict = context.args
     
@@ -51,7 +51,7 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
-  def create(self, request) -> MassenergizeResponse: 
+  def create(self, request): 
     context: Context = request.context
     args = context.get_request_body() 
     (self.validator
@@ -76,7 +76,7 @@ class ActionHandler(RouteHandler):
     return MassenergizeResponse(data=action_info)
 
 
-  def list(self, request) -> MassenergizeResponse: 
+  def list(self, request): 
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
@@ -88,7 +88,7 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
-  def update(self, request) -> MassenergizeResponse: 
+  def update(self, request): 
     context: Context = request.context
     args = context.get_request_body() 
     (self.validator
@@ -115,7 +115,7 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
-  def copy(self, request) -> MassenergizeResponse: 
+  def copy(self, request): 
     context: Context = request.context
     args: dict = context.args
     action_id = args.pop('action_id', None)
@@ -126,7 +126,7 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
-  def delete(self, request) -> MassenergizeResponse: 
+  def delete(self, request): 
     context: Context = request.context
     args: dict = context.args
     action_id = args.pop('action_id', None)
@@ -137,7 +137,7 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
-  def community_admin_list(self, request) -> MassenergizeResponse: 
+  def community_admin_list(self, request): 
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop("community_id", None)
@@ -148,7 +148,7 @@ class ActionHandler(RouteHandler):
 
 
   @super_admins_only
-  def super_admin_list(self, request) -> MassenergizeResponse: 
+  def super_admin_list(self, request): 
     context: Context = request.context
     args: dict = context.args
     actions, err = self.service.list_actions_for_super_admin(context)

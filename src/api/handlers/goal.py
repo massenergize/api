@@ -8,156 +8,139 @@ from types import FunctionType as function
 from _main_.utils.utils import get_models_and_field_types
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from api.decorators import admins_only, super_admins_only, login_required
 
-#TODO: install middleware to catch authz violations
-#TODO: add logger
+
 
 class GoalHandler(RouteHandler):
 
-  def __init__(self):
+  def __init__(self, request):
     super().__init__()
     self.service = GoalService()
     self.registerRoutes()
 
-  def registerRoutes(self) -> None:
-    self.add("/goals.info", self.info()) 
-    self.add("/goals.create", self.create())
-    self.add("/goals.add", self.create())
-    self.add("/goals.list", self.list())
-    self.add("/goals.update", self.update())
-    self.add("/goals.delete", self.delete())
-    self.add("/goals.copy", self.copy())
-    self.add("/goals.remove", self.delete())
-    self.add("/goals.increase", self.increase())
-    self.add("/goals.decrease", self.decrease())
+  def registerRoutes(self):
+    self.add("/goals.info", self.info) 
+    self.add("/goals.create", self.create)
+    self.add("/goals.add", self.create)
+    self.add("/goals.list", self.list)
+    self.add("/goals.update", self.update)
+    self.add("/goals.delete", self.delete)
+    self.add("/goals.copy", self.copy)
+    self.add("/goals.remove", self.delete)
+    self.add("/goals.increase", self.increase)
+    self.add("/goals.decrease", self.decrease)
 
     #admin routes
-    self.add("/goals.listForCommunityAdmin", self.community_admin_list())
-    self.add("/goals.listForSuperAdmin", self.super_admin_list())
+    self.add("/goals.listForCommunityAdmin", self.community_admin_list)
+    self.add("/goals.listForSuperAdmin", self.super_admin_list)
+
+  @login_required
+  def info(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    goal_id = args.get('goal_id')
+    goal_info, err = self.service.get_goal_info(goal_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goal_info)
 
 
-  def info(self) -> function:
-    def goal_info_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      
-      goal_id = args.get('goal_id')
-      goal_info, err = self.service.get_goal_info(goal_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goal_info)
-    return goal_info_view
+  @login_required
+  def create(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    team_id = args.pop('team_id', None) 
+    community_id = args.pop('community_id', None)
+    user_id = args.pop('user_id', None)
+    goal_info, err = self.service.create_goal(community_id, team_id, user_id, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goal_info)
 
 
-  def create(self) -> function:
-    def create_goal_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      team_id = args.pop('team_id', None) 
-      community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      goal_info, err = self.service.create_goal(community_id, team_id, user_id, args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goal_info)
-    return create_goal_view
+  @login_required
+  def list(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    team_id = args.pop('team_id', None) 
+    community_id = args.pop("community_id", None)
+    subdomain = args.pop("subdomain", None)
+    user_id = args.pop('user_id', None)
+    goal_info, err = self.service.list_goals(community_id, subdomain, team_id, user_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goal_info)
+
+  @login_required
+  def update(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    goal_id = args.pop('goal_id', None)
+    goal_info, err = self.service.update_goal(goal_id, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goal_info)
+
+  @login_required
+  def delete(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    goal_id = args.pop('goal_id', None)
+    goal_info, err = self.service.delete_goal(goal_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goal_info)
+
+  @login_required
+  def copy(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    goal_id = args.pop('goal_id', None)
+    goal_info, err = self.service.copy_goal(goal_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goal_info)
+
+  @admins_only
+  def community_admin_list(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop("community_id", None)
+    goals, err = self.service.list_goals_for_community_admin(context, community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goals)
 
 
-  def list(self) -> function:
-    def list_goal_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      team_id = args.pop('team_id', None) 
-      community_id = args.pop("community_id", None)
-      subdomain = args.pop("subdomain", None)
-      user_id = args.pop('user_id', None)
-      goal_info, err = self.service.list_goals(community_id, subdomain, team_id, user_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goal_info)
-    return list_goal_view
+  @super_admins_only
+  def super_admin_list(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    goals, err = self.service.list_goals_for_super_admin()
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goals)
 
+  @login_required
+  def increase(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    goal_id = args.pop('goal_id', None)
+    field_name = args.pop('field_name', None)
+    goal, err = self.service.increase_value(goal_id, field_name)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goal)
 
-  def update(self) -> function:
-    def update_goal_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      goal_id = args.pop('goal_id', None)
-      goal_info, err = self.service.update_goal(goal_id, args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goal_info)
-    return update_goal_view
-
-
-  def delete(self) -> function:
-    def delete_goal_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      goal_id = args.pop('goal_id', None)
-      goal_info, err = self.service.delete_goal(goal_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goal_info)
-    return delete_goal_view
-
-
-  def copy(self) -> function:
-    def copy_goal_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      goal_id = args.pop('goal_id', None)
-      goal_info, err = self.service.copy_goal(goal_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goal_info)
-    return copy_goal_view
-
-
-  def community_admin_list(self) -> function:
-    def community_admin_list_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      community_id = args.pop("community_id", None)
-      goals, err = self.service.list_goals_for_community_admin(context, community_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goals)
-    return community_admin_list_view
-
-
-  def super_admin_list(self) -> function:
-    def super_admin_list_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      goals, err = self.service.list_goals_for_super_admin()
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goals)
-    return super_admin_list_view
-
-
-  def increase(self) -> function:
-    def increase_field_value(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      goal_id = args.pop('goal_id', None)
-      field_name = args.pop('field_name', None)
-      goal, err = self.service.increase_value(goal_id, field_name)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goal)
-    return increase_field_value
-
-
-  def decrease(self) -> function:
-    def decrease_field_value(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      goal_id = args.pop('goal_id', None)
-      field_name = args.pop('field_name', None)
-      goal, err = self.service.decrease_value(goal_id, field_name)      
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=goal)
-    return decrease_field_value
+  @login_required
+  def decrease(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    goal_id = args.pop('goal_id', None)
+    field_name = args.pop('field_name', None)
+    goal, err = self.service.decrease_value(goal_id, field_name)      
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=goal)
