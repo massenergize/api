@@ -9,8 +9,7 @@ from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 
 
-#TODO: install middleware to catch authz violations
-#TODO: add logger
+
 
 class DonatePageSettingsHandler(RouteHandler):
 
@@ -19,99 +18,85 @@ class DonatePageSettingsHandler(RouteHandler):
     self.service = DonatePageSettingsService()
     self.registerRoutes()
 
-  def registerRoutes(self) -> None:
-    self.add("/donate_page_settings.info", self.info()) 
-    self.add("/donate_page_settings.create", self.create())
-    self.add("/donate_page_settings.add", self.create())
-    self.add("/donate_page_settings.list", self.list())
-    self.add("/donate_page_settings.update", self.update())
-    self.add("/donate_page_settings.delete", self.delete())
-    self.add("/donate_page_settings.remove", self.delete())
+  def registerRoutes(self):
+    self.add("/donate_page_settings.info", self.info) 
+    self.add("/donate_page_settings.create", self.create)
+    self.add("/donate_page_settings.add", self.create)
+    self.add("/donate_page_settings.list", self.list)
+    self.add("/donate_page_settings.update", self.update)
+    self.add("/donate_page_settings.delete", self.delete)
+    self.add("/donate_page_settings.remove", self.delete)
 
     #admin routes
-    self.add("/donate_page_settings.listForCommunityAdmin", self.community_admin_list())
-    self.add("/donate_page_settings.listForSuperAdmin", self.super_admin_list())
+    self.add("/donate_page_settings.listForCommunityAdmin", self.community_admin_list)
+    self.add("/donate_page_settings.listForSuperAdmin", self.super_admin_list)
 
 
-  def info(self) -> function:
-    def donate_page_setting_info_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      args = rename_field(args, 'community_id', 'community__id')
-      args = rename_field(args, 'subdomain', 'community__subdomain')
-      args = rename_field(args, 'donate_page_id', 'id')
-      donate_page_setting_info, err = self.service.get_donate_page_setting_info(args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=donate_page_setting_info)
-    return donate_page_setting_info_view
+  def info(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    args = rename_field(args, 'community_id', 'community__id')
+    args = rename_field(args, 'subdomain', 'community__subdomain')
+    args = rename_field(args, 'donate_page_id', 'id')
+    donate_page_setting_info, err = self.service.get_donate_page_setting_info(args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=donate_page_setting_info)
 
 
-  def create(self) -> function:
-    def create_donate_page_setting_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      donate_page_setting_info, err = self.service.create_donate_page_setting(args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=donate_page_setting_info)
-    return create_donate_page_setting_view
+  def create(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    donate_page_setting_info, err = self.service.create_donate_page_setting(args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=donate_page_setting_info)
 
 
-  def list(self) -> function:
-    def list_donate_page_setting_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      community_id = args.pop('community_id', None)
-      user_id = args.pop('user_id', None)
-      donate_page_setting_info, err = self.service.list_donate_page_settings(community_id, user_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=donate_page_setting_info)
-    return list_donate_page_setting_view
+  def list(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    user_id = args.pop('user_id', None)
+    donate_page_setting_info, err = self.service.list_donate_page_settings(community_id, user_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=donate_page_setting_info)
 
 
-  def update(self) -> function:
-    def update_donate_page_setting_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      donate_page_setting_info, err = self.service.update_donate_page_setting(args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=donate_page_setting_info)
-    return update_donate_page_setting_view
+  def update(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    donate_page_setting_info, err = self.service.update_donate_page_setting(args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=donate_page_setting_info)
 
 
-  def delete(self) -> function:
-    def delete_donate_page_setting_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      donate_page_setting_id = args.get("id", None)
-      donate_page_setting_info, err = self.service.delete_donate_page_setting(args.get("id", None))
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=donate_page_setting_info)
-    return delete_donate_page_setting_view
+  def delete(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    donate_page_setting_id = args.get("id", None)
+    donate_page_setting_info, err = self.service.delete_donate_page_setting(args.get("id", None))
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=donate_page_setting_info)
 
 
-  def community_admin_list(self) -> function:
-    def community_admin_list_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      community_id = args.pop("community_id", None)
-      donate_page_settings, err = self.service.list_donate_page_settings_for_community_admin(community_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=donate_page_settings)
-    return community_admin_list_view
+  def community_admin_list(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop("community_id", None)
+    donate_page_settings, err = self.service.list_donate_page_settings_for_community_admin(community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=donate_page_settings)
 
 
-  def super_admin_list(self) -> function:
-    def super_admin_list_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      donate_page_settings, err = self.service.list_donate_page_settings_for_super_admin()
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return MassenergizeResponse(data=donate_page_settings)
-    return super_admin_list_view
+  def super_admin_list(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    donate_page_settings, err = self.service.list_donate_page_settings_for_super_admin()
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=donate_page_settings)
