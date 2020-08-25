@@ -29,7 +29,7 @@ class AdminHandler(RouteHandler):
     self.add("/admins.messages.list", self.list_messages) 
 
 
-  def add_super_admin(self) -> MassenergizeResponse:
+  def add_super_admin(self, request):
     context: Context  = request.context
     args = context.get_request_body() 
 
@@ -48,7 +48,7 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  def remove_super_admin(self, request) -> MassenergizeResponse: 
+  def remove_super_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
 
@@ -66,7 +66,7 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  def list_super_admin(self, request) -> MassenergizeResponse: 
+  def list_super_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
     admin_info, err = self.service.list_super_admin(context, args)
@@ -75,7 +75,7 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  def add_community_admin(self, request) -> MassenergizeResponse: 
+  def add_community_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body()
 
@@ -96,7 +96,7 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  def remove_community_admin(self, request) -> MassenergizeResponse: 
+  def remove_community_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body()
 
@@ -117,7 +117,7 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  def list_community_admin(self, request) -> MassenergizeResponse: 
+  def list_community_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
 
@@ -134,7 +134,7 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  def message(self, request) -> MassenergizeResponse: 
+  def message(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
 
@@ -153,8 +153,8 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  def list_messages(self) -> function:
-    def list_messages(self, request) -> MassenergizeResponse: 
+  def list_messages(self):
+    def list_messages(self, request): 
       context: Context  = request.context
       args = context.get_request_body() 
 

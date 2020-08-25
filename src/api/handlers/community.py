@@ -34,7 +34,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.listForSuperAdmin", self.super_admin_list())
 
 
-  def info(self, request) -> function:
+  def info(self, request):
     context: Context = request.context
     args: dict = context.args
     args = rename_field(args, 'community_id', 'id')
@@ -144,7 +144,7 @@ class CommunityHandler(RouteHandler):
 
 
   @admins_only
-  def delete(self, request) -> function:
+  def delete(self, request):
     context: Context = request.context
     args: dict = context.args
     args = rename_field(args, 'community_id', 'id')
@@ -155,7 +155,7 @@ class CommunityHandler(RouteHandler):
 
 
   @admins_only
-  def community_admin_list(self, request) -> function:
+  def community_admin_list(self, request):
     context: Context  = request.context
     args = context.get_request_body()
     communities, err = self.service.list_communities_for_community_admin(context)
