@@ -7,7 +7,7 @@ from _main_.settings import SECRET_KEY
 from firebase_admin import auth
 import json, jwt
 from sentry_sdk import capture_message
-from api.urls import ROUTE_HANDLERS
+#from api.urls import ROUTE_HANDLERS
 
 class MassenergizeJWTAuthMiddleware:
 

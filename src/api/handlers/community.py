@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to communities"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, parse_location, parse_bool, check_length, rename_field
+from _main_.utils.common import parse_location, parse_bool, check_length, rename_field
 from api.services.community import CommunityService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -30,8 +30,8 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.leave", self.leave)
 
     #admin routes
-    self.add("/communities.listForCommunityAdmin", self.community_admin_list())
-    self.add("/communities.listForSuperAdmin", self.super_admin_list())
+    self.add("/communities.listForCommunityAdmin", self.community_admin_list)
+    self.add("/communities.listForSuperAdmin", self.super_admin_list)
 
 
   def info(self, request):

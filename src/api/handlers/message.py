@@ -5,7 +5,7 @@
 """Handler file for all routes pertaining to messages"""
 
 from _main_.utils.route_handler import RouteHandler
-import _main_.utils.common as utils
+#import _main_.utils.common as utils
 from _main_.utils.common import get_request_contents, rename_field, parse_bool, parse_location, parse_list, validate_fields, parse_string
 from api.services.message import MessageService
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -27,8 +27,8 @@ class MessageHandler(RouteHandler):
     self.add("/messages.delete", self.delete)
     self.add("/messages.listForCommunityAdmin", self.community_admin_list)
     self.add("/messages.listTeamAdminMessages", self.team_admin_list)
-    self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin())
-    self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins())
+    self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin)
+    self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins)
 
   @admins_only
   def info(self, request):

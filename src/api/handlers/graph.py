@@ -1,10 +1,10 @@
 """Handler file for all routes pertaining to graphs"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, parse_list, parse_bool, check_length, rename_field, parse_int
+from _main_.utils.common import parse_list, parse_bool, check_length, rename_field, parse_int
 from api.services.graph import GraphService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
+#from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
@@ -12,7 +12,7 @@ from api.decorators import admins_only, super_admins_only, login_required
 
 class GraphHandler(RouteHandler):
 
-  def __init__(self, request):
+  def __init__(self):
     super().__init__()
     self.service = GraphService()
     self.registerRoutes()
@@ -74,7 +74,8 @@ class GraphHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    v: Validator = Validator()
+    #v: Validator = Validator()
+    v = self.validator
     v.expect("community_id", str, False)
     v.expect("subdomain", str, False)
     v.rename("id", "community_id")
@@ -93,7 +94,7 @@ class GraphHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    v: Validator = Validator()
+    v = self.validator
     v.expect("community_id", str, False)
     v.expect("subdomain", str, False)
     v.rename("id", "community_id")
@@ -111,7 +112,7 @@ class GraphHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    v: Validator = Validator()
+    v = self.validator
     v.expect("team_id", str, False)
     args, err = v.verify(args, strict=True)
     if err:
@@ -128,7 +129,7 @@ class GraphHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    v: Validator = Validator()
+    v = self.validator
     v.expect("community_id", str, False)
     v.expect("subdomain", str, False)
     v.rename("id", "community_id")

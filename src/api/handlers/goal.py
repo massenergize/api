@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to goals"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents
+#from _main_.utils.common import get_request_contents
 from api.services.goal import GoalService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -14,7 +14,7 @@ from api.decorators import admins_only, super_admins_only, login_required
 
 class GoalHandler(RouteHandler):
 
-  def __init__(self, request):
+  def __init__(self):
     super().__init__()
     self.service = GoalService()
     self.registerRoutes()
