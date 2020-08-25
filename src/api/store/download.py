@@ -1,4 +1,4 @@
-from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPIError, InvalidResourceError
+from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
