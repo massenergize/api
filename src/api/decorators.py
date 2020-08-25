@@ -16,7 +16,7 @@ def login_required(function):
   def wrap(handler, request, *args, **kwargs):
     context: Context = request.context
     if context.user_is_logged_in:
-      return function(request, *args, **kwargs)
+      return function(handler, request, *args, **kwargs)
     else:
       raise PermissionDenied
 
@@ -33,7 +33,7 @@ def admins_only(function):
   def wrap(handler, request, *args, **kwargs):
     context: Context = request.context
     if context.user_is_logged_in and context.user_is_admin():
-      return function(request, *args, **kwargs)
+      return function(handler, request, *args, **kwargs)
     else:
       raise PermissionDenied
   wrap.__doc__ = function.__doc__
@@ -49,7 +49,7 @@ def super_admins_only(function):
   def wrap(handler, request, *args, **kwargs):
     context: Context = request.context
     if context.user_is_logged_in and context.user_is_super_admin:
-      return function(request, *args, **kwargs)
+      return function(handler, request, *args, **kwargs)
     else:
       raise PermissionDenied
 
