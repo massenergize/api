@@ -15,8 +15,6 @@ class DownloadStore:
 
     self.action_categories = TagCollection.objects.get(name="Category").tag_set.all()
 
-    # TODO: add state reported actions as rows based on category
-    # i.e. state reported data, activism, ...
     self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon',
     'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
 
@@ -128,6 +126,17 @@ class DownloadStore:
     return self._get_cells_from_dict(self.action_info_columns, action_cells)
 
 
+  def _get_reported_data_rows(self, community):
+    rows = []
+    for action_category in self.action_categories:
+      data = Data.objects.filter(tag=action_category, community=community).first()
+      if not data:
+        continue
+      rows.append(self._get_cells_from_dict({'title': 'STATE-REPORTED DATA',
+       'category' : action_category, 'done_count': data}))
+    return rows
+
+
   def _get_team_info_cells(self, team):
     members = get_team_users(team)
 
@@ -164,20 +173,16 @@ class DownloadStore:
       cells.append(str(UserActionRel.objects.filter(action=action, user__in=team_users, status='DONE').count()))
     return cells
 
-  # TODO: return a tuple in which the second value is an int for the reported households
   def _get_community_reported_data(self, community):
     community = Community.objects.get(pk=community.id)
     if not community:
       return None
-    
     ret = {}
-
     for action_category in self.action_categories:
       data = Data.objects.filter(tag=action_category, community=community).first()
       if not data:
         continue
       ret[action_category] = data.reported_value
-
     return ret
 
 
@@ -220,9 +225,10 @@ class DownloadStore:
     }
     reported_actions = self._get_community_reported_data(community)
     community_cells.update(reported_actions)
-    community_cells['total_actions_done'] = str(actions_done + sum(value for action in reported_actions.keys()))
-    community_cells['total_households_count'] = 0 # TODO
+    community_cells['total_actions_done'] = str(actions_done + sum(value for value in reported_actions.keys()))
+    community_cells['total_households_count'] = 0 # TODO: what is this, exactly?
 
+    #TODO: remove when things are working
     print(community_cells)
 
     return self._get_cells_from_dict(self.community_info_columns, community_cells)
@@ -316,6 +322,11 @@ class DownloadStore:
       data.append([community] \
         + self._get_action_info_cells(action))
 
+    for community in Community.objects.filter(is_deleted=False):
+      community_reported_rows = self._get_reported_data_rows(community)
+      for row in community_reported_rows:
+        data.append([community.name] + row)
+
     data = sorted(data, key=lambda row : row[0]) # sort by community
     data.insert(0, columns) # insert the column names
 
@@ -331,6 +342,11 @@ class DownloadStore:
 
     for action in actions:
       data.append(self._get_action_info_cells(action))
+
+    community = Community.objects.filter(community__id=community_id).first()
+    community_reported_rows = self._get_reported_data_rows(community)
+    for row in community_reported_rows:
+      data.append(row)
 
     return data
 
