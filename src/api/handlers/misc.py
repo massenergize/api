@@ -18,7 +18,7 @@ class MiscellaneousHandler(RouteHandler):
 
   def registerRoutes(self) -> None:
     self.add("/menus.list", self.navigation_menu_list) 
-    self.add("/data.backfill", self.backfill) 
+    # self.add("/data.backfill", self.backfill) 
 
   def navigation_menu_list(self, request):
     context: Context = request.context

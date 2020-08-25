@@ -9,6 +9,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from api.decorators import admins_only, super_admins_only, login_required
 
 
 
@@ -34,7 +35,7 @@ class VendorHandler(RouteHandler):
     self.add("/vendors.listForCommunityAdmin", self.community_admin_list)
     self.add("/vendors.listForSuperAdmin", self.super_admin_list)
 
-
+  
   def info(self, request):
     context: Context  = request.context
     args = context.get_request_body()
@@ -44,6 +45,7 @@ class VendorHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
 
+  @admins_only
   def publish(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -54,7 +56,7 @@ class VendorHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
 
-
+  @admins_only
   def create(self, request):
     context: Context  = request.context
     args = context.get_request_body() 
@@ -107,6 +109,7 @@ class VendorHandler(RouteHandler):
     return MassenergizeResponse(data=vendor_info)
 
 
+  @admins_only
   def update(self, request):
     context: Context  = request.context
     args = context.get_request_body() 
@@ -149,7 +152,7 @@ class VendorHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
 
-
+  @admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -162,7 +165,7 @@ class VendorHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
 
-
+  @login_required
   def copy(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -175,7 +178,7 @@ class VendorHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=vendor_info)
 
-
+  @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -185,7 +188,7 @@ class VendorHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendors)
 
-
+  @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args

@@ -7,7 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
-
+from api.decorators import admins_only, super_admins_only
 
 class SummaryHandler(RouteHandler):
 
@@ -21,7 +21,7 @@ class SummaryHandler(RouteHandler):
     self.add("/summary.listForCommunityAdmin", self.community_admin_summary)
     self.add("/summary.listForSuperAdmin", self.super_admin_summary)
 
-
+  @admins_only
   def community_admin_summary(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -31,7 +31,7 @@ class SummaryHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=summary)
 
-
+  @super_admins_only
   def super_admin_summary(self, request):
     context: Context = request.context
     args: dict = context.args

@@ -7,7 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
-
+from api.decorators import admins_only, super_admins_only, login_required
 
 class ActionsPageSettingsHandler(RouteHandler):
 
@@ -41,7 +41,7 @@ class ActionsPageSettingsHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=actions_page_setting_info)
 
-
+  @admins_only
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -50,7 +50,7 @@ class ActionsPageSettingsHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=actions_page_setting_info)
 
-
+  @admins_only
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -61,7 +61,7 @@ class ActionsPageSettingsHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=actions_page_setting_info)
 
-
+  @admins_only
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -70,7 +70,7 @@ class ActionsPageSettingsHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=actions_page_setting_info)
 
-
+  @admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -80,7 +80,7 @@ class ActionsPageSettingsHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=actions_page_setting_info)
 
-
+  @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -90,7 +90,7 @@ class ActionsPageSettingsHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=actions_page_settings)
 
-
+  @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args

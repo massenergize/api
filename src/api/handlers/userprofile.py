@@ -7,6 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from api.decorators import admins_only, super_admins_only, login_required
 
 
 
@@ -42,6 +43,7 @@ class UserHandler(RouteHandler):
     self.add("/users.listForSuperAdmin", self.super_admin_list)
 
 
+  @login_required
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -49,7 +51,6 @@ class UserHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
-
 
   def create(self, request):
     context: Context = request.context
@@ -70,7 +71,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @admins_only
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -81,7 +82,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @login_required
   def list_actions_todo(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -90,6 +91,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
+  @login_required
   def list_actions_completed(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -98,7 +100,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @login_required
   def remove_user_action(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -111,7 +113,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @login_required
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -120,7 +122,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @login_required
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -130,7 +132,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -140,7 +142,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=users)
 
-
+  @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -149,6 +151,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=users)
 
+  @login_required
   def add_action_todo(self, request):
     context: Context = request.context
     
@@ -165,7 +168,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @login_required
   def add_action_completed(self, request):
     context: Context = request.context
     
@@ -183,7 +186,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @login_required
   def list_households(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -192,6 +195,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
+  @login_required
   def remove_household(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -201,6 +205,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
+  @login_required
   def add_household(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -209,6 +214,8 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
+
+  @login_required
   def edit_household(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -217,7 +224,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
-
+  @login_required
   def list_events(self, request):
     context: Context = request.context
     args: dict = context.args

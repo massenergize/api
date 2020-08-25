@@ -7,7 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
-
+from api.decorators import admins_only, super_admins_only, login_required
 
 
 class TestimonialHandler(RouteHandler):
@@ -30,7 +30,7 @@ class TestimonialHandler(RouteHandler):
     self.add("/testimonials.listForCommunityAdmin", self.community_admin_list)
     self.add("/testimonials.listForSuperAdmin", self.super_admin_list)
 
-
+  @login_required
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -40,7 +40,7 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
-
+  @login_required
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -68,7 +68,7 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
-
+  @admins_only
   def list(self, request):
     context = request.context
     args = context.args
@@ -77,7 +77,7 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
-
+  @admins_only
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -98,7 +98,7 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
-
+  @admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -108,7 +108,7 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
-
+  @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -118,7 +118,7 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonials)
 
-
+  @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args

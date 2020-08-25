@@ -9,6 +9,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from api.decorators import admins_only, super_admins_only, login_required
 
 
 class AdminHandler(RouteHandler):
@@ -28,7 +29,7 @@ class AdminHandler(RouteHandler):
     self.add("/admins.messages.add", self.message) 
     self.add("/admins.messages.list", self.list_messages) 
 
-
+  @super_admins_only
   def add_super_admin(self, request):
     context: Context  = request.context
     args = context.get_request_body() 
@@ -47,7 +48,7 @@ class AdminHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=admin_info)
 
-
+  @super_admins_only
   def remove_super_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
@@ -65,7 +66,7 @@ class AdminHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=admin_info)
 
-
+  @super_admins_only
   def list_super_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
@@ -74,7 +75,7 @@ class AdminHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=admin_info)
 
-
+  @admins_only
   def add_community_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body()
@@ -86,7 +87,7 @@ class AdminHandler(RouteHandler):
       .expect("subdomain", str)
     )
 
-    args, err = validator.verify(args)
+    args, err = self.validator.verify(args)
     if err:
       return err
 
@@ -95,7 +96,7 @@ class AdminHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=admin_info)
 
-
+  @admins_only
   def remove_community_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body()
@@ -116,7 +117,7 @@ class AdminHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=admin_info)
 
-
+  @admins_only
   def list_community_admin(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
@@ -134,6 +135,7 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
+  @login_required
   def message(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
@@ -153,23 +155,22 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  def list_messages(self):
-    def list_messages(self, request): 
-      context: Context  = request.context
-      args = context.get_request_body() 
+  @admins_only
+  def list_messages(self, request):
+    context: Context  = request.context
+    args = context.get_request_body() 
 
-      (self.validator
-        .add("community_id", str, is_required=False)
-        .add("subdomain", str, is_required=False)
-      )
+    (self.validator
+      .add("community_id", str, is_required=False)
+      .add("subdomain", str, is_required=False)
+    )
 
-      args, err = self.validator.verify(args)
-      if err:
-        return err
+    args, err = self.validator.verify(args)
+    if err:
+      return err
 
-      admin_info, err = self.service.list_admin_messages(context, args)
-      if err:
-        return err
-      return MassenergizeResponse(data=admin_info)
-    return list_messages_view
+    admin_info, err = self.service.list_admin_messages(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=admin_info)
 

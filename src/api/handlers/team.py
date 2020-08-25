@@ -8,6 +8,7 @@ from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from _main_.utils.common import parse_str_list
+from api.decorators import admins_only, super_admins_only, login_required
 
 class TeamHandler(RouteHandler):
 
@@ -38,7 +39,7 @@ class TeamHandler(RouteHandler):
     self.add("/teams.listForCommunityAdmin", self.community_admin_list)
     self.add("/teams.listForSuperAdmin", self.super_admin_list)
 
-
+  
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -49,7 +50,7 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-
+  @admins_only
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -81,7 +82,7 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-
+  @admins_only
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -93,7 +94,7 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-
+  @admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -103,7 +104,7 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-
+  @login_required
   def join(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -114,7 +115,7 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-
+  @login_required
   def leave(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -126,6 +127,7 @@ class TeamHandler(RouteHandler):
     return MassenergizeResponse(data=team_info)
 
 
+  @login_required
   def add_member(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -135,6 +137,7 @@ class TeamHandler(RouteHandler):
     return MassenergizeResponse(data=team_info)
 
 
+  @admins_only
   def remove_member(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -144,6 +147,7 @@ class TeamHandler(RouteHandler):
     return MassenergizeResponse(data=team_info)
 
 
+  @login_required
   def message_admin(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -153,6 +157,7 @@ class TeamHandler(RouteHandler):
     return MassenergizeResponse(data=team_info)      
 
 
+  @admins_only
   def members(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -162,6 +167,7 @@ class TeamHandler(RouteHandler):
     return MassenergizeResponse(data=team_members_info)
 
 
+  @admins_only
   def members_preferred_names(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -170,7 +176,7 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_members_preferred_names_info)
 
-
+  @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -179,7 +185,7 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=teams)
 
-
+  @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args

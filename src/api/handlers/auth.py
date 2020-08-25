@@ -29,7 +29,6 @@ class AuthHandler(RouteHandler):
   def login(self, request): 
     context: Context = request.context
     token, err = self.service.login(context)
-    print(token)
     if err:
       return err
 
@@ -42,7 +41,7 @@ class AuthHandler(RouteHandler):
 
     return response
 
-
+  @login_required
   def logout(self, request): 
     # create a response
     response = MassenergizeResponse()
@@ -61,10 +60,10 @@ class AuthHandler(RouteHandler):
     
     return MassenergizeResponse(data=user_info)
 
+
   def verify_captcha(self, request): 
     context: Context = request.context
     captcha_string = context.args.get('captchaString', None)
-
     verification, err = self.service.verify_captcha(context, captcha_string)
     if err:
       return err
