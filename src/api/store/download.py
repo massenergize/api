@@ -4,6 +4,7 @@ from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
   UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit, \
   Data, TagCollection
+from api.store.graph import get_households_engaged
 from api.store.team import get_team_users
 from django.db.models import Q
 from sentry_sdk import capture_message
@@ -226,7 +227,7 @@ class DownloadStore:
     reported_actions = self._get_community_reported_data(community)
     community_cells.update(reported_actions)
     community_cells['total_actions_done'] = str(actions_done + sum(value for value in reported_actions.keys()))
-    community_cells['total_households_count'] = 0 # TODO: what is this, exactly?
+    community_cells['total_households_count'] = get_households_engaged(community)
 
     #TODO: remove when things are working
     print(community_cells)
