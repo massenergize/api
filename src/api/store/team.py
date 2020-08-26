@@ -1,4 +1,4 @@
-from database.models import Team, UserProfile, Media, Community, TeamMember
+from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
@@ -6,6 +6,8 @@ from _main_.utils.context import Context
 from .utils import get_community_or_die, get_user_or_die
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
+from _main_.utils.emailer.send_email import send_massenergize_email
+
 
 def can_set_parent(parent, this_team=None):
   if parent.parent:
@@ -29,6 +31,7 @@ class TeamStore:
   def __init__(self):
     self.name = "Team Store/DB"
 
+  # TODO: only if team is published, or user is team admin, cadmin, or super admin
   def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
     team = Team.objects.get(id=team_id)
     if not team:
@@ -45,7 +48,7 @@ class TeamStore:
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
       if community:
-        teams = Team.objects.filter(community=community)
+        teams = Team.objects.filter(community=community, is_published=True)
       elif user:
         teams = user.team_set.all()
       return teams, None
@@ -53,11 +56,10 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-
   def team_stats(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       community = get_community_or_die(context, args)
-      teams = Team.objects.filter(community=community)
+      teams = Team.objects.filter(community=community, is_published=True)
       ans = []
       for team in teams:
         res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0, "carbon_footprint_reduction": 0}
@@ -147,6 +149,17 @@ class TeamStore:
         logo.save()
         new_team.logo = logo
 
+      # TODO: this code does will not make sense when there are multiple communities for the team...
+      # TODO: create a rich email template for this?
+      is_published = context.user_is_admin()
+      new_team.is_published = is_published
+      if not is_published:
+        cadmins = CommunityAdminGroup.objects.filter(community=community_id).select_related("members")
+        message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team."
+        for cadmin in cadmins:
+          send_massenergize_email(subject="New team awaiting approval",
+                                msg=message, to=cadmin.member.email)
+      
       new_team.save()
 
       for admin in verified_admins:
@@ -161,7 +174,6 @@ class TeamStore:
         team.delete()
       return None, CustomMassenergizeError(str(e))
 
-
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
       
@@ -170,6 +182,16 @@ class TeamStore:
       parent_id = args.pop('parent_id', None)
 
       team = Team.objects.filter(id=team_id)
+
+      # TODO: create a rich email template for this?
+      # TODO: only allow a cadmin or super admin to do this?
+      is_published = args.pop('is_published', False)
+      if is_published and not team.is_published:
+        team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
+        message = "Your team has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal."
+        for team_admin in team_admins:
+          send_massenergize_email(subject="Your team has been approved",
+                                msg=message, to=team_admin.user.email)
 
 
       team.update(**args)
