@@ -34,10 +34,10 @@ class AuthHandler(RouteHandler):
 
     # create a response
     response: MassenergizeResponse = MassenergizeResponse()
-    print(token)
+
     # set cookie on response before sending
     # cookie expiration set to 1yr
-    response.set_cookie("token", value=token, max_age=31536000, secure=True, httponly=True)    
+    response.set_cookie("token", value=token, max_age=31536000)    
     return response
 
 

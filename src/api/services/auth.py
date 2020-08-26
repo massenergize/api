@@ -14,7 +14,7 @@ from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
 import requests
-
+import os
 
 class AuthService:
   """
@@ -58,6 +58,7 @@ class AuthService:
           algorithm='HS256'
         ).decode('utf-8')
 
+        print(payload)
         return str(massenergize_jwt_token), None
 
       else:
@@ -74,7 +75,6 @@ class AuthService:
       user_id = context.user_id
       user_email = context.user_email
       user = None
-      print("user", user)
       if user_id:
         user = UserProfile.objects.get(pk=user_id)
       elif user_email:
@@ -95,7 +95,7 @@ class AuthService:
     try:
       data = {
         'secret': os.environ.get('RECAPTCHA_SECRET_KEY'),
-        'response': args['captchaString']
+        'response': captcha_string
       }
       r = requests.post(
         'https://www.google.com/recaptcha/api/siteverify', data=data)
