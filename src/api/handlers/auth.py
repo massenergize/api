@@ -33,13 +33,13 @@ class AuthHandler(RouteHandler):
       return err
 
     # create a response
-    response = MassenergizeResponse(data={"idToken": token})
-
+    response: MassenergizeResponse = MassenergizeResponse()
+    print(token)
     # set cookie on response before sending
     # cookie expiration set to 1yr
-    response.set_cookie("token", token, max_age=31536000)
-
+    response.set_cookie("token", value=token, max_age=31536000, secure=True, httponly=True)    
     return response
+
 
   @login_required
   def logout(self, request): 
@@ -54,6 +54,8 @@ class AuthHandler(RouteHandler):
 
   def whoami(self, request): 
     context: Context = request.context
+    print("token", request.COOKIES.get('token', None) )
+
     user_info, err = self.service.whoami(context)
     if err:
       return err

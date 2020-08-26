@@ -35,16 +35,19 @@ class AuthService:
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
-
+        
         user = UserProfile.objects.filter(email=user_email).first()
         if (not user):
           return None, CustomMassenergizeError("Please create an account")
 
+        if context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
+          raise PermissionError
+
         payload = {
           "user_id": str(user.id), 
           "email": user.email,
-          "is_super_admin": user.is_super_admin, #TODO: remove in favor of relying on realtime data
-          "is_community_admin": user.is_community_admin, # TODO: remove
+          "is_super_admin": user.is_super_admin, 
+          "is_community_admin": user.is_community_admin,
           "iat": decoded_token.get("iat"),
           "exp": decoded_token.get("exp"),
         }
@@ -61,7 +64,8 @@ class AuthService:
         return None, CustomMassenergizeError("invalid_auth")
 
     except Exception as e:
-      capture_message(str(e), level="error")
+      print(e)
+      capture_message("Authentication Error", level="error")
       return None, CustomMassenergizeError(e)
 
 
@@ -70,15 +74,19 @@ class AuthService:
       user_id = context.user_id
       user_email = context.user_email
       user = None
-
+      print("user", user)
       if user_id:
         user = UserProfile.objects.get(pk=user_id)
       elif user_email:
         user = UserProfile.objects.get(pk=user_email)
-      
+
+      if user and context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
+        raise PermissionError
+
       return serialize(user, full=True), None
 
     except Exception as e:
+      print("who_am_i", e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 

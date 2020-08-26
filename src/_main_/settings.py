@@ -37,7 +37,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
@@ -119,6 +119,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
 ROOT_URLCONF = '_main_.urls'
+# SESSION_COOKIE_SAMESITE = 'Strict'
 # SESSION_SAVE_EVERY_REQUEST = True
 
 TEMPLATES = [

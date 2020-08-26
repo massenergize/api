@@ -25,6 +25,7 @@ class Context:
     self.user_is_super_admin = False
     self.user_is_community_admin = False
     self.community = None
+    self.is_admin_site = False
 
   def set_user_credentials(self, decoded_token):
     self.user_is_logged_in = True
@@ -39,6 +40,7 @@ class Context:
     self.args = get_request_contents(request)
     self.is_sandbox = self.args.pop('__is_sandbox', False)
     self.community = self.args.pop('__community', None)
+    self.is_admin_site = self.args.pop('__is_admin_site', False)
 
     #set the is_dev field
     self.is_prod = self.args.pop('__is_prod', False)
