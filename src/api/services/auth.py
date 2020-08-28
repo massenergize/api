@@ -38,7 +38,7 @@ class AuthService:
         
         user = UserProfile.objects.filter(email=user_email).first()
         if (not user):
-          return None, CustomMassenergizeError("Please create an account")
+          return None, None, CustomMassenergizeError("Please create an account")
 
         if context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
           raise PermissionError
@@ -58,16 +58,15 @@ class AuthService:
           algorithm='HS256'
         ).decode('utf-8')
 
-        print(payload)
-        return str(massenergize_jwt_token), None
+        return serialize(user, full=True), str(massenergize_jwt_token), None
 
       else:
-        return None, CustomMassenergizeError("invalid_auth")
+        return None, None, CustomMassenergizeError("invalid_auth")
 
     except Exception as e:
       print(e)
       capture_message("Authentication Error", level="error")
-      return None, CustomMassenergizeError(e)
+      return None, None, CustomMassenergizeError(e)
 
 
   def whoami(self, context: Context):
@@ -86,7 +85,6 @@ class AuthService:
       return serialize(user, full=True), None
 
     except Exception as e:
-      print("who_am_i", e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 

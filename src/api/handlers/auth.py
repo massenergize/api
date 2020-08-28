@@ -28,12 +28,12 @@ class AuthHandler(RouteHandler):
 
   def login(self, request): 
     context: Context = request.context
-    token, err = self.service.login(context)
+    user_info, token, err = self.service.login(context)
     if err:
       return err
 
     # create a response
-    response: MassenergizeResponse = MassenergizeResponse()
+    response: MassenergizeResponse = MassenergizeResponse(user_info)
 
     # set cookie on response before sending
     # cookie expiration set to 1yr
