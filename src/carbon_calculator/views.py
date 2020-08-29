@@ -3,16 +3,11 @@ from django.http import JsonResponse
 from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
 from database.utils.common import get_request_contents
+from _main_.utils.massenergize_response import MassenergizeResponse
 
 from .carbonCalculator import CarbonCalculator
 from .queries import QueryEvents, QueryStations, QueryGroups, QueryEventSummary
 from .calcUsers import QueryCalcUsers, CreateCalcUser
-
-#from database.utils.create_factory import CreateFactory
-#from database.utils.database_reader import DatabaseReader
-
-#FACTORY = CreateFactory("Data Creator")
-#FETCH = DatabaseReader("Database Reader")
 
 # Create your views here.
 CALC = CarbonCalculator()
@@ -25,25 +20,25 @@ def ping(request):
     return Json(None)
 
 def index(request):
-    return JsonResponse(CALC.AllActionsList())
+    return MassenergizeResponse(CALC.AllActionsList())
 
 def actioninfo(request, action):
-    return JsonResponse(CALC.Query(action))
+    return MassenergizeResponse(CALC.Query(action))
 
 def eventinfo(request, event=None):
-    return JsonResponse(QueryEvents(event))
+    return MassenergizeResponse(QueryEvents(event))
 
 def eventsummary(request, event=None):
-    return JsonResponse(QueryEventSummary(event))
+    return MassenergizeResponse(QueryEventSummary(event))
 
 def groupinfo(request, group=None):
-    return JsonResponse(QueryGroups(group))
+    return MassenergizeResponse(QueryGroups(group))
 
 def stationinfo(request, station=None):
-    return JsonResponse(QueryStations(station))
+    return MassenergizeResponse(QueryStations(station))
 
 def userinfo(request, user=None):
-    return JsonResponse(QueryCalcUsers(user, request))
+    return MassenergizeResponse(QueryCalcUsers(user, request))
 
 # these requests should be POSTs or GETs
 def estimate(request, action):
@@ -52,27 +47,27 @@ def estimate(request, action):
         save = True
     else:
         save = False
-    return JsonResponse(CALC.Estimate(action, inputs, save))
+    return MassenergizeResponse(CALC.Estimate(action, inputs, save))
 
 # these requests should be POSTs
 def undo(request, action):
     inputs = get_request_contents(request)
     if request.method == "POST":
-        return JsonResponse(CALC.Undo(action, inputs))
+        return MassenergizeResponse(CALC.Undo(action, inputs))
     else:
         return Json(None)
 
 def reset(request):
     inputs = get_request_contents(request)
-    return JsonResponse(CALC.Reset(inputs))
+    return MassenergizeResponse(CALC.Reset(inputs))
 
 def importcsv(request):
     inputs = get_request_contents(request)
-    return JsonResponse(CALC.Import(inputs))
+    return MassenergizeResponse(CALC.Import(inputs))
 
 def exportcsv(request):
     inputs = get_request_contents(request)
-    return JsonResponse(CALC.Export(inputs))
+    return MassenergizeResponse(CALC.Export(inputs))
 
 def users(request):
   args = get_request_contents(request)

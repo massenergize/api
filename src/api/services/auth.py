@@ -14,7 +14,7 @@ from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
 import requests
-
+import os
 
 class AuthService:
   """
@@ -35,16 +35,19 @@ class AuthService:
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
-
+        
         user = UserProfile.objects.filter(email=user_email).first()
         if (not user):
-          return None, CustomMassenergizeError("Please create an account")
+          return None, None, CustomMassenergizeError("Please create an account")
+
+        if context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
+          raise PermissionError
 
         payload = {
           "user_id": str(user.id), 
           "email": user.email,
-          "is_super_admin": user.is_super_admin, #TODO: remove in favor of relying on realtime data
-          "is_community_admin": user.is_community_admin, # TODO: remove
+          "is_super_admin": user.is_super_admin, 
+          "is_community_admin": user.is_community_admin,
           "iat": decoded_token.get("iat"),
           "exp": decoded_token.get("exp"),
         }
@@ -55,14 +58,14 @@ class AuthService:
           algorithm='HS256'
         ).decode('utf-8')
 
-        return str(massenergize_jwt_token), None
+        return serialize(user, full=True), str(massenergize_jwt_token), None
 
       else:
-        return None, CustomMassenergizeError("invalid_auth")
+        return None, None, CustomMassenergizeError("invalid_auth")
 
     except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
+      capture_message("Authentication Error", level="error")
+      return None, None, CustomMassenergizeError(e)
 
 
   def whoami(self, context: Context):
@@ -70,12 +73,14 @@ class AuthService:
       user_id = context.user_id
       user_email = context.user_email
       user = None
-
       if user_id:
         user = UserProfile.objects.get(pk=user_id)
       elif user_email:
         user = UserProfile.objects.get(pk=user_email)
-      
+
+      if user and context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
+        raise PermissionError
+
       return serialize(user, full=True), None
 
     except Exception as e:
@@ -87,7 +92,7 @@ class AuthService:
     try:
       data = {
         'secret': os.environ.get('RECAPTCHA_SECRET_KEY'),
-        'response': args['captchaString']
+        'response': captcha_string
       }
       r = requests.post(
         'https://www.google.com/recaptcha/api/siteverify', data=data)
