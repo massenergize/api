@@ -18,7 +18,8 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('cc/',include('carbon_calculator.urls')),
+    path('cc/',include('carbon_calculator.urls')),
+    path('v3/cc/',include('carbon_calculator.urls')),
     path('v3/', include('api.urls')), #latest
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),

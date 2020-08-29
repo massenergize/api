@@ -37,7 +37,13 @@ class AuthHandler(RouteHandler):
 
     # set cookie on response before sending
     # cookie expiration set to 1yr
-    response.set_cookie("token", value=token, max_age=31536000)    
+    MAX_AGE = 31536000
+
+    # if the signin is from an admin site then set it to 24 hrs
+    if(context.is_admin_site):
+      MAX_AGE = 86400
+    
+    response.set_cookie("token", value=token, max_age=MAX_AGE)    
     return response
 
 
@@ -54,8 +60,6 @@ class AuthHandler(RouteHandler):
 
   def whoami(self, request): 
     context: Context = request.context
-    print("token", request.COOKIES.get('token', None) )
-
     user_info, err = self.service.whoami(context)
     if err:
       return err

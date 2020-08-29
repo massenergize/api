@@ -64,7 +64,6 @@ class AuthService:
         return None, None, CustomMassenergizeError("invalid_auth")
 
     except Exception as e:
-      print(e)
       capture_message("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
 
