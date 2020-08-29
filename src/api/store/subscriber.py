@@ -33,10 +33,6 @@ class SubscriberStore:
       if community_id:
         community = Community.objects.get(id=community_id)
         new_subscriber.community = community
-
-        #community.subscribers.add(new_subscriber)
-        #community.save()
-      print(new_subscriber)
       return new_subscriber, None
     except Exception as e:
       capture_message(str(e), level="error")

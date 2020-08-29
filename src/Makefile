@@ -18,7 +18,7 @@ deploy-prod:
 	docker build -t massenergize/api .
 	docker tag massenergize/api:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
-	eb deploy -l $(VERSION)
+	eb deploy --version $(VERSION)
 .PHONY: deploy-prod
 
 deploy-dev:
@@ -28,7 +28,7 @@ deploy-dev:
 	docker build -t massenergize/api-dev .
 	docker tag massenergize/api-dev:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(VERSION)
-	eb deploy -l $(VERSION)
+	eb deploy --version $(VERSION)
 .PHONY: deploy-dev
 
 deploy:

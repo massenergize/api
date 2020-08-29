@@ -1,23 +1,2 @@
-MassEnergize Production Site Updated
-Version Numbers:
-Front-end site - 2.9.54
-Back-end - 2.9.15
-Admin site - 2.9.16
-Improvements in this update:
-Social media integration
-Add buttons for FaceBook, Twitter and e-mail sharing
-Testimonials: 
-Remove anonymous option in favor of “preferred name”
-Allow/encourage users to upload photos with their testimonial
-Teams functionality improvements:
-Consistent info on Profile and Teams pages to access the single team pages
-Improvement in HTML content rendering for Actions (bulleted list)
-Under the hood:
-Calls to back-end speed-up.
-Error logging facility
-Admin site changes:
-Help facility for cadmins: ? icon brings up docs and videos
-CSV Export of data for Cadmins on community profile pages (for data of specific communities) and for Sadmins at bottom of Dashboard page (for data across all communities)
-Previewer for HTML content (more updates to come)
-Deployment process: updated to improve reliability.
-Please note any issues that you observe, and report them or any feature requests in this channel.  Thanks!
+This contains improvements to the general API structure and also changes
+our authentication models quite a bit.

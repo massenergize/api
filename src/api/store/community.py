@@ -35,7 +35,6 @@ class CommunityStore:
 
   def join_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      context.logger.add_trace('join_community')
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
       user.communities.add(community)
@@ -45,10 +44,6 @@ class CommunityStore:
       if not community_member:
         community_member = CommunityMember.objects.create(community=community, user=user, is_admin=False)
 
-      context.logger.log({
-        "user": user,
-        "community": community,
-      })
       return user, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -56,7 +51,6 @@ class CommunityStore:
 
   def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      context.logger.add_trace('join_community')
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
       user.communities.remove(community)
@@ -65,11 +59,7 @@ class CommunityStore:
       community_member: CommunityMember = CommunityMember.objects.filter(community=community, user=user).first()
       if not community_member or (not community_member.is_admin):
         community_member.delete()
-        
-      context.logger.log({
-        "user": user,
-        "community": community,
-      })
+     
       return user, None
     except Exception as e:
       capture_message(str(e), level="error")
