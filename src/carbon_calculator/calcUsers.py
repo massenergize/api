@@ -182,9 +182,7 @@ def CreateCalcUser(args):
                     
         return {"id":newUser.id,"email":newUser.email, "success":True}
     except:
-        print("Exception!")
         error = {"success":False}
-
         return error
 
 def ExportCalcUsers(fileName, event):

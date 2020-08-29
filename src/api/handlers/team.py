@@ -167,7 +167,6 @@ class TeamHandler(RouteHandler):
     return MassenergizeResponse(data=team_members_info)
 
 
-  @admins_only
   def members_preferred_names(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -175,6 +174,7 @@ class TeamHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_members_preferred_names_info)
+
 
   @admins_only
   def community_admin_list(self, request):

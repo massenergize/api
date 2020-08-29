@@ -28,18 +28,24 @@ class AuthHandler(RouteHandler):
 
   def login(self, request): 
     context: Context = request.context
-    token, err = self.service.login(context)
+    user_info, token, err = self.service.login(context)
     if err:
       return err
 
     # create a response
-    response = MassenergizeResponse(data={"idToken": token})
+    response: MassenergizeResponse = MassenergizeResponse(user_info)
 
     # set cookie on response before sending
     # cookie expiration set to 1yr
-    response.set_cookie("token", token, max_age=31536000)
+    MAX_AGE = 31536000
 
+    # if the signin is from an admin site then set it to 24 hrs
+    if(context.is_admin_site):
+      MAX_AGE = 86400
+    
+    response.set_cookie("token", value=token, max_age=MAX_AGE)    
     return response
+
 
   @login_required
   def logout(self, request): 

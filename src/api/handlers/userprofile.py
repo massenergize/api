@@ -71,16 +71,17 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
+
   @admins_only
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    #user_id = args.pop('user_id', None)
     user_info, err = self.service.list_users(community_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
+
 
   @login_required
   def list_actions_todo(self, request):
@@ -154,9 +155,7 @@ class UserHandler(RouteHandler):
   @login_required
   def add_action_todo(self, request):
     context: Context = request.context
-    
-    validator: Validator = Validator()
-    args, err = (validator
+    args, err = (self.validator
       .expect("action_id", str, is_required=True)
       .expect("household_id", str, is_required=False)
       .verify(context.args)
@@ -172,8 +171,7 @@ class UserHandler(RouteHandler):
   def add_action_completed(self, request):
     context: Context = request.context
     
-    validator: Validator = Validator()
-    args, err = (validator
+    args, err = (self.validator
       .expect("action_id", str, is_required=True)
       .expect("household_id", str, is_required=False)
       .verify(context.args)
