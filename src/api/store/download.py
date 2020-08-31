@@ -24,7 +24,7 @@ class DownloadStore:
 
     self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count',
     'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action'] \
-    + [category.name + " (reported)" for category in self.action_categories] + ['total_actions_done', 'total_households_count']
+    + [category.name + " (reported)" for category in self.action_categories] + ['actions_done_with_reported', 'households_count_with_reported']
 
 
   def _get_cells_from_dict(self, columns, data):
