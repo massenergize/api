@@ -4,7 +4,6 @@ from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
   UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit, \
   Data, TagCollection
-from api.store.graph import get_households_engaged
 from api.store.team import get_team_users
 from django.db.models import Q
 from sentry_sdk import capture_message
@@ -23,9 +22,9 @@ class DownloadStore:
     
     self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
-    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count'
+    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count',
     'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action'] \
-    + list(self.action_categories) + ['total_actions_done', 'total_households_count']
+    + [category.name + " (reported)" for category in self.action_categories] + ['total_actions_done', 'total_households_count']
 
 
   def _get_cells_from_dict(self, columns, data):
@@ -133,8 +132,8 @@ class DownloadStore:
       data = Data.objects.filter(tag=action_category, community=community).first()
       if not data:
         continue
-      rows.append(self._get_cells_from_dict({'title': 'STATE-REPORTED DATA',
-       'category' : action_category, 'done_count': data}))
+      rows.append(self._get_cells_from_dict(self.action_info_columns, 
+                    {'title': 'STATE-REPORTED', 'category' : action_category.name, 'done_count': str(data.value)}))
     return rows
 
 
@@ -183,7 +182,7 @@ class DownloadStore:
       data = Data.objects.filter(tag=action_category, community=community).first()
       if not data:
         continue
-      ret[action_category] = data.reported_value
+      ret[action_category.name + " (reported)"] = data.reported_value
     return ret
 
 
@@ -209,7 +208,7 @@ class DownloadStore:
     actions_per_member = str(round(actions_done / members_count, 2)) if members_count != 0 else '0'
 
     action_done_count_map = {action.title: done_action_rels.filter(action=action).count() for action in actions}
-    actions_by_done_count = sorted(action_done_count_map.items(), key=lambda item : item[1], reverse=True)
+    actions_by_done_count = sorted(action_done_count_map.items(), key=lambda item: item[1], reverse=True)
     most_done_action = actions_by_done_count[0][0] if (len(actions_by_done_count) > 0 and actions_by_done_count[0][1] != 0) else ''
     second_most_done_action = actions_by_done_count[1][0] if (len(actions_by_done_count) > 1 and actions_by_done_count[1][1] != 0) else ''
 
@@ -226,11 +225,10 @@ class DownloadStore:
     }
     reported_actions = self._get_community_reported_data(community)
     community_cells.update(reported_actions)
-    community_cells['total_actions_done'] = str(actions_done + sum(value for value in reported_actions.keys()))
-    community_cells['total_households_count'] = get_households_engaged(community)
-
-    #TODO: remove when things are working
-    print(community_cells)
+    community_cells['total_actions_done'] = str(actions_done + sum(value for value in reported_actions.values()))
+    total_households_count = 0 if not community.goal else community.goal.attained_number_of_households
+    total_households_count += RealEstateUnit.objects.filter(community=community).count()
+    community_cells['total_households_count'] = total_households_count
 
     return self._get_cells_from_dict(self.community_info_columns, community_cells)
 
@@ -344,7 +342,7 @@ class DownloadStore:
     for action in actions:
       data.append(self._get_action_info_cells(action))
 
-    community = Community.objects.filter(community__id=community_id).first()
+    community = Community.objects.filter(id=community_id).first()
     community_reported_rows = self._get_reported_data_rows(community)
     for row in community_reported_rows:
       data.append(row)

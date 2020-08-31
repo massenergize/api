@@ -16,7 +16,7 @@ def get_households_engaged(community: Community):
 
   done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").prefetch_related('action__calculator_action')
   actions_completed += done_actions.count()
-  carbon_footprint_reduction = 0 if not community.goal or not community.goalattained_carbon_footprint_reduction else community.goal.attained_carbon_footprint_reduction
+  carbon_footprint_reduction = 0 if (not community.goal or not community.goal. attained_carbon_footprint_reduction) else community.goal.attained_carbon_footprint_reduction
 
   # loop over actions completed
   for actionRel in done_actions:
