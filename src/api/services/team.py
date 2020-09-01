@@ -40,8 +40,8 @@ class TeamService:
     return serialize(team), None
 
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.update_team(team_id, args)
+  def update_team(self, context, team_id, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.update_team(context, team_id, args)
     if err:
       return None, err
     return serialize(team), None
