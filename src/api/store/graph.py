@@ -7,6 +7,41 @@ from api.store.team import get_team_users
 from .utils import get_community
 from sentry_sdk import capture_message
 
+
+def get_households_engaged(community: Community):
+
+  households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
+  households_engaged += (RealEstateUnit.objects.filter(community=community).count())
+  actions_completed = 0 if not community.goal else community.goal.attained_number_of_actions
+
+  done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").prefetch_related('action__calculator_action')
+  actions_completed += done_actions.count()
+  carbon_footprint_reduction = 0 if (not community.goal or not community.goal. attained_carbon_footprint_reduction) else community.goal.attained_carbon_footprint_reduction
+
+  # loop over actions completed
+  for actionRel in done_actions:
+    if actionRel.action and actionRel.action.calculator_action :
+      carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+
+  return {"community": {"id": community.id, "name": community.name}, 
+          "actions_completed": actions_completed, "households_engaged": households_engaged, 
+          "carbon_footprint_reduction": carbon_footprint_reduction}
+
+
+def get_all_households_engaged():
+  households_engaged = UserProfile.objects.filter(is_deleted=False).count()
+  done_actions = UserActionRel.objects.filter(status="DONE").prefetch_relate('action__calculator_action')
+  actions_completed = done_actions.count()
+  carbon_footprint_reduction = 0
+  for actionRel in done_actions:
+    if actionRel.action and actionRel.action.calculator_action :
+      carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
+
+  return {"community": {"id": 0, "name": 'Other'}, 
+          "actions_completed": actions_completed, "households_engaged": households_engaged,
+          "carbon_footprint_reduction": carbon_footprint_reduction}
+
+
 class GraphStore:
   def __init__(self):
     self.name = "Graph Store/DB"
@@ -85,8 +120,6 @@ class GraphStore:
       
     except Exception as e:
       capture_message(str(e), level="error")
-      import traceback
-      traceback.print_exc()
       return None, CustomMassenergizeError(e)
 
 
@@ -134,43 +167,8 @@ class GraphStore:
         
     except Exception as e:
       capture_message(str(e), level="error")
-      import traceback
-      traceback.print_exc()
       return None, CustomMassenergizeError(e)
 
-
-  def _get_households_engaged(self, community: Community):
-
-    households_engaged = 0 if not community.goal else community.goal.attained_number_of_households
-    households_engaged += (RealEstateUnit.objects.filter(community=community).count())
-    actions_completed = 0 if not community.goal else community.goal.attained_number_of_actions
-
-    done_actions = UserActionRel.objects.filter(real_estate_unit__community=community.id, status="DONE").prefetch_related('action__calculator_action')
-    actions_completed += done_actions.count()
-    carbon_footprint_reduction = 0 if not community.goal or not community.goal.attained_carbon_footprint_reduction else community.goal.attained_carbon_footprint_reduction
-
-    # loop over actions completed
-    for actionRel in done_actions:
-      if actionRel.action and actionRel.action.calculator_action :
-        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
-
-    return {"community": {"id": community.id, "name": community.name}, 
-            "actions_completed": actions_completed, "households_engaged": households_engaged, 
-            "carbon_footprint_reduction": carbon_footprint_reduction}
-
-
-  def _get_all_households_engaged(self):
-    households_engaged = UserProfile.objects.filter(is_deleted=False).count()
-    done_actions = UserActionRel.objects.filter(status="DONE").prefetch_related('action__calculator_action')
-    actions_completed = done_actions.count()
-    carbon_footprint_reduction = 0
-    for actionRel in done_actions:
-      if actionRel.action and actionRel.action.calculator_action :
-        carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
-
-    return {"community": {"id": 0, "name": 'Other'}, 
-            "actions_completed": actions_completed, "households_engaged": households_engaged,
-            "carbon_footprint_reduction": carbon_footprint_reduction}
 
 
   def graph_communities_impact(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
@@ -184,12 +182,12 @@ class GraphStore:
       if not community:
         return None, InvalidResourceError()
 
-      res = [self._get_households_engaged(community)]
+      res = [get_households_engaged(community)]
       limit = 10
       for c in Community.objects.filter(is_deleted=False, is_published=True)[:limit]:
 
         if c.id != community.id:
-          res.append(self._get_households_engaged(c))
+          res.append(get_households_engaged(c))
 
       return {
         "id": 1,
@@ -326,8 +324,8 @@ class GraphStore:
 
       comm_impact = []
       for c in Community.objects.filter(is_deleted=False, id__in = comm_ids):
-        comm_impact.append(self._get_households_engaged(c))
-      comm_impact.append(self._get_all_households_engaged())
+        comm_impact.append(get_households_engaged(c))
+      comm_impact.append(get_all_households_engaged())
       return {
         "actions_completed": graphs,
         "communities_impact": comm_impact
@@ -351,8 +349,8 @@ class GraphStore:
 
       comm_impact = []
       for c in Community.objects.filter(is_deleted=False)[:4]:
-        comm_impact.append(self._get_households_engaged(c))
-      comm_impact.append(self._get_all_households_engaged())
+        comm_impact.append(get_households_engaged(c))
+      comm_impact.append(get_all_households_engaged())
       return {
         "actions_completed": graphs,
         "communities_impact": comm_impact
