@@ -22,7 +22,7 @@ def get_team_users(team):
   if team.parent:
     return team_users
   else:
-    child_teams = Team.objects.filter(parent=team, is_deleted=False)
+    child_teams = Team.objects.filter(parent=team, is_deleted=False, is_published=True)
     child_team_users = [tm.user for tm in
                   TeamMember.objects.filter(team__in=child_teams, is_deleted=False).select_related('user')]
     return set().union(team_users, child_team_users)
