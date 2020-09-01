@@ -620,6 +620,7 @@ class Team(models.Model):
     res['community'] = get_json_if_not_none(self.community)
     res['logo'] = get_json_if_not_none(self.logo)
     res['is_closed'] = get_json_if_not_none(self.is_closed)
+    res['is_published'] = get_json_if_not_none(self.is_published)
     res['parent'] = get_json_if_not_none(self.parent)
     return res
 
