@@ -1,5 +1,5 @@
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError, User
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
@@ -31,11 +31,15 @@ class TeamStore:
   def __init__(self):
     self.name = "Team Store/DB"
 
-  # TODO: only if team is published, or user is team admin, cadmin, or super admin
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
+  def get_team_info(self, context: Context, team_id) -> (dict, MassEnergizeAPIError):
     team = Team.objects.get(id=team_id)
     if not team:
       return None, InvalidResourceError()
+    user = User.objects.get(id=context.user_id)
+    #TODO: untested
+    if not team.is_published and not (context.user_is_admin()
+                            or TeamMember.objects.filter(team=team, user=user).exists()):
+      return None, CustomMassenergizeError("Cannot access team until it is approved")
     return team, None
 
   def get_team_admins(self, team_id):
@@ -150,16 +154,15 @@ class TeamStore:
         new_team.logo = logo
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
-      # TODO: create a rich email template for this?
+      # TODO: create a rich email template for this? at the least, include a link to the team edit page
       is_published = context.user_is_admin()
       new_team.is_published = is_published
       if not is_published:
-        cadmins = CommunityAdminGroup.objects.filter(community=community_id).select_related("members")
+        cadmins = CommunityAdminGroup.objects.filter(community__id=community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team."
         for cadmin in cadmins:
           send_massenergize_email(subject="New team awaiting approval",
-                                msg=message, to=cadmin.member.email)
-      
+                                msg=message, to=cadmin.email)
       new_team.save()
 
       for admin in verified_admins:
@@ -184,7 +187,7 @@ class TeamStore:
       team = Team.objects.filter(id=team_id)
 
       # TODO: create a rich email template for this?
-      # TODO: only allow a cadmin or super admin to do this?
+      # TODO: only allow a cadmin or super admin to change this particular field?
       is_published = args.pop('is_published', False)
       if is_published and not team.is_published:
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
@@ -192,7 +195,6 @@ class TeamStore:
         for team_admin in team_admins:
           send_massenergize_email(subject="Your team has been approved",
                                 msg=message, to=team_admin.user.email)
-
 
       team.update(**args)
       team = team.first()

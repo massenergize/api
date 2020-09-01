@@ -45,12 +45,12 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_id = args.pop('team_id', None)
     
-    team_info, err = self.team.get_team_info(team_id)
+    team_info, err = self.team.get_team_info(context, team_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-  @admins_only
+  @login_required
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -82,7 +82,7 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-  @admins_only
+  @login_required
   def update(self, request):
     context: Context = request.context
     args: dict = context.args

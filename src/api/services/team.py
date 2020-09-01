@@ -14,8 +14,8 @@ class TeamService:
     self.store =  TeamStore()
     self.message_store = MessageStore()
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.get_team_info(team_id)
+  def get_team_info(self, context: Context, team_id) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.get_team_info(context, team_id)
     if err:
       return None, err
     return serialize(team, full=True), None
