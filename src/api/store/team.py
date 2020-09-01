@@ -1,5 +1,5 @@
-from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError, User
+from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserProfile
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
@@ -35,7 +35,7 @@ class TeamStore:
     team = Team.objects.get(id=team_id)
     if not team:
       return None, InvalidResourceError()
-    user = User.objects.get(id=context.user_id)
+    user = UserProfile.objects.get(id=context.user_id)
     #TODO: untested
     if not team.is_published and not (context.user_is_admin()
                             or TeamMember.objects.filter(team=team, user=user).exists()):
@@ -52,7 +52,7 @@ class TeamStore:
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
       if community:
-        teams = Team.objects.filter(community=community, is_published=True)
+        teams = Team.objects.filter(community=community, is_published=True, is_deleted=False)
       elif user:
         teams = user.team_set.all()
       return teams, None
@@ -63,7 +63,7 @@ class TeamStore:
   def team_stats(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       community = get_community_or_die(context, args)
-      teams = Team.objects.filter(community=community, is_published=True)
+      teams = Team.objects.filter(community=community, is_published=True, is_deleted=False)
       ans = []
       for team in teams:
         res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0, "carbon_footprint_reduction": 0}
@@ -183,21 +183,24 @@ class TeamStore:
       community_id = args.pop('community_id', None)
       logo = args.pop('logo', None)
       parent_id = args.pop('parent_id', None)
+      is_published = args.pop('is_published', False)
 
       team = Team.objects.filter(id=team_id)
+ 
+      team.update(**args)
+      team = team.first()
 
       # TODO: create a rich email template for this?
       # TODO: only allow a cadmin or super admin to change this particular field?
-      is_published = args.pop('is_published', False)
       if is_published and not team.is_published:
+        team.is_published = True
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
         message = "Your team has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal."
         for team_admin in team_admins:
           send_massenergize_email(subject="Your team has been approved",
                                 msg=message, to=team_admin.user.email)
 
-      team.update(**args)
-      team = team.first()
+
 
       if team:
         if community_id:
