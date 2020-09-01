@@ -7,6 +7,7 @@ from .utils import get_community_or_die, get_user_or_die
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
+from _main_.settings import IS_PROD
 
 def can_set_parent(parent, this_team=None):
   if parent.parent:
@@ -159,7 +160,7 @@ class TeamStore:
       if not is_published:
         cadmins = CommunityAdminGroup.objects.filter(community__id=community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team.\n\n%s" % ("%s/admin/edit/%i/team" %
-        ("https://admin.massenergize.org" if context.is_prod else "https://admin-dev.massenergize.org", team.id))
+        ("https://admin.massenergize.org" if IS_PROD else "https://admin-dev.massenergize.org", team.id))
         for cadmin in cadmins:
           send_massenergize_email(subject="New team awaiting approval",
                                 msg=message, to=cadmin.email)
@@ -177,7 +178,7 @@ class TeamStore:
         team.delete()
       return None, CustomMassenergizeError(str(e))
 
-  def update_team(self, context:Context, team_id, args) -> (dict, MassEnergizeAPIError):
+  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
       
       community_id = args.pop('community_id', None)
@@ -195,12 +196,10 @@ class TeamStore:
       if is_published and not team.is_published:
         team.is_published = True
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
-        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/teams/%i") % ("https://community.massenergize.org" if context.is_prod else "https://community-dev.massenergize.org", team.id))
+        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/teams/%i") % ("https://community.massenergize.org" if IS_PROD else "https://community-dev.massenergize.org", team.id))
         for team_admin in team_admins:
           send_massenergize_email(subject="Your team has been approved",
                                 msg=message, to=team_admin.user.email)
-
-
 
       if team:
         if community_id:
