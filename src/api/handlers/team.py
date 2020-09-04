@@ -26,8 +26,9 @@ class TeamHandler(RouteHandler):
     self.add("/teams.update", self.update)
     self.add("/teams.delete", self.delete)
     self.add("/teams.remove", self.delete)
-    self.add("/teams.leave", self.remove_member)
-    self.add("/teams.join", self.add_member)
+    # switch from add_member to join, remove_member to leave
+    self.add("/teams.join", self.join)
+    self.add("/teams.leave", self.leave)
     self.add("/teams.addMember", self.add_member)
     self.add("/teams.removeMember", self.remove_member)
     self.add("/teams.messageAdmin", self.message_admin)
@@ -66,7 +67,7 @@ class TeamHandler(RouteHandler):
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
-    context: Context = request.context
+    #context: Context = request.context
     team_info, err = self.team.list_teams(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
