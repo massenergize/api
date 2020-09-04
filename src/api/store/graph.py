@@ -30,7 +30,7 @@ def get_households_engaged(community: Community):
 
 def get_all_households_engaged():
   households_engaged = UserProfile.objects.filter(is_deleted=False).count()
-  done_actions = UserActionRel.objects.filter(status="DONE").prefetch_relate('action__calculator_action')
+  done_actions = UserActionRel.objects.filter(status="DONE").prefetch_related('action__calculator_action')
   actions_completed = done_actions.count()
   carbon_footprint_reduction = 0
   for actionRel in done_actions:
