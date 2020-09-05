@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:2.9.15",
+    "Name": "202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:3.0.0",
     "Update": "true"
   },
   "Ports": [
