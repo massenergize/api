@@ -10,25 +10,34 @@ start:
 	python manage.py runserver
 .PHONY: start
 
+
+prepare-prod:
+	python deployment/prepare_to_deploy.py --prod 0 1
+.PHONY: prepare-prod
+
 VERSION=latest
 deploy-prod:
-	python deployment/prepare_to_deploy.py --prod 0 1
 	$(eval VERSION := $(shell cat api_version_prod.txt))	
 	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
 	docker build -t massenergize/api .
 	docker tag massenergize/api:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api:$(VERSION)
-	eb deploy --version $(VERSION)
+	eb deploy --label $(VERSION)
 .PHONY: deploy-prod
 
-deploy-dev:
+
+prepare-dev:
 	python deployment/prepare_to_deploy.py --dev 0 1
-	$(eval VERSION := $(shell cat api_version_dev.txt))	
+.PHONY: deploy-dev
+
+DEV_VERSION=latest
+deploy-dev:
+	$(eval DEV_VERSION := $(shell cat api_version_dev.txt))	
 	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
 	docker build -t massenergize/api-dev .
-	docker tag massenergize/api-dev:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(VERSION)
-	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(VERSION)
-	eb deploy --version $(VERSION)
+	docker tag massenergize/api-dev:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
+	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:$(DEV_VERSION)
+	eb deploy --label $(DEV_VERSION)
 .PHONY: deploy-dev
 
 deploy:

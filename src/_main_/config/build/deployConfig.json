@@ -1,5 +1,5 @@
 {
   "IS_PROD": false,
-  "BUILD_VERSION": "2.9.16",
-  "BUILD_VERSION_NOTES": "This contains improvements to the general API structure and also changes\nour authentication models quite a bit."
+  "BUILD_VERSION": "3.0.0",
+  "BUILD_VERSION_NOTES": "Bug fixes and general improvements.\nmarking actions todo and done should work properly now.\nDownloads also has some pretty sweet updates."
 }
