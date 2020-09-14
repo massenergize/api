@@ -1,5 +1,5 @@
 {
   "IS_PROD": false,
-  "BUILD_VERSION": "3.0.0",
+  "BUILD_VERSION": "3.0.1",
   "BUILD_VERSION_NOTES": "Bug fixes and general improvements.\nmarking actions todo and done should work properly now.\nDownloads also has some pretty sweet updates."
 }
