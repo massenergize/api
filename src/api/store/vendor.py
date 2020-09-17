@@ -36,7 +36,7 @@ class VendorStore:
       subdomain = args.pop('subdomain', None)
       community_id = args.pop('community_id', None)
 
-      if community_id:
+      if community_id and community_id!='undefined':
         community = Community.objects.get(pk=community_id)
       elif subdomain:
         community = Community.objects.get(subdomain=subdomain)
@@ -197,8 +197,13 @@ class VendorStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
-      if not community_id:
-        user = UserProfile.objects.get(pk=context.user_id)
+      # community_id coming from admin portal as "null"
+      if not community_id or community_id=='undefined' or community_id=='null':     
+        # different code in action.py/event.py
+        #user = UserProfile.objects.get(pk=context.user_id)
+        #admin_groups = user.communityadmingroup_set.all()
+        #comm_ids = [ag.community.id for ag in admin_groups]
+        #vendors = Vendor.objects.filter(community__id__in = comm_ids, is_deleted=False).select_related('logo', 'community')
         communities, err = get_admin_communities(context)
         vendors = None
         for c in communities:
