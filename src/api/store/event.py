@@ -170,7 +170,8 @@ class EventStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
-      if not community_id:
+      # community_id coming from admin portal is 'undefined'
+      if not community_id or community_id=='undefined':
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]

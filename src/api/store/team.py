@@ -354,7 +354,7 @@ class TeamStore:
         return None, NotAuthorizedError()
 
       community_id = args.pop('community_id', None)
-      if not community_id:
+      if not community_id or community_id=='undefined':
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
