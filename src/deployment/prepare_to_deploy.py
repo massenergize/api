@@ -1,5 +1,10 @@
-from _main_ import settings
+from os.path import dirname, abspath, join
 import sys, os
+THIS_DIR = dirname(__file__)
+CODE_DIR = abspath(join(THIS_DIR, '..'))
+sys.path.append(CODE_DIR)
+from _main_ import settings
+
 from termcolor import colored
 import json
 

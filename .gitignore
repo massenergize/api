@@ -13,3 +13,4 @@ src/*.jpeg
 
 *.env
 env
+src/Dockerrun.aws.json
