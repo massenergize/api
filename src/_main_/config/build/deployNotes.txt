@@ -1,3 +1,1 @@
-Bug fixes and general improvements.
-marking actions todo and done should work properly now.
-Downloads also has some pretty sweet updates.
+Bug fix by Brad
