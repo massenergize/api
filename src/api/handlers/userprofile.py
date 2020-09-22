@@ -118,7 +118,7 @@ class UserHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    user_info, err = self.service.update_user(args.get("id", None), args)
+    user_info, err = self.service.update_user(context, args.get("id", None), args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
