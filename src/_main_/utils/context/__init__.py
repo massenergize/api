@@ -1,4 +1,4 @@
-from _main_.utils.common import get_request_contents
+from _main_.utils.common import get_request_contents, parse_bool
 
 
 class Context:
@@ -37,12 +37,12 @@ class Context:
   def set_request_body(self, request):
     #get the request args
     self.args = get_request_contents(request)
-    self.is_sandbox = self.args.pop('__is_sandbox', False)
+    self.is_sandbox = parse_bool(self.args.pop('__is_sandbox', False))
     self.community = self.args.pop('__community', None)
-    self.is_admin_site = self.args.pop('__is_admin_site', False)
+    self.is_admin_site = parse_bool(self.args.pop('__is_admin_site', False))
 
     #set the is_dev field
-    self.is_prod = self.args.pop('__is_prod', False)
+    self.is_prod = parse_bool(self.args.pop('__is_prod', False))
     self.is_dev = not self.is_prod
 
   def get_request_body(self):

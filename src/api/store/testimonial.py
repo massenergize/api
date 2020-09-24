@@ -37,7 +37,7 @@ class TestimonialStore:
         elif user_id:
           testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False)
         elif user_email:
-          testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False)
+          testimonials = Testimonial.objects.filter(user__email=user_email, is_deleted=False)
 
       else:
         if subdomain:
@@ -48,7 +48,7 @@ class TestimonialStore:
         elif user_id:
           testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False, is_published=True)
         elif user_email:
-          testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False, is_published=True)
+          testimonials = Testimonial.objects.filter(user__email=user_email, is_deleted=False, is_published=True)
 
       return testimonials, None
     except Exception as e:
@@ -193,6 +193,7 @@ class TestimonialStore:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
+
         testimonials = Testimonial.objects.filter(community__id__in = comm_ids, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
 
