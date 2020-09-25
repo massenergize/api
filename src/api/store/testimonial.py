@@ -85,15 +85,15 @@ class TestimonialStore:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_testimonial.image = media
 
-      if action and isinstance(action, int):
+      if action:
         testimonial_action = Action.objects.get(id=action)
         new_testimonial.action = testimonial_action
 
-      if vendor and isinstance(vendor, int):
+      if vendor:
         testimonial_vendor = Vendor.objects.get(id=vendor)
         new_testimonial.vendor = testimonial_vendor
 
-      if community and isinstance(community, int):
+      if community:
         testimonial_community = Community.objects.get(id=community)
         new_testimonial.community = testimonial_community
       else:
