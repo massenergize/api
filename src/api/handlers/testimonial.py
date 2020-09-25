@@ -50,6 +50,22 @@ class TestimonialHandler(RouteHandler):
     args = rename_field(args, 'preferredName', 'preferred_name')
     args['tags'] = parse_list(args.get('tags', []))
 
+    # check validity - these should be IDs
+    commmunity = args.get('community', None)
+    if community and not isinstance(community, int):
+      args["community"] = None
+
+    action = args.get('action', None)
+    if action and not isinstance(action, int):
+      args["action"] = None
+
+    vendor = args.get('vendor', None)
+    if vendor and not isinstance(vendor, int):
+      args["vendor"] = None
+
+      # To do, if we decide: 
+      # if user specifies other_vendor and passed to API - should record it as an unapproved vendor
+
     is_approved = args.pop("is_approved", None)
     if is_approved:
       args["is_approved"] = parse_bool(is_approved)
@@ -57,9 +73,9 @@ class TestimonialHandler(RouteHandler):
     if is_published:
       args["is_published"] = parse_bool(is_published)
 
+    # no anonymous option anymore
     args["anonymous"] = False
  
-    
     testimonial_info, err = self.service.create_testimonial(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
