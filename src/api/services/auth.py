@@ -31,7 +31,6 @@ class AuthService:
     try:
       args = context.args or {}
       firebase_id_token = args.get('idToken', None)
-
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
@@ -61,9 +60,12 @@ class AuthService:
         return serialize(user, full=True), str(massenergize_jwt_token), None
 
       else:
+        print(firebase_id_token, context)
         return None, None, CustomMassenergizeError("invalid_auth")
 
     except Exception as e:
+      import traceback
+      traceback.print_exc()
       capture_message("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
 
