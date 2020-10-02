@@ -7,7 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
-from _main_.utils.common import parse_str_list
+from _main_.utils.common import parse_str_list, parse_bool
 from api.decorators import admins_only, super_admins_only, login_required
 
 class TeamHandler(RouteHandler):
@@ -58,6 +58,11 @@ class TeamHandler(RouteHandler):
 
     admin_emails = args.pop('admin_emails', '')
     args["admin_emails"] = parse_str_list(admin_emails)
+
+    parentId = args.pop('parent_id', None)
+    if parentId and parentId != 'undefined':
+      args["parent_id"] = parentId
+
     team_info, err = self.team.create_team(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -88,6 +93,8 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     team_id = args.pop('id', None)
+    args['is_published'] = parse_bool(args.pop('is_published', None))
+    
     if not team_id:
       return  MassenergizeResponse(error="Please provide a team ID")
     team_info, err = self.team.update_team(team_id, args)
