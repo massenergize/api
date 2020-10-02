@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to subscribers"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, parse_bool
+from _main_.utils.common import get_request_contents, parse_bool, rename_field
 from api.services.subscriber import SubscriberService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -45,20 +45,19 @@ class SubscriberHandler(RouteHandler):
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
+    args = rename_field(args, 'community_id', 'community')
 
-    validator: Validator = Validator()
-    (validator
+    (self.validator
       .add("name", str, is_required=True)
       .add("email", str, is_required=True)
-      .add("community", str, is_required=False)
+      .add("community_id", str, is_required=False)
     )
 
-    args, err = validator.verify(args)
+    args, err = self.validator.verify(args)
     if err:
       return err
-    
-    community_id = args.pop('community_id', None)
-
+      
+    community_id = args.pop('community', None)
     subscriber_info, err = self.service.create_subscriber(community_id ,args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
