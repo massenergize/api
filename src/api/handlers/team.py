@@ -3,11 +3,12 @@
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field
 from api.services.team import TeamService
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
-from _main_.utils.common import parse_str_list, parse_bool
+from _main_.utils.common import parse_str_list, parse_bool, is_value
 from api.decorators import admins_only, super_admins_only, login_required
 
 class TeamHandler(RouteHandler):
@@ -45,8 +46,12 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     team_id = args.pop('team_id', None)
-    
-    team_info, err = self.team.get_team_info(context, team_id)
+
+    if is_value(team_id):
+      team_info, err = self.team.get_team_info(context, team_id)
+    else:
+      err = CustomMassEnergizeError("No team_id passed to teams.info")
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
@@ -57,10 +62,11 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
 
     admin_emails = args.pop('admin_emails', '')
-    args["admin_emails"] = parse_str_list(admin_emails)
+    if is_value(admin_emails):
+      args["admin_emails"] = parse_str_list(admin_emails)
 
     parentId = args.pop('parent_id', None)
-    if parentId and parentId != 'undefined':
+    if is_value(parentId):
       args["parent_id"] = parentId
 
     team_info, err = self.team.create_team(context, args)
@@ -93,11 +99,14 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     team_id = args.pop('id', None)
-    args['is_published'] = parse_bool(args.pop('is_published', None))
-    
-    if not team_id:
-      return  MassenergizeResponse(error="Please provide a team ID")
-    team_info, err = self.team.update_team(team_id, args)
+
+    args['is_published'] = parse_bool(args.pop('is_published', None))   
+      
+    if is_value(team_id):
+      team_info, err = self.team.update_team(team_id, args)
+    else:
+      err = CustomMassenergizeError("No team_id passed to teams.update")
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
@@ -107,7 +116,11 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     team_id = args.get("team_id", None)
-    team_info, err = self.team.delete_team(team_id)
+    if is_value(team_id):
+      team_info, err = self.team.delete_team(team_id)
+    else:
+      err = CustomMassEnergizeError("No team_id passed to teams.delete")
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
@@ -118,7 +131,13 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_id = args.pop('team_id', None)
     user_id = args.pop('user_id', None)
-    team_info, err = self.team.join_team(team_id, user_id)
+    if is_value(team_id) and is_value(user_id):
+      team_info, err = self.team.join_team(team_id, user_id)
+    elif not is_value(team_id):
+      err = CustomMassenergizeError("No team_id passed to teams.join")
+    else:
+      err = CustomMassenergizeError("No user_id passed to teams.join")
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
@@ -129,7 +148,13 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_id = args.pop('team_id', None)
     user_id = args.pop('user_id', None)
-    team_info, err = self.team.leave_team(team_id, user_id)
+    if is_value(team_id) and is_value(user_id):
+      team_info, err = self.team.leave_team(team_id, user_id)
+    elif not is_value(team_id):
+      err = CustomMassenergizeError("No team_id passed to teams.leave")
+    else:
+      err = CustomMassenergizeError("No user_id passed to teams.leave")
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
@@ -154,7 +179,6 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-
   @login_required
   def message_admin(self, request):
     context: Context = request.context
@@ -164,7 +188,6 @@ class TeamHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)      
 
-
   @admins_only
   def members(self, request):
     context: Context = request.context
@@ -173,7 +196,6 @@ class TeamHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_members_info)
-
 
   def members_preferred_names(self, request):
     context: Context = request.context
