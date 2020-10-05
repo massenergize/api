@@ -63,7 +63,8 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      user_email = args.pop('user_email', None)
+      user_email = args.pop('user_email', context.user_email)
+
       preferred_name = args.pop('preferred_name', None)
 
       args["title"] = args.get("title", "Thank You")[:100]

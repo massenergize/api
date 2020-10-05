@@ -142,6 +142,10 @@ def extract_location(args):
   
   return location
 
+def is_value(b):
+  if b and b != 'undefined':
+    return True
+  return False
 
 def resize_image(img, options={}):
   if options.get("is_logo", False):
