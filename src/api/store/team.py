@@ -155,7 +155,8 @@ class TeamStore:
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
       # TODO: create a rich email template for this?
-      #is_published = context.user_is_admin()
+      
+      # Wnen team initially created, it is not visible until reviewed by community admin
       is_published = False
       new_team.is_published = is_published
       if not is_published:
