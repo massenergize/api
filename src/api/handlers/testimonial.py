@@ -53,15 +53,15 @@ class TestimonialHandler(RouteHandler):
     # check validity - these should be IDs
     community = args.get('community', None)
     if community and not isinstance(community, int):
-      args["community"] = None
+        args["community"] = parse_int(community)
 
     action = args.get('action', None)
     if action and not isinstance(action, int):
-      args["action"] = None
+        args["action"] = parse_int(action)
 
     vendor = args.get('vendor', None)
     if vendor and not isinstance(vendor, int):
-      args["vendor"] = None
+        args["vendor"] = parse_int(vendor)
 
       # To do, if we decide: 
       # if user specifies other_vendor and passed to API - should record it as an unapproved vendor
