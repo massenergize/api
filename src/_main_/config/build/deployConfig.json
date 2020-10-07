@@ -1,5 +1,5 @@
 {
   "IS_PROD": false,
-  "BUILD_VERSION": "3.0.7",
+  "BUILD_VERSION": "3.0.8",
   "BUILD_VERSION_NOTES": "\nBug fixes for testimonials and actions\n"
 }
