@@ -165,7 +165,7 @@ class CommunityStore:
         teamsPage.save()
 
       
-      admin_group_name  = f"{new_community.name}-{new_community.subdomain}Admin-Group"
+      admin_group_name  = f"{new_community.name}-{new_community.subdomain}-Admin-Group"
       comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=new_community)
       comm_admin.save()
 
@@ -194,7 +194,7 @@ class CommunityStore:
         new_action.is_global = False
 
         #make sure the action title does not exceed the max length expected
-        suffix = f'-{action_to_copy_id}'
+        suffix = f'-{new_community.subdomain}-{action_to_copy_id}'
         new_action.title = new_action.title[:SHORT_STR_LEN-len(suffix)]+suffix 
 
         # only save this action if it does not exist
