@@ -189,15 +189,6 @@ class CarbonCalculatorTest(TestCase):
         else:
             print("carbon_calculator results consistent with input data from "+str(oldtime))
 
-def outputLine(data, filename, new=False):
-    tag = "a"
-    if new:
-        tag = "w"
-
-    f = open(filename, tag)
-    f.write(str(data) + "\n")
-    f.close()
-    # 1 !!!!!!! Works !!!!!!!
     def test_info_events(self):
         ''' Tests /cc/info/events url and returns a json of events. '''
 
@@ -347,33 +338,93 @@ def outputLine(data, filename, new=False):
                           "Defaults": "carbon_calculator/content/exportdefaults.csv"
                           })
 
-# don't care about this rn...
+def outputLine(data, filename, new=False):
+    tag = "a"
+    if new:
+        tag = "w"
+
+    f = open(filename, tag)
+    f.write(str(data) + "\n")
+    f.close()
+    # 1 !!!!!!! Works !!!!!!!
+
 def outputInputs(data):
     f = open("carbon_calculator/tests/Inputs.txt", "a")
     f.write(str(data) + "\n")
     f.close()
-#don't care about this rn...
+
 def populate_inputs_file():
-    client = Client()
-    response = client.get("/cc/info/actions")
-    data = jsons.loads(response.content)["actions"]
-    # print(data)
-    names = [i["name"] for i in data]
-    # print(names)
+    client      = Client()
+    response    = client.get("/cc/info/actions")
+    data        = jsons.loads(response.content)["actions"]
+    names       = [i["name"] for i in data]
+
+    filename_all = "carbon_calculator/tests/" + "allPossibleInputs.txt"
+    data = {"Timestamp" : timezone.now().isoformat(" "), "Contents" : "All Possible Calculator Inputs"}
+    outputLine(data, filename_all, True)
+    filename_def = "carbon_calculator/tests/" + "defaultInputs.txt"
+    data = {"Timestamp" : timezone.now().isoformat(" "), "Contents" : "Default Calculator Inputs"}
+    outputLine(data, filename_def, True)
+    np = 0    
     for name in names:
-        try:
-            outputInputs(
-                jsons.loads(
-                    client.post(
-                        "/cc/getInputs/{}".format(name), {}
-                    ).content
-                )
-            )
-        except:
-            pass
+        # get info on the action to find allowed parameter values
+        #print("URL: /cc/info/action/{}".format(name))
+        response = client.get("/cc/info/action/{}".format(name))
+        data = response.json() #jsons.loads(response.content, {})
+        actionName = data["action"]["name"]
 
+        questions = data["action"]["questionInfo"]
+        qTot = []
+        qInd = []
+        for question in questions:
+            qType = question["questionType"]
+            qInd.append(0)
+            if qType == "Choice":
+                qTot.append(len(question["responses"]))
+            else:
+             if qType == "Number":
+                qTot.append(1)
+             else:
+                qTot.append(0)
 
-"""Results from run with above settings:
-Inputs to EvalSolarPV: {'solar_potential': 'Great'}
-{'status': 0, 'carbon_points': 5251.0, 'cost': 14130.0, 'savings': 3241.0, 'explanation': 'installing a solar PV array on your home would pay back in around 5 years and save 26.3 tons of CO2 over 10 years.'}
-.    """
+        nq = len(questions)
+        qr = range(nq)
+        done = False
+        ni = 0
+        while not done:
+            actionPars = {"Action": actionName, "inputs":{}}
+            q = 0
+            for q in qr:
+                question = questions[q]
+                if qTot[q] > 1:
+                    actionPars["inputs"][question["name"]] = question["responses"][qInd[q]]["text"]
+                else:
+                    if qTot[q] == 1:
+                        val = 0.
+                        typ = question["numeric_values"].get("typical_value",-999)
+                        if typ > 0:
+                            val = typ
+                        actionPars["inputs"][question["name"]] = val
+
+            outputs = client.get("/cc/estimate/{}".format(actionPars['Action']), actionPars["inputs"]).content.decode("utf-8")
+            actionPars["outputs"] = eval(outputs)
+            outputLine(actionPars, filename_all)
+            np += 1
+            ni += 1
+
+            # update the response indices, increment one by one to get each combination
+            for q in qr:
+                if qTot[q]>0:
+                    qInd[q] += 1
+                    if qInd[q] == qTot[q]:
+                        qInd[q] = 0
+                    else:
+                        break
+                if q == nq-1:
+                    done = True
+
+        msg = "Action '%s', %d possible inputs" % (actionName, ni)
+        print(msg)
+
+    msg = "Number possible calculator inputs with all choices = %d" % np
+    print(msg)
