@@ -45,7 +45,6 @@ def get_community_or_die(context, args):
   
 
 def get_user_or_die(context, args):
-  print(args)
   user_email = args.pop('user_email', None) or args.pop('email', None) 
   user_id = args.pop('user_id', None) 
   if user_id:

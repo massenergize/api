@@ -171,7 +171,6 @@ class TestimonialStore:
       testimonial.update(**args)
       return new_testimonial, None
     except Exception as e:
-      print(e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 

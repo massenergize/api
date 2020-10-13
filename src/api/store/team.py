@@ -52,8 +52,6 @@ class TeamStore:
       if not team_id:
         return None, CustomMassenergizeError("provide_team_id")
       team_admins = TeamMember.objects.filter(is_admin=True, team__id=team_id, is_deleted=False)
-      print(team_admins)
-
       team_admins = [a.user for a in team_admins if a.user]
       return team_admins, None
     except Exception as e:
