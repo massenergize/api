@@ -29,6 +29,7 @@ class CarbonCalculatorTest(TestCase):
                 "Questions":"carbon_calculator/content/Questions.csv",
                 "Stations":"carbon_calculator/content/Stations.csv",
                 "Groups":"carbon_calculator/content/Groups.csv",
+                "Organizations":"carbon_calculator/content/Organizations.csv",
                 "Events":"carbon_calculator/content/Events.csv",
                 "Defaults":"carbon_calculator/content/Defaults.csv"
                 })
@@ -57,16 +58,18 @@ class CarbonCalculatorTest(TestCase):
         # test there are actions
         # test that one action has the average_points
 
-        response = self.client.get('/cc')
+        response = self.client.get('/cc/')
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get('/cc/info')
+        response = self.client.get('/cc/info/')
         self.assertEqual(response.status_code, 200)
 
+        #for some reason this URL doesn't want the trailing slash
         response = self.client.get('/cc/info/actions')
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content.decode('utf8'))
+        data = data.get("data",data)
         self.assertGreaterEqual(len(data["actions"]),37)
 
         name= data["actions"][0]["name"]
@@ -85,6 +88,7 @@ class CarbonCalculatorTest(TestCase):
         with the results of the last run. Finally, pretty print the differences
         between this test run and the last one. Don't return anything.
         """
+        print('Test_consistency/n')
         #Check for required data
         if len(self.input_data) <= 0:
             return
@@ -133,11 +137,16 @@ class CarbonCalculatorTest(TestCase):
         output_data = []
         for aip in inputs: #aip = action inputs pair
             try:
-                output_data.append(
-                    { "Action" : aip['Action'], "inputs" : aip['inputs'], 'outputs' : jsons.loads( #Response of estimate in dict form
+                outdata = jsons.loads( #Response of estimate in dict form
                         self.client.post(
                             "/cc/estimate/{}".format(aip['Action']), aip["inputs"]
-                                ).content)}) #Throwing errors, need a better inputs file
+                                ).content)
+                outdata = outdata.get("data", outdata)
+
+                output_data.append(
+                    { "Action" : aip['Action'], 
+                    "inputs" : aip['inputs'], 
+                    'outputs' : outdata })
             except Exception as e: #Some may throw errors w/o inputs
                 print('eval_all_inputs exception')
                 print(e)
@@ -170,7 +179,7 @@ class CarbonCalculatorTest(TestCase):
                     print("outputs_old error:")
                     print(old[i])
                 elif not key in outputs_new:
-                    print("outpus_new error:")
+                    print("outputs_new error, key = "+key)
                     print(new[i])
                 elif not outputs_new[key] == outputs_old[key]:
                     differences.append((action, inputs,
@@ -346,7 +355,6 @@ def outputLine(data, filename, new=False):
     f = open(filename, tag)
     f.write(str(data) + "\n")
     f.close()
-    # 1 !!!!!!! Works !!!!!!!
 
 def outputInputs(data):
     f = open("carbon_calculator/tests/Inputs.txt", "a")

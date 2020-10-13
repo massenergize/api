@@ -5,6 +5,7 @@ from database.models import UserProfile, CommunityMember, Action, Team, \
   UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit, \
   Data, TagCollection
 from api.store.team import get_team_users
+from api.store.tag_collection import TagCollectionStore
 from django.db.models import Q
 from sentry_sdk import capture_message
 
@@ -12,6 +13,13 @@ class DownloadStore:
 
   def __init__(self):
     self.name = "Download Store/DB"
+    tcs = TagCollectionStore()
+
+    # for testing with empty database, create tag collection
+    tag_collections = TagCollection.objects.filter(name='Category')
+    if tag_collections.count()<1:
+      tagdata = {'name':'Category', 'tags':'Home Energy,Solar,Transportation,Waste & Recycling,Food,Activism & Education,Land, Soil & Water'}
+      tcs.create_tag_collection(tagdata)
 
     self.action_categories = TagCollection.objects.get(name="Category").tag_set.all()
 
