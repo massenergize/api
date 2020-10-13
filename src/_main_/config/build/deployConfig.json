@@ -1,5 +1,5 @@
 {
   "IS_PROD": false,
-  "BUILD_VERSION": "3.0.8",
-  "BUILD_VERSION_NOTES": "\nBug fixes for testimonials and actions\n"
+  "BUILD_VERSION": "3.0.10",
+  "BUILD_VERSION_NOTES": "October 2020, Sprint 1 Fixes:\nIssue frontend-admin #244, 231, 348,207,212, 205, 149, 200, 215, 151,37,219, 116, 193,225,129, 356, 226\n"
 }

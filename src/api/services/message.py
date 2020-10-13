@@ -41,7 +41,10 @@ class MessageService:
       return None, err
 
     team_id = message.team.pk if message.team else None
-    team_admins = self.team_store.get_team_admins(context, team_id)
+    team_admins, err = self.team_store.get_team_admins(context, team_id)
+
+    if(err):
+      return None, err
 
     sender_name = message.user_name or (message.user and message.user.full_name)
     sender_email  = message.email or (message.user and message.user.email)

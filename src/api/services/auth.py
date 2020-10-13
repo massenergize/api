@@ -31,7 +31,6 @@ class AuthService:
     try:
       args = context.args or {}
       firebase_id_token = args.get('idToken', None)
-
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
@@ -62,7 +61,9 @@ class AuthService:
 
       else:
         return None, None, CustomMassenergizeError("invalid_auth")
-
+    except PermissionError:
+      capture_message("not_at_admin", level="error")
+      return None, None, CustomMassenergizeError('not_an_admin')
     except Exception as e:
       capture_message("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
@@ -85,6 +86,7 @@ class AuthService:
 
     except Exception as e:
       capture_message(str(e), level="error")
+
       return None, CustomMassenergizeError(e)
 
 

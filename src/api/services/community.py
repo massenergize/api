@@ -24,20 +24,20 @@ class CommunityService:
     return serialize(community, full=True), None
 
   def join_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
-    community, err = self.store.join_community(context, args)
+    user, err = self.store.join_community(context, args)
     if err:
       return None, err
 
     #send an email to the community admin
-    return serialize(community), None
+    return serialize(user, full=True), None
 
   def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
-    community, err = self.store.leave_community(context, args)
+    user, err = self.store.leave_community(context, args)
     if err:
       return None, err
 
     #send an email to the community admin
-    return serialize(community), None
+    return serialize(user, full=True), None
 
   def list_communities(self, context, args) -> (list, MassEnergizeAPIError):
     communities, err = self.store.list_communities(context, args)

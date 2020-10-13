@@ -137,7 +137,7 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      
+      rank = args.pop('rank', None)
       new_testimonial = testimonial.first()
 
       if image:
@@ -155,6 +155,9 @@ class TestimonialStore:
       if community:
         testimonial_community = Community.objects.get(id=community)
         new_testimonial.community = testimonial_community
+      
+      if rank:
+        new_testimonial.rank = rank
       
       tags_to_set = []
       for t in tags:

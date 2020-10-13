@@ -32,21 +32,33 @@ class TeamStore:
     self.name = "Team Store/DB"
 
   def get_team_info(self, context: Context, team_id) -> (dict, MassEnergizeAPIError):
-    team = Team.objects.get(id=team_id)
-    if not team:
-      return None, InvalidResourceError()
-    user = UserProfile.objects.get(id=context.user_id)
-    #TODO: untested
-    if not team.is_published and not (context.user_is_admin()
-                            or TeamMember.objects.filter(team=team, user=user).exists()):
-      return None, CustomMassenergizeError("Cannot access team until it is approved")
-    return team, None
+    try:
+      team = Team.objects.filter(id=team_id).first()
+      if not team:
+        return None, InvalidResourceError()
+      user = UserProfile.objects.get(id=context.user_id)
+      #TODO: untested
+      if not team.is_published and not (context.user_is_admin()
+                              or TeamMember.objects.filter(team=team, user=user).exists()):
+        return None, CustomMassenergizeError("Cannot access team until it is approved")
+      return team, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
-  def get_team_admins(self, team_id):
-    if not team_id:
-      return []
-    return [a.user for a in TeamMember.objects.filter(is_admin=True, team__id=team_id, is_deleted=False) if a.user is not None]
 
+  def get_team_admins(self, context, team_id):
+    try:
+      if not team_id:
+        return None, CustomMassenergizeError("provide_team_id")
+      team_admins = TeamMember.objects.filter(is_admin=True, team__id=team_id, is_deleted=False)
+      team_admins = [a.user for a in team_admins if a.user]
+      return team_admins, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+      
   def list_teams(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       community = get_community_or_die(context, args)

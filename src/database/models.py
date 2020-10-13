@@ -251,7 +251,7 @@ class Community(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN)
   subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
-  owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Ellen')
+  owner_name = models.CharField(max_length=SHORT_STR_LEN, default='Unknown')
   owner_email = models.EmailField(blank=False)
   owner_phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
   about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
@@ -1260,22 +1260,7 @@ class Testimonial(models.Model):
       "full_name": "User unknown",
       "email": "e-mail address not provided"
     }
-    # Cadmins need to see e-mails
-    #if(self.anonymous):
-    #  return {
-    #    "full_name": "Anonymous",
-    #    "email": "anonymous"
-    #  }
-    #elif(self.preferred_name):
-    #  return {
-    #    "full_name": self.preferred_name,
-    #    "email": "anonymous"
-    #  }
-    #else:
-    #  return get_json_if_not_none(self.user) or {
-    #    "full_name": "Anonymous",
-    #    "email": "anonymous"
-    #  }
+
 
   def simple_json(self):
     res = model_to_dict(self, exclude=['image', 'tags'])
@@ -1294,12 +1279,11 @@ class Testimonial(models.Model):
   def full_json(self):
     data = self.simple_json() 
     data['image'] = data.get('file', None)
-    #data['tags'] = [t.simple_json() for t in self.tags.all()]
+    data['tags'] = [t.simple_json() for t in self.tags.all()]
     return data
 
   class Meta:
     ordering = ('rank',)
-    # unique_together = [['user', 'action']]
     db_table = 'testimonials'
 
 

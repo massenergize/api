@@ -2,6 +2,7 @@ from database.models import Community, CommunityMember, UserProfile, Action, Eve
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from database.utils.constants import SHORT_STR_LEN
 from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die
 import random 
@@ -82,6 +83,7 @@ class CommunityStore:
 
 
   def create_community(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+    new_community = None
     try:
       logo = args.pop('logo', None)
       new_community = Community.objects.create(**args)
@@ -162,7 +164,9 @@ class CommunityStore:
         teamsPage.is_template = False
         teamsPage.save()
 
-      comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=f"{new_community.name}-Admin-Group", community=new_community)
+      
+      admin_group_name  = f"{new_community.name}-{new_community.subdomain}-Admin-Group"
+      comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=new_community)
       comm_admin.save()
 
       if context.user_id:
@@ -178,23 +182,34 @@ class CommunityStore:
           comm_admin.members.add(owner)
           comm_admin.save()
 
-      
       #also clone all global actions for this community
       global_actions = Action.objects.filter(is_global=True)
       for action_to_copy in global_actions:
+        action_to_copy_id = action_to_copy.id
         old_tags = action_to_copy.tags.all()
         old_vendors = action_to_copy.vendors.all()
-        new_action = action_to_copy
+        new_action: Action = action_to_copy
         new_action.pk = None
-        new_action.community = None
         new_action.is_published = False
-        new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
+        new_action.is_global = False
+
+        #make sure the action title does not exceed the max length expected
+        suffix = f'-{new_community.subdomain}-{action_to_copy_id}'
+        new_action.title = new_action.title[:SHORT_STR_LEN-len(suffix)]+suffix 
+
+        # only save this action if it does not exist
+        # if(Action.objects.filter(title=new_action.title, community=new_community).count() == 0):
         new_action.save()
+
         new_action.tags.set(old_tags)
         new_action.vendors.set(old_vendors)
-      
+
+        new_action.community = new_community
+        new_action.save()
       return new_community, None
     except Exception as e:
+      if new_community:
+        new_community.delete()
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
@@ -212,9 +227,6 @@ class CommunityStore:
       community.update(**args)
 
       new_community = community.first()
-      # if logo and new_community.logo:   # can't update the logo if the community doesn't have one already?
-      #  # new_community.logo.file = logo
-      #  # new_community.logo.save()
       if logo:   
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()

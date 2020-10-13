@@ -64,7 +64,7 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
-  @login_required
+  @super_admins_only
   def create(self, request):
     context: Context  = request.context
     args = context.get_request_body()
@@ -124,9 +124,12 @@ class CommunityHandler(RouteHandler):
       if not ok:
         return MassenergizeResponse(error=str(err))
 
-    args['owner_name'] = args.get('owner_name', None)
-    args['owner_email'] = args.get('owner_email', None)
-    args['owner_phone_number'] = args.get('owner_phone_number', None)
+    if(args.get('owner_name', None)):
+      args['owner_name'] = args.get('owner_name', None)
+    if(args.get('owner_email', None)):
+      args['owner_email'] = args.get('owner_email', None)
+    if(args.get('owner_phone_number', None)):
+      args['owner_phone_number'] = args.get('owner_phone_number', None)
     
     if(args.get('is_geographically_focused', False)):
       args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', False))
