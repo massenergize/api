@@ -146,7 +146,6 @@ class UserHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
-    args: dict = context.args
     users, err = self.service.list_users_for_super_admin(context)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

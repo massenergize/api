@@ -37,6 +37,16 @@ class TeamService:
     team, err = self.store.create_team(context, args)
     if err:
       return None, err
+
+    # within store.create_team, an e-mail was sent to the community admin
+    # 
+    # TODO: the following functionality is needed
+    # message to the effect that you have been named as a team admin
+    #message_info, err = self.message_store.message_team_admin(context, args)
+    #
+    # message to community admins that a team was created (needs to be recorded in admin portal because the e-mail may be lost)
+    #message_info, err = self.message_store.message_admin(context, args)
+
     return serialize(team), None
 
 

@@ -169,12 +169,15 @@ class TeamStore:
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
       # TODO: create a rich email template for this?
-      is_published = context.user_is_admin()
+      
+      # Wnen team initially created, it is not visible until reviewed by community admin
+      is_published = False
       new_team.is_published = is_published
       if not is_published:
         cadmins = CommunityAdminGroup.objects.filter(community__id=community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team.\n\n%s" % ("%s/admin/edit/%i/team" %
         ("https://admin.massenergize.org" if IS_PROD else "https://admin-dev.massenergize.org", team.id))
+
         for cadmin in cadmins:
           send_massenergize_email(subject="New team awaiting approval",
                                 msg=message, to=cadmin.email)
@@ -194,7 +197,6 @@ class TeamStore:
 
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
-      
       community_id = args.pop('community_id', None)
       logo = args.pop('logo', None)
       parent_id = args.pop('parent_id', None)
@@ -214,6 +216,9 @@ class TeamStore:
         for team_admin in team_admins:
           send_massenergize_email(subject="Your team has been approved",
                                 msg=message, to=team_admin.user.email)
+      else:
+        # this is how teams can get be made not live
+        team.is_published = is_published
 
       if team:
         if community_id:
@@ -227,12 +232,16 @@ class TeamStore:
             team.parent = parent
         
         if logo:
-          logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
-          logo.save()
-          team.logo = logo
+          # if existing logo, the string length is around 300 characters
+          # If a new logo updated, this will be the length of the file, much larger than that       
+          new_logo = len(logo) > 1000
+
+          if new_logo:
+            logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
+            logo.save()
+            team.logo = logo
 
         team.save()
-
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
