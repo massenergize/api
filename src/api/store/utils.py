@@ -45,12 +45,17 @@ def get_community_or_die(context, args):
   
 
 def get_user_or_die(context, args):
-  user_email = args.pop('user_email', None) or args.pop('email', None) or context.user_email
-  user_id = args.pop('user_id', None) or context.user_id
+  print(args)
+  user_email = args.pop('user_email', None) or args.pop('email', None) 
+  user_id = args.pop('user_id', None) 
   if user_id:
     return UserProfile.objects.get(pk=user_id)
   elif user_email:
     return UserProfile.objects.get(email=user_email)
+  elif context.user_id:
+    return UserProfile.objects.get(pk=context.user_id)
+  elif context.user_email:
+    return UserProfile.objects.get(email=context.user_email)
   else:
     raise Exception("Please provide a valid user_id or user_email")
 

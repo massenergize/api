@@ -60,12 +60,11 @@ class AuthService:
         return serialize(user, full=True), str(massenergize_jwt_token), None
 
       else:
-        print(firebase_id_token, context)
         return None, None, CustomMassenergizeError("invalid_auth")
-
+    except PermissionError:
+      capture_message("not_at_admin", level="error")
+      return None, None, CustomMassenergizeError('not_an_admin')
     except Exception as e:
-      import traceback
-      traceback.print_exc()
       capture_message("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
 
@@ -87,6 +86,7 @@ class AuthService:
 
     except Exception as e:
       capture_message(str(e), level="error")
+
       return None, CustomMassenergizeError(e)
 
 

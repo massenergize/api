@@ -136,7 +136,7 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      
+      rank = args.pop('rank', None)
       new_testimonial = testimonial.first()
 
       if image:
@@ -155,6 +155,9 @@ class TestimonialStore:
         testimonial_community = Community.objects.get(id=community)
         new_testimonial.community = testimonial_community
       
+      if rank:
+        new_testimonial.rank = rank
+      
       tags_to_set = []
       for t in tags:
         tag = Tag.objects.filter(pk=t).first()
@@ -167,6 +170,7 @@ class TestimonialStore:
       testimonial.update(**args)
       return new_testimonial, None
     except Exception as e:
+      print(e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
