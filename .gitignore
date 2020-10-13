@@ -10,3 +10,7 @@ src/*.jpg
 src/*.jpeg
 
 \.vscode/
+
+src/dev.env
+
+src/prod.env

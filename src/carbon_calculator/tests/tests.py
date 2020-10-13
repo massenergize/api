@@ -13,10 +13,7 @@ IMPORT_SUCCESS = {"status": True}
 class CarbonCalculatorTest(TestCase):
     @classmethod
     def setUpClass(self):
-        ''' This will run before any tests occur. This is loading the files that are associated with the various
-            carbon calculator models. '''
-
-        self.client = Client()  # this will act as fake user, so it will send urls to the server for testing
+        self.client = Client()
         self.client.post('/cc/import',
                          {"Confirm": "Yes",
                           "Actions": "carbon_calculator/content/Actions.csv",
@@ -33,30 +30,38 @@ class CarbonCalculatorTest(TestCase):
         populate_inputs_file()
 
     def test_info_actions(self):
-        ''' Makes sure path to /cc/info/actions is successful '''
+        # test routes function
+        # test there are actions
+        # test that one action has the average_points
 
+        response = self.client.post('/cc')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post('/cc/info')
+        self.assertEqual(response.status_code, 200)
         response = self.client.post('/cc/info/actions')
         self.assertEqual(response.status_code, 200)    # remember status code 200 is a good status
 
+        data = json.loads(response.content.decode('utf8'))
+        self.assertGreaterEqual(len(data["actions"]),37)
+
+        name= data["actions"][0]["name"]
+        self.assertEqual(name,"energy_fair")
+
+        points = data["actions"][0]["average_points"]
+        self.assertEqual(points,50)
+
     def test_solarPVNoArgs(self):
-        ''' Ya so kinda confused with this whole class... cause I've tried to type out that url and I get a error
-            but when i do a assert equal for a good status code I get no errors... weird... '''
-        # why is this response good? Becuase when I type it in it won't work
         response = self.client.post('/cc/getInputs/install_solarPV', {})
         data = jsons.loads(response.content)
-        # outputInputs(data)
+        #outputInputs(data)
 
     def test_solarPVGreat(self):
-        ''' gotta by honest don't really know to much about this. I just know this is greg and josh's thing so
-            imma just leave at that... '''
         response = self.client.post('/cc/getInputs/install_solarPV',
-                                    {
-                                        'solar_potential': 'Great'
-                                    }
-                                    )
+            {
+            'solar_potential': 'Great'
+            }
+        )
         data = jsons.loads(response.content)
-        # print('solarPV data: \n')
-        # print(data)
 
     def test_led_number_nonefficient_bulbs(self):
         response = self.client.post('/cc/getInputs/led_lighting',
