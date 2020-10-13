@@ -1,8 +1,11 @@
 from django.test import TestCase, Client
 from carbon_calculator.models import CalcUser, Event, Station, Action, Group, Question
 from carbon_calculator.views import importcsv
+from database.models import Vendor
+from django.db.models import Count
 import json
 import jsons
+import requests
 import os
 import pprint, sys
 from django.utils import timezone #For keeping track of when the consistency was last checked
@@ -10,6 +13,9 @@ from django.utils import timezone #For keeping track of when the consistency was
 OUTPUTS_FILE   = "carbon_calculator/tests/expected_outputs.txt"
 INPUTS_FILE    = "carbon_calculator/tests/allPossibleInputs.txt"
 VALUE_DIFF     = "Value difference"
+
+IMPORT_SUCCESS = {"status": True}
+
 
 # Create your tests here.
 class CarbonCalculatorTest(TestCase):
@@ -191,79 +197,183 @@ def outputLine(data, filename, new=False):
     f = open(filename, tag)
     f.write(str(data) + "\n")
     f.close()
+    # 1 !!!!!!! Works !!!!!!!
+    def test_info_events(self):
+        ''' Tests /cc/info/events url and returns a json of events. '''
 
+        event_list = self.client.get("/cc/info/events", {}) # status code = 200
+        event_list_json = jsons.loads(event_list.content)   # loads into json
+        #print(event_list_json)                             # uncomment this to see json
+
+    # 2 I belive this one works... little unsure
+    def test_info_all_events(self):
+        '''tests /cc/info/event/~eventName~ and should return all data about that event '''
+        #print("2")
+        obj = Event.objects.first()  # getting the first object in model
+        field_object = Event._meta.get_field('name') # this and next is getting the name
+        #print("field object")
+        #print(field_object)
+        field_value = field_object.value_from_object(obj) # this returns actual name (as str)
+        #print("field value")
+        #print(field_value)
+
+        # UPDATE WORKS !!! Well pretty sure, gives me all of the info sooooo
+        event_url = "/cc/info/event/" + field_value
+        #print(event_url)
+        event_info = self.client.get(event_url, {})
+        event_json = jsons.loads(event_info.content)
+        #print(event_json)
+
+    # 4 !!!!!!! WORKS !!!!!!!
+    def test_info_impact_event(self):
+        #print("test info impact event")
+        obj = Event.objects.first()  # getting the first object in model
+        field_object = Event._meta.get_field('name')  # this and next is getting the name
+        field_value = field_object.value_from_object(obj)  # this returns actual name (as str)
+        #print(field_value)
+
+        event_url = "/cc/info/impact/" + field_value
+        #print(event_url)
+        event_info = self.client.get(event_url, {})
+        event_json = jsons.loads(event_info.content)
+        #print(event_json)
+
+    # 6 !!!!!!! WORKS !!!!!!!
+    def test_info_on_one_group(self):
+        obj = Group.objects.first()
+        field_object = Group._meta.get_field('name')
+        field_value = field_object.value_from_object(obj)
+        #print(field_value)
+
+        event_url = "/cc/info/group/" + field_value
+        #print(event_url)
+        event_info = self.client.get(event_url, {})
+        event_json = jsons.loads(event_info.content)
+        #print(event_json)
+
+    # 8 !!!!!!! WORKS !!!!!!!
+    def test_info_stations_one_station(self):
+        obj = Station.objects.first()
+        field_object = Station._meta.get_field('name')
+        field_value = field_object.value_from_object(obj)
+        #print(field_value)
+
+        event_url = "/cc/info/station/" + field_value
+        #print(event_url)
+        event_info = self.client.get(event_url, {})
+        event_json = jsons.loads(event_info.content)
+        #print(event_json)
+
+    #extra
+    def test_get_action_list(self):
+        impact_info = self.client.get("/cc/info/actions", {})
+        #print("actions:")
+        #print(jsons.loads(impact_info.content))
+
+    # 12 !!!!!! WORKS !!!!!!!
+    def test_estimate_actions(self):
+
+        obj = Action.objects.first()  # getting the first object in model
+        field_object = Action._meta.get_field('name')  # this and next is getting the name
+        field_value = field_object.value_from_object(obj)  # this returns actual name (as str)
+        #print(field_value)
+
+        event_url = '/cc/estimate/' + field_value
+        response = self.client.post(event_url, {})
+        self.assertEqual(response.status_code, 200)
+        # event_json = jsons.loads(event_info.content)
+        # print(event_json)
+        #test_action = self.client.post('/cc/estimate/')
+
+    # 13 !!!!!! WORKS !!!!!!
+    def test_undo_actions(self):
+
+        obj = Action.objects.first()
+        field_object = Action._meta.get_field('name')
+        field_value = field_object.value_from_object(obj)
+        #print(field_value)
+
+        event_url = '/cc/undo/' + field_value
+        response = self.client.post(event_url, {})
+        #print(response)
+
+    # 3 !!!!!! Works !!!!!!
+    def test_impact_url(self):
+
+       impact_info = self.client.get("/cc/info/impact", {})
+       #print("test impact url")
+       #print(jsons.loads(impact_info.content))
+
+    # 5 !!!!!! WORKS !!!!!!!
+    def test_info_group_url(self):
+        #print("test info group url")
+        group_info = self.client.get("/cc/info/groups", {})
+        #print("test info group url")
+        #print(jsons.loads(group_info.content))
+
+    # 7 !!!! Works !!!!
+    def test_info_stations_url(self):
+
+        station_info = self.client.get("/cc/info/stations", {})
+        #print("test info stations url")
+        #print(jsons.loads(station_info.content))
+
+    # 9 !!! Works But there is no users, I even checked by running the server
+    def test_info_users_url(self):
+        user_url = "/cc/info/users"
+
+        user_info = self.client.get(user_url, {})
+        #print("test info users url")
+        #print(jsons.loads(user_info.content))
+
+    # 11 !!!!! WORKS !!!!
+    def test_create_user(self):
+        response = self.client.post('/cc/users', {
+                                                    'id':1,
+                                                    'email':'email@gmail.com'
+                                                 })
+        data = jsons.loads(response.content)
+        #print(data)
+
+    # 10 DOES NOT WORK becuase there are no users
+    def test_getting_user(self):
+        response = self.client.get("/cc/info/users")
+        #print(jsons.loads(response.content))
+
+    # honestly no idea if this works, it gives a response that its exporting but idk if it is
+    def test_exporting_csv(self):
+        self.client.post('/cc/export',
+                         {
+                          "Defaults": "carbon_calculator/content/exportdefaults.csv"
+                          })
+
+# don't care about this rn...
+def outputInputs(data):
+    f = open("carbon_calculator/tests/Inputs.txt", "a")
+    f.write(str(data) + "\n")
+    f.close()
+#don't care about this rn...
 def populate_inputs_file():
-    client      = Client()
-    response    = client.get("/cc/info/actions")
-    data        = jsons.loads(response.content)["actions"]
-    names       = [i["name"] for i in data]
-
-    filename_all = "carbon_calculator/tests/" + "allPossibleInputs.txt"
-    data = {"Timestamp" : timezone.now().isoformat(" "), "Contents" : "All Possible Calculator Inputs"}
-    outputLine(data, filename_all, True)
-    filename_def = "carbon_calculator/tests/" + "defaultInputs.txt"
-    data = {"Timestamp" : timezone.now().isoformat(" "), "Contents" : "Default Calculator Inputs"}
-    outputLine(data, filename_def, True)
-    np = 0    
+    client = Client()
+    response = client.get("/cc/info/actions")
+    data = jsons.loads(response.content)["actions"]
+    # print(data)
+    names = [i["name"] for i in data]
+    # print(names)
     for name in names:
-        # get info on the action to find allowed parameter values
-        #print("URL: /cc/info/action/{}".format(name))
-        response = client.get("/cc/info/action/{}".format(name))
-        data = response.json() #jsons.loads(response.content, {})
-        actionName = data["action"]["name"]
+        try:
+            outputInputs(
+                jsons.loads(
+                    client.post(
+                        "/cc/getInputs/{}".format(name), {}
+                    ).content
+                )
+            )
+        except:
+            pass
 
-        questions = data["action"]["questionInfo"]
-        qTot = []
-        qInd = []
-        for question in questions:
-            qType = question["questionType"]
-            qInd.append(0)
-            if qType == "Choice":
-                qTot.append(len(question["responses"]))
-            else:
-             if qType == "Number":
-                qTot.append(1)
-             else:
-                qTot.append(0)
 
-        nq = len(questions)
-        qr = range(nq)
-        done = False
-        ni = 0
-        while not done:
-            actionPars = {"Action": actionName, "inputs":{}}
-            q = 0
-            for q in qr:
-                question = questions[q]
-                if qTot[q] > 1:
-                    actionPars["inputs"][question["name"]] = question["responses"][qInd[q]]["text"]
-                else:
-                    if qTot[q] == 1:
-                        val = 0.
-                        typ = question["numeric_values"].get("typical_value",-999)
-                        if typ > 0:
-                            val = typ
-                        actionPars["inputs"][question["name"]] = val
-
-            outputs = client.get("/cc/estimate/{}".format(actionPars['Action']), actionPars["inputs"]).content.decode("utf-8")
-            actionPars["outputs"] = eval(outputs)
-            outputLine(actionPars, filename_all)
-            np += 1
-            ni += 1
-
-            # update the response indices, increment one by one to get each combination
-            for q in qr:
-                if qTot[q]>0:
-                    qInd[q] += 1
-                    if qInd[q] == qTot[q]:
-                        qInd[q] = 0
-                    else:
-                        break
-                if q == nq-1:
-                    done = True
-
-        msg = "Action '%s', %d possible inputs" % (actionName, ni)
-        print(msg)
-
-    msg = "Number possible calculator inputs with all choices = %d" % np
-    print(msg)
+"""Results from run with above settings:
+Inputs to EvalSolarPV: {'solar_potential': 'Great'}
+{'status': 0, 'carbon_points': 5251.0, 'cost': 14130.0, 'savings': 3241.0, 'explanation': 'installing a solar PV array on your home would pay back in around 5 years and save 26.3 tons of CO2 over 10 years.'}
+.    """
