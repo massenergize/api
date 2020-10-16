@@ -100,6 +100,10 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_id = args.pop('id', None)
 
+    parentId = args.pop('parent_id', None)
+    if is_value(parentId):
+      args["parent_id"] = parentId
+
     args['is_published'] = parse_bool(args.pop('is_published', None))   
       
     if is_value(team_id):

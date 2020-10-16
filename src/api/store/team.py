@@ -270,7 +270,7 @@ class TeamStore:
     try:
       team = Team.objects.get(id=team_id)
       user = UserProfile.objects.get(id=user_id)
-      teamMember = TeamMember.create(team=team, user=user)
+      teamMember = TeamMember.objects.create(team=team, user=user)
       teamMember.save()
       #team.members.add(user_id)
       #team.save()
