@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to subscribers"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, parse_bool, rename_field
+from _main_.utils.common import get_request_contents, parse_bool, parse_int, rename_field
 from api.services.subscriber import SubscriberService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -56,8 +56,10 @@ class SubscriberHandler(RouteHandler):
     args, err = self.validator.verify(args)
     if err:
       return err
-      
+  
     community_id = args.pop('community', None)
+    if community_id and not isinstance(community_id, int):
+        community_id = parse_int(community_id)
     subscriber_info, err = self.service.create_subscriber(community_id ,args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -101,7 +103,10 @@ class SubscriberHandler(RouteHandler):
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
+
     subscriber_id = args.pop('subscriber_id', None)
+    if subscriber_id and not isinstance(subscriber_id, int):
+        subscriber_id = parse_int(subscriber_id)
     subscriber_info, err = self.service.delete_subscriber(subscriber_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

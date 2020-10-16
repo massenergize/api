@@ -28,11 +28,14 @@ class SubscriberStore:
 
   def create_subscriber(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
+      
       new_subscriber = Subscriber.objects.create(**args)
-      new_subscriber.save()
       if community_id:
         community = Community.objects.get(id=community_id)
         new_subscriber.community = community
+
+      new_subscriber.save()
+
       return new_subscriber, None
     except Exception as e:
       capture_message(str(e), level="error")
