@@ -1,2 +1,2 @@
-October 2020, Sprint 1 Fixes:
-Issue frontend-admin #244, 231, 348,207,212, 205, 149, 200, 215, 151,37,219, 116, 193,225,129, 356, 226
+October 16,2020 Fixes:
+Issues frontend-portal #206,211,374,375
