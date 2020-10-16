@@ -1,4 +1,4 @@
-from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserProfile
+from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
@@ -36,10 +36,14 @@ class TeamStore:
       team = Team.objects.filter(id=team_id).first()
       if not team:
         return None, InvalidResourceError()
-      user = UserProfile.objects.get(id=context.user_id)
+
+      userOnTeam = False 
+      if context.user_id:    # None for anonymous usage
+        user = UserProfile.objects.get(id=context.user_id)
+        userOnTeam = TeamMember.objects.filter(team=team, user=user).exists()
+ 
       #TODO: untested
-      if not team.is_published and not (context.user_is_admin()
-                              or TeamMember.objects.filter(team=team, user=user).exists()):
+      if not team.is_published and not (context.user_is_admin() or userOnTeam):
         return None, CustomMassenergizeError("Cannot access team until it is approved")
       return team, None
     except Exception as e:

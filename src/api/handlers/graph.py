@@ -74,7 +74,6 @@ class GraphHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    #v: Validator = Validator()
     v = self.validator
     v.expect("community_id", str, False)
     v.expect("subdomain", str, False)
