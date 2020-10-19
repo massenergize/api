@@ -1,5 +1,5 @@
 {
   "IS_PROD": false,
-  "BUILD_VERSION": "3.0.11",
-  "BUILD_VERSION_NOTES": "October 16,2020 Fixes:\nIssues frontend-portal #206,211,374,375\n"
+  "BUILD_VERSION": "3.0.12",
+  "BUILD_VERSION_NOTES": "October 19, 2020 Fixes:\nIssues frontend-portal #395, Admin Portal #240\n"
 }
