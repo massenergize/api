@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to users"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents
+from _main_.utils.common import get_request_contents, rename_field
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -105,7 +105,7 @@ class UserHandler(RouteHandler):
   def remove_user_action(self, request):
     context: Context = request.context
     args: dict = context.args
-    user_action_id = args.get('user_action_id', None)
+    user_action_id = args.get('user_action_id', None) or args.get("id", None)
     if not user_action_id:
       return MassenergizeResponse(error="invalid_resource")
 
@@ -118,7 +118,9 @@ class UserHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    user_info, err = self.service.update_user(context, args.get("id", None), args)
+    args = rename_field(args,'id','user_id')
+    user_id = args.pop('user_id', None)
+    user_info, err = self.service.update_user(context, user_id, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
