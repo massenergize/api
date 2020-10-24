@@ -200,6 +200,12 @@ class TeamStore:
   def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
       community_id = args.pop('community_id', None)
+      if community_id:
+        community = Community.objects.filter(pk=community_id).first()
+        subdomain = community.subdomain
+      else:
+        subdomain = "your_community"
+
       logo = args.pop('logo', None)
       parent_id = args.pop('parent_id', None)
       is_published = args.pop('is_published', False)
@@ -214,7 +220,8 @@ class TeamStore:
       if is_published and not team.is_published:
         team.is_published = True
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
-        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/teams/%i") % ("https://community.massenergize.org" if IS_PROD else "https://community-dev.massenergize.org", team.id))
+        # fix the broken URL in this message, needs to have community nam
+        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % ("https://community.massenergize.org" if IS_PROD else "https://community-dev.massenergize.org", subdomain, team.id))
         for team_admin in team_admins:
           send_massenergize_email(subject="Your team has been approved",
                                 msg=message, to=team_admin.user.email)

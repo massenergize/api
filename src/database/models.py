@@ -442,7 +442,7 @@ class UserProfile(models.Model):
   #  not just one?  why many to many
   """
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-  full_name=models.CharField(max_length=SHORT_STR_LEN, null=True)
+  full_name = models.CharField(max_length=SHORT_STR_LEN, null=True)
   profile_picture = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     blank=True, null=True)
   preferred_name=models.CharField(max_length=SHORT_STR_LEN, null=True)
@@ -473,6 +473,7 @@ class UserProfile(models.Model):
     res['user_info'] = self.user_info
     res['profile_picture'] = get_json_if_not_none(self.profile_picture)
     res['communities'] = [c.community.name for c in CommunityMember.objects.filter(user=self)]
+    res['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     return res
 
 

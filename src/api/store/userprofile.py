@@ -189,7 +189,7 @@ class UserStore:
   def update_user(self, context: Context, user_id, args) -> (dict, MassEnergizeAPIError):
     try:
       email = args.get('email', None)
-      user_id = args.get('user_id', None)
+      # user_id = args.get('user_id', None)
 
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -198,8 +198,9 @@ class UserStore:
         user = UserProfile.objects.filter(id=user_id)
         if not user:
           return None, InvalidResourceError()
+
         user.update(**args)
-        return user, None
+        return user.first(), None
       else:
         return None, CustomMassenergizeError('permission_denied')
 
