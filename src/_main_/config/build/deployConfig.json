@@ -1,5 +1,6 @@
 {
   "IS_PROD": false,
-  "BUILD_VERSION": "3.0.13",
+  "IS_CANARY": true,
+  "BUILD_VERSION": "2.9.23",
   "BUILD_VERSION_NOTES": "October 19, 2020 Fixes:\nIssues frontend-portal #395, Admin Portal #240\n"
 }
