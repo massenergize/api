@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import Deployment
-from _main_.settings import IS_PROD, BASE_DIR
+from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 
@@ -25,6 +25,10 @@ def home(request):
 
   if IS_PROD:
     SITE_TITLE = 'MassEnergize-API'
+    SITE_BACKGROUND_COLOR = '#310161'
+    SITE_FONT_COLOR = 'white'
+  elif IS_CANARY:
+    SITE_TITLE = 'CANARY: MassEnergize-API'
     SITE_BACKGROUND_COLOR = '#310161'
     SITE_FONT_COLOR = 'white'
   else:

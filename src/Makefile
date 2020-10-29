@@ -6,7 +6,7 @@ init:
 .PHONY: init
 
 start:
-	python deployment/prepare_to_deploy.py dev 1
+	python deployment/prepare_to_deploy.py canary 1
 	python manage.py runserver
 .PHONY: start
 
@@ -25,6 +25,19 @@ deploy-prod:
 	eb deploy --label $(VERSION)
 .PHONY: deploy-prod
 
+prepare-canary:
+	python deployment/prepare_to_deploy.py --canary 0 1
+.PHONY: prepare-canary
+
+CANARY_VERSION=latest
+deploy-canary:
+	$(eval CANARY_VERSION := $(shell cat api_version_canary.txt))	
+	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 202758212688.dkr.ecr.us-east-2.amazonaws.com
+	docker build -t massenergize/api-canary .
+	docker tag massenergize/api-canary:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
+	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
+	eb deploy --label $(CANARY_VERSION)
+.PHONY: deploy-canary
 
 prepare-dev:
 	python deployment/prepare_to_deploy.py --dev 0 1
