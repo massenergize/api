@@ -79,13 +79,15 @@ class TeamStore:
   def team_stats(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       community = get_community_or_die(context, args)
-      teams = Team.objects.filter(community=community, is_published=True, is_deleted=False)
+      teams = Team.objects.filter(community=community, is_deleted=False)
+      if context.is_prod:
+        teams = teams.filter(is_published=True)
+
       ans = []
       for team in teams:
         res = {"members": 0, "households": 0, "actions": 0, "actions_completed": 0, "actions_todo": 0, "carbon_footprint_reduction": 0}
         res["team"] = team.simple_json()
-        # team.members deprecated
-        # for m in team.members.all():
+   
         users = get_team_users(team)
         res["members"] = len(users)
         for user in users:

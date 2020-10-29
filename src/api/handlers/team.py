@@ -69,6 +69,8 @@ class TeamHandler(RouteHandler):
     if is_value(parentId):
       args["parent_id"] = parentId
 
+    args['is_published'] = parse_bool(args.pop('is_published', None))   
+
     team_info, err = self.team.create_team(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

@@ -23,11 +23,21 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
+IS_CANARY = True
 IS_LOCAL = False
 
 try:
-    env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env' if not IS_LOCAL else 'local.env')
+    if IS_PROD:
+        env_path = Path('.') / 'prod.env'
+    elif IS_CANARY:
+        env_path = Path('.') / 'canary.env'
+    elif IS_LOCAL:
+        env_path = Path('.') / 'local.env'
+    else:
+        env_path = Path('.') / 'dev.env'
+
     load_dotenv(dotenv_path=env_path, verbose=True)
+
 except Exception:
     load_dotenv()
 
@@ -43,15 +53,12 @@ ALLOWED_HOSTS = [
     '0.0.0.0',
     '127.0.0.1',
     'localhost',
-
     '.massenergize.org',
     '.massenergize.com',
-
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
-    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
-    '0.0.0.0',
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
-    'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com'
+    'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
+    'massenergize-canary-api.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [

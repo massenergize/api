@@ -17,6 +17,7 @@ BUILD_VERSION_PATH = os.path.join(__location__, 'build.json')
 def run():
   args = sys.argv
   deploy_to_prod = False
+  deploy_to_canary = False
   deploy_to_dev = True
   is_local = False
   is_deploy = True
@@ -24,10 +25,15 @@ def run():
 
   if len(args) > 1:
     deploy_to_prod = "prod" in args[1].lower()
-    deploy_to_dev = not deploy_to_prod
-    target = "prod" if deploy_to_prod else "dev"
+    deploy_to_canary = "canary" in args[1].lower()
+    deploy_to_dev = (not deploy_to_prod) and (not deploy_to_canary)
+    if deploy_to_prod:
+      target = "prod"
+    elif deploy_to_canary:
+      target = "canary"
+    else:
+      target = "dev"
 
-    
   if len(args) > 2:
     is_local = args[2] in ['1', 'true', 'True']
   else:
@@ -54,12 +60,14 @@ def run():
   
   elif deploy_to_prod and not settings.IS_PROD:
     return "!!! Please set IS_PROD=True in _main_/settings.py if you want to deploy to PROD", False
-
   
-  build_version = generate_config(target, is_local, is_deploy)
-  update_aws_docker_config(deploy_to_prod, build_version)
+  elif deploy_to_canary and not settings.IS_CANARY:
+    return "!!! Please set IS_CANARY=True in _main_/settings.py if you want to deploy to CANARY", False
 
-  return f"ALL GOOD! - Ready for Launch to {'PROD' if deploy_to_prod else 'DEV'}", True
+  build_version = generate_config(target, is_local, is_deploy)
+  update_aws_docker_config(target, build_version)
+  
+  return f"ALL GOOD! - Ready for Launch to {target.capitalize()}", True
 
 
 def get_target_config(target, is_local, is_deploy):
@@ -71,6 +79,15 @@ def get_target_config(target, is_local, is_deploy):
   if target == 'prod':
     return {
       "IS_PROD": True,
+      "IS_CANARY": False,
+      "BUILD_VERSION": generate_new_build_number(target),
+      "BUILD_VERSION_NOTES": deploy_notes
+    }
+
+  elif target == 'canary':
+    return {
+      "IS_PROD": False,
+      "IS_CANARY": True,
       "BUILD_VERSION": generate_new_build_number(target),
       "BUILD_VERSION_NOTES": deploy_notes
     }
@@ -79,6 +96,7 @@ def get_target_config(target, is_local, is_deploy):
     #assume dev
     return {
       "IS_PROD": False,
+      "IS_CANARY": False,
       "BUILD_VERSION": generate_new_build_number(target),
       "BUILD_VERSION_NOTES": deploy_notes
     }
@@ -140,8 +158,7 @@ def generate_config(target, is_local, is_deploy):
     write_json_contents(BUILD_VERSION_PATH, build_versions)
 
   if success:
-    print (f'Running ON {"PROD" if new_config.get("IS_PROD") else "DEV" }, \
-        Local={new_config.get("IS_LOCAL") }')
+    print (f'Running ON {target.capitalize()}, Local={new_config.get("IS_LOCAL") }')
 
   else:
     print ('Updating Config Failed!')
@@ -149,21 +166,30 @@ def generate_config(target, is_local, is_deploy):
   return new_config.get("BUILD_VERSION")
 
 
-def update_aws_docker_config(is_prod, build_version):
+def update_aws_docker_config(target, build_version):
   dst_docker_run_aws_file = os.path.join(__location__, '../Dockerrun.aws.json') 
   dst_secure_listener_file = os.path.join(__location__, '../.ebextensions/securelistener-clb.config') 
   dst_elastic_bean_stalk = os.path.join(__location__, '../.elasticbeanstalk/config.yml') 
+
   dev_version_txt = os.path.join(__location__, '../api_version_dev.txt') 
   prod_version_txt = os.path.join(__location__, '../api_version_prod.txt') 
+  canary_version_txt = os.path.join(__location__, '../api_version_canary.txt')
 
-  if is_prod:
+  if target == 'prod':
     src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.prod.aws.json') 
     src_secure_listener_file = os.path.join(__location__, '../deployment/aws/prodSecureListener.config') 
     src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/prodElasticBeanstalkConfig.yml') 
     write_any_content(prod_version_txt, build_version)
     
 
+  elif target == 'canary':
+    src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.canary.aws.json') 
+    src_secure_listener_file = os.path.join(__location__, '../deployment/aws/canarySecureListener.config') 
+    src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/canaryElasticBeanstalkConfig.yml') 
+    write_any_content(canary_version_txt, build_version)
+
   else:
+    # assume dev
     src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.dev.aws.json') 
     src_secure_listener_file = os.path.join(__location__, '../deployment/aws/prodSecureListener.config') 
     src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/devElasticBeanstalkConfig.yml') 
