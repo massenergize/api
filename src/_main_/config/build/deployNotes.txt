@@ -1,2 +1,2 @@
-October 24, 2020 Fixes:
-Issues frontend-portal #402 & 322, API issue #210
+October 30, 2020 Fixes:
+API issues #214, 215
