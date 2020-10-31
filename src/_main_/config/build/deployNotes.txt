@@ -1,2 +1,2 @@
 October 30, 2020 Fixes:
-API issues #214, 215
+API issues #214, 215 - Teams download, vendor location, testimonial view permissions
