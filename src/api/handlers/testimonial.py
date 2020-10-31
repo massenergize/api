@@ -30,7 +30,6 @@ class TestimonialHandler(RouteHandler):
     self.add("/testimonials.listForCommunityAdmin", self.community_admin_list)
     self.add("/testimonials.listForSuperAdmin", self.super_admin_list)
 
-  # not @login_required
   def info(self, request):
     context: Context = request.context
     args: dict = context.args

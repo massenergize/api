@@ -927,6 +927,7 @@ class Vendor(models.Model):
     data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['website'] = self.more_info and self.more_info.get('website', None)
     data['key_contact'] = self.key_contact
+    data["location"] = self.location
     return data
 
   class Meta:
