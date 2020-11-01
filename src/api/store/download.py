@@ -30,16 +30,20 @@ class DownloadStore:
     
     self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
-    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count',
-    'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action'] \
+    self.community_info_columns = ['name', 'members_count', 'households_count', 'total_households_count', 'teams_count', 'total_yearly_lbs_carbon', 'total_actions_done','actions_done', 'actions_per_member', 'testimonials_count',
+    'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_impact_action'] \
     + [category.name + " (reported)" for category in self.action_categories] + ['actions_done_with_reported', 'households_count_with_reported']
 
 
   def _get_cells_from_dict(self, columns, data):
     cells = ['' for _ in range(len(columns))]
+
     for key, value in data.items():
+      if type(value) == int or type(value) == float:
+        value = str(value)
       if not value:
         continue
+
       cells[columns.index(key)] = value
     return cells
 
@@ -198,7 +202,6 @@ class DownloadStore:
     community_members = CommunityMember.objects.filter(is_deleted=False, community=community)\
                                           .select_related('user')
     users = [cm.user for cm in community_members]
-
     members_count = community_members.count()
     households_count = str(RealEstateUnit.objects.filter(is_deleted=False, community=community).count())
     teams_count = str(Team.objects.filter(is_deleted=False, community=community).count())
@@ -217,27 +220,28 @@ class DownloadStore:
 
     action_done_count_map = {action.title: done_action_rels.filter(action=action).count() for action in actions}
     actions_by_done_count = sorted(action_done_count_map.items(), key=lambda item: item[1], reverse=True)
-    most_done_action = actions_by_done_count[0][0] if (len(actions_by_done_count) > 0 and actions_by_done_count[0][1] != 0) else ''
-    second_most_done_action = actions_by_done_count[1][0] if (len(actions_by_done_count) > 1 and actions_by_done_count[1][1] != 0) else ''
+
+    most_done_action = actions_by_done_count[0][0] if actions_done > 0 and (len(actions_by_done_count) > 0 and actions_by_done_count[0][1] != 0) else ''
+    second_most_done_action = actions_by_done_count[1][0] if actions_done > 0 and (len(actions_by_done_count) > 1 and actions_by_done_count[1][1] != 0) else ''
 
     actions_by_impact = actions.order_by('calculator_action__average_points')
-    highest_impact_action = actions_by_impact[0] if len(actions_by_impact) > 0 else ''
-    second_highest_impact_action = actions_by_impact[1] if len(actions_by_impact) > 1 else ''
-
+    highest_impact_action = actions_by_impact[0] if actions_done > 0 and len(actions_by_impact) > 0 else ''
+    second_highest_impact_action = actions_by_impact[1] if actions_done > 0 and len(actions_by_impact) > 1 else ''
     community_cells = {
       'name': community.name, 'members_count': str(members_count), 'households_count': households_count,
       'teams_count' : teams_count, 'total_yearly_lbs_carbon' : total_carbon_points,
       'actions_done': str(actions_done), 'actions_per_member': actions_per_member,
       'testimonials_count' : testimonials_count, 'events_count': events_count,
-      'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action, 'highest_impact_action': highest_impact_action, 'second_highest_imapct_action': second_highest_impact_action
+      'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action, 'highest_impact_action': highest_impact_action, 'second_highest_impact_action': second_highest_impact_action
     }
+
     reported_actions = self._get_community_reported_data(community)
     community_cells.update(reported_actions)
     community_cells['total_actions_done'] = str(actions_done + sum(value for value in reported_actions.values()))
+
     total_households_count = 0 if not community.goal else community.goal.attained_number_of_households
     total_households_count += RealEstateUnit.objects.filter(community=community).count()
     community_cells['total_households_count'] = total_households_count
-
     return self._get_cells_from_dict(self.community_info_columns, community_cells)
 
   def _all_users_download(self):
@@ -360,7 +364,6 @@ class DownloadStore:
 
   def _all_communities_download(self):
     communities = Community.objects.filter(is_deleted=False)
-
     columns = self.community_info_columns
     data = [columns]
 
