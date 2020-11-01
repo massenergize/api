@@ -181,31 +181,64 @@ class CommunityStore:
           comm_admin.members.add(owner)
           comm_admin.save()
 
-      #also clone all global actions for this community
-      #global_actions = Action.objects.filter(is_global=True)
-      #for action_to_copy in global_actions:
-      #  print(action_to_copy)
-      #  action_to_copy_id = action_to_copy.id
-      #  old_tags = action_to_copy.tags.all()
-      #  old_vendors = action_to_copy.vendors.all()
-      #  new_action: Action = action_to_copy
-      #  new_action.pk = None
-      #  new_action.is_published = False
-      #  new_action.is_global = False
+      # Also clone all template actions for this community
+      # 11/1/20 BHN: Add protection against excessive copying in case of too many actions marked as template
+      # Also don't copy the ones marked as deleted!
+      global_actions = Action.objects.filter(is_deleted=False, is_global=True)
+      count = global_actions.count()
+      MAX_TEMPLATE_ACTIONS = 25
+      num_copied = 0
 
-        #make sure the action title does not exceed the max length expected
-      #  suffix = f'-{new_community.subdomain}-{action_to_copy_id}'
-      #  new_action.title = new_action.title[:SHORT_STR_LEN-len(suffix)]+suffix 
+      for action_to_copy in global_actions:
+        action_to_copy_id = action_to_copy.id
+        old_tags = action_to_copy.tags.all()
+        old_vendors = action_to_copy.vendors.all()
+        new_action: Action = action_to_copy
+        new_action.pk = None
+        new_action.is_published = False
+        new_action.is_global = False
+
+        # remove the "TEMPLATE", "TEMP" or "TMP" prefix or suffix
+        old_title = new_action.title
+        new_title = old_title
+
+        loc = old_title.find("TEMPLATE")
+        if loc == 0 :
+          new_title = old_title[9:]
+        elif loc > 0:
+          new_title = old_title[0:loc-1]
+        else:
+          loc = old_title.find("TEMP")
+          if loc==0:
+            new_title = old_title[5:]
+          elif loc>0:
+            new_title = old_title[0:loc-1]
+          else:
+            loc = old_title.find("TMP")
+            if loc==0:
+              new_title = old_title[4:]
+            elif loc>0:
+              new_title = old_title[0:loc-1]
+
+        # add community name to suffix (not the action id
+        # #make sure the action title does not exceed the max length expected
+        #suffix = f'-{new_community.subdomain}-{action_to_copy_id}'
+        suffix = f'-{new_community.subdomain}'
+        len_suffix = len(suffix)
+        new_title_len = min(len(new_title), SHORT_STR_LEN - len_suffix)
+        new_action.title = new_title[0:new_title_len]+suffix
 
         # only save this action if it does not exist
         # if(Action.objects.filter(title=new_action.title, community=new_community).count() == 0):
-      #  new_action.save()
-      #  print(new_action.full_json())
-      #  new_action.tags.set(old_tags)
-      #  new_action.vendors.set(old_vendors)
+        new_action.save()
+        new_action.tags.set(old_tags)
+        new_action.vendors.set(old_vendors)
 
-      #  new_action.community = new_community
-      #  new_action.save()
+        new_action.community = new_community
+        new_action.save()
+        num_copied += 1
+        if num_copied >= MAX_TEMPLATE_ACTIONS:
+          break
      
       return new_community, None
     except Exception as e:
