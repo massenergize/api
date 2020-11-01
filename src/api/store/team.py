@@ -7,7 +7,7 @@ from .utils import get_community_or_die, get_user_or_die
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
-from _main_.settings import IS_PROD
+from _main_.settings import IS_PROD, IS_CANARY
 
 def can_set_parent(parent, this_team=None):
   if parent.parent:
@@ -180,7 +180,7 @@ class TeamStore:
       if not is_published:
         cadmins = CommunityAdminGroup.objects.filter(community__id=community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team.\n\n%s" % ("%s/admin/edit/%i/team" %
-        ("https://admin.massenergize.org" if IS_PROD else "https://admin-dev.massenergize.org", team.id))
+        ("https://admin.massenergize.org" if IS_PROD else "https://admin-canary.massenergize.org" if IS_CANARY else "https://admin-dev.massenergize.org", team.id))
 
         for cadmin in cadmins:
           send_massenergize_email(subject="New team awaiting approval",
