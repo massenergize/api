@@ -64,8 +64,8 @@ class DownloadHandler(RouteHandler):
   @admins_only
   def communities_download(self, request):
     context: Context = request.context
-    args: dict = context.args
-    (communities_data, _), err = self.service.communities_download(context)
+    #args: dict = context.args
+    (communities_data, dummy), err = self.service.communities_download(context)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return self._get_csv_response(data=communities_data, download_type='communities')
