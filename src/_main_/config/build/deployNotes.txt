@@ -1,2 +1,2 @@
-October 30, 2020 Fixes:
-API issues #214, 215 - Teams download, vendor location, testimonial view permissions
+November 3rd, 2020 Fixes:
+API issues #218, Admin-253 - All communities download, create community, link in team creation email

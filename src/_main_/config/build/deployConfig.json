@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
-  "IS_CANARY": false,
+  "IS_CANARY": true,
   "BUILD_VERSION": "3.0.16",
-  "BUILD_VERSION_NOTES": "October 30, 2020 Fixes:\nAPI issues #214, 215 - Teams download, vendor location, testimonial view permissions\n"
+  "BUILD_VERSION_NOTES": "November 3rd, 2020 Fixes:\nAPI issues #218, Admin-253 - All communities download, create community, link in team creation email\n"
 }
