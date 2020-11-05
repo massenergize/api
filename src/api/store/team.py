@@ -223,7 +223,7 @@ class TeamStore:
         team.is_published = True
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
         # fix the broken URL in this message, needs to have community nam
-        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % ("https://community.massenergize.org" if IS_PROD else "https://community-dev.massenergize.org", subdomain, team.id))
+        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % ("https://community.massenergize.org" if IS_PROD else "https://community-canary.massenergize.org"if IS_CANARY else "https://community-dev.massenergize.org", subdomain, team.id))
         for team_admin in team_admins:
           send_massenergize_email(subject="Your team has been approved",
                                 msg=message, to=team_admin.user.email)
