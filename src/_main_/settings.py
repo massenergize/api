@@ -205,8 +205,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Sentry Logging Initialization
 sentry_sdk.init(
-    dsn=os.environ.get('SENTRY_DSN'),
+    dsn="os.environ.get('SENTRY_DSN')",
     integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
