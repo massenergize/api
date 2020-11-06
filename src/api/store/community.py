@@ -2,9 +2,8 @@ from database.models import Community, CommunityMember, UserProfile, Action, Eve
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from database.utils.constants import SHORT_STR_LEN
 from django.db.models import Q
-from .utils import get_community_or_die, get_user_or_die
+from .utils import get_community_or_die, get_user_or_die, get_new_title
 import random 
 from sentry_sdk import capture_message
 
@@ -25,8 +24,10 @@ class CommunityStore:
         return None, InvalidResourceError()
 
       
-      if context.is_prod and not community.is_published and not context.user_is_admin():
-          return None, InvalidResourceError()
+      if (not community.is_published) and context.is_prod and (not context.is_admin_site):
+        # if the community is not live and we are fetching info on the community
+        # on prod, we should pretend the community does not exist.
+        return None, InvalidResourceError()
 
       return community, None
     except Exception as e:
@@ -189,6 +190,7 @@ class CommunityStore:
       MAX_TEMPLATE_ACTIONS = 25
       num_copied = 0
 
+      actions_copied = set()
       for action_to_copy in global_actions:
         action_to_copy_id = action_to_copy.id
         old_tags = action_to_copy.tags.all()
@@ -198,38 +200,17 @@ class CommunityStore:
         new_action.is_published = False
         new_action.is_global = False
 
-        # remove the "TEMPLATE", "TEMP" or "TMP" prefix or suffix
         old_title = new_action.title
-        new_title = old_title
+        new_title = get_new_title(new_community, old_title)
 
-        loc = old_title.find("TEMPLATE")
-        if loc == 0 :
-          new_title = old_title[9:]
-        elif loc > 0:
-          new_title = old_title[0:loc-1]
+        # first check that we have not copied an action with the same name
+        if new_title in actions_copied:
+          continue 
         else:
-          loc = old_title.find("TEMP")
-          if loc==0:
-            new_title = old_title[5:]
-          elif loc>0:
-            new_title = old_title[0:loc-1]
-          else:
-            loc = old_title.find("TMP")
-            if loc==0:
-              new_title = old_title[4:]
-            elif loc>0:
-              new_title = old_title[0:loc-1]
+          actions_copied.add(new_title)
 
-        # add community name to suffix (not the action id
-        # #make sure the action title does not exceed the max length expected
-        #suffix = f'-{new_community.subdomain}-{action_to_copy_id}'
-        suffix = f'-{new_community.subdomain}'
-        len_suffix = len(suffix)
-        new_title_len = min(len(new_title), SHORT_STR_LEN - len_suffix)
-        new_action.title = new_title[0:new_title_len]+suffix
+        new_action.title = new_title
 
-        # only save this action if it does not exist
-        # if(Action.objects.filter(title=new_action.title, community=new_community).count() == 0):
         new_action.save()
         new_action.tags.set(old_tags)
         new_action.vendors.set(old_vendors)
@@ -245,6 +226,7 @@ class CommunityStore:
       if new_community:
         new_community.delete()
       capture_message(str(e), level="error")
+      print(e)
       return None, CustomMassenergizeError(e)
 
 

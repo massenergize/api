@@ -23,8 +23,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
-IS_CANARY = True
-IS_LOCAL = False
+IS_CANARY = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:

@@ -37,7 +37,10 @@ class AuthService:
         
         user = UserProfile.objects.filter(email=user_email).first()
         if (not user):
-          return None, None, CustomMassenergizeError("Please create an account")
+          # there is a case where user is authenticated with firebase but
+          # does has not completed a massenergize registration form
+          # to sign up in our system
+          return None, None, CustomMassenergizeError("authenticated_but_needs_registration")
 
         if context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
           raise PermissionError
