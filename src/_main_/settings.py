@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
-IS_CANARY = True
+IS_CANARY = False
 IS_LOCAL = False
 
 try:
@@ -207,6 +207,7 @@ AUTH_PASSWORD_VALIDATORS = [
 sentry_sdk.init(
     dsn=os.environ.get('SENTRY_DSN'),
     integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.

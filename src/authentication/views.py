@@ -58,7 +58,7 @@ def verify(request):
       user_email = decoded_token["email"]
       user = UserProfile.objects.filter(email=user_email).first()
       if (not user):
-        return CustomMassenergizeError("Please create an account")
+        return CustomMassenergizeError("authenticated_but_needs_registration")
 
       payload = {
         "user_id": str(user.id), 
