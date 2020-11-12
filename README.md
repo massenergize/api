@@ -1,10 +1,5 @@
 # MassEnergize API
 
-Maintained by:
-* Samuel Opoku-Agyemang
-* Satrajit Ghosh
-* Brad Hubbard-Nelson
-
 ## Maintainers
 
 This repository is managed by
