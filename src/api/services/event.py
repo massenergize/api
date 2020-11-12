@@ -18,6 +18,24 @@ class EventService:
       return None, err
     return serialize(event), None
 
+  def rsvp(self, context, event_id) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.rsvp(context, event_id)
+    if err:
+      return None, err
+    return serialize(event), None
+
+  def rsvp_update(self, context, event_id, status) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.rsvp_update(context, event_id, status)
+    if err:
+      return None, err
+    return serialize(event), None
+
+  def rsvp_remove(self, context, rsvp_id) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.rsvp_remove(context, rsvp_id)
+    if err:
+      return None, err
+    return result, None
+
   def copy_event(self, context, event_id) -> (dict, MassEnergizeAPIError):
     event, err = self.store.copy_event(context, event_id)
     if err:

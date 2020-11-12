@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from api.decorators import admins_only, super_admins_only, login_required
 import csv
 
 # see: https://docs.djangoproject.com/en/3.0/howto/outputting-csv
@@ -18,10 +19,10 @@ class DownloadHandler(RouteHandler):
 
 
   def registerRoutes(self) -> None:
-    self.add("/downloads.users", self.users_download()) 
-    self.add("/downloads.actions", self.actions_download())
-    self.add("/downloads.communities", self.communities_download())
-    self.add("/downloads.teams", self.teams_download())
+    self.add("/downloads.users", self.users_download) 
+    self.add("/downloads.actions", self.actions_download)
+    self.add("/downloads.communities", self.communities_download)
+    self.add("/downloads.teams", self.teams_download)
 
 
   def _get_csv_response(self, data, download_type, community_name=None):
@@ -38,48 +39,44 @@ class DownloadHandler(RouteHandler):
     return response
 
 
-  def users_download(self) -> function:
-    def users_download_view(request) -> None:
-      context: Context = request.context
-      args: dict = context.args
-      community_id = args.pop('community_id', None)
-      (users_data, community_name), err = self.service.users_download(context, community_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return self._get_csv_response(data=users_data, download_type='users', community_name=community_name)
-    return users_download_view
+  @admins_only
+  def users_download(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    (users_data, community_name), err = self.service.users_download(context, community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return self._get_csv_response(data=users_data, download_type='users', community_name=community_name)
 
 
-  def actions_download(self) -> function:
-    def actions_download_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      community_id = args.pop('community_id', None)
-      (actions_data, community_name), err = self.service.actions_download(context, community_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return self._get_csv_response(data=actions_data, download_type='actions', community_name=community_name)
-    return actions_download_view
+  @admins_only
+  def actions_download(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    (actions_data, community_name), err = self.service.actions_download(context, community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return self._get_csv_response(data=actions_data, download_type='actions', community_name=community_name)
 
 
-  def communities_download(self) -> function:
-    def communities_download_view(request) -> None:
-      context: Context = request.context
-      args: dict = context.args
-      (communities_data, _), err = self.service.communities_download(context)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return self._get_csv_response(data=communities_data, download_type='communities')
-    return communities_download_view
+  @admins_only
+  def communities_download(self, request):
+    context: Context = request.context
+    #args: dict = context.args
+    (communities_data, dummy), err = self.service.communities_download(context)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return self._get_csv_response(data=communities_data, download_type='communities')
 
 
-  def teams_download(self) -> function:
-    def teams_download_view(request) -> None: 
-      context: Context = request.context
-      args: dict = context.args
-      community_id = args.pop('community_id', None)
-      (teams_data, community_name), err = self.service.teams_download(context, community_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
-      return self._get_csv_response(data=teams_data, download_type='teams', community_name=community_name)
-    return teams_download_view
+  @admins_only
+  def teams_download(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    (teams_data, community_name), err = self.service.teams_download(context, community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return self._get_csv_response(data=teams_data, download_type='teams', community_name=community_name)

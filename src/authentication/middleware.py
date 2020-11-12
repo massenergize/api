@@ -1,19 +1,18 @@
 """
 Middle ware for authorization for users before they access specific resources
 """
-from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.context import Context
 from _main_.settings import SECRET_KEY
 from firebase_admin import auth
 import json, jwt
 from sentry_sdk import capture_message
-
+#from api.urls import ROUTE_HANDLERS
 
 class MassenergizeJWTAuthMiddleware:
+
   def __init__(self, get_response):
     self.get_response = get_response
-    self.restricted_paths = set([])
-    # One-time configuration and initialization.
 
   def __call__(self, request):
     # Code to be executed for each request before
@@ -27,46 +26,63 @@ class MassenergizeJWTAuthMiddleware:
     return response
   
 
-  def _get_auth_token(self, request):
+  def _get_decoded_token(self, token) -> (dict, MassEnergizeAPIError):
     try:
-      authz = request.headers.get('Authorization', None)
-      cleaned_path = request.path.split('/')[-1]
-      if (authz is None) and (cleaned_path in self.restricted_paths):
-        return None, NotAuthorizedError()
-      elif authz:
-        id_token = authz.split(' ')[-1]
-        return id_token, None
-      return None, None
+      payload = jwt.decode(token, SECRET_KEY, algorithm='HS256')
+      return payload, None
+    except jwt.ExpiredSignatureError:
+      return None, CustomMassenergizeError('session_expired')
+    except jwt.DecodeError:
+      return None, CustomMassenergizeError('token_decode_error')
+    except jwt.InvalidTokenError:
+      return None, CustomMassenergizeError('invalid_token')
     except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
+      return None, CustomMassenergizeError('invalid_token')
 
 
+  def _get_clean_path(self, request):
+    try:
+      return request.path.split('/')[-1]
+    except Exception:
+      return request.path
 
   def process_view(self, request, view_func, *view_args, **view_kwargs):
-
     try:
-      #extract JWT auth token
-      id_token, err = self._get_auth_token(request)
-      if err:
-        return err
-      
-      # add a context: (this will contain all info about this user's session info)
+      # add a context: (this will contain all info about 
+      # the request body, this user's session info, etc)
       ctx = Context()
 
       #set request body
       ctx.set_request_body(request)
 
-      if id_token:
-        decoded_token = jwt.decode(id_token, SECRET_KEY, algorithm='HS256')
+      path = self._get_clean_path(request)
+
+      #extract JWT auth token
+      token = request.COOKIES.get('token', None) 
+
+      if token:
+        decoded_token, err = self._get_decoded_token(token)
+        if err:
+          err.delete_cookie('token')
+          return err
+
         # at this point the user has an active session
         ctx.set_user_credentials(decoded_token)
-        
-      
-      request.context = ctx
 
-      #TODO: enforce all requests accessing resources are always logged in first
+      request.context = ctx
 
     except Exception as e:
       capture_message(str(e), level="error")
       return CustomMassenergizeError(e)
+
+
+class RemoveHeaders:
+
+  def __init__(self, get_response):
+    self.get_response = get_response
+
+  def __call__(self, request):
+    response = self.get_response(request)
+    response['Server'] = ''
+    return response
+

@@ -148,7 +148,7 @@ class MessageStore:
       if context.user_is_community_admin:
         messages = Message.objects.filter(is_deleted=False, is_team_admin_message=False, community__id__in=[c.id for c in admin_communities])
       elif context.user_is_super_admin:
-        messages = Message.objects.filter(is_deleted=False)
+        messages = Message.objects.filter(is_deleted=False, is_team_admin_message=False,)
       else:
         messages = []
 

@@ -29,7 +29,7 @@ class TestimonialStore:
 
       testimonials = []
 
-      if context.is_dev:
+      if context.is_sandbox:
         if subdomain:
           testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False)
         elif community_id:
@@ -37,7 +37,7 @@ class TestimonialStore:
         elif user_id:
           testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False)
         elif user_email:
-          testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False)
+          testimonials = Testimonial.objects.filter(user__email=user_email, is_deleted=False)
 
       else:
         if subdomain:
@@ -48,7 +48,7 @@ class TestimonialStore:
         elif user_id:
           testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False, is_published=True)
         elif user_email:
-          testimonials = Testimonial.objects.filter(user__email=subdomain, is_deleted=False, is_published=True)
+          testimonials = Testimonial.objects.filter(user__email=user_email, is_deleted=False, is_published=True)
 
       return testimonials, None
     except Exception as e:
@@ -63,7 +63,8 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      user_email = args.pop('user_email', None)
+      user_email = args.pop('user_email', context.user_email)
+
       preferred_name = args.pop('preferred_name', None)
 
       args["title"] = args.get("title", "Thank You")[:100]
@@ -136,7 +137,7 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      
+      rank = args.pop('rank', None)
       new_testimonial = testimonial.first()
 
       if image:
@@ -154,6 +155,9 @@ class TestimonialStore:
       if community:
         testimonial_community = Community.objects.get(id=community)
         new_testimonial.community = testimonial_community
+      
+      if rank:
+        new_testimonial.rank = rank
       
       tags_to_set = []
       for t in tags:
@@ -193,6 +197,7 @@ class TestimonialStore:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
+
         testimonials = Testimonial.objects.filter(community__id__in = comm_ids, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
 

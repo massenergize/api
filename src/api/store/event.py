@@ -5,6 +5,7 @@ from django.db.models import Q
 from _main_.utils.context import Context
 from random import randint
 from sentry_sdk import capture_message
+from .utils import get_user_or_die
 
 
 class EventStore:
@@ -65,7 +66,7 @@ class EventStore:
     else:
       events = []
     
-    if not context.is_dev and events:
+    if not context.is_sandbox and events:
       events = events.filter(is_published=True)
   
     return events, None
@@ -169,7 +170,8 @@ class EventStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
-      if not community_id:
+      # community_id coming from admin portal is 'undefined'
+      if not community_id or community_id=='undefined':
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -192,3 +194,61 @@ class EventStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
+
+
+  def rsvp(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+      event = Event.objects.filter(pk=event_id).first()
+      if not event:
+        return None, InvalidResourceError()
+
+      event_attendee = EventAttendee.objects.create(
+        event=event, attendee=user, status="RSVP")
+
+      return event_attendee, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def rsvp(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+      event = Event.objects.filter(pk=event_id).first()
+      if not event:
+        return None, InvalidResourceError()
+
+      event_attendee = EventAttendee.objects.create(
+        event=event, attendee=user, status="RSVP")
+
+      return event_attendee, None
+      
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def rsvp_update(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+    try:
+      user = get_user_or_die(context, args)
+      event = Event.objects.filter(pk=event_id).first()
+      if not event:
+        return None, InvalidResourceError()
+
+      event_attendee = EventAttendee.objects.filter(
+        event=event, attendee=user).update(status=status)
+
+      return event_attendee, None
+      
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def rsvp_remove(self, context: Context, rsvp_id) -> (dict, MassEnergizeAPIError):
+    try:
+      result = EventAttendee.objects.filter(pk=rsvp_id).delete()
+      return result, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)

@@ -250,7 +250,7 @@ class AdminStore:
           "email":email,
           "subject": title,
           "message": body,
-          "url": f"https://admin{ '-dev' if context.is_dev else '' }.massenergize.org/admin/edit/{new_message.id}/message",
+          "url": f"https://admin{ '-dev' if context.is_sandbox else '' }.massenergize.org/admin/edit/{new_message.id}/message",
           "community": community.name
       }) 
 

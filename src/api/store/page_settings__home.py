@@ -57,29 +57,29 @@ class HomePageSettingsStore:
           community_goal = home_page_setting.community.goal
 
           attained_number_of_actions = goal_updates.get('attained_number_of_actions', None)
-          if attained_number_of_actions:
+          if attained_number_of_actions != None:
             community_goal.attained_number_of_actions = attained_number_of_actions
           
           target_number_of_actions = goal_updates.get('target_number_of_actions', None)
-          if target_number_of_actions:
+          if target_number_of_actions != None:
             community_goal.target_number_of_actions = target_number_of_actions
           
 
           attained_number_of_households= goal_updates.get('attained_number_of_households', None)
-          if attained_number_of_households:
+          if attained_number_of_households != None:
             community_goal.attained_number_of_households = attained_number_of_households
           
           target_number_of_households = goal_updates.get('target_number_of_households', None)
-          if target_number_of_actions:
+          if target_number_of_actions != None:
             community_goal.target_number_of_households = target_number_of_households
 
 
           attained_carbon_footprint_reduction = goal_updates.get('attained_carbon_footprint_reduction', None)
-          if attained_carbon_footprint_reduction:
+          if attained_carbon_footprint_reduction != None:
             community_goal.attained_carbon_footprint_reduction = attained_carbon_footprint_reduction
           
           target_carbon_footprint_reduction = goal_updates.get('target_carbon_footprint_reduction', None)
-          if target_carbon_footprint_reduction:
+          if target_carbon_footprint_reduction != None:
             community_goal.target_carbon_footprint_reduction = target_carbon_footprint_reduction
 
 

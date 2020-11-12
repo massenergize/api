@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import firebase_admin
 from firebase_admin import credentials
-from .utils.utils import load_json
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 import sentry_sdk
@@ -24,15 +23,25 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
+IS_CANARY = False
+IS_LOCAL = False
 
 try:
-    env_path = Path('.') / ('prod.env' if IS_PROD else 'dev.env')
+    if IS_PROD:
+        env_path = Path('.') / 'prod.env'
+    elif IS_CANARY:
+        env_path = Path('.') / 'canary.env'
+    elif IS_LOCAL:
+        env_path = Path('.') / 'local.env'
+    else:
+        env_path = Path('.') / 'dev.env'
+
     load_dotenv(dotenv_path=env_path, verbose=True)
+
 except Exception:
     load_dotenv()
 
 
-# os.environ.update(CONFIG_DATA)
 # ********  END LOAD CONFIG DATA ***********#
 
 SECRET_KEY =  os.environ.get("SECRET_KEY")
@@ -41,23 +50,15 @@ SECRET_KEY =  os.environ.get("SECRET_KEY")
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'api.massenergize.org',
-    'apis.massenergize.org',
-    'api.massenergize.com',
-    'apis.massenergize.com',
-    'api-prod.massenergize.org',
-    'api.prod.massenergize.org',
-    'api-dev.massenergize.org',
-    'api.dev.massenergize.org',
-    'massenergize-api.wpdvzstek2.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-production.us-east-2.elasticbeanstalk.com',
-    'massenergize-api-prod-env.us-east-2.elasticbeanstalk.com',
-    'Prod-env.eba-cg9aw8pt.us-east-2.elasticbeanstalk.com',
-    'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
     '0.0.0.0',
-    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com'
+    '127.0.0.1',
+    'localhost',
+    '.massenergize.org',
+    '.massenergize.com',
+    'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
+    'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
+    'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
+    'massenergize-canary-api.us-east-2.elasticbeanstalk.com'
 ]
 
 INSTALLED_APPS = [
@@ -76,9 +77,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -92,26 +94,40 @@ MIDDLEWARE = [
 
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE  = 'storages.backends.s3boto3.S3Boto3Storage'
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 
 
 #-------- AWS CONFIGURATION ---------------------#
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_ACCESS_KEY_ID        = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY    = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME  = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
-#--------END AWS CONFIGURATION ---------------------#
 
+#-------- OTHER CONFIGURATION ---------------------#
+SECURE_SSL_REDIRECT = False
+SECURE_HSTS_SECONDS = 3600
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+USE_X_FORWARDED_HOST = True
+WSGI_APPLICATION = '_main_.wsgi.application'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = not DEBUG
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+AWS_DEFAULT_ACL = None
+APPEND_SLASH = True
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
-
 ROOT_URLCONF = '_main_.urls'
-
+# SESSION_COOKIE_SAMESITE = 'Strict'
+# SESSION_SAVE_EVERY_REQUEST = True
 
 TEMPLATES = [
     {
@@ -129,31 +145,31 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = '_main_.wsgi.application'
 
-CSRF_COOKIE_SECURE = False
-SESSION_COOKIE_SECURE = False
+
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': os.environ.get('DATABASE_NAME'),
-        'USER': os.environ.get('DATABASE_USER'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
-        'HOST': os.environ.get('DATABASE_HOST'),
-        'PORT': os.environ.get('DATABASE_PORT')
-    },
-    'local-default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE'),
-        'NAME': 'postgres2',
-        'USER': 'Brad',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '5432'
+        'ENGINE'   : os.environ.get('DATABASE_ENGINE'),
+        'NAME'     : os.environ.get('DATABASE_NAME'),
+        'USER'     : os.environ.get('DATABASE_USER'),
+        'PASSWORD' : os.environ.get('DATABASE_PASSWORD'),
+        'HOST'     : os.environ.get('DATABASE_HOST'),
+        'PORT'     : os.environ.get('DATABASE_PORT')
     },
 }
+
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': os.getenv('CACHE_BACKEND'),
+#         'LOCATION': os.getenv('CACHE_LOCATION'),
+#     }
+# }
+
+
 
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",
@@ -191,6 +207,7 @@ AUTH_PASSWORD_VALIDATORS = [
 sentry_sdk.init(
     dsn=os.environ.get('SENTRY_DSN'),
     integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.

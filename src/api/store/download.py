@@ -1,8 +1,11 @@
-from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPIError, InvalidResourceError
+from _main_.utils.massenergize_errors import NotAuthorizedError, MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
-UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit
+  UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit, \
+  Data, TagCollection
+from api.store.team import get_team_users
+from api.store.tag_collection import TagCollectionStore
 from django.db.models import Q
 from sentry_sdk import capture_message
 
@@ -10,21 +13,37 @@ class DownloadStore:
 
   def __init__(self):
     self.name = "Download Store/DB"
+    tcs = TagCollectionStore()
 
-    self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon', 'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
+    # for testing with empty database, create tag collection
+    tag_collections = TagCollection.objects.filter(name='Category')
+    if tag_collections.count()<1:
+      tagdata = {'name':'Category', 'tags':'Home Energy,Solar,Transportation,Waste & Recycling,Food,Activism & Education,Land, Soil & Water'}
+      tcs.create_tag_collection(tagdata)
+
+    self.action_categories = TagCollection.objects.get(name="Category").tag_set.all()
+
+    self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon',
+    'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
 
     self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'testimonials_count']
     
-    self.team_info_columns = ['name', 'members_count', 'total_yearly_lbs_carbon', 'testimonials_count']
+    self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
-    self.community_info_columns = ['name', 'members_count', 'households_count', 'teams_count', 'total_yearly_lbs_carbon', 'actions_done', 'actions_per_member', 'testimonials_count', 'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_imapct_action']
+    self.community_info_columns = ['name', 'members_count', 'households_count', 'total_households_count', 'teams_count', 'total_yearly_lbs_carbon', 'total_actions_done','actions_done', 'actions_per_member', 'testimonials_count',
+    'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_impact_action'] \
+    + [category.name + " (reported)" for category in self.action_categories] + ['actions_done_with_reported', 'households_count_with_reported']
 
 
   def _get_cells_from_dict(self, columns, data):
     cells = ['' for _ in range(len(columns))]
+
     for key, value in data.items():
+      if type(value) == int or type(value) == float:
+        value = str(value)
       if not value:
         continue
+
       cells[columns.index(key)] = value
     return cells
 
@@ -119,14 +138,24 @@ class DownloadStore:
     return self._get_cells_from_dict(self.action_info_columns, action_cells)
 
 
-  def _get_team_info_cells(self, team):
-    members = TeamMember.objects.filter(is_deleted=False, team=team).select_related('user')
+  def _get_reported_data_rows(self, community):
+    rows = []
+    for action_category in self.action_categories:
+      data = Data.objects.filter(tag=action_category, community=community).first()
+      if not data:
+        continue
+      rows.append(self._get_cells_from_dict(self.action_info_columns, 
+                    {'title': 'STATE-REPORTED', 'category' : action_category.name, 'done_count': str(data.value)}))
+    return rows
 
-    members_count = str(members.count())
+
+  def _get_team_info_cells(self, team):
+    members = get_team_users(team)
+
+    members_count = str(len(members))
 
     total_carbon_points = 0
-    for m in members:
-      user = m.user
+    for user in members:
       actions = user.useractionrel_set.all()
       done_actions = actions.filter(status="DONE")
       for done_action in done_actions:
@@ -135,14 +164,17 @@ class DownloadStore:
     total_carbon_points = str(total_carbon_points)
 
     testimonials_count = 0
-    for m in members:
-      testimonials_count += Testimonial.objects.filter(is_deleted=False, user=m.user).count()
+    for user in members:
+      testimonials_count += Testimonial.objects.filter(is_deleted=False, user=user).count()
     testimonials_count = str(testimonials_count)
 
     team_cells = {
       'name': team.name, 'members_count': members_count,
       'total_yearly_lbs_carbon': total_carbon_points, 'testimonials_count': testimonials_count
     }
+    if team.parent:
+      team_cells['parent'] = team.parent.name
+    
     return self._get_cells_from_dict(self.team_info_columns, team_cells)
 
 
@@ -153,12 +185,23 @@ class DownloadStore:
       cells.append(str(UserActionRel.objects.filter(action=action, user__in=team_users, status='DONE').count()))
     return cells
 
+  def _get_community_reported_data(self, community):
+    community = Community.objects.get(pk=community.id)
+    if not community:
+      return None
+    ret = {}
+    for action_category in self.action_categories:
+      data = Data.objects.filter(tag=action_category, community=community).first()
+      if not data:
+        continue
+      ret[action_category.name + " (reported)"] = data.reported_value
+    return ret
+
 
   def _get_community_info_cells(self, community):
     community_members = CommunityMember.objects.filter(is_deleted=False, community=community)\
                                           .select_related('user')
     users = [cm.user for cm in community_members]
-
     members_count = community_members.count()
     households_count = str(RealEstateUnit.objects.filter(is_deleted=False, community=community).count())
     teams_count = str(Team.objects.filter(is_deleted=False, community=community).count())
@@ -176,24 +219,30 @@ class DownloadStore:
     actions_per_member = str(round(actions_done / members_count, 2)) if members_count != 0 else '0'
 
     action_done_count_map = {action.title: done_action_rels.filter(action=action).count() for action in actions}
-    actions_by_done_count = sorted(action_done_count_map.items(), key=lambda item : item[1], reverse=True)
-    most_done_action = actions_by_done_count[0][0] if (len(actions_by_done_count) > 0 and actions_by_done_count[0][1] != 0) else ''
-    second_most_done_action = actions_by_done_count[1][0] if (len(actions_by_done_count) > 1 and actions_by_done_count[1][1] != 0) else ''
+    actions_by_done_count = sorted(action_done_count_map.items(), key=lambda item: item[1], reverse=True)
+
+    most_done_action = actions_by_done_count[0][0] if actions_done > 0 and (len(actions_by_done_count) > 0 and actions_by_done_count[0][1] != 0) else ''
+    second_most_done_action = actions_by_done_count[1][0] if actions_done > 0 and (len(actions_by_done_count) > 1 and actions_by_done_count[1][1] != 0) else ''
 
     actions_by_impact = actions.order_by('calculator_action__average_points')
-    highest_impact_action = actions_by_impact[0] if len(actions_by_impact) > 0 else ''
-    second_highest_impact_action = actions_by_impact[1] if len(actions_by_impact) > 1 else ''
-
+    highest_impact_action = actions_by_impact[0] if actions_done > 0 and len(actions_by_impact) > 0 else ''
+    second_highest_impact_action = actions_by_impact[1] if actions_done > 0 and len(actions_by_impact) > 1 else ''
     community_cells = {
       'name': community.name, 'members_count': str(members_count), 'households_count': households_count,
       'teams_count' : teams_count, 'total_yearly_lbs_carbon' : total_carbon_points,
       'actions_done': str(actions_done), 'actions_per_member': actions_per_member,
       'testimonials_count' : testimonials_count, 'events_count': events_count,
-      'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action, 'highest_impact_action': highest_impact_action, 'second_highest_imapct_action': second_highest_impact_action
+      'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action, 'highest_impact_action': highest_impact_action, 'second_highest_impact_action': second_highest_impact_action
     }
 
-    return self._get_cells_from_dict(self.community_info_columns, community_cells)
+    reported_actions = self._get_community_reported_data(community)
+    community_cells.update(reported_actions)
+    community_cells['total_actions_done'] = str(actions_done + sum(value for value in reported_actions.values()))
 
+    total_households_count = 0 if not community.goal else community.goal.attained_number_of_households
+    total_households_count += RealEstateUnit.objects.filter(community=community).count()
+    community_cells['total_households_count'] = total_households_count
+    return self._get_cells_from_dict(self.community_info_columns, community_cells)
 
   def _all_users_download(self):
     users = list(UserProfile.objects.filter(is_deleted=False)) \
@@ -284,6 +333,11 @@ class DownloadStore:
       data.append([community] \
         + self._get_action_info_cells(action))
 
+    for community in Community.objects.filter(is_deleted=False):
+      community_reported_rows = self._get_reported_data_rows(community)
+      for row in community_reported_rows:
+        data.append([community.name] + row)
+
     data = sorted(data, key=lambda row : row[0]) # sort by community
     data.insert(0, columns) # insert the column names
 
@@ -300,12 +354,16 @@ class DownloadStore:
     for action in actions:
       data.append(self._get_action_info_cells(action))
 
+    community = Community.objects.filter(id=community_id).first()
+    community_reported_rows = self._get_reported_data_rows(community)
+    for row in community_reported_rows:
+      data.append(row)
+
     return data
 
 
   def _all_communities_download(self):
     communities = Community.objects.filter(is_deleted=False)
-
     columns = self.community_info_columns
     data = [columns]
 
@@ -371,7 +429,7 @@ class DownloadStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      return (self._all_communities_download(), None), None          
+      return (self._all_communities_download(), None), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

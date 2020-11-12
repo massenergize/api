@@ -8,3 +8,4 @@ dev.env
 prod.env
 .ebextensions/securelistener-clb.config
 prepare-for-deploy.py
+deployment/aws/

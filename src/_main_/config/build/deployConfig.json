@@ -1,0 +1,6 @@
+{
+  "IS_PROD": false,
+  "IS_CANARY": false,
+  "BUILD_VERSION": "3.0.17",
+  "BUILD_VERSION_NOTES": "November 3rd, 2020 Fixes:\nAPI issues #218, Admin-253 - All communities download, create community, link in team creation email\n"
+}

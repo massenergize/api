@@ -21,7 +21,8 @@ def register_all_models():
   success = True
   for model in all_database_models:
     try:
-      admin.site.register(model)
+      if not model._meta.abstract:    # can't register abstract models (namely PageSettings)
+        admin.site.register(model)
     except admin.sites.AlreadyRegistered:
       success = False
   return success
