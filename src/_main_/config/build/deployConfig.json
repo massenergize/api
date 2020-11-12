@@ -1,6 +1,6 @@
 {
-  "IS_PROD": true,
+  "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.1.0",
+  "BUILD_VERSION": "3.1.1",
   "BUILD_VERSION_NOTES": "Nov 11\nDeployment to PROD\n- Cookie Login\n- Bug fixes, etc\n"
 }
