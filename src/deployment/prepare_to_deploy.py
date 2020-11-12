@@ -191,7 +191,7 @@ def update_aws_docker_config(target, build_version):
   else:
     # assume dev
     src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.dev.aws.json') 
-    src_secure_listener_file = os.path.join(__location__, '../deployment/aws/prodSecureListener.config') 
+    src_secure_listener_file = os.path.join(__location__, '../deployment/aws/devSecureListener.config') 
     src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/devElasticBeanstalkConfig.yml') 
     write_any_content(dev_version_txt, build_version)
 

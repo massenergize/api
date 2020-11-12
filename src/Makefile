@@ -6,7 +6,7 @@ init:
 .PHONY: init
 
 start:
-	python deployment/prepare_to_deploy.py canary 1
+	python deployment/prepare_to_deploy.py prod 1
 	python manage.py runserver
 .PHONY: start
 
