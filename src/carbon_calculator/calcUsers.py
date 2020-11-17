@@ -97,8 +97,15 @@ def QuerySingleCalcUser(userId,args):
 
     if qs:
         q = qs[0]
+        if not q.other_info:
+            return INVALID_QUERY, {}
+
+        locality = "unknown"
+        if q.other_info:
+            locality = q.other_info.get("Locality","somewhere")
+
         other_info = q.other_info
-        carbonSaver = other_info["CarbonSaver"]
+        carbonSaver = other_info.get("CarbonSaver", None)
         if not carbonSaver:
             return INVALID_QUERY, {}
 
@@ -135,12 +142,12 @@ def QuerySingleCalcUser(userId,args):
             carbonSaver["points"] = points
             carbonSaver["cost"] = cost
             carbonSaver["savings"] = savings
-            other_info["carbonSaver"] = carbonSaver
+            other_info["CarbonSaver"] = carbonSaver
             q.other_info = other_info
             q.save()
 
         return VALID_QUERY, {"id":q.id, "First Name":firstName, "Last Name":lastName, "e-mail":email, 
-                    "Locality":q.locality, "Groups":groups, 
+                    "Locality":locality, "Groups":groups, 
                     "Created":q.created_at, "Updated":q.updated_at,
                     "TotalPoints":points, "TotalCost":cost, "TotalSavings":savings, "ActionInfoList":actionInfoList}
     else:
@@ -178,13 +185,15 @@ def CreateCalcUser(args):
             newUser.accepts_tnc = accepts_tnc
 
             jsondata = {}
-            if newUser.user_info == '':
+            if not newUser.user_info or newUser.user_info == '':
+                jsondata = {}
+            else:
                 jsondata = newUser.user_info
             jsondata["Locality"] = locality
             jsondata["Minimum_Age"] = minimum_age
             newUser.user_info = jsondata
 
-            if newUser.other_info == '':
+            if not newUser.other_info or newUser.other_info == '':
                 other_info = {"CarbonSaver": { "Events":[eventName], "Groups":groups, "Points":0, "Cost":0, "Savings":0 }}
                 newUser.other_info = other_info
             else:
@@ -198,7 +207,7 @@ def CreateCalcUser(args):
                     jsondata["CarbonSaver"] = carbonSaver
                 else:
                     jsondata['CarbonSaver'] = { 'Events':[eventName], 'Groups':groups, 'Points':0, 'Cost':0, 'Savings':0 }
-                newUser.user_info = jsondata
+                newUser.other_info = jsondata
 
             newUser.save()
 
@@ -234,13 +243,15 @@ def CreateCalcUser(args):
             for group in groups:
                 group1 = Group.objects.filter(name=group).first()
                 if group1:
-                    group1.members.add(newUser)
+                    group1.member_list.add(newUser)
+                    group1.members += 1
                     group1.save()
                 #    newUser.groups.add(group1)
                 #    newUser.save()
                     
         return {"id":newUser.id,"email":newUser.email, "success":True}
-    except:
+    except Exception as e: 
+        print('CreateCalcUser: '+str(e))
         error = {"success":False}
         return error
 
@@ -283,7 +294,7 @@ def ExportCalcUsers(fileName, event):
                     groups = []
                     #grouplist = user.groups.all()
                     groupList =  user.group_set.all()
-                    print(groupList)
+
                     if grouplist:
                         for group in grouplist:
                             groups.append(group.displayname)
@@ -317,7 +328,7 @@ def CalcUserUpdate(user_id, update):
     try:
         user = UserProfile.objects.filter(id=user_id).first()
         if user:
-            carbonSaver = user.other_info.get("carbonSaver", None)
+            carbonSaver = user.other_info.get("CarbonSaver", None)
             if carbonSaver:
                 for (k,v) in update:
                     carbonSaver[k] += v

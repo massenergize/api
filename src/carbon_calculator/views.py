@@ -70,7 +70,7 @@ def reset(request):
 
 def importcsv(request):
     context: Context = request.context
-    #print(context)
+
     if True: #context.user_is_admin():
         inputs = get_request_contents(request)
         return MassenergizeResponse(CALC.Import(inputs))
@@ -93,7 +93,7 @@ def users(request):
             return Json(users)
         else:
             return Json(None)
-    elif request.method == 'POST' and context.user_is_logged_in:
+    elif request.method == 'POST': # and context.user_is_logged_in:
         #about to create a new User instance
         user = CreateCalcUser(args)
         return Json(user)

@@ -55,8 +55,8 @@ def SavePic2Media(picURL):
                 return media
             else:
                 return None
-    except:
-        print("Error encountered")
+    except Exception as e:
+        print("Error encountered: "+str(e))
         return None
 
 class CarbonCalculator:
