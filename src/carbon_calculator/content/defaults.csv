@@ -82,7 +82,7 @@ general_decent_home_investment_payback,default,10,Default value without referenc
 general_household_size_default,default,4,Default value without reference,,2019-11-03 14:25
 heating_ashp_fed_tax_credit,default,0,Default value without reference,,2019-11-02 21:29
 heating_ashp_utility_rebate,default,2500,Default value without reference,,2019-11-02 21:29
-heating_assessment_conversion,default,0.1,Assume 20% of coaching inquiries result in heat pumps,,2019-11-02 01:23
+heating_assessment_conversion,default,0.1,Assume 10% of coaching inquiries result in heat pumps,,2019-11-02 01:23
 heating_default_ashp_efficiency,default,3,Default value without reference,,2019-11-02 13:09
 heating_default_ashp_fraction,default,0.8,Default value without reference,,2019-11-02 21:29
 heating_default_electric_efficiency,default,1,Default value without reference,,2019-11-02 13:08
@@ -119,7 +119,7 @@ lawn_fertilzer_bag_size,default,14,Default value without reference,,2019-11-03 1
 lawn_mow_gas_5000sf,default,0.5,Default value without reference,,2019-11-03 13:10
 lawn_mow_kwh_5000sf,default,2,Default value without reference,,2019-11-03 13:10
 natgas_ch4_global_warming_potential,default,86,IPCC 2014 report - low end GWP for Natural Gas on 20 yr timescale,,2019-10-27 11:20
-natgas_fraction_methane_leakage,default,0.028,survey report from 2015 - 2.8% fugitive emissions,,2019-10-27 11:19
+natgas_fraction_methane_leakage,default,0.023,"Science (AAAS), EDF article Assessment of methane emissions from the U.S. oil and gas supply chain. 2018 - 2.3% fugitive emissions",,2019-10-27 11:19
 natgas_lbs_co2_per_therm,default,11.7,Standard combustion CO2 for Natural Gas,,2019-10-27 11:18
 natgas_price_per_therm,default,1.52,Web: https://www.mass.gov/info-details/household-heating-costs Winter 2018-19,,2019-10-27 10:54
 nitrogen_co2_factor,default,0.02,Default value without reference,,2019-11-03 13:38

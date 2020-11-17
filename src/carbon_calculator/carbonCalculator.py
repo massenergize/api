@@ -3,7 +3,7 @@
 # Updated April 3
 #imports
 from datetime import date,datetime
-from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia, CalcUser, Org
+from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia,Org
 from django.utils import timezone
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
@@ -25,7 +25,7 @@ from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolar
 from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
-from .calcUsers import ExportCalcUsers
+from .calcUsers import ExportCalcUsers, CalcUserUpdate
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -164,14 +164,8 @@ class CarbonCalculator:
                         savings = record.savings
                         record.delete()
 
-                        user = CalcUser.objects.filter(id=user_id).first()
-                        if user:
-                            user.points -= points
-                            user.cost -= cost
-                            user.savings -= savings
-                            user.save()
-
-                        return {'status':VALID_QUERY, 'carbon_points':-points, 'cost':-cost, 'savings':-savings, 'explanation':"Undoing action"}
+                        if CalcUserUpdate(user_id, {"points":-points, "cost":-cost, "savings":-savings}):
+                            return {'status':VALID_QUERY, 'carbon_points':-points, 'cost':-cost, 'savings':-savings, 'explanation':"Undoing action"}
         return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
@@ -187,14 +181,9 @@ class CarbonCalculator:
                                 savings = savings)
         record.save()
 
-        user = CalcUser.objects.filter(id=user_id).first()
-        if user:
-            user.points += points
-            user.cost += cost
-            user.savings += savings
-            user.save()
-
-        return results
+        if CalcUserUpdate(user_id, {"points":points, "cost":cost, "savings":savings}):
+            return results
+        return queryFailed
 
     def Reset(self,inputs):
         if inputs.get('Confirm',NO) == YES:

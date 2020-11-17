@@ -1,10 +1,11 @@
-from .models import CalcUser, Event, Group, Action, ActionPoints, Station
+from database.models import UserProfile
+from .models import Event, Group, Action, ActionPoints, Station
 from .CCConstants import VALID_QUERY, INVALID_QUERY
 import csv
 
 def QueryCalcUsers(userId, args):
-    id = args.GET.get("id", None)
-    email = args.GET.get("email",None)
+    id = args.get("id", None)
+    email = args.get("email",None)
     if id and not userId:
         userId = id
     
@@ -13,10 +14,10 @@ def QueryCalcUsers(userId, args):
         if status == VALID_QUERY:
             return {"status":status, "userInfo":userInfo}
         else:
-            if userId:               
-                return {"status":status, "statusText":"User Id ("+userId+") not found"}
-            else:
+            if email:               
                 return {"status":status, "statusText":"User ("+email+") not found"}
+            else:
+                return {"status":status, "statusText":"User Id ("+userId+") not found"}
     else:
         status, userList = QueryAllCalcUsers(args)
         if status == VALID_QUERY:
@@ -26,29 +27,33 @@ def QueryCalcUsers(userId, args):
 
 def QueryAllCalcUsers(args):
     
-    event = args.GET.get('Event','')
-    group = args.GET.get('Group','')
+    event = args.get('Event','')
+    group = args.get('Group','')
     if event == '':
-        users = CalcUser.objects.all()
+        users = UserProfile.objects.all()
     else:
         users = None
         event = Event.objects.filter(name=event).first()
         if event:
             users = event.attendees.all()
 
-    if users:
-        if group:
-             users = users.filter(group=group)
+    #if users:
+    #    if group:
+    #         users = users.filter(group=group)
 
     if users:
         userInfo = []
         for q in users:
+            other_info = q.other_info
+            carbonSaver = other_info["CarbonSaver"]
+            if not carbonSaver:
+                continue
 
-            groups = []
-            for group in q.groups.all():
-                groups.append(group.displayname)
+            groups = q.other_info["CarbonSaver"]["Groups"]
+            #for group in q.groups.all():
+            #    groups.append(group.displayname)
 
-            if q.minimum_age:
+            if q.user_info.get("Minimum_age", False):
                 firstName = q.first_name
                 lastName = q.last_name
                 email = q.email
@@ -82,23 +87,31 @@ def QueryAllCalcUsers(args):
 
 def QuerySingleCalcUser(userId,args):
     if userId:
-        qs = CalcUser.objects.filter(id=userId)
+        qs = UserProfile.objects.filter(id=userId)
     else:
-        email= args.GET.get("email",None)
+        email= args.get("email",None)
         if email:
-            qs = CalcUser.objects.filter(email=email)
+            qs = UserProfile.objects.filter(email=email)
         else:
             qs = None
 
     if qs:
         q = qs[0]
-        groups = []
-        for group in q.groups.all():
-            groups.append(group.displayname)
+        other_info = q.other_info
+        carbonSaver = other_info["CarbonSaver"]
+        if not carbonSaver:
+            return INVALID_QUERY, {}
 
-        if q.minimum_age:
-            firstName = q.first_name
-            lastName = q.last_name
+        groups = q.other_info["CarbonSaver"]["Groups"]
+        #groups = []
+        #for group in q.groups.all():
+        #    groups.append(group.displayname)
+
+        user_info = q.user_info
+        if user_info.get("minimum_age",False):
+            space = q.full_name.find('')
+            firstName = q.full_name[0:space]
+            lastName = q.full_name[space+1:]
             email = q.email
         else:
             firstName = "UnderAge"
@@ -118,10 +131,12 @@ def QuerySingleCalcUser(userId,args):
                             "cost":action.cost, "savings":action.savings, "date":action.created_date}
                 actionInfoList.append(actionInfo)
 
-        if points>0 and q.points==0:
-            q.points = points
-            q.cost = cost
-            q.savings = savings
+        if points>0 and carbonSaver.get("points", 0) == 0:
+            carbonSaver["points"] = points
+            carbonSaver["cost"] = cost
+            carbonSaver["savings"] = savings
+            other_info["carbonSaver"] = carbonSaver
+            q.other_info = other_info
             q.save()
 
         return VALID_QUERY, {"id":q.id, "First Name":firstName, "Last Name":lastName, "e-mail":email, 
@@ -132,10 +147,16 @@ def QuerySingleCalcUser(userId,args):
         return INVALID_QUERY, {}
 
 def CreateCalcUser(args):
+# 15 Nov 2020 - Change CalcUser to use the standard UserProfile
 
     try:
         first_name = args.get("first_name","")
         last_name = args.get("last_name","")
+
+        full_name = first_name + " " + last_name
+        full_name = args.get("full_name", full_name)
+        preferred_name = first_name + last_name[0:0]    # could do better than this
+
         email = args.get("email","")
         locality = args.get("locality","")
         groups = args.get("groups",[])
@@ -143,27 +164,63 @@ def CreateCalcUser(args):
         accepts_tnc = args.get("accepts_terms_and_conditions", False)
         eventName = args.get("eventName","")
 
-        newUser = CalcUser.objects.filter(email=email).first()
+        newUser = UserProfile.objects.filter(email=email).first()
+        #newUser = CalcUser.objects.filter(email=email).first()
         if newUser:
-
-            if first_name!="":
-                newUser.first_name = first_name
-            if last_name != "":
-                newUser.last_name = last_name
+            # the record existed
+            if full_name!="":
+                newUser.full_name = full_name
+            if preferred_name != "":
+                newUser.preferred_name = preferred_name
             if locality != "":
                 newUser.locality = locality
             newUser.minimum_age = minimum_age
             newUser.accepts_tnc = accepts_tnc
 
+            jsondata = {}
+            if newUser.user_info == '':
+                jsondata = newUser.user_info
+            jsondata["Locality"] = locality
+            jsondata["Minimum_Age"] = minimum_age
+            newUser.user_info = jsondata
+
+            if newUser.other_info == '':
+                other_info = {"CarbonSaver": { "Events":[eventName], "Groups":groups, "Points":0, "Cost":0, "Savings":0 }}
+                newUser.other_info = other_info
+            else:
+                jsondata = newUser.other_info
+                carbonSaver = jsondata.get("CarbonSaver", None)
+                if carbonSaver:
+                    carbonSaver["Events"].append(eventName)
+                    for group in groups:
+                        if not group in carbonSaver["Groups"]:
+                            carbonSaver["Groups"].append(group)
+                    jsondata["CarbonSaver"] = carbonSaver
+                else:
+                    jsondata['CarbonSaver'] = { 'Events':[eventName], 'Groups':groups, 'Points':0, 'Cost':0, 'Savings':0 }
+                newUser.user_info = jsondata
+
             newUser.save()
 
         else:
-            newUser = CalcUser(first_name=first_name,
-                            last_name = last_name,
-                            email =email, 
-                            locality = locality,
-                            minimum_age = minimum_age,
-                            accepts_terms_and_conditions = accepts_tnc)
+            newUser = UserProfile.objects.create(
+                full_name=full_name,
+                preferred_name = preferred_name,
+                email = email, 
+                is_vendor = False,
+                accepts_terms_and_conditions = accepts_tnc)
+            #newUser = CalcUser(first_name=first_name,
+            #                last_name = last_name,
+            #                email =email, 
+            #                locality = locality,
+            #                minimum_age = minimum_age,
+            #                accepts_terms_and_conditions = accepts_tnc)
+
+            user_Info = { 'Minimum_Age':minimum_age }
+            newUser.user_info = user_Info
+
+            other_info = {'CarbonSaver': { 'Events':[eventName], 'Groups':groups, 'Points':0, 'Cost':0, 'Savings':0 }}
+            newUser.other_info = other_info
 
             newUser.save()                
 
@@ -177,8 +234,10 @@ def CreateCalcUser(args):
             for group in groups:
                 group1 = Group.objects.filter(name=group).first()
                 if group1:
-                    newUser.groups.add(group1)
-                    newUser.save()
+                    group1.members.add(newUser)
+                    group1.save()
+                #    newUser.groups.add(group1)
+                #    newUser.save()
                     
         return {"id":newUser.id,"email":newUser.email, "success":True}
     except:
@@ -194,7 +253,7 @@ def ExportCalcUsers(fileName, event):
             rowtext = ["First Name","Last Name","e-mail","Locality","Groups","Over13","AcceptsTNC","Created","Updated"]
             actionList = []
             if event=='':   #all events
-                users = CalcUser.objects.all()
+                users = UserProfile.objects.filter(other_info)
                 actions = Action.objects.all()
                 for action in actions:
                     rowtext.append(action.name)
@@ -220,8 +279,11 @@ def ExportCalcUsers(fileName, event):
                 msg = "Exporting %d CalcUsers to csv file %s" % (users.count(), fileName)
                 print(msg)
                 for user in users:
+
                     groups = []
-                    grouplist = user.groups.all()
+                    #grouplist = user.groups.all()
+                    groupList =  user.group_set.all()
+                    print(groupList)
                     if grouplist:
                         for group in grouplist:
                             groups.append(group.displayname)
@@ -250,3 +312,31 @@ def ExportCalcUsers(fileName, event):
     if csvfile:
         csvfile.close()
     return status
+
+def CalcUserUpdate(user_id, update):
+    try:
+        user = UserProfile.objects.filter(id=user_id).first()
+        if user:
+            carbonSaver = user.other_info.get("carbonSaver", None)
+            if carbonSaver:
+                for (k,v) in update:
+                    carbonSaver[k] += v
+                user.save()
+                return True
+
+        return False
+    except:
+        return False
+
+def CalcUserLocality(user_id):
+    try:
+        user = UserProfile.objects.filter(id=user_id).first()
+        if user:
+            locality = user.user_info.get("locality", None)
+            if locality:
+                return locality
+
+        return None
+    except:
+        return None
+

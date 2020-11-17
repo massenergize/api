@@ -3,6 +3,7 @@ from django.contrib.postgres.fields import JSONField
 from django.forms.models import model_to_dict
 from database.utils.constants import SHORT_STR_LEN, TINY_STR_LEN
 from database.utils.common import  json_loader
+
 # Create your models here.
 
 NAME_STR_LEN = 40
@@ -159,10 +160,12 @@ class Station(models.Model):
 
 
 class Group(models.Model):
+    from database.models import UserProfile
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN,unique=True)
     displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
     description = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    member_list = models.ManyToManyField(UserProfile, related_name='group_members', blank=True) 
     members = models.PositiveIntegerField(default=0)
     points = models.PositiveIntegerField(default=0)
     savings = models.DecimalField(default=0.0,max_digits=10,decimal_places=2)
@@ -180,51 +183,51 @@ class Group(models.Model):
         db_table = 'groups_cc'
 
 
-class CalcUser(models.Model):
-    """
-    A class used to represent a Calculator User
-
-    Note: Authentication is handled by firebase so we just need emails
-
-    Attributes
-    ----------
-    email : str
-      email of the user.  Should be unique.
-      created_at: DateTime
-      The date and time that this goal was added 
-    created_at: DateTime
-      The date and time of the last time any updates were made to the information
-      about this goal
-
-    """
-    id = models.AutoField(primary_key=True)
-    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-    first_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
-    last_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
-    email = models.EmailField(max_length=SHORT_STR_LEN, 
-      unique=True, db_index=True)
-    locality = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
-    groups = models.ManyToManyField(Group, blank=True)
-    minimum_age = models.BooleanField(default=False, blank=True)
-    accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    #updated 12/1
-    points = models.IntegerField(default = 0) 
-    cost = models.IntegerField(default = 0)
-    savings = models.IntegerField(default = 0)
-
-    def simple_json(self):
-        return model_to_dict(self)
-
-    def full_json(self):
-        return self.simple_json()
-
-    def __str__(self):
-        return self.email
+#class CalcUser(models.Model):
+#    """
+#    A class used to represent a Calculator User
 #
-    class Meta:
-        db_table = 'user_profiles_cc' 
+#    Note: Authentication is handled by firebase so we just need emails
+#
+#   Attributes
+#    ----------
+#    email : str
+#      email of the user.  Should be unique.
+#      created_at: DateTime
+#      The date and time that this goal was added 
+#    created_at: DateTime
+#      The date and time of the last time any updates were made to the information
+#      about this goal
+#
+#    """
+#    id = models.AutoField(primary_key=True)
+#    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+#    first_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+#    last_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+#    email = models.EmailField(max_length=SHORT_STR_LEN, 
+#      unique=True, db_index=True)
+#    locality = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+#    groups = models.ManyToManyField(Group, blank=True)
+#    minimum_age = models.BooleanField(default=False, blank=True)
+#    accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
+#    created_at = models.DateTimeField(auto_now_add=True)
+#    updated_at = models.DateTimeField(auto_now=True)
+#    #updated 12/1
+#    points = models.IntegerField(default = 0) 
+#    cost = models.IntegerField(default = 0)
+#    savings = models.IntegerField(default = 0)
+#
+#    def simple_json(self):
+#        return model_to_dict(self)
+#
+#    def full_json(self):
+#        return self.simple_json()
+#
+#    def __str__(self):
+#        return self.email
+#
+#    class Meta:
+#        db_table = 'user_profiles_cc' 
 
 class Org(models.Model):
     """
@@ -263,6 +266,7 @@ class Org(models.Model):
         db_table = 'organization_cc' 
 
 class Event(models.Model):
+    from database.models import UserProfile
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=NAME_STR_LEN,unique=True)
     displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
@@ -278,7 +282,8 @@ class Event(models.Model):
 #   for a given event, campaign or purpose (platform default or community sites)
     visible = models.BooleanField(default=True)
     event_tag = models.CharField(max_length=TINY_STR_LEN,blank=True)
-    attendees = models.ManyToManyField(CalcUser, blank=True)
+    #attendees = models.ManyToManyField(CalcUser, blank=True)
+    attendees = models.ManyToManyField(UserProfile, blank=True)
 
     def simple_json(self):
         return model_to_dict(self)
@@ -296,14 +301,23 @@ class ActionPoints(models.Model):
     """
     Class to record choices made for actions - first from the Event Calculator and eventually from  
     """
+    from database.models import UserProfile
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
+    #user = models.ForeignKey(CalcUser, blank=True, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(UserProfile, blank=True, null=True, on_delete=models.SET_NULL)
+
     created_date = models.DateTimeField(auto_now_add=True)
 #
     #action = models.ForeignKey(Action, blank=True, null=True, on_delete=models.SET_NULL)
     action = models.CharField(max_length=NAME_STR_LEN, blank=True)
+
+#    the questions and answers
     choices = JSONField(blank=True)
-#    # how to put in the questions and answers?
+
+    #next two fields added 11/15/20
+    action_date = models.DateTimeField(auto_now_add=True, null=True)
+    # 'pledged', 'todo', 'done'
+    action_status = models.CharField(max_length=NAME_STR_LEN,blank=True)
 #
     points = models.IntegerField(default = 0) 
     cost = models.IntegerField(default = 0)

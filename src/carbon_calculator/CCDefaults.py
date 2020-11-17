@@ -1,4 +1,5 @@
-from .models import CalcDefault, CalcUser
+from .models import CalcDefault
+from .calcUsers import CalcUserLocality
 import time
 import timeit
 import csv
@@ -10,9 +11,9 @@ def getLocality(inputs):
     locality = "default"
     
     if id != "":
-        user = CalcUser.objects.filter(id=id).first()
-        if user:
-            locality = user.locality
+        loc = CalcUserLocality(id)
+        if loc:
+            locality = loc
 
     elif community != "":
         locality = community
