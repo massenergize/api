@@ -139,9 +139,9 @@ def QuerySingleCalcUser(userId,args):
                 actionInfoList.append(actionInfo)
 
         if points>0 and carbonSaver.get("points", 0) == 0:
-            carbonSaver["points"] = points
-            carbonSaver["cost"] = cost
-            carbonSaver["savings"] = savings
+            carbonSaver["Points"] = points
+            carbonSaver["Cost"] = cost
+            carbonSaver["Savings"] = savings
             other_info["CarbonSaver"] = carbonSaver
             q.other_info = other_info
             q.save()
