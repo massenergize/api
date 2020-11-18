@@ -23,9 +23,10 @@ class CommunityStore:
       if not community:
         return None, InvalidResourceError()
 
-      
-      if (not community.is_published) and context.is_prod and (not context.is_admin_site):
-        # if the community is not live and we are fetching info on the community
+      # context.is_prod now means the prod database site.
+      # if (not community.is_published) and context.is_prod and (not context.is_admin_site):
+      if (not community.is_published) and (not context.is_sandbox) and (not context.is_admin_site):
+         # if the community is not live and we are fetching info on the community
         # on prod, we should pretend the community does not exist.
         return None, InvalidResourceError()
 
