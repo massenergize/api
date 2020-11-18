@@ -135,7 +135,6 @@ class AdminHandler(RouteHandler):
     return MassenergizeResponse(data=admin_info)
 
 
-  @login_required
   def message(self, request): 
     context: Context  = request.context
     args = context.get_request_body() 
