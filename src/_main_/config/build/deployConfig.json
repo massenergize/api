@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.1.1",
-  "BUILD_VERSION_NOTES": "Nov 11\nDeployment to PROD\n- Cookie Login\n- Bug fixes, etc\n"
+  "BUILD_VERSION": "3.1.2",
+  "BUILD_VERSION_NOTES": "Nov 23\nDeployment to Dev\n- Contact-us if not signed in (Portal #467)\n- Communities.info for sandbox (API #224)\n"
 }
