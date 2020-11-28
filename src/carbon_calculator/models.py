@@ -26,6 +26,7 @@ class CarbonCalculatorMedia(models.Model):
         the type of this media file whether it is an image, video, pdf etc.
     """
     id = models.AutoField(primary_key=True)
+    name = models.SlugField(max_length=SHORT_STR_LEN, blank=True) 
     file = models.FileField(upload_to='media/')
     is_deleted = models.BooleanField(default=False)
 

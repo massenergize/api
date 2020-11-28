@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
-
+from django.utils.text import slugify
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
 import json
@@ -63,7 +63,7 @@ def SavePic2Media(picURL):
             image_file = InMemoryUploadedFile(img_io, None, file_name, content_type,
                                   None, None)
 
-            media = CarbonCalculatorMedia.objects.create(file=image_file)
+            media = CarbonCalculatorMedia.objects.create(file=image_file, name=f"{slugify(file_name)}")
 
             if media:
                 media.save()
