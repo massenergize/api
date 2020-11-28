@@ -5,12 +5,15 @@
 from datetime import date,datetime
 from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia,Org
 from django.utils import timezone
+
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
 import json
 import csv
 from django.core import files
-from io import BytesIO
 import requests
 from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
 from .CCDefaults import getDefault, getLocality, CCD
@@ -43,12 +46,24 @@ def SavePic2Media(picURL):
             print("ERROR: Unable to import action photo from "+picURL)
             return None
         else:
-            file_name =  "carbon_calculator/assets/" + picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
-            fp = open(file_name,"wb")
-            fp.write(resp.content)
-            fp.close()
-            media = CarbonCalculatorMedia(file = file_name)
-            #media = CarbonCalculatorMedia.objects.create(file=file_name)
+            image = resp.content
+            file_name =  picURL.split("/")[-1]
+            file_type_ext = file_name.split(".")[-1]
+
+            img_io = BytesIO(image)
+            
+            content_type = 'image/jpeg'
+            if file_type_ext.lower() == 'png':
+                content_type = 'image/png'
+
+            # Create a new Django file-like object to be used in models as ImageField using
+            # InMemoryUploadedFile.  If you look at the source in Django, a
+            # SimpleUploadedFile is essentially instantiated similarly to what is shown here
+            #image_file = InMemoryUploadedFile(img_io, None, 'foo.jpg', 'image/jpeg',
+            image_file = InMemoryUploadedFile(img_io, None, file_name, content_type,
+                                  None, None)
+
+            media = CarbonCalculatorMedia.objects.create(file=image_file)
 
             if media:
                 media.save()

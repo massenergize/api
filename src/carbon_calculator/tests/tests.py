@@ -117,9 +117,9 @@ class CarbonCalculatorTest(TestCase):
             self.input_timestamp = header["Timestamp"]
             inputs = [eval(i.strip()) for i in f.readlines()]
             f.close()
-        except:
+        except Exception as e:
             inputs = []
-            print("Exception from read_inputs")
+            print("Exception from read_inputs: " + str(e))
         return inputs
 
     def write_outputs(self, filename):
