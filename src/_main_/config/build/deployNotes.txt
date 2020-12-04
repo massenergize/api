@@ -1,4 +1,4 @@
-Nov 23
-Deployment to Dev
+Dec 4:
+Deployment to Prod
 - Contact-us if not signed in (Portal #467)
 - Communities.info for sandbox (API #224)
