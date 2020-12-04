@@ -1,4 +1,4 @@
-Nov 11
-Deployment to PROD
-- Cookie Login
-- Bug fixes, etc
+Nov 23
+Deployment to Dev
+- Contact-us if not signed in (Portal #467)
+- Communities.info for sandbox (API #224)
