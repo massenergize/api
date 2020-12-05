@@ -193,31 +193,31 @@ def CreateCalcUser(args):
             newUser.minimum_age = minimum_age
             newUser.accepts_tnc = accepts_tnc
 
-            jsondata = {}
+            user_info = {}
             if not newUser.user_info or newUser.user_info == '':
-                jsondata = {}
+                user_info = {}
             else:
-                jsondata = newUser.user_info
-            jsondata["locality"] = locality
-            jsondata["minimum_Age"] = minimum_age
-            newUser.user_info = jsondata
+                user_info = newUser.user_info
+            user_info["locality"] = locality
+            user_info["minimum_age"] = minimum_age
+            newUser.user_info = user_info
 
             if not newUser.other_info or newUser.other_info == '':
                 other_info = {"CarbonSaver": { "events":[eventName], "groups":groups, "points":0, "cost":0, "savings":0 }}
                 newUser.other_info = other_info
             else:
-                jsondata = newUser.other_info
-                carbonSaver = jsondata.get("CarbonSaver", None)
+                other_info = newUser.other_info
+                carbonSaver = other_info.get("CarbonSaver", None)
                 if carbonSaver:
                     if not eventName in carbonSaver["events"]:
                         carbonSaver["events"].append(eventName)
                     for group in groups:
                         if not group in carbonSaver["groups"]:
                             carbonSaver["groups"].append(group)
-                    jsondata["CarbonSaver"] = carbonSaver
+                    other_info["CarbonSaver"] = carbonSaver
                 else:
-                    jsondata['CarbonSaver'] = { 'events':[eventName], 'groups':groups, 'points':0, 'cost':0, 'savings':0 }
-                newUser.other_info = jsondata
+                    other_info['CarbonSaver'] = { 'events':[eventName], 'groups':groups, 'points':0, 'cost':0, 'savings':0 }
+                newUser.other_info = other_info
 
             newUser.save()
 
@@ -228,12 +228,6 @@ def CreateCalcUser(args):
                 email = email, 
                 is_vendor = False,
                 accepts_terms_and_conditions = accepts_tnc)
-            #newUser = CalcUser(first_name=first_name,
-            #                last_name = last_name,
-            #                email =email, 
-            #                locality = locality,
-            #                minimum_age = minimum_age,
-            #                accepts_terms_and_conditions = accepts_tnc)
 
             user_Info = { 'minimum_Age':minimum_age }
             newUser.user_info = user_Info
