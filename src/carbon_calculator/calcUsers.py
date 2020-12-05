@@ -49,11 +49,11 @@ def QueryAllCalcUsers(args):
             if not carbonSaver:
                 continue
 
-            groups = q.other_info["CarbonSaver"]["Groups"]
+            groups = q.other_info["CarbonSaver"]["groups"]
             #for group in q.groups.all():
             #    groups.append(group.displayname)
 
-            if q.user_info.get("Minimum_age", False):
+            if q.user_info.get("minimum_age", False):
                 firstName = q.first_name
                 lastName = q.last_name
                 email = q.email
@@ -96,35 +96,44 @@ def QuerySingleCalcUser(userId,args):
             qs = None
 
     if qs:
+        # User record found
         q = qs[0]
-        if not q.other_info:
-            return INVALID_QUERY, {}
+
+        full_name = q.full_name
+        space = full_name.find('')
+        firstName = full_name[0:space]
+        lastName = full_name[space+1:]
+        email = q.email
 
         locality = "unknown"
-        if q.other_info:
-            locality = q.other_info.get("Locality","somewhere")
+        if q.other_info and q.other_info.get("CarbonSaver", None):
 
-        other_info = q.other_info
-        carbonSaver = other_info.get("CarbonSaver", None)
-        if not carbonSaver:
-            return INVALID_QUERY, {}
+            # User has used CarbonSaver
+            other_info = q.other_info
+            carbonSaver = other_info.get("CarbonSaver", None)
 
-        groups = q.other_info["CarbonSaver"]["Groups"]
-        #groups = []
-        #for group in q.groups.all():
-        #    groups.append(group.displayname)
+            groups = carbonSaver.get("groups",[])
 
-        user_info = q.user_info
-        if user_info.get("minimum_age",False):
-            space = q.full_name.find('')
-            firstName = q.full_name[0:space]
-            lastName = q.full_name[space+1:]
-            email = q.email
+            user_info = q.user_info
+            if user_info:
+                locality = user_info.get("locality","unknown") 
+            if not user_info or not user_info.get("minimum_age",False):
+                firstName = "UnderAge"
+                lastName = "Anonymous"
+                email = "None"
+
         else:
-            firstName = "UnderAge"
-            lastName = "Anonymous"
-            email = "None"
+            # First time using CarbonSaver? create necessary info
+            other_info = {}
+            if q.other_info:
+                other_info = q.other_info
 
+            carbonSaver = {"CarbonSaver": {"points":0, "cost":0, "savings":0}}
+            other_info["CarbonSaver"] = carbonSaver
+            q.other_info = other_info
+            q.save()
+
+            groups = []
         #actions the user has committed to
         actionInfoList = []
         points = cost = savings = 0.
@@ -139,9 +148,9 @@ def QuerySingleCalcUser(userId,args):
                 actionInfoList.append(actionInfo)
 
         if points>0 and carbonSaver.get("points", 0) == 0:
-            carbonSaver["Points"] = points
-            carbonSaver["Cost"] = cost
-            carbonSaver["Savings"] = savings
+            carbonSaver["points"] = points
+            carbonSaver["cost"] = cost
+            carbonSaver["savings"] = savings
             other_info["CarbonSaver"] = carbonSaver
             q.other_info = other_info
             q.save()
@@ -189,24 +198,25 @@ def CreateCalcUser(args):
                 jsondata = {}
             else:
                 jsondata = newUser.user_info
-            jsondata["Locality"] = locality
-            jsondata["Minimum_Age"] = minimum_age
+            jsondata["locality"] = locality
+            jsondata["minimum_Age"] = minimum_age
             newUser.user_info = jsondata
 
             if not newUser.other_info or newUser.other_info == '':
-                other_info = {"CarbonSaver": { "Events":[eventName], "Groups":groups, "Points":0, "Cost":0, "Savings":0 }}
+                other_info = {"CarbonSaver": { "events":[eventName], "groups":groups, "points":0, "cost":0, "savings":0 }}
                 newUser.other_info = other_info
             else:
                 jsondata = newUser.other_info
                 carbonSaver = jsondata.get("CarbonSaver", None)
                 if carbonSaver:
-                    carbonSaver["Events"].append(eventName)
+                    if not eventName in carbonSaver["events"]:
+                        carbonSaver["events"].append(eventName)
                     for group in groups:
-                        if not group in carbonSaver["Groups"]:
-                            carbonSaver["Groups"].append(group)
+                        if not group in carbonSaver["groups"]:
+                            carbonSaver["groups"].append(group)
                     jsondata["CarbonSaver"] = carbonSaver
                 else:
-                    jsondata['CarbonSaver'] = { 'Events':[eventName], 'Groups':groups, 'Points':0, 'Cost':0, 'Savings':0 }
+                    jsondata['CarbonSaver'] = { 'events':[eventName], 'groups':groups, 'points':0, 'cost':0, 'savings':0 }
                 newUser.other_info = jsondata
 
             newUser.save()
@@ -225,10 +235,10 @@ def CreateCalcUser(args):
             #                minimum_age = minimum_age,
             #                accepts_terms_and_conditions = accepts_tnc)
 
-            user_Info = { 'Minimum_Age':minimum_age }
+            user_Info = { 'minimum_Age':minimum_age }
             newUser.user_info = user_Info
 
-            other_info = {'CarbonSaver': { 'Events':[eventName], 'Groups':groups, 'Points':0, 'Cost':0, 'Savings':0 }}
+            other_info = {'CarbonSaver': { 'events':[eventName], 'groups':groups, 'points':0, 'cost':0, 'savings':0 }}
             newUser.other_info = other_info
 
             newUser.save()                
@@ -316,8 +326,8 @@ def ExportCalcUsers(fileName, event):
                                 rowtext.append("")
                     rows.append(rowtext)
                 csvwriter.writerows(rows)
-    except:
-        print("Error exporting CalcUsers to CSV file")
+    except Exception as e:
+        print("Error exporting CalcUsers to CSV file: "+str(e))
         status = False
 
     if csvfile:
