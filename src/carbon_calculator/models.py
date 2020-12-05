@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.forms.models import model_to_dict
 from database.utils.constants import SHORT_STR_LEN, TINY_STR_LEN
-from database.utils.common import  json_loader
+from database.utils.common import  json_loader, get_json_if_not_none
 
 # Create your models here.
 
@@ -31,7 +31,10 @@ class CarbonCalculatorMedia(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def simple_json(self):
-        return model_to_dict(self)
+        return {
+            "id": self.id,
+            "url": self.file.url,
+        }
 
     def full_json(self):
         return self.simple_json()
@@ -255,7 +258,16 @@ class Org(models.Model):
         null=True, blank=True, related_name='event_host_logo')
 
     def simple_json(self):
-        return model_to_dict(self)
+        return {
+            "name": self.name,
+            "contact": self.contact,
+            "email": self.email,
+            "phone": self.phone,
+            "about": self.about,
+            "url":self.url,
+            "logo":get_json_if_not_none(self.logo)
+        }
+
 
     def full_json(self):
         return self.simple_json()
