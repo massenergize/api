@@ -186,53 +186,6 @@ class Group(models.Model):
     class Meta:
         db_table = 'groups_cc'
 
-
-#class CalcUser(models.Model):
-#    """
-#    A class used to represent a Calculator User
-#
-#    Note: Authentication is handled by firebase so we just need emails
-#
-#   Attributes
-#    ----------
-#    email : str
-#      email of the user.  Should be unique.
-#      created_at: DateTime
-#      The date and time that this goal was added 
-#    created_at: DateTime
-#      The date and time of the last time any updates were made to the information
-#      about this goal
-#
-#    """
-#    id = models.AutoField(primary_key=True)
-#    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-#    first_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
-#    last_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
-#    email = models.EmailField(max_length=SHORT_STR_LEN, 
-#      unique=True, db_index=True)
-#    locality = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
-#    groups = models.ManyToManyField(Group, blank=True)
-#    minimum_age = models.BooleanField(default=False, blank=True)
-#    accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
-#    created_at = models.DateTimeField(auto_now_add=True)
-#    updated_at = models.DateTimeField(auto_now=True)
-#    #updated 12/1
-#    points = models.IntegerField(default = 0) 
-#    cost = models.IntegerField(default = 0)
-#    savings = models.IntegerField(default = 0)
-#
-#    def simple_json(self):
-#        return model_to_dict(self)
-#
-#    def full_json(self):
-#        return self.simple_json()
-#
-#    def __str__(self):
-#        return self.email
-#
-#    class Meta:
-#        db_table = 'user_profiles_cc' 
-
 class Org(models.Model):
     """
     A class used to represent an organization

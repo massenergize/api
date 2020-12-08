@@ -55,7 +55,6 @@ class UserHandler(RouteHandler):
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
-    #validator: Validator = Validator()
     args, err = (self.validator
       .expect("accepts_terms_and_conditions", bool, is_required=True)
       .expect("email", str, is_required=True)

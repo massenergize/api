@@ -50,16 +50,14 @@ def SavePic2Media(picURL):
             file_name =  picURL.split("/")[-1]
             file_type_ext = file_name.split(".")[-1]
 
-            img_io = BytesIO(image)
-            
             content_type = 'image/jpeg'
-            if file_type_ext.lower() == 'png':
+            if len(file_type_ext)>0 and file_type_ext.lower() == 'png':
                 content_type = 'image/png'
 
             # Create a new Django file-like object to be used in models as ImageField using
             # InMemoryUploadedFile.  If you look at the source in Django, a
             # SimpleUploadedFile is essentially instantiated similarly to what is shown here
-            #image_file = InMemoryUploadedFile(img_io, None, 'foo.jpg', 'image/jpeg',
+            img_io = BytesIO(image)
             image_file = InMemoryUploadedFile(img_io, None, file_name, content_type,
                                   None, None)
 
