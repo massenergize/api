@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
-from carbon_calculator.models import CalcUser, Event, Station, Action, Group, Question
+from carbon_calculator.models import Event, Station, Action, Group, Question
 from carbon_calculator.views import importcsv
-from database.models import Vendor
+from database.models import UserProfile
 from django.db.models import Count
 import json
 import jsons
@@ -22,7 +22,6 @@ class CarbonCalculatorTest(TestCase):
     @classmethod
     def setUpClass(self):
         self.client = Client()
-
         self.client.post('/cc/import',
             {   "Confirm": "Yes",
                 "Actions":"carbon_calculator/content/Actions.csv",
@@ -88,7 +87,6 @@ class CarbonCalculatorTest(TestCase):
         with the results of the last run. Finally, pretty print the differences
         between this test run and the last one. Don't return anything.
         """
-        print('Test_consistency/n')
         #Check for required data
         if len(self.input_data) <= 0:
             return
@@ -119,9 +117,9 @@ class CarbonCalculatorTest(TestCase):
             self.input_timestamp = header["Timestamp"]
             inputs = [eval(i.strip()) for i in f.readlines()]
             f.close()
-        except:
+        except Exception as e:
             inputs = []
-            print("Exception from read_inputs")
+            print("Exception from read_inputs: " + str(e))
         return inputs
 
     def write_outputs(self, filename):
@@ -276,7 +274,6 @@ class CarbonCalculatorTest(TestCase):
         obj = Action.objects.first()  # getting the first object in model
         field_object = Action._meta.get_field('name')  # this and next is getting the name
         field_value = field_object.value_from_object(obj)  # this returns actual name (as str)
-        #print(field_value)
 
         event_url = '/cc/estimate/' + field_value
         response = self.client.post(event_url, {})

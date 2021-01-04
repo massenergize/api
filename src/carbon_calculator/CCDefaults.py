@@ -1,4 +1,6 @@
-from .models import CalcDefault, CalcUser
+from .models import CalcDefault
+from .calcUsers import CalcUserLocality
+from datetime import datetime
 import time
 import timeit
 import csv
@@ -10,9 +12,9 @@ def getLocality(inputs):
     locality = "default"
     
     if id != "":
-        user = CalcUser.objects.filter(id=id).first()
-        if user:
-            locality = user.locality
+        loc = CalcUserLocality(id)
+        if loc:
+            locality = loc
 
     elif community != "":
         locality = community
@@ -118,6 +120,7 @@ class CCD():
         return status
     def importDefaults(self,fileName):
         try:
+            status = True
             with open(fileName, newline='') as csvfile:
                 inputlist = csv.reader(csvfile)
                 first = True
@@ -143,10 +146,12 @@ class CCD():
                         if not valid_date or valid_date=="":
                             valid_date = '2000-01-01'
 
+                        #valid_date = datetime.date(valid_date)
+                        valid_date = datetime.strptime(valid_date, "%Y-%m-%d").date()
+
                         qs = CalcDefault.objects.filter(variable=variable, locality=locality)
                         if qs:
                             qs[0].delete()
-
 
                         cd = CalcDefault(variable=variable,
                                 locality=locality,
