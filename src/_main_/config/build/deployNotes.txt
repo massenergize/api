@@ -1,4 +1,4 @@
-Nov 23
+Jan 5th
 Deployment to Dev
-- Contact-us if not signed in (Portal #467)
-- Communities.info for sandbox (API #224)
+- Updates to Carbon Calc functionality
+- Model changes
