@@ -255,10 +255,11 @@ class DownloadStore:
     columns = ['primary community',
                 'secondary community' ] \
                 + self.user_info_columns \
-                + [action.title for action in actions] \
-                + [team.name for team in teams]
-    sub_columns = ['', ''] + ['' for _ in range(len(self.user_info_columns))] \
-            + ["ACTION" for _ in range(len(actions))] + ["TEAM" for _ in range(len(teams))]
+                + ['TEAM'] \
+                + [action.title for action in actions]
+    print(columns)
+    sub_columns = ['', ''] + ['' for _ in range(len(self.user_info_columns))] + [''] \
+            + ["ACTION" for _ in range(len(actions))] #+ ["TEAM" for _ in range(len(teams))]
     data = []
 
     for user in users:
@@ -278,9 +279,11 @@ class DownloadStore:
 
       row = [primary_community, secondary_community] \
       + self._get_user_info_cells(user) \
-      + self._get_user_actions_cells(user, actions) \
-      + self._get_user_teams_cells(user, teams)
+      + self._get_user_teams_cells(user, teams) \
+      + self._get_user_actions_cells(user, actions)
 
+      print("Row")
+      print(row)
       data.append(row)
 
     # sort by community
@@ -301,11 +304,11 @@ class DownloadStore:
     teams = Team.objects.filter(community__id=community_id, is_deleted=False)
 
     columns = self.user_info_columns \
-                + 'TEAMS' \
+                + ['TEAM'] \
                 + [action.title for action in actions]
                 #+ [team.name for team in teams]
     sub_columns = ['' for _ in range(len(self.user_info_columns))]  \
-                + 'LIST' \
+                + [''] \
                 + ["ACTION" for _ in range(len(actions))] #+ ["TEAM" for _ in range(len(teams))]
     data = [columns, sub_columns]
 
@@ -313,7 +316,7 @@ class DownloadStore:
 
       #BHN 20.1.10 Put teams list in one cell, ahead of actions 
       row = self._get_user_info_cells(user) \
-          + self._get_user_teams_cells(user, teams) \   
+          + self._get_user_teams_cells(user, teams) \
           + self._get_user_actions_cells(user, actions)
 
       data.append(row)
@@ -402,6 +405,7 @@ class DownloadStore:
         if community_id:
           return (self._community_users_download(community_id), community_name), None
         else:
+          print('all_users_download')
           return (self._all_users_download(), None), None
       elif context.user_is_community_admin and community_id:
         return (self._community_users_download(community_id), community_name), None
