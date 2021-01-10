@@ -55,7 +55,7 @@ class DownloadStore:
     else:
         user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
         testimonials_count = user_testimonials.count() if user_testimonials else '0'
-
+ 
         user_cells = {'name': user.full_name,
                       'preferred_name': user.preferred_name,
                       'email': user.email,
@@ -91,19 +91,21 @@ class DownloadStore:
 
   def _get_user_teams_cells(self, user, teams):
     if (isinstance(user, Subscriber)):
-      return ['' for _ in range(len(teams))]
+      return [''] # for _ in range(len(teams))]
 
-    cells = []
+    cell_text = '['
     user_team_members = TeamMember.objects.filter(user=user).select_related('team')
     for team in teams:
       user_team_status = ''
       team_member = user_team_members.filter(team=team).first()
       if team_member:
+        cell_text = cell_text + team.name
         if team_member.is_admin:
-          user_team_status = 'ADMIN'
-        else:
-          user_team_status = 'MEMBER'
-      cells.append(user_team_status)
+          cell_text += '(ADMIN)'
+        cell_text += ","
+
+    cell_text += ']'
+    cells = [cell_text]  
     return cells
 
 
@@ -299,17 +301,20 @@ class DownloadStore:
     teams = Team.objects.filter(community__id=community_id, is_deleted=False)
 
     columns = self.user_info_columns \
-                + [action.title for action in actions] \
-                + [team.name for team in teams]
-    sub_columns = ['' for _ in range(len(self.user_info_columns))] \
-            + ["ACTION" for _ in range(len(actions))] + ["TEAM" for _ in range(len(teams))]
+                + 'TEAMS' \
+                + [action.title for action in actions]
+                #+ [team.name for team in teams]
+    sub_columns = ['' for _ in range(len(self.user_info_columns))]  \
+                + 'LIST' \
+                + ["ACTION" for _ in range(len(actions))] #+ ["TEAM" for _ in range(len(teams))]
     data = [columns, sub_columns]
 
     for user in users:
 
+      #BHN 20.1.10 Put teams list in one cell, ahead of actions 
       row = self._get_user_info_cells(user) \
-      + self._get_user_actions_cells(user, actions) \
-      + self._get_user_teams_cells(user, teams)
+          + self._get_user_teams_cells(user, teams) \   
+          + self._get_user_actions_cells(user, actions)
 
       data.append(row)
 

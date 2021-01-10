@@ -1,3 +1,4 @@
+from _main_.settings import IS_PROD, IS_CANARY
 """
 This file contains Global constants used throughout the codebase.
 """
