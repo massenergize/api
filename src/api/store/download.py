@@ -96,7 +96,7 @@ class DownloadStore:
     cell_text = '['
     user_team_members = TeamMember.objects.filter(user=user).select_related('team')
     for team in teams:
-      user_team_status = ''
+
       team_member = user_team_members.filter(team=team).first()
       if team_member:
         cell_text = cell_text + team.name
@@ -323,6 +323,32 @@ class DownloadStore:
 
     return data
 
+  # new 1/11/20 BHN - untested
+  def _team_users_download(self, team_id):
+    users = [cm.user for cm in TeamMember.objects.filter(team__id=team_id, \
+            is_deleted=False, user__is_deleted=False).select_related('user')]
+
+    # Soon teams could span communities, in which case actions list would be larger.  
+    # For now, take the first community that a team is associated with
+    community_id = Team.objects.get(id=team_id).community.id     
+    actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
+                                                      .filter(is_deleted=False)
+
+    columns = self.user_info_columns \
+                + [action.title for action in actions]
+    sub_columns = ['' for _ in range(len(self.user_info_columns))]  \
+                + ["ACTION" for _ in range(len(actions))]
+    data = [columns, sub_columns]
+
+    for user in users:
+
+      row = self._get_user_info_cells(user) \
+          + self._get_user_actions_cells(user, actions)
+
+      data.append(row)
+
+    return data
+
 
   def _all_actions_download(self):
     actions = Action.objects.select_related('calculator_action', 'community') \
@@ -397,18 +423,28 @@ class DownloadStore:
     return data
 
 
-  def users_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def users_download(self, context: Context, community_id, team_id) -> (list, MassEnergizeAPIError):
     try:
-      if community_id:
+      if team_id:
+        community_name = Team.objects.get(id=team_id).name
+      elif community_id:
         community_name = Community.objects.get(id=community_id).name
+
       if context.user_is_super_admin:
-        if community_id:
+        if team_id:
+          return (self._team_users_download(team_id), community_name), None
+        elif community_id:
           return (self._community_users_download(community_id), community_name), None
         else:
-          print('all_users_download')
+
           return (self._all_users_download(), None), None
-      elif context.user_is_community_admin and community_id:
-        return (self._community_users_download(community_id), community_name), None
+      elif context.user_is_community_admin:
+        if team_id:
+          return (self._team_users_download(team_id), community_name), None
+        elif community_id:
+          return (self._community_users_download(community_id), community_name), None
+        else:
+          return None, NotAuthorizedError()
       else:
         return None, NotAuthorizedError()
     except Exception as e:
