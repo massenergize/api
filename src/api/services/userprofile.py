@@ -83,7 +83,7 @@ class UserService:
     community_name =  community.name if community else "Global Massenergize Community"
     community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
     subdomain =   community.subdomain if community else "global"
-    subject = f'Welcome to Massenergize, {community_name}'
+    subject = f'Welcome to {community_name}, a MassEnergize community'
     homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
     
     content_variables = {

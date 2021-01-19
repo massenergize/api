@@ -65,7 +65,7 @@ class AuthService:
       else:
         return None, None, CustomMassenergizeError("invalid_auth")
     except PermissionError:
-      capture_message("not_at_admin", level="error")
+      capture_message("not_an_admin", level="error")
       return None, None, CustomMassenergizeError('not_an_admin')
     except Exception as e:
       capture_message("Authentication Error", level="error")
