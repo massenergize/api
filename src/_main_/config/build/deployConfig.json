@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.1.4",
-  "BUILD_VERSION_NOTES": "Jan 5th\nDeployment to Dev\n- Updates to Carbon Calc functionality\n- Model changes\n"
+  "BUILD_VERSION": "3.1.5",
+  "BUILD_VERSION_NOTES": "Jan 18th Deployment to Dev\n- Changes to user registration e-mail\n- Download team users and their actions (Cadmin)\n"
 }

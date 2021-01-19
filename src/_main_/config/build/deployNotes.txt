@@ -1,4 +1,3 @@
-Jan 5th
-Deployment to Dev
-- Updates to Carbon Calc functionality
-- Model changes
+Jan 18th Deployment to Dev
+- Changes to user registration e-mail
+- Download team users and their actions (Cadmin)
