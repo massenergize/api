@@ -5,7 +5,7 @@ psycopg2-binary==2.8.5
 whitenoise==5.1.0
 Pillow==7.1.1
 django-storages==1.9.1
-boto3==1.14.20
+boto3==1.16.57
 django-cors-headers==3.4.0
 firebase-admin==4.3.0
 jsons==1.2.0

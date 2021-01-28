@@ -212,7 +212,12 @@ class DownloadStore:
 
     actions = Action.objects.filter(Q(community=community) | Q(is_global=True)).filter(is_deleted=False).select_related('calculator_action')
 
-    done_action_rels = UserActionRel.objects.filter(action__in=actions, user__in=users, is_deleted=False, status='DONE').select_related('action__calculator_action')
+    if community.is_geographically_focused:
+      # geographic focus - actions take place where real estate units are located
+      done_action_rels = UserActionRel.objects.filter(action__in=actions, real_estate_unit__community=community, is_deleted=False, status='DONE').select_related('action__calculator_action')
+    else:
+      # non-geographic focus - actions attributed to any community members
+      done_action_rels = UserActionRel.objects.filter(action__in=actions, user__in=users,  is_deleted=False, status='DONE').select_related('action__calculator_action')
 
     actions_done = len(done_action_rels)
     total_carbon_points = sum([action_rel.action.calculator_action.average_points

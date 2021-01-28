@@ -1255,7 +1255,7 @@ class Testimonial(models.Model):
     return self.title
 
   def info(self):
-    return model_to_dict(self, include=['id', 'title', 'community'])
+    return model_to_dict(self, fields=['id', 'title', 'community'])
 
   def _get_user_info(self):
     return get_json_if_not_none(self.user) or {
@@ -2058,9 +2058,18 @@ class HomePageSettings(models.Model):
     goal = get_json_if_not_none(self.community.goal) or {}
     # decision not to include state reported solar
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
-    # 
-    goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").prefetch_related('action__calculator_action')
+    #
+    if self.community.is_geographically_focused: 
+      goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(is_deleted=False, community=self.community).count())
+      done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").prefetch_related('action__calculator_action')
+    else:
+      community_members = CommunityMember.objects.filter(is_deleted=False, community=self.community)\
+                                          .select_related('user')
+      users = [cm.user for cm in community_members]
+      members_count = community_members.count()
+      goal["organic_attained_number_of_households"] = members_count
+      done_actions = UserActionRel.objects.filter(user__in=users, status="DONE").prefetch_related('action__calculator_action')
+
     goal["organic_attained_number_of_actions"] = (done_actions.count())
     carbon_footprint_reduction = 0
     for actionRel in done_actions:
