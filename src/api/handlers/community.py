@@ -86,6 +86,9 @@ class CommunityHandler(RouteHandler):
     args['is_approved'] = parse_bool(args.pop('is_approved', False))
 
     args = rename_field(args, 'image', 'logo')
+
+    # Not sure I agree with this.  Now that we use zipcodes list to define boundary of a geographic community
+    # the location of a community is really the mailing address, which can have value for a non-geograpic community
     args = parse_location(args)
     if not args['is_geographically_focused']:
       args.pop('location', None)

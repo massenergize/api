@@ -262,6 +262,8 @@ class Community(models.Model):
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   is_geographically_focused = models.BooleanField(default=False, blank=True)
   location = JSONField(blank=True, null=True)
+  # zipcodes will define the range for geographic communities
+  zipcodes = models.ManyToManyField(Location, blank=True)
   policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False, blank=True)
   accepted_terms_and_conditions = models.BooleanField(default=True)
@@ -352,6 +354,8 @@ class RealEstateUnit(models.Model):
   )
   community = models.ForeignKey(Community, null=True, on_delete=models.SET_NULL, blank=True)
   location = JSONField(blank=True, null=True)
+  # added 1/28/21 - redundant to location, address will have Zip code, defining which community the REU is in
+  address = models.ForeignKey(Location, null=True, on_delete=models.SET_NULL)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)

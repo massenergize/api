@@ -1,4 +1,4 @@
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -56,6 +56,7 @@ class UserStore:
       household_id = args.get('household_id', None) or args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
+
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
 
     except Exception as e:
@@ -67,16 +68,78 @@ class UserStore:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
       unit_type=args.pop('unit_type', None)
+      # Location is string address of the unit, deliminted as follows:
+      # 'street' + ", " + city + ", " + state + ", " + 'zipcode'
       location=args.pop('location', None)
-      communityId = args.pop('community_id', None) or args.pop('community', None) 
+      address = args.pop('address', None)
+      if address:
+        street = address.get('street', None)
+        unit_number = address.get('unit_number', None)
+        zipcode = address.get('zipcode', None)
+        city = address.get('city', None)
+        county = address.get('county', None)
+        state = address.get('state', None)
+      else:
+        # get address from location string
+        loc_parts = location.split(', ')
+        street = unit_number = city = county = state = zipcode = None
+        if len(loc_parts)>= 4:
+          street = loc_parts[0]
+          unit_number = None
+          city = loc_parts[1]
+          county = None
+          state = loc_parts[2]
+          zipcode = loc_parts[3]
+
+      location_type = 'FULL_ADDRESS'
+      if zipcode and not street and not city and not county and not state:
+        location_type = 'ZIP_CODE_ONLY'
+      elif state and not zipcode and not city and not county:
+        location_type = 'STATE_ONLY'
+      elif city and not street:
+        location_type = 'CITY_ONLY'
+      elif county and not city:
+        location_type = 'COUNTY_ONLY'
+
+      newloc = Location.objects.get_or_create(
+          location_type = location_type,
+          street = street,
+          unit_number = unit_number,
+          zipcode = zipcode,
+          city = city,
+          county = county,
+          state = state
+      )
+
+      # this is currently a bogus community, the one signed into when the profile was created
+      # communityId = args.pop('community_id', None) or args.pop('community', None) 
+      communityId = None
+
+      # determine which, if any, community this household is actually in
+      communities = Community.objects.filter(deleted=False, is_geographically_focused=True)
+      community_found = False
+      for community in communities:
+        cid = community.id
+        for loc in community.zipcodes:
+          if loc.zipcode == zipcode:
+            # this is the one
+            community_found = True
+            communityId = cid
+            break
+        if community_found:
+          break
 
       new_unit = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
       new_unit.save()
 
+      new_unit.address = newloc
+
       user.real_estate_units.add(new_unit)
-      if communityId:
-        community = Community.objects.get(id=communityId)
+      if community_found:
+        #community = Community.objects.get(id=communityId)
         new_unit.community = community
+      else:
+        new_unit.community = None
 
       new_unit.save()
 
@@ -92,7 +155,54 @@ class UserStore:
       household_id = args.get('household_id', None)
       unit_type=args.pop('unit_type', None)
       location=args.pop('location', None)
-      communityId = args.pop('community_id', None) or args.pop('community', None) 
+      # this address location now will contain the parsed address      
+      address = args.pop('address', None)
+      if address:
+        street = address.get('street', None)
+        unit_number = address.get('unit_number', None)
+        zipcode = address.get('zipcode', None)
+        city = address.get('city', None)
+        county = address.get('county', None)
+        state = address.get('state', None)
+      else:
+        # get address from location string
+        loc_parts = location.split(', ')
+        street = unit_number = city = county = state = zipcode = None
+        if len(loc_parts)>= 4:
+          street = loc_parts[0]
+          unit_number = None
+          city = loc_parts[1]
+          county = None
+          state = loc_parts[2]
+          zipcode = loc_parts[3]
+
+      location_type = 'FULL_ADDRESS'
+      if zipcode and not street and not city and not county and not state:
+        location_type = 'ZIP_CODE_ONLY'
+      elif state and not zipcode and not city and not county:
+        location_type = 'STATE_ONLY'
+      elif city and not street:
+        location_type = 'CITY_ONLY'
+      elif county and not city:
+        location_type = 'COUNTY_ONLY'
+
+      # this is currently a bogus community, the one signed into when the profile was created
+      # communityId = args.pop('community_id', None) or args.pop('community', None) 
+      communityId = None 
+
+      # determine which, if any, community this household is actually in
+      communities = Community.objects.filter(deleted=False, is_geographically_focused=True)
+      community_found = False
+      for community in communities:
+        cid = community.id
+        for loc in community.zipcodes:
+          if loc.zipcode == zipcode:
+            # this is the one
+            community_found = True
+            communityId = cid
+            break
+        if community_found:
+          break
 
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
@@ -102,9 +212,34 @@ class UserStore:
       new_unit.unit_type = unit_type
       new_unit.location = location
 
-      if communityId:
-        community = Community.objects.get(id=communityId)
+      if community_found:
+        # community = Community.objects.get(id=communityId)
         new_unit.community = community
+      else:
+        new_unit.community = None
+
+      newloc = new_unit.address
+      if newloc:
+        newloc.location_type = location_type,
+        newloc.street = street,
+        newloc.unit_number = unit_number,
+        newloc.zipcode = zipcode,
+        newloc.city = city,
+        newloc.county = county,
+        newloc.state = state
+        newloc.save()      
+      else:
+        newloc, created = Location.objects.get_or_create(
+          location_type = location_type,
+          street = street,
+          unit_number = unit_number,
+          zipcode = zipcode,
+          city = city,
+          county = county,
+          state = state
+      ) 
+
+      new_unit.address = newloc
 
       new_unit.save()
 
@@ -302,7 +437,6 @@ class UserStore:
         #TODO: update action stats
         completed.update(status="TODO")
         return completed.first(), None
- 
       
       # create a new one since we didn't find it existed before
       new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="TODO")

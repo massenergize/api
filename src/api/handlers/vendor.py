@@ -29,7 +29,7 @@ class VendorHandler(RouteHandler):
     self.add("/vendors.copy", self.copy)
     self.add("/vendors.delete", self.delete)
     self.add("/vendors.remove", self.delete)
-    self.add("/vendors.publish", self.publish)
+    #self.add("/vendors.publish", self.publish)
 
     #admin routes
     self.add("/vendors.listForCommunityAdmin", self.community_admin_list)
@@ -45,16 +45,17 @@ class VendorHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
 
-  @admins_only
-  def publish(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    args = rename_field(args, 'vendor_id', 'id')
-    args['is_published'] =True
-    vendor_info, err = self.service.update(args)
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=vendor_info)
+  # this isn't used
+  # @admins_only
+  #def publish(self, request):
+  #  context: Context = request.context
+  #  args: dict = context.args
+  #  args = rename_field(args, 'vendor_id', 'id')
+  #  args['is_published'] =True
+  #  vendor_info, err = self.service.update(args)
+  #  if err:
+  #    return MassenergizeResponse(error=str(err), status=err.status)
+  #  return MassenergizeResponse(data=vendor_info)
 
   @admins_only
   def create(self, request):

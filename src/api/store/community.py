@@ -1,4 +1,4 @@
-from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, Goal, CommunityAdminGroup, Location
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -10,6 +10,7 @@ from sentry_sdk import capture_message, capture_exception
 class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
+
 
   def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -52,6 +53,7 @@ class CommunityStore:
       capture_exception(e)
       return None, CustomMassenergizeError(e)
 
+
   def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       community = get_community_or_die(context, args)
@@ -88,11 +90,21 @@ class CommunityStore:
     new_community = None
     try:
       logo = args.pop('logo', None)
+
+      # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
+      # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
+      # These we can deal with by having the Location include city and or state fields
+      zipcodes = args.pop('zipcodes',None)
+
       new_community = Community.objects.create(**args)
 
-      have_address = args.get('is_geographically_focused', False)
-      if not have_address:
-        args['location'] = None
+      geographic = args.get('is_geographically_focused', False)
+      if geographic:
+        zipcode_list = zipcodes.replace(" ","").split(",")  # passed as comma separated list
+        for zipcode in zipcode_list:
+          # should be a five character string
+          loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
+          new_community.zipcodes.add(loc)
       
       if logo:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
@@ -234,23 +246,34 @@ class CommunityStore:
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
       logo = args.pop('logo', None)
-      community = Community.objects.filter(id=community_id)
+
+      # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
+      # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
+      # These we can deal with by having the Location include city and or state fields
+      zipcodes = args.pop('zipcodes',None)
+
+      community = Community.objects.get(id=community_id)
       if not community:
         return None, InvalidResourceError()
       
-      if not args.get('is_geographically_focused', False):
-        args['location'] = None
+      geographic = args.get('is_geographically_focused', False):
+      if geographic:        
+        zipcode_list = zipcodes.replace(" ","").split(",")  # passed as comma separated list
+        for zipcode in zipcode_list:
+          # should be a five character string
+          loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
+          community.zipcodes.add(loc)
 
       community.update(**args)
 
-      new_community = community.first()
+      #new_community = community.first()
       if logo:   
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
-        new_community.logo = cLogo
-        new_community.save()
+        community.logo = cLogo
+        community.save()
 
-      return new_community, None
+      return community, None
     except Exception as e:
       capture_exception(e)
       return None, CustomMassenergizeError(e)
