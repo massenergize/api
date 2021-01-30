@@ -1,3 +1,2 @@
-Jan 18th Deployment to Dev
-- Changes to user registration e-mail
-- Download team users and their actions (Cadmin)
+Jan 28th Deployment to Dev
+- Customizable titles and descriptions for home page
