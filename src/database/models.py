@@ -2031,7 +2031,9 @@ class HomePageSettings(models.Model):
   show_featured_links = models.BooleanField(default=True, blank=True)
   show_featured_video = models.BooleanField(default=False, blank=True)
 
+  featured_stats_subtitle = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   featured_stats_description = models.CharField(max_length=LONG_STR_LEN, blank=True)
+  featured_events_subtitle = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   featured_events_description = models.CharField(max_length=LONG_STR_LEN, blank=True)
 
   show_footer_subscribe = models.BooleanField(default=True, blank=True)
