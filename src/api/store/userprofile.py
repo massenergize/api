@@ -81,7 +81,7 @@ class UserStore:
         state = address.get('state', None)
       else:
         # get address from location string
-        loc_parts = location.split(', ')
+        loc_parts = location.capitalize().replace(" ","").split(',')
         street = unit_number = city = county = state = zipcode = None
         if len(loc_parts)>= 4:
           street = loc_parts[0]
@@ -116,7 +116,7 @@ class UserStore:
       communityId = None
 
       # determine which, if any, community this household is actually in
-      communities = Community.objects.filter(deleted=False, is_geographically_focused=True)
+      communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
       community_found = False
       for community in communities:
         cid = community.id
@@ -166,7 +166,7 @@ class UserStore:
         state = address.get('state', None)
       else:
         # get address from location string
-        loc_parts = location.split(', ')
+        loc_parts = locationlocation.capitalize().replace(" ","").split(',')
         street = unit_number = city = county = state = zipcode = None
         if len(loc_parts)>= 4:
           street = loc_parts[0]
@@ -191,7 +191,7 @@ class UserStore:
       communityId = None 
 
       # determine which, if any, community this household is actually in
-      communities = Community.objects.filter(deleted=False, is_geographically_focused=True)
+      communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
       community_found = False
       for community in communities:
         cid = community.id

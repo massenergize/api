@@ -303,6 +303,13 @@ class Community(models.Model):
     #BHN - TODO
     #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
+    zipcodes = ""
+    for loc in self.zipcodes.all():
+      if zipcodes != "":
+        zipcodes += ", "
+      zip = loc.zipcode
+      zipcodes += zip
+
     return {
       "id": self.id,
       "name": self.name,
@@ -321,7 +328,8 @@ class Community(models.Model):
       "created_at": self.created_at,
       "updated_at": self.updated_at,
       "more_info": self.more_info,
-      "admins": admins
+      "admins": admins,
+      "zipcodes": zipcodes
     }
 
 

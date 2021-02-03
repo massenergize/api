@@ -252,19 +252,20 @@ class CommunityStore:
       # These we can deal with by having the Location include city and or state fields
       zipcodes = args.pop('zipcodes',None)
 
-      community = Community.objects.get(id=community_id)
+      community = Community.objects.filter(id=community_id)
       if not community:
         return None, InvalidResourceError()
+
+      community.update(**args)
+      community = community.first()
       
-      geographic = args.get('is_geographically_focused', False):
+      geographic = args.get('is_geographically_focused', False)
       if geographic:        
         zipcode_list = zipcodes.replace(" ","").split(",")  # passed as comma separated list
         for zipcode in zipcode_list:
           # should be a five character string
           loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
           community.zipcodes.add(loc)
-
-      community.update(**args)
 
       #new_community = community.first()
       if logo:   
