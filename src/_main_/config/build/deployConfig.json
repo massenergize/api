@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.1.7",
-  "BUILD_VERSION_NOTES": "Jan 28th Deployment to Dev\n- Customizable titles and descriptions for home page\n"
+  "BUILD_VERSION": "3.1.8",
+  "BUILD_VERSION_NOTES": "Feb 5th Deployment to Dev\n- Frontend Portal #445 - ability to clear team logo\n"
 }

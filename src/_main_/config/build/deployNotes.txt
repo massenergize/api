@@ -1,2 +1,2 @@
-Jan 28th Deployment to Dev
-- Customizable titles and descriptions for home page
+Feb 5th Deployment to Dev
+- Frontend Portal #445 - ability to clear team logo
