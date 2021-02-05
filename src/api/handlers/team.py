@@ -111,7 +111,7 @@ class TeamHandler(RouteHandler):
     if is_value(team_id):
       team_info, err = self.team.update_team(team_id, args)
     else:
-      err = CustomMassenergizeError("No team_id passed to teams.a")
+      err = CustomMassenergizeError("No team_id passed to teams.update")
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
