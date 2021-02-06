@@ -251,6 +251,8 @@ class TeamStore:
             logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
             logo.save()
             team.logo = logo
+          else: 
+            team.logo = None 
 
         team.save()
       return team, None

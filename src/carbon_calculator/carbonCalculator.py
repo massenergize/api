@@ -3,14 +3,17 @@
 # Updated April 3
 #imports
 from datetime import date,datetime
-from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia, CalcUser, Org
+from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia,Org
 from django.utils import timezone
+
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.utils.text import slugify
 from database.utils.create_factory import CreateFactory
 from database.utils.database_reader import DatabaseReader
 import json
 import csv
 from django.core import files
-from io import BytesIO
 import requests
 from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
 from .CCDefaults import getDefault, getLocality, CCD
@@ -25,7 +28,7 @@ from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolar
 from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
-from .calcUsers import ExportCalcUsers
+from .calcUsers import ExportCalcUsers, CalcUserUpdate
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -43,20 +46,30 @@ def SavePic2Media(picURL):
             print("ERROR: Unable to import action photo from "+picURL)
             return None
         else:
-            file_name =  "carbon_calculator/assets/" + picURL.split("/")[-1]  # There's probably a better way of doing this but this is just a quick example
-            fp = open(file_name,"wb")
-            fp.write(resp.content)
-            fp.close()
-            media = CarbonCalculatorMedia(file = file_name)
-            #media = CarbonCalculatorMedia.objects.create(file=file_name)
+            image = resp.content
+            file_name =  picURL.split("/")[-1]
+            file_type_ext = file_name.split(".")[-1]
+
+            content_type = 'image/jpeg'
+            if len(file_type_ext)>0 and file_type_ext.lower() == 'png':
+                content_type = 'image/png'
+
+            # Create a new Django file-like object to be used in models as ImageField using
+            # InMemoryUploadedFile.  If you look at the source in Django, a
+            # SimpleUploadedFile is essentially instantiated similarly to what is shown here
+            img_io = BytesIO(image)
+            image_file = InMemoryUploadedFile(img_io, None, file_name, content_type,
+                                  None, None)
+
+            media = CarbonCalculatorMedia.objects.create(file=image_file, name=f"{slugify(file_name)}")
 
             if media:
                 media.save()
                 return media
             else:
                 return None
-    except:
-        print("Error encountered")
+    except Exception as e:
+        print("Error encountered: "+str(e))
         return None
 
 class CarbonCalculator:
@@ -164,14 +177,8 @@ class CarbonCalculator:
                         savings = record.savings
                         record.delete()
 
-                        user = CalcUser.objects.filter(id=user_id).first()
-                        if user:
-                            user.points -= points
-                            user.cost -= cost
-                            user.savings -= savings
-                            user.save()
-
-                        return {'status':VALID_QUERY, 'carbon_points':-points, 'cost':-cost, 'savings':-savings, 'explanation':"Undoing action"}
+                        if CalcUserUpdate(user_id, {"points":-points, "cost":-cost, "savings":-savings}):
+                            return {'status':VALID_QUERY, 'carbon_points':-points, 'cost':-cost, 'savings':-savings, 'explanation':"Undoing action"}
         return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
@@ -187,14 +194,9 @@ class CarbonCalculator:
                                 savings = savings)
         record.save()
 
-        user = CalcUser.objects.filter(id=user_id).first()
-        if user:
-            user.points += points
-            user.cost += cost
-            user.savings += savings
-            user.save()
-
-        return results
+        if CalcUserUpdate(user_id, {"points":points, "cost":cost, "savings":savings}):
+            return results
+        return queryFailed
 
     def Reset(self,inputs):
         if inputs.get('Confirm',NO) == YES:

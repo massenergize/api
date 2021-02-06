@@ -42,10 +42,9 @@ class AuthHandler(RouteHandler):
     # if the signin is from an admin site then set it to 24 hrs
     if(context.is_admin_site):
       MAX_AGE = 86400
-    
-    response.set_cookie("token", value=token, max_age=MAX_AGE)    
-    return response
 
+    response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')    
+    return response
 
   @login_required
   def logout(self, request): 

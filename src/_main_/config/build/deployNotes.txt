@@ -1,4 +1,2 @@
-Dec 4:
-Deployment to Prod
-- Contact-us if not signed in (Portal #467)
-- Communities.info for sandbox (API #224)
+Feb 5th Deployment to Dev
+- Frontend Portal #445 - ability to clear team logo
