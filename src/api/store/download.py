@@ -26,7 +26,7 @@ class DownloadStore:
     self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon',
     'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
 
-    self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'testimonials_count']
+    self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'created', 'testimonials_count']
     
     self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
@@ -55,7 +55,7 @@ class DownloadStore:
     else:
         user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
         testimonials_count = user_testimonials.count() if user_testimonials else '0'
- 
+
         user_cells = {'name': user.full_name,
                       'preferred_name': user.preferred_name,
                       'email': user.email,
@@ -63,6 +63,7 @@ class DownloadStore:
                           'community admin' if user.is_community_admin else
                           'vendor' if user.is_vendor else
                           'community member',
+                      'created': user.created_at.strftime("%Y-%m-%d"),
                       'testimonials_count': testimonials_count}
 
     return self._get_cells_from_dict(self.user_info_columns, user_cells)
@@ -257,7 +258,7 @@ class DownloadStore:
                 + self.user_info_columns \
                 + ['TEAM'] \
                 + [action.title for action in actions]
-    print(columns)
+
     sub_columns = ['', ''] + ['' for _ in range(len(self.user_info_columns))] + [''] \
             + ["ACTION" for _ in range(len(actions))] #+ ["TEAM" for _ in range(len(teams))]
     data = []
@@ -269,6 +270,7 @@ class DownloadStore:
         else:
           primary_community, secondary_community = '', ''
       else:
+        # original - lists up to two communities that user is a member of
         communities = [cm.community.name for cm in CommunityMember.objects.filter(user=user).select_related('community')]
         if len(communities) > 1:
           primary_community, secondary_community = communities[0], communities[1]
@@ -282,8 +284,6 @@ class DownloadStore:
       + self._get_user_teams_cells(user, teams) \
       + self._get_user_actions_cells(user, actions)
 
-      print("Row")
-      print(row)
       data.append(row)
 
     # sort by community

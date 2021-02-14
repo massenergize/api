@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = True
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -47,7 +47,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
@@ -115,9 +115,9 @@ USE_X_FORWARDED_HOST = True
 WSGI_APPLICATION = '_main_.wsgi.application'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-CSRF_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_HTTPONLY = not DEBUG
+CSRF_COOKIE_SECURE = True #not DEBUG
+SESSION_COOKIE_SECURE = True #not DEBUG
+SESSION_COOKIE_HTTPONLY = True #not DEBUG
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL = None
@@ -127,7 +127,7 @@ CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
 ROOT_URLCONF = '_main_.urls'
 # SESSION_COOKIE_SAMESITE = 'Strict'
-# SESSION_SAVE_EVERY_REQUEST = True
+SESSION_SAVE_EVERY_REQUEST = True
 
 TEMPLATES = [
     {

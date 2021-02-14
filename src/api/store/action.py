@@ -102,7 +102,8 @@ class ActionStore:
       new_action = action_to_copy
       new_action.pk = None
       new_action.is_published = False
-      new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
+      new_action.title = action_to_copy.title #+ f' Copy {random.randint(1,10000)}'
+      new_action.community = None
       new_action.save()
       new_action.tags.set(old_tags)
       new_action.vendors.set(old_vendors)
@@ -126,7 +127,6 @@ class ActionStore:
       image = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
       action.update(**args)
-
       action = action.first()
       if image:
         media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)

@@ -8,6 +8,15 @@ from types import FunctionType as function
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 
+def visitor_ip_address(request):
+
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 class CommunityHandler(RouteHandler):
 
@@ -98,12 +107,13 @@ class CommunityHandler(RouteHandler):
 
   def list(self, request):
     context: Context  = request.context
+
+    print(visitor_ip_address(request))
     args = context.args
     community_info, err = self.service.list_communities(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
-
 
   @admins_only
   def update(self, request):
