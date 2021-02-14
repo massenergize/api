@@ -1,4 +1,4 @@
-from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data
+from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -19,8 +19,8 @@ class MiscellaneousStore:
   def backfill(self, context: Context, args) -> (list, CustomMassenergizeError):
     # return self.backfill_teams(context, args)
     # return self.backfill_community_members(context, args)
-    return self.backfill_graph_default_data(context, args)
-    # return self.backfill_real_estate_units(context, args)
+    # return self.backfill_graph_default_data(context, args)
+    return self.backfill_real_estate_units(context, args)
     # return self.backfill_tag_data(context, args)
 
   def backfill_teams(self, context: Context, args) -> (list, CustomMassenergizeError):
@@ -104,13 +104,86 @@ class MiscellaneousStore:
 
   def backfill_real_estate_units(self, context: Context, args):
     try:
-      for user_action in UserActionRel.objects.all():
-        if not user_action.real_estate_unit.community:
-          user_action.real_estate_unit.community = user_action.action.community
-        user_action.real_estate_unit.unit_type = (user_action.real_estate_unit.unit_type or 'residential').lower()
-        user_action.real_estate_unit.save()
-        if not user_action.real_estate_unit.community:
-          user_action.real_estate_unit.delete()
+      # BHN: Not sure the purpose of this, but it would change the community of a real estate unit depending on an action taken
+      #for user_action in UserActionRel.objects.all():
+        #if not user_action.real_estate_unit.community:
+        #  user_action.real_estate_unit.community = user_action.action.community
+        #user_action.real_estate_unit.unit_type = (user_action.real_estate_unit.unit_type or 'residential').lower()
+        #user_action.real_estate_unit.save()
+        #if not user_action.real_estate_unit.community:
+        #  user_action.real_estate_unit.delete()
+
+      # Set the community of a real estate unit based on the zip code of the real estate unit.  This defines what geographic community, if any gets credit
+      # For now, check for zip code
+      print("Number of real estate units:" + str(RealEstateUnit.objects.all().count()))
+      for reu in RealEstateUnit.objects.all():
+        street = unit_number = city = county = state = zipcode = ""
+        loc = reu.location
+        if reu.address:
+          zipcode = reu.address.zipcode
+        elif loc and isinstance(loc,str) and not reu.address:
+
+          loc_parts = loc.capitalize().replace(" ", "").split(',')
+          if len(loc_parts)>= 4:
+            street = loc_parts[0]
+            city = loc_parts[1]
+            state = loc_parts[2]
+            zipcode = loc_parts[3]
+          else:
+            # deal with odd cases
+            zipcode = "00000"
+            state = "MA"      # may be wrong occasionally
+            if loc.find("Wayland")>=0:
+              city = "Wayland"
+              zipcode = "01778"
+            elif loc.find("Concord")>=0:
+              city = "Concord"
+              zipcode = "01742"
+
+          # create the Location for the RealEstateUnit        
+          location_type = 'FULL_ADDRESS'
+          if zipcode and not street and not city and not county and not state:
+            location_type = 'ZIP_CODE_ONLY'
+          elif state and not zipcode and not city and not county:
+            location_type = 'STATE_ONLY'
+          elif city and not street:
+            location_type = 'CITY_ONLY'
+          elif county and not city:
+            location_type = 'COUNTY_ONLY'
+
+          newloc, created = Location.objects.get_or_create(
+            location_type = location_type,
+            street = street,
+            unit_number = unit_number,
+            zipcode = zipcode,
+            city = city,
+            county = county,
+            state = state
+          )
+          reu.address = newloc
+
+        # this is currently a bogus community, the one signed into when the profile was created
+        # communityId = args.pop('community_id', None) or args.pop('community', None) 
+        communityId = None 
+        # determine which, if any, community this household is actually in
+        communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
+        community_found = False
+        for community in communities:
+          cid = community.id
+          for zip in community.zipcodes.all():
+            if zip.zipcode == zipcode:
+              # this is the one
+              community_found = True
+              communityId = cid
+              break
+          if community_found:
+            break
+        if community_found:
+          reu.community = community
+          print("Zip: "+zipcode + " community:" + community.name)
+        else:
+          reu.community = None
+        reu.save()
 
       return {'backfill_real_estate_units': 'done'}, None
 
