@@ -260,10 +260,19 @@ class Community(models.Model):
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
+
   is_geographically_focused = models.BooleanField(default=False, blank=True)
   location = JSONField(blank=True, null=True)
-  # zipcodes will define the range for geographic communities
-  zipcodes = models.ManyToManyField(Location, blank=True)
+
+  # new - define the geographic area for a community (zipcodes, towns/cities, counties, states, countries)
+  geography_type = models.CharField(
+    max_length=TINY_STR_LEN,
+    choices=CHOICES.get("COMMUNITY_GEOGRAPHY_TYPES", {}).items(), 
+    blank=True, null=True)
+  
+  # location_set will define the range for geographic communities
+  location_set = models.ManyToManyField(Location, blank=True)
+
   policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False, blank=True)
   accepted_terms_and_conditions = models.BooleanField(default=True)
@@ -303,12 +312,23 @@ class Community(models.Model):
     #BHN - TODO
     #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
-    zipcodes = ""
-    for loc in self.zipcodes.all():
-      if zipcodes != "":
-        zipcodes += ", "
-      zip = loc.zipcode
-      zipcodes += zip
+    locations = ""
+    for loc in self.location_set.all():
+      if locations != "":
+        locations += ", "
+      if self.geography_type == "ZIPCODE":
+        l = loc.zipcode
+      elif self.geography_type == "CITY":
+        l = loc.city
+      elif self.geography_type == "COUNTY":
+        l = loc.county
+      elif self.geography_type == "STATE":
+        l = loc.state
+      elif self.geography_type == "COUNTRY":
+        l = loc.country
+      else:
+        l=loc.zipcode
+      locations += l
 
     return {
       "id": self.id,
@@ -329,7 +349,8 @@ class Community(models.Model):
       "updated_at": self.updated_at,
       "more_info": self.more_info,
       "admins": admins,
-      "zipcodes": zipcodes
+      "geography_type": self.geography_type,
+      "location_set": locations
     }
 
 

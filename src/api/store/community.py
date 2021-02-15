@@ -5,11 +5,114 @@ from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die, get_new_title
 import random 
+import zipcodes
 from sentry_sdk import capture_message, capture_exception
 
 class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
+
+  def _update_locations(self, geography_type, location_set, community):
+        
+      # this can be list of zipcodes, towns, cities, counties, states        
+      location_list = location_set.split(",")  # passed as comma separated list
+      for location in location_list:
+
+        if geography_type == 'ZIPCODE':
+          if location[0].isdigit():
+            location = location.replace(" ","")
+
+            # looks like a zipcode.  Check which towns it corresponds to
+            zipcode = zipcodes.matching(location)
+            if len(zipcode)>0:
+              city = zipcode[0].get('city', None)  
+            else:
+              raise Exception('No zip code entry found for zip='+location)         
+            loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=location)
+            if created:
+              print("Zipcode "+location+" created")
+            else:
+              print("Zipcode "+location+" found")
+          else:
+            # assume this is a town, see we can find the zip codes associated with it
+            ss = location.split('-')
+            town = ss[0]
+            if len(ss)==2:
+              state = ss[1]
+            else:
+              state = 'MA'
+              
+            zips = zipcodes.filter_by(city=town, state=state, zip_code_type='STANDARD' )
+            print("Number of zipcodes = "+str(len(zips)))
+            if len(zips)>0:
+              for zip in zips:
+                zipcode = zip.zip_code
+                loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
+                if created:
+                  print("Zipcode "+zipcode+" created")
+                else:
+                  print("Zipcode "+zipcode+" found")
+
+            else:
+              print("No zipcodes found corresponding to town "+ town + ", " + state)
+              raise Exception("No zipcodes found corresponding to city "+ city + ", " + state)
+        elif geography_type == 'CITY':
+          # check that this city is found in the zipcodes list
+          ss = location.split('-')
+          city = ss[0]
+          if len(ss)==2:
+            state = ss[1]
+          else:
+            state = 'MA'
+
+          zips = zipcodes.filter_by(city=city, state=state, zip_code_type='STANDARD' )
+          print("Number of zipcodes = "+str(len(zips)))
+          if len(zips)>0:
+            loc, created = Location.objects.get_or_create(location_type='CITY_ONLY', city=city)
+          else:
+            print("No zipcodes found corresponding to city "+ city + ", " + state)
+            raise Exception("No zipcodes found corresponding to city "+ city + ", " + state)
+        elif geography_type == 'COUNTY':
+         # check that this county is found in the zipcodes list
+          ss = location.split('-')
+          county = ss[0]
+          if len(ss)==2:
+            state = ss[1]
+          else:
+            state = 'MA'
+
+          zips = zipcodes.filter_by(county=town, state=state, zip_code_type='STANDARD' )
+          print("Number of zipcodes = "+str(len(zips)))
+          if len(zips)>0:
+            loc, created = Location.objects.get_or_create(location_type='COUNTY_ONLY', county=county)
+          else:
+            print("No zipcodes found corresponding to county "+ county + ", " + state)
+            raise Exception("No zipcodes found corresponding to county "+ county + ", " + state)
+
+        elif geography_type == 'STATE':
+          # check that this state is found in the zipcodes list
+          zips = zipcodes.filter_by(state=location, zip_code_type='STANDARD' )
+          print("Number of zipcodes = "+str(len(zips)))
+          if len(zips)>0:
+            loc, created = Location.objects.get_or_create(location_type='STATE_ONLY', state=location)
+          else:
+            print("No zipcodes found corresponding to state "+ location)
+            raise Exception("No zipcodes found corresponding to state "+ location)
+
+        elif geography_type == 'COUNTRY':
+          # check that this state is found in the zipcodes list
+          zips = zipcodes.filter_by(country=location, zip_code_type='STANDARD' )
+          print("Number of zipcodes = "+str(len(zips)))
+          if len(zips)>0:
+            loc, created = Location.objects.get_or_create(location_type='COUNTRY_ONLY', country=location)
+          else:
+            print("No zipcodes found corresponding to country "+ location)
+            raise Exception("No zipcodes found corresponding to country "+ location)
+        else:
+          raise Exception("Unexpected geography type: " + str(geography_type))
+        
+        # should be a five character string
+        community.location_set.add(loc)
 
 
   def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
@@ -91,20 +194,17 @@ class CommunityStore:
     try:
       logo = args.pop('logo', None)
 
-      # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
+      # The set of locations (zipcodes, cities, counties, states), stored as Location models, are what determines a boundary for a geograpically focussed community
       # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
       # These we can deal with by having the Location include city and or state fields
-      zipcodes = args.pop('zipcodes',None)
+      location_set = args.pop('location_set',None)
 
       new_community = Community.objects.create(**args)
 
       geographic = args.get('is_geographically_focused', False)
       if geographic:
-        zipcode_list = zipcodes.replace(" ","").split(",")  # passed as comma separated list
-        for zipcode in zipcode_list:
-          # should be a five character string
-          loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
-          new_community.zipcodes.add(loc)
+        geography_type = args.get('geography_type', None)
+        self._update_locations(geography_type, location_set, new_community)
       
       if logo:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
@@ -250,7 +350,7 @@ class CommunityStore:
       # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
       # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
       # These we can deal with by having the Location include city and or state fields
-      zipcodes = args.pop('zipcodes',None)
+      location_set = args.pop('location_set',None)
 
       community = Community.objects.filter(id=community_id)
       if not community:
@@ -260,12 +360,9 @@ class CommunityStore:
       community = community.first()
       
       geographic = args.get('is_geographically_focused', False)
-      if geographic:        
-        zipcode_list = zipcodes.replace(" ","").split(",")  # passed as comma separated list
-        for zipcode in zipcode_list:
-          # should be a five character string
-          loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
-          community.zipcodes.add(loc)
+      if geographic:
+        geography_type = args.get('geography_type', None)
+        self._update_locations(geography_type, location_set, community)
 
       #new_community = community.first()
       if logo:   
@@ -278,7 +375,6 @@ class CommunityStore:
     except Exception as e:
       capture_exception(e)
       return None, CustomMassenergizeError(e)
-
 
   def delete_community(self, args) -> (dict, MassEnergizeAPIError):
     try:

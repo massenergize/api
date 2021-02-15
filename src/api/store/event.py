@@ -229,7 +229,7 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
-  def rsvp_update(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+  def rsvp_update(self, context: Context, event_id, status) -> (dict, MassEnergizeAPIError):
     try:
       user = get_user_or_die(context, args)
       event = Event.objects.filter(pk=event_id).first()
