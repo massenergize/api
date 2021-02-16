@@ -143,19 +143,27 @@ class TestimonialStore:
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_testimonial.image = media
+      else:
+        new_testimonial.image = None
 
       if action:
-        testimonial_action = Action.objects.get(id=action)
+        testimonial_action = Action.objects.filter(id=action).first()
         new_testimonial.action = testimonial_action
+      else:
+        new_testimonial.action = None
 
       if vendor:
-        testimonial_vendor = Vendor.objects.get(id=vendor)
+        testimonial_vendor = Vendor.objects.filter(id=vendor).first()
         new_testimonial.vendor = testimonial_vendor
+      else:
+        new_testimonial.vendor = None
 
       if community:
-        testimonial_community = Community.objects.get(id=community)
+        testimonial_community = Community.objects.filter(id=community).first()
         new_testimonial.community = testimonial_community
-      
+      else:
+        new_testimonial.community = None
+
       if rank:
         new_testimonial.rank = rank
       

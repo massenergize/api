@@ -142,11 +142,15 @@ class ActionStore:
         community = Community.objects.filter(id=community_id).first()
         if community:
           action.community = community
+        else:
+          action.community = None
 
       if calculator_action:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
         if ccAction:
           action.calculator_action = ccAction
+        else:
+          action.calculator_action = None
         
       action.save()
       return action, None

@@ -232,12 +232,14 @@ class TeamStore:
         team.is_published = is_published
 
       if team:
+        team.community = None
         if community_id:
           community = Community.objects.filter(pk=community_id).first()
           if community:
-            team.community = community
+            team.community = community          
 
         if parent_id:
+          team.parent = None
           parent = Team.objects.filter(pk=parent_id).first()
           if parent and can_set_parent(parent, this_team=team):
             team.parent = parent
