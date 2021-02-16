@@ -37,8 +37,8 @@ class UserStore:
 
   def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      email = args.get('email', None)
-      user_id = args.get('user_id', None)
+      #email = args.get('email', None)
+      #user_id = args.get('user_id', None)
 
       # if not self._has_access(context, user_id, email):
       #   return None, CustomMassenergizeError("permission_denied")
@@ -113,18 +113,18 @@ class UserStore:
 
       # this is currently a bogus community, the one signed into when the profile was created
       # communityId = args.pop('community_id', None) or args.pop('community', None) 
-      communityId = None
+      #communityId = None
 
       # determine which, if any, community this household is actually in
       communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
       community_found = False
       for community in communities:
-        cid = community.id
+        #cid = community.id
         for loc in community.zipcodes:
           if loc.zipcode == zipcode:
             # this is the one
             community_found = True
-            communityId = cid
+            #communityId = cid
             break
         if community_found:
           break
@@ -166,7 +166,7 @@ class UserStore:
         state = address.get('state', None)
       else:
         # get address from location string
-        loc_parts = locationlocation.capitalize().replace(" ","").split(',')
+        loc_parts = location.capitalize().replace(" ","").split(',')
         street = unit_number = city = county = state = zipcode = None
         if len(loc_parts)>= 4:
           street = loc_parts[0]
@@ -188,18 +188,18 @@ class UserStore:
 
       # this is currently a bogus community, the one signed into when the profile was created
       # communityId = args.pop('community_id', None) or args.pop('community', None) 
-      communityId = None 
+      #communityId = None 
 
       # determine which, if any, community this household is actually in
       communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
       community_found = False
       for community in communities:
-        cid = community.id
+        #cid = community.id
         for loc in community.zipcodes:
           if loc.zipcode == zipcode:
             # this is the one
             community_found = True
-            communityId = cid
+            #communityId = cid
             break
         if community_found:
           break
@@ -237,7 +237,11 @@ class UserStore:
           city = city,
           county = county,
           state = state
-      ) 
+        ) 
+        if created:
+          print("Location with zipcode "+zipcode+" created for user "+user.preferred_name)
+        else:
+          print("Location with zipcode "+zipcode+" found for user "+user.preferred_name)
 
       new_unit.address = newloc
 
@@ -261,6 +265,7 @@ class UserStore:
     community,err = get_community(community_id)
     
     if not community:
+      print(err)
       return [], None
     return community.userprofile_set.all(), None
 
@@ -383,6 +388,7 @@ class UserStore:
 
         return users, None
       elif not community:
+        print(err)
         return [], None
 
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
