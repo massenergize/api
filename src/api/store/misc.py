@@ -2,6 +2,7 @@ from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMem
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+import zipcodes
 from sentry_sdk import capture_message
 
 class MiscellaneousStore:
@@ -29,7 +30,7 @@ class MiscellaneousStore:
       for team in teams:
         members = team.members.all()
         for member in members:
-          team_member: TeamMembers = TeamMember.objects.filter(user=member, team=team).first()
+          team_member = TeamMember.objects.filter(user=member, team=team).first()
           if team_member:
             team_member.is_admin = False
             team_member.save()
@@ -38,7 +39,7 @@ class MiscellaneousStore:
 
         admins = team.admins.all()
         for admin in admins:
-          team_member: TeamMembers = TeamMember.objects.filter(user=admin, team=team).first()
+          team_member = TeamMember.objects.filter(user=admin, team=team).first()
           if team_member:
             team_member.is_admin = True
             team_member.save()
@@ -104,49 +105,74 @@ class MiscellaneousStore:
 
   def backfill_real_estate_units(self, context: Context, args):
     try:
-      # BHN: Not sure the purpose of this, but it would change the community of a real estate unit depending on an action taken
-      #for user_action in UserActionRel.objects.all():
-        #if not user_action.real_estate_unit.community:
-        #  user_action.real_estate_unit.community = user_action.action.community
-        #user_action.real_estate_unit.unit_type = (user_action.real_estate_unit.unit_type or 'residential').lower()
-        #user_action.real_estate_unit.save()
-        #if not user_action.real_estate_unit.community:
-        #  user_action.real_estate_unit.delete()
-
-      # Set the community of a real estate unit based on the zip code of the real estate unit.  This defines what geographic community, if any gets credit
+      # BHN - Feb 2021 - assign all real estate units to geographic communities
+      # Set the community of a real estate unit based on the location of the real estate unit.  
+      # This defines what geographic community, if any gets credit
       # For now, check for zip code
       print("Number of real estate units:" + str(RealEstateUnit.objects.all().count()))
       for reu in RealEstateUnit.objects.all():
-        street = unit_number = city = county = state = zipcode = ""
-        loc = reu.location
+        street = unit_number = city = county = state = zip = ""
+        loc = reu.location    # a JSON field
         if reu.address:
-          zipcode = reu.address.zipcode
-        elif loc and isinstance(loc,str) and not reu.address:
+          zip = reu.address.zipcode
+        elif loc:
+          if not isinstance(loc,str):   
+            # one odd case in dev DB, looked like a Dict
+            print("REU location not a string: "+str(loc)+" Type="+str(type(loc)))
+            loc = loc["street"]
 
-          loc_parts = loc.capitalize().replace(" ", "").split(',')
+          loc_parts = loc.capitalize().replace(", ", ",").split(',')
           if len(loc_parts)>= 4:
-            street = loc_parts[0]
-            city = loc_parts[1]
-            state = loc_parts[2]
-            zipcode = loc_parts[3]
+            # deal with a couple odd cases
+            if loc.find("Denver")<=0:
+              street = loc_parts[0]
+              city = loc_parts[2]
+              state = loc_parts[3]
+              zip = "80203"
+              print("Denver")
+            else:  
+              street = loc_parts[0]
+              city = loc_parts[1]
+              state = loc_parts[2]
+              zip = loc_parts[3]
+              if not zip or len(zip)!=5:
+                print("Invalid zipcode, setting to 00000")
+                zip = "00000"
+              else:
+                print("Zipcode found "+zip)
           else:
             # deal with odd cases
-            zipcode = "00000"
+            zip = "00000"
             state = "MA"      # may be wrong occasionally
-            if loc.find("Wayland")>=0:
+            if loc.find("Wayland")>=0 or loc.find("Fields Lane")>=0:
               city = "Wayland"
-              zipcode = "01778"
+              zip = "01778"
             elif loc.find("Concord")>=0:
               city = "Concord"
-              zipcode = "01742"
-
+              zip = "01742"
+            elif loc.find("Falmouth")>=0:
+              city = "Falmouth"
+              zip = "02540"
+            elif loc.find("Ithaca")>=0:
+              city = "Ithaca"
+              state = "NY"
+              zip = "14850"
+            elif loc.find("Rochester")>=0:
+              city = "Rochester"
+              state = "NY"
+              zip = "14627"
+            elif loc.find("Whitefield")>=0:
+              city = "Whitefield"
+              state = "NH"
+              zip = "03598"
+            print("Zipcode assigned "+zip)
           # create the Location for the RealEstateUnit        
           location_type = 'FULL_ADDRESS'
-          if zipcode and not street and not city and not county and not state:
+          if zip and not street: # and not city and not county and not state:
             location_type = 'ZIP_CODE_ONLY'
-          elif state and not zipcode and not city and not county:
+          elif state and not zip and not city and not county:
             location_type = 'STATE_ONLY'
-          elif city and not street:
+          elif city and not zip and not street:
             location_type = 'CITY_ONLY'
           elif county and not city:
             location_type = 'COUNTY_ONLY'
@@ -155,33 +181,76 @@ class MiscellaneousStore:
             location_type = location_type,
             street = street,
             unit_number = unit_number,
-            zipcode = zipcode,
+            zipcode = zip,
             city = city,
             county = county,
             state = state
           )
+          if created:
+            print("Location with zipcode "+zip+" created")
+          else:
+            print("Location with zipcode "+zip+" found")
+          print(newloc)
           reu.address = newloc
+          reu.save()
+          print("REU saved ")
+
+        else:
+          # no location was stored?
+          print("No location recorded for RealEstateUnit "+str(reu))
+          zip = "00000"
+          location_type = "ZIP_CODE_ONLY"
+          newloc, created = Location.objects.get_or_create(
+            location_type = location_type,
+            street = street,
+            unit_number = unit_number,
+            zipcode = zip,
+            city = city,
+            county = county,
+            state = state
+          )
+          if created:
+            print("Location with zipcode "+zip+" created")
+          else:
+            print("Location with zipcode "+zip+" found")
+          print(newloc)
+          reu.address = newloc
+          reu.save()
 
         # this is currently a bogus community, the one signed into when the profile was created
         # communityId = args.pop('community_id', None) or args.pop('community', None) 
-        communityId = None 
+        #communityId = None 
         # determine which, if any, community this household is actually in
         communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
-        community_found = False
+        found = False
         for community in communities:
-          cid = community.id
-          for zip in community.zipcodes.all():
-            if zip.zipcode == zipcode:
-              # this is the one
-              community_found = True
-              communityId = cid
-              break
-          if community_found:
+          geography_type = community.geography_type
+          for location in community.location_set.all():
+            if geography_type == 'ZIPCODE':
+              if zip==location.zipcode:
+                found = True
+                #print('Found REU with zipcode '+zip+' within community')
+                if reu.community.id != community.id:
+                  print('Adding the REU with zipcode '+zip+" to the community "+community.name)
+                  reu.community = community
+                break
+            elif geography_type == 'CITY':
+              if reu.community and reu.community.geography_type != 'ZIPCODE':
+                reu_city = zipcodes.matching(zip)
+                print(reu_city)
+              pass
+            elif geography_type == 'COUNTY':
+              pass
+            elif geography_type == 'STATE':
+              pass
+            elif geography_type == 'COUNTRY':
+              pass
+          if not found and reu.community and reu.community.id == community.id:
+            print("REU not located in this community, but was labeled as belonging to the community")
+
+          if found:
             break
-        if community_found:
-          reu.community = community
-          print("Zip: "+zipcode + " community:" + community.name)
-        else:
+        if not found:
           reu.community = None
         reu.save()
 

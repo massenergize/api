@@ -1,4 +1,4 @@
-from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, Goal, CommunityAdminGroup, Location
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, Goal, CommunityAdminGroup, Location, RealEstateUnit
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -12,109 +12,232 @@ class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
 
+  # QUESTION FOR SAM:
+  # These helper routines don't make use of self, should they be member functions as currently implemented, 
+  # or outside the CommunityStore class?
+
+  def _check_geography_unique(self, community, geography_type, loc):
+    # ensure that this zip code is not part of another geographic zip code based community
+    check_communities = Community.objects.filter(is_geographically_focused=True, geography_type=geography_type, is_deleted=False).prefetch_related('location_set')
+    for check_community in check_communities:
+      if check_community.id == community.id:
+        continue
+      for location in check_community.location_set.all():
+        if geography_type == 'ZIPCODE' and location.zipcode == loc:
+          # zip code already used
+          message = 'Zipcode %s is already part of another geographic community %s.' % (loc, check_community.name)
+          print(message)
+          raise Exception(message)
+        elif geography_type == 'CITY' and location.city == loc:
+          message = 'City %s is already part of another geographic community %s.' % (loc, check_community.name)
+          print(message)
+          raise Exception(message)
+        elif geography_type == 'COUNTY' and location.county == loc:
+          message = 'County %s is already part of another geographic community %s.' % (loc, check_community.name)
+          print(message)
+          raise Exception(message)
+        elif geography_type == 'STATE' and location.state == loc:
+          message = 'State (%s) is already part of another geographic community (%s).' % (loc, check_community.name)
+          print(message)
+          raise Exception(message)
+        elif geography_type == 'COUNTRY' and location.country == loc:
+          message = 'Country (%s) is already part of another geographic community (%s).' % (loc, check_community.name)
+          print(message)
+          raise Exception(message)
+
   def _update_locations(self, geography_type, location_set, community):
         
-      # this can be list of zipcodes, towns, cities, counties, states        
-      location_list = location_set.split(",")  # passed as comma separated list
-      for location in location_list:
+    # clean up in case there is garbage in there
+    if community.location_set:
+      community.location_set.clear()
 
-        if geography_type == 'ZIPCODE':
-          if location[0].isdigit():
-            location = location.replace(" ","")
+    # this is a list of zipcodes, towns, cities, counties, states        
+    location_list = location_set.replace(", ",",").split(",")  # passed as comma separated list
+    print("Community includes the following locations :"+str(location_list))
+    for location in location_list:
+      if geography_type == 'ZIPCODE':
+        if location[0].isdigit():
+          location = location.replace(" ","")
 
-            # looks like a zipcode.  Check which towns it corresponds to
-            zipcode = zipcodes.matching(location)
-            if len(zipcode)>0:
-              city = zipcode[0].get('city', None)  
-            else:
-              raise Exception('No zip code entry found for zip='+location)         
-            loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=location)
-            if created:
-              print("Zipcode "+location+" created")
-            else:
-              print("Zipcode "+location+" found")
+          # looks like a zipcode.  Check which towns it corresponds to
+          zipcode = zipcodes.matching(location)
+          if len(zipcode)>0:
+            city = zipcode[0].get('city', None)  
           else:
-            # assume this is a town, see we can find the zip codes associated with it
-            ss = location.split('-')
-            town = ss[0]
-            if len(ss)==2:
-              state = ss[1]
-            else:
-              state = 'MA'
-              
-            zips = zipcodes.filter_by(city=town, state=state, zip_code_type='STANDARD' )
-            print("Number of zipcodes = "+str(len(zips)))
-            if len(zips)>0:
-              for zip in zips:
-                zipcode = zip.zip_code
-                loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
-                if created:
-                  print("Zipcode "+zipcode+" created")
-                else:
-                  print("Zipcode "+zipcode+" found")
+            raise Exception('No zip code entry found for zip='+location)
 
-            else:
-              print("No zipcodes found corresponding to town "+ town + ", " + state)
-              raise Exception("No zipcodes found corresponding to city "+ city + ", " + state)
-        elif geography_type == 'CITY':
-          # check that this city is found in the zipcodes list
-          ss = location.split('-')
-          city = ss[0]
-          if len(ss)==2:
-            state = ss[1]
+          loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=location, city=city)
+          if created:
+            print("Zipcode "+location+" created for town "+city)
           else:
-            state = 'MA'
+            print("Zipcode "+location+" found for town "+city)
+                        
+          self._check_geography_unique(community, geography_type, location)
 
-          zips = zipcodes.filter_by(city=city, state=state, zip_code_type='STANDARD' )
-          print("Number of zipcodes = "+str(len(zips)))
-          if len(zips)>0:
-            loc, created = Location.objects.get_or_create(location_type='CITY_ONLY', city=city)
-          else:
-            print("No zipcodes found corresponding to city "+ city + ", " + state)
-            raise Exception("No zipcodes found corresponding to city "+ city + ", " + state)
-        elif geography_type == 'COUNTY':
-         # check that this county is found in the zipcodes list
-          ss = location.split('-')
-          county = ss[0]
-          if len(ss)==2:
-            state = ss[1]
-          else:
-            state = 'MA'
-
-          zips = zipcodes.filter_by(county=town, state=state, zip_code_type='STANDARD' )
-          print("Number of zipcodes = "+str(len(zips)))
-          if len(zips)>0:
-            loc, created = Location.objects.get_or_create(location_type='COUNTY_ONLY', county=county)
-          else:
-            print("No zipcodes found corresponding to county "+ county + ", " + state)
-            raise Exception("No zipcodes found corresponding to county "+ county + ", " + state)
-
-        elif geography_type == 'STATE':
-          # check that this state is found in the zipcodes list
-          zips = zipcodes.filter_by(state=location, zip_code_type='STANDARD' )
-          print("Number of zipcodes = "+str(len(zips)))
-          if len(zips)>0:
-            loc, created = Location.objects.get_or_create(location_type='STATE_ONLY', state=location)
-          else:
-            print("No zipcodes found corresponding to state "+ location)
-            raise Exception("No zipcodes found corresponding to state "+ location)
-
-        elif geography_type == 'COUNTRY':
-          # check that this state is found in the zipcodes list
-          zips = zipcodes.filter_by(country=location, zip_code_type='STANDARD' )
-          print("Number of zipcodes = "+str(len(zips)))
-          if len(zips)>0:
-            loc, created = Location.objects.get_or_create(location_type='COUNTRY_ONLY', country=location)
-          else:
-            print("No zipcodes found corresponding to country "+ location)
-            raise Exception("No zipcodes found corresponding to country "+ location)
         else:
-          raise Exception("Unexpected geography type: " + str(geography_type))
-        
-        # should be a five character string
-        community.location_set.add(loc)
+          # assume this is a town, see we can find the zip codes associated with it
+          ss = location.split('-')
+          town = ss[0]
+          if len(ss)==2:
+            state = ss[1]
+          else:
+            state = 'MA'
+            
+          zips = zipcodes.filter_by(city=town, state=state, zip_code_type='STANDARD' )
+          print("Number of zipcodes = "+str(len(zips)))
+          if len(zips)>0:
+            for zip in zips:
+              zipcode = zip.zip_code
+              loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
+              if created:
+                print("Zipcode "+zipcode+" created")
+              else:
+                print("Zipcode "+zipcode+" found")
 
+              self._check_geography_unique(community, geography_type, zipcode)
 
+          else:
+            print("No zipcodes found corresponding to town "+ town + ", " + state)
+            raise Exception("No zipcodes found corresponding to city "+ town + ", " + state)
+      elif geography_type == 'CITY':
+        # check that this city is found in the zipcodes list
+        ss = location.split('-')
+        city = ss[0]
+        if len(ss)==2:
+          state = ss[1]
+        else:
+          state = 'MA'
+
+        zips = zipcodes.filter_by(city=city, state=state, zip_code_type='STANDARD' )
+        print("Number of zipcodes = "+str(len(zips)))
+        if len(zips)>0:
+          loc, created = Location.objects.get_or_create(location_type='CITY_ONLY', city=city, state=state)
+          if created:
+            print("City "+city+" created")
+          else:
+            print("City "+city+" found")
+
+        else:
+          print("No zipcodes found corresponding to city "+ city + ", " + state)
+          raise Exception("No zipcodes found corresponding to city "+ city + ", " + state)
+
+        self._check_geography_unique(community, geography_type, city)
+      elif geography_type == 'COUNTY':
+       # check that this county is found in the zipcodes list
+        ss = location.split('-')
+        county = ss[0]
+        if len(ss)==2:
+          state = ss[1]
+        else:
+          state = 'MA'
+
+        zips = zipcodes.filter_by(county=town, state=state, zip_code_type='STANDARD' )
+        print("Number of zipcodes = "+str(len(zips)))
+        if len(zips)>0:
+          loc, created = Location.objects.get_or_create(location_type='COUNTY_ONLY', county=county, state=state)
+        else:
+          print("No zipcodes found corresponding to county "+ county + ", " + state)
+          raise Exception("No zipcodes found corresponding to county "+ county + ", " + state)
+
+        self._check_geography_unique(community, geography_type, county)
+
+      elif geography_type == 'STATE':
+        # check that this state is found in the zipcodes list
+        state = location
+        zips = zipcodes.filter_by(state=state, zip_code_type='STANDARD' )
+        print("Number of zipcodes = "+str(len(zips)))
+        if len(zips)>0:
+          loc, created = Location.objects.get_or_create(location_type='STATE_ONLY', state=state)
+        else:
+          print("No zipcodes found corresponding to state "+ location)
+          raise Exception("No zipcodes found corresponding to state "+ location)
+
+        self._check_geography_unique(community, geography_type, location)
+
+      elif geography_type == 'COUNTRY':
+        # check that this state is found in the zipcodes list
+        country = location
+        zips = zipcodes.filter_by(country=country, zip_code_type='STANDARD' )
+        print("Number of zipcodes = "+str(len(zips)))
+        if len(zips)>0:
+          loc, created = Location.objects.get_or_create(location_type='COUNTRY_ONLY', country=country)
+        else:
+          print("No zipcodes found corresponding to country "+ location)
+          raise Exception("No zipcodes found corresponding to country "+ location)
+      
+        self._check_geography_unique(community, geography_type, location)
+
+      else:
+        raise Exception("Unexpected geography type: " + str(geography_type))
+      # should be a five character string
+      community.location_set.add(loc)
+
+    # now this community location has been established, find any real estate units which should be associated with it.
+    # update_real_estate_units(community, location_set)
+    reus = RealEstateUnit.objects.all().select_related('address')
+    print("Updating "+str(reus.count())+" RealEstateUnits")
+    
+    for reu in reus:
+      if reu.address:
+        zip = reu.address.zipcode
+        if not isinstance(zip,str) or len(zip)!=5:
+          print("REU invalid zipcode: address = "+str(reu.address))
+          zip = "00000"
+
+        found = False
+        reu_community_type = None
+        if reu.community:
+          reu_community_type = reu.community.geography_type
+
+        for location in community.location_set.all():
+          if geography_type == 'ZIPCODE':
+            if zip==location.zipcode:
+              found = True
+              #print('Found REU with zipcode '+zip+' within community')
+              if not reu.community or reu.community.id != community.id:
+                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
+                reu.community = community
+              break
+          elif geography_type == 'CITY':
+            if reu_community_type != 'ZIPCODE':
+              reu_loc_data = zipcodes.matching(zip)
+              if len(reu_loc_data)>0 and reu_loc_data[0]['city']==city: 
+                found = True
+                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
+                reu.community = community
+              break
+          elif geography_type == 'COUNTY':
+            if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY':
+              reu_loc_data = zipcodes.matching(zip)
+              if len(reu_loc_data)>0 and reu_loc_data[0]['county']==county: 
+                found = True
+                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
+                reu.community = community
+              break
+          elif geography_type == 'STATE':
+            if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY':
+              reu_loc_data = zipcodes.matching(zip)
+              if len(reu_loc_data)>0 and reu_loc_data[0]['state']==state: 
+                found = True
+                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
+                reu.community = community
+              break
+          elif geography_type == 'COUNTRY':
+            if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY' and reu_community_type != 'STATE':
+              reu_loc_data = zipcodes.matching(zip)
+              if len(reu_loc_data)>0 and reu_loc_data[0]['country']==country: 
+                found = True
+                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
+                reu.community = community
+              break
+        if not found and reu.community and reu.community.id == community.id:
+          print("REU not located in this community, but was labeled as belonging to the community")
+
+        reu.save()
+      else:
+        print("RealEstateUnit without address - do backfill first")
+        print(reu.location)
+  
   def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       subdomain = args.get('subdomain', None)
@@ -299,13 +422,11 @@ class CommunityStore:
       # 11/1/20 BHN: Add protection against excessive copying in case of too many actions marked as template
       # Also don't copy the ones marked as deleted!
       global_actions = Action.objects.filter(is_deleted=False, is_global=True)
-      count = global_actions.count()
       MAX_TEMPLATE_ACTIONS = 25
       num_copied = 0
 
       actions_copied = set()
       for action_to_copy in global_actions:
-        action_to_copy_id = action_to_copy.id
         old_tags = action_to_copy.tags.all()
         old_vendors = action_to_copy.vendors.all()
         new_action: Action = action_to_copy
@@ -363,6 +484,7 @@ class CommunityStore:
       if geographic:
         geography_type = args.get('geography_type', None)
         self._update_locations(geography_type, location_set, community)
+
 
       #new_community = community.first()
       if logo:   
