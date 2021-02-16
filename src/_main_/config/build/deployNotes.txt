@@ -1,2 +1,2 @@
-Feb 5th Deployment to Dev
-- Frontend Portal #445 - ability to clear team logo
+Feb 16th Deployment to Dev
+- Frontend Portal #286 - ability to clear linked service providers, etc
