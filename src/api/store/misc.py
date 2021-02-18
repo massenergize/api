@@ -2,6 +2,7 @@ from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMem
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from .utils import find_reu_community
 import zipcodes
 from sentry_sdk import capture_message
 
@@ -113,8 +114,10 @@ class MiscellaneousStore:
       for reu in RealEstateUnit.objects.all():
         street = unit_number = city = county = state = zip = ""
         loc = reu.location    # a JSON field
-        if reu.address:
+        zip = None
+        if reu.address and reu.address.zipcode and len(reu.address.zipcode)==5:
           zip = reu.address.zipcode
+          print("Zip recorded as " + str(zip))
         elif loc:
           if not isinstance(loc,str):   
             # one odd case in dev DB, looked like a Dict
@@ -141,7 +144,7 @@ class MiscellaneousStore:
               else:
                 print("Zipcode found "+zip)
           else:
-            # deal with odd cases
+            # deal with odd cases which were encountered in the database
             zip = "00000"
             state = "MA"      # may be wrong occasionally
             if loc.find("Wayland")>=0 or loc.find("Fields Lane")>=0:
@@ -217,45 +220,18 @@ class MiscellaneousStore:
           reu.address = newloc
           reu.save()
 
-        # this is currently a bogus community, the one signed into when the profile was created
-        # communityId = args.pop('community_id', None) or args.pop('community', None) 
-        #communityId = None 
         # determine which, if any, community this household is actually in
-        communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
-        found = False
-        for community in communities:
-          geography_type = community.geography_type
-          for location in community.location_set.all():
-            if geography_type == 'ZIPCODE':
-              if zip==location.zipcode:
-                found = True
-                #print('Found REU with zipcode '+zip+' within community')
-                if reu.community.id != community.id:
-                  print('Adding the REU with zipcode '+zip+" to the community "+community.name)
-                  reu.community = community
-                break
-            elif geography_type == 'CITY':
-              if reu.community and reu.community.geography_type != 'ZIPCODE':
-                reu_city = zipcodes.matching(zip)
-                print(reu_city)
-              pass
-            elif geography_type == 'COUNTY':
-              pass
-            elif geography_type == 'STATE':
-              pass
-            elif geography_type == 'COUNTRY':
-              pass
-          if not found and reu.community and reu.community.id == community.id:
-            print("REU not located in this community, but was labeled as belonging to the community")
+        community = find_reu_community(reu)
+        if community:
+          print("Adding the REU with zipcode " + zip + " to the community " + community.name)
+          reu.community = community
 
-          if found:
-            break
-        if not found:
+        elif reu.community:
+          print("REU not located in any community, but was labeled as belonging to the community "+reu.community.name)
           reu.community = None
         reu.save()
 
       return {'backfill_real_estate_units': 'done'}, None
-
 
     except Exception as e:
       capture_message(str(e), level="error")

@@ -3,8 +3,8 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_community_or_die, get_user_or_die, get_new_title
-import random 
+from .utils import get_community_or_die, get_user_or_die, get_new_title, is_reu_in_community
+import random
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
 
@@ -87,8 +87,9 @@ class CommunityStore:
           print("Number of zipcodes = "+str(len(zips)))
           if len(zips)>0:
             for zip in zips:
-              zipcode = zip.zip_code
-              loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode)
+              print(zip)
+              zipcode = zip["zip_code"]
+              loc, created = Location.objects.get_or_create(location_type='ZIP_CODE_ONLY', zipcode=zipcode, city=town)
               if created:
                 print("Zipcode "+zipcode+" created")
               else:
@@ -183,57 +184,19 @@ class CommunityStore:
         if not isinstance(zip,str) or len(zip)!=5:
           print("REU invalid zipcode: address = "+str(reu.address))
           zip = "00000"
+          reu.address.zipcode = zip
+        
+        if is_reu_in_community(reu, community):
+          print("Adding the REU with zipcode " + zip + " to the community " + community.name)
+          reu.community = community
+          reu.save()
 
-        found = False
-        reu_community_type = None
-        if reu.community:
-          reu_community_type = reu.community.geography_type
-
-        for location in community.location_set.all():
-          if geography_type == 'ZIPCODE':
-            if zip==location.zipcode:
-              found = True
-              #print('Found REU with zipcode '+zip+' within community')
-              if not reu.community or reu.community.id != community.id:
-                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
-                reu.community = community
-              break
-          elif geography_type == 'CITY':
-            if reu_community_type != 'ZIPCODE':
-              reu_loc_data = zipcodes.matching(zip)
-              if len(reu_loc_data)>0 and reu_loc_data[0]['city']==city: 
-                found = True
-                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
-                reu.community = community
-              break
-          elif geography_type == 'COUNTY':
-            if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY':
-              reu_loc_data = zipcodes.matching(zip)
-              if len(reu_loc_data)>0 and reu_loc_data[0]['county']==county: 
-                found = True
-                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
-                reu.community = community
-              break
-          elif geography_type == 'STATE':
-            if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY':
-              reu_loc_data = zipcodes.matching(zip)
-              if len(reu_loc_data)>0 and reu_loc_data[0]['state']==state: 
-                found = True
-                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
-                reu.community = community
-              break
-          elif geography_type == 'COUNTRY':
-            if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY' and reu_community_type != 'STATE':
-              reu_loc_data = zipcodes.matching(zip)
-              if len(reu_loc_data)>0 and reu_loc_data[0]['country']==country: 
-                found = True
-                print('Adding the REU with zipcode '+zip+" to the community "+community.name)
-                reu.community = community
-              break
-        if not found and reu.community and reu.community.id == community.id:
+        elif reu.community and reu.community.id == community.id:
+          # this could be the case if the community was made smaller
           print("REU not located in this community, but was labeled as belonging to the community")
+          reu.community = None
+          reu.save()
 
-        reu.save()
       else:
         print("RealEstateUnit without address - do backfill first")
         print(reu.location)

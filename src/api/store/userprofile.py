@@ -4,7 +4,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
 from sentry_sdk import capture_message
-from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups
+from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community
+
 
 class UserStore:
   def __init__(self):
@@ -92,11 +93,11 @@ class UserStore:
           zipcode = loc_parts[3]
 
       location_type = 'FULL_ADDRESS'
-      if zipcode and not street and not city and not county and not state:
+      if zipcode and not street:
         location_type = 'ZIP_CODE_ONLY'
       elif state and not zipcode and not city and not county:
         location_type = 'STATE_ONLY'
-      elif city and not street:
+      elif city and not zipcode and not street:
         location_type = 'CITY_ONLY'
       elif county and not city:
         location_type = 'COUNTY_ONLY'
@@ -111,39 +112,20 @@ class UserStore:
           state = state
       )
 
-      # this is currently a bogus community, the one signed into when the profile was created
-      # communityId = args.pop('community_id', None) or args.pop('community', None) 
-      #communityId = None
+      reu = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
+      reu.address = newloc
 
-      # determine which, if any, community this household is actually in
-      communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
-      community_found = False
-      for community in communities:
-        #cid = community.id
-        for loc in community.zipcodes:
-          if loc.zipcode == zipcode:
-            # this is the one
-            community_found = True
-            #communityId = cid
-            break
-        if community_found:
-          break
+      community = find_reu_community(reu)
+      if community:
+        print("Adding the REU with zipcode " + zipcode + " to the community " + community.name)
+        reu.community = community
 
-      new_unit = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
-      new_unit.save()
+      user.real_estate_units.add(reu)
+      user.save()
 
-      new_unit.address = newloc
+      reu.save()
+      return reu, None
 
-      user.real_estate_units.add(new_unit)
-      if community_found:
-        #community = Community.objects.get(id=communityId)
-        new_unit.community = community
-      else:
-        new_unit.community = None
-
-      new_unit.save()
-
-      return new_unit, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
@@ -153,6 +135,9 @@ class UserStore:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
       household_id = args.get('household_id', None)
+      if not household_id:
+        return None, CustomMassenergizeError("Please provide household_id")
+
       unit_type=args.pop('unit_type', None)
       location=args.pop('location', None)
       # this address location now will contain the parsed address      
@@ -186,39 +171,22 @@ class UserStore:
       elif county and not city:
         location_type = 'COUNTY_ONLY'
 
-      # this is currently a bogus community, the one signed into when the profile was created
-      # communityId = args.pop('community_id', None) or args.pop('community', None) 
-      #communityId = None 
+      newloc = Location.objects.get_or_create(
+          location_type = location_type,
+          street = street,
+          unit_number = unit_number,
+          zipcode = zipcode,
+          city = city,
+          county = county,
+          state = state
+      )
 
-      # determine which, if any, community this household is actually in
-      communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
-      community_found = False
-      for community in communities:
-        #cid = community.id
-        for loc in community.zipcodes:
-          if loc.zipcode == zipcode:
-            # this is the one
-            community_found = True
-            #communityId = cid
-            break
-        if community_found:
-          break
+      reu = RealEstateUnit.objects.get(pk=household_id)
+      reu.name = name
+      reu.unit_type = unit_type
+      reu.location = location
 
-      if not household_id:
-        return None, CustomMassenergizeError("Please provide household_id")
-
-      new_unit = RealEstateUnit.objects.get(pk=household_id)
-      new_unit.name = name
-      new_unit.unit_type = unit_type
-      new_unit.location = location
-
-      if community_found:
-        # community = Community.objects.get(id=communityId)
-        new_unit.community = community
-      else:
-        new_unit.community = None
-
-      newloc = new_unit.address
+      newloc = reu.address
       if newloc:
         newloc.location_type = location_type,
         newloc.street = street,
@@ -243,11 +211,15 @@ class UserStore:
         else:
           print("Location with zipcode "+zipcode+" found for user "+user.preferred_name)
 
-      new_unit.address = newloc
+      reu.address = newloc
 
-      new_unit.save()
+      community = find_reu_community(reu)
+      if community:
+        print("Updating the REU with zipcode " + zipcode + " to the community " + community.name)
+        reu.community = community
 
-      return new_unit, None
+      reu.save()
+      return reu, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

@@ -94,18 +94,17 @@ class DownloadStore:
     if (isinstance(user, Subscriber)):
       return [''] # for _ in range(len(teams))]
 
-    cell_text = '['
+    cell_text = ''
     user_team_members = TeamMember.objects.filter(user=user).select_related('team')
     for team in teams:
 
       team_member = user_team_members.filter(team=team).first()
       if team_member:
+        if cell_text != "": cell_text += ", "
         cell_text = cell_text + team.name
         if team_member.is_admin:
-          cell_text += '(ADMIN)'
-        cell_text += ","
+          cell_text += "(ADMIN)"
 
-    cell_text += ']'
     cells = [cell_text]  
     return cells
 
@@ -291,8 +290,8 @@ class DownloadStore:
 
         for community in communities:
           if community != primary_community:
-            secondary_community = community
-            break
+            if secondary_community != '': secondary_community += ", "
+            secondary_community += community
 
         #if len(communities) > 1:
         #  primary_community, secondary_community = communities[0], communities[1]
