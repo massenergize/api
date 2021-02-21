@@ -1,13 +1,12 @@
 """
 Middle ware for authorization for users before they access specific resources
 """
-from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError, MassEnergizeAPIError
+from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError, MassEnergizeAPIError, MassenergizeResponse
 from _main_.utils.context import Context
 from _main_.settings import SECRET_KEY
 from firebase_admin import auth
 import json, jwt
 from sentry_sdk import capture_message
-#from api.urls import ROUTE_HANDLERS
 
 class MassenergizeJWTAuthMiddleware:
 
@@ -68,6 +67,17 @@ class MassenergizeJWTAuthMiddleware:
 
         # at this point the user has an active session
         ctx.set_user_credentials(decoded_token)
+
+        if ctx.user_is_admin() and ctx.is_admin_site:
+
+          # Extend work time when working on the Admin portal so work is not lost
+          MAX_AGE = 24*60*60    # one day
+          response = MassenergizeResponse(None)
+
+          # BHN: I'm not sure why the cookie needs to be deleted first
+          # but set_cookie doesn't keep it from expiring as I expected
+          response.delete_cookie("token")
+          response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')    
 
       request.context = ctx
 
