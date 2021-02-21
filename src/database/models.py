@@ -470,6 +470,7 @@ class UserProfile(models.Model):
 
   def simple_json(self):
     res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
+    res['joined'] = self.created_at.date()
     res['user_info'] = self.user_info
     res['profile_picture'] = get_json_if_not_none(self.profile_picture)
     res['communities'] = [c.community.name for c in CommunityMember.objects.filter(user=self)]
@@ -485,6 +486,7 @@ class UserProfile(models.Model):
     
     data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles'])
+    data['joined'] = self.created_at.date()
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
