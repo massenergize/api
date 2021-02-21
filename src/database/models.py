@@ -585,6 +585,7 @@ class Team(models.Model):
 
   admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
     blank=True) 
+  # not used
   members = models.ManyToManyField(UserProfile, related_name='team_members', 
     blank=True) 
 
@@ -609,8 +610,8 @@ class Team(models.Model):
   def is_admin(self, UserProfile):
     return self.admins.filter(id=UserProfile.id)
 
-  def is_member(self, UserProfile):
-    return self.members.filter(id=UserProfile.id)
+  #def is_member(self, UserProfile):
+  #  return self.members.filter(id=UserProfile.id)
 
   def __str__(self):
     return self.name
