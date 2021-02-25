@@ -1,2 +1,4 @@
-Feb 16th Deployment to Dev
-- Frontend Portal #286 - ability to clear linked service providers, etc
+Feb 25th Deployment to Dev
+- Keep admin sessions alive
+- Pass back User join date (Admin #151)
+- Do not show unpublished teams except in sandbox

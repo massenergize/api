@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.1.9",
-  "BUILD_VERSION_NOTES": "Feb 16th Deployment to Dev\n- Frontend Portal #286 - ability to clear linked service providers, etc\n"
+  "BUILD_VERSION": "3.1.11",
+  "BUILD_VERSION_NOTES": "Feb 25th Deployment to Dev\n- Keep admin sessions alive\n- Pass back User join date (Admin #151)\n- Do not show unpublished teams except in sandbox\n"
 }
