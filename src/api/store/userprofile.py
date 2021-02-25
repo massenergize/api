@@ -5,7 +5,7 @@ from _main_.utils.context import Context
 from django.db.models import F
 from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community
-
+import json
 
 class UserStore:
   def __init__(self):
@@ -74,12 +74,13 @@ class UserStore:
       location=args.pop('location', None)
       address = args.pop('address', None)
       if address:
-        street = address.get('street', None)
-        unit_number = address.get('unit_number', None)
-        zipcode = address.get('zipcode', None)
-        city = address.get('city', None)
-        county = address.get('county', None)
-        state = address.get('state', None)
+        address = json.loads(address)
+        street = address.get('street', '')
+        unit_number = address.get('unit_number', '')
+        zipcode = address.get('zipcode', '')
+        city = address.get('city', '')
+        county = address.get('county', '')
+        state = address.get('state', '')
       else:
         # get address from location string
         loc_parts = location.capitalize().replace(" ","").split(',')
@@ -102,7 +103,7 @@ class UserStore:
       elif county and not city:
         location_type = 'COUNTY_ONLY'
 
-      newloc = Location.objects.get_or_create(
+      reuloc, created = Location.objects.get_or_create(
           location_type = location_type,
           street = street,
           unit_number = unit_number,
@@ -113,7 +114,7 @@ class UserStore:
       )
 
       reu = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
-      reu.address = newloc
+      reu.address = reuloc
 
       community = find_reu_community(reu)
       if community:
@@ -142,13 +143,15 @@ class UserStore:
       location=args.pop('location', None)
       # this address location now will contain the parsed address      
       address = args.pop('address', None)
+      
       if address:
-        street = address.get('street', None)
-        unit_number = address.get('unit_number', None)
-        zipcode = address.get('zipcode', None)
-        city = address.get('city', None)
-        county = address.get('county', None)
-        state = address.get('state', None)
+        address = json.loads(address)
+        street = address.get('street', '')
+        unit_number = address.get('unit_number', '')
+        zipcode = address.get('zipcode', '')
+        city = address.get('city', '')
+        county = address.get('county', '')
+        state = address.get('state', '')
       else:
         # get address from location string
         loc_parts = location.capitalize().replace(" ","").split(',')
@@ -171,7 +174,7 @@ class UserStore:
       elif county and not city:
         location_type = 'COUNTY_ONLY'
 
-      newloc = Location.objects.get_or_create(
+      reuloc, created = Location.objects.get_or_create(
           location_type = location_type,
           street = street,
           unit_number = unit_number,
@@ -180,38 +183,16 @@ class UserStore:
           county = county,
           state = state
       )
+      if created:
+        print("Location with zipcode "+zipcode+" created for user "+user.preferred_name)
+      else:
+        print("Location with zipcode "+zipcode+" found for user "+user.preferred_name)
 
       reu = RealEstateUnit.objects.get(pk=household_id)
       reu.name = name
       reu.unit_type = unit_type
-      reu.location = location
 
-      newloc = reu.address
-      if newloc:
-        newloc.location_type = location_type,
-        newloc.street = street,
-        newloc.unit_number = unit_number,
-        newloc.zipcode = zipcode,
-        newloc.city = city,
-        newloc.county = county,
-        newloc.state = state
-        newloc.save()      
-      else:
-        newloc, created = Location.objects.get_or_create(
-          location_type = location_type,
-          street = street,
-          unit_number = unit_number,
-          zipcode = zipcode,
-          city = city,
-          county = county,
-          state = state
-        ) 
-        if created:
-          print("Location with zipcode "+zipcode+" created for user "+user.preferred_name)
-        else:
-          print("Location with zipcode "+zipcode+" found for user "+user.preferred_name)
-
-      reu.address = newloc
+      reu.address = reuloc
 
       community = find_reu_community(reu)
       if community:
