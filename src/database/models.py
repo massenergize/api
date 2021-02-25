@@ -399,7 +399,12 @@ class RealEstateUnit(models.Model):
     return f"{self.community}|{self.unit_type}|{self.name}"
 
   def simple_json(self):
-    return model_to_dict(self)
+    #return model_to_dict(self)
+
+    res =  model_to_dict(self)
+    res['location'] = get_json_if_not_none(self.address)
+    return res
+
 
   def full_json(self):
     return self.simple_json()

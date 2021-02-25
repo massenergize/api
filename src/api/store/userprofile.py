@@ -194,9 +194,10 @@ class UserStore:
 
       reu.address = reuloc
 
-      community = find_reu_community(reu)
+      verbose = False
+      community = find_reu_community(reu, verbose)
       if community:
-        print("Updating the REU with zipcode " + zipcode + " to the community " + community.name)
+        if verbose: print("Updating the REU with zipcode " + zipcode + " to the community " + community.name)
         reu.community = community
 
       reu.save()
