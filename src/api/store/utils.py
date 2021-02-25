@@ -126,9 +126,33 @@ def find_reu_community(reu, verbose=False):
 
   communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
 
-  for community in communities:
+  # heirarchy of communities:
+  # most communities will be Zipcode
+  communities1 = communities.filter(geography_type='ZIPCODE')
+  for community in communities1:
     if is_reu_in_community(reu, community, verbose):
       return community
+
+  communities1 = communities.filter(geography_type='CITY')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
+  communities1 = communities.filter(geography_type='COUNTY')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
+  communities1 = communities.filter(geography_type='STATE')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
+  communities1 = communities.filter(geography_type='COUNTRY')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
   return None
 
 def is_reu_in_community(reu, community, verbose=False):
@@ -154,7 +178,7 @@ def is_reu_in_community(reu, community, verbose=False):
   for location in community.location_set.all():
     if geography_type == 'ZIPCODE':
       if zip==location.zipcode:
-        if verbose: print("Found REU with zipcode "+zip+" within community"+community.name)
+        if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
         return True
 
     elif geography_type == 'CITY':
@@ -162,28 +186,28 @@ def is_reu_in_community(reu, community, verbose=False):
       if reu_community_type != 'ZIPCODE':
         reu_loc_data = zipcodes.matching(zip)
         if len(reu_loc_data)>0 and reu_loc_data[0]['city']==location.city: 
-          if verbose: print('Found REU with zipcode '+zip+" within community "+community.name)
+          if verbose: print('Found REU with zipcode '+zip+" within community: "+community.name)
           return True
 
     elif geography_type == 'COUNTY':
       if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY':
         reu_loc_data = zipcodes.matching(zip)
         if len(reu_loc_data)>0 and reu_loc_data[0]['county']==location.county:           
-          if verbose: print("Found REU with zipcode "+zip+" within community "+community.name)
+          if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
           return True
 
     elif geography_type == 'STATE':
       if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY':
         reu_loc_data = zipcodes.matching(zip)
         if len(reu_loc_data)>0 and reu_loc_data[0]['state']==location.state:           
-          if verbose: print("Found REU with zipcode "+zip+" to the community "+community.name)
+          if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
           return True
 
     elif geography_type == 'COUNTRY':
       if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY' and reu_community_type != 'STATE':
         reu_loc_data = zipcodes.matching(zip)
         if len(reu_loc_data)>0 and reu_loc_data[0]['country']==location.country:           
-          if verbose: print("Found REU with zipcode "+zip+" to the community "+community.name)
+          if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
           return True
 
   return False
