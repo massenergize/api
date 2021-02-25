@@ -24,8 +24,8 @@ class AuthHandler(RouteHandler):
     self.add("/auth.whoami", self.whoami)
     self.add("/auth.test", self.whoami)
     self.add("/auth.verifyCaptcha", self.verify_captcha)
-
-
+  
+  
   def login(self, request): 
     context: Context = request.context
     user_info, token, err = self.service.login(context)
@@ -41,11 +41,11 @@ class AuthHandler(RouteHandler):
 
     # if the signin is from an admin site then set it to 24 hrs
     if(context.is_admin_site):
-      MAX_AGE = 86400
+      MAX_AGE = 24*60*60
 
     response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')    
     return response
-
+  
   @login_required
   def logout(self, request): 
     # create a response
