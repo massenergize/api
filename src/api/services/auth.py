@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import get_request_contents
-from database.models import UserProfile
+from database.models import UserProfile, IpProfile
 from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
@@ -72,7 +72,8 @@ class AuthService:
       return None, None, CustomMassenergizeError(e)
 
 
-  def whoami(self, context: Context):
+  
+  def whoami(self, context: Context, IpProfile: ip_user = None):
     try:
       user_id = context.user_id
       user_email = context.user_email
@@ -84,6 +85,25 @@ class AuthService:
 
       if user and context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
         raise PermissionError
+
+      # keep statistics on community portal
+      if user and not context.admin_site:
+        now = datetime.now()
+        print(now)
+        date = now.date
+        print(date)
+
+        if user.last_visited.date != date:
+          user.last_visited = now
+          user.num_visits += 1
+          visit_history = user.visit_history
+          visit_history["dates"].append(date)
+          user.visit_history = visit_history
+
+          # if the IpProfile exists, connect it to the user profile
+          if ip_user and ip_user not in user.unique_ip_addresses:
+            user.unique_ip_addresses.add(ip_user)
+
 
       return serialize(user, full=True), None
 
@@ -114,3 +134,49 @@ class AuthService:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+
+  def userByIP(self, context, ip, loc, browser):
+    try:
+      now = datetime.now()
+      print(now)
+      date = now.date
+      print(date)
+
+      # see if this IP user is in DB, if not create it
+      ip_profile, created = IpProfile.objects.get_or_create(pk=ip)
+      if created:
+        print("Created IpProfile for :"+ip)
+        ip_profile.client = browser
+
+        location, created = Location.objects.get_or_create(
+          location_type="ZIP_CODE_ONLY", 
+          zipcode=loc.zipcode)
+        if created:
+          print("Created Location for :"+ip)
+          location.state = loc.state
+          location.city = loc.city
+          location.save()
+
+        ip_profile.location = Location
+        ip_profile.num_visits = 1
+        ip_profile.last_visited = now 
+        ip_profile.visit_history = {"dates":[date]}
+
+      else:
+
+      # update IP user with latest data
+        if ip_profile.last_visited.date != date:
+          ip_profile.last_visited = now
+          ip_profile.num_visits += 1
+          visit_history = ip_profile.visit_history
+          visit_history["dates"].append(date)
+          ip_profile.visit_history = visit_history
+
+      ip_profile.save()
+      return ip_profile, None
+                
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
