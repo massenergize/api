@@ -14,6 +14,7 @@ from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
 import requests
+from django.utils import timezone
 from datetime import datetime
 import os
 
@@ -94,7 +95,7 @@ class AuthService:
         date = now.date
         print(date)
 
-        if user.last_visited.date != date:
+        if not user.last_visited or user.last_visited.date != date:
           user.last_visited = now
           user.num_visits += 1
           visit_history = user.visit_history
@@ -104,7 +105,6 @@ class AuthService:
           # if the IpProfile exists, connect it to the user profile
           if ip_user and ip_user not in user.unique_ip_addresses:
             user.unique_ip_addresses.add(ip_user)
-
 
       return serialize(user, full=True), None
 
@@ -139,27 +139,27 @@ class AuthService:
 
   def userByIP(self, context, ip, loc, browser):
     try:
-      now = datetime.now()
-      print(now)
-      date = now.date
-      print(date)
+      now = datetime.now(tz=timezone.get_current_timezone())
+      date = now.date()
 
       # see if this IP user is in DB, if not create it
       ip_profile, created = IpProfile.objects.get_or_create(pk=ip)
       if created:
-        print("Created IpProfile for :"+ip)
+        print("Created IpProfile for: "+ip)
         ip_profile.client = browser
 
-        location, created = Location.objects.get_or_create(
-          location_type="ZIP_CODE_ONLY", 
-          zipcode=loc.zipcode)
-        if created:
-          print("Created Location for :"+ip)
-          location.state = loc.state
-          location.city = loc.city
-          location.save()
+        if loc:
+          location, created = Location.objects.get_or_create(
+            location_type="ZIP_CODE_ONLY", 
+            zipcode=loc.zipcode)
+          if created:
+            print("Created Location for :"+ip)
+            location.state = loc.state
+            location.city = loc.city
+            location.save()
 
-        ip_profile.location = Location
+          ip_profile.location = Location
+
         ip_profile.num_visits = 1
         ip_profile.last_visited = now 
         ip_profile.visit_history = {"dates":[date]}
@@ -167,11 +167,13 @@ class AuthService:
       else:
 
       # update IP user with latest data
-        if ip_profile.last_visited.date != date:
+        if not ip_profile.last_visited or ip_profile.last_visited.date() != date:
           ip_profile.last_visited = now
           ip_profile.num_visits += 1
           visit_history = ip_profile.visit_history
-          visit_history["dates"].append(date)
+          if not visit_history:
+            visit_history = {"dates":[]}
+          visit_history["dates"].append(str(date))
           ip_profile.visit_history = visit_history
 
       ip_profile.save()

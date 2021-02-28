@@ -65,12 +65,11 @@ class AuthHandler(RouteHandler):
 
     if not context.is_admin_site:
       ip = self.ipLocator.getIP(request)
-      print(ip)
+
       #ip = "38.242.8.93"
       loc = self.ipLocator.getGeo(ip)
 
       browser = self.ipLocator.getBrowser(request)
-      print(browser)
 
       ip_user, err = self.service.userByIP(context, ip, loc, browser)
       if err:

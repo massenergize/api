@@ -57,10 +57,8 @@ class GeoIP:
     else:
         ip = request.META.get('REMOTE_ADDR')
 
-    if ip_valid(ip):
-      print("IP adddress is valid")
-    else:
-      print("IP address is NOT valid")
+    if not ip_valid(ip):
+      print("GeoIP: IP address is NOT valid")
       return None
 
     return ip

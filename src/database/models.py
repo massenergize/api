@@ -470,7 +470,7 @@ class IpProfile(models.Model):
   """
   ip_address = models.GenericIPAddressField(primary_key=True)
   location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True)
-  client = JSONField(blank=True)
+  client = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -583,7 +583,7 @@ class UserProfile(models.Model):
     admin_at = [cm.community.info() for cm in CommunityMember.objects.filter(user=self, is_admin=True)]
     
     data = model_to_dict(self, exclude=['real_estate_units', 
-      'communities', 'roles'])
+      'communities', 'roles', 'last_visited'])
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
@@ -591,6 +591,7 @@ class UserProfile(models.Model):
     data['admin_at'] = admin_at
     data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    data['last_visited'] = str(self.last_visited)
     return data
 
   class Meta:
