@@ -85,6 +85,7 @@ class CommunityHandler(RouteHandler):
     args['is_approved'] = parse_bool(args.pop('is_approved', False))
 
     args = rename_field(args, 'image', 'logo')
+
     args = parse_location(args)
     if not args['is_geographically_focused']:
       args.pop('location', None)
@@ -139,6 +140,7 @@ class CommunityHandler(RouteHandler):
 
     args = rename_field(args, 'image', 'logo')
     args = parse_location(args)
+
     community_info, err = self.service.update_community(community_id ,args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

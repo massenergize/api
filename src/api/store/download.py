@@ -94,18 +94,17 @@ class DownloadStore:
     if (isinstance(user, Subscriber)):
       return [''] # for _ in range(len(teams))]
 
-    cell_text = '['
+    cell_text = ''
     user_team_members = TeamMember.objects.filter(user=user).select_related('team')
     for team in teams:
 
       team_member = user_team_members.filter(team=team).first()
       if team_member:
+        if cell_text != "": cell_text += ", "
         cell_text = cell_text + team.name
         if team_member.is_admin:
-          cell_text += '(ADMIN)'
-        cell_text += ","
+          cell_text += "(ADMIN)"
 
-    cell_text += ']'
     cells = [cell_text]  
     return cells
 
@@ -213,7 +212,12 @@ class DownloadStore:
 
     actions = Action.objects.filter(Q(community=community) | Q(is_global=True)).filter(is_deleted=False).select_related('calculator_action')
 
-    done_action_rels = UserActionRel.objects.filter(action__in=actions, user__in=users, is_deleted=False, status='DONE').select_related('action__calculator_action')
+    if community.is_geographically_focused:
+      # geographic focus - actions take place where real estate units are located
+      done_action_rels = UserActionRel.objects.filter(action__in=actions, real_estate_unit__community=community, is_deleted=False, status='DONE').select_related('action__calculator_action')
+    else:
+      # non-geographic focus - actions attributed to any community members
+      done_action_rels = UserActionRel.objects.filter(action__in=actions, user__in=users,  is_deleted=False, status='DONE').select_related('action__calculator_action')
 
     actions_done = len(done_action_rels)
     total_carbon_points = sum([action_rel.action.calculator_action.average_points
@@ -270,14 +274,31 @@ class DownloadStore:
         else:
           primary_community, secondary_community = '', ''
       else:
-        # original - lists up to two communities that user is a member of
+        # community list which user has associated with
         communities = [cm.community.name for cm in CommunityMember.objects.filter(user=user).select_related('community')]
-        if len(communities) > 1:
-          primary_community, secondary_community = communities[0], communities[1]
-        elif len(communities) == 1:
-          primary_community, secondary_community = communities[0], ''
-        else:
-          primary_community, secondary_community = '', ''
+        # communities of primary real estate unit associated with the user
+        reu_community = None
+        for reu in user.real_estate_units.all():
+          if reu.community:
+            reu_community = reu.community.name
+            break
+
+        primary_community = secondary_community = ''
+        # Primary community comes from a RealEstateUnit
+        if reu_community:
+          primary_community = reu_community
+
+        for community in communities:
+          if community != primary_community:
+            if secondary_community != '': secondary_community += ", "
+            secondary_community += community
+
+        #if len(communities) > 1:
+        #  primary_community, secondary_community = communities[0], communities[1]
+        #elif len(communities) == 1:
+        #  primary_community, secondary_community = communities[0], ''
+        #else:
+        #  primary_community, secondary_community = '', ''
 
       row = [primary_community, secondary_community] \
       + self._get_user_info_cells(user) \

@@ -1,10 +1,11 @@
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
 from sentry_sdk import capture_message
-from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups
+from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community
+import json
 
 class UserStore:
   def __init__(self):
@@ -37,8 +38,8 @@ class UserStore:
 
   def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      email = args.get('email', None)
-      user_id = args.get('user_id', None)
+      #email = args.get('email', None)
+      #user_id = args.get('user_id', None)
 
       # if not self._has_access(context, user_id, email):
       #   return None, CustomMassenergizeError("permission_denied")
@@ -56,6 +57,7 @@ class UserStore:
       household_id = args.get('household_id', None) or args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
+
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
 
     except Exception as e:
@@ -67,20 +69,64 @@ class UserStore:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
       unit_type=args.pop('unit_type', None)
+      # Location is string address of the unit, deliminted as follows:
+      # 'street' + ", " + city + ", " + state + ", " + 'zipcode'
       location=args.pop('location', None)
-      communityId = args.pop('community_id', None) or args.pop('community', None) 
+      address = args.pop('address', None)
+      if address:
+        address = json.loads(address)
+        street = address.get('street', '')
+        unit_number = address.get('unit_number', '')
+        zipcode = address.get('zipcode', '')
+        city = address.get('city', '')
+        county = address.get('county', '')
+        state = address.get('state', '')
+      else:
+        # get address from location string
+        loc_parts = location.capitalize().replace(" ","").split(',')
+        street = unit_number = city = county = state = zipcode = None
+        if len(loc_parts)>= 4:
+          street = loc_parts[0]
+          unit_number = None
+          city = loc_parts[1]
+          county = None
+          state = loc_parts[2]
+          zipcode = loc_parts[3]
 
-      new_unit = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
-      new_unit.save()
+      location_type = 'FULL_ADDRESS'
+      if zipcode and not street:
+        location_type = 'ZIP_CODE_ONLY'
+      elif state and not zipcode and not city and not county:
+        location_type = 'STATE_ONLY'
+      elif city and not zipcode and not street:
+        location_type = 'CITY_ONLY'
+      elif county and not city:
+        location_type = 'COUNTY_ONLY'
 
-      user.real_estate_units.add(new_unit)
-      if communityId:
-        community = Community.objects.get(id=communityId)
-        new_unit.community = community
+      reuloc, created = Location.objects.get_or_create(
+          location_type = location_type,
+          street = street,
+          unit_number = unit_number,
+          zipcode = zipcode,
+          city = city,
+          county = county,
+          state = state
+      )
 
-      new_unit.save()
+      reu = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
+      reu.address = reuloc
 
-      return new_unit, None
+      community = find_reu_community(reu)
+      if community:
+        print("Adding the REU with zipcode " + zipcode + " to the community " + community.name)
+        reu.community = community
+
+      user.real_estate_units.add(reu)
+      user.save()
+
+      reu.save()
+      return reu, None
+
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
@@ -90,25 +136,72 @@ class UserStore:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
       household_id = args.get('household_id', None)
-      unit_type=args.pop('unit_type', None)
-      location=args.pop('location', None)
-      communityId = args.pop('community_id', None) or args.pop('community', None) 
-
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
 
-      new_unit = RealEstateUnit.objects.get(pk=household_id)
-      new_unit.name = name
-      new_unit.unit_type = unit_type
-      new_unit.location = location
+      unit_type=args.pop('unit_type', None)
+      location=args.pop('location', None)
+      # this address location now will contain the parsed address      
+      address = args.pop('address', None)
+      
+      if address:
+        address = json.loads(address)
+        street = address.get('street', '')
+        unit_number = address.get('unit_number', '')
+        zipcode = address.get('zipcode', '')
+        city = address.get('city', '')
+        county = address.get('county', '')
+        state = address.get('state', '')
+      else:
+        # get address from location string
+        loc_parts = location.capitalize().replace(" ","").split(',')
+        street = unit_number = city = county = state = zipcode = None
+        if len(loc_parts)>= 4:
+          street = loc_parts[0]
+          unit_number = None
+          city = loc_parts[1]
+          county = None
+          state = loc_parts[2]
+          zipcode = loc_parts[3]
 
-      if communityId:
-        community = Community.objects.get(id=communityId)
-        new_unit.community = community
+      location_type = 'FULL_ADDRESS'
+      if zipcode and not street and not city and not county and not state:
+        location_type = 'ZIP_CODE_ONLY'
+      elif state and not zipcode and not city and not county:
+        location_type = 'STATE_ONLY'
+      elif city and not street:
+        location_type = 'CITY_ONLY'
+      elif county and not city:
+        location_type = 'COUNTY_ONLY'
 
-      new_unit.save()
+      reuloc, created = Location.objects.get_or_create(
+          location_type = location_type,
+          street = street,
+          unit_number = unit_number,
+          zipcode = zipcode,
+          city = city,
+          county = county,
+          state = state
+      )
+      if created:
+        print("Location with zipcode "+zipcode+" created for user "+user.preferred_name)
+      else:
+        print("Location with zipcode "+zipcode+" found for user "+user.preferred_name)
 
-      return new_unit, None
+      reu = RealEstateUnit.objects.get(pk=household_id)
+      reu.name = name
+      reu.unit_type = unit_type
+
+      reu.address = reuloc
+
+      verbose = False
+      community = find_reu_community(reu, verbose)
+      if community:
+        if verbose: print("Updating the REU with zipcode " + zipcode + " to the community " + community.name)
+        reu.community = community
+
+      reu.save()
+      return reu, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
@@ -126,6 +219,7 @@ class UserStore:
     community,err = get_community(community_id)
     
     if not community:
+      print(err)
       return [], None
     return community.userprofile_set.all(), None
 
@@ -248,6 +342,7 @@ class UserStore:
 
         return users, None
       elif not community:
+        print(err)
         return [], None
 
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
@@ -302,7 +397,6 @@ class UserStore:
         #TODO: update action stats
         completed.update(status="TODO")
         return completed.first(), None
- 
       
       # create a new one since we didn't find it existed before
       new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="TODO")

@@ -1,7 +1,9 @@
-from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data
+from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from .utils import find_reu_community
+import zipcodes
 from sentry_sdk import capture_message
 
 class MiscellaneousStore:
@@ -19,8 +21,8 @@ class MiscellaneousStore:
   def backfill(self, context: Context, args) -> (list, CustomMassenergizeError):
     # return self.backfill_teams(context, args)
     # return self.backfill_community_members(context, args)
-    return self.backfill_graph_default_data(context, args)
-    # return self.backfill_real_estate_units(context, args)
+    # return self.backfill_graph_default_data(context, args)
+    return self.backfill_real_estate_units(context, args)
     # return self.backfill_tag_data(context, args)
 
   def backfill_teams(self, context: Context, args) -> (list, CustomMassenergizeError):
@@ -29,7 +31,7 @@ class MiscellaneousStore:
       for team in teams:
         members = team.members.all()
         for member in members:
-          team_member: TeamMembers = TeamMember.objects.filter(user=member, team=team).first()
+          team_member = TeamMember.objects.filter(user=member, team=team).first()
           if team_member:
             team_member.is_admin = False
             team_member.save()
@@ -38,7 +40,7 @@ class MiscellaneousStore:
 
         admins = team.admins.all()
         for admin in admins:
-          team_member: TeamMembers = TeamMember.objects.filter(user=admin, team=team).first()
+          team_member = TeamMember.objects.filter(user=admin, team=team).first()
           if team_member:
             team_member.is_admin = True
             team_member.save()
@@ -104,16 +106,132 @@ class MiscellaneousStore:
 
   def backfill_real_estate_units(self, context: Context, args):
     try:
-      for user_action in UserActionRel.objects.all():
-        if not user_action.real_estate_unit.community:
-          user_action.real_estate_unit.community = user_action.action.community
-        user_action.real_estate_unit.unit_type = (user_action.real_estate_unit.unit_type or 'residential').lower()
-        user_action.real_estate_unit.save()
-        if not user_action.real_estate_unit.community:
-          user_action.real_estate_unit.delete()
+      # BHN - Feb 2021 - assign all real estate units to geographic communities
+      # Set the community of a real estate unit based on the location of the real estate unit.  
+      # This defines what geographic community, if any gets credit
+      # For now, check for zip code
+      print("Number of real estate units:" + str(RealEstateUnit.objects.all().count()))
+      for reu in RealEstateUnit.objects.all():
+        street = unit_number = city = county = state = zip = ""
+        loc = reu.location    # a JSON field
+        zip = None
+        if reu.address and reu.address.zipcode and len(reu.address.zipcode)==5:
+          zip = reu.address.zipcode
+          print("Zip recorded as " + str(zip))
+        elif loc:
+          if not isinstance(loc,str):   
+            # one odd case in dev DB, looked like a Dict
+            print("REU location not a string: "+str(loc)+" Type="+str(type(loc)))
+            loc = loc["street"]
+
+          loc_parts = loc.capitalize().replace(", ", ",").split(',')
+          if len(loc_parts)>= 4:
+            # deal with a couple odd cases
+            if loc.find("Denver")<=0:
+              street = loc_parts[0]
+              city = loc_parts[2]
+              state = loc_parts[3]
+              zip = "80203"
+              print("Denver")
+            else:  
+              street = loc_parts[0]
+              city = loc_parts[1]
+              state = loc_parts[2]
+              zip = loc_parts[3]
+              if not zip or len(zip)!=5:
+                print("Invalid zipcode, setting to 00000")
+                zip = "00000"
+              else:
+                print("Zipcode found "+zip)
+          else:
+            # deal with odd cases which were encountered in the database
+            zip = "00000"
+            state = "MA"      # may be wrong occasionally
+            if loc.find("Wayland")>=0 or loc.find("Fields Lane")>=0:
+              city = "Wayland"
+              zip = "01778"
+            elif loc.find("Concord")>=0:
+              city = "Concord"
+              zip = "01742"
+            elif loc.find("Falmouth")>=0:
+              city = "Falmouth"
+              zip = "02540"
+            elif loc.find("Ithaca")>=0:
+              city = "Ithaca"
+              state = "NY"
+              zip = "14850"
+            elif loc.find("Rochester")>=0:
+              city = "Rochester"
+              state = "NY"
+              zip = "14627"
+            elif loc.find("Whitefield")>=0:
+              city = "Whitefield"
+              state = "NH"
+              zip = "03598"
+            print("Zipcode assigned "+zip)
+          # create the Location for the RealEstateUnit        
+          location_type = 'FULL_ADDRESS'
+          if zip and not street: # and not city and not county and not state:
+            location_type = 'ZIP_CODE_ONLY'
+          elif state and not zip and not city and not county:
+            location_type = 'STATE_ONLY'
+          elif city and not zip and not street:
+            location_type = 'CITY_ONLY'
+          elif county and not city:
+            location_type = 'COUNTY_ONLY'
+
+          newloc, created = Location.objects.get_or_create(
+            location_type = location_type,
+            street = street,
+            unit_number = unit_number,
+            zipcode = zip,
+            city = city,
+            county = county,
+            state = state
+          )
+          if created:
+            print("Location with zipcode "+zip+" created")
+          else:
+            print("Location with zipcode "+zip+" found")
+          print(newloc)
+          reu.address = newloc
+          reu.save()
+          print("REU saved ")
+
+        else:
+          # no location was stored?
+          print("No location recorded for RealEstateUnit "+str(reu))
+          zip = "00000"
+          location_type = "ZIP_CODE_ONLY"
+          newloc, created = Location.objects.get_or_create(
+            location_type = location_type,
+            street = street,
+            unit_number = unit_number,
+            zipcode = zip,
+            city = city,
+            county = county,
+            state = state
+          )
+          if created:
+            print("Location with zipcode "+zip+" created")
+          else:
+            print("Location with zipcode "+zip+" found")
+          print(newloc)
+          reu.address = newloc
+          reu.save()
+
+        # determine which, if any, community this household is actually in
+        community = find_reu_community(reu)
+        if community:
+          print("Adding the REU with zipcode " + zip + " to the community " + community.name)
+          reu.community = community
+
+        elif reu.community:
+          print("REU not located in any community, but was labeled as belonging to the community "+reu.community.name)
+          reu.community = None
+        reu.save()
 
       return {'backfill_real_estate_units': 'done'}, None
-
 
     except Exception as e:
       capture_message(str(e), level="error")

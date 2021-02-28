@@ -1,10 +1,11 @@
-from database.models import Community, UserProfile
+from database.models import Community, UserProfile, RealEstateUnit, Location
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
 from _main_.utils.context import Context
 from django.db.models import Q
 from database.utils.constants import SHORT_STR_LEN
 import requests 
 import json
+import zipcodes
 from sentry_sdk import capture_message
 
 def get_community(community_id=None, subdomain=None):
@@ -116,3 +117,97 @@ def get_new_title(new_community, old_title):
   len_suffix = len(suffix)
   new_title_len = min(len(new_title), SHORT_STR_LEN - len_suffix)
   return new_title[0:new_title_len]+suffix
+
+
+def find_reu_community(reu, verbose=False):
+  """
+  Determine which, if any, community this household is actually in
+  """
+
+  communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
+
+  # heirarchy of communities:
+  # most communities will be Zipcode
+  communities1 = communities.filter(geography_type='ZIPCODE')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
+  communities1 = communities.filter(geography_type='CITY')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
+  communities1 = communities.filter(geography_type='COUNTY')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
+  communities1 = communities.filter(geography_type='STATE')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
+  communities1 = communities.filter(geography_type='COUNTRY')
+  for community in communities1:
+    if is_reu_in_community(reu, community, verbose):
+      return community
+
+  return None
+
+def is_reu_in_community(reu, community, verbose=False):
+  """
+  Determine whether the RealEstateUnit reu is in community
+  """
+
+  if reu.address:
+    zip = reu.address.zipcode
+    if not zip:
+      if verbose: print("RealEstateUnit address doesn't include zipcode")
+      return False
+  else:
+    if verbose: print("RealEstateUnit doesn't have address")
+    return False
+
+  geography_type = community.geography_type
+  reu_community_type = None
+  if reu.community:   # current community REU linked to
+    reu_community_type = reu.community.geography_type
+
+  # loop over the locations linked to in the community, to see if REU is in it
+  for location in community.location_set.all():
+    if geography_type == 'ZIPCODE':
+      if zip==location.zipcode:
+        if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
+        return True
+
+    elif geography_type == 'CITY':
+      # check if reu in city if not within a smaller zipcode based community
+      if reu_community_type != 'ZIPCODE':
+        reu_loc_data = zipcodes.matching(zip)
+        if len(reu_loc_data)>0 and reu_loc_data[0]['city']==location.city: 
+          if verbose: print('Found REU with zipcode '+zip+" within community: "+community.name)
+          return True
+
+    elif geography_type == 'COUNTY':
+      if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY':
+        reu_loc_data = zipcodes.matching(zip)
+        if len(reu_loc_data)>0 and reu_loc_data[0]['county']==location.county:           
+          if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
+          return True
+
+    elif geography_type == 'STATE':
+      if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY':
+        reu_loc_data = zipcodes.matching(zip)
+        if len(reu_loc_data)>0 and reu_loc_data[0]['state']==location.state:           
+          if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
+          return True
+
+    elif geography_type == 'COUNTRY':
+      if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY' and reu_community_type != 'STATE':
+        reu_loc_data = zipcodes.matching(zip)
+        if len(reu_loc_data)>0 and reu_loc_data[0]['country']==location.country:           
+          if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
+          return True
+
+  return False
