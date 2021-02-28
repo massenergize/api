@@ -9,11 +9,12 @@ from django.http import JsonResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import get_request_contents
-from database.models import UserProfile, IpProfile
+from database.models import UserProfile, IpProfile, Location
 from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
 import requests
+from datetime import datetime
 import os
 
 class AuthService:
@@ -73,7 +74,7 @@ class AuthService:
 
 
   
-  def whoami(self, context: Context, IpProfile: ip_user = None):
+  def whoami(self, context: Context, ip_user: IpProfile = None):
     try:
       user_id = context.user_id
       user_email = context.user_email
