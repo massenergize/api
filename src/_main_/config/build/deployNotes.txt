@@ -1,4 +1,2 @@
-Feb 25th Deployment to Dev
-- Keep admin sessions alive
-- Pass back User join date (Admin #151)
-- Do not show unpublished teams except in sandbox
+March 1st Deployment to Dev
+- This works: Keep admin sessions alive by not expiring tokens
