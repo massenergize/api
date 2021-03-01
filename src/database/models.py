@@ -296,8 +296,8 @@ class Community(models.Model):
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
     # 
     # For Wayland launch, insisting that we show large numbers so people feel good about it.
-    goal["attained_number_of_households"] += (RealEstateUnit.objects.filter(community=self).count())
-    goal["attained_number_of_actions"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count())
+    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
     #BHN - TODO
     #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 

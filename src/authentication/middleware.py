@@ -27,7 +27,7 @@ class MassenergizeJWTAuthMiddleware:
 
   def _get_decoded_token(self, token) -> (dict, MassEnergizeAPIError):
     try:
-      payload = jwt.decode(token, SECRET_KEY, algorithm='HS256')
+      payload = jwt.decode(token, SECRET_KEY, algorithm='HS256', options={"verify_exp": False})
       return payload, None
     except jwt.ExpiredSignatureError:
       return None, CustomMassenergizeError('session_expired')
@@ -36,6 +36,7 @@ class MassenergizeJWTAuthMiddleware:
     except jwt.InvalidTokenError:
       return None, CustomMassenergizeError('invalid_token')
     except Exception as e:
+      capture_message(str(e), level="error")
       return None, CustomMassenergizeError('invalid_token')
 
 
