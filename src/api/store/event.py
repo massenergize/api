@@ -118,7 +118,7 @@ class EventStore:
 
       community = args.pop("community_id", None)
       if community:
-        community = Community.objects.get(pk=community)
+        community = Community.objects.filter(pk=community).first()
       
       events.update(**args)
 
@@ -134,6 +134,8 @@ class EventStore:
       
       if community:
         event.community = community
+      else:
+        event.community = None
       
       event.save()
 

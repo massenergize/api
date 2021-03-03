@@ -1,2 +1,2 @@
-Feb 5th Deployment to Dev
-- Frontend Portal #445 - ability to clear team logo
+March 1st Deployment to Dev
+- This works: Keep admin sessions alive by not expiring tokens
