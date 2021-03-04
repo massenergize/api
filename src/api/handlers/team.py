@@ -40,17 +40,17 @@ class TeamHandler(RouteHandler):
     #admin routes
     self.add("/teams.listForCommunityAdmin", self.community_admin_list)
     self.add("/teams.listForSuperAdmin", self.super_admin_list)
-
   
   def info(self, request):
     context: Context = request.context
+    print(context)
     args: dict = context.args
     team_id = args.pop('team_id', None)
 
     if is_value(team_id):
       team_info, err = self.team.get_team_info(context, team_id)
     else:
-      err = CustomMassEnergizeError("No team_id passed to teams.info")
+      err = CustomMassenergizeError("No team_id passed to teams.info")
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

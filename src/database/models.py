@@ -1273,7 +1273,7 @@ class Testimonial(models.Model):
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
-    res["created_at"] = self.created_at
+    res["created_at"] = self.created_at.date()
     res['file'] = get_json_if_not_none(self.image)
     res['tags'] = [t.simple_json() for t in self.tags.all()]
     res['anonymous'] = self.anonymous

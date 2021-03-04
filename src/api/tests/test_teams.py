@@ -1,12 +1,28 @@
 from django.test import TestCase, Client
+from django.conf import settings as django_settings
 from urllib.parse import urlencode
+from _main_.settings import BASE_DIR
+from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import Team, Community, UserProfile, Action, UserActionRel, TeamMember, RealEstateUnit
 from carbon_calculator.models import Action as CCAction
+from _main_.utils.utils import load_json
 
 class TeamsTestCase(TestCase):
-
-  def setUp(self):
+  @classmethod
+  def setUpClass(self):
     self.client = Client()
+
+    print("Running setUpClass")
+    self.client.post('/cc/import',
+            {   "Confirm": "Yes",
+                "Actions":"carbon_calculator/content/Actions.csv",
+                "Questions":"carbon_calculator/content/Questions.csv",
+                "Stations":"carbon_calculator/content/Stations.csv",
+                "Groups":"carbon_calculator/content/Groups.csv",
+                "Organizations":"carbon_calculator/content/Organizations.csv",
+                "Events":"carbon_calculator/content/Events.csv",
+                "Defaults":"carbon_calculator/content/Defaults.csv"
+                })
 
     self.COMMUNITY = Community.objects.create(**{
       'subdomain': 'joshtopia',
@@ -23,7 +39,7 @@ class TeamsTestCase(TestCase):
       'email': 'bar@test.com'
     })
 
-    self.TEAM1 = Team.objects.create(community=self.COMMUNITY, name="Les Montréalais")
+    self.TEAM1 = Team.objects.create(community=self.COMMUNITY, name="Les Montréalais", is_published=True)
     self.TEAM2 = Team.objects.create(community=self.COMMUNITY, name="McGill CS Students")
 
     self.ADMIN1 = TeamMember(team=self.TEAM1, user=self.USER1)
@@ -34,23 +50,76 @@ class TeamsTestCase(TestCase):
     self.ADMIN2.is_admin = True
     self.ADMIN2.save()
 
+    try:
+        self.test_cases = load_json(BASE_DIR + "/api/tests/TestCases.json")
+    except Exception as e:
+        print(str(e))
+      
+  @classmethod
+  def tearDownClass(self):
+    print("tearDownClass")
+
+  def signinAs(self, role):
+    token = self.test_cases.get(role, None)
+    print("Signing in as: "+role)  
+
+    # First try : this doesn't work because the middleware.py doesn't find the cookie
+    response: MassenergizeResponse = MassenergizeResponse()
+    response.delete_cookie("token")
+    if token:
+      MAX_AGE = 10000
+      response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
+
+    # second try
+    #self.client.cookies.load({ "token": token })
+
+
+
+  def setUp(self):
+    # this gets run on every test case
+    pass
 
   def test_info(self):
-    info_response = self.client.post('/v3/teams.info', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
 
+    # first test for no user signed in
+    self.signinAs("")
+
+    # successfully retrieve information about a team that has been published
+    info_response = self.client.post('/v3/teams.info', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(info_response["success"])
+
 
     self.assertEqual(self.TEAM1.name, info_response['data']['name'])
 
+    # don't retrieve information about a team that has not been published
+    info_response = self.client.post('/v3/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(info_response["success"])
+
+    # first test for no user signed in
+    self.signinAs("Cadmin")
+
+    # retrieve information about an unpublished team if you;'re a cadmin
+    info_response = self.client.post('/v3/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    print(info_response)
+    self.assertTrue(info_response["success"])
+
+    # if no ID passed, return error
+    info_response = self.client.post('/v3/teams.info', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(info_response["success"])
+
 
   def test_create(self): # same as add
+
+    # attempt to create team if not signed in
+     
     name = "Foo Bar"
     create_response = self.client.post('/v3/teams.create', urlencode({"community_id": self.COMMUNITY.id, "name": name, "admin_emails": self.USER1.email}), content_type="application/x-www-form-urlencoded").toDict()
 
-    self.assertTrue(create_response["success"])
+    self.assertFalse(create_response["success"])
 
     self.assertEqual(name, create_response['data']['name'])
 
+    # attempt to create team when properly signed in
 
   # TODO: doesn't test providing no community id in order to list the teams for the user only
   # TODO: test published/unpublished teams
