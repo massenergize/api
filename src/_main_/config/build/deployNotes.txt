@@ -1,2 +1,3 @@
-March 1st Deployment to Dev
-- This works: Keep admin sessions alive by not expiring tokens
+March 4th Deployment to Prod
+- Keep admin sessions alive by not expiring tokens
+- Don't show non published sites except sandbox

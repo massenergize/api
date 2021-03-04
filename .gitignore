@@ -15,3 +15,4 @@ src/*.jpeg
 env
 src/Dockerrun.aws.json
 .idea
+src/api/tests/TestCases.json
