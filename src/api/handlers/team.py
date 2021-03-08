@@ -43,7 +43,6 @@ class TeamHandler(RouteHandler):
   
   def info(self, request):
     context: Context = request.context
-    print(context)
     args: dict = context.args
     team_id = args.pop('team_id', None)
 
@@ -108,7 +107,7 @@ class TeamHandler(RouteHandler):
     args['is_published'] = parse_bool(args.pop('is_published', None))   
       
     if is_value(team_id):
-      team_info, err = self.team.update_team(team_id, args)
+      team_info, err = self.team.update_team(context, team_id, args)
     else:
       err = CustomMassenergizeError("No team_id passed to teams.update")
 
