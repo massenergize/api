@@ -123,6 +123,10 @@ class ActionStore:
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
+
+      steps_to_take = args.pop('steps_to_take','')      
+      deep_dive = args.pop('deep_dive','')
+
       calculator_action = args.pop('calculator_action', None)
       action.update(**args)
 
@@ -130,6 +134,12 @@ class ActionStore:
       if image:
         media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
         action.image = media
+      else:
+        action.image = None
+
+
+      action.steps_to_take = steps_to_take
+      action.deep_dive = deep_dive
 
       if tags:
         action.tags.set(tags)
