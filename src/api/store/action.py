@@ -4,7 +4,6 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
-import random
 from sentry_sdk import capture_message
 
 
@@ -102,7 +101,7 @@ class ActionStore:
       new_action = action_to_copy
       new_action.pk = None
       new_action.is_published = False
-      new_action.title = action_to_copy.title + f' Copy {random.randint(1,10000)}'
+      new_action.title = action_to_copy.title + "-Copy"
       new_action.save()
       new_action.tags.set(old_tags)
       new_action.vendors.set(old_vendors)
