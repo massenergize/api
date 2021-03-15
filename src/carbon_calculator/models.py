@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
+#from django.db.models import JSONField
 from django.forms.models import model_to_dict
 from database.utils.constants import SHORT_STR_LEN, TINY_STR_LEN
 from database.utils.common import  json_loader, get_json_if_not_none

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
+#from django.db.models import JSONField
 from database.utils.constants import *
 from datetime import date, datetime
 from django.utils import timezone
@@ -259,6 +260,8 @@ class Community(models.Model):
     null=True, blank=True, related_name='community_logo')
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
+  favicon = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True, related_name='community_favicon')
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
   is_geographically_focused = models.BooleanField(default=False, blank=True)
   location = JSONField(blank=True, null=True)
@@ -281,6 +284,7 @@ class Community(models.Model):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
       'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
     res['logo'] = get_json_if_not_none(self.logo)
+    res['favicon'] = get_json_if_not_none(self.favicon)
     return res
 
   def full_json(self):
@@ -311,6 +315,7 @@ class Community(models.Model):
       "goal": goal,
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
+      "favicon": get_json_if_not_none(self.favicon),
       "location":self.location,
       "is_approved": self.is_approved,
       "is_published": self.is_published,
@@ -1258,7 +1263,7 @@ class Testimonial(models.Model):
     return self.title
 
   def info(self):
-    return model_to_dict(self, include=['id', 'title', 'community'])
+    return model_to_dict(self, fields=['id', 'title', 'community'])
 
   def _get_user_info(self):
     return get_json_if_not_none(self.user) or {
@@ -2007,10 +2012,6 @@ class HomePageSettings(models.Model):
   social_media_links: str
     Links to social media, such as:  ["facebook:www.facebook.com/coolerconcord/,instgram:www.instagram.com/coolerconcord/"]
 
-  for the tab on all pages:
-  -------------------------
-  favicon_image : ForeignKey to Media file for favicon
-
   more_info: JSON - extraneous information
   is_deleted: boolean - whether this page was deleted from the platform (perhaps with it's community)
   is_published: boolean - whether this page is live
@@ -2043,8 +2044,6 @@ class HomePageSettings(models.Model):
   show_footer_social_media = models.BooleanField(default=True, blank=True)
   social_media_links = JSONField(blank=True, null=True)
   
-  favicon_image = models.ForeignKey(Media, related_name='favicon', on_delete=models.SET_NULL, null=True, blank=True)
-
   is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)

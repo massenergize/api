@@ -3,8 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_community_or_die, get_user_or_die, get_new_title
-import random 
+from .utils import get_community_or_die, get_user_or_die, get_new_title 
 from sentry_sdk import capture_message, capture_exception
 
 class CommunityStore:
@@ -19,7 +18,7 @@ class CommunityStore:
       if not community_id and not subdomain:
         return None, CustomMassenergizeError("Missing community_id or subdomain field")
 
-      community: Community = Community.objects.select_related('logo', 'goal').filter(Q(pk=community_id)| Q(subdomain=subdomain)).first()
+      community: Community = Community.objects.select_related('logo', 'favicon', 'goal').filter(Q(pk=community_id)| Q(subdomain=subdomain)).first()
       if not community:
         return None, InvalidResourceError()
 
@@ -88,6 +87,7 @@ class CommunityStore:
     new_community = None
     try:
       logo = args.pop('logo', None)
+      favicon = args.pop('favicon', None)
       new_community = Community.objects.create(**args)
 
       have_address = args.get('is_geographically_focused', False)
@@ -98,6 +98,10 @@ class CommunityStore:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
         new_community.logo = cLogo
+      if favicon:
+        cFav = Media(file=favicon, name=f"{args.get('name', '')} CommunityFavicon")
+        cFav.save()
+        new_community.favicon = cFav
       
       #create a goal for this community
       community_goal = Goal.objects.create(name=f"{new_community.name}-Goal")
@@ -187,13 +191,11 @@ class CommunityStore:
       # 11/1/20 BHN: Add protection against excessive copying in case of too many actions marked as template
       # Also don't copy the ones marked as deleted!
       global_actions = Action.objects.filter(is_deleted=False, is_global=True)
-      count = global_actions.count()
       MAX_TEMPLATE_ACTIONS = 25
       num_copied = 0
 
       actions_copied = set()
       for action_to_copy in global_actions:
-        action_to_copy_id = action_to_copy.id
         old_tags = action_to_copy.tags.all()
         old_vendors = action_to_copy.vendors.all()
         new_action: Action = action_to_copy
@@ -234,6 +236,7 @@ class CommunityStore:
   def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
     try:
       logo = args.pop('logo', None)
+      favicon = args.pop('favicon', None)
       community = Community.objects.filter(id=community_id)
       if not community:
         return None, InvalidResourceError()
@@ -248,6 +251,12 @@ class CommunityStore:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
         new_community.logo = cLogo
+        new_community.save()
+
+      if favicon:   
+        cFavicon = Media(file=favicon, name=f"{args.get('name', '')} CommunityFavicon")
+        cFavicon.save()
+        new_community.favicon = cFavicon
         new_community.save()
 
       return new_community, None

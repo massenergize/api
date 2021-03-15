@@ -34,7 +34,7 @@ class EventService:
     event, err = self.store.rsvp_remove(context, rsvp_id)
     if err:
       return None, err
-    return result, None
+    return event, None
 
   def copy_event(self, context, event_id) -> (dict, MassEnergizeAPIError):
     event, err = self.store.copy_event(context, event_id)

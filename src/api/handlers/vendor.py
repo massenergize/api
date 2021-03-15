@@ -51,7 +51,7 @@ class VendorHandler(RouteHandler):
     args: dict = context.args
     args = rename_field(args, 'vendor_id', 'id')
     args['is_published'] =True
-    vendor_info, err = self.service.update(args)
+    vendor_info, err = self.service.update_vendor(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
