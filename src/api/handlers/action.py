@@ -150,7 +150,6 @@ class ActionHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request): 
     context: Context = request.context
-    #args: dict = context.args
     actions, err = self.service.list_actions_for_super_admin(context)
     if err:
       return err
