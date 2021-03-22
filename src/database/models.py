@@ -1341,7 +1341,9 @@ class UserActionRel(models.Model):
       "user": get_json_if_not_none(self.user),
       "action": get_json_if_not_none(self.action),
       "real_estate_unit": get_json_if_not_none(self.real_estate_unit),
-      "status": self.status
+      "status": self.status,
+      "date_completed": self.date_completed,
+      "carbon_impact": self.carbon_impact
     }
 
   def full_json(self):
