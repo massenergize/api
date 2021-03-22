@@ -12,12 +12,10 @@ class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
 
-  # QUESTION FOR SAM:
-  # These helper routines don't make use of self, should they be member functions as currently implemented, 
-  # or outside the CommunityStore class?
-
   def _check_geography_unique(self, community, geography_type, loc):
-    # ensure that this zip code is not part of another geographic zip code based community
+    """
+    Ensure that the location 'loc' is not part of another geographic community
+    """
     check_communities = Community.objects.filter(is_geographically_focused=True, geography_type=geography_type, is_deleted=False).prefetch_related('location_set')
     for check_community in check_communities:
       if check_community.id == community.id:
@@ -46,7 +44,9 @@ class CommunityStore:
           raise Exception(message)
 
   def _update_locations(self, geography_type, location_set, community):
-        
+    """ 
+    Fill the location_set for an updated geographic community 
+    """    
     # clean up in case there is garbage in there
     if community.location_set:
       community.location_set.clear()
@@ -173,8 +173,10 @@ class CommunityStore:
       # should be a five character string
       community.location_set.add(loc)
 
-    # now this community location has been established, find any real estate units which should be associated with it.
-    # update_real_estate_units(community, location_set)
+  def _update_real_estate_units(self, community):
+    """
+    Find any real estate units which should be associated with this community.
+    """ 
     reus = RealEstateUnit.objects.all().select_related('address')
     print("Updating "+str(reus.count())+" RealEstateUnits")
     
@@ -291,6 +293,7 @@ class CommunityStore:
       if geographic:
         geography_type = args.get('geography_type', None)
         self._update_locations(geography_type, location_set, new_community)
+        self._update_real_estate_units(new_community)
       
       if logo:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
@@ -447,6 +450,7 @@ class CommunityStore:
       if geographic:
         geography_type = args.get('geography_type', None)
         self._update_locations(geography_type, location_set, community)
+        self._update_real_estate_units(community)
 
 
       #new_community = community.first()
