@@ -1,4 +1,4 @@
-from database.models import AboutUsPageSettings, UserProfile
+from database.models import AboutUsPageSettings, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -38,13 +38,23 @@ class AboutUsPageSettingsStore:
   def update_about_us_page_setting(self, args) -> (dict, MassEnergizeAPIError):
     try:
       about_us_page_id= args.get('id', None)
-      if about_us_page_id:
-        actions_page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_id)
-        actions_page_setting.update(**args)
-        if not actions_page_setting:
-          return None, InvalidResourceError()
+      page_image = args.pop('image', None)
 
-        return actions_page_setting.first(), None
+      if about_us_page_id:
+        page_setting = AboutUsPageSettings.objects.filter(id=about_us_page_id)
+        if not page_setting:
+          return None, InvalidResourceError()
+        page_setting.update(**args)
+
+        page_setting = page_setting.first()
+        if page_image:
+          current_image = Media(file=page_image, name=f"AboutUsImage-{page_setting.community.name}", order=1)
+          current_image.save()
+
+          page_setting.images.add(current_image)
+          page_setting.save()
+
+        return page_setting, None
       else:
         return None, CustomMassenergizeError("Please provide an id")
     except Exception as e:
