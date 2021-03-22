@@ -2,6 +2,8 @@ import jwt
 from http.cookies import SimpleCookie
 from datetime import datetime
 from _main_.settings import SECRET_KEY
+from database.models import UserProfile
+
 
 def setupCC(client):
     client.post('/cc/import',
@@ -42,3 +44,13 @@ def signinAs(client, user):
     else:
       print("No user signed in")
       client.cookies = SimpleCookie({'token': ""})
+
+def createUsers():
+
+    user, _ = UserProfile.objects.get_or_create(full_name="Regular User",email="user@test.com")
+
+    cadmin, _ = UserProfile.objects.get_or_create(full_name="Community Admin",email="cadmin@test.com",is_community_admin=True)
+
+    sadmin, _ = UserProfile.objects.get_or_create(full_name="Super Admin",email="sadmin@test.com", is_super_admin=True)
+
+    return user, cadmin, sadmin
