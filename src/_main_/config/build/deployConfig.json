@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.1.12",
-  "BUILD_VERSION_NOTES": "March 1st Deployment to Dev\n- This works: Keep admin sessions alive by not expiring tokens\n"
+  "BUILD_VERSION": "3.1.13",
+  "BUILD_VERSION_NOTES": "March 25th Deployment to Dev\n- Changes for Social Media on homepage\n"
 }

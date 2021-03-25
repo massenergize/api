@@ -1,2 +1,2 @@
-March 1st Deployment to Dev
-- This works: Keep admin sessions alive by not expiring tokens
+March 25th Deployment to Dev
+- Changes for Social Media on homepage
