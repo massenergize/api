@@ -175,7 +175,7 @@ def is_reu_in_community(reu, community, verbose=False):
     reu_community_type = reu.community.geography_type
 
   # loop over the locations linked to in the community, to see if REU is in it
-  for location in community.location_set.all():
+  for location in community.locations.all():
     if geography_type == 'ZIPCODE':
       if zip==location.zipcode:
         if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
@@ -211,3 +211,9 @@ def is_reu_in_community(reu, community, verbose=False):
           return True
 
   return False
+
+def split_location_string(string: loc):
+  """
+  Return the parts of a location string (formerly used for a real estate unit location)
+  """
+  return loc.capitalize().replace(", ", ",").split(",")

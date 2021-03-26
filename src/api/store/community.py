@@ -16,11 +16,11 @@ class CommunityStore:
     """
     Ensure that the location 'loc' is not part of another geographic community
     """
-    check_communities = Community.objects.filter(is_geographically_focused=True, geography_type=geography_type, is_deleted=False).prefetch_related('location_set')
+    check_communities = Community.objects.filter(is_geographically_focused=True, geography_type=geography_type, is_deleted=False).prefetch_related('associated_locatins')
     for check_community in check_communities:
       if check_community.id == community.id:
         continue
-      for location in check_community.location_set.all():
+      for location in check_community.locations.all():
         if geography_type == 'ZIPCODE' and location.zipcode == loc:
           # zip code already used
           message = 'Zipcode %s is already part of another geographic community %s.' % (loc, check_community.name)
@@ -43,16 +43,16 @@ class CommunityStore:
           print(message)
           raise Exception(message)
 
-  def _update_locations(self, geography_type, location_set, community):
+  def _update_locations(self, geography_type, locations, community):
     """ 
-    Fill the location_set for an updated geographic community 
+    Fill the locations for an updated geographic community 
     """    
     # clean up in case there is garbage in there
-    if community.location_set:
-      community.location_set.clear()
+    if community.locations:
+      community.locations.clear()
 
     # this is a list of zipcodes, towns, cities, counties, states        
-    location_list = location_set.replace(", ",",").split(",")  # passed as comma separated list
+    location_list = locations.replace(", ",",").split(",")  # passed as comma separated list
     print("Community includes the following locations :"+str(location_list))
     for location in location_list:
       if geography_type == 'ZIPCODE':
@@ -171,11 +171,13 @@ class CommunityStore:
       else:
         raise Exception("Unexpected geography type: " + str(geography_type))
       # should be a five character string
-      community.location_set.add(loc)
+      community.locations.add(loc)
 
-  def _update_real_estate_units(self, community):
+  def _update_real_estate_units_with_community(self, community):
     """
-    Find any real estate units which should be associated with this community.
+    Utility function used when Community added or updated
+    Find any real estate units in the database which are located in this community,
+    and update the link to the community.
     """ 
     reus = RealEstateUnit.objects.all().select_related('address')
     print("Updating "+str(reus.count())+" RealEstateUnits")
@@ -285,15 +287,15 @@ class CommunityStore:
       # The set of locations (zipcodes, cities, counties, states), stored as Location models, are what determines a boundary for a geograpically focussed community
       # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
       # These we can deal with by having the Location include city and or state fields
-      location_set = args.pop('location_set',None)
+      locations = args.pop('locations',None)
 
       new_community = Community.objects.create(**args)
 
       geographic = args.get('is_geographically_focused', False)
       if geographic:
         geography_type = args.get('geography_type', None)
-        self._update_locations(geography_type, location_set, new_community)
-        self._update_real_estate_units(new_community)
+        self._update_locations(geography_type, locations, new_community)
+        self._update_real_estate_units_with_community(new_community)
       
       if logo:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
@@ -437,7 +439,7 @@ class CommunityStore:
       # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
       # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
       # These we can deal with by having the Location include city and or state fields
-      location_set = args.pop('location_set',None)
+      locations = args.pop('locations',None)
 
       community = Community.objects.filter(id=community_id)
       if not community:
@@ -449,8 +451,8 @@ class CommunityStore:
       geographic = args.get('is_geographically_focused', False)
       if geographic:
         geography_type = args.get('geography_type', None)
-        self._update_locations(geography_type, location_set, community)
-        self._update_real_estate_units(community)
+        self._update_locations(geography_type, locations, community)
+        self._update_real_estate_units_with_community(community)
 
 
       #new_community = community.first()

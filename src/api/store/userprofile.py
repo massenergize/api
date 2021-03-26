@@ -4,7 +4,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
 from sentry_sdk import capture_message
-from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community
+from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community, split_location_string
 import json
 
 class UserStore:
@@ -83,7 +83,7 @@ class UserStore:
         state = address.get('state', '')
       else:
         # get address from location string
-        loc_parts = location.capitalize().replace(" ","").split(',')
+        loc_parts = split_location_string(location)
         street = unit_number = city = county = state = zipcode = None
         if len(loc_parts)>= 4:
           street = loc_parts[0]
@@ -154,7 +154,7 @@ class UserStore:
         state = address.get('state', '')
       else:
         # get address from location string
-        loc_parts = location.capitalize().replace(" ","").split(',')
+        loc_parts = split_location_string(location)
         street = unit_number = city = county = state = zipcode = None
         if len(loc_parts)>= 4:
           street = loc_parts[0]

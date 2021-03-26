@@ -2,7 +2,7 @@ from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMem
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from .utils import find_reu_community
+from .utils import find_reu_community, split_location_string
 import zipcodes
 from sentry_sdk import capture_message
 
@@ -124,7 +124,7 @@ class MiscellaneousStore:
             print("REU location not a string: "+str(loc)+" Type="+str(type(loc)))
             loc = loc["street"]
 
-          loc_parts = loc.capitalize().replace(", ", ",").split(',')
+          loc_parts = split_location_string(loc)
           if len(loc_parts)>= 4:
             # deal with a couple odd cases
             if loc.find("Denver")<=0:

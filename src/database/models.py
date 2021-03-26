@@ -262,6 +262,8 @@ class Community(models.Model):
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
 
   is_geographically_focused = models.BooleanField(default=False, blank=True)
+
+  # deprecated: location of community was originally a JSON string; now defined below in locations (link to Location model)
   location = JSONField(blank=True, null=True)
 
   # new - define the geographic area for a community (zipcodes, towns/cities, counties, states, countries)
@@ -270,8 +272,8 @@ class Community(models.Model):
     choices=CHOICES.get("COMMUNITY_GEOGRAPHY_TYPES", {}).items(), 
     blank=True, null=True)
   
-  # location_set will define the range for geographic communities
-  location_set = models.ManyToManyField(Location, blank=True)
+  # locations defines the range for geographic communities
+  locations = models.ManyToManyField(Location, blank=True)
 
   policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False, blank=True)
@@ -313,7 +315,7 @@ class Community(models.Model):
     #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
     locations = ""
-    for loc in self.location_set.all():
+    for loc in self.locations.all():
       if locations != "":
         locations += ", "
       if self.geography_type == "ZIPCODE":
@@ -350,7 +352,7 @@ class Community(models.Model):
       "more_info": self.more_info,
       "admins": admins,
       "geography_type": self.geography_type,
-      "location_set": locations
+      "locations": locations
     }
 
 

@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='community',
-            name='location_set',
+            name='locations',
             field=models.ManyToManyField(blank=True, to='database.Location'),
         ),
         migrations.AddField(
