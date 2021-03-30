@@ -260,8 +260,21 @@ class Community(models.Model):
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
+
   is_geographically_focused = models.BooleanField(default=False, blank=True)
+
+  # deprecated: location of community was originally a JSON string; now defined below in locations (link to Location model)
   location = JSONField(blank=True, null=True)
+
+  # new - define the geographic area for a community (zipcodes, towns/cities, counties, states, countries)
+  geography_type = models.CharField(
+    max_length=TINY_STR_LEN,
+    choices=CHOICES.get("COMMUNITY_GEOGRAPHY_TYPES", {}).items(), 
+    blank=True, null=True)
+  
+  # locations defines the range for geographic communities
+  locations = models.ManyToManyField(Location, blank=True)
+
   policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False, blank=True)
   accepted_terms_and_conditions = models.BooleanField(default=True)
@@ -301,6 +314,24 @@ class Community(models.Model):
     #BHN - TODO
     #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
+    locations = ""
+    for loc in self.locations.all():
+      if locations != "":
+        locations += ", "
+      if self.geography_type == "ZIPCODE":
+        l = loc.zipcode
+      elif self.geography_type == "CITY":
+        l = loc.city
+      elif self.geography_type == "COUNTY":
+        l = loc.county
+      elif self.geography_type == "STATE":
+        l = loc.state
+      elif self.geography_type == "COUNTRY":
+        l = loc.country
+      else:
+        l=loc.zipcode
+      locations += l
+
     return {
       "id": self.id,
       "name": self.name,
@@ -319,7 +350,9 @@ class Community(models.Model):
       "created_at": self.created_at,
       "updated_at": self.updated_at,
       "more_info": self.more_info,
-      "admins": admins
+      "admins": admins,
+      "geography_type": self.geography_type,
+      "locations": locations
     }
 
 
@@ -352,6 +385,8 @@ class RealEstateUnit(models.Model):
   )
   community = models.ForeignKey(Community, null=True, on_delete=models.SET_NULL, blank=True)
   location = JSONField(blank=True, null=True)
+  # added 1/28/21 - redundant to location, address will have Zip code, defining which community the REU is in
+  address = models.ForeignKey(Location, null=True, on_delete=models.SET_NULL)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -366,7 +401,12 @@ class RealEstateUnit(models.Model):
     return f"{self.community}|{self.unit_type}|{self.name}"
 
   def simple_json(self):
-    return model_to_dict(self)
+    #return model_to_dict(self)
+
+    res =  model_to_dict(self)
+    res['location'] = get_json_if_not_none(self.address)
+    return res
+
 
   def full_json(self):
     return self.simple_json()
@@ -1258,7 +1298,7 @@ class Testimonial(models.Model):
     return self.title
 
   def info(self):
-    return model_to_dict(self, include=['id', 'title', 'community'])
+    return model_to_dict(self, fields=['id', 'title', 'community'])
 
   def _get_user_info(self):
     return get_json_if_not_none(self.user) or {
@@ -2063,9 +2103,18 @@ class HomePageSettings(models.Model):
     goal = get_json_if_not_none(self.community.goal) or {}
     # decision not to include state reported solar
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
-    # 
-    goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").prefetch_related('action__calculator_action')
+    #
+    if self.community.is_geographically_focused: 
+      goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(is_deleted=False, community=self.community).count())
+      done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").prefetch_related('action__calculator_action')
+    else:
+      community_members = CommunityMember.objects.filter(is_deleted=False, community=self.community)\
+                                          .select_related('user')
+      users = [cm.user for cm in community_members]
+      members_count = community_members.count()
+      goal["organic_attained_number_of_households"] = members_count
+      done_actions = UserActionRel.objects.filter(user__in=users, status="DONE").prefetch_related('action__calculator_action')
+
     goal["organic_attained_number_of_actions"] = (done_actions.count())
     carbon_footprint_reduction = 0
     for actionRel in done_actions:

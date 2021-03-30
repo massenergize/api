@@ -29,7 +29,6 @@ class VendorHandler(RouteHandler):
     self.add("/vendors.copy", self.copy)
     self.add("/vendors.delete", self.delete)
     self.add("/vendors.remove", self.delete)
-    self.add("/vendors.publish", self.publish)
 
     #admin routes
     self.add("/vendors.listForCommunityAdmin", self.community_admin_list)
@@ -41,17 +40,6 @@ class VendorHandler(RouteHandler):
     args = context.get_request_body()
     args = rename_field(args, 'vendor_id', 'id')
     vendor_info, err = self.service.get_vendor_info(context, args)
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=vendor_info)
-
-  @admins_only
-  def publish(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    args = rename_field(args, 'vendor_id', 'id')
-    args['is_published'] =True
-    vendor_info, err = self.service.update(args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
@@ -191,7 +179,6 @@ class VendorHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
-    args: dict = context.args
     vendors, err = self.service.list_vendors_for_super_admin(context)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
