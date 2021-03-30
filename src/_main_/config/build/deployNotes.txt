@@ -1,2 +1,2 @@
-March 25th Deployment to Dev
-- Changes for Social Media on homepage
+March 30th Deployment to Dev
+- Update definitions for geographically based communities

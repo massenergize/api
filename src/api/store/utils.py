@@ -212,7 +212,7 @@ def is_reu_in_community(reu, community, verbose=False):
 
   return False
 
-def split_location_string(string: loc):
+def split_location_string(loc):
   """
   Return the parts of a location string (formerly used for a real estate unit location)
   """
