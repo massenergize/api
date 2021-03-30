@@ -2307,6 +2307,36 @@ class VendorsPageSettings(PageSettings):
     db_table = 'vendors_page_settings'
     verbose_name_plural = "VendorsPageSettings"
 
+class EventsPageSettings(PageSettings):
+  """
+  Represents the community's Events page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "EventsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'events_page_settings'
+    verbose_name_plural = "EventsPageSettings"
+
+class TestimonialsPageSettings(PageSettings):
+  """
+  Represents the community's Testimonials page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "TestimonialsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'testimonials_page_settings'
+    verbose_name_plural = "TestimonialsPageSettings"
+
 class Message(models.Model):
   """
   A class used to represent a Message sent on the MassEnergize Platform

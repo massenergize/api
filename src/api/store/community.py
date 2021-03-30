@@ -1,4 +1,6 @@
-from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, 
+  ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, 
+  EventsPageSettings, TestimonialsPageSettings, VendorsPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -9,6 +11,20 @@ from sentry_sdk import capture_message, capture_exception
 class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
+
+  def _clone_page_settings(self, pageSettings, title, community):
+      page = pageSettings.objects.filter(is_template=True).first()
+      if page:
+        page.pk = None
+      else:
+        page = pageSettings.objects.create()
+
+      page.title = title
+      page.community = community
+      page.is_template = False
+      page.save()
+
+      return page
 
   def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -108,39 +124,6 @@ class CommunityStore:
       new_community.goal = community_goal
       new_community.save()
 
-      #now create all the pages
-      aboutUsPage = AboutUsPageSettings.objects.filter(is_template=True).first()
-      if aboutUsPage:
-        aboutUsPage.pk = None
-        aboutUsPage.title = f"About {new_community.name}"
-        aboutUsPage.community = new_community
-        aboutUsPage.is_template = False
-        aboutUsPage.save()
-
-      actionsPage = ActionsPageSettings.objects.filter(is_template=True).first()
-      if actionsPage:
-        actionsPage.pk = None
-        actionsPage.title = f"Actions for {new_community.name}"
-        actionsPage.community = new_community
-        actionsPage.is_template = False
-        actionsPage.save()
-
-      contactUsPage = ContactUsPageSettings.objects.filter(is_template=True).first()
-      if contactUsPage:
-        contactUsPage.pk = None 
-        contactUsPage.title = f"Contact Us - {new_community.name}"
-        contactUsPage.community = new_community
-        contactUsPage.is_template = False
-        contactUsPage.save()
-
-      donatePage = DonatePageSettings.objects.filter(is_template=True).first()
-      if donatePage:
-        donatePage.pk = None 
-        donatePage.title = f"Take Actions - {new_community.name}"
-        donatePage.community = new_community
-        donatePage.is_template = False
-        donatePage.save()
-
       homePage = HomePageSettings.objects.filter(is_template=True).first()
       images = homePage.images.all()
       #TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
@@ -152,23 +135,16 @@ class CommunityStore:
         homePage.save()
         homePage.images.set(images)
     
-      impactPage = ImpactPageSettings.objects.filter(is_template=True).first()
-      if impactPage:
-        impactPage.pk = None 
-        impactPage.title = f"See our Impact - {new_community.name}"
-        impactPage.community = new_community
-        impactPage.is_template = False
-        impactPage.save()
-
-      # by adding TeamsPageSettings - since this doesn't exist for all communities, will it cause a problem? 
-      # Create it when TeamsPageSettings in admin portal
-      teamsPage = TeamsPageSettings.objects.filter(is_template=True).first()
-      if teamsPage:
-        teamsPage.pk = None 
-        teamsPage.title = f"Teams in this community"
-        teamsPage.community = new_community
-        teamsPage.is_template = False
-        teamsPage.save()
+      #now create all the pages
+      aboutUsPage = _clone_page_settings(AboutUsPageSettings, f"About {new_community.name}", new_community)
+      actionsPage = _clone_page_settings(ActionPageSettings, f"Actions for {new_community.name}", new_community)
+      contactUsPage = _clone_page_settings(ContactUsPageSettings, f"Contact Us - {new_community.name}", new_community)
+      donatePage = _clone_page_settings(DonatePageSettings, f"Take Actions - {new_community.name}", new_community)
+      impactPage = _clone_page_settings(ImpactPageSettings, f"See our Impact - {new_community.name}", new_community)
+      teamsPage = _clone_page_settings(TeamsPageSettings, f"Teams in this community", new_community)
+      vendorsPage = _clone_page_settings(VendorsPageSettings, f"Service Providers", new_community)
+      eventsPage = _clone_page_settings(EventsPageSettings, f"Events and Campaigns", new_community)
+      testimonialsPage = _clone_page_settings(TestimonialsPageSettings, f"Testimonials", new_community)
     
       admin_group_name  = f"{new_community.name}-{new_community.subdomain}-Admin-Group"
       comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=new_community)
