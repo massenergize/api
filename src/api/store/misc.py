@@ -190,13 +190,12 @@ class MiscellaneousStore:
             state = state
           )
           if created:
-            print("Location with zipcode "+zip+" created")
+            msg = "Location with zipcode %s created: location_type=%s street=%s unit_number=%s city=%s county=%s state=%s" % (zip, location_type, street, unit_number, city, county, state)
+            print()
           else:
             print("Location with zipcode "+zip+" found")
-          print(newloc)
           reu.address = newloc
           reu.save()
-          print("REU saved ")
 
         else:
           # no location was stored?
@@ -216,7 +215,6 @@ class MiscellaneousStore:
             print("Location with zipcode "+zip+" created")
           else:
             print("Location with zipcode "+zip+" found")
-          print(newloc)
           reu.address = newloc
           reu.save()
 
