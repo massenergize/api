@@ -16,7 +16,7 @@ class CommunityStore:
     """
     Ensure that the location 'loc' is not part of another geographic community
     """
-    check_communities = Community.objects.filter(is_geographically_focused=True, geography_type=geography_type, is_deleted=False).prefetch_related('associated_locatins')
+    check_communities = Community.objects.filter(is_geographically_focused=True, geography_type=geography_type, is_deleted=False).prefetch_related('locations')
     for check_community in check_communities:
       if check_community.id == community.id:
         continue
