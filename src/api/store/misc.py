@@ -141,6 +141,25 @@ class MiscellaneousStore:
                 state = loc_parts[3]
                 zip = "80203"
                 print("Denver - bogus address")
+              # six early cases from summer Prod db
+              elif userProfile.email == "kaat@transitionwayland.org":
+                city = "Wayland"
+                zip = "01778"
+              elif userProfile.email == "philposner25@gmail.com":
+                city = "Concord"
+                zip = "01742"
+              elif userProfile.email == "ellie.goldberg@gmail.com":
+                city = "Newton"
+                zip = "02459"
+              elif userProfile.email == "dbkmerritt@gmail.com":
+                city = "Framingham"
+                zip = "01702"
+              elif userProfile.email == "events@greennewton.org":
+                city = "Newton"
+                zip = "02459"
+              elif userProfile.email == "fdavis@tiac.net":
+                city = "Medfield"
+                zip = "02052"
               else:  
                 street = loc_parts[0]
                 city = loc_parts[1]
@@ -150,10 +169,10 @@ class MiscellaneousStore:
                   print("Invalid zipcode: "+zip+", setting to 00000")
                   zip = "00000"
             else:
-              # deal with odd cases which were encountered in the database
+              # deal with odd cases which were encountered in the dev database
               zip = "00000"
               state = "MA"      # may be wrong occasionally
-              if loc.find("Wayland")>=0 or loc.find("Fields Lane")>=0:
+              if loc.find("Wayland")>=0 or loc.find("wayland")>=0 or loc.find("Fields Lane")>=0:
                 city = "Wayland"
                 zip = "01778"
               elif loc.find("Concord")>=0:
@@ -174,6 +193,7 @@ class MiscellaneousStore:
                 city = "Whitefield"
                 state = "NH"
                 zip = "03598"
+              
               print("Zipcode assigned "+zip)
 
             # create the Location for the RealEstateUnit        
@@ -200,10 +220,8 @@ class MiscellaneousStore:
             reu.save()
   
           else:
-            # no location was stored?  
-            print("No location recorded for RealEstateUnit "+str(reu))
   
-            # fixes for some missing addresses in Prod DB
+            # fixes for some missing addresses in summer Prod DB
             zip = "00000"
             cn = ""
             if userProfile.communities:
@@ -219,7 +237,32 @@ class MiscellaneousStore:
               zip = "01742"
             elif cn == "Green Newton":
               zip = "02460"
-            
+            elif userProfile.email == "kaat@transitionwayland.org":
+              city = "Wayland"
+              zip = "01778"
+            elif userProfile.email == "philposner25@gmail.com":
+              city = "Concord"
+              zip = "01742"
+            elif userProfile.email == "ellie.goldberg@gmail.com":
+              city = "Newton"
+              zip = "02459"
+            elif userProfile.email == "dbkmerritt@gmail.com":
+              city = "Framingham"
+              zip = "01702"
+            elif userProfile.email == "events@greennewton.org":
+              city = "Newton"
+              zip = "02459"
+            elif userProfile.email == "fdavis@tiac.net":
+              city = "Medfield"
+              zip = "02052"
+            elif userProfile.email == "bradhn@mindspring.com":
+              city = "Concord"
+              zip = "01742"
+
+            # no location was stored?  
+            if zip=="00000":
+              print("No location found for RealEstateUnit "+str(reu))
+
             location_type = "ZIP_CODE_ONLY"
             newloc, created = Location.objects.get_or_create(
               location_type = location_type,

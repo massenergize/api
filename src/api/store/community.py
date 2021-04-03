@@ -217,27 +217,56 @@ class CommunityStore:
     Find any real estate units in the database which are located in this community,
     and update the link to the community.
     """ 
+    userProfiles = UserProfile.objects.prefetch_related('real_estate_units').filter(is_deleted=False)
     reus = RealEstateUnit.objects.all().select_related('address')
     print("Updating "+str(reus.count())+" RealEstateUnits")
     
-    for reu in reus:
-      if reu.address:
-        zip = reu.address.zipcode
-        if not isinstance(zip,str) or len(zip)!=5:
-          print("REU invalid zipcode: address = "+str(reu.address))
-          zip = "00000"
-          reu.address.zipcode = zip
-        
-        if is_reu_in_community(reu, community):
-          print("Adding the REU with zipcode " + zip + " to the community " + community.name)
-          reu.community = community
-          reu.save()
+    # loop over profiles and realEstateUnits associated with them
+    for userProfile in userProfiles:
 
-        elif reu.community and reu.community.id == community.id:
-          # this could be the case if the community was made smaller
-          print("REU not located in this community, but was labeled as belonging to the community")
-          reu.community = None
-          reu.save()
+      for reu in userProfile.real_estate_units.all():
+        if reu.address:
+          zip = reu.address.zipcode
+          if not isinstance(zip,str) or len(zip)!=5:
+            address_string = str(reu.address)
+            print("REU invalid zipcode: address = "+address_string)
+
+            # temporary fix
+            if address_string.find("carlisle")>=0:
+              zip = "01741"
+              city = "Carlisle"
+            elif address_string.find("wayland")>=0:
+              zip = "01778"
+              city = "Wayland"
+            elif address_string.find("sudbury")>=0:
+              zip = "01776"                
+              city = "Sudbury"
+            elif address_string.find("framingham")>=0:
+              zip = "01701"  
+              city = "Framingham"
+            elif address_string.find("waban")>=0:
+              zip = "02461"
+              city = "Newton"
+            elif address_string.find("newtonville")>=0:
+              zip = "02456"
+              city = "Newton"
+            else:              
+              zip = "00000"
+              
+            reu.address.zipcode = zip
+            reu.address.city = city
+            reu.address.save()
+
+          if is_reu_in_community(reu, community):
+            print("Adding the REU with zipcode " + zip + " to the community " + community.name)
+            reu.community = community
+            reu.save()
+
+          elif reu.community and reu.community.id == community.id:
+            # this could be the case if the community was made smaller
+            print("REU not located in this community, but was labeled as belonging to the community")
+            reu.community = None
+            reu.save()
   
   def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
