@@ -3,7 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_community_or_die, get_user_or_die, get_new_title, is_reu_in_community
+from .utils import get_community_or_die, get_user_or_die, get_new_title, is_reu_in_community, check_location
 import random
 import zipcodes
 from sentry_sdk import capture_message, capture_exception

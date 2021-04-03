@@ -43,6 +43,8 @@ class Location(models.Model):
   is_deleted = models.BooleanField(default=False, blank=True)
   state = models.CharField(max_length=SHORT_STR_LEN, 
     choices = ZIP_CODE_AND_STATES.items(), blank=True)
+  country = models.CharField(max_length=SHORT_STR_LEN, 
+    default="US", blank=True)
   more_info = JSONField(blank=True, null=True)
 
   def __str__(self):
@@ -51,9 +53,11 @@ class Location(models.Model):
     elif self.location_type == 'ZIP_CODE_ONLY':
       return self.zipcode
     elif self.location_type == 'CITY_ONLY':
-      return self.city
+      return '%s-%s' % (self.city, self.state)
     elif self.location_type == 'COUNTY_ONLY':
-      return self.county 
+      return '%s-%s' % (self.county, self.state)
+    elif self.location_type == 'COUNTRY_ONLY':
+      return self.country 
     elif self.location_type == 'FULL_ADDRESS':
       return '%s, %s, %s, %s, %s' % (
         self.street, self.unit_number, self.city, self.county, self.state
