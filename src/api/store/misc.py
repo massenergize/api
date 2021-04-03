@@ -2,6 +2,7 @@ from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMem
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from database.utils.common import json_loader
 from .utils import find_reu_community, split_location_string, check_location
 from sentry_sdk import capture_message
 
@@ -104,6 +105,7 @@ class MiscellaneousStore:
 
 
   def backfill_real_estate_units(self, context: Context, args):
+    ZIPCODE_FIXES = json_loader('api/store/ZIPCODE_FIXES.json')
     try:
       # BHN - Feb 2021 - assign all real estate units to geographic communities
       # Set the community of a real estate unit based on the location of the real estate unit.  
@@ -111,13 +113,13 @@ class MiscellaneousStore:
       # For now, check for zip code
       reu_all = RealEstateUnit.objects.all()   
       print("Number of real estate units:" + str(reu_all.count()))
-      print("Number of real estate units non deleted:" + str(reu_all.filter(is_deleted=False).count()))
 
       userProfiles = UserProfile.objects.prefetch_related('real_estate_units').filter(is_deleted=False)
       print("number of user profiles:" + str(userProfiles.count()))
 
       # loop over profiles and realEstateUnits associated with them
       for userProfile in userProfiles:
+        user = userProfile.email
         msg = "User: %s (%s) - %s" % (userProfile.full_name, userProfile.email, userProfile.created_at.strftime("%Y-%m-%d"))
         print(msg)
 
@@ -134,32 +136,16 @@ class MiscellaneousStore:
   
             loc_parts = split_location_string(loc)
             if len(loc_parts)>= 4:
-              # deal with a couple odd cases
+              # deal with one odd case
               if loc_parts[2].find("Denver")>=0:
                 street = loc_parts[0]
                 city = loc_parts[2]
                 state = loc_parts[3]
                 zip = "80203"
-                print("Denver - bogus address")
               # six early cases from summer Prod db
-              elif userProfile.email == "kaat@transitionwayland.org":
-                city = "Wayland"
-                zip = "01778"
-              elif userProfile.email == "philposner25@gmail.com":
-                city = "Concord"
-                zip = "01742"
-              elif userProfile.email == "ellie.goldberg@gmail.com":
-                city = "Newton"
-                zip = "02459"
-              elif userProfile.email == "dbkmerritt@gmail.com":
-                city = "Framingham"
-                zip = "01702"
-              elif userProfile.email == "events@greennewton.org":
-                city = "Newton"
-                zip = "02459"
-              elif userProfile.email == "fdavis@tiac.net":
-                city = "Medfield"
-                zip = "02052"
+              elif userProfile.email in ZIPCODE_FIXES:
+                zip = ZIPCODE_FIXES[user]["zipcode"]
+                city = ZIPCODE_FIXES[user]["city"]
               else:  
                 street = loc_parts[0]
                 city = loc_parts[1]
@@ -172,27 +158,11 @@ class MiscellaneousStore:
               # deal with odd cases which were encountered in the dev database
               zip = "00000"
               state = "MA"      # may be wrong occasionally
-              if loc.find("Wayland")>=0 or loc.find("wayland")>=0 or loc.find("Fields Lane")>=0:
-                city = "Wayland"
-                zip = "01778"
-              elif loc.find("Concord")>=0:
-                city = "Concord"
-                zip = "01742"
-              elif loc.find("Falmouth")>=0:
-                city = "Falmouth"
-                zip = "02540"
-              elif loc.find("Ithaca")>=0:
-                city = "Ithaca"
-                state = "NY"
-                zip = "14850"
-              elif loc.find("Rochester")>=0:
-                city = "Rochester"
-                state = "NY"
-                zip = "14627"
-              elif loc.find("Whitefield")>=0:
-                city = "Whitefield"
-                state = "NH"
-                zip = "03598"
+              for entry in ZIPCODE_FIXES:
+                if loc.find(entry)>=0:
+                  zip = ZIPCODE_FIXES[entry]["zipcode"]
+                  city = ZIPCODE_FIXES[entry]["city"]
+                  state = ZIPCODE_FIXES[entry].get("state","MA")
               
               print("Zipcode assigned "+zip)
 
@@ -228,36 +198,13 @@ class MiscellaneousStore:
               cn = userProfile.communities.first().name
             elif reu.community:
               cn = reu.community.name
-              
-            if cn=="Energize Wayland":
-              zip = "01778"
-            elif cn=="Energize Framingham":
-              zip = "01701"
-            elif cn == "Cooler Concord":
-              zip = "01742"
-            elif cn == "Green Newton":
-              zip = "02460"
-            elif userProfile.email == "kaat@transitionwayland.org":
-              city = "Wayland"
-              zip = "01778"
-            elif userProfile.email == "philposner25@gmail.com":
-              city = "Concord"
-              zip = "01742"
-            elif userProfile.email == "ellie.goldberg@gmail.com":
-              city = "Newton"
-              zip = "02459"
-            elif userProfile.email == "dbkmerritt@gmail.com":
-              city = "Framingham"
-              zip = "01702"
-            elif userProfile.email == "events@greennewton.org":
-              city = "Newton"
-              zip = "02459"
-            elif userProfile.email == "fdavis@tiac.net":
-              city = "Medfield"
-              zip = "02052"
-            elif userProfile.email == "bradhn@mindspring.com":
-              city = "Concord"
-              zip = "01742"
+
+            if cn in ZIPCODE_FIXES:  
+              zip = ZIPCODE_FIXES[cn]["zipcode"]
+              city = ZIPCODE_FIXES[cn]["city"]
+            elif user in ZIPCODE_FIXES:
+              zip = ZIPCODE_FIXES[user]["zipcode"]
+              city = ZIPCODE_FIXES[user]["city"]
 
             # no location was stored?  
             if zip=="00000":

@@ -4,6 +4,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die, get_new_title, is_reu_in_community, check_location
+from database.utils.common import json_loader
 import random
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
@@ -209,14 +210,15 @@ class CommunityStore:
       else:
         raise Exception("Unexpected geography type: " + str(geography_type))
       # should be a five character string
-      community.locations.add(loc)
-
+      community.locations.add(loc) 
+  
   def _update_real_estate_units_with_community(self, community):
     """
     Utility function used when Community added or updated
     Find any real estate units in the database which are located in this community,
     and update the link to the community.
     """ 
+    ZIPCODE_FIXES = json_loader('api/store/ZIPCODE_FIXES.json')
     userProfiles = UserProfile.objects.prefetch_related('real_estate_units').filter(is_deleted=False)
     reus = RealEstateUnit.objects.all().select_related('address')
     print("Updating "+str(reus.count())+" RealEstateUnits")
@@ -231,28 +233,14 @@ class CommunityStore:
             address_string = str(reu.address)
             print("REU invalid zipcode: address = "+address_string)
 
-            # temporary fix
-            if address_string.find("carlisle")>=0:
-              zip = "01741"
-              city = "Carlisle"
-            elif address_string.find("wayland")>=0:
-              zip = "01778"
-              city = "Wayland"
-            elif address_string.find("sudbury")>=0:
-              zip = "01776"                
-              city = "Sudbury"
-            elif address_string.find("framingham")>=0:
-              zip = "01701"  
-              city = "Framingham"
-            elif address_string.find("waban")>=0:
-              zip = "02461"
-              city = "Newton"
-            elif address_string.find("newtonville")>=0:
-              zip = "02456"
-              city = "Newton"
-            else:              
-              zip = "00000"
-              
+            zip = "00000"
+            for loc in ZIPCODE_FIXES:
+              # temporary fixing known address problems in the database
+              if address_string.find(loc)>=0:
+                zip = ZIPCODE_FIXES[loc]["zipcode"]
+                city = ZIPCODE_FIXES[loc]["city"]
+                break
+
             reu.address.zipcode = zip
             reu.address.city = city
             reu.address.save()
