@@ -135,7 +135,7 @@ class MiscellaneousStore:
             loc_parts = split_location_string(loc)
             if len(loc_parts)>= 4:
               # deal with a couple odd cases
-              if loc.find("Denver")>=0:
+              if loc_parts[2].find("Denver")>=0:
                 street = loc_parts[0]
                 city = loc_parts[2]
                 state = loc_parts[3]
@@ -146,11 +146,9 @@ class MiscellaneousStore:
                 city = loc_parts[1]
                 state = loc_parts[2]
                 zip = loc_parts[3].strip()
-                if not zip or len(zip)!=5:
+                if not zip or (len(zip)!=5 and len(zip)!=10):
                   print("Invalid zipcode: "+zip+", setting to 00000")
                   zip = "00000"
-                else:
-                  print("Valid zipcode found "+zip)
             else:
               # deal with odd cases which were encountered in the database
               zip = "00000"
@@ -205,7 +203,23 @@ class MiscellaneousStore:
             # no location was stored?  
             print("No location recorded for RealEstateUnit "+str(reu))
   
+            # fixes for some missing addresses in Prod DB
             zip = "00000"
+            cn = ""
+            if userProfile.communities:
+              cn = userProfile.communities.first().name
+            elif reu.community:
+              cn = reu.community.name
+              
+            if cn=="Energize Wayland":
+              zip = "01778"
+            elif cn=="Energize Framingham":
+              zip = "01701"
+            elif cn == "Cooler Concord":
+              zip = "01742"
+            elif cn == "Green Newton":
+              zip = "02460"
+            
             location_type = "ZIP_CODE_ONLY"
             newloc, created = Location.objects.get_or_create(
               location_type = location_type,

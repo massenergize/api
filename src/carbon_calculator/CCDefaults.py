@@ -29,10 +29,10 @@ class CCD():
 
     DefaultsByLocality = {"default":{}} # the class variable
     try:
-        num = CalcDefault.objects.all().count()
+        cq = CalcDefault.objects.all()
+        num = cq.count()
         msg = "Initializing %d Carbon Calc defaults from db" % num
         print(msg)
-        cq = CalcDefault.objects.all()
         for c in cq:
             # valid date is 0 if not specified
             date = '2000-01-01'
@@ -66,7 +66,8 @@ class CCD():
                     DefaultsByLocality[c.locality][c.variable]["values"].append(c.value)
 
 
-    except:
+    except Exception as e:
+        print(str(e))
         print("CalcDefault initialization skipped")
 
     def __init__(self):

@@ -238,10 +238,6 @@ class CommunityStore:
           print("REU not located in this community, but was labeled as belonging to the community")
           reu.community = None
           reu.save()
-
-      else:
-        print("RealEstateUnit without address - do backfill first")
-        print(reu.location)
   
   def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
