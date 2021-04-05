@@ -30,9 +30,9 @@ class DownloadStore:
     
     self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
-    self.community_info_columns = ['name', 'members_count', 'households_count', 'total_households_count', 'teams_count', 'total_yearly_lbs_carbon', 'total_actions_done','actions_done', 'actions_per_member', 'testimonials_count',
+    self.community_info_columns = ['name', 'location', 'members_count', 'households_count', 'total_households_count', 'teams_count', 'total_yearly_lbs_carbon', 'total_actions_done','actions_done', 'actions_per_member', 'testimonials_count',
     'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_impact_action'] \
-    + [category.name + " (reported)" for category in self.action_categories] + ['actions_done_with_reported', 'households_count_with_reported']
+    + [category.name + " (reported)" for category in self.action_categories]        #  + ['actions_done_with_reported', 'households_count_with_reported']
 
 
   def _get_cells_from_dict(self, columns, data):
@@ -201,11 +201,20 @@ class DownloadStore:
 
 
   def _get_community_info_cells(self, community):
+
+    location_string = ''
+    if community.is_geographically_focused:
+      location_string += '['
+      for loc in community.locations.all():
+        if location_string != '[':
+          location_string += ','        
+        location_string += str(loc)
+      location_string += ']'
+
     community_members = CommunityMember.objects.filter(is_deleted=False, community=community)\
                                           .select_related('user')
     users = [cm.user for cm in community_members]
     members_count = community_members.count()
-    households_count = str(RealEstateUnit.objects.filter(is_deleted=False, community=community).count())
     teams_count = str(Team.objects.filter(is_deleted=False, community=community).count())
     events_count = str(Event.objects.filter(is_deleted=False, community=community).count())
     testimonials_count = str(Testimonial.objects.filter(is_deleted=False, community=community).count())
@@ -214,10 +223,14 @@ class DownloadStore:
 
     if community.is_geographically_focused:
       # geographic focus - actions take place where real estate units are located
-      done_action_rels = UserActionRel.objects.filter(action__in=actions, real_estate_unit__community=community, is_deleted=False, status='DONE').select_related('action__calculator_action')
+      households_count = str(RealEstateUnit.objects.filter(is_deleted=False, community=community).count())
+      #done_action_rels = UserActionRel.objects.filter(action__in=actions, real_estate_unit__community=community, is_deleted=False, status='DONE').select_related('action__calculator_action')
+      done_action_rels = UserActionRel.objects.filter(real_estate_unit__community=community, is_deleted=False, status='DONE').select_related('action__calculator_action')
     else:
       # non-geographic focus - actions attributed to any community members
-      done_action_rels = UserActionRel.objects.filter(action__in=actions, user__in=users,  is_deleted=False, status='DONE').select_related('action__calculator_action')
+      households_count = sum([user.real_estate_units.count() for user in users])
+      #done_action_rels = UserActionRel.objects.filter(action__in=actions, user__in=users,  is_deleted=False, status='DONE').select_related('action__calculator_action')
+      done_action_rels = UserActionRel.objects.filter(user__in=users,  is_deleted=False, status='DONE').select_related('action__calculator_action')
 
     actions_done = len(done_action_rels)
     total_carbon_points = sum([action_rel.action.calculator_action.average_points
@@ -235,7 +248,8 @@ class DownloadStore:
     highest_impact_action = actions_by_impact[0] if actions_done > 0 and len(actions_by_impact) > 0 else ''
     second_highest_impact_action = actions_by_impact[1] if actions_done > 0 and len(actions_by_impact) > 1 else ''
     community_cells = {
-      'name': community.name, 'members_count': str(members_count), 'households_count': households_count,
+      'name': community.name, 'location': location_string, 
+      'members_count': str(members_count), 'households_count': households_count,
       'teams_count' : teams_count, 'total_yearly_lbs_carbon' : total_carbon_points,
       'actions_done': str(actions_done), 'actions_per_member': actions_per_member,
       'testimonials_count' : testimonials_count, 'events_count': events_count,
