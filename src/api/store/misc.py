@@ -137,13 +137,7 @@ class MiscellaneousStore:
             loc_parts = split_location_string(loc)
             if len(loc_parts)>= 4:
               # deal with one odd case
-              if loc_parts[2].find("Denver")>=0:
-                street = loc_parts[0]
-                city = loc_parts[2]
-                state = loc_parts[3]
-                zip = "80203"
-              # six early cases from summer Prod db
-              elif userProfile.email in ZIPCODE_FIXES:
+              if userProfile.email in ZIPCODE_FIXES:
                 zip = ZIPCODE_FIXES[user]["zipcode"]
                 city = ZIPCODE_FIXES[user]["city"]
               else:  
@@ -256,7 +250,7 @@ class MiscellaneousStore:
             home_energy_data.save()
             data.delete()
 
-      return {'backfill_real_estate_units': 'done'}, None
+      return {'backfill_tag_data': 'done'}, None
 
 
     except Exception as e:
