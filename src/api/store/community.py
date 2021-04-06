@@ -1,4 +1,7 @@
-from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings,  ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, EventsPageSettings, TestimonialsPageSettings, VendorsPageSettings, Goal, CommunityAdminGroup
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, \
+  ActivityLog, AboutUsPageSettings,  ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, \
+  HomePageSettings, ImpactPageSettings, TeamsPageSettings, EventsPageSettings, TestimonialsPageSettings, \
+  VendorsPageSettings, Goal, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -6,23 +9,27 @@ from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die, get_new_title 
 from sentry_sdk import capture_message, capture_exception
 
+def _clone_page_settings(pageSettings, title, community):
+    """
+    Clone fht page settings for a new community from a template
+    """
+    page = pageSettings.objects.filter(is_template=True).first()
+    if page:
+        page.pk = None
+    else:
+        page = pageSettings.objects.create()
+
+    page.title = title
+    page.community = community
+    page.is_template = False
+    page.save()
+
+    return page
+
 class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
 
-  def _clone_page_settings(self, pageSettings, title, community):
-      page = pageSettings.objects.filter(is_template=True).first()
-      if page:
-        page.pk = None
-      else:
-        page = pageSettings.objects.create()
-
-      page.title = title
-      page.community = community
-      page.is_template = False
-      page.save()
-
-      return page
 
   def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -134,15 +141,24 @@ class CommunityStore:
         homePage.images.set(images)
     
       #now create all the pages
-      aboutUsPage = _clone_page_settings(AboutUsPageSettings, f"About {new_community.name}", new_community)
-      actionsPage = _clone_page_settings(ActionPageSettings, f"Actions for {new_community.name}", new_community)
-      contactUsPage = _clone_page_settings(ContactUsPageSettings, f"Contact Us - {new_community.name}", new_community)
-      donatePage = _clone_page_settings(DonatePageSettings, f"Take Actions - {new_community.name}", new_community)
-      impactPage = _clone_page_settings(ImpactPageSettings, f"See our Impact - {new_community.name}", new_community)
-      teamsPage = _clone_page_settings(TeamsPageSettings, f"Teams in this community", new_community)
-      vendorsPage = _clone_page_settings(VendorsPageSettings, f"Service Providers", new_community)
-      eventsPage = _clone_page_settings(EventsPageSettings, f"Events and Campaigns", new_community)
-      testimonialsPage = _clone_page_settings(TestimonialsPageSettings, f"Testimonials", new_community)
+      if not _clone_page_settings(AboutUsPageSettings, f"About {new_community.name}", new_community):
+        raise("Failed to clone settings for AboutUs page")
+      if not _clone_page_settings(ActionsPageSettings, f"Actions for {new_community.name}", new_community):
+        raise("Failed to clone settings for Actions page")
+      if not _clone_page_settings(ContactUsPageSettings, f"Contact Us - {new_community.name}", new_community):
+        raise("Failed to clone settings for ContactUs page")
+      if not _clone_page_settings(DonatePageSettings, f"Take Actions - {new_community.name}", new_community):
+        raise("Failed to clone settings for Donate page")
+      if not _clone_page_settings(ImpactPageSettings, f"See our Impact - {new_community.name}", new_community):
+        raise("Failed to clone settings for Impact page")
+      if not _clone_page_settings(TeamsPageSettings, f"Teams in this community", new_community):
+        raise("Failed to clone settings for Teams page")
+      if not _clone_page_settings(VendorsPageSettings, f"Service Providers", new_community):
+        raise("Failed to clone settings for Vendors page")
+      if not _clone_page_settings(EventsPageSettings, f"Events and Campaigns", new_community):
+        raise("Failed to clone settings for Events page")
+      if not _clone_page_settings(TestimonialsPageSettings, f"Testimonials", new_community):
+        raise("Failed to clone settings for Testimonials page")
     
       admin_group_name  = f"{new_community.name}-{new_community.subdomain}-Admin-Group"
       comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=new_community)
