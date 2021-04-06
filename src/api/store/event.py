@@ -212,7 +212,6 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-
   def rsvp_update(self, context: Context, event_id, status) -> (dict, MassEnergizeAPIError):
     try:
       args: dict = context.args
