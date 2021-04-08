@@ -3,10 +3,8 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.db.models import Q
 from _main_.utils.context import Context
-from random import randint
 from sentry_sdk import capture_message
 from .utils import get_user_or_die
-
 
 class EventStore:
   def __init__(self):
@@ -33,7 +31,7 @@ class EventStore:
       old_tags = event_to_copy.tags.all()
       event_to_copy.pk = None
       new_event = event_to_copy 
-      new_event.name = f"{event_to_copy.name}-Copy-{randint(1, 1000)}"
+      new_event.name = event_to_copy.name + "-Copy"
       new_event.is_published=False
       new_event.start_date_and_time = event_to_copy.start_date_and_time
       new_event.end_date_and_time = event_to_copy.end_date_and_time
@@ -200,6 +198,7 @@ class EventStore:
 
   def rsvp(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
     try:
+      args: dict = context.args
       user = get_user_or_die(context, args)
       event = Event.objects.filter(pk=event_id).first()
       if not event:
@@ -213,26 +212,9 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-
-  def rsvp(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+  def rsvp_update(self, context: Context, event_id, status) -> (dict, MassEnergizeAPIError):
     try:
-      user = get_user_or_die(context, args)
-      event = Event.objects.filter(pk=event_id).first()
-      if not event:
-        return None, InvalidResourceError()
-
-      event_attendee = EventAttendee.objects.create(
-        event=event, attendee=user, status="RSVP")
-
-      return event_attendee, None
-      
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
-
-
-  def rsvp_update(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
-    try:
+      args: dict = context.args
       user = get_user_or_die(context, args)
       event = Event.objects.filter(pk=event_id).first()
       if not event:

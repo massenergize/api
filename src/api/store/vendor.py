@@ -2,13 +2,11 @@ from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
-import random
 from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
-
 
 class VendorStore:
   def __init__(self):
@@ -181,7 +179,7 @@ class VendorStore:
       vendor.pk = None
       vendor.is_published = False
       vendor.is_verified = False
-      vendor.name = f"{vendor.name}-Copy-{random.randint(1,100000)}"
+      vendor.name = vendor.name + "-Copy"
       vendor.save()
       return vendor, None
     except Exception as e:

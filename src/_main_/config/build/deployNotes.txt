@@ -1,2 +1,4 @@
-March 1st Deployment to Dev
-- This works: Keep admin sessions alive by not expiring tokens
+April 8th Deployment to Dev
+- Customizable page settings by community
+- Updated definitions for geographically based communities
+

@@ -16,3 +16,4 @@ env
 src/Dockerrun.aws.json
 .idea
 src/api/tests/TestCases.json
+src/api/store/ZIPCODE_FIXES.json

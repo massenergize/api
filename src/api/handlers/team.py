@@ -123,7 +123,7 @@ class TeamHandler(RouteHandler):
     if is_value(team_id):
       team_info, err = self.team.delete_team(team_id)
     else:
-      err = CustomMassEnergizeError("No team_id passed to teams.delete")
+      err = CustomMassenergizeError("No team_id passed to teams.delete")
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

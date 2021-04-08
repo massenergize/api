@@ -1,10 +1,63 @@
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import F
 from sentry_sdk import capture_message
-from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups
+from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community, split_location_string, check_location
+import json
+
+def _get_or_create_reu_location(args, user=None):
+  unit_type=args.pop('unit_type', None)
+  location=args.pop('location', None)
+
+  # this address location now will contain the parsed address      
+  address = args.pop('address', None)      
+  if address:
+    # address passed as a JSON string    
+    address = json.loads(address)
+    street = address.get('street', '')
+    unit_number = address.get('unit_number', '')
+    zipcode = address.get('zipcode', '')
+    city = address.get('city', '')
+    county = address.get('county', '')
+    state = address.get('state', '')
+    country = address.get('country','US')
+  else:
+    # Legacy: get address from location string
+    loc_parts = split_location_string(location)
+    street = unit_number = city = county = state = zipcode = None
+    if len(loc_parts)>= 4:
+      street = loc_parts[0]
+      unit_number = ''
+      city = loc_parts[1]
+      county = ''
+      state = loc_parts[2]
+      zipcode = loc_parts[3]
+      country = 'US'
+
+  # check location is valid
+  location_type, valid = check_location(street, unit_number, city, state, zipcode, county, country)
+  if not valid:
+    print(location_type)
+    raise Exception(location_type)
+
+  reuloc, created = Location.objects.get_or_create(
+    location_type = location_type,
+    street = street,
+    unit_number = unit_number,
+    zipcode = zipcode,
+    city = city,
+    county = county,
+    state = state,
+    country = country
+  )
+
+  if created:
+      print("Location with zipcode "+zipcode+" created for user "+user.preferred_name)
+  else:
+      print("Location with zipcode "+zipcode+" found for user "+user.preferred_name)
+  return reuloc
 
 class UserStore:
   def __init__(self):
@@ -37,8 +90,8 @@ class UserStore:
 
   def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      email = args.get('email', None)
-      user_id = args.get('user_id', None)
+      #email = args.get('email', None)
+      #user_id = args.get('user_id', None)
 
       # if not self._has_access(context, user_id, email):
       #   return None, CustomMassenergizeError("permission_denied")
@@ -56,6 +109,7 @@ class UserStore:
       household_id = args.get('household_id', None) or args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
+
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
 
     except Exception as e:
@@ -67,20 +121,19 @@ class UserStore:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
       unit_type=args.pop('unit_type', None)
-      location=args.pop('location', None)
-      communityId = args.pop('community_id', None) or args.pop('community', None) 
 
-      new_unit = RealEstateUnit.objects.create(name=name, unit_type=unit_type,location=location)
-      new_unit.save()
+      reuloc = _get_or_create_reu_location(args, user)
+      reu = RealEstateUnit.objects.create(name=name, unit_type=unit_type)
+      reu.address = reuloc
 
-      user.real_estate_units.add(new_unit)
-      if communityId:
-        community = Community.objects.get(id=communityId)
-        new_unit.community = community
+      community = find_reu_community(reu)
+      if community: reu.community = community
+      reu.save()      
+      user.real_estate_units.add(reu)
+      user.save()
 
-      new_unit.save()
+      return reu, None
 
-      return new_unit, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
@@ -90,25 +143,24 @@ class UserStore:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
       household_id = args.get('household_id', None)
-      unit_type=args.pop('unit_type', None)
-      location=args.pop('location', None)
-      communityId = args.pop('community_id', None) or args.pop('community', None) 
-
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
 
-      new_unit = RealEstateUnit.objects.get(pk=household_id)
-      new_unit.name = name
-      new_unit.unit_type = unit_type
-      new_unit.location = location
+      reuloc = _get_or_create_reu_location(args, user)
 
-      if communityId:
-        community = Community.objects.get(id=communityId)
-        new_unit.community = community
+      reu = RealEstateUnit.objects.get(pk=household_id)
+      reu.name = name
+      reu.unit_type = unit_type
+      reu.address = reuloc
 
-      new_unit.save()
+      verbose = False
+      community = find_reu_community(reu, verbose)
+      if community:
+        if verbose: print("Updating the REU with zipcode " + zipcode + " to the community " + community.name)
+        reu.community = community
 
-      return new_unit, None
+      reu.save()
+      return reu, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
@@ -126,6 +178,7 @@ class UserStore:
     community,err = get_community(community_id)
     
     if not community:
+      print(err)
       return [], None
     return community.userprofile_set.all(), None
 
@@ -248,6 +301,7 @@ class UserStore:
 
         return users, None
       elif not community:
+        print(err)
         return [], None
 
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
@@ -302,7 +356,6 @@ class UserStore:
         #TODO: update action stats
         completed.update(status="TODO")
         return completed.first(), None
- 
       
       # create a new one since we didn't find it existed before
       new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="TODO")
@@ -326,6 +379,9 @@ class UserStore:
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
+      date_completed = args.get("date_completed", None)
+      # future use
+      carbon_impact = args.get("carbon_impact", 0)
 
       user = None
       if user_id:
@@ -360,11 +416,28 @@ class UserStore:
       #if this already exists as a todo just move it over
       completed = UserActionRel.objects.filter(user=user, real_estate_unit=household, action=action)
       if completed:
-        completed.update(status="DONE")
-        return completed.first(), None
+        completed.update(
+          status="DONE", 
+          date_completed=date_completed,
+          carbon_impact=carbon_impact
+          )
+        completed = completed.first()
+        
+        if vendor_id:
+          vendor = Vendor.objects.get(id=vendor_id) #not required
+          completed.vendor = vendor
+
+        return completed, None
 
       # create a new one since we didn't find it existed before
-      new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="DONE")
+      new_user_action_rel = UserActionRel(
+        user=user, 
+        action=action, 
+        real_estate_unit=household, 
+        status="DONE",
+        date_completed=date_completed,
+        carbon_impact=carbon_impact
+        )
 
       if vendor_id:
         vendor = Vendor.objects.get(id=vendor_id) #not required
