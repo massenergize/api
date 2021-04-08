@@ -15,7 +15,7 @@ from sentry_sdk import capture_message, capture_exception
 
 def _clone_page_settings(pageSettings, title, community):
     """
-    Clone fht page settings for a new community from a template
+    Clone page settings for a new community from a template
     """
     page = pageSettings.objects.filter(is_template=True).first()
     if not page:
@@ -419,7 +419,6 @@ class CommunityStore:
       if not _clone_page_settings(TestimonialsPageSettings, f"Testimonials", community):
         raise("Failed to clone settings for Testimonials page")
     
-      print("Create admin group")
       admin_group_name  = f"{community.name}-{community.subdomain}-Admin-Group"
       comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=community)
       comm_admin.save()
