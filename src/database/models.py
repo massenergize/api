@@ -263,6 +263,8 @@ class Community(models.Model):
     null=True, blank=True, related_name='community_logo')
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
+  favicon = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True, related_name='community_favicon')
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
 
   is_geographically_focused = models.BooleanField(default=False, blank=True)
@@ -298,6 +300,7 @@ class Community(models.Model):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
       'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved','more_info'])
     res['logo'] = get_json_if_not_none(self.logo)
+    res['favicon'] = get_json_if_not_none(self.favicon)
     return res
 
   def full_json(self):
@@ -346,6 +349,7 @@ class Community(models.Model):
       "goal": goal,
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
+      "favicon": get_json_if_not_none(self.favicon),
       "location":self.location,
       "is_approved": self.is_approved,
       "is_published": self.is_published,
@@ -1380,7 +1384,9 @@ class UserActionRel(models.Model):
       "user": get_json_if_not_none(self.user),
       "action": get_json_if_not_none(self.action),
       "real_estate_unit": get_json_if_not_none(self.real_estate_unit),
-      "status": self.status
+      "status": self.status,
+      "date_completed": self.date_completed,
+      "carbon_impact": self.carbon_impact
     }
 
   def full_json(self):
@@ -2051,10 +2057,6 @@ class HomePageSettings(models.Model):
   social_media_links: str
     Links to social media, such as:  ["facebook:www.facebook.com/coolerconcord/,instgram:www.instagram.com/coolerconcord/"]
 
-  for the tab on all pages:
-  -------------------------
-  favicon_image : ForeignKey to Media file for favicon
-
   more_info: JSON - extraneous information
   is_deleted: boolean - whether this page was deleted from the platform (perhaps with it's community)
   is_published: boolean - whether this page is live
@@ -2087,8 +2089,6 @@ class HomePageSettings(models.Model):
   show_footer_social_media = models.BooleanField(default=True, blank=True)
   social_media_links = JSONField(blank=True, null=True)
   
-  favicon_image = models.ForeignKey(Media, related_name='favicon', on_delete=models.SET_NULL, null=True, blank=True)
-
   is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -2358,6 +2358,36 @@ class VendorsPageSettings(PageSettings):
   class Meta:
     db_table = 'vendors_page_settings'
     verbose_name_plural = "VendorsPageSettings"
+
+class EventsPageSettings(PageSettings):
+  """
+  Represents the community's Events page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "EventsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'events_page_settings'
+    verbose_name_plural = "EventsPageSettings"
+
+class TestimonialsPageSettings(PageSettings):
+  """
+  Represents the community's Testimonials page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "TestimonialsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'testimonials_page_settings'
+    verbose_name_plural = "TestimonialsPageSettings"
 
 class Message(models.Model):
   """

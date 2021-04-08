@@ -379,6 +379,9 @@ class UserStore:
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
+      date_completed = args.get("date_completed", None)
+      # future use
+      carbon_impact = args.get("carbon_impact", 0)
 
       user = None
       if user_id:
@@ -413,11 +416,28 @@ class UserStore:
       #if this already exists as a todo just move it over
       completed = UserActionRel.objects.filter(user=user, real_estate_unit=household, action=action)
       if completed:
-        completed.update(status="DONE")
-        return completed.first(), None
+        completed.update(
+          status="DONE", 
+          date_completed=date_completed,
+          carbon_impact=carbon_impact
+          )
+        completed = completed.first()
+        
+        if vendor_id:
+          vendor = Vendor.objects.get(id=vendor_id) #not required
+          completed.vendor = vendor
+
+        return completed, None
 
       # create a new one since we didn't find it existed before
-      new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="DONE")
+      new_user_action_rel = UserActionRel(
+        user=user, 
+        action=action, 
+        real_estate_unit=household, 
+        status="DONE",
+        date_completed=date_completed,
+        carbon_impact=carbon_impact
+        )
 
       if vendor_id:
         vendor = Vendor.objects.get(id=vendor_id) #not required

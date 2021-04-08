@@ -1,3 +1,7 @@
+from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, \
+  ActivityLog, AboutUsPageSettings,  ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, \
+  HomePageSettings, ImpactPageSettings, TeamsPageSettings, EventsPageSettings, TestimonialsPageSettings, \
+  VendorsPageSettings, Goal, CommunityAdminGroup
 from database.models import Community, CommunityMember, UserProfile, Action, Event, Graph, Media, ActivityLog, AboutUsPageSettings, ActionsPageSettings, ContactUsPageSettings, DonatePageSettings, HomePageSettings, ImpactPageSettings, TeamsPageSettings, Goal, CommunityAdminGroup, Location, RealEstateUnit
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -8,6 +12,26 @@ from database.utils.common import json_loader
 import random
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
+
+def _clone_page_settings(pageSettings, title, community):
+    """
+    Clone page settings for a new community from a template
+    """
+    page = pageSettings.objects.filter(is_template=True).first()
+    if not page:
+        template_community = Community.objects.get(subdomain='template')
+        page = pageSettings.objects.create(is_template=True, community=template_community)
+        page.save()
+        page.pk = None
+
+    page.pk = None
+
+    page.title = title
+    page.community = community
+    page.is_template = False
+    page.save()
+
+    return page
 
 class CommunityStore:
   def __init__(self):
@@ -264,7 +288,7 @@ class CommunityStore:
       if not community_id and not subdomain:
         return None, CustomMassenergizeError("Missing community_id or subdomain field")
 
-      community: Community = Community.objects.select_related('logo', 'goal').filter(Q(pk=community_id)| Q(subdomain=subdomain)).first()
+      community: Community = Community.objects.select_related('logo', 'favicon', 'goal').filter(Q(pk=community_id)| Q(subdomain=subdomain)).first()
       if not community:
         return None, InvalidResourceError()
 
@@ -331,7 +355,7 @@ class CommunityStore:
 
 
   def create_community(self,context: Context, args) -> (dict, MassEnergizeAPIError):
-    new_community = None
+    community = None
     try:
       logo = args.pop('logo', None)
 
@@ -340,88 +364,63 @@ class CommunityStore:
       # These we can deal with by having the Location include city and or state fields
       locations = args.pop('locations',None)
 
-      new_community = Community.objects.create(**args)
+      favicon = args.pop('favicon', None)
+      community = Community.objects.create(**args)
+      community.save()
 
       geographic = args.get('is_geographically_focused', False)
       if geographic:
         geography_type = args.get('geography_type', None)
-        self._update_locations(geography_type, locations, new_community)
-        self._update_real_estate_units_with_community(new_community)
+        self._update_locations(geography_type, locations, community)
+        self._update_real_estate_units_with_community(community)
       
       if logo:
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
-        new_community.logo = cLogo
+        community.logo = cLogo
+      if favicon:
+        cFav = Media(file=favicon, name=f"{args.get('name', '')} CommunityFavicon")
+        cFav.save()
+        community.favicon = cFav
       
       #create a goal for this community
-      community_goal = Goal.objects.create(name=f"{new_community.name}-Goal")
-      new_community.goal = community_goal
-      new_community.save()
-
-      #now create all the pages
-      aboutUsPage = AboutUsPageSettings.objects.filter(is_template=True).first()
-      if aboutUsPage:
-        aboutUsPage.pk = None
-        aboutUsPage.title = f"About {new_community.name}"
-        aboutUsPage.community = new_community
-        aboutUsPage.is_template = False
-        aboutUsPage.save()
-
-      actionsPage = ActionsPageSettings.objects.filter(is_template=True).first()
-      if actionsPage:
-        actionsPage.pk = None
-        actionsPage.title = f"Actions for {new_community.name}"
-        actionsPage.community = new_community
-        actionsPage.is_template = False
-        actionsPage.save()
-
-      contactUsPage = ContactUsPageSettings.objects.filter(is_template=True).first()
-      if contactUsPage:
-        contactUsPage.pk = None 
-        contactUsPage.title = f"Contact Us - {new_community.name}"
-        contactUsPage.community = new_community
-        contactUsPage.is_template = False
-        contactUsPage.save()
-
-      donatePage = DonatePageSettings.objects.filter(is_template=True).first()
-      if donatePage:
-        donatePage.pk = None 
-        donatePage.title = f"Take Actions - {new_community.name}"
-        donatePage.community = new_community
-        donatePage.is_template = False
-        donatePage.save()
+      community_goal = Goal.objects.create(name=f"{community.name}-Goal")
+      community.goal = community_goal
+      community.save()
 
       homePage = HomePageSettings.objects.filter(is_template=True).first()
       images = homePage.images.all()
       #TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
       if homePage:
         homePage.pk = None 
-        homePage.title = f"Welcome to Massenergize, {new_community.name}!"
-        homePage.community = new_community
+        homePage.title = f"Welcome to Massenergize, {community.name}!"
+        homePage.community = community
         homePage.is_template = False
         homePage.save()
         homePage.images.set(images)
-    
-      impactPage = ImpactPageSettings.objects.filter(is_template=True).first()
-      if impactPage:
-        impactPage.pk = None 
-        impactPage.title = f"See our Impact - {new_community.name}"
-        impactPage.community = new_community
-        impactPage.is_template = False
-        impactPage.save()
 
-      # by adding TeamsPageSettings - since this doesn't exist for all communities, will it cause a problem? 
-      # Create it when TeamsPageSettings in admin portal
-      teamsPage = TeamsPageSettings.objects.filter(is_template=True).first()
-      if teamsPage:
-        teamsPage.pk = None 
-        teamsPage.title = f"Teams in this community"
-        teamsPage.community = new_community
-        teamsPage.is_template = False
-        teamsPage.save()
+      #now create all the pages
+      if not _clone_page_settings(AboutUsPageSettings, f"About {community.name}", community):
+        raise("Failed to clone settings for AboutUs page")
+      if not _clone_page_settings(ActionsPageSettings, f"Actions for {community.name}", community):
+        raise("Failed to clone settings for Actions page")
+      if not _clone_page_settings(ContactUsPageSettings, f"Contact Us - {community.name}", community):
+        raise("Failed to clone settings for ContactUs page")
+      if not _clone_page_settings(DonatePageSettings, f"Take Actions - {community.name}", community):
+        raise("Failed to clone settings for Donate page")
+      if not _clone_page_settings(ImpactPageSettings, f"See our Impact - {community.name}", community):
+        raise("Failed to clone settings for Impact page")
+      if not _clone_page_settings(TeamsPageSettings, f"Teams in this community", community):
+        raise("Failed to clone settings for Teams page")
+      if not _clone_page_settings(VendorsPageSettings, f"Service Providers", community):
+        raise("Failed to clone settings for Vendors page")
+      if not _clone_page_settings(EventsPageSettings, f"Events and Campaigns", community):
+        raise("Failed to clone settings for Events page")
+      if not _clone_page_settings(TestimonialsPageSettings, f"Testimonials", community):
+        raise("Failed to clone settings for Testimonials page")
     
-      admin_group_name  = f"{new_community.name}-{new_community.subdomain}-Admin-Group"
-      comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=new_community)
+      admin_group_name  = f"{community.name}-{community.subdomain}-Admin-Group"
+      comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=community)
       comm_admin.save()
 
       if context.user_id:
@@ -446,6 +445,7 @@ class CommunityStore:
 
       actions_copied = set()
       for action_to_copy in global_actions:
+        print(action_to_copy.title)
         old_tags = action_to_copy.tags.all()
         old_vendors = action_to_copy.vendors.all()
         new_action: Action = action_to_copy
@@ -454,7 +454,7 @@ class CommunityStore:
         new_action.is_global = False
 
         old_title = new_action.title
-        new_title = get_new_title(new_community, old_title)
+        new_title = get_new_title(community, old_title)
 
         # first check that we have not copied an action with the same name
         if new_title in actions_copied:
@@ -468,17 +468,17 @@ class CommunityStore:
         new_action.tags.set(old_tags)
         new_action.vendors.set(old_vendors)
 
-        new_action.community = new_community
+        new_action.community = community
         new_action.save()
         num_copied += 1
         if num_copied >= MAX_TEMPLATE_ACTIONS:
           break
      
-      return new_community, None
+      return community, None
     except Exception as e:
-      if new_community:
+      if community:
         # if we did not succeed creating the community we should delete it
-        new_community.delete()
+        community.delete()
       capture_exception(e)
       return None, CustomMassenergizeError(e)
 
@@ -492,6 +492,7 @@ class CommunityStore:
       # These we can deal with by having the Location include city and or state fields
       locations = args.pop('locations',None)
 
+      favicon = args.pop('favicon', None)
       community = Community.objects.filter(id=community_id)
       if not community:
         return None, InvalidResourceError()
@@ -506,7 +507,6 @@ class CommunityStore:
         self._update_real_estate_units_with_community(community)
 
 
-      #new_community = community.first()
       if logo:   
         cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
         cLogo.save()
@@ -514,6 +514,11 @@ class CommunityStore:
         community.save()
 
       return community, None
+      if favicon:   
+        cFavicon = Media(file=favicon, name=f"{args.get('name', '')} CommunityFavicon")
+        cFavicon.save()
+        community.favicon = cFavicon
+        community.save()
     except Exception as e:
       capture_exception(e)
       return None, CustomMassenergizeError(e)
