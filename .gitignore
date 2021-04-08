@@ -14,3 +14,5 @@ src/*.jpeg
 *.env
 env
 src/Dockerrun.aws.json
+.idea
+src/api/store/ZIPCODE_FIXES.json

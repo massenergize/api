@@ -44,7 +44,9 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    (users_data, community_name), err = self.service.users_download(context, community_id)
+    team_id = args.pop('team_id', None)
+
+    (users_data, community_name), err = self.service.users_download(context, community_id=community_id, team_id=team_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return self._get_csv_response(data=users_data, download_type='users', community_name=community_name)

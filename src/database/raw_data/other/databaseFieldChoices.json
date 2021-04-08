@@ -1,10 +1,21 @@
 {
+
   "LOCATION_TYPES" : {
     "STATE_ONLY":"State Only",
     "ZIP_CODE_ONLY":"Zip Code Only",
     "CITY_ONLY":"City Only",
     "COUNTY_ONLY": "County Only",
+    "COUNTRY_ONLY": "Country Only",
     "FULL_ADDRESS":"FULL ADDRESS"
+  },
+
+  "COMMUNITY_GEOGRAPHY_TYPES" : {
+    "ZIPCODE":"Community defined by one or more zipcodes",
+    "CITY":"Community defined by one or more cities or towns",
+    "COUNTY":"Community defined by one or more counties",
+    "STATE": "Community defined by one or more states",
+    "COUNTRY":"Community defined by a country",
+    "NON_GEOGRAPHIC":"A non-geographic community"
   },
 
   "FILE_TYPES_ALLOWED": {

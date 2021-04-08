@@ -67,6 +67,7 @@ class TeamStore:
     try:
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
+
       if community:
         teams = Team.objects.filter(community=community, is_published=True, is_deleted=False)
       elif user:
@@ -80,7 +81,10 @@ class TeamStore:
     try:
       community = get_community_or_die(context, args)
       teams = Team.objects.filter(community=community, is_deleted=False)
-      if context.is_prod:
+
+      # show unpublished teams only in sandbox.
+      # TODO: Better solution would be to show also for the user who created the team, but more complicated
+      if not context.is_sandbox:
         teams = teams.filter(is_published=True)
 
       ans = []
@@ -232,12 +236,14 @@ class TeamStore:
         team.is_published = is_published
 
       if team:
+        team.community = None
         if community_id:
           community = Community.objects.filter(pk=community_id).first()
           if community:
-            team.community = community
+            team.community = community          
 
         if parent_id:
+          team.parent = None
           parent = Team.objects.filter(pk=parent_id).first()
           if parent and can_set_parent(parent, this_team=team):
             team.parent = parent
@@ -251,6 +257,8 @@ class TeamStore:
             logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
             logo.save()
             team.logo = logo
+          else: 
+            team.logo = None 
 
         team.save()
       return team, None

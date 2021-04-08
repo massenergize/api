@@ -1,5 +1,4 @@
-November 3rd, 2020 Fixes:
-Fixes issue where community shows up even when unpublished
-Fixes sentry.io logging issue
-cleans up store/community a little bit
-Returns new custom error when user tries to login in but does not have an account
+April 8th Deployment to Dev
+- Customizable page settings by community
+- Updated definitions for geographically based communities
+

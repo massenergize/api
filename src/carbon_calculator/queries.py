@@ -83,8 +83,9 @@ def QueryAllEvents():
     if qs:
         eventInfo = []
         for q in qs:
-            info = {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location}
-            eventInfo.append(info)
+            if q.datetime:
+                info = {"name":q.name, "displayname":q.displayname, "datetime":q.datetime, "location":q.location}
+                eventInfo.append(info)
         return VALID_QUERY, eventInfo
     else:
         return INVALID_QUERY, []

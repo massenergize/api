@@ -1,7 +1,5 @@
 # MassEnergize API
 
-This repository contains the frontend code for the MassEnergize API which powers our front-end services. It's build with [Django](https://www.djangoproject.com/).
-
 ## Maintainers
 
 This repository is managed by

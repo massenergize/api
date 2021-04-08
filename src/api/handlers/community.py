@@ -86,6 +86,7 @@ class CommunityHandler(RouteHandler):
     args['is_approved'] = parse_bool(args.pop('is_approved', False))
 
     args = rename_field(args, 'image', 'logo')
+
     args = parse_location(args)
     if not args['is_geographically_focused']:
       args.pop('location', None)
@@ -140,6 +141,7 @@ class CommunityHandler(RouteHandler):
 
     args = rename_field(args, 'image', 'logo')
     args = parse_location(args)
+
     community_info, err = self.service.update_community(community_id ,args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -160,7 +162,7 @@ class CommunityHandler(RouteHandler):
   @admins_only
   def community_admin_list(self, request):
     context: Context  = request.context
-    args = context.get_request_body()
+    #args = context.get_request_body()
     communities, err = self.service.list_communities_for_community_admin(context)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -170,7 +172,7 @@ class CommunityHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request):
     context: Context  = request.context
-    args = context.get_request_body()
+    #args = context.get_request_body()
     communities, err = self.service.list_communities_for_super_admin(context)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

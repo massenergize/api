@@ -8,8 +8,8 @@ class DownloadService:
     def __init__(self):
       self.store = DownloadStore()
 
-    def users_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
-      users_download, err = self.store.users_download(context, community_id)
+    def users_download(self, context: Context, community_id=None, team_id=None) -> (list, MassEnergizeAPIError):
+      users_download, err = self.store.users_download(context, community_id, team_id)
       if err:
         return None, err
       return users_download, None

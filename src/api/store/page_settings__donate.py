@@ -38,14 +38,25 @@ class DonatePageSettingsStore:
   def update_donate_page_setting(self, args) -> (dict, MassEnergizeAPIError):
     try:
       donate_page_id= args.get('id', None)
+      page_image = args.pop('image', None)
+
       if donate_page_id:
         
-        donate_page_setting = DonatePageSettings.objects.filter(id=donate_page_id)
-        donate_page_setting.update(**args)
-        if not donate_page_setting:
+        page_setting = DonatePageSettings.objects.filter(id=donate_page_id)
+        if not page_setting:
           return None, InvalidResourceError()
+        page_setting.update(**args)
 
-        return donate_page_setting.first(), None
+        page_setting = page_setting.first()
+
+        if page_image:
+          current_image = Media(file=page_image, name=f"DonateImage-{page_setting.community.name}", order=1)
+          current_image.save()
+
+          page_setting.images.add(current_image)
+          page_setting.save()
+
+        return page_setting, None
       else:
         return None, CustomMassenergizeError("Please provide an id")
     except Exception as e:

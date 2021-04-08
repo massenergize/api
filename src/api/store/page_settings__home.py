@@ -84,11 +84,13 @@ class HomePageSettingsStore:
 
 
           community_goal.save()
-      
 
-      #featured links
-      if (not args.get('show_featured_links', False)):
+      #featured links (copy logic from featured_events)
+      if (args.get('show_featured_links', None)):
         featured_links = args.pop('featured_links', None)
+        home_page_setting.featured_links.set(featured_links)
+      else:
+        args.pop('featured_links', [])
 
       #images
       current_images = home_page_setting.images.all()
