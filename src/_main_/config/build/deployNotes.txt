@@ -1,3 +1,4 @@
-April 5th Deployment to Dev
-- Update definitions for geographically based communities
-- Update minor version for DB updates
+April 8th Deployment to Dev
+- Customizable page settings by community
+- Updated definitions for geographically based communities
+
