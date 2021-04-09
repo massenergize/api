@@ -23,10 +23,11 @@ class CommunitiesTestCase(TestCase):
     signinAs(self.client, self.SADMIN)
 
     setupCC(self.client)
-  
+
+    name = 'turtles'  
     self.COMMUNITY = Community.objects.create(**{
-      'subdomain': 'joshtopia',
-      'name': 'Joshtopia',
+      'subdomain': name,
+      'name': name.capitalize(),
       'accepted_terms_and_conditions': True
     })
 
@@ -34,13 +35,14 @@ class CommunitiesTestCase(TestCase):
     self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
     self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
+    
     self.USER1 = UserProfile.objects.create(**{
-      'full_name': "Josh Katofksy",
-      'email': 'foo@test.com'
+      'full_name': "Community Tester",
+      'email': 'community@tester.com'
     })
     self.USER2 = UserProfile.objects.create(**{
-      'full_name': "Kosh Jatofsky",
-      'email': 'bar@test.com'
+      'full_name': "Tester Community",
+      'email': 'tester@community.com'
     })
 
     self.TEAM1 = Team.objects.create(community=self.COMMUNITY, name="Les Montréalais", is_published=True)
@@ -71,13 +73,9 @@ class CommunitiesTestCase(TestCase):
     signinAs(self.client, None)
 
     # successfully retrieve information about a team that has been published
-    info_response = self.client.post('/v3/communities.info', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/v3/communities.info', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(info_response["success"])
-    self.assertEqual(self.TEAM1.name, info_response['data']['name'])
-
-    # don't retrieve information about a team that has not been published
-    info_response = self.client.post('/v3/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(info_response["success"])
+    self.assertEqual(self.COMMUNITY.name, info_response['data']['name'])
 
     signinAs(self.client, self.USER)
     # don't retrieve information about a team that has not been published
