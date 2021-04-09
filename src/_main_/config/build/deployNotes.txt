@@ -1,4 +1,4 @@
-April 8th Deployment to Dev
+April 9th Deployment to Canary
 - Customizable page settings by community
 - Updated definitions for geographically based communities
 
