@@ -39,7 +39,7 @@ class PageSettingsHandler(RouteHandler):
     args: dict = context.args
     args = rename_field(args, 'community_id', 'community__id')
     args = rename_field(args, 'subdomain', 'community__subdomain')
-    args = rename_field(args, pageName+'_page_id', 'id')
+    args = rename_field(args, self.pageName+'_page_id', 'id')
     page_setting_info, err = self.service.get_page_setting_info(args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
