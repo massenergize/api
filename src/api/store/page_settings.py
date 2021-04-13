@@ -1,4 +1,4 @@
-from database.models import UserProfile
+from database.models import UserProfile, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -9,18 +9,32 @@ class PageSettingsStore:
     self.name = "ContactUsPageSettings Store/DB"
     self.pageSettingsModel = dataModel
 
-  def get_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+
+  def get_page_setting_info(self, args) -> (dict, MassEnergizeAPIError): 
     try:
-      page = self.pageSettingsModel.objects.filter(**args).first()
+      page = self.pageSettingsModel.objects.filter(**args)
       if not page:
-        return None, InvalidResourceError()
+        community_id = args.pop('community__id', None)
+        if not community_id:
+          raise("Community id missing from PageSetting")
+        community = Community.objects.filter(pk=community_id).first()
+        page = self.pageSettingsModel.objects.create(**{'title': 'Page Settings',
+          'is_template': False, 
+          'community_id': community.id
+          }   
+        )
+        page.save()
+        if not page:
+          return None, InvalidResourceError()
+      else:
+        page = page.first()    
       return page, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def list_contact_us_page_settings(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_page_settings(self, community_id) -> (list, MassEnergizeAPIError):
     page_settings = self.pageSettingsModel.objects.filter(community__id=community_id)
     if not page_settings:
       return [], None
@@ -40,15 +54,20 @@ class PageSettingsStore:
     page_setting = self.pageSettingsModel.objects.filter(id=page_setting_id)
     if not page_setting:
       return None, InvalidResourceError()
+    args['is_published'] = args.pop('is_published', '').lower() == 'true'
+
+    image = args.pop('image', None)
     page_setting.update(**args)
-    return page_setting, None
+    return page_setting.first(), None
 
 
   def delete_page_setting(self, page_setting_id) -> (dict, MassEnergizeAPIError):
     page_settings = self.pageSettingsModel.objects.filter(id=page_setting_id)
     if not page_settings:
       return None, InvalidResourceError()
-
+    
+    page_settings.update(**{'is_deleted':True})
+    return page_settings.first(), None
 
   def list_page_settings_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
     page_settings = self.pageSettingsModel.objects.filter(community__id = community_id)

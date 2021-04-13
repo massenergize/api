@@ -12,13 +12,14 @@ from api.decorators import admins_only, super_admins_only, login_required
 
 class PageSettingsHandler(RouteHandler):
 
-  def __init__(self, pageName=None):
+  def __init__(self, pageName, dataModel):
     super().__init__()
-    #self.service = ContactUsPageSettingsService()
     self.pageName = pageName
     if not pageName:
       raise('PageSettingsHandler: no page name supplied')
     self.registerRoutes(pageName)
+    self.service = PageSettingsService(dataModel)
+
 
   def registerRoutes(self, pageName):
     self.add("/"+pageName+"_page_settings.info", self.info) 

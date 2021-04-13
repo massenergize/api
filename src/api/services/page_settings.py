@@ -32,14 +32,14 @@ class PageSettingsService:
     return serialize(page_setting), None
 
 
-  def update_page_setting(self, args) -> (dict, MassEnergizeAPIError):
-    page_setting, err = self.store.update_page_setting(args)
+  def update_page_setting(self, id, args) -> (dict, MassEnergizeAPIError):
+    page_setting, err = self.store.update_page_setting(id, args)
     if err:
       return None, err
     return serialize(page_setting), None
 
-  def delete_page_setting(self, args) -> (dict, MassEnergizeAPIError):
-    page_setting, err = self.store.delete_page_setting(args)
+  def delete_page_setting(self, id) -> (dict, MassEnergizeAPIError):
+    page_setting, err = self.store.delete_page_setting(id)
     if err:
       return None, err
     return serialize(page_setting), None
