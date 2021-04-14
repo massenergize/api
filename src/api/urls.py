@@ -9,6 +9,7 @@ from api.handlers.page_settings__testimonials import TestimonialsPageSettingsHan
 from api.handlers.community import CommunityHandler
 from api.handlers.page_settings__contactus import ContactUsPageSettingsHandler
 from api.handlers.page_settings__donate import DonatePageSettingsHandler
+from api.handlers.page_settings__impact import ImpactPageSettingsHandler
 from api.handlers.download import DownloadHandler
 from api.handlers.event import EventHandler
 from api.handlers.goal import GoalHandler
@@ -44,6 +45,7 @@ ROUTE_HANDLERS = [
   GoalHandler(),
   GraphHandler(),
   HomePageSettingsHandler(),
+  ImpactPageSettingsHandler(),
   MessageHandler(),
   MiscellaneousHandler(),
   PolicyHandler(),
