@@ -18,8 +18,7 @@ class PageSettingsStore:
         if not community_id:
           raise("Community id missing from PageSetting")
         community = Community.objects.filter(pk=community_id).first()
-        page = self.pageSettingsModel.objects.create(**{'title': 'Page Settings',
-          'is_template': False, 
+        page = self.pageSettingsModel.objects.create(**{'is_template': False, 
           'community_id': community.id
           }   
         )
