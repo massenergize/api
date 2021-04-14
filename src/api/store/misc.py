@@ -120,10 +120,11 @@ class MiscellaneousStore:
       # loop over profiles and realEstateUnits associated with them
       for userProfile in userProfiles:
         user = userProfile.email
-        msg = "User: %s (%s) - %s" % (userProfile.full_name, userProfile.email, userProfile.created_at.strftime("%Y-%m-%d"))
+        reus = userProfile.real_estate_units.all()
+        msg = "User: %s (%s), %d households - %s" % (userProfile.full_name, userProfile.email, reus.count(), userProfile.created_at.strftime("%Y-%m-%d"))
         print(msg)
-
-        for reu in userProfile.real_estate_units.all():
+        
+        for reu in reus:
           street = unit_number = city = county = state = zip = ""
           loc = reu.location    # a JSON field
           zip = None
@@ -136,18 +137,20 @@ class MiscellaneousStore:
   
             loc_parts = split_location_string(loc)
             if len(loc_parts)>= 4:
-              # deal with one odd case
+              # deal with odd cases
               if userProfile.email in ZIPCODE_FIXES:
                 zip = ZIPCODE_FIXES[user]["zipcode"]
                 city = ZIPCODE_FIXES[user]["city"]
               else:  
-                street = loc_parts[0]
-                city = loc_parts[1]
-                state = loc_parts[2]
+                street = loc_parts[0].capitalize()
+                city = loc_parts[1].capitalize()
+                state = loc_parts[2].upper()
                 zip = loc_parts[3].strip()
                 if not zip or (len(zip)!=5 and len(zip)!=10):
                   print("Invalid zipcode: "+zip+", setting to 00000")
                   zip = "00000"
+                elif len(zip)==10:
+                  zip = zip[0:5]  
             else:
               # deal with odd cases which were encountered in the dev database
               zip = "00000"
@@ -165,8 +168,11 @@ class MiscellaneousStore:
             if not valid:
               print("check_location returns: "+location_type)
               continue
-  
-            newloc, created = Location.objects.get_or_create(
+
+
+
+            #newloc, created = Location.objects.get_or_create(            
+            newloc = Location.objects.filter(
               location_type = location_type,
               street = street,
               unit_number = unit_number,
@@ -175,11 +181,20 @@ class MiscellaneousStore:
               county = county,
               state = state
             )
-            if created:
-              msg = "Location with zipcode %s created: location_type=%s street=%s unit_number=%s city=%s county=%s state=%s" % (zip, location_type, street, unit_number, city, county, state)
-              print()
+            if not newloc:
+              newloc = Location.objects.create(
+                location_type = location_type,
+                street = street,
+                unit_number = unit_number,
+                zipcode = zip,
+                city = city,
+                county = county,
+                state = state)
+              print("Zipcode "+zip+" created for town "+city)
             else:
-              print("Location with zipcode "+zip+" found")
+              newloc = newloc.first()
+              print("Zipcode "+zip+" found for town "+city)
+
             reu.address = newloc
             reu.save()
   

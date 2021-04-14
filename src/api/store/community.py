@@ -255,9 +255,10 @@ class CommunityStore:
           zip = reu.address.zipcode
           if not isinstance(zip,str) or len(zip)!=5:
             address_string = str(reu.address)
-            print("REU invalid zipcode: address = "+address_string)
+            print("REU invalid zipcode: address = "+address_string+" User "+userProfile.email)
 
             zip = "00000"
+            city = ""
             for loc in ZIPCODE_FIXES:
               # temporary fixing known address problems in the database
               if address_string.find(loc)>=0:
