@@ -2,6 +2,7 @@ from database.models import UserProfile, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from .utils import get_community
 from sentry_sdk import capture_message
 
 class PageSettingsStore:
@@ -12,12 +13,12 @@ class PageSettingsStore:
 
   def get_page_setting_info(self, args) -> (dict, MassEnergizeAPIError): 
     try:
+      community_id = args.get('community__id', None)
+      community_subdomain = args.get('community__subdomain', None)
+      community, error = get_community(community_id, subdomain)
+ 
       page = self.pageSettingsModel.objects.filter(**args)
       if not page:
-        community_id = args.pop('community__id', None)
-        if not community_id:
-          raise("Community id missing from PageSetting")
-        community = Community.objects.filter(pk=community_id).first()
         page = self.pageSettingsModel.objects.create(**{'is_template': False, 
           'community_id': community.id
           }   
