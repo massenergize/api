@@ -98,7 +98,7 @@ class Media(models.Model):
 
 
   def __str__(self):      
-    return self.name
+    return str(self.id) + '-' +self.name + "(" + self.file.name + ")"
 
 
   def simple_json(self):
