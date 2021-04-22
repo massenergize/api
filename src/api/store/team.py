@@ -3,11 +3,11 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
-from .utils import get_community_or_die, get_user_or_die
+from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
+from .utils import get_community_or_die, get_user_or_die, get_admin_communities
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
-from _main_.settings import IS_PROD, IS_CANARY
 
 def can_set_parent(parent, this_team=None):
   if parent.parent:
@@ -67,6 +67,7 @@ class TeamStore:
     try:
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
+
       if community:
         teams = Team.objects.filter(community=community, is_published=True, is_deleted=False)
       elif user:
@@ -76,11 +77,15 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+
   def team_stats(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       community = get_community_or_die(context, args)
       teams = Team.objects.filter(community=community, is_deleted=False)
-      if context.is_prod:
+
+      # show unpublished teams only in sandbox.
+      # TODO: Better solution would be to show also for the user who created the team, but more complicated
+      if not context.is_sandbox:
         teams = teams.filter(is_published=True)
 
       ans = []
@@ -180,7 +185,7 @@ class TeamStore:
       if not is_published:
         cadmins = CommunityAdminGroup.objects.filter(community__id=community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team.\n\n%s" % ("%s/admin/edit/%i/team" %
-        ("https://admin.massenergize.org" if IS_PROD else "https://admin-canary.massenergize.org" if IS_CANARY else "https://admin-dev.massenergize.org", team.id))
+          (ADMIN_URL_ROOT, team.id))
 
         for cadmin in cadmins:
           send_massenergize_email(subject="New team awaiting approval",
@@ -199,7 +204,8 @@ class TeamStore:
         team.delete()
       return None, CustomMassenergizeError(str(e))
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
+
+  def update_team(self, context, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
       community_id = args.pop('community_id', None)
       if community_id:
@@ -211,9 +217,29 @@ class TeamStore:
       logo = args.pop('logo', None)
       parent_id = args.pop('parent_id', None)
       is_published = args.pop('is_published', False)
-
+        
       team = Team.objects.filter(id=team_id)
- 
+
+      # to update Team, need to be super_admin, community_admin of that community, or a team_admin
+      allowed = False
+      if context.user_is_super_admin:
+        allowed = True
+      elif context.user_is_community_admin:
+        community = team.first().community
+        admin_communities, err = get_admin_communities(context)
+        if community in admin_communities:
+          allowed = True
+      else:
+        # user has to be on the team admin list
+        teamMembers = TeamMember.objects.filter(team=team.first())
+        for teamMember in teamMembers:
+          if teamMember.user.id == user_id and teamMember.is_admin:
+            allowed = True
+            break
+
+      if not allowed:
+        return None, NotAuthorizedError()
+
       team.update(**args)
       team = team.first()
 
@@ -223,7 +249,7 @@ class TeamStore:
         team.is_published = True
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
         # fix the broken URL in this message, needs to have community nam
-        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % ("https://community.massenergize.org" if IS_PROD else "https://community-canary.massenergize.org" if IS_CANARY else "https://community-dev.massenergize.org", subdomain, team.id))
+        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % (COMMUNITY_URL_ROOT, subdomain, team.id))
         for team_admin in team_admins:
           send_massenergize_email(subject="Your team has been approved",
                                 msg=message, to=team_admin.user.email)
@@ -231,22 +257,21 @@ class TeamStore:
         # this is how teams can get be made not live
         team.is_published = is_published
 
-      if team:
-        if community_id:
-          community = Community.objects.filter(pk=community_id).first()
-          if community:
-            team.community = community
+      if community_id:
+        community = Community.objects.filter(pk=community_id).first()
+        if community:
+            team.community = community          
 
-        if parent_id:
+      if parent_id:
+          team.parent = None
           parent = Team.objects.filter(pk=parent_id).first()
           if parent and can_set_parent(parent, this_team=team):
             team.parent = parent
         
-        if logo:
+      if logo:
           # if existing logo, the string length is around 300 characters
           # If a new logo updated, this will be the length of the file, much larger than that       
           new_logo = len(logo) > 1000
-
           if new_logo:
             logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
             logo.save()
@@ -254,7 +279,7 @@ class TeamStore:
           else: 
             team.logo = None 
 
-        team.save()
+      team.save()
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")

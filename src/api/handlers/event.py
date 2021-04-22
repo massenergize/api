@@ -27,8 +27,8 @@ class EventHandler(RouteHandler):
     self.add("/events.delete", self.delete)
     self.add("/events.remove", self.delete)
     self.add("/events.rsvp", self.rsvp)
-    self.add("/events.rsvp.update", self.rsvp)
-    self.add("/events.rsvp.remove.", self.rsvp)
+    self.add("/events.rsvp.update", self.rsvp_update)
+    self.add("/events.rsvp.remove", self.rsvp_remove)
     self.add("/events.todo", self.save_for_later)
 
     #admin routes
@@ -181,7 +181,6 @@ class EventHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
-    #args: dict = context.args
     events, err = self.service.list_events_for_super_admin(context)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

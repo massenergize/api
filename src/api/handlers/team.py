@@ -40,7 +40,6 @@ class TeamHandler(RouteHandler):
     #admin routes
     self.add("/teams.listForCommunityAdmin", self.community_admin_list)
     self.add("/teams.listForSuperAdmin", self.super_admin_list)
-
   
   def info(self, request):
     context: Context = request.context
@@ -50,7 +49,7 @@ class TeamHandler(RouteHandler):
     if is_value(team_id):
       team_info, err = self.team.get_team_info(context, team_id)
     else:
-      err = CustomMassEnergizeError("No team_id passed to teams.info")
+      err = CustomMassenergizeError("No team_id passed to teams.info")
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -80,7 +79,6 @@ class TeamHandler(RouteHandler):
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
-    #context: Context = request.context
     team_info, err = self.team.list_teams(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -109,7 +107,7 @@ class TeamHandler(RouteHandler):
     args['is_published'] = parse_bool(args.pop('is_published', None))   
       
     if is_value(team_id):
-      team_info, err = self.team.update_team(team_id, args)
+      team_info, err = self.team.update_team(context, team_id, args)
     else:
       err = CustomMassenergizeError("No team_id passed to teams.update")
 
@@ -125,7 +123,7 @@ class TeamHandler(RouteHandler):
     if is_value(team_id):
       team_info, err = self.team.delete_team(team_id)
     else:
-      err = CustomMassEnergizeError("No team_id passed to teams.delete")
+      err = CustomMassenergizeError("No team_id passed to teams.delete")
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

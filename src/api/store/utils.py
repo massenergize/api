@@ -123,7 +123,6 @@ def find_reu_community(reu, verbose=False):
   """
   Determine which, if any, community this household is actually in
   """
-
   communities = Community.objects.filter(is_deleted=False, is_geographically_focused=True)
 
   # heirarchy of communities:
@@ -145,7 +144,7 @@ def find_reu_community(reu, verbose=False):
 
   communities1 = communities.filter(geography_type='STATE')
   for community in communities1:
-    if is_reu_in_community(reu, community, verbose):
+    if is_reu_in_community(reu, community, verbose):     
       return community
 
   communities1 = communities.filter(geography_type='COUNTRY')
@@ -175,7 +174,7 @@ def is_reu_in_community(reu, community, verbose=False):
     reu_community_type = reu.community.geography_type
 
   # loop over the locations linked to in the community, to see if REU is in it
-  for location in community.location_set.all():
+  for location in community.locations.all():
     if geography_type == 'ZIPCODE':
       if zip==location.zipcode:
         if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
@@ -204,6 +203,13 @@ def is_reu_in_community(reu, community, verbose=False):
           return True
 
     elif geography_type == 'COUNTRY':
+
+      # special catch-all case for RealEstateUnits with invalid zipcodes, which get set to "00000"
+      if location.country=="US" and zip=="00000":
+          if verbose: print("Found REU with zipcode "+zip+" within community: "+community.name)
+          return True
+
+
       if reu_community_type != 'ZIPCODE' and reu_community_type != 'CITY' and reu_community_type != 'COUNTY' and reu_community_type != 'STATE':
         reu_loc_data = zipcodes.matching(zip)
         if len(reu_loc_data)>0 and reu_loc_data[0]['country']==location.country:           
@@ -211,3 +217,48 @@ def is_reu_in_community(reu, community, verbose=False):
           return True
 
   return False
+
+def split_location_string(loc):
+  """
+  Return the parts of a location string (formerly used for a real estate unit location)
+  """
+  return loc.capitalize().replace(", ", ",").split(",")
+
+def check_location(street, unit, city, state, zipcode, county="", country="US"):
+  """
+  Check that an address is valid (zip code if in US)
+  """
+  # check zipcode if US location
+  if country == 'US':
+    if not zipcode and not city and not state and not county:
+      return "No zipcode, city, state or county provided", False
+    elif zipcode == "00000":
+      # not a real zipcode, but use for unknown zipcode in US
+      # this is for previously entered zipcodes which may have been invalid
+      pass
+    else :
+      try:
+        matching_locations = zipcodes.matching(zipcode)
+        if len(matching_locations) < 1:
+          # No matching location
+          return "Zipcode doesn't correspond to a community in US", False
+      except Exception as e:
+        return str(e), False
+
+  else:
+    # non US address, not currently supported
+    return "Non-US addresses not currently supported", False
+
+  
+  location_type = 'FULL_ADDRESS'
+  if zipcode and not street:
+    location_type = 'ZIP_CODE_ONLY'
+  elif state and not zipcode and not city and not county:
+    location_type = 'STATE_ONLY'
+  elif city and not zipcode and not street:
+    location_type = 'CITY_ONLY'
+  elif county and not city:
+    location_type = 'COUNTY_ONLY'
+  elif country and not state:
+    location_type = 'COUNTRY_ONLY'
+  return location_type, True

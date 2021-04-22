@@ -18,7 +18,6 @@ class HomePageSettingsHandler(RouteHandler):
 
   def registerRoutes(self):
     self.add("/home_page_settings.info", self.info) 
-    #self.add("/home_page_settings.publish", self.publish) 
     self.add("/home_page_settings.create", self.create)
     self.add("/home_page_settings.add", self.create)
     self.add("/home_page_settings.list", self.list)
@@ -41,17 +40,6 @@ class HomePageSettingsHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=home_page_setting_info)
-
-  # this route isn't used - so not sure whether it works
-  #@admins_only
-  #def publish(self, request):
-  #  context: Context = request.context
-  #  args: dict = context.args
-  #  home_page_id = args.pop('home_page_id', None)
-  #  home_page_setting_info, err = self.service.update_home_page_setting(home_page_id)
-  #  if err:
-  #    return MassenergizeResponse(error=str(err), status=err.status)
-  #  return MassenergizeResponse(data=home_page_setting_info)
 
   @admins_only
   def create(self, request):
@@ -156,8 +144,6 @@ class HomePageSettingsHandler(RouteHandler):
 
   @super_admins_only
   def super_admin_list(self, request):
-    context: Context = request.context
-    args: dict = context.args
     home_page_settings, err = self.service.list_home_page_settings_for_super_admin()
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

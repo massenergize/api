@@ -43,6 +43,8 @@ class Location(models.Model):
   is_deleted = models.BooleanField(default=False, blank=True)
   state = models.CharField(max_length=SHORT_STR_LEN, 
     choices = ZIP_CODE_AND_STATES.items(), blank=True)
+  country = models.CharField(max_length=SHORT_STR_LEN, 
+    default="US", blank=True)
   more_info = JSONField(blank=True, null=True)
 
   def __str__(self):
@@ -51,9 +53,11 @@ class Location(models.Model):
     elif self.location_type == 'ZIP_CODE_ONLY':
       return self.zipcode
     elif self.location_type == 'CITY_ONLY':
-      return self.city
+      return '%s-%s' % (self.city, self.state)
     elif self.location_type == 'COUNTY_ONLY':
-      return self.county 
+      return '%s-%s' % (self.county, self.state)
+    elif self.location_type == 'COUNTRY_ONLY':
+      return self.country 
     elif self.location_type == 'FULL_ADDRESS':
       return '%s, %s, %s, %s, %s' % (
         self.street, self.unit_number, self.city, self.county, self.state
@@ -260,9 +264,13 @@ class Community(models.Model):
     null=True, blank=True, related_name='community_logo')
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
+  favicon = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True, related_name='community_favicon')
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
 
   is_geographically_focused = models.BooleanField(default=False, blank=True)
+
+  # deprecated: location of community was originally a JSON string; now defined below in locations (link to Location model)
   location = JSONField(blank=True, null=True)
 
   # new - define the geographic area for a community (zipcodes, towns/cities, counties, states, countries)
@@ -271,8 +279,8 @@ class Community(models.Model):
     choices=CHOICES.get("COMMUNITY_GEOGRAPHY_TYPES", {}).items(), 
     blank=True, null=True)
   
-  # location_set will define the range for geographic communities
-  location_set = models.ManyToManyField(Location, blank=True)
+  # locations defines the range for geographic communities
+  locations = models.ManyToManyField(Location, blank=True)
 
   policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False, blank=True)
@@ -291,8 +299,9 @@ class Community(models.Model):
 
   def simple_json(self):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
-      'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
+      'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved','more_info'])
     res['logo'] = get_json_if_not_none(self.logo)
+    res['favicon'] = get_json_if_not_none(self.favicon)
     return res
 
   def full_json(self):
@@ -308,13 +317,13 @@ class Community(models.Model):
     #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
     # 
     # For Wayland launch, insisting that we show large numbers so people feel good about it.
-    goal["attained_number_of_households"] += (RealEstateUnit.objects.filter(community=self).count())
-    goal["attained_number_of_actions"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count())
+    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
     #BHN - TODO
     #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
 
     locations = ""
-    for loc in self.location_set.all():
+    for loc in self.locations.all():
       if locations != "":
         locations += ", "
       if self.geography_type == "ZIPCODE":
@@ -341,6 +350,7 @@ class Community(models.Model):
       "goal": goal,
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
+      "favicon": get_json_if_not_none(self.favicon),
       "location":self.location,
       "is_approved": self.is_approved,
       "is_published": self.is_published,
@@ -351,7 +361,7 @@ class Community(models.Model):
       "more_info": self.more_info,
       "admins": admins,
       "geography_type": self.geography_type,
-      "location_set": locations
+      "locations": locations
     }
 
 
@@ -569,6 +579,7 @@ class UserProfile(models.Model):
 
   def simple_json(self):
     res =  model_to_dict(self, ['id', 'full_name', 'preferred_name', 'email', 'is_super_admin', 'is_community_admin'])
+    res['joined'] = self.created_at.date()
     res['user_info'] = self.user_info
     res['profile_picture'] = get_json_if_not_none(self.profile_picture)
     res['communities'] = [c.community.name for c in CommunityMember.objects.filter(user=self)]
@@ -584,6 +595,7 @@ class UserProfile(models.Model):
     
     data = model_to_dict(self, exclude=['real_estate_units', 
       'communities', 'roles', 'last_visited'])
+    data['joined'] = self.created_at.date()
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
     data['goal'] = get_json_if_not_none(self.goal)
@@ -683,6 +695,7 @@ class Team(models.Model):
 
   admins = models.ManyToManyField(UserProfile, related_name='team_admins', 
     blank=True) 
+  # not used
   members = models.ManyToManyField(UserProfile, related_name='team_members', 
     blank=True) 
 
@@ -707,8 +720,8 @@ class Team(models.Model):
   def is_admin(self, UserProfile):
     return self.admins.filter(id=UserProfile.id)
 
-  def is_member(self, UserProfile):
-    return self.members.filter(id=UserProfile.id)
+  #def is_member(self, UserProfile):
+  #  return self.members.filter(id=UserProfile.id)
 
   def __str__(self):
     return self.name
@@ -1370,7 +1383,7 @@ class Testimonial(models.Model):
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
-    res["created_at"] = self.created_at
+    res["created_at"] = self.created_at.date()
     res['file'] = get_json_if_not_none(self.image)
     res['tags'] = [t.simple_json() for t in self.tags.all()]
     res['anonymous'] = self.anonymous
@@ -1433,7 +1446,9 @@ class UserActionRel(models.Model):
       "user": get_json_if_not_none(self.user),
       "action": get_json_if_not_none(self.action),
       "real_estate_unit": get_json_if_not_none(self.real_estate_unit),
-      "status": self.status
+      "status": self.status,
+      "date_completed": self.date_completed,
+      "carbon_impact": self.carbon_impact
     }
 
   def full_json(self):
@@ -2104,10 +2119,6 @@ class HomePageSettings(models.Model):
   social_media_links: str
     Links to social media, such as:  ["facebook:www.facebook.com/coolerconcord/,instgram:www.instagram.com/coolerconcord/"]
 
-  for the tab on all pages:
-  -------------------------
-  favicon_image : ForeignKey to Media file for favicon
-
   more_info: JSON - extraneous information
   is_deleted: boolean - whether this page was deleted from the platform (perhaps with it's community)
   is_published: boolean - whether this page is live
@@ -2140,8 +2151,6 @@ class HomePageSettings(models.Model):
   show_footer_social_media = models.BooleanField(default=True, blank=True)
   social_media_links = JSONField(blank=True, null=True)
   
-  favicon_image = models.ForeignKey(Media, related_name='favicon', on_delete=models.SET_NULL, null=True, blank=True)
-
   is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -2411,6 +2420,36 @@ class VendorsPageSettings(PageSettings):
   class Meta:
     db_table = 'vendors_page_settings'
     verbose_name_plural = "VendorsPageSettings"
+
+class EventsPageSettings(PageSettings):
+  """
+  Represents the community's Events page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "EventsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'events_page_settings'
+    verbose_name_plural = "EventsPageSettings"
+
+class TestimonialsPageSettings(PageSettings):
+  """
+  Represents the community's Testimonials page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "TestimonialsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'testimonials_page_settings'
+    verbose_name_plural = "TestimonialsPageSettings"
 
 class Message(models.Model):
   """
