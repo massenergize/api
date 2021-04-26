@@ -1,4 +1,4 @@
-April 8th Deployment to Dev
-- Customizable page settings by community
-- Updated definitions for geographically based communities
+April 25th Deployment to Dev
+- Bug fixes on team page settings
+- Fixes team creation from portal
 
