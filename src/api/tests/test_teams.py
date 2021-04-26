@@ -24,9 +24,10 @@ class TeamsTestCase(TestCase):
 
     setupCC(self.client)
   
+    COMMUNITY_NAME = "test_teams"
     self.COMMUNITY = Community.objects.create(**{
-      'subdomain': 'joshtopia',
-      'name': 'Joshtopia',
+      'subdomain': COMMUNITY_NAME,
+      'name': COMMUNITY_NAME.capitalize(),
       'accepted_terms_and_conditions': True
     })
 

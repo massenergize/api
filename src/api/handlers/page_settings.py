@@ -16,7 +16,7 @@ class PageSettingsHandler(RouteHandler):
     super().__init__()
     self.pageName = pageName
     if not pageName:
-      raise('PageSettingsHandler: no page name supplied')
+      raise Exception('PageSettingsHandler: no page name supplied')
     self.registerRoutes(pageName)
     self.service = PageSettingsService(dataModel)
 

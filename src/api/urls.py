@@ -37,7 +37,6 @@ ROUTE_HANDLERS = [
   AuthHandler(),
   CommunityHandler(),
   ContactUsPageSettingsHandler(),
-  DownloadHandler(), 
   DonatePageSettingsHandler(),
   DownloadHandler(),
   EventHandler(),
