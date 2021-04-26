@@ -14,7 +14,7 @@ class PageSettingsStore:
   def get_page_setting_info(self, args) -> (dict, MassEnergizeAPIError): 
     try:
       community_id = args.get('community__id', None)
-      community_subdomain = args.get('community__subdomain', None)
+      subdomain = args.get('community__subdomain', None)
       community, error = get_community(community_id, subdomain)
  
       page = self.pageSettingsModel.objects.filter(**args)
