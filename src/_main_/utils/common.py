@@ -143,7 +143,7 @@ def extract_location(args):
   return location
 
 def is_value(b):
-  if b and b != 'undefined':
+  if b and b != 'undefined' and b != "NONE":
     return True
   return False
 

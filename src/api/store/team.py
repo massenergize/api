@@ -3,11 +3,11 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
-from .utils import get_community_or_die, get_user_or_die
+from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
+from .utils import get_community_or_die, get_user_or_die, get_admin_communities
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
-from _main_.settings import IS_PROD, IS_CANARY
 
 def can_set_parent(parent, this_team=None):
   if parent.parent:
@@ -77,6 +77,7 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+
   def team_stats(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       community = get_community_or_die(context, args)
@@ -123,6 +124,7 @@ class TeamStore:
       image_files = args.pop('pictures', None)
       video = args.pop('video', None)
       parent_id = args.pop('parent_id', None)
+      args.pop('undefined', None)
 
       admin_emails = args.pop('admin_emails', [])
       
@@ -154,56 +156,55 @@ class TeamStore:
       else:
         return None, CustomMassenergizeError("Please provide a community")
       
-      new_team = Team.objects.create(**args)
-      team = new_team
+      team, _ = Team.objects.get_or_create(**args)
 
       # add multiple communities if that is the case (generally not)
       if community_list:
         for community in community_list:
-          new_team.community.add(community)
+          team.community.add(community)
 
       # for the case of a sub-team, record the parent
       if parent_id:
         parent = Team.objects.filter(pk=parent_id).first()
         if parent and can_set_parent(parent):
-          new_team.parent = parent
+          team.parent = parent
         else:
           return None, CustomMassenergizeError("Cannot set parent team")
 
       if logo_file:
-        logo = Media.objects.create(file=logo_file, name=f"{slugify(new_team.name)}-TeamLogo")
+        logo = Media.objects.create(file=logo_file, name=f"{slugify(team.name)}-TeamLogo")
         logo.save()
-        new_team.logo = logo
+        team.logo = logo
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
       # TODO: create a rich email template for this?
       
       # Wnen team initially created, it is not visible until reviewed by community admin
       is_published = False
-      new_team.is_published = is_published
+      team.is_published = is_published
       if not is_published:
         cadmins = CommunityAdminGroup.objects.filter(community__id=community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team.\n\n%s" % ("%s/admin/edit/%i/team" %
-        ("https://admin.massenergize.org" if IS_PROD else "https://admin-canary.massenergize.org" if IS_CANARY else "https://admin-dev.massenergize.org", team.id))
+          (ADMIN_URL_ROOT, team.id))
 
         for cadmin in cadmins:
           send_massenergize_email(subject="New team awaiting approval",
                                 msg=message, to=cadmin.email)
-      new_team.save()
-
+      team.save()
       for admin in verified_admins:
         teamMember, _ = TeamMember.objects.get_or_create(team=team,user=admin)
         teamMember.is_admin = True
         teamMember.save()
 
-      return new_team, None
+      return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       if team:
         team.delete()
       return None, CustomMassenergizeError(str(e))
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
+
+  def update_team(self, context, team_id, args) -> (dict, MassEnergizeAPIError):
     try:
       community_id = args.pop('community_id', None)
       if community_id:
@@ -215,9 +216,29 @@ class TeamStore:
       logo = args.pop('logo', None)
       parent_id = args.pop('parent_id', None)
       is_published = args.pop('is_published', False)
-
+        
       team = Team.objects.filter(id=team_id)
- 
+
+      # to update Team, need to be super_admin, community_admin of that community, or a team_admin
+      allowed = False
+      if context.user_is_super_admin:
+        allowed = True
+      elif context.user_is_community_admin:
+        community = team.first().community
+        admin_communities, err = get_admin_communities(context)
+        if community in admin_communities:
+          allowed = True
+      else:
+        # user has to be on the team admin list
+        teamMembers = TeamMember.objects.filter(team=team.first())
+        for teamMember in teamMembers:
+          if teamMember.user.id == user_id and teamMember.is_admin:
+            allowed = True
+            break
+
+      if not allowed:
+        return None, NotAuthorizedError()
+
       team.update(**args)
       team = team.first()
 
@@ -227,7 +248,7 @@ class TeamStore:
         team.is_published = True
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
         # fix the broken URL in this message, needs to have community nam
-        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % ("https://community.massenergize.org" if IS_PROD else "https://community-canary.massenergize.org" if IS_CANARY else "https://community-dev.massenergize.org", subdomain, team.id))
+        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % (COMMUNITY_URL_ROOT, subdomain, team.id))
         for team_admin in team_admins:
           send_massenergize_email(subject="Your team has been approved",
                                 msg=message, to=team_admin.user.email)
@@ -235,24 +256,21 @@ class TeamStore:
         # this is how teams can get be made not live
         team.is_published = is_published
 
-      if team:
-        team.community = None
-        if community_id:
-          community = Community.objects.filter(pk=community_id).first()
-          if community:
+      if community_id:
+        community = Community.objects.filter(pk=community_id).first()
+        if community:
             team.community = community          
 
-        if parent_id:
+      if parent_id:
           team.parent = None
           parent = Team.objects.filter(pk=parent_id).first()
           if parent and can_set_parent(parent, this_team=team):
             team.parent = parent
         
-        if logo:
+      if logo:
           # if existing logo, the string length is around 300 characters
           # If a new logo updated, this will be the length of the file, much larger than that       
           new_logo = len(logo) > 1000
-
           if new_logo:
             logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
             logo.save()
@@ -260,7 +278,7 @@ class TeamStore:
           else: 
             team.logo = None 
 
-        team.save()
+      team.save()
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")

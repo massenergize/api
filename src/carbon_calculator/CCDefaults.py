@@ -174,12 +174,15 @@ class CCD():
                             f = False
                             var = self.DefaultsByLocality[locality][variable]
                             for i in range(len(var["valid_dates"])):
-                                if valid_date < var["valid_dates"][i]:
+                                compdate = var["valid_dates"][i]
+                                if type(compdate)==type('str'):
+                                    compdate = datetime.strptime(compdate, "%Y-%m-%d").date()
+                                if valid_date < compdate:
                                     var["valid_dates"].insert(i,valid_date)
                                     var["values"].insert(i,value)
                                     f = True
                                     break
-                                elif valid_date == var["valid_dates"][i]:
+                                elif valid_date == compdate:
                                     var["values"][i] = value
                                     f = True
                                     break

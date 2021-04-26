@@ -9,6 +9,7 @@ import requests
 import os
 import pprint, sys
 from django.utils import timezone #For keeping track of when the consistency was last checked
+from api.tests.common import signinAs, setupCC
 
 OUTPUTS_FILE   = "carbon_calculator/tests/expected_outputs.txt"
 INPUTS_FILE    = "carbon_calculator/tests/allPossibleInputs.txt"
@@ -22,16 +23,27 @@ class CarbonCalculatorTest(TestCase):
     @classmethod
     def setUpClass(self):
         self.client = Client()
-        self.client.post('/cc/import',
-            {   "Confirm": "Yes",
-                "Actions":"carbon_calculator/content/Actions.csv",
-                "Questions":"carbon_calculator/content/Questions.csv",
-                "Stations":"carbon_calculator/content/Stations.csv",
-                "Groups":"carbon_calculator/content/Groups.csv",
-                "Organizations":"carbon_calculator/content/Organizations.csv",
-                "Events":"carbon_calculator/content/Events.csv",
-                "Defaults":"carbon_calculator/content/Defaults.csv"
-                })
+        
+        self.USER = UserProfile.objects.create(**{
+          'full_name': "Regular User",
+          'email': 'user@test.com',
+        })
+
+        self.CADMIN = UserProfile.objects.create(**{
+          'full_name': "Community Admin",
+          'email': 'cadmin@test.com',
+          'is_community_admin': True
+        })
+
+        self.SADMIN = UserProfile.objects.create(**{
+          'full_name': "Super Admin",
+          'email': 'sadmin@test.com',
+          'is_super_admin': True
+        })
+
+        signinAs(self.client, self.SADMIN)
+
+        setupCC(self.client)
 
         generate_inputs = eval(os.getenv("GENERATE_INPUTS"))
         if generate_inputs > 0:

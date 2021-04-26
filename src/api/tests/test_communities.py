@@ -8,26 +8,26 @@ from carbon_calculator.models import Action as CCAction
 from _main_.utils.utils import load_json
 from api.tests.common import signinAs, setupCC, createUsers
 
-class TeamsTestCase(TestCase):
+class CommunitiesTestCase(TestCase):
 
 
   @classmethod
   def setUpClass(self):
 
-    print("\n---> Testing Teams <---\n")
+    print("\n---> Testing Communities <---\n")
 
     self.client = Client()
 
     self.USER, self.CADMIN, self.SADMIN = createUsers()
-    
+
     signinAs(self.client, self.SADMIN)
 
     setupCC(self.client)
-  
-    COMMUNITY_NAME = "test_teams"
+
+    name = 'turtles'  
     self.COMMUNITY = Community.objects.create(**{
-      'subdomain': COMMUNITY_NAME,
-      'name': COMMUNITY_NAME.capitalize(),
+      'subdomain': name,
+      'name': name.capitalize(),
       'accepted_terms_and_conditions': True
     })
 
@@ -35,13 +35,14 @@ class TeamsTestCase(TestCase):
     self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
     self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
+    
     self.USER1 = UserProfile.objects.create(**{
-      'full_name': "Josh Katofksy",
-      'email': 'foo@test.com'
+      'full_name': "Community Tester",
+      'email': 'community@tester.com'
     })
     self.USER2 = UserProfile.objects.create(**{
-      'full_name': "Kosh Jatofsky",
-      'email': 'bar@test.com'
+      'full_name': "Tester Community",
+      'email': 'tester@community.com'
     })
 
     self.TEAM1 = Team.objects.create(community=self.COMMUNITY, name="Les Montréalais", is_published=True)
@@ -56,7 +57,6 @@ class TeamsTestCase(TestCase):
     self.ADMIN2.save()
     self.TEAM1.save()
     self.TEAM2.save()
-
       
   @classmethod
   def tearDownClass(self):
@@ -68,19 +68,14 @@ class TeamsTestCase(TestCase):
     pass
 
   def test_info(self):
-    print("test_info")
 
     # first test for no user signed in
     signinAs(self.client, None)
 
     # successfully retrieve information about a team that has been published
-    info_response = self.client.post('/v3/teams.info', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/v3/communities.info', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(info_response["success"])
-    self.assertEqual(self.TEAM1.name, info_response['data']['name'])
-
-    # don't retrieve information about a team that has not been published
-    info_response = self.client.post('/v3/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(info_response["success"])
+    self.assertEqual(self.COMMUNITY.name, info_response['data']['name'])
 
     signinAs(self.client, self.USER)
     # don't retrieve information about a team that has not been published
@@ -122,9 +117,8 @@ class TeamsTestCase(TestCase):
   # TODO: test published/unpublished teams
   def test_list(self):
 
-    print("test_list")
     signinAs(self.client, self.USER1)
-    list_response = self.client.post('/v3/teams.list', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/v3/communities.list', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
 
     # only one team approved
     self.assertTrue(list_response["success"])
@@ -132,51 +126,9 @@ class TeamsTestCase(TestCase):
     self.assertEqual(self.TEAM1.name, list_response['data'][0]['name'])
 
 
-  # TODO: doesn't test households or actions todo
-  def test_stats(self):
-    cca1 = CCAction.objects.create(name="CC Action 1", average_points=50, questions="foo")
-    cca2 = CCAction.objects.create(name="CC Action 2", average_points=100, questions="bar")
-    action1 = Action.objects.create(calculator_action=cca1)
-    action2 = Action.objects.create(calculator_action=cca2)
-    reu = RealEstateUnit.objects.create(name="Josh's House", unit_type="RESIDENTIAL")
-    UserActionRel.objects.create(user=self.USER1, action=action1, status="DONE", real_estate_unit=reu)
-    UserActionRel.objects.create(user=self.USER2, action=action1, status="DONE", real_estate_unit=reu)
-    UserActionRel.objects.create(user=self.USER2, action=action2, status="DONE", real_estate_unit=reu)
-
-    stats_response = self.client.post('/v3/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
-
-    self.assertTrue(stats_response["success"])
-
-    self.assertIs(1, len(stats_response['data']))
-
-    self.TEAM2.is_published = True
-    self.TEAM2.save()
-
-    stats_response = self.client.post('/v3/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
-
-    self.assertTrue(stats_response["success"])
-
-    self.assertIs(2, len(stats_response['data']))
-
-    team1stats, team2stats = stats_response['data'][0], stats_response['data'][1]
-
-    self.assertEqual(self.TEAM1.name, team1stats['team']['name'])
-    self.assertEqual(self.TEAM2.name, team2stats['team']['name'])
-
-    self.assertIs(1, team1stats['members'])
-    self.assertIs(1, team2stats['members'])
-
-    self.assertIs(1, team1stats['actions_completed'])
-    self.assertIs(2, team2stats['actions_completed'])
-
-    self.assertIs(50, team1stats['carbon_footprint_reduction'])
-    self.assertIs(150, team2stats['carbon_footprint_reduction'])
-    
-    self.TEAM2.is_published = False
-    self.TEAM2.save()
 
   def test_update(self):
-    print('\ntest_update')
+
     # try to update the community without being signed in
     signinAs(self.client, None)
     new_name = "QAnon followers"

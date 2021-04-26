@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": true,
-  "BUILD_VERSION": "3.2.2",
-  "BUILD_VERSION_NOTES": "April 9th Deployment to Canary\n- Customizable page settings by community\n- Updated definitions for geographically based communities\n\n"
+  "BUILD_VERSION": "3.2.5",
+  "BUILD_VERSION_NOTES": "April 25th Deployment to Dev\n- Bug fixes on team page settings\n- Fixes team creation from portal\n\n"
 }
