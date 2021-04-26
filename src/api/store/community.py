@@ -255,9 +255,10 @@ class CommunityStore:
           zip = reu.address.zipcode
           if not isinstance(zip,str) or len(zip)!=5:
             address_string = str(reu.address)
-            print("REU invalid zipcode: address = "+address_string)
+            print("REU invalid zipcode: address = "+address_string+" User "+userProfile.email)
 
             zip = "00000"
+            city = ""
             for loc in ZIPCODE_FIXES:
               # temporary fixing known address problems in the database
               if address_string.find(loc)>=0:
@@ -401,23 +402,23 @@ class CommunityStore:
 
       #now create all the pages
       if not _clone_page_settings(AboutUsPageSettings, f"About {community.name}", community):
-        raise("Failed to clone settings for AboutUs page")
+        raise Exception("Failed to clone settings for AboutUs page")
       if not _clone_page_settings(ActionsPageSettings, f"Actions for {community.name}", community):
-        raise("Failed to clone settings for Actions page")
+        raise Exception("Failed to clone settings for Actions page")
       if not _clone_page_settings(ContactUsPageSettings, f"Contact Us - {community.name}", community):
-        raise("Failed to clone settings for ContactUs page")
+        raise Exception("Failed to clone settings for ContactUs page")
       if not _clone_page_settings(DonatePageSettings, f"Take Actions - {community.name}", community):
-        raise("Failed to clone settings for Donate page")
+        raise Exception("Failed to clone settings for Donate page")
       if not _clone_page_settings(ImpactPageSettings, f"See our Impact - {community.name}", community):
-        raise("Failed to clone settings for Impact page")
+        raise Exception("Failed to clone settings for Impact page")
       if not _clone_page_settings(TeamsPageSettings, f"Teams in this community", community):
-        raise("Failed to clone settings for Teams page")
+        raise Exception("Failed to clone settings for Teams page")
       if not _clone_page_settings(VendorsPageSettings, f"Service Providers", community):
-        raise("Failed to clone settings for Vendors page")
+        raise Exception("Failed to clone settings for Vendors page")
       if not _clone_page_settings(EventsPageSettings, f"Events and Campaigns", community):
-        raise("Failed to clone settings for Events page")
+        raise Exception("Failed to clone settings for Events page")
       if not _clone_page_settings(TestimonialsPageSettings, f"Testimonials", community):
-        raise("Failed to clone settings for Testimonials page")
+        raise Exception("Failed to clone settings for Testimonials page")
     
       admin_group_name  = f"{community.name}-{community.subdomain}-Admin-Group"
       comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=community)

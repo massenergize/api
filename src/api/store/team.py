@@ -124,6 +124,7 @@ class TeamStore:
       image_files = args.pop('pictures', None)
       video = args.pop('video', None)
       parent_id = args.pop('parent_id', None)
+      args.pop('undefined', None)
 
       admin_emails = args.pop('admin_emails', [])
       
@@ -155,33 +156,32 @@ class TeamStore:
       else:
         return None, CustomMassenergizeError("Please provide a community")
       
-      new_team = Team.objects.create(**args)
-      team = new_team
+      team, _ = Team.objects.get_or_create(**args)
 
       # add multiple communities if that is the case (generally not)
       if community_list:
         for community in community_list:
-          new_team.community.add(community)
+          team.community.add(community)
 
       # for the case of a sub-team, record the parent
       if parent_id:
         parent = Team.objects.filter(pk=parent_id).first()
         if parent and can_set_parent(parent):
-          new_team.parent = parent
+          team.parent = parent
         else:
           return None, CustomMassenergizeError("Cannot set parent team")
 
       if logo_file:
-        logo = Media.objects.create(file=logo_file, name=f"{slugify(new_team.name)}-TeamLogo")
+        logo = Media.objects.create(file=logo_file, name=f"{slugify(team.name)}-TeamLogo")
         logo.save()
-        new_team.logo = logo
+        team.logo = logo
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
       # TODO: create a rich email template for this?
       
       # Wnen team initially created, it is not visible until reviewed by community admin
       is_published = False
-      new_team.is_published = is_published
+      team.is_published = is_published
       if not is_published:
         cadmins = CommunityAdminGroup.objects.filter(community__id=community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team.\n\n%s" % ("%s/admin/edit/%i/team" %
@@ -190,14 +190,13 @@ class TeamStore:
         for cadmin in cadmins:
           send_massenergize_email(subject="New team awaiting approval",
                                 msg=message, to=cadmin.email)
-      new_team.save()
-
+      team.save()
       for admin in verified_admins:
         teamMember, _ = TeamMember.objects.get_or_create(team=team,user=admin)
         teamMember.is_admin = True
         teamMember.save()
 
-      return new_team, None
+      return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       if team:
