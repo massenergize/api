@@ -18,7 +18,7 @@ class Validator:
     }
     return self
 
-  def expect_one_of(self, fields):
+  def expect_one_of(self, lst):
     for (field_name, field_type, is_required) in lst:
       self.fields[field_name] = {
         "type": field_type,
@@ -41,12 +41,17 @@ class Validator:
     self.rename_fields.add((old_name, new_name)) 
     return self
 
-
   def _common_name(self, s):
     return (' '.join(s.split('_'))).title()
 
   def verify(self, args, strict=False):
     try:
+      #first rename all fields that need renaming
+      for (old_name, new_name) in self.rename_fields:
+        val = args.pop(old_name, None)
+        if val:
+          args[new_name] = val
+
       # when in strict mode remove all unexpected fields
       if strict:
         tmp_args = args.copy()
@@ -54,12 +59,6 @@ class Validator:
           if f not in self.fields:
             del tmp_args[f]
         args = tmp_args
-
-      #first rename all fields that need renaming
-      for (old_name, new_name) in self.rename_fields:
-        val = self.fields.pop(old_name, None)
-        if val:
-          self.fields[new_name] = val
 
       # cleanup and verify all contents of the args and return it
       for field_name, field_info in self.fields.items():
@@ -106,5 +105,9 @@ class Validator:
       return args, None
 
     except Exception as e:
+      # now clear the  dictionary
+      self.fields = {}
+      self.rename_fields = set()
+
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
