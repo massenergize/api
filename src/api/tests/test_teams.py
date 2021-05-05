@@ -499,7 +499,7 @@ class TeamsTestCase(TestCase):
 
     # test list for cadmin logged as cadmin not in community
     # cadmin can list for any community?
-    list_response = self.client.post('/v3/teams.listForCommunityAdmin', urlencode({"community_id2": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/v3/teams.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
 
     # test list for cadmin logged as sadmin
@@ -509,22 +509,22 @@ class TeamsTestCase(TestCase):
 
   def test_list_SAdmin(self):
 
-    # test list for cadmin not logged in
+    # test list for sadmin not logged in
     signinAs(self.client, None)
     list_response = self.client.post('/v3/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
-    # test list for cadmin logged as user
+    # test list for sadmin logged as user
     signinAs(self.client, self.USER)
     list_response = self.client.post('/v3/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
-    # test list for cadmin logged as cadmin
+    # test list for sadmin logged as cadmin
     signinAs(self.client, self.CADMIN)
-    list_response = self.client.post('/v3/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/v3/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
-    # test list for cadmin logged as sadmin
+    # test list for sadmin logged as sadmin
     signinAs(self.client, self.SADMIN)
-    list_response = self.client.post('/v3/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/v3/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
