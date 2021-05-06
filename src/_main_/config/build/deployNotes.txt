@@ -1,4 +1,3 @@
-April 25th Deployment to Dev
-- Bug fixes on team page settings
-- Fixes team creation from portal
+May 4th Deployment to Dev
+- Owen Plesko's teams testing and bug fixes relating to teams
 

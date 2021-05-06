@@ -3,10 +3,14 @@ from http.cookies import SimpleCookie
 from datetime import datetime
 from _main_.settings import SECRET_KEY
 from database.models import UserProfile
+from carbon_calculator.models import CalcDefault
 
 
 def setupCC(client):
-    client.post('/cc/import',
+    cq = CalcDefault.objects.all()
+    num = cq.count()
+    if num<=0:
+        client.post('/cc/import',
             {   "Confirm": "Yes",
                 "Actions":"carbon_calculator/content/Actions.csv",
                 "Questions":"carbon_calculator/content/Questions.csv",
