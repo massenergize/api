@@ -11,8 +11,9 @@ class ActionStore:
   def __init__(self):
     self.name = "Action Store/DB"
 
-  def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
+  def get_action_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      action_id = args.get("id", None)
       actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
 
       # may want to add a filter on is_deleted, switched on context
@@ -28,9 +29,12 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_actions(self, context: Context,community_id, subdomain) -> (list, MassEnergizeAPIError):
-    try:
+  def list_actions(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    try: 
       actions = []
+      community_id = args.get('community_id', None)
+      subdomain = args.get('subdomain', None)
+
       if community_id:
         actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(community__id=community_id)
       elif subdomain:
@@ -90,8 +94,9 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def copy_action(self, context: Context, action_id) -> (Action, MassEnergizeAPIError):
+  def copy_action(self, context: Context, args) -> (Action, MassEnergizeAPIError):
     try:
+      action_id = args.get("action_id", None)
       #find the action
       action_to_copy: Action = Action.objects.filter(id=action_id).first()
       if not action_to_copy:
@@ -132,11 +137,10 @@ class ActionStore:
 
       action = action.first()
       if image:
-        media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
+        media = Media.objects.create(name=f"{action.title}-Action-Image", file=image)
         action.image = media
       else:
         action.image = None
-
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
@@ -168,13 +172,14 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_action(self, context: Context, action_id) -> (Action, MassEnergizeAPIError):
+  def delete_action(self, context: Context, args) -> (Action, MassEnergizeAPIError):
     try:
+      action_id = args.get("action_id", None)
       #find the action
       action_to_delete = Action.objects.get(id=action_id)
       action_to_delete.is_deleted = True 
       action_to_delete.save()
-      return action_to_delete.first(), None
+      return action_to_delete, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

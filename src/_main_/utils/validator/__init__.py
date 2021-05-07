@@ -66,7 +66,7 @@ class Validator:
         field_is_required = field_info["is_required"]
 
         if field_is_required and field_name not in args:
-          return None, CustomMassenergizeError(f"You are Missing a Required Input: {self._common_name(field_name)}")
+          raise Exception(f"You are Missing a Required Input: {self._common_name(field_name)}")
         
         if field_name in args:
           if field_type == str:
@@ -75,9 +75,9 @@ class Validator:
             min_length = options.get("min_length", None)
             max_length = options.get("max_length", None)
             if min_length and len(val) < min_length:
-              return None, CustomMassenergizeError(f"{field_name} must have at least {min_length} characters")
+              raise Exception(f"{field_name} must have at least {min_length} characters")
             if max_length and len(val) > max_length:
-              return None, CustomMassenergizeError(f"{field_name} must have at most {max_length} characters")
+              raise Exception(f"{field_name} must have at most {max_length} characters")
             args[field_name] = val
             
           elif field_type == int:
@@ -98,7 +98,7 @@ class Validator:
           elif field_type == 'file':
             args[field_name] =  args.get(field_name, None) or None
 
-      # now clear the  dictionary
+      # now clear the dictionary
       self.fields = {}
       self.rename_fields = set()
 
