@@ -116,8 +116,8 @@ class TestimonialHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("id", str, is_required=True)
-    self.validator.expect("rank", str, is_required=True)
+    self.validator.expect("id", int, is_required=True)
+    self.validator.expect("rank", int, is_required=True)
     self.validator.rename("tstimonial_id", "id")
 
     args, err = self.validator.verify(args)

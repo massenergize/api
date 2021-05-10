@@ -188,7 +188,7 @@ class TestimonialStore:
       id = args.get("id", None)
       rank = args("rank", None)
 
-      if args and rank:
+      if id and rank:
         testimonials = Testimonial.objects.filter(id=id)
         testimonials.update(rank=rank)
         return testimonials.first(), None
