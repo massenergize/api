@@ -38,6 +38,12 @@ class VendorService:
       return None, err
     return serialize(vendor), None
 
+  def rank_vendor(self, args) -> (dict, MassEnergizeAPIError):
+    vendor, err = self.store.rank_vendor(args)
+    if err:
+      return None, err
+    return serialize(vendor), None
+
 
   def copy_vendor(self, vendor_id) -> (dict, MassEnergizeAPIError):
     vendor, err = self.store.copy_vendor(vendor_id)
