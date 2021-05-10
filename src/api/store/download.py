@@ -18,6 +18,7 @@ class DownloadStore:
     # for testing with empty database, create tag collection
     tag_collections = TagCollection.objects.filter(name='Category')
     if tag_collections.count()<1:
+      # because of the comma in "Land, Soil & Water" - this probably doesn't work as intended
       tagdata = {'name':'Category', 'tags':'Home Energy,Solar,Transportation,Waste & Recycling,Food,Activism & Education,Land, Soil & Water'}
       tcs.create_tag_collection(tagdata)
 

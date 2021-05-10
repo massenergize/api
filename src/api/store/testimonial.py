@@ -183,6 +183,22 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
+  def rank_testimonial(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      id = args.get("id", None)
+      rank = args("rank", None)
+
+      if args and rank:
+        testimonials = Testimonial.objects.filter(id=id)
+        testimonials.update(rank=rank)
+        return testimonials.first(), None
+      else:
+        raise Exception("Testimonial Rank and ID not provided to testimonials.rank")
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
   def delete_testimonial(self, context: Context, testimonial_id) -> (dict, MassEnergizeAPIError):
     try:
       testimonials = Testimonial.objects.filter(id=testimonial_id)
