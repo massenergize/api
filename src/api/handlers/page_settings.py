@@ -60,8 +60,7 @@ class PageSettingsHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    user_id = args.pop('user_id', None)
-    page_setting_info, err = self.service.list_page_settings(community_id, user_id)
+    page_setting_info, err = self.service.list_page_settings(community_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=page_setting_info)
