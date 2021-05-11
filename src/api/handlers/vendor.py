@@ -27,6 +27,7 @@ class VendorHandler(RouteHandler):
     self.add("/vendors.list", self.list)
     self.add("/vendors.update", self.update)
     self.add("/vendors.copy", self.copy)
+    self.add("/vendors.rank", self.rank)    
     self.add("/vendors.delete", self.delete)
     self.add("/vendors.remove", self.delete)
 
@@ -136,6 +137,24 @@ class VendorHandler(RouteHandler):
       args['key_contact']["email"] = key_contact_email
 
     vendor_info, err = self.service.update_vendor(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=vendor_info)
+
+  @admins_only
+  def rank(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect('id', int, is_required=True)
+    self.validator.expect('rank', int, is_required=True)
+    self.validator.rename('vendor_id', 'id')
+
+    args, err = self.validator.verify(args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+
+    vendor_info, err = self.service.rank_vendor(args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)

@@ -159,6 +159,22 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
+  def rank_vendor(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      id = args.get("id", None)
+      rank = args.get("rank", None)
+
+      if id and rank:
+        vendors = Event.objects.filter(id=id)
+        vendors.update(rank=rank)
+        return vendors.first(), None
+      else:
+        raise Exception("Rank and ID not provided to vendors.rank")
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
   def delete_vendor(self, vendor_id) -> (dict, MassEnergizeAPIError):
     try:
       vendors = Vendor.objects.filter(id=vendor_id)

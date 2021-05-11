@@ -146,6 +146,22 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
+  def rank_event(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      id = args.get('id', None)
+      rank = args.get('rank', None)
+      if id and rank:
+
+        events = Event.objects.filter(id=id)
+        events.update(rank=rank)
+        return events.first(), None
+      else:
+        raise Exception("Rank and ID not provided to events.rank")
+      
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
   def delete_event(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
     try:
       events = Event.objects.filter(id=event_id)
