@@ -172,10 +172,10 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def rank_action(self, context: Context, args) -> (Action, MassEnergizeAPIError):
+  def rank_action(self, args) -> (Action, MassEnergizeAPIError):
     try:
       id = args.get("id", None)
-      rank = args
+      rank = args.get("rank", None)
 
       if id and rank:
         actions = Action.objects.filter(id=id)

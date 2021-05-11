@@ -183,12 +183,12 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def rank_testimonial(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def rank_testimonial(self, args) -> (dict, MassEnergizeAPIError):
     try:
       id = args.get("id", None)
-      rank = args("rank", None)
+      rank = args.get("rank", None)
 
-      if id and rank:
+      if id and rank:     
         testimonials = Testimonial.objects.filter(id=id)
         testimonials.update(rank=rank)
         return testimonials.first(), None

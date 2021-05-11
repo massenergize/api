@@ -115,16 +115,16 @@ class TestimonialHandler(RouteHandler):
     """ Update the rank of a testimonial, nothing else """
     context: Context = request.context
     args: dict = context.args
-
+      
     self.validator.expect("id", int, is_required=True)
     self.validator.expect("rank", int, is_required=True)
-    self.validator.rename("tstimonial_id", "id")
+    self.validator.rename("testimonial_id", "id")
 
     args, err = self.validator.verify(args)
     if err:
       return err
 
-    testimonial_info, err = self.service.rank_testimonial(context, args)
+    testimonial_info, err = self.service.rank_testimonial(args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)

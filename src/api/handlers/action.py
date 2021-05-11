@@ -134,7 +134,7 @@ class ActionHandler(RouteHandler):
     if err:
       return err
     
-    action_info, err = self.service.rank_action(context, args)
+    action_info, err = self.service.rank_action(args)
     if err:
       return err      
       
