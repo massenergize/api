@@ -54,7 +54,6 @@ class ActionHandlerTest(TestCase):
       pass
 
     def test_info(self):
-      print("testing info!")
       # test info not logged in
       signinAs(self.client, None)
       info_response = self.client.post('/v3/actions.info', urlencode({"id": self.ACTION1.id}), content_type="application/x-www-form-urlencoded").toDict()
@@ -136,7 +135,6 @@ class ActionHandlerTest(TestCase):
       signinAs(self.client, self.CADMIN)
       update_response = self.client.post('/v3/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "cadmin_title"}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(update_response["success"])
-      print(update_response["data"])
       self.assertEquals(update_response["data"]["title"], "cadmin_title")
 
       # test update as sadmin
@@ -172,6 +170,40 @@ class ActionHandlerTest(TestCase):
       # test no action_id
       delete_response = self.client.post('/v3/actions.delete', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertFalse(delete_response["success"])
+
+    def test_rank(self):
+
+      # test not logged in
+      rank = 444
+      signinAs(self.client, None)
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": self.ACTION2.id, "rank": rank}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      # test as user
+      signinAs(self.client, self.USER)
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": self.ACTION2.id, "rank": rank}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      # test as cadmin
+      signinAs(self.client, self.CADMIN)
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": self.ACTION2.id, "rank": rank}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response["success"])
+      self.assertEqual(response["data"]["rank"], rank)
+
+      # test as cadmin, missing parameter
+      rank = 200
+      response = self.client.post('/v3/actions.rank', urlencode({"rank": rank}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": self.ACTION2.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      # pass args as strings
+      signinAs(self.client, self.SADMIN)
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": str(self.ACTION2.id), "rank": str(rank)}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response["success"])
+      self.assertEqual(response["data"]["rank"], rank)
+    
 
     def test_copy(self):
       # test copy not logged in
