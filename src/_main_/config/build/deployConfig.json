@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
-  "IS_CANARY": true,
-  "BUILD_VERSION": "3.2.7",
+  "IS_CANARY": false,
+  "BUILD_VERSION": "3.2.8",
   "BUILD_VERSION_NOTES": "May 11th Deployment to Canary\n- Introducing routes .rank for testimonials, actions, events, vendors\n- Fix images getting lost from testimonials\n- Owen Plesko's testing and bug fixes relating to communities\n\n"
 }
