@@ -25,6 +25,7 @@ class ActionHandler(RouteHandler):
     self.add("/actions.update", self.update)
     self.add("/actions.delete", self.delete)
     self.add("/actions.remove", self.delete)
+    self.add("/actions.rank", self.rank)
     self.add("/actions.copy", self.copy)
 
     #admin routes
@@ -37,14 +38,13 @@ class ActionHandler(RouteHandler):
     args: dict = context.args
     
     # verify the body of the incoming request
-    self.validator.expect("action_id", str, is_required=True)
-    self.validator.rename("id", "action_id")
+    self.validator.expect("id", str, is_required=True)
+    self.validator.rename("action_id", "id")
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
     
-    action_id = args.pop('action_id', None)
-    action_info, err = self.service.get_action_info(context, action_id)
+    action_info, err = self.service.get_action_info(context, args)
     if err:
       return err
     return MassenergizeResponse(data=action_info)
@@ -58,7 +58,7 @@ class ActionHandler(RouteHandler):
       .expect("community_id", int, is_required=False)
       .expect("calculator_action", int, is_required=False)
       .expect("image", "file", is_required=False, options={"is_logo": True})
-      .expect("title", str, is_required=False, options={"min_length": 4, "max_length": 40})
+      .expect("title", str, is_required=True, options={"min_length": 4, "max_length": 40})
       .expect("rank", int, is_required=False)
       .expect("is_global", bool, is_required=False)
       .expect("is_published", bool, is_required=False)
@@ -79,9 +79,15 @@ class ActionHandler(RouteHandler):
   def list(self, request): 
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop('community_id', None)
-    subdomain = args.pop('subdomain', None)
-    action_info, err = self.service.list_actions(context, community_id, subdomain)
+
+    self.validator.expect('community_id', is_required=False)
+    self.validator.expect('subdomain', is_required=False)
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    action_info, err = self.service.list_actions(context, args)
     if err:
       return err
     return MassenergizeResponse(data=action_info)
@@ -115,11 +121,37 @@ class ActionHandler(RouteHandler):
 
 
   @admins_only
+  def rank(self, request): 
+    context: Context = request.context
+    args = context.get_request_body() 
+    (self.validator
+      .expect("id", int, is_required=True)
+      .expect("rank", int, is_required=True)
+      .rename("action_id", "id")
+    )
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    
+    action_info, err = self.service.rank_action(args)
+    if err:
+      return err      
+      
+    return MassenergizeResponse(data=action_info)
+
+
+  @admins_only
   def copy(self, request): 
     context: Context = request.context
     args: dict = context.args
-    action_id = args.pop('action_id', None)
-    action_info, err = self.service.copy_action(context, action_id)
+
+    self.validator.expect("action_id", None)
+    args, err = self.validator.verify(args)
+    if err:
+      return err   
+
+    action_info, err = self.service.copy_action(context, args)
     if err:
       return err
     return MassenergizeResponse(data=action_info)
@@ -129,8 +161,13 @@ class ActionHandler(RouteHandler):
   def delete(self, request): 
     context: Context = request.context
     args: dict = context.args
-    action_id = args.pop('action_id', None)
-    action_info, err = self.service.delete_action(context, action_id)
+
+    self.validator.expect("action_id", is_required=True)
+    args, err = self.validator.verify(args)
+    if err:
+      return err   
+
+    action_info, err = self.service.delete_action(context, args)
     if err:
       return err
     return MassenergizeResponse(data=action_info)

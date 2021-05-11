@@ -121,6 +121,7 @@ class CarbonCalculator:
             theClass = self.allActions[name]
             theInstance = theClass(name)
             self.allActions[name] = theInstance
+
     # query actions
     def Query(self,action=None):
         if action in self.allActions:

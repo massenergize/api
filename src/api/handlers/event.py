@@ -26,6 +26,7 @@ class EventHandler(RouteHandler):
     self.add("/events.update", self.update)
     self.add("/events.delete", self.delete)
     self.add("/events.remove", self.delete)
+    self.add("/events.rank", self.rank)
     self.add("/events.rsvp", self.rsvp)
     self.add("/events.rsvp.update", self.rsvp_update)
     self.add("/events.rsvp.remove", self.rsvp_remove)
@@ -151,6 +152,24 @@ class EventHandler(RouteHandler):
     args = parse_location(args)
 
     event_info, err = self.service.update_event(context, event_id, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=event_info)
+
+  @admins_only
+  def rank(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect('id', int, is_required=True)
+    self.validator.expect('rank', int, is_required=True)
+    self.validator.rename('event_id', 'id')
+
+    args, err = self.validator.verify(args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+
+    event_info, err = self.service.rank_event(args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)

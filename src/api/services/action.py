@@ -12,14 +12,14 @@ class ActionService:
   def __init__(self):
     self.store =  ActionStore()
 
-  def get_action_info(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.get_action_info(context, action_id)
+  def get_action_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.get_action_info(context, args)
     if err:
       return None, err
     return serialize(action, full=True), None
 
-  def list_actions(self, context: Context, community_id, subdomain) -> (list, MassEnergizeAPIError):
-    actions, err = self.store.list_actions(context, community_id, subdomain)
+  def list_actions(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    actions, err = self.store.list_actions(context, args)
     if err:
       return None, err
     return serialize_all(actions), None
@@ -38,14 +38,20 @@ class ActionService:
       return None, err
     return serialize(action), None
 
-  def delete_action(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.delete_action(context, action_id)
+  def rank_action(self, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.rank_action(args)
     if err:
       return None, err
     return serialize(action), None
 
-  def copy_action(self, context: Context, action_id) -> (dict, MassEnergizeAPIError):
-    action, err = self.store.copy_action(context, action_id)
+  def delete_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.delete_action(context, args)
+    if err:
+      return None, err
+    return serialize(action), None
+
+  def copy_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    action, err = self.store.copy_action(context, args)
     if err:
       return None, err
     return serialize(action), None

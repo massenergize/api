@@ -62,6 +62,12 @@ class EventService:
       return None, err
     return serialize(event), None
 
+  def rank_event(self, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.rank_event(args)
+    if err:
+      return None, err
+    return serialize(event), None
+
   def delete_event(self, context, args) -> (dict, MassEnergizeAPIError):
     event, err = self.store.delete_event(context, args)
     if err:
