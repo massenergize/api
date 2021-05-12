@@ -136,7 +136,6 @@ class ActionHandlerTest(TestCase):
       signinAs(self.client, self.CADMIN)
       update_response = self.client.post('/v3/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "cadmin_title"}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(update_response["success"])
-      print(update_response["data"])
       self.assertEquals(update_response["data"]["title"], "cadmin_title")
 
       # test update as sadmin
