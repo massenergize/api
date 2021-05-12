@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.2.6",
-  "BUILD_VERSION_NOTES": "May 4th Deployment to Dev\n- Owen Plesko's teams testing and bug fixes relating to teams\n\n"
+  "BUILD_VERSION": "3.2.10",
+  "BUILD_VERSION_NOTES": "May 11th Deployment to Canary\n- Introducing routes .rank for testimonials, actions, events, vendors\n- Fix images getting lost from testimonials, don't delete in update routes\n- Owen Plesko's testing and bug fixes relating to communities\n\n"
 }

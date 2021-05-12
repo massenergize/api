@@ -136,11 +136,11 @@ class ActionStore:
       action.update(**args)
 
       action = action.first()
+
+      # If no image passed, don't delete the existing
       if image:
         media = Media.objects.create(name=f"{action.title}-Action-Image", file=image)
         action.image = media
-      else:
-        action.image = None
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
@@ -171,6 +171,21 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+
+  def rank_action(self, args) -> (Action, MassEnergizeAPIError):
+    try:
+      id = args.get("id", None)
+      rank = args.get("rank", None)
+
+      if id and rank:
+        actions = Action.objects.filter(id=id)
+        actions.update(rank=rank)
+        return actions.first(), None
+      else:
+        raise Exception("Action Rank and ID not provided to actions.rank")
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(str(e))
 
   def delete_action(self, context: Context, args) -> (Action, MassEnergizeAPIError):
     try:

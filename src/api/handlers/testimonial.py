@@ -25,6 +25,7 @@ class TestimonialHandler(RouteHandler):
     self.add("/testimonials.update", self.update)
     self.add("/testimonials.delete", self.delete)
     self.add("/testimonials.remove", self.delete)
+    self.add("/testimonials.rank", self.rank)
 
     #admin routes
     self.add("/testimonials.listForCommunityAdmin", self.community_admin_list)
@@ -105,6 +106,25 @@ class TestimonialHandler(RouteHandler):
     args['tags'] = parse_list(args.get('tags', []))
     testimonial_id = args.pop("testimonial_id", None)
     testimonial_info, err = self.service.update_testimonial(context, testimonial_id, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=testimonial_info)
+
+  @admins_only
+  def rank(self, request):
+    """ Update the rank of a testimonial, nothing else """
+    context: Context = request.context
+    args: dict = context.args
+      
+    self.validator.expect("id", int, is_required=True)
+    self.validator.expect("rank", int, is_required=True)
+    self.validator.rename("testimonial_id", "id")
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    testimonial_info, err = self.service.rank_testimonial(args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)

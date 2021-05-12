@@ -25,6 +25,7 @@ class ActionHandler(RouteHandler):
     self.add("/actions.update", self.update)
     self.add("/actions.delete", self.delete)
     self.add("/actions.remove", self.delete)
+    self.add("/actions.rank", self.rank)
     self.add("/actions.copy", self.copy)
 
     #admin routes
@@ -113,6 +114,27 @@ class ActionHandler(RouteHandler):
       return err
     
     action_info, err = self.service.update_action(context, args)
+    if err:
+      return err      
+      
+    return MassenergizeResponse(data=action_info)
+
+
+  @admins_only
+  def rank(self, request): 
+    context: Context = request.context
+    args = context.get_request_body() 
+    (self.validator
+      .expect("id", int, is_required=True)
+      .expect("rank", int, is_required=True)
+      .rename("action_id", "id")
+    )
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    
+    action_info, err = self.service.rank_action(args)
     if err:
       return err      
       
