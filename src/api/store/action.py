@@ -136,11 +136,11 @@ class ActionStore:
       action.update(**args)
 
       action = action.first()
+
+      # If no image passed, don't delete the existing
       if image:
         media = Media.objects.create(name=f"{action.title}-Action-Image", file=image)
         action.image = media
-      else:
-        action.image = None
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive

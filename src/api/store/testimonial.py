@@ -140,12 +140,11 @@ class TestimonialStore:
       rank = args.pop('rank', None)
       new_testimonial = testimonial.first()
 
+      # If no image passed, then we don't delete the existing one
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_testimonial.image = media
-      else:
-        new_testimonial.image = None
-
+        
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
         new_testimonial.action = testimonial_action
