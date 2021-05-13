@@ -93,7 +93,6 @@ class SubscriberStore:
 
   def list_subscribers_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
-      print(context)
       if context.user_is_super_admin:
         return self.list_subscribers_for_super_admin(context)
 
