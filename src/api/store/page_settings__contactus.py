@@ -36,6 +36,7 @@ class ContactUsPageSettingsStore:
 
 
   def update_contact_us_page_setting(self, contact_us_page_setting_id, args) -> (dict, MassEnergizeAPIError):
+    print(args)
     contact_us_page_setting = ContactUsPageSettings.objects.filter(id=contact_us_page_setting_id)
     if not contact_us_page_setting:
       return None, InvalidResourceError()
