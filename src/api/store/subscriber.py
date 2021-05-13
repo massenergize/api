@@ -93,13 +93,15 @@ class SubscriberStore:
 
   def list_subscribers_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
     try:
+      print(context)
       if context.user_is_super_admin:
         return self.list_subscribers_for_super_admin(context)
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
 
-      if not community_id:
+      # gets pass from admin portal as "null"
+      if not community_id or community_id=="null":
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         communities = [ag.community for ag in admin_groups]
