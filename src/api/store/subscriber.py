@@ -99,7 +99,9 @@ class SubscriberStore:
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
 
-      if not community_id:
+      # gets pass from admin portal as "null"
+      # TODO: Owen clean this up with validator
+      if not community_id or community_id=="null":
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         communities = [ag.community for ag in admin_groups]
