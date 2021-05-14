@@ -67,18 +67,20 @@ class ActionHandlerTest(TestCase):
     def test_create(self):
         # test not logged in
         signinAs(self.client, None)
-        create_response = self.client.post('/v3/testimonials.create', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        create_response = self.client.post('/v3/testimonials.create', urlencode({"title": "none_logged"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(create_response["success"])
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        create_response = self.client.post('/v3/testimonials.create', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        create_response = self.client.post('/v3/testimonials.create', urlencode({"title": "user_logged"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(create_response["success"])
+        self.assertEqual(create_response["data"]["title"], "user_logged")
 
         # test logged in as admin
         signinAs(self.client, self.SADMIN)
-        create_response = self.client.post('/v3/testimonials.create', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        create_response = self.client.post('/v3/testimonials.create', urlencode({"title": "admin_logged"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(create_response["success"])
+        self.assertEqual(create_response["data"]["title"], "admin_logged")
 
     def test_list(self):
         # test not logged in
