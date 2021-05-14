@@ -34,44 +34,40 @@ class TestimonialHandler(RouteHandler):
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'testimonial_id', 'id')
+
+    self.validator.expect("id", int, is_required=True)
+    self.validator.rename("testimonial_id", "id")
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+
     testimonial_info, err = self.service.get_testimonial_info(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
+
   @login_required
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'community_id', 'community')
-    args = rename_field(args, 'action_id', 'action')
-    args = rename_field(args, 'vendor_id', 'vendor')
-    args = rename_field(args, 'preferredName', 'preferred_name')
-    args['tags'] = parse_list(args.get('tags', []))
 
-    # check validity - these should be IDs
-    community = args.get('community', None)
-    if community and not isinstance(community, int):
-        args["community"] = parse_int(community)
+    self.validator.expect("title", str, is_required=True)
+    self.validator.expect('community', int)
+    self.validator.expect('action', int)
+    self.validator.expect('vendor', int)
+    self.validator.expect("tags", list)
+    self.validator.expect("is_approved", bool)
+    self.validator.expect("is_published", bool)
+    self.validator.rename('community_id', 'community')
+    self.validator.rename('action_id', 'action')
+    self.validator.rename('vendor_id', 'vendor')
+    self.validator.rename('preferredName', 'preferred_name')
+    args, err = self.validator.verify(args)
 
-    action = args.get('action', None)
-    if action and not isinstance(action, int):
-        args["action"] = parse_int(action)
-
-    vendor = args.get('vendor', None)
-    if vendor and not isinstance(vendor, int):
-        args["vendor"] = parse_int(vendor)
-
-      # To do, if we decide: 
-      # if user specifies other_vendor and passed to API - should record it as an unapproved vendor
-
-    is_approved = args.pop("is_approved", None)
-    if is_approved:
-      args["is_approved"] = parse_bool(is_approved)
-    is_published = args.get("is_published", None)
-    if is_published:
-      args["is_published"] = parse_bool(is_published)
+    if err:
+      return err
 
     # no anonymous option anymore
     args["anonymous"] = False
@@ -94,18 +90,23 @@ class TestimonialHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    is_approved = args.pop("is_approved", None)
-    if is_approved:
-      args["is_approved"] = parse_bool(is_approved)
-    is_published = args.get("is_published", None)
-    if is_published:
-      args["is_published"] = parse_bool(is_published)
-    args = rename_field(args, 'community_id', 'community')
-    args = rename_field(args, 'action_id', 'action')
-    args = rename_field(args, 'vendor_id', 'vendor')
-    args['tags'] = parse_list(args.get('tags', []))
-    testimonial_id = args.pop("testimonial_id", None)
-    testimonial_info, err = self.service.update_testimonial(context, testimonial_id, args)
+    self.validator.expect("id", int, is_required=True)
+    self.validator.expect("is_approved", bool)
+    self.validator.expect("is_published", bool)
+    self.validator.expect("community", int)
+    self.validator.expect("action", int)
+    self.validator.expect("vendor", int)
+    self.validator.expect("tags", list)
+    self.validator.rename("testimonial_id", "id")
+    self.validator.rename('community_id', 'community')
+    self.validator.rename('action_id', 'action')
+    self.validator.rename('vendor_id', 'vendor')
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+      
+    testimonial_info, err = self.service.update_testimonial(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)

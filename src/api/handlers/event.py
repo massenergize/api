@@ -40,8 +40,14 @@ class EventHandler(RouteHandler):
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    event_id = args.pop('event_id', None)
-    event_info, err = self.service.get_event_info(context, event_id)
+    
+    self.validator.expect("event_id", is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.get_event_info(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -51,8 +57,14 @@ class EventHandler(RouteHandler):
   def copy(self, request):
     context: Context = request.context
     args: dict = context.args
-    event_id = args.pop('event_id', None)
-    event_info, err = self.service.copy_event(context, event_id)
+    
+    self.validator.expect("event_id", is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.copy_event(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -62,8 +74,14 @@ class EventHandler(RouteHandler):
   def rsvp(self, request):
     context: Context = request.context
     args: dict = context.args
-    event_id = args.pop('event_id', None)
-    event_info, err = self.service.rsvp(context, event_id)
+    
+    self.validator.expect("event_id", is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.rsvp(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -73,9 +91,15 @@ class EventHandler(RouteHandler):
   def rsvp_update(self, request) -> function:
     context: Context = request.context
     args: dict = context.args
-    event_id = args.pop('event_id', None)
-    status = args.pop('status', "SAVE")
-    event_info, err = self.service.rsvp_update(context, event_id, status)
+
+    self.validator.expect("event_id", is_required=True)
+    self.validator.expect("status", is_required=False)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.rsvp_update(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -85,8 +109,14 @@ class EventHandler(RouteHandler):
   def rsvp_remove(self, request):
     context: Context = request.context
     args: dict = context.args
-    rsvp_id = args.pop('rsvp_id', None)
-    event_info, err = self.service.rsvp_remove(context, rsvp_id)
+    
+    self.validator.expect("rsvp_id", is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.rsvp_remove(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -96,13 +126,19 @@ class EventHandler(RouteHandler):
   def save_for_later(self, request):
     context: Context = request.context
     args: dict = context.args
-    event_id = args.pop('event_id', None)
-    event_info, err = self.service.get_event_info(context, event_id)
+
+    self.validator.expect("event_id", is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.get_event_info(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
-
+  # TODO implement validator
   @admins_only
   def create(self, request):
     context: Context = request.context
@@ -129,12 +165,21 @@ class EventHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     subdomain = args.pop('subdomain', None)
     user_id = args.pop('user_id', None)
-    event_info, err = self.service.list_events(context, community_id, subdomain, user_id)
+
+    self.validator.expect("community_id", is_required=False)
+    self.validator.expect("subdomain", is_required=False)
+    self.validator.expect("user_id", is_required=False)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.list_events(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
-
+  # TODO implement validator
   @admins_only
   def update(self, request):
     context: Context = request.context
@@ -190,8 +235,14 @@ class EventHandler(RouteHandler):
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    events, err = self.service.list_events_for_community_admin(context, community_id)
+
+    self.validator.expect("community_id", is_required=True)
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    events, err = self.service.list_events_for_community_admin(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=events)
