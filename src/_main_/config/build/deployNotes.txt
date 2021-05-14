@@ -1,4 +1,5 @@
-May 11th Deployment to Canary
+May 13th Deployment to Canary
+- Fixing several issues which arose during testing (265 266, 267)
 - Introducing routes .rank for testimonials, actions, events, vendors
 - Fix images getting lost from testimonials, don't delete in update routes
 - Owen Plesko's testing and bug fixes relating to communities
