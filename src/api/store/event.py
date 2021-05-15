@@ -10,8 +10,10 @@ class EventStore:
   def __init__(self):
     self.name = "Event Store/DB"
 
-  def get_event_info(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+  def get_event_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      event_id = args.pop("event_id")
+
       events_selected = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(id=event_id)
       event = events_selected.first()
       if not event:
@@ -21,8 +23,10 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def copy_event(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+  def copy_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      event_id = args.pop("event_id")
+
       events_selected = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(id=event_id)
       event_to_copy: Event = events_selected.first()
       if not event_to_copy:
@@ -50,7 +54,11 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_events(self, context: Context, community_id, subdomain, user_id) -> (list, MassEnergizeAPIError):
+  def list_events(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    community_id = args.pop("community_id", None)
+    subdomain = args.pop("subdomain", None)
+    user_id = args.pop("user_id", None)
+
     if community_id:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
@@ -178,8 +186,10 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_events_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_events_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
+      community_id = args.pop("community_id", None)
+
       if context.user_is_super_admin:
         return self.list_events_for_super_admin(context)
 
@@ -212,8 +222,9 @@ class EventStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def rsvp(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+  def rsvp(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      event_id = args.pop("event_id", None)
       args: dict = context.args
       user = get_user_or_die(context, args)
       event = Event.objects.filter(pk=event_id).first()
@@ -228,8 +239,11 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rsvp_update(self, context: Context, event_id, status) -> (dict, MassEnergizeAPIError):
+  def rsvp_update(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      event_id = args.pop("event_id", None)
+      status = args.pop("status", "SAVE")
+
       args: dict = context.args
       user = get_user_or_die(context, args)
       event = Event.objects.filter(pk=event_id).first()
@@ -245,8 +259,10 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rsvp_remove(self, context: Context, rsvp_id) -> (dict, MassEnergizeAPIError):
+  def rsvp_remove(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      rsvp_id = args.pop("rsvp_id", None)
+
       result = EventAttendee.objects.filter(pk=rsvp_id).delete()
       return result, None
     except Exception as e:
