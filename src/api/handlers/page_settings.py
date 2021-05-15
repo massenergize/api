@@ -1,4 +1,4 @@
-"""Handler file for all routes pertaining to contact_us_page_settings"""
+"""Handler file for all routes pertaining to all page_settings"""
 
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field
