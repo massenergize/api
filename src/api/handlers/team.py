@@ -226,6 +226,12 @@ class TeamHandler(RouteHandler):
   def message_admin(self, request):
     context: Context = request.context
     args: dict = context.args
+    self.validator.rename('subject','title')
+    self.validator.expect('title', str, is_required=True)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
     team_info, err = self.team.message_admin(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
