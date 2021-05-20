@@ -101,8 +101,8 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("id", str, is_required=True)
-    self.validator.expect("parent_id", str)
+    self.validator.expect("id", int, is_required=True)
+    self.validator.expect("parent_id", int)
     self.validator.expect("is_published", bool)
     self.validator.rename("team_id", "id")
 

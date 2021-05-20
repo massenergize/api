@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, resize_image
+from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, resize_image, is_value
 from sentry_sdk import capture_message
 
 class Validator:
@@ -81,7 +81,9 @@ class Validator:
             args[field_name] = val
             
           elif field_type == int:
-            args[field_name] = parse_int(args[field_name])
+            check = args.pop(field_name)
+            if is_value(check):     # protect against "undefined" or "NULL"
+              args[field_name] = parse_int(check)
           elif field_type == bool:
             args[field_name] = parse_bool(args[field_name])
           elif field_type == list:
