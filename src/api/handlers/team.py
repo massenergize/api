@@ -62,15 +62,13 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    admin_emails = args.pop('admin_emails', '')
-    if is_value(admin_emails):
-      args["admin_emails"] = parse_str_list(admin_emails)
+    self.validator.expect("parent_id", int)
+    self.validator.expect("is_published", bool)
+    self.validator.expect("admin_emails", 'str_list')
 
-    parentId = args.pop('parent_id', None)
-    if is_value(parentId):
-      args["parent_id"] = parentId
-
-    args['is_published'] = parse_bool(args.pop('is_published', None))   
+    args, err = self.validator.verify(args)
+    if err:
+      return err
 
     team_info, err = self.team.create_team(context, args)
     if err:
