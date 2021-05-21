@@ -498,9 +498,12 @@ class CommunityStore:
       if not community:
         return None, InvalidResourceError()
 
+
       community.update(**args)
       community = community.first()
       
+      # TODO: check that locations have changed before going through the effort of 
+
       geographic = args.get('is_geographically_focused', False)
       if geographic:
         geography_type = args.get('geography_type', None)

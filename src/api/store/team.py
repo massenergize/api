@@ -316,8 +316,9 @@ class TeamStore:
 
       team = Team.objects.get(id=team_id)
       user = UserProfile.objects.get(id=user_id)
-      teamMember = TeamMember.objects.create(team=team, user=user)
-      teamMember.save()
+      teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)
+      if created:
+        teamMember.save()
 
       return team, None
     except Exception as e:
@@ -348,8 +349,7 @@ class TeamStore:
 
       team = Team.objects.get(id=team_id)
       user = UserProfile.objects.get(id=user_id)
-      teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)
-      
+      teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)      
       if created:
         teamMember.save()
       

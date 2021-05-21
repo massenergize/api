@@ -1,5 +1,5 @@
-May 15th Deployment to Canary
-- Goals
+May 20th Deployment to Dev/Canary
+- Fix team member and editing bugs from portal
 - Fixing several issues which arose during testing (265 266, 267)
 - Introducing routes .rank for testimonials, actions, events, vendors
 - Fix images getting lost from testimonials, don't delete in update routes

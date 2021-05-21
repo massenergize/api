@@ -62,15 +62,13 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    admin_emails = args.pop('admin_emails', '')
-    if is_value(admin_emails):
-      args["admin_emails"] = parse_str_list(admin_emails)
+    self.validator.expect("parent_id", int)
+    self.validator.expect("is_published", bool)
+    self.validator.expect("admin_emails", 'str_list')
 
-    parentId = args.pop('parent_id', None)
-    if is_value(parentId):
-      args["parent_id"] = parentId
-
-    args['is_published'] = parse_bool(args.pop('is_published', None))   
+    args, err = self.validator.verify(args)
+    if err:
+      return err
 
     team_info, err = self.team.create_team(context, args)
     if err:
@@ -101,8 +99,8 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("id", str, is_required=True)
-    self.validator.expect("parent_id", str)
+    self.validator.expect("id", int, is_required=True)
+    self.validator.expect("parent_id", int)
     self.validator.expect("is_published", bool)
     self.validator.rename("team_id", "id")
 
@@ -226,6 +224,12 @@ class TeamHandler(RouteHandler):
   def message_admin(self, request):
     context: Context = request.context
     args: dict = context.args
+    self.validator.rename('subject','title')
+    self.validator.expect('title', str, is_required=True)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
     team_info, err = self.team.message_admin(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
