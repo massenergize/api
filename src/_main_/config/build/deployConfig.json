@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.2.12",
-  "BUILD_VERSION_NOTES": "May 15th Deployment to Canary\n- Goals\n- Fixing several issues which arose during testing (265 266, 267)\n- Introducing routes .rank for testimonials, actions, events, vendors\n- Fix images getting lost from testimonials, don't delete in update routes\n- Owen's testing and bug fixes relating to communities, events, testimonials, actions\n\n"
+  "BUILD_VERSION": "3.2.13",
+  "BUILD_VERSION_NOTES": "May 20th Deployment to Dev/Canary\n- Fix team member and editing bugs from portal\n- Fixing several issues which arose during testing (265 266, 267)\n- Introducing routes .rank for testimonials, actions, events, vendors\n- Fix images getting lost from testimonials, don't delete in update routes\n- Owen's testing and bug fixes relating to communities, events, testimonials, actions\n\n"
 }
