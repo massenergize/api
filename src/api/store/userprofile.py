@@ -150,7 +150,7 @@ class UserStore:
 
       reu = RealEstateUnit.objects.get(pk=household_id)
       reu.name = name
-      reu.unit_type = unit_type
+      reu.unit_type = args.get("unit_type", "RESIDENTIAL")
       reu.address = reuloc
 
       verbose = False
