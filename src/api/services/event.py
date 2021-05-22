@@ -56,8 +56,8 @@ class EventService:
     return serialize(event), None
 
 
-  def update_event(self, context, event_id, args) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.update_event(context, event_id, args)
+  def update_event(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.update_event(context, args)
     if err:
       return None, err
     return serialize(event), None
