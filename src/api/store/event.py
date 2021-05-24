@@ -132,8 +132,6 @@ class EventStore:
       if not event:
         return None, CustomMassenergizeError(f"No event with id: {event_id}")
 
-      events.update(**args)
-
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         event.image = media
