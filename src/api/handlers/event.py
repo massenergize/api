@@ -41,7 +41,7 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("event_id", is_required=True)
+    self.validator.expect("event_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
 
     if err:
@@ -58,7 +58,7 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("event_id", is_required=True)
+    self.validator.expect("event_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
 
     if err:
@@ -75,7 +75,7 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("event_id", is_required=True)
+    self.validator.expect("event_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
 
     if err:
@@ -92,8 +92,8 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("event_id", is_required=True)
-    self.validator.expect("status", is_required=False)
+    self.validator.expect("event_id", int, is_required=True)
+    self.validator.expect("status", str, is_required=False)
     args, err = self.validator.verify(args, strict=True)
 
     if err:
@@ -110,7 +110,7 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("rsvp_id", is_required=True)
+    self.validator.expect("rsvp_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
 
     if err:
@@ -127,7 +127,7 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("event_id", is_required=True)
+    self.validator.expect("event_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
 
     if err:
@@ -143,15 +143,18 @@ class EventHandler(RouteHandler):
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
-    ok, err = check_length(args, 'name', min_length=5, max_length=100)
-    if not ok:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    args['tags'] = parse_list(args.get('tags', []))
-    args['is_global'] = parse_bool(args.pop('is_global', None))
-    args['archive'] = parse_bool(args.pop('archive', None))
-    args['is_published'] = parse_bool(args.pop('is_published', None))
-    args['have_address'] =  parse_bool(args.pop('have_address', False))
-    args = parse_location(args)
+
+    self.validator.expect('name', str, is_required=True, options={"min_length":5, "max_length":100})
+    self.validator.expect('tags', list)
+    self.validator.expect('is_global', bool)
+    self.validator.expect('archive', bool)
+    self.validator.expect('is_published', bool)
+    self.validator.expect('have_address', bool)
+    self.validator.expect('location', 'location')
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
 
     event_info, err = self.service.create_event(context, args)
     if err:
@@ -162,9 +165,6 @@ class EventHandler(RouteHandler):
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop('community_id', None)
-    subdomain = args.pop('subdomain', None)
-    user_id = args.pop('user_id', None)
 
     self.validator.expect("community_id", is_required=False)
     self.validator.expect("subdomain", is_required=False)
@@ -184,19 +184,21 @@ class EventHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    event_id = args.pop('event_id', None)
-    ok, err = check_length(args, 'name', min_length=5, max_length=100)
-    if not ok:
-      return MassenergizeResponse(error=str(err), status=err.status)
 
-    args['tags'] = parse_list(args.get('tags', []))
-    args['is_global'] = parse_bool(args.pop('is_global', None))
-    args['archive'] = parse_bool(args.pop('archive', None))
-    args['is_published'] = parse_bool(args.pop('is_published', None))
-    args['have_address'] =  parse_bool(args.pop('have_address', False))
-    args = parse_location(args)
+    self.validator.expect('event_id', int, is_required=True)
+    self.validator.expect('name', str, is_required=True, options={"min_length":5, "max_length":100})
+    self.validator.expect('tags', list)
+    self.validator.expect('is_global', bool)
+    self.validator.expect('archive', bool)
+    self.validator.expect('is_published', bool)
+    self.validator.expect('have_address', bool)
+    self.validator.expect('location', 'location')
+    args, err = self.validator.verify(args)
 
-    event_info, err = self.service.update_event(context, event_id, args)
+    if err:
+      return err
+
+    event_info, err = self.service.update_event(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -236,8 +238,7 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("community_id", is_required=True)
-
+    self.validator.expect("community_id", int, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
