@@ -156,13 +156,6 @@ class EventHandler(RouteHandler):
     if err:
       return err
 
-    #args['tags'] = parse_list(args.get('tags', []))
-    #args['is_global'] = parse_bool(args.pop('is_global', None))
-    #args['archive'] = parse_bool(args.pop('archive', None))
-    #args['is_published'] = parse_bool(args.pop('is_published', None))
-    #args['have_address'] =  parse_bool(args.pop('have_address', False))
-    #args = parse_location(args)
-#
     event_info, err = self.service.create_event(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -172,9 +165,6 @@ class EventHandler(RouteHandler):
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
-    #community_id = args.pop('community_id', None)
-    #subdomain = args.pop('subdomain', None)
-    #user_id = args.pop('user_id', None)
 
     self.validator.expect("community_id", is_required=False)
     self.validator.expect("subdomain", is_required=False)
@@ -207,18 +197,6 @@ class EventHandler(RouteHandler):
 
     if err:
       return err
-
-    #event_id = args.pop('event_id', None)
-    #ok, err = check_length(args, 'name', min_length=5, max_length=100)
-    #if not ok:
-    #  return MassenergizeResponse(error=str(err), status=err.status)
-#
-    #args['tags'] = parse_list(args.get('tags', []))
-    #args['is_global'] = parse_bool(args.pop('is_global', None))
-    #args['archive'] = parse_bool(args.pop('archive', None))
-    #args['is_published'] = parse_bool(args.pop('is_published', None))
-    #args['have_address'] =  parse_bool(args.pop('have_address', False))
-    #args = parse_location(args)
 
     event_info, err = self.service.update_event(context, args)
     if err:
