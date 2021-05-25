@@ -298,7 +298,7 @@ class Community(models.Model):
 
   def simple_json(self):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
-      'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved','more_info'])
+      'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved','more_info' , 'location'])
     res['logo'] = get_json_if_not_none(self.logo)
     res['favicon'] = get_json_if_not_none(self.favicon)
     return res
