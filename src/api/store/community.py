@@ -343,9 +343,9 @@ class CommunityStore:
   def list_communities(self, context: Context, args) -> (list, MassEnergizeAPIError):
     try:
       if context.is_sandbox:
-        communities = Community.objects.prefetch_related("locations").filter(is_deleted=False, is_approved=True).exclude(subdomain='template')
+        communities = Community.objects.filter(is_deleted=False, is_approved=True).exclude(subdomain='template')
       else:
-        communities = Community.objects.prefetch_related("locations").filter(is_deleted=False, is_approved=True, is_published=True).exclude(subdomain='template')
+        communities = Community.objects.filter(is_deleted=False, is_approved=True, is_published=True).exclude(subdomain='template')
 
       if not communities:
         return [], None
