@@ -106,33 +106,35 @@ class VendorStore:
   def update_vendor(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       vendor_id = args.pop('vendor_id', None)
-      vendor = Vendor.objects.get(id=vendor_id)
+      communities = args.pop('communities', [])
+      onboarding_contact_email = args.pop('onboarding_contact_email', None)
+      website = args.pop('website', None)
+      key_contact = args.pop('key_contact', {})
+      image = args.pop('image', None)
+      tags = args.pop('tags', [])
+
+      vendor = Vendor.objects.filter(id=vendor_id)
       if not vendor:
         return None, InvalidResourceError()  
+      vendor.update(**args)
+      vendor = vendor.first()
       
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
 
-      communities = args.pop('communities', [])
       if communities:
         vendor.communities.set(communities)
 
-      onboarding_contact_email = args.pop('onboarding_contact_email', None)
       if onboarding_contact_email:
         vendor.onboarding_contact_email = onboarding_contact_email
 
-      website = args.pop('website', None)
-
-  
-      key_contact = args.pop('key_contact', {})
       if key_contact:
         if vendor.key_contact:
           vendor.key_contact.update(key_contact)
         else:
           vendor.key_contact = args.pop('key_contact', key_contact)
 
-      image = args.pop('image', None)
       if image:
         logo = Media(name=f"Logo-{slugify(vendor.name)}", file=image)
         logo.save()
@@ -143,21 +145,18 @@ class VendorStore:
         if onboarding_contact:
           vendor.onboarding_contact = onboarding_contact
     
-      tags = args.pop('tags', [])
       if tags:
         vendor.tags.set(tags)
 
       if website:
         vendor.more_info = {'website': website}
+        
       vendor.save()
-
-      updated = Vendor.objects.filter(id=vendor_id).update(**args)
       return vendor, None
 
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-
 
   def rank_vendor(self, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -165,7 +164,7 @@ class VendorStore:
       rank = args.get("rank", None)
 
       if id and rank:
-        vendors = Event.objects.filter(id=id)
+        vendors = Vendor.objects.filter(id=id)
         vendors.update(rank=rank)
         return vendors.first(), None
       else:

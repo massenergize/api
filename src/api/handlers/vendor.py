@@ -27,7 +27,7 @@ class VendorHandler(RouteHandler):
     self.add("/vendors.list", self.list)
     self.add("/vendors.update", self.update)
     self.add("/vendors.copy", self.copy)
-    self.add("/vendors.rank", self.rank)    
+    #self.add("/vendors.rank", self.rank) TODO    
     self.add("/vendors.delete", self.delete)
     self.add("/vendors.remove", self.delete)
 
