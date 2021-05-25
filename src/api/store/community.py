@@ -446,7 +446,6 @@ class CommunityStore:
 
       actions_copied = set()
       for action_to_copy in global_actions:
-        print(action_to_copy.title)
         old_tags = action_to_copy.tags.all()
         old_vendors = action_to_copy.vendors.all()
         new_action: Action = action_to_copy

@@ -14,7 +14,7 @@ def _get_or_create_reu_location(args, user=None):
   # this address location now will contain the parsed address      
   address = args.pop('address', None)      
   if address:
-    # address passed as a JSON string    
+    # address passed as a JSON string  
     address = json.loads(address)
     street = address.get('street', '')
     unit_number = address.get('unit_number', '')
@@ -39,7 +39,6 @@ def _get_or_create_reu_location(args, user=None):
   # check location is valid
   location_type, valid = check_location(street, unit_number, city, state, zipcode, county, country)
   if not valid:
-    print(location_type)
     raise Exception(location_type)
 
   reuloc, created = Location.objects.get_or_create(
@@ -106,7 +105,7 @@ class UserStore:
 
   def remove_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      household_id = args.get('household_id', None) or args.get('household_id', None)
+      household_id = args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
 
@@ -142,6 +141,7 @@ class UserStore:
     try:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
+      unit_type=args.pop('unit_type', None)
       household_id = args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
@@ -150,13 +150,13 @@ class UserStore:
 
       reu = RealEstateUnit.objects.get(pk=household_id)
       reu.name = name
-      reu.unit_type = unit_type
+      reu.unit_type = args.get("unit_type", "RESIDENTIAL")
       reu.address = reuloc
 
       verbose = False
       community = find_reu_community(reu, verbose)
       if community:
-        if verbose: print("Updating the REU with zipcode " + zipcode + " to the community " + community.name)
+        if verbose: print("Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
         reu.community = community
 
       reu.save()
@@ -270,7 +270,7 @@ class UserStore:
       if not context.user_is_admin():
 
         # if they are not an admin make sure they can only delete themselves
-        if not context.user_id != user_id:
+        if context.user_id != user_id:
           return None, NotAuthorizedError()
 
       users = UserProfile.objects.filter(id=user_id)
@@ -374,8 +374,8 @@ class UserStore:
 
   def add_action_completed(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      user_id = context.user_id or args.get('user_id')
-      user_email = context.user_email or args.get('user_email')
+      user_id = args.get('user_id') or context.user_id
+      user_email = args.get('user_email') or context.user_email
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
