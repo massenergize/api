@@ -809,22 +809,26 @@ class ActionProperty(models.Model):
 
 class CarbonEquivalency(models.Model):
   """
-  
+  Represents an carbon equivalency that can make 
+  carbon impact more comprehensible to users. 
 
   Attributes
   ----------
-  name : CharField
-    
-  value:
-    
-  icon:
-     
-  explanation:
-     
-  reference: 
-     
-  date:
-    
+  name : str
+    Name of the unit used. E.g. "Tree"
+  value: int
+    Value of carbon (in Lbs) for comparison against 
+    impact.
+  icon: 
+    Graphic representing the appropriate equivalancey.
+  explanation: str
+    Additional information on the equivelancy. E.g. 
+    "A typical hardwood tree can absorb as much as 48 
+    pounds of carbon dioxide per year"
+  reference: str
+    Source of information used. Link, book, study, etc.
+  date: DateTime
+    Timestamp of when the equivilancy was last modified.
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=50)
