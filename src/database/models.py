@@ -810,7 +810,7 @@ class ActionProperty(models.Model):
 class CarbonEquivalency(models.Model):
   """
   Represents an carbon equivalency that can make 
-  carbon impact more comprehensible to users. 
+  carbon impact more comprehensible to users.
 
   Attributes
   ----------
@@ -833,11 +833,11 @@ class CarbonEquivalency(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=50)
   value = models.BigIntegerField()
-  icon = models.models.ForeignKey(Media, on_delete=models.SET_NULL, 
+  icon = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     blank=True, null=True)
   explanation = models.CharField(max_length=100)
   reference = models.CharField(max_length=100)
-  date = models.DateTimeField(auto_now=True, auto_now_add=True)
+  date = models.DateTimeField(auto_now=True)
 
 
 
