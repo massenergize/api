@@ -807,6 +807,37 @@ class ActionProperty(models.Model):
     db_table = 'action_properties'
 
 
+class CarbonEquivalency(models.Model):
+  """
+  
+
+  Attributes
+  ----------
+  name : CharField
+    
+  value:
+    
+  icon:
+     
+  explanation:
+     
+  reference: 
+     
+  date:
+    
+  """
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=50)
+  value = models.BigIntegerField()
+  icon = models.models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    blank=True, null=True)
+  explanation = models.CharField(max_length=100)
+  reference = models.CharField(max_length=100)
+  date = models.DateTimeField(auto_now=True, auto_now_add=True)
+
+
+
+
 class TagCollection(models.Model):
   """
   A class used to represent a collection of Tags.
