@@ -60,19 +60,19 @@ class VendorStore:
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
       image = args.pop('image', None)
-      onboarding_contact_email = args.pop('onboarding_contact_email', None)
-      key_contact_full_name = args.pop('key_contact_full_name', None)
-      key_contact_email = args.pop('key_contact_email', None)
       website = args.pop('website', None)
+      onboarding_contact_email = args.pop('onboarding_contact_email', None)
+      key_contact_name = args.pop('key_contact_name', None)
+      key_contact_email = args.pop('key_contact_email', None)
       args["key_contact"] = {
-        "name": key_contact_full_name,
+        "name": key_contact_name,
         "email": key_contact_email
       }
 
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
-        
+
       new_vendor = Vendor.objects.create(**args)
       if image:
         logo = Media(name=f"Logo-{slugify(new_vendor.name)}", file=image)
@@ -102,38 +102,42 @@ class VendorStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-
   def update_vendor(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    
     try:
       vendor_id = args.pop('vendor_id', None)
       communities = args.pop('communities', [])
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       website = args.pop('website', None)
-      key_contact = args.pop('key_contact', {})
+      key_contact_name = args.pop('key_contact_name', None)
+      key_contact_email = args.pop('key_contact_email', None)
+      key_contact = {
+        "name": key_contact_name,
+        "email": key_contact_email
+      }
       image = args.pop('image', None)
       tags = args.pop('tags', [])
+      have_address = args.pop('have_address', False)
+      if not have_address:
+        args['location'] = None
 
-      vendor = Vendor.objects.filter(id=vendor_id)
+      vendor = Vendor.objects.filter(id=vendor_id)   
       if not vendor:
         return None, InvalidResourceError()  
       vendor.update(**args)
       vendor = vendor.first()
       
-      have_address = args.pop('have_address', False)
-      if not have_address:
-        args['location'] = None
-
       if communities:
         vendor.communities.set(communities)
 
       if onboarding_contact_email:
         vendor.onboarding_contact_email = onboarding_contact_email
-
+        
       if key_contact:
         if vendor.key_contact:
           vendor.key_contact.update(key_contact)
         else:
-          vendor.key_contact = args.pop('key_contact', key_contact)
+          vendor.key_contact = key_contact
 
       if image:
         logo = Media(name=f"Logo-{slugify(vendor.name)}", file=image)
