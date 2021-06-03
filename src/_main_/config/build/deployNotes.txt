@@ -1,4 +1,5 @@
-May 25th Deployment to Dev/Canary
+June 2nd Deployment to Dev/Canary
+- Fix vendor creation/editing
 - Fix most canary bugs (events, teams, edit households)
 - Fix team member and editing bugs from portal
 - Fixing several issues which arose during testing (265 266, 267)
