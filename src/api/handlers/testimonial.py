@@ -30,6 +30,7 @@ class TestimonialHandler(RouteHandler):
     #admin routes
     self.add("/testimonials.listForCommunityAdmin", self.community_admin_list)
     self.add("/testimonials.listForSuperAdmin", self.super_admin_list)
+    
 
   def info(self, request):
     context: Context = request.context
