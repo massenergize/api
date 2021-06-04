@@ -1,4 +1,5 @@
-June 2nd Deployment to Dev/Canary
+June 4th Deployment to Dev/Canary
+- include service provider logo in info (for testimonials)
 - Fix vendor creation/editing
 - Fix most canary bugs (events, teams, edit households)
 - Fix team member and editing bugs from portal
