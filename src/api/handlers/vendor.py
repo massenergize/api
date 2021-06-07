@@ -47,11 +47,11 @@ class VendorHandler(RouteHandler):
 
   @admins_only
   def create(self, request):
+    
     context: Context  = request.context
     args = context.get_request_body() 
-    validator: Validator = Validator()
-    (validator
-      .expect("key_contact_name", str)
+
+    (self.validator.expect("key_contact_name", str)
       .expect("key_contact_email", str)
       .expect("onboarding_contact_email", str)
       .expect("name", str)
@@ -62,26 +62,19 @@ class VendorHandler(RouteHandler):
       .expect("website", str, is_required=False)
       .expect("is_published", bool)
       .expect("communities", list, is_required=False)
-      .expect("service_area_states", list, is_required=False)
-      .expect("properties_serviced", list, is_required=False)
+      .expect("service_area_states", 'str_list', is_required=False)
+      .expect("properties_serviced", 'str_list', is_required=False)
       .expect("image", "file", is_required=False)
       .expect("tags", list, is_required=False)
       .expect("location", "location", is_required=False)
     )
 
-    args, err = validator.verify(args)
+    args, err = self.validator.verify(args)
     if err:
       return err
 
-    args = parse_location(args)
-
     #TODO: remove this after deploy
     args.pop('accept_terms_and_conditions', None)
-
-    args['key_contact'] = {
-      "name": args.pop('key_contact_name', None),
-      "email": args.pop('key_contact_email', None)
-    } 
 
     vendor_info, err = self.service.create_vendor(context, args)
     if err:
@@ -102,9 +95,8 @@ class VendorHandler(RouteHandler):
   def update(self, request):
     context: Context  = request.context
     args = context.get_request_body() 
-    args = rename_field(args, 'id', 'vendor_id')
-    validator: Validator = Validator()
-    (validator
+    (self.validator
+      .rename("id","vendor_id")
       .expect("vendor_id", int)
       .expect("key_contact_name", str, is_required=False)
       .expect("key_contact_email", str, is_required=False)
@@ -117,30 +109,21 @@ class VendorHandler(RouteHandler):
       .expect("have_address", bool, is_required=False)
       .expect("is_published", bool, is_required=False)
       .expect("communities", list, is_required=False)
-      .expect("service_area_states", list, is_required=False)
-      .expect("properties_serviced", list, is_required=False)
+      .expect("service_area_states", 'str_list', is_required=False)
+      .expect("properties_serviced", 'str_list', is_required=False)
       .expect("tags", list, is_required=False)
       .expect("image", "file", is_required=False)
       .expect("location", "location", is_required=False)
     )
 
-    args, err = validator.verify(args)
+    args, err = self.validator.verify(args)
     if err:
       return err
-
-    args['key_contact'] = {}
-    key_contact_name = args.pop('key_contact_name', None)
-    key_contact_email = args.pop('key_contact_email', None)
-    if key_contact_name:
-      args['key_contact']["name"] = key_contact_name
-    if key_contact_email:
-      args['key_contact']["email"] = key_contact_email
 
     vendor_info, err = self.service.update_vendor(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
-
   @admins_only
   def rank(self, request):
     context: Context = request.context
