@@ -38,8 +38,8 @@ class MiscellaneousService:
       return None, err
     return carbon_data, None
   
-  def get_carbon_equivalency(self, context: Context, args) -> (dict, MassEnergizeAPIError):
-    carbon_data, err = self.store.carbon_equivalency(context, args)
+  def get_carbon_equivalencies(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    carbon_data, err = self.store.get_carbon_equivalencies(context, args)
     if err:
       return None, err
     return serialize_all(carbon_data), None
