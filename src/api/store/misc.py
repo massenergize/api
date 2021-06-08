@@ -271,3 +271,12 @@ class MiscellaneousStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+  
+  def create_carbon_equivalency(self, context: Context, args):
+    return {}, None
+
+  def update_carbon_equivalency(self, context: Context, args):
+    return {}, None
+
+  def get_carbon_equivalency(self, context: Context, args):
+    return {}, None
