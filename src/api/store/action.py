@@ -107,6 +107,7 @@ class ActionStore:
       new_action.pk = None
       new_action.is_published = False
       new_action.title = action_to_copy.title + "-Copy"
+      new_action.is_global = False
       new_action.save()
       new_action.tags.set(old_tags)
       new_action.vendors.set(old_vendors)
