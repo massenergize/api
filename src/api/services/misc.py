@@ -26,7 +26,7 @@ class MiscellaneousService:
       return None, err
     return result, None
 
-  def create_carbon_equivalency(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_carbon_equivalency(self, context, args) -> (dict, MassEnergizeAPIError):
     carbon_data, err = self.store.create_carbon_equivalency(context, args)
     if err:
       return None, err

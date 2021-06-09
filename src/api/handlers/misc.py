@@ -44,7 +44,9 @@ class MiscellaneousHandler(RouteHandler):
   def create_carbon_equivalency(self, request):
     context: Context = request.context
     args: dict = context.args
+
     carbon_info, err = self.service.create_carbon_equivalency(context, args)
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=carbon_info)
@@ -53,7 +55,9 @@ class MiscellaneousHandler(RouteHandler):
   def update_carbon_equivalency(self, request):
     context: Context = request.context
     args: dict = context.args
+
     carbon_info, err = self.service.update_carbon_equivalency(context, args)
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=carbon_info)
@@ -61,7 +65,9 @@ class MiscellaneousHandler(RouteHandler):
   def get_carbon_equivalencies(self, request):
     context: Context = request.context
     args: dict = context.args
+    
     carbon_info, err = self.service.get_carbon_equivalencies(context, args)
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=carbon_info)
