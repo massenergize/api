@@ -37,6 +37,7 @@ class EventStore:
       new_event = event_to_copy 
       new_event.name = event_to_copy.name + "-Copy"
       new_event.is_published=False
+      new_event.is_global = False
       new_event.start_date_and_time = event_to_copy.start_date_and_time
       new_event.end_date_and_time = event_to_copy.end_date_and_time
       new_event.description = event_to_copy.description

@@ -2,6 +2,7 @@ from database.models import UserProfile, CommunityMember, EventAttendee, RealEst
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from _main_.settings import DEBUG
 from django.db.models import F
 from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community, split_location_string, check_location
@@ -153,7 +154,7 @@ class UserStore:
       reu.unit_type = args.get("unit_type", "RESIDENTIAL")
       reu.address = reuloc
 
-      verbose = False
+      verbose = DEBUG
       community = find_reu_community(reu, verbose)
       if community:
         if verbose: print("Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
