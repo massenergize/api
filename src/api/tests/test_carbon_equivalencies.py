@@ -76,9 +76,81 @@ class CarbonEquivalenciesTestCase(TestCase):
         create_response = self.client.post('/v3/data.carbonEquivalency.create', urlencode({"community_id": self.COMMUNITY.id,
                                                                            "name": "test_bad_args"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(create_response["success"])
+    
+    def test_get(self):
+        # test not logged
+        signinAs(self.client, None)
+        create_response = self.client.post('/v3/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(create_response["success"])
+        self.assertEqual(create_response["data"]["name"], "test_sadmin")
 
-    # def test_update(self):
+        # test logged as user
+        signinAs(self.client, self.USER)
+        create_response = self.client.post('/v3/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(create_response["success"])
+        self.assertEqual(create_response["data"]["name"], "test_sadmin")
 
-    # def test_update(self):
+        # test logged as cadmin
+        signinAs(self.client, self.CADMIN)
+        create_response = self.client.post('/v3/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(create_response["success"])
+        self.assertEqual(create_response["data"]["name"], "test_sadmin")
 
-    # def test_delete(self):
+        # test logged as sadmin
+        signinAs(self.client, self.SADMIN)
+        create_response = self.client.post('/v3/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(create_response["success"])
+        self.assertEqual(create_response["data"]["name"], "test_sadmin")
+
+        # test bad args
+        signinAs(self.client, self.SADMIN)
+        create_response = self.client.post('/v3/data.carbonEquivalency.get', urlencode({"community_id": self.COMMUNITY.id,
+                                                                           "name": "test_bad_args"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(create_response["success"])
+
+    def test_update(self):
+        # test not logged
+        signinAs(self.client, None)
+
+        create_response = self.client.post('/v3/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        create_response = self.client.post('/v3/data.carbonEquivalency.update', urlencode({
+                                                                            "id": "",
+                                                                            "name": "test_none",
+                                                                            "value":  300,
+                                                                            "explanation": "explanation_text",
+                                                                            "reference": "google.com"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(create_response["success"])
+
+        # test logged as user
+        signinAs(self.client, self.USER)
+        create_response = self.client.post('/v3/data.carbonEquivalency.update', urlencode({
+                                                                           "name": "test_none",
+                                                                           "value":  300,
+                                                                           "explanation": "explanation_text",
+                                                                           "reference": "google.com"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(create_response["success"])
+
+        # test logged as cadmin
+        signinAs(self.client, self.CADMIN)
+        create_response = self.client.post('/v3/data.carbonEquivalency.update', urlencode({
+                                                                           "name": "test_none",
+                                                                           "value":  300,
+                                                                           "explanation": "explanation_text",
+                                                                           "reference": "google.com"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(create_response["success"])
+
+        # test logged as sadmin
+        signinAs(self.client, self.SADMIN)
+        create_response = self.client.post('/v3/data.carbonEquivalency.update', urlencode({
+                                                                           "name": "test_none",
+                                                                           "value":  300,
+                                                                           "explanation": "explanation_text",
+                                                                           "reference": "google.com"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(create_response["success"])
+        self.assertEqual(create_response["data"]["name"], "test_sadmin")
+
+        # test bad args
+        signinAs(self.client, self.SADMIN)
+        create_response = self.client.post('/v3/data.carbonEquivalency.update', urlencode({"community_id": self.COMMUNITY.id,
+                                                                           "name": "test_bad_args"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(create_response["success"])
