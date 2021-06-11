@@ -1,14 +1,18 @@
 """Handler file for all routes pertaining to users"""
-
+from database.models import UserProfile
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
-
+from sentry_sdk import capture_message
+# import pandas as pd
+# for import contacts endpoint - accepts a csv file and verifies correctness of email address format
+import csv, os, io, re
 
 
 class UserHandler(RouteHandler):
@@ -36,6 +40,7 @@ class UserHandler(RouteHandler):
     self.add("/users.households.remove", self.remove_household)
     self.add("/users.households.list", self.list_households)
     self.add("/users.events.list", self.list_events)
+    self.add("/users.import", self.handle_contacts_csv)
 
 
     #admin routes
@@ -230,3 +235,59 @@ class UserHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
+  
+  @admins_only
+  def handle_contacts_csv(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    print("these are the contents of the request")
+    print(args)
+    csv_ref = args['csv'].file    
+    print(type(csv_ref))
+    # csv_ref is a bytes object, we need a csv
+    # so we copy it as a csv temporarily to the disk
+    temporarylocation="testout.csv"
+    with open(temporarylocation, 'wb') as out:
+      # print("file converting")
+      var = csv_ref.read()
+      # print(var)
+      out.write(var)
+
+    with open(temporarylocation, "r") as f:
+      reader = csv.DictReader(f, delimiter=",")
+      for row in reader:
+        try:
+          # prevents the first row (headers) from being read in as a user
+          if row['First Name'] == 'First Name':
+            continue
+          print('this is a row')
+          print(row)
+          # verify correctness of email address
+          regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+          try: 
+            if(re.search(regex,row['Email'])):   
+              # print("this row has a valid email")
+              user = UserProfile.objects.filter(email=row['Email']).first()
+              if not user:
+                # print('user does not exist yet')
+                new_user: UserProfile = UserProfile.objects.create(
+                  full_name = row['First Name'] + ' ' + row['Last Name'], 
+                  preferred_name = row['First Name'], 
+                  email = row['Email'],
+                  is_vendor = False, 
+                  accepts_terms_and_conditions = False
+                )   
+              else: 
+                new_user: UserProfile = user   
+              new_user.save()    
+            else:   
+                print("Invalid Email")  
+                return None, CustomMassenergizeError("Valid email required for sign up")
+          except Exception as e:
+            capture_message(str(e), level="error")
+            print(str(e))
+            return None, CustomMassenergizeError(e)
+        except Exception as e:
+          print(str(e))
+    # and then delete it once we are done parsing it
+    os.remove(temporarylocation)

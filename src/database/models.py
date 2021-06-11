@@ -519,7 +519,7 @@ class UserProfile(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-
+  color = models.TextField(default="#000000", max_length=7, null=True)
   def __str__(self):
     return self.email
 
