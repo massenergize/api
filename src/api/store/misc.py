@@ -298,3 +298,12 @@ class MiscellaneousStore:
   def get_carbon_equivalencies(self, args):
     carbon_equivalencies = CarbonEquivalency.objects.filter(is_deleted=False)
     return carbon_equivalencies, None
+
+  def delete_carbon_equivalency(self, tag_id, args):
+    carbon_equivalency = CarbonEquivalency.objects.filter(id=tag_id)
+
+    if not carbon_equivalency:
+      return None, InvalidResourceError()
+
+    carbon_equivalency.delete(**args)
+    return carbon_equivalency, None
