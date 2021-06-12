@@ -14,8 +14,8 @@ class TeamService:
     self.store =  TeamStore()
     self.message_store = MessageStore()
 
-  def get_team_info(self, context: Context, team_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.get_team_info(context, team_id)
+  def get_team_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.get_team_info(context, args)
     if err:
       return None, err
     return serialize(team, full=True), None
@@ -50,8 +50,8 @@ class TeamService:
     return serialize(team), None
 
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.update_team(team_id, args)
+  def update_team(self, context, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.update_team(context, args)
     if err:
       return None, err
     return serialize(team), None
@@ -62,29 +62,29 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def join_team(self, team_id, user_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.join_team(team_id, user_id)
+  def join_team(self, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.join_team(args)
     if err:
       return None, err
     return serialize(team), None
 
-  def leave_team(self, team_id, user_id) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.leave_team(team_id, user_id)
+  def leave_team(self, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.leave_team(args)
     if err:
       return None, err
     return serialize(team), None
 
-  def add_member(self, context, args) -> (dict, MassEnergizeAPIError):
-    team, err = self.store.add_team_member(context, args)
+  def add_member(self, args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.add_team_member(args)
     if err:
       return None, err
     return serialize(team), None
 
-  def remove_team_member(self, context, args) -> (dict, MassEnergizeAPIError):
-    res, err = self.store.remove_team_member(context, args)
+  def remove_team_member(self,args) -> (dict, MassEnergizeAPIError):
+    team, err = self.store.remove_team_member(args)
     if err:
       return None, err
-    return res, None
+    return serialize(team), None
 
   def members(self, context, args) -> (dict, MassEnergizeAPIError):
     members, err = self.store.members(context, args)

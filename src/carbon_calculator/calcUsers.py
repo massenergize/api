@@ -44,9 +44,7 @@ def QueryAllCalcUsers(args):
     if users:
         userInfo = []
         for q in users:
-            other_info = q.other_info
-            carbonSaver = other_info["CarbonSaver"]
-            if not carbonSaver:
+            if not q.other_info or not other_info.get("CarbonSaver", None):
                 continue
 
             groups = q.other_info["CarbonSaver"]["groups"]

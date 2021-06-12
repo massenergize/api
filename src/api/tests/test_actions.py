@@ -2,134 +2,268 @@
 This is the test file for actions
 """
 from django.test import  TestCase, Client
-from database.models import Community,HomePageSettings, AboutUsPageSettings, ContactUsPageSettings, DonatePageSettings, ActionsPageSettings
+from database.models import Action, Community, CommunityAdminGroup, HomePageSettings, AboutUsPageSettings, ContactUsPageSettings, DonatePageSettings, ActionsPageSettings
 import json
 from urllib.parse import urlencode
+from api.tests.common import signinAs, setupCC, createUsers
 
 class ActionHandlerTest(TestCase):
-    def setUp(self):
-      self.client = Client()
 
-      #THIS DOES NOT WORK AND IDK WHY BECAUSE THE IDS OF THE COMMUNITIES KEEP GOING UP BUT THE LEN STAYS THE SAME
-      if(len(Community.objects.all()) < 1):
-        community = Community.objects.create(**{
-          'subdomain': 'template',
-          'name': 'Template',
-          'accepted_terms_and_conditions': True
-        })
-        community.save()
-
-        home = HomePageSettings.objects.create(**{
-          'title': 'Dummy Home Page',
-          'is_template': True, 
-          'community_id': community.id
-        })
-        home.save()
-
-        aboutus = AboutUsPageSettings.objects.create(**{
-          'title': 'Dummy About Us Page',
-          'is_template': True, 
-          'community_id': community.id
-        })
-        aboutus.save()
-
-        contactus = ContactUsPageSettings.objects.create(**{
-          'title': 'Dummy Contact Us Page',
-          'is_template': True, 
-          'community_id': community.id
-        })
-        contactus.save()
-
-        donate = DonatePageSettings.objects.create(**{
-          'title': 'Dummy Donate Page',
-          'is_template': True, 
-          'community_id': community.id
-        })
-        donate.save()
-
-        actions = ActionsPageSettings.objects.create(**{
-          'title': 'Dummy Action Page',
-          'is_template': True, 
-          'community_id': community.id
-        })
-        actions.save()
-
-    # def test_info_success(self):
-    #   """Test for actions.info route"""
-    #   action = self.client.post('/v3/actions.create', urlencode({ 'title':'test action'}), content_type="application/x-www-form-urlencoded").toDict()
-    #   response = self.client.post('/v3/actions.info', urlencode({ "action_id": action['data']['id']}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(response['data']['title'], 'test action')
-
-    # def test_create_success(self):
-    #   """Test for actions.create route"""
-    #   response = self.client.post('/v3/actions.create', urlencode({ 'title':'Test Action'}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(response['data']['title'], 'Test Action')
- 
-    # def test_create_short_title_error(self):
-    #   """Test for actions.create route with too short of a title"""
-    #   response = self.client.post('/v3/actions.create', urlencode({ 'title':'ts'}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(response['error'], 'Error: title has to be between 4 and 25, Status: 200')
-
-    # def test_create_long_title_error(self):
-    #   """Test for actions.add route with too long of a title"""
-    #   response = self.client.post('/v3/actions.add', urlencode({ 'title':'abcdefghijklmopqrstuvxwxyz'}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(response['error'], 'Error: title has to be between 4 and 25, Status: 200')
-
-    # def test_list(self):
-    #   """Test for actions.list route"""
-    #   community = self.client.post('/v3/communities.create', urlencode({
-    #     'subdomain':'testcom',
-    #     'accepted_terms_and_conditions': True, 
-    #     'name':'TEST',
-    #     #'image':'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
-    #   }), content_type="application/x-www-form-urlencoded").toDict()
-
-    #   #should count these three
-    #   one = self.client.post('/v3/actions.create', urlencode({ 'title':'test action 1', 'community_id': community['data']['id'], 'is_published': True}), content_type="application/x-www-form-urlencoded").toDict()
-    #   two = self.client.post('/v3/actions.create', urlencode({ 'title':'test action 2', 'community_id': community['data']['id'], 'is_published': True}), content_type="application/x-www-form-urlencoded").toDict()
-    #   three = self.client.post('/v3/actions.create', urlencode({ 'title':'test action 3', 'community_id': community['data']['id'], 'is_published': True}), content_type="application/x-www-form-urlencoded").toDict()
+    @classmethod
+    def setUpClass(self):
       
-    #   #should not count these three
-    #   four = self.client.post('/v3/actions.create', urlencode({ 'title':'test action 4', 'community_id': community['data']['id'], 'is_published': False}), content_type="application/x-www-form-urlencoded").toDict()
+      print("\n---> Testing Actions <---\n")
 
-    #   actionslist = self.client.post('/v3/actions.list', urlencode({'community_id': community['data']['id']}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(len(actionslist['data']), 3)
+      self.client = Client()
+      
+      self.USER, self.CADMIN, self.SADMIN = createUsers()
+    
+      signinAs(self.client, self.SADMIN)
 
+      setupCC(self.client)
 
-    # def test_update(self):
-    #   action = self.client.post('/v3/actions.create', urlencode({ 'title':'Action to Update', 'about':'stays the same'}), content_type="application/x-www-form-urlencoded").toDict()
-    #   action_update = self.client.post('/v3/actions.update', urlencode({'action_id': action['data']['id'], 'title':'Updated'}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(action_update['data']['title'], 'Updated')
-    #   self.assertEqual(action_update['data']['about'], 'stays the same')
+      COMMUNITY_NAME = "test_actions"
+      self.COMMUNITY = Community.objects.create(**{
+        'subdomain': COMMUNITY_NAME,
+        'name': COMMUNITY_NAME.capitalize(),
+        'accepted_terms_and_conditions': True
+      })
 
-    # def test_copy_action(self):
-    #   """Test for copying an action"""
-    #   action = self.client.post('/v3/actions.create', urlencode({ 'title':'Action to Copy', 'about':'this is copied exactly'}), content_type="application/x-www-form-urlencoded").toDict()
-    #   action_copy = self.client.post('/v3/actions.copy', urlencode({ 'action_id': action['data']['id']}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(action['data']['about'], action_copy['data']['about'])
+      admin_group_name  = f"{self.COMMUNITY.name}-{self.COMMUNITY.subdomain}-Admin-Group"
+      self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
+      self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
-    # def test_delete(self):
-    #   action = self.client.post('/v3/actions.create', urlencode({ 'title':'to be deleted'}), content_type="application/x-www-form-urlencoded").toDict()
-    #   response = self.client.post('/v3/actions.delete', urlencode({ 'action_id':action['data']['id']}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(action['data']['title'], response['data']['title'])
-    #   # print(self.client.post('/v3/actions.get', urlencode( {'action_id':action['data']['id']}), content_type="application/x-www-form-urlencoded").toDict())
+      self.ACTION1 = Action(title="action1")
+      self.ACTION2 = Action(title="action2")
+      self.ACTION3 = Action(title="action3")
+      self.ACTION4 = Action(title="action4")
+      self.ACTION5 = Action(title="action5")
 
-    # #DOESNT WORK YET BECAUSE CAN'T LOG IN TO ADMIN
-    # def test_list_for_community_admin(self):
-    #   """Test for actions.list route"""
-    #   community = self.client.post('/v3/communities.create', urlencode({
-    #     'subdomain':'testcom',
-    #     'accepted_terms_and_conditions': True, 
-    #     'name':'TEST',
-    #     #'image':'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
-    #   }), content_type="application/x-www-form-urlencoded").toDict()
+      self.ACTION1.save()
+      self.ACTION2.save()
+      self.ACTION3.save()
+      self.ACTION4.save()
+      self.ACTION5.save()
 
-    #   self.assertEqual(community['success'], True)
-    #   one = self.client.post('/v3/actions.create', urlencode({ 'title':'test action 1', 'community_id': community['data']['id'], 'is_published': True}), content_type="application/x-www-form-urlencoded").toDict()
-    #   two = self.client.post('/v3/actions.create', urlencode({ 'title':'test action 2', 'community_id': community['data']['id'], 'is_published': True}), content_type="application/x-www-form-urlencoded").toDict()
-    #   three = self.client.post('/v3/actions.create', urlencode({ 'title':'test action 3', 'community_id': community['data']['id'], 'is_published': False}), content_type="application/x-www-form-urlencoded").toDict()
+    @classmethod
+    def tearDownClass(self):
+      pass
 
-    #   self.assertEqual(one['data']['community']['id'], community['data']['id'])
+    def setUp(self):
+      # this gets run on every test case
+      pass
 
-    #   actionslist = self.client.post('/v3/actions.listForCommunityAdmin', urlencode({'community_id': community['data']['id']}), content_type="application/x-www-form-urlencoded").toDict()
-    #   self.assertEqual(len(actionslist['data']), 3)
+    def test_info(self):
+      # test info not logged in
+      signinAs(self.client, None)
+      info_response = self.client.post('/v3/actions.info', urlencode({"id": self.ACTION1.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(info_response["success"])
+
+      # test info logged as user
+      signinAs(self.client, self.USER)
+      info_response = self.client.post('/v3/actions.info', urlencode({"id": self.ACTION1.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(info_response["success"])
+
+      # test info logged as cadmin
+      signinAs(self.client, self.CADMIN)
+      info_response = self.client.post('/v3/actions.info', urlencode({"id": self.ACTION1.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(info_response["success"])
+
+      # test info logged as sadmin
+      signinAs(self.client, self.SADMIN)
+      info_response = self.client.post('/v3/actions.info', urlencode({"id": self.ACTION1.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(info_response["success"])
+
+    def test_create(self):
+      # test create not logged in
+      signinAs(self.client, None)
+      create_response = self.client.post('/v3/actions.create', urlencode({"title": "none_test"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(create_response["success"])
+
+      # test create logged as user
+      signinAs(self.client, self.USER)
+      create_response = self.client.post('/v3/actions.create', urlencode({"title": "user_test"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(create_response["success"])
+
+      # test create logged as cadmin
+      signinAs(self.client, self.CADMIN)
+      create_response = self.client.post('/v3/actions.create', urlencode({"title": "cadmin_test"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(create_response["success"])
+
+      # test create logged as sadmin
+      signinAs(self.client, self.SADMIN)
+      create_response = self.client.post('/v3/actions.create', urlencode({"title": "sadmin_test"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(create_response["success"])
+
+      # test create no title
+      create_response = self.client.post('/v3/actions.create', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(create_response["success"])
+
+    def test_list(self):
+      # test list not logged in
+      signinAs(self.client, None)
+      list_response = self.client.post('/v3/actions.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(list_response["success"])
+
+      # test list logged as user
+      signinAs(self.client, self.USER)
+      list_response = self.client.post('/v3/actions.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(list_response["success"])
+
+      # test list logged as cadmin
+      signinAs(self.client, self.CADMIN)
+      list_response = self.client.post('/v3/actions.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(list_response["success"])
+
+      # test list logged as sadmin
+      signinAs(self.client, self.SADMIN)
+      list_response = self.client.post('/v3/actions.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(list_response["success"])
+
+    def test_update(self):
+      # test update not signed in
+      signinAs(self.client, None)
+      update_response = self.client.post('/v3/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "none_title"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(update_response["success"])
+
+      # test update signed as user
+      signinAs(self.client, self.USER)
+      update_response = self.client.post('/v3/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "user_title"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(update_response["success"])
+
+      # test update as cadmin
+      signinAs(self.client, self.CADMIN)
+      update_response = self.client.post('/v3/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "cadmin_title"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(update_response["success"])
+      self.assertEquals(update_response["data"]["title"], "cadmin_title")
+
+      # test update as sadmin
+      signinAs(self.client, self.SADMIN)
+      update_response = self.client.post('/v3/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "sadmin_title"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(update_response["success"])
+      self.assertEquals(update_response["data"]["title"], "sadmin_title")
+
+    # action object has no attribute first?
+    def test_delete(self):
+      # test not signed in
+      signinAs(self.client, None)
+      delete_response = self.client.post('/v3/actions.delete', urlencode({"action_id": self.ACTION3.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(delete_response["success"])
+
+      # test as user
+      signinAs(self.client, self.USER)
+      delete_response = self.client.post('/v3/actions.delete', urlencode({"action_id": self.ACTION3.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(delete_response["success"])
+
+      # test as cadmin
+      signinAs(self.client, self.CADMIN)
+      delete_response = self.client.post('/v3/actions.delete', urlencode({"action_id": self.ACTION4.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(delete_response["success"])
+      self.assertTrue(delete_response["data"]["is_deleted"])
+
+      # test as sadmin
+      signinAs(self.client, self.SADMIN)
+      delete_response = self.client.post('/v3/actions.delete', urlencode({"action_id": self.ACTION5.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(delete_response["success"])
+      self.assertTrue(delete_response["data"]["is_deleted"])
+
+      # test no action_id
+      delete_response = self.client.post('/v3/actions.delete', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(delete_response["success"])
+
+    def test_rank(self):
+
+      # test not logged in
+      rank = 444
+      signinAs(self.client, None)
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": self.ACTION2.id, "rank": rank}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      # test as user
+      signinAs(self.client, self.USER)
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": self.ACTION2.id, "rank": rank}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      # test as cadmin
+      signinAs(self.client, self.CADMIN)
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": self.ACTION2.id, "rank": rank}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response["success"])
+      self.assertEqual(response["data"]["rank"], rank)
+
+      # test as cadmin, missing parameter
+      rank = 200
+      response = self.client.post('/v3/actions.rank', urlencode({"rank": rank}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": self.ACTION2.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      # pass args as strings
+      signinAs(self.client, self.SADMIN)
+      response = self.client.post('/v3/actions.rank', urlencode({"action_id": str(self.ACTION2.id), "rank": str(rank)}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response["success"])
+      self.assertEqual(response["data"]["rank"], rank)
+    
+
+    def test_copy(self):
+      # test copy not logged in
+      signinAs(self.client, None)
+      copy_response = self.client.post('/v3/actions.copy', urlencode({"action_id": self.ACTION2.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(copy_response["success"])
+
+      # test copy as user
+      signinAs(self.client, self.USER)
+      copy_response = self.client.post('/v3/actions.copy', urlencode({"action_id": self.ACTION2.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(copy_response["success"])
+
+      # test copy as cadmin
+      signinAs(self.client, self.CADMIN)
+      copy_response = self.client.post('/v3/actions.copy', urlencode({"action_id": self.ACTION2.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(copy_response["success"])
+
+      # test copy as sadmin
+      signinAs(self.client, self.SADMIN)
+      copy_response = self.client.post('/v3/actions.copy', urlencode({"action_id": self.ACTION2.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(copy_response["success"])
+
+    def test_list_CAdmin(self):
+      # test list cadmin not logged in
+      signinAs(self.client, None)
+      list_response = self.client.post('/v3/actions.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(list_response["success"])
+
+      # test list cadmin as user
+      signinAs(self.client, self.USER)
+      list_response = self.client.post('/v3/actions.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(list_response["success"])
+
+      # test list cadmin as cadmin
+      signinAs(self.client, self.CADMIN)
+      list_response = self.client.post('/v3/actions.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(list_response["success"])
+
+      # test list cadmin as sadmin
+      signinAs(self.client, self.SADMIN)
+      list_response = self.client.post('/v3/actions.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(list_response["success"])
+
+    def test_list_SAdmin(self):
+      # test list sadmin not logged in
+      signinAs(self.client, None)
+      list_response = self.client.post('/v3/actions.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(list_response["success"])
+
+      # test list sadmin as user
+      signinAs(self.client, self.USER)
+      list_response = self.client.post('/v3/actions.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(list_response["success"])
+
+      # test list sadmin as cadmin
+      signinAs(self.client, self.CADMIN)
+      list_response = self.client.post('/v3/actions.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(list_response["success"])
+
+      # test list sadmin as sadmin
+      signinAs(self.client, self.SADMIN)
+      list_response = self.client.post('/v3/actions.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(list_response["success"])

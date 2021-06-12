@@ -1,3 +1,10 @@
-March 4th Deployment to Prod
-- Keep admin sessions alive by not expiring tokens
-- Don't show non published sites except sandbox
+June 11th Deployment to Dev/Canary/Prod
+- Copied actions and events are not marked as templates
+- include service provider logo in info (for testimonials)
+- Fix vendor creation/editing
+- Fix most canary bugs (events, teams, edit households)
+- Fix team member and editing bugs from portal
+- Fixing several issues which arose during testing (265 266, 267)
+- Introducing routes .rank for testimonials, actions, events, vendors
+- Fix images getting lost from testimonials, don't delete in update routes
+- Owen's testing and bug fixes relating to communities, events, testimonials, actions

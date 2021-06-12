@@ -212,7 +212,7 @@ def QuerySingleAction(name,event_tag=""):
                                 "category":q.category, "helptext":q.helptext, "questionInfo":questionInfo, \
                                 "average_points":q.average_points, "picture":picture}
         else:
-            print("ERROR: Action "+name+" was not found")
+            #print("ERROR: Action "+name+" was not found")
             return INVALID_QUERY, {}
     except:
         print("Failure to query action : "+name)

@@ -43,6 +43,8 @@ class Location(models.Model):
   is_deleted = models.BooleanField(default=False, blank=True)
   state = models.CharField(max_length=SHORT_STR_LEN, 
     choices = ZIP_CODE_AND_STATES.items(), blank=True)
+  country = models.CharField(max_length=SHORT_STR_LEN, 
+    default="US", blank=True)
   more_info = JSONField(blank=True, null=True)
 
   def __str__(self):
@@ -51,9 +53,11 @@ class Location(models.Model):
     elif self.location_type == 'ZIP_CODE_ONLY':
       return self.zipcode
     elif self.location_type == 'CITY_ONLY':
-      return self.city
+      return '%s-%s' % (self.city, self.state)
     elif self.location_type == 'COUNTY_ONLY':
-      return self.county 
+      return '%s-%s' % (self.county, self.state)
+    elif self.location_type == 'COUNTRY_ONLY':
+      return self.country 
     elif self.location_type == 'FULL_ADDRESS':
       return '%s, %s, %s, %s, %s' % (
         self.street, self.unit_number, self.city, self.county, self.state
@@ -259,9 +263,24 @@ class Community(models.Model):
     null=True, blank=True, related_name='community_logo')
   banner = models.ForeignKey(Media, on_delete=models.SET_NULL, 
     null=True, blank=True, related_name='community_banner')
+  favicon = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    null=True, blank=True, related_name='community_favicon')
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
+
   is_geographically_focused = models.BooleanField(default=False, blank=True)
+
+  # deprecated: location of community was originally a JSON string; now defined below in locations (link to Location model)
   location = JSONField(blank=True, null=True)
+
+  # new - define the geographic area for a community (zipcodes, towns/cities, counties, states, countries)
+  geography_type = models.CharField(
+    max_length=TINY_STR_LEN,
+    choices=CHOICES.get("COMMUNITY_GEOGRAPHY_TYPES", {}).items(), 
+    blank=True, null=True)
+  
+  # locations defines the range for geographic communities
+  locations = models.ManyToManyField(Location, blank=True)
+
   policies = models.ManyToManyField(Policy, blank=True)
   is_approved = models.BooleanField(default=False, blank=True)
   accepted_terms_and_conditions = models.BooleanField(default=True)
@@ -279,8 +298,9 @@ class Community(models.Model):
 
   def simple_json(self):
     res = model_to_dict(self, ['id', 'name', 'subdomain', 'is_approved', 'owner_phone_number',
-      'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved'])
+      'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved','more_info' , 'location'])
     res['logo'] = get_json_if_not_none(self.logo)
+    res['favicon'] = get_json_if_not_none(self.favicon)
     return res
 
   def full_json(self):
@@ -292,14 +312,42 @@ class Community(models.Model):
 
     # get the community goal
     goal = get_json_if_not_none(self.goal) or {}
-    # decision not to include state reported solar in this total
-    #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self).reported_value
-    # 
-    # For Wayland launch, insisting that we show large numbers so people feel good about it.
-    goal["attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self).count())
-    goal["attained_number_of_actions"] = (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
-    #BHN - TODO
-    #goal["attained_carbon_footprint_reduction"] += (UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").count())
+
+    # goal defined consistently; not differently in two places
+    if self.is_geographically_focused: 
+      goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(is_deleted=False, community=self).count())
+      done_actions = UserActionRel.objects.filter(real_estate_unit__community=self,status="DONE").prefetch_related('action__calculator_action')
+    else:
+      community_members = CommunityMember.objects.filter(is_deleted=False, community=self).select_related('user')
+      users = [cm.user for cm in community_members]
+      members_count = community_members.count()
+      goal["organic_attained_number_of_households"] = members_count
+      done_actions = UserActionRel.objects.filter(user__in=users, status="DONE").prefetch_related('action__calculator_action')
+
+    goal["organic_attained_number_of_actions"] = (done_actions.count())
+    carbon_footprint_reduction = 0
+    for actionRel in done_actions:
+      if actionRel.action and actionRel.action.calculator_action:
+        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+    goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
+
+    locations = ""
+    for loc in self.locations.all():
+      if locations != "":
+        locations += ", "
+      if self.geography_type == "ZIPCODE":
+        l = loc.zipcode
+      elif self.geography_type == "CITY":
+        l = loc.city
+      elif self.geography_type == "COUNTY":
+        l = loc.county
+      elif self.geography_type == "STATE":
+        l = loc.state
+      elif self.geography_type == "COUNTRY":
+        l = loc.country
+      else:
+        l=loc.zipcode
+      locations += l
 
     return {
       "id": self.id,
@@ -311,6 +359,7 @@ class Community(models.Model):
       "goal": goal,
       "about_community": self.about_community,
       "logo":get_json_if_not_none(self.logo),
+      "favicon": get_json_if_not_none(self.favicon),
       "location":self.location,
       "is_approved": self.is_approved,
       "is_published": self.is_published,
@@ -319,7 +368,9 @@ class Community(models.Model):
       "created_at": self.created_at,
       "updated_at": self.updated_at,
       "more_info": self.more_info,
-      "admins": admins
+      "admins": admins,
+      "geography_type": self.geography_type,
+      "locations": locations
     }
 
 
@@ -352,6 +403,8 @@ class RealEstateUnit(models.Model):
   )
   community = models.ForeignKey(Community, null=True, on_delete=models.SET_NULL, blank=True)
   location = JSONField(blank=True, null=True)
+  # added 1/28/21 - redundant to location, address will have Zip code, defining which community the REU is in
+  address = models.ForeignKey(Location, null=True, on_delete=models.SET_NULL)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -366,7 +419,12 @@ class RealEstateUnit(models.Model):
     return f"{self.community}|{self.unit_type}|{self.name}"
 
   def simple_json(self):
-    return model_to_dict(self)
+    #return model_to_dict(self)
+
+    res =  model_to_dict(self)
+    res['location'] = get_json_if_not_none(self.address)
+    return res
+
 
   def full_json(self):
     return self.simple_json()
@@ -904,7 +962,9 @@ class Vendor(models.Model):
     return self.name
 
   def info(self):
-    return model_to_dict(self, ['id', 'name', 'service_area', 'key_contact', 'phone_number', 'email' ])
+    data = model_to_dict(self, ['id', 'name', 'service_area', 'key_contact', 'phone_number', 'email' ])
+    data['logo'] = get_json_if_not_none(self.logo)
+    return data
 
   def simple_json(self):
     data = model_to_dict(self, exclude=[
@@ -1258,7 +1318,7 @@ class Testimonial(models.Model):
     return self.title
 
   def info(self):
-    return model_to_dict(self, include=['id', 'title', 'community'])
+    return model_to_dict(self, fields=['id', 'title', 'community'])
 
   def _get_user_info(self):
     return get_json_if_not_none(self.user) or {
@@ -1273,7 +1333,7 @@ class Testimonial(models.Model):
     res["action"] = get_json_if_not_none(self.action)
     res["vendor"] = None if not self.vendor else self.vendor.info()
     res["community"] = get_json_if_not_none(self.community)
-    res["created_at"] = self.created_at
+    res["created_at"] = self.created_at.date()
     res['file'] = get_json_if_not_none(self.image)
     res['tags'] = [t.simple_json() for t in self.tags.all()]
     res['anonymous'] = self.anonymous
@@ -1336,7 +1396,9 @@ class UserActionRel(models.Model):
       "user": get_json_if_not_none(self.user),
       "action": get_json_if_not_none(self.action),
       "real_estate_unit": get_json_if_not_none(self.real_estate_unit),
-      "status": self.status
+      "status": self.status,
+      "date_completed": self.date_completed,
+      "carbon_impact": self.carbon_impact
     }
 
   def full_json(self):
@@ -2007,10 +2069,6 @@ class HomePageSettings(models.Model):
   social_media_links: str
     Links to social media, such as:  ["facebook:www.facebook.com/coolerconcord/,instgram:www.instagram.com/coolerconcord/"]
 
-  for the tab on all pages:
-  -------------------------
-  favicon_image : ForeignKey to Media file for favicon
-
   more_info: JSON - extraneous information
   is_deleted: boolean - whether this page was deleted from the platform (perhaps with it's community)
   is_published: boolean - whether this page is live
@@ -2043,8 +2101,6 @@ class HomePageSettings(models.Model):
   show_footer_social_media = models.BooleanField(default=True, blank=True)
   social_media_links = JSONField(blank=True, null=True)
   
-  favicon_image = models.ForeignKey(Media, related_name='favicon', on_delete=models.SET_NULL, null=True, blank=True)
-
   is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
@@ -2060,25 +2116,11 @@ class HomePageSettings(models.Model):
 
 
   def full_json(self):
-    goal = get_json_if_not_none(self.community.goal) or {}
-    # decision not to include state reported solar
-    #solar_actions_count = Data.objects.get(name__icontains="Solar", community=self.community).reported_value
-    # 
-    goal["organic_attained_number_of_households"] = (RealEstateUnit.objects.filter(community=self.community).count())
-    done_actions = UserActionRel.objects.filter(real_estate_unit__community=self.community,status="DONE").prefetch_related('action__calculator_action')
-    goal["organic_attained_number_of_actions"] = (done_actions.count())
-    carbon_footprint_reduction = 0
-    for actionRel in done_actions:
-      if actionRel.action and actionRel.action.calculator_action:
-        carbon_footprint_reduction += actionRel.action.calculator_action.average_points
-    goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
-
     res =  self.simple_json()
     res['images'] = [i.simple_json() for i in self.images.all()]
     res['community'] = get_json_if_not_none(self.community)
     res['featured_events'] = [i.simple_json() for i in self.featured_events.all()]
     res['featured_stats'] = [i.simple_json() for i in self.featured_stats.all()]
-    res['goal']  = goal
     return res
 
   class Meta:
@@ -2305,6 +2347,36 @@ class VendorsPageSettings(PageSettings):
   class Meta:
     db_table = 'vendors_page_settings'
     verbose_name_plural = "VendorsPageSettings"
+
+class EventsPageSettings(PageSettings):
+  """
+  Represents the community's Events page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "EventsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'events_page_settings'
+    verbose_name_plural = "EventsPageSettings"
+
+class TestimonialsPageSettings(PageSettings):
+  """
+  Represents the community's Testimonials page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  def __str__(self):             
+    return "TestimonialsPageSettings - %s" % (self.community)
+
+  class Meta:
+    db_table = 'testimonials_page_settings'
+    verbose_name_plural = "TestimonialsPageSettings"
 
 class Message(models.Model):
   """

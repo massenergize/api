@@ -12,38 +12,38 @@ class EventService:
   def __init__(self):
     self.store =  EventStore()
 
-  def get_event_info(self, context, event_id) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.get_event_info(context, event_id)
+  def get_event_info(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.get_event_info(context, args)
     if err:
       return None, err
     return serialize(event), None
 
-  def rsvp(self, context, event_id) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.rsvp(context, event_id)
+  def rsvp(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.rsvp(context, args)
     if err:
       return None, err
     return serialize(event), None
 
-  def rsvp_update(self, context, event_id, status) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.rsvp_update(context, event_id, status)
+  def rsvp_update(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.rsvp_update(context, args)
     if err:
       return None, err
     return serialize(event), None
 
-  def rsvp_remove(self, context, rsvp_id) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.rsvp_remove(context, rsvp_id)
+  def rsvp_remove(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.rsvp_remove(context, args)
     if err:
       return None, err
-    return result, None
+    return event, None
 
-  def copy_event(self, context, event_id) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.copy_event(context, event_id)
+  def copy_event(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.copy_event(context, args)
     if err:
       return None, err
     return serialize(event), None
 
-  def list_events(self, context, community_id, subdomain, user_id) -> (list, MassEnergizeAPIError):
-    events, err = self.store.list_events(context, community_id, subdomain, user_id)
+  def list_events(self, context, args) -> (list, MassEnergizeAPIError):
+    events, err = self.store.list_events(context, args)
     if err:
       return None, err
     return serialize_all(events), None
@@ -56,8 +56,14 @@ class EventService:
     return serialize(event), None
 
 
-  def update_event(self, context, event_id, args) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.update_event(context, event_id, args)
+  def update_event(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.update_event(context, args)
+    if err:
+      return None, err
+    return serialize(event), None
+
+  def rank_event(self, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.rank_event(args)
     if err:
       return None, err
     return serialize(event), None
@@ -69,8 +75,8 @@ class EventService:
     return serialize(event), None
 
 
-  def list_events_for_community_admin(self, context, community_id) -> (list, MassEnergizeAPIError):
-    events, err = self.store.list_events_for_community_admin(context, community_id)
+  def list_events_for_community_admin(self, context, args) -> (list, MassEnergizeAPIError):
+    events, err = self.store.list_events_for_community_admin(context, args)
     if err:
       return None, err
     return serialize_all(events), None

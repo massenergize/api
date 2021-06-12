@@ -3,9 +3,13 @@ from api.handlers.admin import AdminHandler
 from api.handlers.auth import AuthHandler
 from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
 from api.handlers.page_settings__actions import ActionsPageSettingsHandler
+from api.handlers.page_settings__events import EventsPageSettingsHandler
+from api.handlers.page_settings__vendors import VendorsPageSettingsHandler
+from api.handlers.page_settings__testimonials import TestimonialsPageSettingsHandler
 from api.handlers.community import CommunityHandler
 from api.handlers.page_settings__contactus import ContactUsPageSettingsHandler
 from api.handlers.page_settings__donate import DonatePageSettingsHandler
+from api.handlers.page_settings__impact import ImpactPageSettingsHandler
 from api.handlers.download import DownloadHandler
 from api.handlers.event import EventHandler
 from api.handlers.goal import GoalHandler
@@ -33,13 +37,14 @@ ROUTE_HANDLERS = [
   AuthHandler(),
   CommunityHandler(),
   ContactUsPageSettingsHandler(),
-  DownloadHandler(), 
   DonatePageSettingsHandler(),
   DownloadHandler(),
   EventHandler(),
+  EventsPageSettingsHandler(),
   GoalHandler(),
   GraphHandler(),
   HomePageSettingsHandler(),
+  ImpactPageSettingsHandler(),
   MessageHandler(),
   MiscellaneousHandler(),
   PolicyHandler(),
@@ -50,8 +55,10 @@ ROUTE_HANDLERS = [
   TeamHandler(),
   TeamsPageSettingsHandler(),
   TestimonialHandler(),
+  TestimonialsPageSettingsHandler(),
   UserHandler(),
-  VendorHandler()
+  VendorHandler(),
+  VendorsPageSettingsHandler()
 ]
 
 urlpatterns = []

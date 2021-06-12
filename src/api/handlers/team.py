@@ -27,7 +27,6 @@ class TeamHandler(RouteHandler):
     self.add("/teams.update", self.update)
     self.add("/teams.delete", self.delete)
     self.add("/teams.remove", self.delete)
-    # switch from add_member to join, remove_member to leave
     self.add("/teams.join", self.join)
     self.add("/teams.leave", self.leave)
     self.add("/teams.addMember", self.add_member)
@@ -40,17 +39,19 @@ class TeamHandler(RouteHandler):
     #admin routes
     self.add("/teams.listForCommunityAdmin", self.community_admin_list)
     self.add("/teams.listForSuperAdmin", self.super_admin_list)
-
   
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    team_id = args.pop('team_id', None)
 
-    if is_value(team_id):
-      team_info, err = self.team.get_team_info(context, team_id)
-    else:
-      err = CustomMassEnergizeError("No team_id passed to teams.info")
+    self.validator.expect("id", str, is_required=True)
+    self.validator.rename("team_id", "id")
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    team_info, err = self.team.get_team_info(context, args)
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -61,15 +62,13 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    admin_emails = args.pop('admin_emails', '')
-    if is_value(admin_emails):
-      args["admin_emails"] = parse_str_list(admin_emails)
+    self.validator.expect("parent_id", int)
+    self.validator.expect("is_published", bool)
+    self.validator.expect("admin_emails", 'str_list')
 
-    parentId = args.pop('parent_id', None)
-    if is_value(parentId):
-      args["parent_id"] = parentId
-
-    args['is_published'] = parse_bool(args.pop('is_published', None))   
+    args, err = self.validator.verify(args)
+    if err:
+      return err
 
     team_info, err = self.team.create_team(context, args)
     if err:
@@ -99,18 +98,17 @@ class TeamHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    team_id = args.pop('id', None)
 
-    parentId = args.pop('parent_id', None)
-    if is_value(parentId):
-      args["parent_id"] = parentId
+    self.validator.expect("id", int, is_required=True)
+    self.validator.expect("parent_id", int)
+    self.validator.expect("is_published", bool)
+    self.validator.rename("team_id", "id")
 
-    args['is_published'] = parse_bool(args.pop('is_published', None))   
-      
-    if is_value(team_id):
-      team_info, err = self.team.update_team(team_id, args)
-    else:
-      err = CustomMassenergizeError("No team_id passed to teams.update")
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    team_info, err = self.team.update_team(context, args)
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -120,11 +118,15 @@ class TeamHandler(RouteHandler):
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
-    team_id = args.get("team_id", None)
-    if is_value(team_id):
-      team_info, err = self.team.delete_team(team_id)
-    else:
-      err = CustomMassEnergizeError("No team_id passed to teams.delete")
+
+    # verify the body of the incoming request
+    self.validator.expect("id", str, is_required=True)
+    self.validator.rename("team_id", "id")
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    team_info, err = self.team.delete_team(args)
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -134,14 +136,21 @@ class TeamHandler(RouteHandler):
   def join(self, request):
     context: Context = request.context
     args: dict = context.args
-    team_id = args.pop('team_id', None)
-    user_id = args.pop('user_id', None)
-    if is_value(team_id) and is_value(user_id):
-      team_info, err = self.team.join_team(team_id, user_id)
-    elif not is_value(team_id):
-      err = CustomMassenergizeError("No team_id passed to teams.join")
+
+    # verify the body of the incoming request
+    self.validator.expect("id", str, is_required=True)
+    self.validator.expect("user_id", str, is_required=True)
+    self.validator.rename("team_id", "id")
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    executor_id = context.user_id
+
+    if executor_id == args.get("user_id", None):
+      team_info, err = self.team.join_team(args)
     else:
-      err = CustomMassenergizeError("No user_id passed to teams.join")
+      err = CustomMassenergizeError("Executor dosen't have sufficient permissions to use teams.leave on this user")
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -151,25 +160,43 @@ class TeamHandler(RouteHandler):
   def leave(self, request):
     context: Context = request.context
     args: dict = context.args
-    team_id = args.pop('team_id', None)
-    user_id = args.pop('user_id', None)
-    if is_value(team_id) and is_value(user_id):
-      team_info, err = self.team.leave_team(team_id, user_id)
-    elif not is_value(team_id):
-      err = CustomMassenergizeError("No team_id passed to teams.leave")
+
+    # verify the body of the incoming request
+    self.validator.expect("user_id", str, is_required=True)
+    self.validator.expect("id", str, is_required=True)
+    self.validator.rename("team_id", "id")
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    # test for perms
+    executor_id = context.user_id
+
+    if executor_id == args.get("user_id", None):
+      team_info, err = self.team.leave_team(args)
     else:
-      err = CustomMassenergizeError("No user_id passed to teams.leave")
+      err = CustomMassenergizeError("Executor dosen't have sufficient permissions to use teams.leave on this user")
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
 
-  @login_required
+  @admins_only
   def add_member(self, request):
     context: Context = request.context
     args: dict = context.args
-    team_info, err = self.team.add_member(context, args)
+
+    # verify the body of the incoming request
+    self.validator.expect("user_id", str, is_required=True)
+    self.validator.expect("id", str, is_required=True)
+    self.validator.rename("team_id", "id")
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    team_info, err = self.team.add_member(args)
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
@@ -179,7 +206,16 @@ class TeamHandler(RouteHandler):
   def remove_member(self, request):
     context: Context = request.context
     args: dict = context.args
-    team_info, err = self.team.remove_team_member(context, args)
+
+    # verify the body of the incoming request
+    self.validator.expect("user_id", str, is_required=True)
+    self.validator.expect("id", str, is_required=True)
+    self.validator.rename("team_id", "id")
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    team_info, err = self.team.remove_team_member(args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
@@ -188,6 +224,12 @@ class TeamHandler(RouteHandler):
   def message_admin(self, request):
     context: Context = request.context
     args: dict = context.args
+    self.validator.rename('subject','title')
+    self.validator.expect('title', str, is_required=True)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
     team_info, err = self.team.message_admin(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
