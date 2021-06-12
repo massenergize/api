@@ -1,4 +1,4 @@
-June 9th Deployment to Dev/Canary
+June 11th Deployment to Dev/Canary/Prod
 - Copied actions and events are not marked as templates
 - include service provider logo in info (for testimonials)
 - Fix vendor creation/editing
