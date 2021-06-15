@@ -1,4 +1,4 @@
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -206,19 +206,20 @@ class UserStore:
 
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
-      
       user = UserProfile.objects.filter(email=email).first()
+      print("this is the user")
+      print(user)
       if not user:
         new_user: UserProfile = UserProfile.objects.create(
           full_name = args.get('full_name'), 
           preferred_name = args.get('preferred_name', None), 
           email = args.get('email'), 
           is_vendor = args.get('is_vendor', False), 
-          accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+          accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False), 
+          color = args.get('color')
         )
       else:
         new_user: UserProfile = user
-
 
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
       if not community_member_exists:
@@ -249,11 +250,22 @@ class UserStore:
         return None, CustomMassenergizeError("permission_denied")
 
       if context.user_is_logged_in and ((context.user_id == user_id) or (context.user_is_admin())):
-        user = UserProfile.objects.filter(id=user_id)
-        if not user:
+        users = UserProfile.objects.filter(id=user_id)
+        if len(users) == 0:
           return None, InvalidResourceError()
-
-        user.update(**args)
+        # print('id: ' + user.id)
+        user = users[0]
+        user.full_name = args['full_name']
+        user.preferred_name = args['preferred_name']
+        user.save()
+        if args['profile_picture']:
+          pic = Media()
+          pic.name = f'{user.full_name} profpic'
+          pic.file = args['profile_picture']
+          pic.media_type = 'image'
+          pic.save()
+        user.profile_picture = pic
+        user.save()
         return user.first(), None
       else:
         return None, CustomMassenergizeError('permission_denied')
