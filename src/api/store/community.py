@@ -407,9 +407,9 @@ class CommunityStore:
         raise Exception("Failed to clone settings for Actions page")
       if not _clone_page_settings(ContactUsPageSettings, f"Contact Us - {community.name}", community):
         raise Exception("Failed to clone settings for ContactUs page")
-      if not _clone_page_settings(DonatePageSettings, f"Take Actions - {community.name}", community):
+      if not _clone_page_settings(DonatePageSettings, f"Support {community.name}", community):
         raise Exception("Failed to clone settings for Donate page")
-      if not _clone_page_settings(ImpactPageSettings, f"See our Impact - {community.name}", community):
+      if not _clone_page_settings(ImpactPageSettings, f"Our Impact - {community.name}", community):
         raise Exception("Failed to clone settings for Impact page")
       if not _clone_page_settings(TeamsPageSettings, f"Teams in this community", community):
         raise Exception("Failed to clone settings for Teams page")
