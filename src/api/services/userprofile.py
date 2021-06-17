@@ -102,8 +102,8 @@ class UserService:
     return serialize(user, full=True), None
 
 
-  def update_user(self,context, user_id, args) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.update_user(context, user_id, args)
+  def update_user(self,context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.update_user(context, args)
     if err:
       return None, err
     return serialize(user), None

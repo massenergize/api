@@ -200,7 +200,6 @@ class UserStore:
       email = args.get('email', None) 
       community = get_community_or_die(context, args)
 
-
       # allow home address to be passed in
       location = args.pop('location', '')
 
@@ -216,7 +215,7 @@ class UserStore:
           email = args.get('email'), 
           is_vendor = args.get('is_vendor', False), 
           accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False), 
-          color = args.get('color')
+          #color = args.get('color', None)
         )
       else:
         new_user: UserProfile = user
@@ -241,32 +240,34 @@ class UserStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_user(self, context: Context, user_id, args) -> (dict, MassEnergizeAPIError):
+  def update_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      user_id = args.get('id', None)
       email = args.get('email', None)
-      # user_id = args.get('user_id', None)
 
+      print(user_id)
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
 
       if context.user_is_logged_in and ((context.user_id == user_id) or (context.user_is_admin())):
         users = UserProfile.objects.filter(id=user_id)
-        if len(users) == 0:
+        if not users:
           return None, InvalidResourceError()
-        # print('id: ' + user.id)
-        user = users[0]
-        user.full_name = args['full_name']
-        user.preferred_name = args['preferred_name']
-        user.save()
-        if args['profile_picture']:
+
+        profile_picture = args.pop("profile_picture", None)
+        print(profile_picture)
+        users.update(**args)          # print('id: ' + user.id)
+        user = users.first()
+
+        if profile_picture:
           pic = Media()
           pic.name = f'{user.full_name} profpic'
-          pic.file = args['profile_picture']
+          pic.file = profile_picture
           pic.media_type = 'image'
           pic.save()
         user.profile_picture = pic
         user.save()
-        return user.first(), None
+        return user, None
       else:
         return None, CustomMassenergizeError('permission_denied')
 
