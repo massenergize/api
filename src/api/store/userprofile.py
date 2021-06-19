@@ -245,7 +245,6 @@ class UserStore:
       user_id = args.get('id', None)
       email = args.get('email', None)
 
-      print(user_id)
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
 
@@ -255,7 +254,6 @@ class UserStore:
           return None, InvalidResourceError()
 
         profile_picture = args.pop("profile_picture", None)
-        print(profile_picture)
         users.update(**args)          # print('id: ' + user.id)
         user = users.first()
 
@@ -265,8 +263,10 @@ class UserStore:
           pic.file = profile_picture
           pic.media_type = 'image'
           pic.save()
-        user.profile_picture = pic
-        user.save()
+
+          user.profile_picture = pic
+          user.save()
+          
         return user, None
       else:
         return None, CustomMassenergizeError('permission_denied')

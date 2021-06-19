@@ -132,14 +132,15 @@ class UserProfileTestCase(TestCase):
         # test logged as user
         signinAs(self.client, self.USER)
         update_response = self.client.post('/v3/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name1"}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertEqual(update_response["data"]["full_name"], "updated name1")
         self.assertTrue(update_response["success"])
+        self.assertEqual(update_response["data"]["full_name"], "updated name1")
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
         update_response = self.client.post('/v3/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name2"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(update_response["success"])        
         self.assertEqual(update_response["data"]["full_name"], "updated name2")
-        self.assertTrue(update_response["success"])
+
 
     def test_delete(self):
         user1 = UserProfile.objects.create(email="user1@email.com", full_name="user1test")
