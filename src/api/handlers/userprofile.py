@@ -60,6 +60,7 @@ class UserHandler(RouteHandler):
       .expect("full_name", str, is_required=True)
       .expect("preferred_name", str, is_required=True)
       .expect("is_vendor", bool, is_required=True)
+      .expect('color', str, is_required=True)
       .verify(context.args)
     )
     if err:
