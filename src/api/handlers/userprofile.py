@@ -251,7 +251,6 @@ class UserHandler(RouteHandler):
         admin_group = CommunityAdminGroup.objects.filter(community=community).first()
         if cadmin in admin_group.members.all():
           break
-    
     registered_community = community
     csv_ref = args['csv'].file 
     first_name_field = args['first_name_field']
