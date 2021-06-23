@@ -292,6 +292,9 @@ class UserHandler(RouteHandler):
               new_user.save()  
               # send email inviting user to complete their profile
               message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name
+              link = registered_community.name + "localhost:3000/" + str(registered_community.subdomain) + "/completeRegistration?token=" + new_user.id
+              print(link)
+              message.append("Use the following link to join " + registered_community.name + ": " + link)
               send_massenergize_email(subject="Invitation to Join MassEnergize Community", msg=message, to=new_user.email)
             else:    
                 print("UH OH")
