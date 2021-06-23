@@ -47,7 +47,6 @@ class UserHandler(RouteHandler):
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
     self.add("/users.import", self.handle_contacts_csv)
-    self.add("/users.test", self.test_route)
 
 
   @login_required
@@ -245,24 +244,24 @@ class UserHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     # query users by user id, find the user that is sending the request
-    user = UserProfile.objects.filter(id="837ef9ff-4065-4a41-b5d3-cfba7abc9108").first()
+    cadmin = UserProfile.objects.filter(id=context.user_id).first()
     # find the community that the user is the admin of. In the next section, populate user profiles with that information
     registered_community = None
-    print(user.communities.all())
-    for community in user.communities.all():
+    for community in cadmin.communities.all():
         admin_group = CommunityAdminGroup.objects.filter(community=community).first()
-        if user in admin_group.members.all():
+        if cadmin in admin_group.members.all():
           break
     
     registered_community = community
-    csv_ref = args['csv'].file    
+    csv_ref = args['csv'].file 
+    first_name_field = args['first_name_field']
+    last_name_field = args['last_name_field']   
+    email_field = args['email_field']
     # csv_ref is a bytes object, we need a csv
     # so we copy it as a csv temporarily to the disk
     temporarylocation="testout.csv"
     with open(temporarylocation, 'wb') as out:
-      # print("file converting")
       var = csv_ref.read()
-      # print(var)
       out.write(var)
     with open(temporarylocation, "r") as f:
       reader = csv.DictReader(f, delimiter=",")
@@ -270,20 +269,20 @@ class UserHandler(RouteHandler):
         column_list = list(row.keys())
         try:
           # prevents the first row (headers) from being read in as a user
-          if row['First Name'] == column_list[0]:
+          if row[first_name_field] == column_list[0]:
             continue
           # verify correctness of email address
           regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
           try: 
-            if(re.search(regex,row['Email'])):   
-              # print("this row has a valid email")
-              user = UserProfile.objects.filter(email=row['Email']).first()
+            if(re.search(regex,row[email_field])):   
+              user = UserProfile.objects.filter(email=row[email_field]).first()
               if not user:
-                # print('user does not exist yet')
+                if row[email_field] == "" or not row[email_field]:
+                  return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
                 new_user: UserProfile = UserProfile.objects.create(
-                  full_name = row['First Name'] + ' ' + row['Last Name'], 
-                  preferred_name = row['First Name'], 
-                  email = row['Email'],
+                  full_name = row[first_name_field] + ' ' + row[last_name_field], 
+                  preferred_name = row[first_name_field], 
+                  email = row[email_field],
                   is_vendor = False, 
                   accepts_terms_and_conditions = False
                 )   
@@ -293,10 +292,12 @@ class UserHandler(RouteHandler):
                 new_user: UserProfile = user  
               new_user.save()  
               # send email inviting user to complete their profile
-              message = user.full_name + " invited you to join the following MassEnergize Community: " + registered_community
+              message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name
               send_massenergize_email(subject="Invitation to Join MassEnergize Community", msg=message, to=new_user.email)
             else:    
-                return None, CustomMassenergizeError("Valid email required for sign up")
+                print("UH OH")
+                return MassenergizeResponse(data=None, error="One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
+                # return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
           except Exception as e:
             capture_message(str(e), level="error")
             print(str(e))
@@ -307,40 +308,8 @@ class UserHandler(RouteHandler):
     # and then delete it once we are done parsing it
     os.remove(temporarylocation)
     res = {'column names' : column_list}
+    print('got to end')
     return MassenergizeResponse(data=res)
 
  
-  def test_route(self, request):
-    try:
-      print('route is working up to here')
-    except Exception as e:
-      print(str(e))
-    try: 
-      registered_community = Community.objects.filter(name="Sustainable Students").first()
-      user = UserProfile.objects.filter(email="arthorse17@gmail.com").first()
-      if not user:
-        new_user: UserProfile = UserProfile.objects.create(
-          full_name = "Patrick Star", 
-          preferred_name = "Patrick", 
-          email = "arthorse17@gmail.com",
-          is_vendor = False, 
-          accepts_terms_and_conditions = False
-        )   
-        if registered_community:
-          new_user.communities.add(registered_community)
-      else: 
-        new_user: UserProfile = user  
-      new_user.save()  
-      # send email inviting user to complete their profile
-      print("type of user")
-      print(type(user))
-      message = user.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name
-      send_massenergize_email(subject="Invitation to Join MassEnergize Community", msg=message, to=new_user.email)
-      print("email sent")
-      dat = {"lovely":"lovely"}
-      return MassenergizeResponse(data=dat)
-    except Exception as e:
-      capture_message(str(e), level="error")
-      print(str(e))
-      err = str(e)
-      return MassenergizeResponse(error=err)
+  
