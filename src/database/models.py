@@ -963,7 +963,9 @@ class Vendor(models.Model):
     return self.name
 
   def info(self):
-    return model_to_dict(self, ['id', 'name', 'service_area', 'key_contact', 'phone_number', 'email' ])
+    data = model_to_dict(self, ['id', 'name', 'service_area', 'key_contact', 'phone_number', 'email' ])
+    data['logo'] = get_json_if_not_none(self.logo)
+    return data
 
   def simple_json(self):
     data = model_to_dict(self, exclude=[

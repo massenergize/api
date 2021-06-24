@@ -37,6 +37,7 @@ class EventStore:
       new_event = event_to_copy 
       new_event.name = event_to_copy.name + "-Copy"
       new_event.is_published=False
+      new_event.is_global = False
       new_event.start_date_and_time = event_to_copy.start_date_and_time
       new_event.end_date_and_time = event_to_copy.end_date_and_time
       new_event.description = event_to_copy.description
@@ -112,8 +113,9 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_event(self, context: Context, event_id, args) -> (dict, MassEnergizeAPIError):
+  def update_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      event_id = args.pop('event_id', None)
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       events = Event.objects.filter(id=event_id)
@@ -131,8 +133,6 @@ class EventStore:
       event: Event = events.first()
       if not event:
         return None, CustomMassenergizeError(f"No event with id: {event_id}")
-
-      events.update(**args)
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")

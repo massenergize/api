@@ -16,7 +16,7 @@ class PageSettingsService:
     page_setting, err = self.store.get_page_setting_info(args)
     if err:
       return None, err
-    return serialize(page_setting), None
+    return serialize(page_setting, full=True), None
 
   def list_page_settings(self, page_setting_id) -> (list, MassEnergizeAPIError):
     page_setting, err = self.store.list_page_settings(page_setting_id)
