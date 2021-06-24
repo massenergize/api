@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to users"""
 from functools import wraps
 from _main_.utils.emailer.send_email import send_massenergize_email
-from database.models import CommunityAdminGroup, UserProfile, Community
+from database.models import CommunityAdminGroup, UserProfile, Community, Team
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field
 from api.services.userprofile import UserService
@@ -47,6 +47,7 @@ class UserHandler(RouteHandler):
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
     self.add("/users.import", self.handle_contacts_csv)
+    self.add("/users.adminCommunity", self.get_admin_community)
 
 
   @login_required
@@ -237,6 +238,26 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
   
+  # lists id of community for which the user sending the request is the admin
+  @admins_only
+  def get_admin_community(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    # query users by user id, find the user that is sending the request
+    cadmin = UserProfile.objects.filter(id=context.user_id).first()
+    # find the community that the user is the admin of. In the next section, populate user profiles with that information
+    try:
+      print(cadmin.communities.all())
+      for community in cadmin.communities.all():
+          admin_group = CommunityAdminGroup.objects.filter(community=community).first()
+          print(admin_group.members.all())
+          if cadmin in admin_group.members.all():
+            return MassenergizeResponse(data={"id":community.id, "subdomain":str(community.subdomain)})
+    except Exception as e:
+      print(str(e))
+    return CustomMassenergizeError("You are not the administrator of any community")
+    
+
 
   @admins_only
   # @community_admins_only
@@ -252,6 +273,8 @@ class UserHandler(RouteHandler):
         if cadmin in admin_group.members.all():
           break
     registered_community = community
+    
+    # find the community within the team that the 
     csv_ref = args['csv'].file 
     first_name_field = args['first_name_field']
     last_name_field = args['last_name_field']   
@@ -284,20 +307,22 @@ class UserHandler(RouteHandler):
                   email = row[email_field],
                   is_vendor = False, 
                   accepts_terms_and_conditions = False
-                )   
+                )
                 if registered_community:
                   new_user.communities.add(registered_community)
               else: 
                 new_user: UserProfile = user  
+              team = Team.objects.filter(id=args['team_id']).first()
+              if team:
+                team.members.add(new_user)
               new_user.save()  
               # send email inviting user to complete their profile
-              message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name
-              link = registered_community.name + "localhost:3000/" + str(registered_community.subdomain) + "/completeRegistration?token=" + new_user.id
+              message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
+              link = "localhost:3000/" + str(registered_community.subdomain) + "/completeRegistration?userID=" + str(new_user.id)
               print(link)
-              message.append("Use the following link to join " + registered_community.name + ": " + link)
+              message += "Use the following link to join " + registered_community.name + ": " + link
               send_massenergize_email(subject="Invitation to Join MassEnergize Community", msg=message, to=new_user.email)
             else:    
-                print("UH OH")
                 return MassenergizeResponse(data=None, error="One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
                 # return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
           except Exception as e:
@@ -310,7 +335,6 @@ class UserHandler(RouteHandler):
     # and then delete it once we are done parsing it
     os.remove(temporarylocation)
     res = {'column names' : column_list}
-    print('got to end')
     return MassenergizeResponse(data=res)
 
  
