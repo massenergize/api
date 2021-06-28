@@ -401,7 +401,7 @@ class UserHandler(RouteHandler):
                 message += args["message"]
               '''if team:
                 message += "You have been assigned to the following team: " + team.name + "\n"'''
-              link = "localhost:3000/" + str(registered_community.subdomain) + "/completeRegistration?userID=" + str(new_user.id)
+              link = "localhost:3000/" + str(registered_community.subdomain) + "/signup"
               print(link)
               message += "Use the following link to join " + registered_community.name + ": " + link
               send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
