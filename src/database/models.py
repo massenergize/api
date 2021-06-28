@@ -9,6 +9,7 @@ from carbon_calculator.models import Action as CCAction
 import uuid
 import time
 
+
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 ZIP_CODE_AND_STATES = json_loader('./database/raw_data/other/states.json')
 
@@ -559,7 +560,14 @@ class UserProfile(models.Model):
     db_table = 'user_profiles' 
     ordering = ('-created_at',)
 
-
+class ImportedUser(models.Model):
+  id = models.AutoField(primary_key=True)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  # refers to whether or not the user has a completed profile
+  is_completed = models.BooleanField(default=False)
+  completed_at = models.DateTimeField(default=timezone.now, blank=True)
 class CommunityMember(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE)

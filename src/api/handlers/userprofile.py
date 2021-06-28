@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to users"""
 from functools import wraps
 from _main_.utils.emailer.send_email import send_massenergize_email
-from database.models import CommunityAdminGroup, UserProfile, Community, Team
+from database.models import CommunityAdminGroup, ImportedUser, UserProfile, Community, Team
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field
 from api.services.userprofile import UserService
@@ -12,6 +12,7 @@ from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, community_admins_only, super_admins_only, login_required
 from sentry_sdk import capture_message
+from django.utils import timezone
 # import pandas as pd
 # for import contacts endpoint - accepts a csv file and verifies correctness of email address format
 import csv, os, io, re
@@ -42,13 +43,16 @@ class UserHandler(RouteHandler):
     self.add("/users.households.remove", self.remove_household)
     self.add("/users.households.list", self.list_households)
     self.add("/users.events.list", self.list_events)
+    self.add("/users.checkImported", self.check_user_imported)
+    self.add("/users.completeImported", self.complete_imported_user)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
     self.add("/users.import", self.handle_contacts_csv)
     self.add("/users.adminCommunity", self.get_admin_community)
-
+    self.add("/users.listTeamsForCommunityAdmin", self.community_team_list)
+    
 
   @login_required
   def info(self, request):
@@ -142,6 +146,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
+  # lists users that are in the community for cadmin
   @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
@@ -151,6 +156,27 @@ class UserHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=users)
+  
+  
+  @admins_only
+  def community_team_list(self, request):
+    try:
+      context: Context = request.context
+      print(context)
+      args: dict = context.args
+      community_id = args.pop("community_id", None)
+      print(community_id)
+      comm = Community.objects.filter(id=community_id).first()
+      print(comm)
+      teams = Team.objects.filter(community=comm).all().values_list('name', flat=True)
+      teams=list(teams)
+      print(teams)
+    except Exception as e:
+      print(str(e))
+      return MassenergizeResponse(error=str(e), status=False)
+    
+    return MassenergizeResponse(data=teams)
+    
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -251,18 +277,56 @@ class UserHandler(RouteHandler):
       print(cadmin.communities.all())
       for community in cadmin.communities.all():
           admin_group = CommunityAdminGroup.objects.filter(community=community).first()
-          print(admin_group.members.all())
           if cadmin in admin_group.members.all():
             return MassenergizeResponse(data={"id":community.id, "subdomain":str(community.subdomain)})
     except Exception as e:
       print(str(e))
     return CustomMassenergizeError("You are not the administrator of any community")
     
+  # checks whether a user profile has been temporarily set up as a CSV
+  def check_user_imported(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    email_address = args['email']
+    print("THIS IS THE EMAIL ADDRESS GETTING PASSED IN")
+    print(email_address)
+    profile = UserProfile.objects.filter(email=email_address).first()
+    imported = None
+    if profile:
+      imported = ImportedUser.objects.filter(user=profile).first()
+      print(imported)
+    if imported:
+      print('we got here folks')
+      name = profile.full_name.split()
+      first_name = name[0]
+      last_name = name[1]
+      return MassenergizeResponse(data={"imported":True, "firstName": first_name, "lastName": last_name, "preferredName": first_name})
+    print('we got here folks pt 2')
+    return MassenergizeResponse(data={"imported":False})
 
+  @login_required
+  def complete_imported_user(self, request):
+    try:
+      context: Context = request.context
+      args: dict = context.args
+      email_address = args['email']
+      imported = None
+      profile = UserProfile.objects.filter(email=email_address).first()
+      if profile:
+        imported = ImportedUser.objects.filter(email=email_address).first()
+      if not imported:
+        return MassenergizeResponse(data={"completed":False}), None
+      imported.is_completed = True
+      imported.completed_at = timezone.now()
+      imported.save()
+      return MassenergizeResponse(data={"completed":True}), None
+    except Exception as e:
+      return None, MassEnergizeAPIError(error=str(e))
+    return MassenergizeResponse(data={"completed":True}), None
 
   @admins_only
-  # @community_admins_only
-  def handle_contacts_csv(self, request) -> (dict, MassEnergizeAPIError):
+  # @community_admins_only (not set this way for testing purposes)
+  def handle_contacts_csv(self, request):
     context: Context = request.context
     args: dict = context.args
     # query users by user id, find the user that is sending the request
@@ -309,20 +373,38 @@ class UserHandler(RouteHandler):
                   is_vendor = False, 
                   accepts_terms_and_conditions = False
                 )
+                new_user.save() 
                 if registered_community:
                   new_user.communities.add(registered_community)
               else: 
                 new_user: UserProfile = user  
-              team = Team.objects.filter(id=args['team_id']).first()
-              if team:
+              if args['team_name'] != "none":
+                team = Team.objects.filter(name=args['team_name']).first()
                 team.members.add(new_user)
-              new_user.save()  
+                team.save()
+              new_user.save()
+              # filter imported objects to see if there exists one already
+              check: ImportedUser = ImportedUser.objects.filter(user_id=new_user.id).first()
+              if not check: 
+                imported: ImportedUser = ImportedUser.objects.create(
+                  user = new_user
+                )
+                imported.save()
+              else:
+                imported: UserProfile = check
+              imported.save()
               # send email inviting user to complete their profile
-              message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
+              message = ""
+              message += cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
+              if args["message"] != "":
+                message += "They have included a message for you here:\n"
+                message += args["message"]
+              '''if team:
+                message += "You have been assigned to the following team: " + team.name + "\n"'''
               link = "localhost:3000/" + str(registered_community.subdomain) + "/completeRegistration?userID=" + str(new_user.id)
               print(link)
               message += "Use the following link to join " + registered_community.name + ": " + link
-              send_massenergize_email(subject="Invitation to Join MassEnergize Community", msg=message, to=new_user.email)
+              send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
             else:    
                 return MassenergizeResponse(data=None, error="One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
                 # return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
