@@ -157,25 +157,7 @@ class UserHandler(RouteHandler):
     return MassenergizeResponse(data=users)
   
   
-  @admins_only
-  def community_team_list(self, request):
-    try:
-      context: Context = request.context
-      print(context)
-      args: dict = context.args
-      community_id = args.pop("community_id", None)
-      print(community_id)
-      comm = Community.objects.filter(id=community_id).first()
-      print(comm)
-      teams = Team.objects.filter(community=comm).all().values_list('name', flat=True)
-      teams=list(teams)
-      print(teams)
-    except Exception as e:
-      print(str(e))
-      return MassenergizeResponse(error=str(e), status=False)
-    
-    return MassenergizeResponse(data=teams)
-    
+  
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -364,20 +346,21 @@ class UserHandler(RouteHandler):
                   new_user.communities.add(registered_community)
               else: 
                 new_user: UserProfile = user  
-              if args['team_name'] != "none":
-                team = Team.objects.filter(name=args['team_name']).first()
+              team_name = args.get('team_name', None)
+              if team_name != "none":
+                team = Team.objects.filter(name=team_name).first()
                 team.members.add(new_user)
                 team.save()
               new_user.save()
               # send email inviting user to complete their profile
-              message = ""
-              message += cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
-              if args["message"] != "":
+              message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
+              mess = args.get('message', None)
+              if mess and mess != "":
                 message += "They have included a message for you here:\n"
-                message += args["message"]
-              '''if team:
-                message += "You have been assigned to the following team: " + team.name + "\n"'''
-              link = "localhost:3000/" + str(registered_community.subdomain) + "/signup"
+                message += mess
+              if team:
+                message += "You have been assigned to the following team: " + team.name + "\n"
+              link = "massenergize.org/" + str(registered_community.subdomain) + "/signup"
               print(link)
               message += "Use the following link to join " + registered_community.name + ": " + link
               send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
