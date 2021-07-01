@@ -200,15 +200,12 @@ class UserStore:
       email = args.get('email', None) 
       community = get_community_or_die(context, args)
 
-
       # allow home address to be passed in
       location = args.pop('location', '')
 
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
       user = UserProfile.objects.filter(email=email).first()
-      print("this is the user")
-      print(user)
       if not user:
         new_user: UserProfile = UserProfile.objects.create(
           full_name = args.get('full_name'), 
@@ -220,6 +217,12 @@ class UserStore:
         )
       else:
         new_user: UserProfile = user
+        # if user was imported but profile incomplete, updates user with info submitted in form
+        if not new_user.accepts_terms_and_conditions:
+          new_user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+          is_vendor = args.get('is_vendor', False)
+          preferences = {'color': args.get('color')}
+
 
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
       if not community_member_exists:
@@ -230,7 +233,6 @@ class UserStore:
         household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
         new_user.real_estate_units.add(household)
     
-      
       res = {
         "user": new_user,
         "community": community

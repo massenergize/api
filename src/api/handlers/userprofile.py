@@ -1,7 +1,7 @@
 """Handler file for all routes pertaining to users"""
 from functools import wraps
 from _main_.utils.emailer.send_email import send_massenergize_email
-from database.models import CommunityAdminGroup, ImportedUser, UserProfile, Community, Team
+from database.models import CommunityAdminGroup, UserProfile, Community, Team
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field
 from api.services.userprofile import UserService
@@ -51,7 +51,6 @@ class UserHandler(RouteHandler):
     self.add("/users.listForSuperAdmin", self.super_admin_list)
     self.add("/users.import", self.handle_contacts_csv)
     self.add("/users.adminCommunity", self.get_admin_community)
-    self.add("/users.listTeamsForCommunityAdmin", self.community_team_list)
     
 
   @login_required
@@ -287,21 +286,14 @@ class UserHandler(RouteHandler):
   def check_user_imported(self, request):
     context: Context = request.context
     args: dict = context.args
-    email_address = args['email']
-    print("THIS IS THE EMAIL ADDRESS GETTING PASSED IN")
+    email_address = args.get('email', None)
     print(email_address)
     profile = UserProfile.objects.filter(email=email_address).first()
-    imported = None
-    if profile:
-      imported = ImportedUser.objects.filter(user=profile).first()
-      print(imported)
-    if imported:
-      print('we got here folks')
+    if profile.accepts_terms_and_conditions:
       name = profile.full_name.split()
       first_name = name[0]
       last_name = name[1]
       return MassenergizeResponse(data={"imported":True, "firstName": first_name, "lastName": last_name, "preferredName": first_name})
-    print('we got here folks pt 2')
     return MassenergizeResponse(data={"imported":False})
 
   @login_required
@@ -312,14 +304,8 @@ class UserHandler(RouteHandler):
       email_address = args['email']
       imported = None
       profile = UserProfile.objects.filter(email=email_address).first()
-      if profile:
-        imported = ImportedUser.objects.filter(email=email_address).first()
-      if not imported:
+      if profile.accepts_terms_and_conditions:
         return MassenergizeResponse(data={"completed":False}), None
-      imported.is_completed = True
-      imported.completed_at = timezone.now()
-      imported.save()
-      return MassenergizeResponse(data={"completed":True}), None
     except Exception as e:
       return None, MassEnergizeAPIError(error=str(e))
     return MassenergizeResponse(data={"completed":True}), None
@@ -383,16 +369,6 @@ class UserHandler(RouteHandler):
                 team.members.add(new_user)
                 team.save()
               new_user.save()
-              # filter imported objects to see if there exists one already
-              check: ImportedUser = ImportedUser.objects.filter(user_id=new_user.id).first()
-              if not check: 
-                imported: ImportedUser = ImportedUser.objects.create(
-                  user = new_user
-                )
-                imported.save()
-              else:
-                imported: UserProfile = check
-              imported.save()
               # send email inviting user to complete their profile
               message = ""
               message += cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"

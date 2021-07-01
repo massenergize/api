@@ -560,14 +560,6 @@ class UserProfile(models.Model):
     db_table = 'user_profiles' 
     ordering = ('-created_at',)
 
-class ImportedUser(models.Model):
-  id = models.AutoField(primary_key=True)
-  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True)
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
-  # refers to whether or not the user has a completed profile
-  is_completed = models.BooleanField(default=False)
-  completed_at = models.DateTimeField(default=timezone.now, blank=True)
 class CommunityMember(models.Model):
   id = models.AutoField(primary_key=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE)
