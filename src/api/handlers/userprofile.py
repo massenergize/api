@@ -318,6 +318,8 @@ class UserHandler(RouteHandler):
     with open(temporarylocation, 'wb') as out:
       var = csv_ref.read()
       out.write(var)
+    # invalid_emails keeps track of any lines in the file that don't have a valid email address
+    invalid_emails = []
     with open(temporarylocation, "r") as f:
       reader = csv.DictReader(f, delimiter=",")
       for row in reader:
@@ -328,55 +330,54 @@ class UserHandler(RouteHandler):
             continue
           # verify correctness of email address
           regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-          try: 
-            if(re.search(regex,row[email_field])):   
-              user = UserProfile.objects.filter(email=row[email_field]).first()
-              if not user:
-                if row[email_field] == "" or not row[email_field]:
-                  return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
-                new_user: UserProfile = UserProfile.objects.create(
-                  full_name = row[first_name_field] + ' ' + row[last_name_field], 
-                  preferred_name = row[first_name_field], 
-                  email = row[email_field],
-                  is_vendor = False, 
-                  accepts_terms_and_conditions = False
-                )
-                new_user.save() 
-                if registered_community:
-                  new_user.communities.add(registered_community)
-              else: 
-                new_user: UserProfile = user  
-              team_name = args.get('team_name', None)
-              if team_name != "none":
-                team = Team.objects.filter(name=team_name).first()
-                team.members.add(new_user)
-                team.save()
-              new_user.save()
-              # send email inviting user to complete their profile
-              message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
-              mess = args.get('message', None)
-              if mess and mess != "":
-                message += "They have included a message for you here:\n"
-                message += mess
-              if team:
-                message += "You have been assigned to the following team: " + team.name + "\n"
-              link = "massenergize.org/" + str(registered_community.subdomain) + "/signup"
-              print(link)
-              message += "Use the following link to join " + registered_community.name + ": " + link
-              send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
-            else:    
-                return MassenergizeResponse(data=None, error="One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
-                # return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
-          except Exception as e:
-            capture_message(str(e), level="error")
-            print(str(e))
-            return None, CustomMassenergizeError(e)
+           
+          if(re.search(regex,row[email_field])):   
+            user = UserProfile.objects.filter(email=row[email_field]).first()
+            if not user:
+              if row[email_field] == "" or not row[email_field]:
+                return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
+              new_user: UserProfile = UserProfile.objects.create(
+                full_name = row[first_name_field] + ' ' + row[last_name_field], 
+                preferred_name = row[first_name_field], 
+                email = row[email_field],
+                is_vendor = False, 
+                accepts_terms_and_conditions = False
+              )
+              new_user.save() 
+              if registered_community:
+                new_user.communities.add(registered_community)
+            else: 
+              new_user: UserProfile = user  
+            team_name = args.get('team_name', None)
+            team = None
+            if team_name != "none":
+              team = Team.objects.filter(name=team_name).first()
+              team.members.add(new_user)
+              team.save()
+            new_user.save()
+            # send email inviting user to complete their profile
+            message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
+            mess = args.get('message', None)
+            if mess and mess != "":
+              message += "They have included a message for you here:\n"
+              message += mess
+            if team:
+              message += "You have been assigned to the following team: " + team.name + "\n"
+            link = "massenergize.org/" + str(registered_community.subdomain) + "/signup"
+            print(link)
+            message += "Use the following link to join " + registered_community.name + ": " + link
+            send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
+          else:   
+            if reader.line_num != 0:
+              invalid_emails.append(reader.line_num) 
+              # return MassenergizeResponse(data=None, error="Invalid email address on line " + reader.line_num +". Please make sure all your users have valid email addresses listed.")
+              # return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
         except Exception as e:
           print(str(e))
           return None, CustomMassenergizeError(e)
     # and then delete it once we are done parsing it
     os.remove(temporarylocation)
-    res = {'column names' : column_list}
+    res = {'invalidEmails' : invalid_emails}
     return MassenergizeResponse(data=res)
 
  
