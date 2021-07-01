@@ -13,7 +13,6 @@ from _main_.utils.validator import Validator
 from api.decorators import admins_only, community_admins_only, super_admins_only, login_required
 from sentry_sdk import capture_message
 from django.utils import timezone
-# import pandas as pd
 # for import contacts endpoint - accepts a csv file and verifies correctness of email address format
 import csv, os, io, re
 
@@ -297,6 +296,7 @@ class UserHandler(RouteHandler):
   def handle_contacts_csv(self, request):
     context: Context = request.context
     args: dict = context.args
+    
     # query users by user id, find the user that is sending the request
     cadmin = UserProfile.objects.filter(id=context.user_id).first()
     # find the community that the user is the admin of. In the next section, populate user profiles with that information

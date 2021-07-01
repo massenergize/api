@@ -140,3 +140,9 @@ class UserService:
     if err:
       return None, err
     return serialize(user, full=True), None
+  
+  def import_contacts(self, context, args) -> (dict, MassEnergizeAPIError):
+    data, err = self.store.import_contacts(context, args)
+    if err:
+      return None, err
+    return data, None
