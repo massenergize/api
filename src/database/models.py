@@ -495,7 +495,7 @@ class UserProfile(models.Model):
   created_at: DateTime
     The date and time of the last time any updates were made to the information
     about this goal
-
+  color:  models.CharField(default="#000000", max_length = 7)
   #TODO: roles field: if we have this do we need is_superadmin etc? also why
   #  not just one?  why many to many
   """
@@ -519,7 +519,7 @@ class UserProfile(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  #color = models.CharField(default="#000000", max_length = 7)
+  preferences = JSONField(default=dict)
 
   def __str__(self):
     return self.email

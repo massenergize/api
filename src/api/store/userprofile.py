@@ -215,7 +215,7 @@ class UserStore:
           email = args.get('email'), 
           is_vendor = args.get('is_vendor', False), 
           accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False), 
-          #color = args.get('color', None)
+          preferences = {'color': args.get('color')}
         )
       else:
         new_user: UserProfile = user
