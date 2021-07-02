@@ -200,14 +200,13 @@ class UserStore:
       email = args.get('email', None) 
       community = get_community_or_die(context, args)
 
-      # allow home address to be passed in
+      # allow home address and profile picture to be passed in
       location = args.pop('location', '')
+      profile_picture = args.pop("profile_picture", None)
 
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
       user = UserProfile.objects.filter(email=email).first()
-      print("this is the user")
-      print(user)
       if not user:
         new_user: UserProfile = UserProfile.objects.create(
           full_name = args.get('full_name'), 
@@ -217,6 +216,18 @@ class UserStore:
           accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False), 
           preferences = {'color': args.get('color', '')}
         )
+
+        if profile_picture:
+          pic = Media()
+          pic.name = f'{new_user.full_name} profpic'
+          pic.file = profile_picture
+          pic.media_type = 'image'
+          pic.save()
+
+          new_user.profile_picture = pic
+          new_user.save()
+
+
       else:
         new_user: UserProfile = user
 
@@ -227,14 +238,14 @@ class UserStore:
 
         #create their first household
         household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
-        new_user.real_estate_units.add(household)
-    
+        new_user.real_estate_units.add(household)    
       
       res = {
         "user": new_user,
         "community": community
       }
       return res, None
+
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
