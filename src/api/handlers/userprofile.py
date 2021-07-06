@@ -254,7 +254,6 @@ class UserHandler(RouteHandler):
     cadmin = UserProfile.objects.filter(id=context.user_id).first()
     # find the community that the user is the admin of. In the next section, populate user profiles with that information
     try:
-      print(cadmin.communities.all())
       for community in cadmin.communities.all():
           admin_group = CommunityAdminGroup.objects.filter(community=community).first()
           if cadmin in admin_group.members.all():
@@ -268,7 +267,6 @@ class UserHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     email_address = args.get('email', None)
-    print(email_address)
     profile = UserProfile.objects.filter(email=email_address).first()
     if profile.accepts_terms_and_conditions:
       name = profile.full_name.split()
@@ -364,14 +362,11 @@ class UserHandler(RouteHandler):
             if team:
               message += "You have been assigned to the following team: " + team.name + "\n"
             link = "massenergize.org/" + str(registered_community.subdomain) + "/signup"
-            print(link)
             message += "Use the following link to join " + registered_community.name + ": " + link
             send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
           else:   
             if reader.line_num != 0:
               invalid_emails.append(reader.line_num) 
-              # return MassenergizeResponse(data=None, error="Invalid email address on line " + reader.line_num +". Please make sure all your users have valid email addresses listed.")
-              # return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
         except Exception as e:
           print(str(e))
           return None, CustomMassenergizeError(e)
