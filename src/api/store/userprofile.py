@@ -1,4 +1,4 @@
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -200,13 +200,12 @@ class UserStore:
       email = args.get('email', None) 
       community = get_community_or_die(context, args)
 
-
-      # allow home address to be passed in
+      # allow home address and profile picture to be passed in
       location = args.pop('location', '')
+      profile_picture = args.pop("profile_picture", None)
 
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
-      
       user = UserProfile.objects.filter(email=email).first()
       if not user:
         new_user: UserProfile = UserProfile.objects.create(
@@ -214,11 +213,23 @@ class UserStore:
           preferred_name = args.get('preferred_name', None), 
           email = args.get('email'), 
           is_vendor = args.get('is_vendor', False), 
-          accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+          accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False), 
+          preferences = {'color': args.get('color', '')}
         )
+
+        if profile_picture:
+          pic = Media()
+          pic.name = f'{new_user.full_name} profpic'
+          pic.file = profile_picture
+          pic.media_type = 'image'
+          pic.save()
+
+          new_user.profile_picture = pic
+          new_user.save()
+
+
       else:
         new_user: UserProfile = user
-
 
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
       if not community_member_exists:
@@ -227,34 +238,47 @@ class UserStore:
 
         #create their first household
         household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
-        new_user.real_estate_units.add(household)
-    
+        new_user.real_estate_units.add(household)    
       
       res = {
         "user": new_user,
         "community": community
       }
       return res, None
+
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def update_user(self, context: Context, user_id, args) -> (dict, MassEnergizeAPIError):
+  def update_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      user_id = args.get('id', None)
       email = args.get('email', None)
-      # user_id = args.get('user_id', None)
 
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
 
       if context.user_is_logged_in and ((context.user_id == user_id) or (context.user_is_admin())):
-        user = UserProfile.objects.filter(id=user_id)
-        if not user:
+        users = UserProfile.objects.filter(id=user_id)
+        if not users:
           return None, InvalidResourceError()
 
-        user.update(**args)
-        return user.first(), None
+        profile_picture = args.pop("profile_picture", None)
+        users.update(**args)          # print('id: ' + user.id)
+        user = users.first()
+
+        if profile_picture:
+          pic = Media()
+          pic.name = f'{user.full_name} profpic'
+          pic.file = profile_picture
+          pic.media_type = 'image'
+          pic.save()
+
+          user.profile_picture = pic
+          user.save()
+          
+        return user, None
       else:
         return None, CustomMassenergizeError('permission_denied')
 

@@ -62,6 +62,13 @@ class ActionStore:
       vendors = args.pop('vendors', [])
       image = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
+      title = args.get('title', None)
+
+      actions = Action.objects.filter(title=title, community__id=community_id)
+      if actions:
+        # an action with this name and community already exists, return it
+        return actions.first(), None
+
       new_action = Action.objects.create(**args)
 
       

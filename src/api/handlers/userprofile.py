@@ -10,7 +10,6 @@ from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
 
 
-
 class UserHandler(RouteHandler):
 
   def __init__(self):
@@ -118,9 +117,13 @@ class UserHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args,'id','user_id')
-    user_id = args.pop('user_id', None)
-    user_info, err = self.service.update_user(context, user_id, args)
+    args, err = (self.validator
+      .rename("user_id","id").expect("id", str, is_required=True)
+      .verify(context.args))
+    if err:
+      return err
+    
+    user_info, err = self.service.update_user(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)

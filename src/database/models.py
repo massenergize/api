@@ -495,14 +495,14 @@ class UserProfile(models.Model):
   created_at: DateTime
     The date and time of the last time any updates were made to the information
     about this goal
-
+  color:  models.CharField(default="#000000", max_length = 7)
   #TODO: roles field: if we have this do we need is_superadmin etc? also why
   #  not just one?  why many to many
   """
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
   full_name = models.CharField(max_length=SHORT_STR_LEN, null=True)
   profile_picture = models.ForeignKey(Media, on_delete=models.SET_NULL, 
-    blank=True, null=True)
+    blank=True, null=True, related_name="profile_picture")
   preferred_name=models.CharField(max_length=SHORT_STR_LEN, null=True)
   email = models.EmailField(unique=True, db_index=True)
   user_info = JSONField(blank=True, null=True)
@@ -519,6 +519,7 @@ class UserProfile(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
+  preferences = JSONField(default=dict)
 
   def __str__(self):
     return self.email
