@@ -6,6 +6,7 @@ from django.utils import timezone
 from .utils.common import  json_loader,get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
+from django.core.validators import MaxValueValidator
 import uuid
 import time
 
@@ -1118,6 +1119,11 @@ class Event(models.Model):
   is_global: boolean
     True if this action is an event that every community should see or not.
     False otherwise.
+  is_recurring: boolean
+    if the event is recurring, this value is True 
+    and it has a RecurringPattern instance attached to it. 
+  recurring_details: JSON
+    stores information about the recurrence pattern of the event if is_recurring = True
   """
   id = models.AutoField(primary_key=True)
   name  = models.CharField(max_length = SHORT_STR_LEN)
@@ -1139,8 +1145,8 @@ class Event(models.Model):
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
   rank = models.PositiveIntegerField(default=0, blank=True, null=True)
-
-
+  is_recurring = models.BooleanField(default=False, blank=True, null=True)
+  recurring_details = JSONField(blank=True, null=True)
   def __str__(self):             
     return self.name
 
@@ -1154,7 +1160,6 @@ class Event(models.Model):
     data['more_info'] = self.more_info
     return data
 
-
   def full_json(self):
     return self.simple_json()
 
@@ -1162,6 +1167,72 @@ class Event(models.Model):
   class Meta:
     ordering = ('rank', '-start_date_and_time',)
     db_table = 'events'
+
+# leaner class that stores information about events that have already passed
+# in the future, can use this class to revive events that may have been archived
+class PastEvent(models.Model):
+  id = models.AutoField(primary_key=True)
+  name  = models.CharField(max_length = SHORT_STR_LEN)
+  description = models.TextField(max_length = LONG_STR_LEN)
+  start_date_and_time = models.DateTimeField()
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+class RecurringPattern(models.Model):
+  '''
+  A class used to represent the pattern in which a particular event recurs, if it does recur. 
+  (see is_recurring field in Event model)
+
+  Attributes
+  ----------
+  event: Event
+    Foreign Key tied to the event attached to this RecurringPattern. 
+  recurring_type: char
+    tells us the time interval for which the event recurs. 
+    options are "w" for weekly, "m" for monthly, and "y" for yearly. 
+  separation_count: int
+    how many of the specified time intervals the events are separated by. 
+    for instance, if recurring_type is "w" and separation_count is 2, 
+    then the events are happening once every two weeks.
+  max_occurrences: int
+    optional, specifies the maximum number of event instances to occur
+    before the event stops. 
+  day_of_week, week_of_month, month_of_year: int
+    contain the day of the week, week of the month, and month of the year
+    on which the event should recur respectively, depending on recurring_type
+  '''
+  id = models.AutoField(primary_key=True)
+  event = models.ForeignKey(Event, on_delete=models.CASCADE)
+  recurring_type = models.CharField(max_length=1, null=True)
+  separation_count = models.PositiveIntegerField(null=True)
+  max_occurrences = models.PositiveIntegerField(validators=[MaxValueValidator(10)], blank=True, null=True, default=10)
+  day_of_week = models.PositiveIntegerField(validators=[MaxValueValidator(6)], blank=True, null=True)
+  week_of_month = models.PositiveIntegerField(validators=[MaxValueValidator(3)], blank=True, null=True)
+  month_of_year = models.PositiveIntegerField(validators=[MaxValueValidator(11)], blank=True, null=True)
+
+class RecurringEventException(models.Model):
+  '''
+  A class used to represent an exception to a recurring event. 
+  Can be used to store when an instance of a recurring event is 
+  deleted or rescheduled. 
+  Attributes
+  ----------
+  event: Event
+    stores the recurring event that the exception is attached to
+  rescheduled_event: Event
+    if the event instance is rescheduled, a new Event is created
+    representing the rescheduled event instance
+  is_cancelled : boolean
+    True if the event has been cancelled by CAdmin
+  is_rescheduled: boolean
+    True if event has been rescheduled by CAdmin
+  
+  '''
+  id = models.AutoField(primary_key=True)
+  # WHAT TO DO ABOUT ON DELETE????
+  # just going to keep it as CASCADE for now
+  event = models.ForeignKey(Event, on_delete = models.CASCADE, related_name="recurring_event")
+  rescheduled_event = models.ForeignKey(Event, on_delete = models.CASCADE, blank=True, null=True)
+  is_cancelled = models.BooleanField(default=True)
+  is_rescheduled = models.BooleanField(default=True)
 
 
 class EventAttendee(models.Model):

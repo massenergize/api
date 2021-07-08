@@ -233,4 +233,6 @@ class UserHandler(RouteHandler):
     user_info, err = self.service.list_events_for_user(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
+    print('ehllo')
+    print(type(user_info))
     return MassenergizeResponse(data=user_info)

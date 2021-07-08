@@ -1,4 +1,4 @@
-from database.models import Event, UserProfile, EventAttendee, Media, Community
+from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.db.models import Q
@@ -80,12 +80,22 @@ class EventStore:
 
 
   def create_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    print(args)
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
-
+      recurring  = args.pop('is_recurring', False)
+      recurring_type = args.pop('recurring_type', None)
+      separation_count = args.pop('separation_count', None)
+      day_of_week = None
+      week_of_month = None
+      if recurring_type == "week":
+        day_of_week = args.pop("day_of_week", None)
+      elif recurring_type == "month":
+        week_of_month = args.pop("week_of_month", None)
       have_address = args.pop('have_address', False)
+
       if not have_address:
         args['location'] = None
 
@@ -101,7 +111,18 @@ class EventStore:
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_event.image = media
-      
+
+      if recurring and (day_of_week or week_of_month): 
+        new_event.is_recurring = True
+        new_event.recurring_details = {
+          "recurring_type": recurring_type, 
+          "separation_count": separation_count, 
+          "day_of_week": day_of_week, 
+          "week_of_month": week_of_month
+        }
+        print("event recurring details: ")
+        print(new_event.recurring_details)
+        
       new_event.save()
 
       if tags:
@@ -118,6 +139,8 @@ class EventStore:
       event_id = args.pop('event_id', None)
       image = args.pop('image', None)
       tags = args.pop('tags', [])
+      recurring  = args.pop('recurring', False)
+      recurring_details = args.pop('recurring_details', None)
       events = Event.objects.filter(id=event_id)
 
       have_address = args.pop('have_address', False)
@@ -142,7 +165,13 @@ class EventStore:
         event.community = community
       else:
         event.community = None
-      
+
+      if recurring and recurring_details: 
+        event.is_recurring = True
+        event.recurring_details = recurring_details
+        print("event recurring details: ")
+        print(event.recurring_details)
+
       event.save()
 
       if tags:
@@ -153,6 +182,29 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  def reschedule_recurring_event(self, args) -> (dict, MassEnergizeAPIError):
+    try: 
+      id = args.get('id', None)
+      start_date_and_time = args.get('startDateTime', None)
+      end_date_and_time = args.get('endDateTime', None)
+
+      event = Event.objects.filter(id=id).first()
+      rescheduled_event = Event.objects.create(**args)
+      
+      # can reschedule events more than 1 event in advance
+      if event.is_recurring:
+        rescheduled = RecurringEventException.objects.create(
+          event = event, 
+          rescheduled_event = rescheduled_event
+        )
+      else: 
+        return None, MassEnergizeAPIError("Pinged reshcedule_recurring_event endpoint, but cannot reschedule an instance of a non recurring event")
+    except Exception as e: 
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def delete_recurring_event(self, args) -> (dict, MassEnergizeAPIError):
+    pass
 
   def rank_event(self, args) -> (dict, MassEnergizeAPIError):
     try:

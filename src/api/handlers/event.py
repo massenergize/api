@@ -50,6 +50,7 @@ class EventHandler(RouteHandler):
     event_info, err = self.service.get_event_info(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
+    
     return MassenergizeResponse(data=event_info)
 
 
@@ -170,7 +171,7 @@ class EventHandler(RouteHandler):
     self.validator.expect("subdomain", is_required=False)
     self.validator.expect("user_id", is_required=False)
     args, err = self.validator.verify(args, strict=True)
-
+    
     if err:
       return err
 
