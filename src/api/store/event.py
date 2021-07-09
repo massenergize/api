@@ -46,6 +46,8 @@ class EventStore:
       new_event.description = event_to_copy.description
       new_event.featured_summary = event_to_copy.featured_summary
       new_event.location = event_to_copy.location
+      if event_to_copy.is_recurring:
+        new_event.recurring_details = event_to_copy.recurring_details
       new_event.save()
 
       #copy tags over
@@ -106,7 +108,7 @@ class EventStore:
         community = Community.objects.get(pk=community)
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community_id")
-    # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
+      # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
       if recurring and start_date_and_time:
         # extract month, day and year from start_date_and_time
         date = start_date_and_time[0:10:1].split('-')
@@ -140,7 +142,7 @@ class EventStore:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_event.image = media
 
-      if recurring and (day_of_week or week_of_month): 
+      if recurring and day_of_week: 
         new_event.is_recurring = True
         new_event.recurring_details = {
           "recurring_type": recurring_type, 
@@ -165,8 +167,18 @@ class EventStore:
       event_id = args.pop('event_id', None)
       image = args.pop('image', None)
       tags = args.pop('tags', [])
-      recurring  = args.pop('recurring', False)
-      recurring_details = args.pop('recurring_details', None)
+      recurring  = args.pop('is_recurring', False)
+      start_date_and_time = args.pop('start_date_and_time', None)
+      end_date_and_time = args.pop('end_date_and_time', None)
+      recurring_type = args.pop('recurring_type', None)
+      separation_count = args.pop('separation_count', None)
+      day_of_week = args.pop('day_of_week', None)
+      start_date_and_time = args.get('start_date_and_time', None)
+      end_date_and_time = args.get('end_date_and_time', None)
+      week_of_month = args.pop("week_of_month", None)
+      if recurring_type != "month":
+        week_of_month = None
+
       events = Event.objects.filter(id=event_id)
 
       have_address = args.pop('have_address', False)
@@ -192,11 +204,42 @@ class EventStore:
       else:
         event.community = None
 
-      if recurring and recurring_details: 
+      
+      # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
+      if recurring and start_date_and_time:
+        # extract month, day and year from start_date_and_time
+        date = start_date_and_time[0:10:1].split('-')
+        day = datetime.datetime(int(date[0]), int(date[1]), int(date[2]))
+        # check if weekday matches the start_date_and_time
+        if calendar.day_name[day.weekday()] != day_of_week:
+          return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
+        # if necessary, check if week of month matches the start_date...
+        if week_of_month:
+          # since this gets passed in as an English word, we need to convert it to an integer first
+          converter = {"first":1, "second":2, "third":3, "fourth":4}
+          # get the week of the date passed in
+          first_day = day.replace(day=1)
+          dom = day.day
+          adjusted_dom = dom + first_day.weekday()
+          if converter[week_of_month] != int(ceil(adjusted_dom/7.0)):
+            return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
+        
+        end_date = end_date_and_time[0:10:1].split('-')
+        end_day = datetime.datetime(int(end_date[0]), int(end_date[1]), int(end_date[2]))
+        # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
+
+        # check that if the event does not go longer than a day (recurring events cannot go longer than 1 day)
+        if day.date() != end_day.date():
+          return None, CustomMassenergizeError("Recurring events must only last 1 day. Make sure your starting date and ending date are the same")
+      
+      if recurring and day_of_week: 
         event.is_recurring = True
-        event.recurring_details = recurring_details
-        print("event recurring details: ")
-        print(event.recurring_details)
+        event.recurring_details = {
+          "recurring_type": recurring_type, 
+          "separation_count": separation_count, 
+          "day_of_week": day_of_week, 
+          "week_of_month": week_of_month
+        }
 
       event.save()
 
@@ -230,6 +273,9 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
   def delete_recurring_event(self, args) -> (dict, MassEnergizeAPIError):
+    pass
+
+  def edit_recurring_event():
     pass
 
   def rank_event(self, args) -> (dict, MassEnergizeAPIError):
