@@ -5,6 +5,9 @@ from django.db.models import Q
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from .utils import get_user_or_die
+import datetime
+import calendar
+from math import ceil
 
 class EventStore:
   def __init__(self):
@@ -88,12 +91,12 @@ class EventStore:
       recurring  = args.pop('is_recurring', False)
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
-      day_of_week = None
-      week_of_month = None
-      if recurring_type == "week":
-        day_of_week = args.pop("day_of_week", None)
-      elif recurring_type == "month":
-        week_of_month = args.pop("week_of_month", None)
+      day_of_week = args.pop('day_of_week', None)
+      start_date_and_time = args.get('start_date_and_time', None)
+      end_date_and_time = args.get('end_date_and_time', None)
+      week_of_month = args.pop("week_of_month", None)
+      if recurring_type != "month":
+        week_of_month = None
       have_address = args.pop('have_address', False)
 
       if not have_address:
@@ -103,7 +106,32 @@ class EventStore:
         community = Community.objects.get(pk=community)
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community_id")
+    # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
+      if recurring and start_date_and_time:
+        # extract month, day and year from start_date_and_time
+        date = start_date_and_time[0:10:1].split('-')
+        day = datetime.datetime(int(date[0]), int(date[1]), int(date[2]))
+        # check if weekday matches the start_date_and_time
+        if calendar.day_name[day.weekday()] != day_of_week:
+          return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
+        # if necessary, check if week of month matches the start_date...
+        if week_of_month:
+          # since this gets passed in as an English word, we need to convert it to an integer first
+          converter = {"first":1, "second":2, "third":3, "fourth":4}
+          # get the week of the date passed in
+          first_day = day.replace(day=1)
+          dom = day.day
+          adjusted_dom = dom + first_day.weekday()
+          if converter[week_of_month] != int(ceil(adjusted_dom/7.0)):
+            return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
+        
+        end_date = end_date_and_time[0:10:1].split('-')
+        end_day = datetime.datetime(int(end_date[0]), int(end_date[1]), int(end_date[2]))
+        # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
 
+        # check that if the event does not go longer than a day (recurring events cannot go longer than 1 day)
+        if day.date() != end_day.date():
+          return None, CustomMassenergizeError("Recurring events must only last 1 day. Make sure your starting date and ending date are the same")
       new_event: Event = Event.objects.create(**args)
       if community:
         new_event.community = community
@@ -120,8 +148,6 @@ class EventStore:
           "day_of_week": day_of_week, 
           "week_of_month": week_of_month
         }
-        print("event recurring details: ")
-        print(new_event.recurring_details)
         
       new_event.save()
 

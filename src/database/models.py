@@ -1206,8 +1206,7 @@ class RecurringPattern(models.Model):
   max_occurrences = models.PositiveIntegerField(validators=[MaxValueValidator(10)], blank=True, null=True, default=10)
   day_of_week = models.PositiveIntegerField(validators=[MaxValueValidator(6)], blank=True, null=True)
   week_of_month = models.PositiveIntegerField(validators=[MaxValueValidator(3)], blank=True, null=True)
-  month_of_year = models.PositiveIntegerField(validators=[MaxValueValidator(11)], blank=True, null=True)
-
+  
 class RecurringEventException(models.Model):
   '''
   A class used to represent an exception to a recurring event. 
