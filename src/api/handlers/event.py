@@ -31,6 +31,7 @@ class EventHandler(RouteHandler):
     self.add("/events.rsvp.update", self.rsvp_update)
     self.add("/events.rsvp.remove", self.rsvp_remove)
     self.add("/events.todo", self.save_for_later)
+    self.add("/events.exceptions.list", self.list_exceptions)
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list)
@@ -162,6 +163,15 @@ class EventHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
+  @login_required
+  # lists any recurring event exceptions for the event
+  def list_exceptions(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    exceptions, err = self.service.list_recurring_event_exceptions(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=exceptions)
 
   def list(self, request):
     context: Context = request.context

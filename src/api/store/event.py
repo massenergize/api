@@ -6,6 +6,7 @@ from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from .utils import get_user_or_die
 import datetime
+from datetime import timedelta
 import calendar
 from math import ceil
 
@@ -59,6 +60,13 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  def list_recurring_event_exceptions(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    event_id = args.pop("event_id", None)
+    corresponding_event: Event = Event.objects.filter(id=event_id).first()
+    e = RecurringEventException.objects.filter(event=corresponding_event)
+    
+    return e, None
+
 
   def list_events(self, context: Context, args) -> (list, MassEnergizeAPIError):
     community_id = args.pop("community_id", None)
@@ -90,9 +98,14 @@ class EventStore:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
-      recurring  = args.pop('is_recurring', False)
+      is_recurring  = args.pop('is_recurring', False)
+      if is_recurring == "false" or is_recurring == "":
+        recurring = False
+      else: recurring = True
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
+      separation_count = int(separation_count)
+    
       day_of_week = args.pop('day_of_week', None)
       start_date_and_time = args.get('start_date_and_time', None)
       end_date_and_time = args.get('end_date_and_time', None)
@@ -100,7 +113,9 @@ class EventStore:
       if recurring_type != "month":
         week_of_month = None
       have_address = args.pop('have_address', False)
-
+      # since this gets passed in as an English word, we need to convert it to an integer first
+      converter = {"first":1, "second":2, "third":3, "fourth":4}
+          
       if not have_address:
         args['location'] = None
 
@@ -109,7 +124,7 @@ class EventStore:
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community_id")
       # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
-      if recurring and start_date_and_time:
+      if recurring  and start_date_and_time:
         # extract month, day and year from start_date_and_time
         date = start_date_and_time[0:10:1].split('-')
         day = datetime.datetime(int(date[0]), int(date[1]), int(date[2]))
@@ -118,15 +133,22 @@ class EventStore:
           return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
         # if necessary, check if week of month matches the start_date...
         if week_of_month:
-          # since this gets passed in as an English word, we need to convert it to an integer first
-          converter = {"first":1, "second":2, "third":3, "fourth":4}
-          # get the week of the date passed in
-          first_day = day.replace(day=1)
-          dom = day.day
-          adjusted_dom = dom + first_day.weekday()
-          if converter[week_of_month] != int(ceil(adjusted_dom/7.0)):
-            return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
-        
+          # let's say the date passed in represents the Nth occurence of a particular weekday in the month 
+          # we find N
+          # get the first instance of the same weekday in the month
+          obj = calendar.Calendar()
+          date_of_first_weekday = 1
+          for d in obj.itermonthdates(int(day.year), int(day.month)):
+            if int(d.day >= 8):
+              continue
+            d1 = datetime.datetime(int(d.year), int(d.month), int(d.day))
+            if calendar.day_name[d1.weekday()] == day_of_week:
+              date_of_first_weekday = int(d1.day)
+              print(date_of_first_weekday)
+              diff = day.day - date_of_first_weekday
+              if converter[week_of_month] - 1 != diff/7:
+                return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
+            
         end_date = end_date_and_time[0:10:1].split('-')
         end_day = datetime.datetime(int(end_date[0]), int(end_date[1]), int(end_date[2]))
         # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
@@ -142,6 +164,7 @@ class EventStore:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_event.image = media
 
+
       if recurring and day_of_week: 
         new_event.is_recurring = True
         new_event.recurring_details = {
@@ -149,18 +172,108 @@ class EventStore:
           "separation_count": separation_count, 
           "day_of_week": day_of_week, 
           "week_of_month": week_of_month
-        }
-        
-      new_event.save()
+        } 
+      
 
+      new_event.save()
+      weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
+      
+      if recurring_type == "week":
+        if separation_count == 1:
+          today = datetime.datetime.today()
+          diff = weekdays[day_of_week] - today.weekday()
+          if diff < 0: diff += 7
+          change = timedelta(days=diff)
+          upcoming_date = today + change
+          print(upcoming_date)
+          # TODO: create datetime for start_date_and_time, update
+        elif separation_count != 1:
+          # get the occurence of the last event
+          # start_date_and_time stores the UPCOMING EVENT instance; 
+          # in this case, it is not updated, so we use it as our old event instance so we can update it
+          last = new_event.start_date_and_time[0:10:1].split('-')
+          last_date = datetime.datetime(int(last[0]), int(last[1]), int(last[2]))
+          diff = weekdays[day_of_week] - last_date.weekday()
+          if diff < 0: diff += 7
+          for i in range(separation_count - 1):
+            diff += 7
+          change = timedelta(days = diff)
+          upcoming_date = last_date + change
+          print(str(upcoming_date))
+          # TODO: create datetime for start_date_and_time, update
+      elif recurring_type == "month":
+        print('month branch')
+        if separation_count == 1:
+          # get next (week_of_month) (day_of_week), whether that's this month or next monthu
+          # check if today is past this month's (week_of_month) (day_of_week)
+          # get the first week of the current month
+          d = datetime.datetime.now()
+          obj = calendar.Calendar()
+          date_of_first_weekday = 0
+          for day in obj.itermonthdates(int(d.year), int(d.month)):
+            if int(day.day) >= 8:
+              continue
+            d1 = datetime.datetime(int(d.year), int(d.month), int(day.day))
+            print(calendar.day_name[d1.weekday()])
+            print(day_of_week)
+            if calendar.day_name[d1.weekday()] == day_of_week:
+              print('printing weekday')
+              print(d1.weekday)
+              date_of_first_weekday = int(day.day)
+              print('date of first weekday')
+              print(date_of_first_weekday)
+              break
+          # we have obtained the date of the first (day_of_week) of the month
+          upcoming_date = date_of_first_weekday + ((converter[week_of_month] - 1)*7)
+          print(upcoming_date)
+          # if the event has already passed this month, we get the next month
+          if (upcoming_date < d.day):
+            change = timedelta(32)
+            next_month = d + change
+            # get the correct date for next month
+            for day in obj.itermonthdates(int(next_month.year), (int(next_month.month))):
+              if int(day.day >= 8):
+                continue
+              d2 = datetime.datetime(int(day.year), int(day.month) + 1, int(day.day))
+              if weekdays[d2.weekday()] == day_of_week:
+                upcoming_date = int(day.day)
+                break
+                # we have obtained the date of the first (day_of_week) of the month
+              upcoming_date += ((converter[week_of_month] - 1)*7)
+              print(upcoming_date)
+        elif separation_count != 1:
+          # assumes that there is a cycle of less than (separation_count) months before start_date... is updated
+          last = new_event.start_date_and_time[0:10:1].split('-')
+          last_date = datetime.datetime(int(last[0]), int(last[1]), int(last[2]))
+          # use timedelta to get the new month
+          change = timedelta((separation_count * 31) + 1)
+          new_month = last_date + change
+          # find the corresponding ith day of the jth month
+          obj = calendar.Calendar()
+          date_of_first_weekday = 0
+          for day in obj.itermonthdates(int(new_month.year), int(new_month.month)):
+            if int(day.day) >= 8:
+              continue
+            d1 = datetime.datetime(int(day.year), int(day.month), int(day.day))
+            print(calendar.day_name[d1.weekday()])
+            print(day_of_week)
+            if calendar.day_name[d1.weekday()] == day_of_week:
+              print('printing weekday')
+              print(d1.weekday)
+              date_of_first_weekday = int(day.day)
+              print('date of first weekday')
+              print(date_of_first_weekday)
+              break
+          # we have obtained the date of the first (day_of_week) of the month
+          upcoming_date = date_of_first_weekday + ((converter[week_of_month] - 1)*7)
+          print(str(new_month.month) +" " + str(upcoming_date))
       if tags:
         new_event.tags.set(tags)
-      
+
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-
 
   def update_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -172,12 +285,13 @@ class EventStore:
       end_date_and_time = args.pop('end_date_and_time', None)
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
+      separation_count = int(separation_count)
       day_of_week = args.pop('day_of_week', None)
-      start_date_and_time = args.get('start_date_and_time', None)
-      end_date_and_time = args.get('end_date_and_time', None)
       week_of_month = args.pop("week_of_month", None)
       if recurring_type != "month":
         week_of_month = None
+      upcoming_is_cancelled = args.pop("upcoming_is_cancelled", None)
+      upcoming_is_rescheduled = args.pop('upcoming_is_rescheduled', None)
 
       events = Event.objects.filter(id=event_id)
 
@@ -188,10 +302,11 @@ class EventStore:
       community = args.pop("community_id", None)
       if community:
         community = Community.objects.filter(pk=community).first()
-      
-      events.update(**args)
 
       event: Event = events.first()
+      event.is_recurring = recurring
+      event.start_date_and_time = start_date_and_time
+      event.end_date_and_time = end_date_and_time
       if not event:
         return None, CustomMassenergizeError(f"No event with id: {event_id}")
 
@@ -203,34 +318,6 @@ class EventStore:
         event.community = community
       else:
         event.community = None
-
-      
-      # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
-      if recurring and start_date_and_time:
-        # extract month, day and year from start_date_and_time
-        date = start_date_and_time[0:10:1].split('-')
-        day = datetime.datetime(int(date[0]), int(date[1]), int(date[2]))
-        # check if weekday matches the start_date_and_time
-        if calendar.day_name[day.weekday()] != day_of_week:
-          return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
-        # if necessary, check if week of month matches the start_date...
-        if week_of_month:
-          # since this gets passed in as an English word, we need to convert it to an integer first
-          converter = {"first":1, "second":2, "third":3, "fourth":4}
-          # get the week of the date passed in
-          first_day = day.replace(day=1)
-          dom = day.day
-          adjusted_dom = dom + first_day.weekday()
-          if converter[week_of_month] != int(ceil(adjusted_dom/7.0)):
-            return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
-        
-        end_date = end_date_and_time[0:10:1].split('-')
-        end_day = datetime.datetime(int(end_date[0]), int(end_date[1]), int(end_date[2]))
-        # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
-
-        # check that if the event does not go longer than a day (recurring events cannot go longer than 1 day)
-        if day.date() != end_day.date():
-          return None, CustomMassenergizeError("Recurring events must only last 1 day. Make sure your starting date and ending date are the same")
       
       if recurring and day_of_week: 
         event.is_recurring = True
@@ -239,7 +326,124 @@ class EventStore:
           "separation_count": separation_count, 
           "day_of_week": day_of_week, 
           "week_of_month": week_of_month
-        }
+        } 
+      event.save()
+      weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
+      converter = {"first":1, "second":2, "third":3, "fourth":4}
+      if recurring_type == "week":
+        if separation_count == 1:
+          today = datetime.datetime.today()
+          diff = weekdays[day_of_week] - today.weekday()
+          if diff < 0: diff += 7
+          change = timedelta(days=diff)
+          upcoming_date = today + change
+          print(upcoming_date)
+          # TODO: create datetime for start_date_and_time, update
+        elif separation_count != 1:
+          # get the occurence of the last event
+          # start_date_and_time stores the UPCOMING EVENT instance; 
+          # in this case, it is not updated, so we use it as our old event instance so we can update it
+          last = event.start_date_and_time[0:10:1].split('-')
+          last_date = datetime.datetime(int(last[0]), int(last[1]), int(last[2]))
+          diff = weekdays[day_of_week] - last_date.weekday()
+          if diff < 0: diff += 7
+          for i in range(separation_count - 1):
+            diff += 7
+          change = timedelta(days = diff)
+          upcoming_date = last_date + change
+          print(str(upcoming_date))
+          # TODO: create datetime for start_date_and_time, update
+      elif recurring_type == "month":
+        print('month branch')
+        if separation_count == 1:
+          # get next (week_of_month) (day_of_week), whether that's this month or next monthu
+          # check if today is past this month's (week_of_month) (day_of_week)
+          # get the first week of the current month
+          d = datetime.datetime.now()
+          obj = calendar.Calendar()
+          date_of_first_weekday = 0
+          for day in obj.itermonthdates(int(d.year), int(d.month)):
+            if int(day.day) >= 8:
+              continue
+            d1 = datetime.datetime(int(d.year), int(d.month), int(day.day))
+            print(calendar.day_name[d1.weekday()])
+            print(day_of_week)
+            if calendar.day_name[d1.weekday()] == day_of_week:
+              print('printing weekday')
+              print(d1.weekday)
+              date_of_first_weekday = int(day.day)
+              print('date of first weekday')
+              print(date_of_first_weekday)
+              break
+          # we have obtained the date of the first (day_of_week) of the month
+          upcoming_date = date_of_first_weekday + ((converter[week_of_month] - 1)*7)
+          print(upcoming_date)
+          # if the event has already passed this month, we get the next month
+          if (upcoming_date < d.day):
+            change = timedelta(32)
+            next_month = d + change
+            # get the correct date for next month
+            for day in obj.itermonthdates(int(next_month.year), (int(next_month.month))):
+              if int(day.day >= 8):
+                continue
+              d2 = datetime.datetime(int(day.year), int(day.month) + 1, int(day.day))
+              if weekdays[d2.weekday()] == day_of_week:
+                upcoming_date = int(day.day)
+                break
+                # we have obtained the date of the first (day_of_week) of the month
+              upcoming_date += ((converter[week_of_month] - 1)*7)
+              print(upcoming_date)
+        elif separation_count != 1:
+          # assumes that there is a cycle of less than (separation_count) months before start_date... is updated
+          last = event.start_date_and_time[0:10:1].split('-')
+          last_date = datetime.datetime(int(last[0]), int(last[1]), int(last[2]))
+          # use timedelta to get the new month
+          change = timedelta((separation_count * 31) + 1)
+          new_month = last_date + change
+          # find the corresponding ith day of the jth month
+          obj = calendar.Calendar()
+          date_of_first_weekday = 0
+          for day in obj.itermonthdates(int(new_month.year), int(new_month.month)):
+            if int(day.day) >= 8:
+              continue
+            d1 = datetime.datetime(int(day.year), int(day.month), int(day.day))
+            print(calendar.day_name[d1.weekday()])
+            print(day_of_week)
+            if calendar.day_name[d1.weekday()] == day_of_week:
+              print('printing weekday')
+              print(d1.weekday)
+              date_of_first_weekday = int(day.day)
+              print('date of first weekday')
+              print(date_of_first_weekday)
+              break
+          # we have obtained the date of the first (day_of_week) of the month
+          upcoming_date = date_of_first_weekday + ((converter[week_of_month] - 1)*7)
+          print(str(new_month.month) +" " + str(upcoming_date))
+      
+      # CAdmin is cancelling the upcoming event instance
+      if upcoming_is_cancelled == 'true' or upcoming_is_cancelled == True:
+        event.recurring_details["is_cancelled"] = True
+      else:
+        event.recurring_details["is_cancelled"] = False
+      
+      #CAdmin is rescheduling the upcoming event instance
+      if upcoming_is_rescheduled == 'true' or upcoming_is_rescheduled == True:
+        rescheduled_start = args.get('rescheduled_start_datetime', None)
+        rescheduled_end = args.get('rescheduled_end_datetime', None)
+        
+        rescheduled_event = event
+        rescheduled_event.id = None
+        rescheduled_event.pk = None
+        rescheduled_event.start_date_and_time = rescheduled_start
+        rescheduled_event.end_date_and_time = rescheduled_end
+        rescheduled_event.name = event.name + " (rescheduled)"
+        rescheduled_event.save()
+        rescheduled: RecurringEventException = RecurringEventException.objects.create(
+          event = event,  
+          former_time = event.start_date_and_time, 
+          rescheduled_event = rescheduled_event
+        )
+        rescheduled.save()
 
       event.save()
 
@@ -251,33 +455,8 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def reschedule_recurring_event(self, args) -> (dict, MassEnergizeAPIError):
-    try: 
-      id = args.get('id', None)
-      start_date_and_time = args.get('startDateTime', None)
-      end_date_and_time = args.get('endDateTime', None)
 
-      event = Event.objects.filter(id=id).first()
-      rescheduled_event = Event.objects.create(**args)
-      
-      # can reschedule events more than 1 event in advance
-      if event.is_recurring:
-        rescheduled = RecurringEventException.objects.create(
-          event = event, 
-          rescheduled_event = rescheduled_event
-        )
-      else: 
-        return None, MassEnergizeAPIError("Pinged reshcedule_recurring_event endpoint, but cannot reschedule an instance of a non recurring event")
-    except Exception as e: 
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
-
-  def delete_recurring_event(self, args) -> (dict, MassEnergizeAPIError):
-    pass
-
-  def edit_recurring_event():
-    pass
-
+  
   def rank_event(self, args) -> (dict, MassEnergizeAPIError):
     try:
       id = args.get('id', None)

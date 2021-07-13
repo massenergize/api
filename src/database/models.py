@@ -1209,9 +1209,8 @@ class RecurringPattern(models.Model):
   
 class RecurringEventException(models.Model):
   '''
-  A class used to represent an exception to a recurring event. 
-  Can be used to store when an instance of a recurring event is 
-  deleted or rescheduled. 
+  A class used to represent a RESCHEDULING of a recurring event. 
+  
   Attributes
   ----------
   event: Event
@@ -1223,16 +1222,26 @@ class RecurringEventException(models.Model):
     True if the event has been cancelled by CAdmin
   is_rescheduled: boolean
     True if event has been rescheduled by CAdmin
-  
+  former_time: dateTime
+    Tells us when the instance was originally scheduled. Helps us figure out when to delete RecurringEventException
   '''
   id = models.AutoField(primary_key=True)
-  # WHAT TO DO ABOUT ON DELETE????
-  # just going to keep it as CASCADE for now
   event = models.ForeignKey(Event, on_delete = models.CASCADE, related_name="recurring_event")
   rescheduled_event = models.ForeignKey(Event, on_delete = models.CASCADE, blank=True, null=True)
-  is_cancelled = models.BooleanField(default=True)
-  is_rescheduled = models.BooleanField(default=True)
+  # shouldnt be this way - blank should be false, but I don't know what to set the default to
+  former_time = models.DateTimeField(null=True, blank=True)
 
+  def __str__(self):             
+    return str(self.id)
+  
+  def simple_json(self):
+    data = model_to_dict(self, exclude=['event', 'rescheduled_event'])
+    data['id'] = str(self.id)
+    data['former_time'] = str(self.former_time)
+    data['event'] = self.event.name
+    data['rescheduled_start_time'] = str(self.rescheduled_event.start_date_and_time)
+    data['rescheduled_end_time'] = str(self.rescheduled_event.end_date_and_time)
+    return data
 
 class EventAttendee(models.Model):
   """
