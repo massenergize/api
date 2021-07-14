@@ -103,7 +103,6 @@ class EventStore:
         new_event.image = media
       
       new_event.save()
-
       if tags:
         new_event.tags.set(tags)
       

@@ -5,8 +5,10 @@ from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 
+
 # Create your views here.
 def home(request):
+  
   deployments = Deployment.objects.all()[:3]
   build_info = load_json(BASE_DIR + "/_main_/config/build/deployConfig.json")
   deploy_notes = load_text_contents(BASE_DIR + "/_main_/config/build/deployNotes.txt")
