@@ -302,6 +302,7 @@ class Community(models.Model):
       'owner_name', 'owner_email', 'is_geographically_focused', 'is_published', 'is_approved','more_info' , 'location'])
     res['logo'] = get_json_if_not_none(self.logo)
     res['favicon'] = get_json_if_not_none(self.favicon)
+    print(res)
     return res
 
   def full_json(self):

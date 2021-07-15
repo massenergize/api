@@ -124,6 +124,21 @@ class EventHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
+  @login_required
+  def update_recurring_date(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("event_id", int, is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.update_recurring_event_date(context, args)
+    if err: 
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=event_info)
 
   @login_required
   def save_for_later(self, request):
