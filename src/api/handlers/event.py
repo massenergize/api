@@ -1,5 +1,6 @@
 """Handler file for all routes pertaining to events"""
 
+from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, parse_list, parse_bool, check_length, parse_date, parse_int, parse_location
 from api.services.event import EventService
@@ -167,6 +168,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('is_global', bool)
     self.validator.expect('archive', bool)
     self.validator.expect('is_published', bool)
+    self.validator.expect('is_recurring', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     args, err = self.validator.verify(args)
@@ -190,6 +192,7 @@ class EventHandler(RouteHandler):
     return MassenergizeResponse(data=exceptions)
 
   def list(self, request):
+    
     context: Context = request.context
     args: dict = context.args
 
@@ -202,8 +205,15 @@ class EventHandler(RouteHandler):
       return err
 
     event_info, err = self.service.list_events(context, args)
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
+    
+    try:
+      blob = MassenergizeResponse(data=event_info)
+      print(blob)
+    except Exception as e:
+      print(str(e))
     return MassenergizeResponse(data=event_info)
 
   @login_required
@@ -234,6 +244,9 @@ class EventHandler(RouteHandler):
     self.validator.expect('is_published', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
+    self.validator.expect('is_recurring', bool)
+    self.validator.expect('upcoming_is_cancelled', bool)
+    self.validator.expect('upcoming_is_rescheduled', bool)
     args, err = self.validator.verify(args)
 
     if err:

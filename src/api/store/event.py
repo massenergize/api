@@ -72,28 +72,30 @@ class EventStore:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
-
+    
     if community_id:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      
     elif subdomain:
       query =  Q(community__subdomain=subdomain)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
-
+      
     elif user_id:
       events = EventAttendee.objects.filter(attendee=user_id)
+      
     else:
       events = []
     
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
-  
+
     return events, None
 
 
   def create_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
-    print(args)
+    
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -173,7 +175,6 @@ class EventStore:
           "day_of_week": day_of_week, 
           "week_of_month": week_of_month
         } 
-      
 
       new_event.save()
       
@@ -186,18 +187,23 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
   def update_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    print(args)
     try:
       event_id = args.pop('event_id', None)
       image = args.pop('image', None)
       tags = args.pop('tags', [])
-      recurring  = args.pop('is_recurring', False)
-      start_date_and_time = args.pop('start_date_and_time', None)
-      end_date_and_time = args.pop('end_date_and_time', None)
+      recurring  = args.get('is_recurring', False)
+      start_date_and_time = args.get('start_date_and_time', None)
+      end_date_and_time = args.get('end_date_and_time', None)
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
       separation_count = int(separation_count)
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
+      rescheduled_start_datetime = args.pop('rescheduled_start_datetime', None)
+      rescheduled_end_datetime = args.pop('rescheduled_end_datetime', None)
+
+      
       if recurring_type != "month":
         week_of_month = None
       upcoming_is_cancelled = args.pop("upcoming_is_cancelled", None)
@@ -213,7 +219,9 @@ class EventStore:
       if community:
         community = Community.objects.filter(pk=community).first()
 
+      events.update(**args)
       event: Event = events.first()
+      print(recurring)
       event.is_recurring = recurring
       event.start_date_and_time = start_date_and_time
       event.end_date_and_time = end_date_and_time
@@ -281,24 +289,44 @@ class EventStore:
       else:
         event.recurring_details["is_cancelled"] = False
       
+      # check if there was a previously rescheduled event instance
+      rescheduled: RecurringEventException = RecurringEventException.objects.filter(event=event)
+
       #CAdmin is rescheduling the upcoming event instance
       if upcoming_is_rescheduled == 'true' or upcoming_is_rescheduled == True:
-        rescheduled_start = args.get('rescheduled_start_datetime', None)
-        rescheduled_end = args.get('rescheduled_end_datetime', None)
+        print('GIRL WHAAAA')
+        # only create the event and recurring event exception if the event is being newly rescheduled, 
+        # otherwise, don't do anything
         
-        rescheduled_event = event
-        rescheduled_event.id = None
-        rescheduled_event.pk = None
-        rescheduled_event.start_date_and_time = rescheduled_start
-        rescheduled_event.end_date_and_time = rescheduled_end
-        rescheduled_event.name = event.name + " (rescheduled)"
-        rescheduled_event.save()
-        rescheduled: RecurringEventException = RecurringEventException.objects.create(
+        if not rescheduled:
+          rescheduled_event = event
+          rescheduled_event.id = None
+          rescheduled_event.pk = None
+          rescheduled_event.start_date_and_time = rescheduled_start_datetime
+          rescheduled_event.end_date_and_time = rescheduled_end_datetime
+          rescheduled_event.name = event.name + " (rescheduled)"
+          rescheduled_event.is_recurring = False
+          rescheduled_event.recurring_details = None
+          rescheduled_event.is_published = event.is_published
+          rescheduled_event.save()
+          rescheduled = RecurringEventException.objects.create(
           event = event,  
           former_time = event.start_date_and_time, 
           rescheduled_event = rescheduled_event
         )
+        # they are trying to modify an existing event that is rescheduled
+        elif rescheduled:
+          ev = rescheduled.rescheduled_event
+          ev.start_date_and_time = rescheduled_start_datetime
+          ev.end_date_and_time = rescheduled_end_datetime
+          ev.save()
         rescheduled.save()
+
+      # CAdmin is not rescheduling the upcoming event instance
+      else:
+        #this is a new update = there was a previously rescheduled event, now the CAdmin wants to get rid of it
+        if rescheduled: 
+          rescheduled.delete()
 
       event.save()
 
@@ -317,26 +345,19 @@ class EventStore:
     event = Event.objects.filter(id=event_id).first()
     weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
     converter = {"first":1, "second":2, "third":3, "fourth":4}
+    start = event.start_date_and_time[0:10:1].split('-')
+    start_date = datetime.datetime(int(start[0]), int(start[1]), int(start[2]))
+    end = event.end_date_and_time[0:10:1].split('-')
+    end_date = datetime.datetime(int(end[0]), int(end[1]), int(end[2]))
+    duration = end_date - start_date
+    today = datetime.datetime.now()
     if event.recurring_details.recurring_type == "week":
-      today = datetime.datetime.now()
-      start = event.start_date_and_time[0:10:1].split('-')
-      start_date = datetime.datetime(int(start[0]), int(start[1]), int(start[2]))
-      end = event.end_date_and_time[0:10:1].split('-')
-      end_date = datetime.datetime(int(end[0]), int(end[1]), int(end[2]))
-      duration = end_date - start_date
       while (start_date < today):
         start_date += timedelta(7*event.recurring_details.separation_count)
         end_date = start_date + duration
       event.start_date_and_time = start_date
       event.end_date_and_time = end_date
     elif event.recurring_details.recurring_type == "month":
-      # assumes that there is a cycle of less than (separation_count) months before start_date... is updated
-      start = event.start_date_and_time[0:10:1].split('-')
-      start_date = datetime.datetime(int(start[0]), int(start[1]), int(start[2]))
-      end = event.end_date_and_time[0:10:1].split('-')
-      end_date = datetime.datetime(int(end[0]), int(end[1]), int(end[2]))
-      duration = end_date - start_date
-      today = datetime.datetime.now()
       while (start_date < today):
         # use timedelta to get the new month
         new_month = start_date + timedelta((event.recurring_details.separation_count * 31) + 1)

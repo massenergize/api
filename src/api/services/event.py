@@ -56,6 +56,7 @@ class EventService:
     return serialize(event), None
 
   def list_events(self, context, args) -> (list, MassEnergizeAPIError):
+    print('SERVICES FUNCTION CALLED')
     events, err = self.store.list_events(context, args)
     if err:
       return None, err

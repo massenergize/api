@@ -86,7 +86,7 @@ class AuthService:
         raise PermissionError
       #print(user)
       s = serialize(user, full=True)
-      print(s)
+      
       return s, None
 
     except Exception as e:
