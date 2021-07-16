@@ -1147,7 +1147,7 @@ class Event(models.Model):
   rank = models.PositiveIntegerField(default=0, blank=True, null=True)
   is_recurring = models.BooleanField(default=False, blank=True, null=True)
   recurring_details = JSONField(blank=True, null=True)
-  def __str__(self):             
+  def __str__(self):         
     return self.name
 
   def simple_json(self):
@@ -1239,7 +1239,7 @@ class RecurringEventException(models.Model):
     data = model_to_dict(self, exclude=['event', 'rescheduled_event'])
     data['id'] = str(self.id)
     data['former_time'] = str(self.former_time)
-    data['event'] = self.event.name
+    data['event'] = self.event.id
     data['rescheduled_start_time'] = str(self.rescheduled_event.start_date_and_time)
     data['rescheduled_end_time'] = str(self.rescheduled_event.end_date_and_time)
     return data

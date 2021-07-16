@@ -45,6 +45,7 @@ class EventService:
   def list_recurring_event_exceptions(self, context, args) -> (list, MassEnergizeAPIError):
     exceptions, err = self.store.list_recurring_event_exceptions(context, args)
     if err: 
+      print(err)
       return None, err
     print(serialize_all(exceptions))
     return serialize_all(exceptions), None

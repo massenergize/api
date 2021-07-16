@@ -8,7 +8,7 @@ from .utils import get_user_or_die
 import datetime
 from datetime import timedelta
 import calendar
-from math import ceil
+import pytz
 
 class EventStore:
   def __init__(self):
@@ -47,7 +47,8 @@ class EventStore:
       new_event.description = event_to_copy.description
       new_event.featured_summary = event_to_copy.featured_summary
       new_event.location = event_to_copy.location
-      if event_to_copy.is_recurring:
+      if not (event_to_copy.is_recurring == None):
+        new_event.is_recurring = event_to_copy.is_recurring
         new_event.recurring_details = event_to_copy.recurring_details
       new_event.save()
 
@@ -146,11 +147,10 @@ class EventStore:
             d1 = datetime.datetime(int(d.year), int(d.month), int(d.day))
             if calendar.day_name[d1.weekday()] == day_of_week:
               date_of_first_weekday = int(d1.day)
-              print(date_of_first_weekday)
               diff = day.day - date_of_first_weekday
-              if converter[week_of_month] - 1 != diff/7:
-                return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
-            
+              break
+          if converter[week_of_month] - 1 != diff/7:
+            return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
         end_date = end_date_and_time[0:10:1].split('-')
         end_day = datetime.datetime(int(end_date[0]), int(end_date[1]), int(end_date[2]))
         # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
@@ -168,6 +168,7 @@ class EventStore:
 
 
       if recurring and day_of_week: 
+        if week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
         new_event.is_recurring = True
         new_event.recurring_details = {
           "recurring_type": recurring_type, 
@@ -239,7 +240,7 @@ class EventStore:
       # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
 
       converter = {"first":1, "second":2, "third":3, "fourth":4}
-
+      
       if recurring  and start_date_and_time:
         # extract month, day and year from start_date_and_time
         date = start_date_and_time[0:10:1].split('-')
@@ -255,15 +256,18 @@ class EventStore:
           obj = calendar.Calendar()
           date_of_first_weekday = 1
           for d in obj.itermonthdates(int(day.year), int(day.month)):
+            print(d.day)
             if int(d.day >= 8):
               continue
             d1 = datetime.datetime(int(d.year), int(d.month), int(d.day))
             if calendar.day_name[d1.weekday()] == day_of_week:
               date_of_first_weekday = int(d1.day)
               print(date_of_first_weekday)
+              print('hello folks')
               diff = day.day - date_of_first_weekday
-              if converter[week_of_month] - 1 != diff/7:
-                return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
+              break
+          if converter[week_of_month] - 1 != diff/7:
+            return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
         end_date = end_date_and_time[0:10:1].split('-')
         end_day = datetime.datetime(int(end_date[0]), int(end_date[1]), int(end_date[2]))
         # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
@@ -273,6 +277,7 @@ class EventStore:
           return None, CustomMassenergizeError("Recurring events must only last 1 day. Make sure your starting date and ending date are the same")  
 
       if recurring and day_of_week: 
+        if week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
         event.is_recurring = True
         event.recurring_details = {
           "recurring_type": recurring_type, 
@@ -282,38 +287,59 @@ class EventStore:
         } 
       event.save()
       
-      
+      if upcoming_is_cancelled and upcoming_is_rescheduled:
+        return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
+
       # CAdmin is cancelling the upcoming event instance
-      if upcoming_is_cancelled == 'true' or upcoming_is_cancelled == True:
-        event.recurring_details["is_cancelled"] = True
-      else:
-        event.recurring_details["is_cancelled"] = False
+      event.recurring_details["is_cancelled"] = upcoming_is_cancelled
+      
       
       # check if there was a previously rescheduled event instance
-      rescheduled: RecurringEventException = RecurringEventException.objects.filter(event=event)
+      rescheduled: RecurringEventException = RecurringEventException.objects.filter(event=event).first()
 
       #CAdmin is rescheduling the upcoming event instance
-      if upcoming_is_rescheduled == 'true' or upcoming_is_rescheduled == True:
-        print('GIRL WHAAAA')
+      if upcoming_is_rescheduled:
         # only create the event and recurring event exception if the event is being newly rescheduled, 
         # otherwise, don't do anything
-        
         if not rescheduled:
-          rescheduled_event = event
-          rescheduled_event.id = None
-          rescheduled_event.pk = None
-          rescheduled_event.start_date_and_time = rescheduled_start_datetime
-          rescheduled_event.end_date_and_time = rescheduled_end_datetime
-          rescheduled_event.name = event.name + " (rescheduled)"
-          rescheduled_event.is_recurring = False
-          rescheduled_event.recurring_details = None
-          rescheduled_event.is_published = event.is_published
+          
+          rescheduled_event = Event.objects.create(
+            name = event.name + " (rescheduled)", 
+            featured_summary = event.featured_summary, 
+            start_date_and_time = rescheduled_start_datetime,
+            end_date_and_time = rescheduled_end_datetime,
+            description = event.description, 
+            community = event.community, 
+            location = event.location, 
+            image = event.image, 
+            archive = event.archive, 
+            is_global = event.is_global, 
+            external_link = event.external_link, 
+            more_info = event.more_info, 
+            is_deleted = event.is_deleted, 
+            is_published = event.is_published, 
+            rank = event.rank, 
+            is_recurring = False, 
+            recurring_details = None
+          )
           rescheduled_event.save()
+
+          old_tags = event.tags.all()
+          old_communities = event.invited_communities.all()
+
+          for t in old_tags:
+            rescheduled_event.tags.add(t)
+          for c in old_communities:
+            rescheduled_event.invited_communities.add(c)
+
+          rescheduled_event.save()
+          
           rescheduled = RecurringEventException.objects.create(
           event = event,  
           former_time = event.start_date_and_time, 
           rescheduled_event = rescheduled_event
-        )
+          )
+
         # they are trying to modify an existing event that is rescheduled
         elif rescheduled:
           ev = rescheduled.rescheduled_event
@@ -345,44 +371,49 @@ class EventStore:
     event = Event.objects.filter(id=event_id).first()
     weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
     converter = {"first":1, "second":2, "third":3, "fourth":4}
-    start = event.start_date_and_time[0:10:1].split('-')
-    start_date = datetime.datetime(int(start[0]), int(start[1]), int(start[2]))
-    end = event.end_date_and_time[0:10:1].split('-')
-    end_date = datetime.datetime(int(end[0]), int(end[1]), int(end[2]))
-    duration = end_date - start_date
-    today = datetime.datetime.now()
-    if event.recurring_details.recurring_type == "week":
-      while (start_date < today):
-        start_date += timedelta(7*event.recurring_details.separation_count)
-        end_date = start_date + duration
-      event.start_date_and_time = start_date
-      event.end_date_and_time = end_date
-    elif event.recurring_details.recurring_type == "month":
-      while (start_date < today):
-        # use timedelta to get the new month
-        new_month = start_date + timedelta((event.recurring_details.separation_count * 31) + 1)
-        # find the corresponding ith day of the jth month
-        obj = calendar.Calendar()
-        date_of_first_weekday = 0
-        for day in obj.itermonthdates(int(new_month.year), int(new_month.month)):
-          if int(day.day) >= 8:
-            continue
-          d1 = datetime.datetime(int(day.year), int(day.month), int(day.day))
-          if calendar.day_name[d1.weekday()] == event.recurring_details.day_of_week:
-            print('printing weekday')
-            print(d1.weekday)
-            date_of_first_weekday = int(day.day)
-            print('date of first weekday')
-            print(date_of_first_weekday)
-            break
-        upcoming_date = date_of_first_weekday + ((converter[event.recurring_details.week_of_month] - 1)*7)
-        start_date = datetime.datetime(upcoming_date, new_month.month, new_month.year)
-      event.start_date_and_time = start_date
-      event.end_date_and_time = start_date + duration
-    event.save()
-    exception = RecurringEventException.objects.filter(event=event).first()
-    if exception.former_time < event.start_date_and_time:
-      exception.delete()
+    try:
+        start_date = event.start_date_and_time
+        end_date = event.end_date_and_time
+        duration = end_date - start_date
+        tod = datetime.datetime.utcnow() 
+        today = pytz.utc.localize(tod)
+        if event.recurring_details['recurring_type'] == "week":
+          while (start_date < today):
+            start_date += timedelta(7*event.recurring_details['separation_count'])
+            end_date = start_date + duration
+          event.start_date_and_time = start_date
+          event.end_date_and_time = end_date
+        elif event.recurring_details['recurring_type'] == "month":
+          #print(type(start_date))
+          #print(type(today))
+          while (start_date < today):
+            # use timedelta to get the new month
+            new_month = start_date + timedelta((event.recurring_details['separation_count'] * 31) + 1)
+            #print('new month day')
+            #print(new_month.day)
+            # find the corresponding ith day of the jth month
+            obj = calendar.Calendar()
+            date_of_first_weekday = 1
+            for day in obj.itermonthdates(int(new_month.year), int(new_month.month)):
+              if int(day.day) >= 8:
+                continue
+              d1 = pytz.utc.localize(datetime.datetime(int(day.year), int(day.month), int(day.day)))
+              #print("checkpoint a", day.day)
+              if calendar.day_name[d1.weekday()] == event.recurring_details['day_of_week']:
+                date_of_first_weekday = int(day.day)
+                break
+            upcoming_date = date_of_first_weekday + ((converter[event.recurring_details['week_of_month']] - 1)*7)
+            
+            start_date = pytz.utc.localize(datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour, start_date.minute))
+            print('new start date', start_date)
+          event.start_date_and_time = start_date
+          event.end_date_and_time = start_date + duration
+        event.save()
+        exception = RecurringEventException.objects.filter(event=event).first()
+        if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(event.start_date_and_time):
+          exception.delete()
+    except Exception as e:
+      print(str(e))
     
     return event, None
 
@@ -433,7 +464,10 @@ class EventStore:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
-        events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+        # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
+        # not as their own separate events
+        events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
+
         return events, None
 
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True), is_deleted=False).select_related('image', 'community').prefetch_related('tags')
@@ -447,7 +481,9 @@ class EventStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      events = Event.objects.filter(is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+      # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
+      # not as their own separate events
+      events = Event.objects.filter(is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")

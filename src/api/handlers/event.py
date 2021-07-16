@@ -125,7 +125,7 @@ class EventHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
-  @login_required
+  # @login_required
   def update_recurring_date(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -187,6 +187,7 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     exceptions, err = self.service.list_recurring_event_exceptions(context, args)
+    
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=exceptions)
@@ -208,12 +209,7 @@ class EventHandler(RouteHandler):
 
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
-    
-    try:
-      blob = MassenergizeResponse(data=event_info)
-      print(blob)
-    except Exception as e:
-      print(str(e))
+
     return MassenergizeResponse(data=event_info)
 
   @login_required
