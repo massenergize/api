@@ -188,7 +188,6 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
   def update_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
-    print(args)
     try:
       event_id = args.pop('event_id', None)
       image = args.pop('image', None)
@@ -222,7 +221,6 @@ class EventStore:
 
       events.update(**args)
       event: Event = events.first()
-      print(recurring)
       event.is_recurring = recurring
       event.start_date_and_time = start_date_and_time
       event.end_date_and_time = end_date_and_time
@@ -256,14 +254,11 @@ class EventStore:
           obj = calendar.Calendar()
           date_of_first_weekday = 1
           for d in obj.itermonthdates(int(day.year), int(day.month)):
-            print(d.day)
             if int(d.day >= 8):
               continue
             d1 = datetime.datetime(int(d.year), int(d.month), int(d.day))
             if calendar.day_name[d1.weekday()] == day_of_week:
               date_of_first_weekday = int(d1.day)
-              print(date_of_first_weekday)
-              print('hello folks')
               diff = day.day - date_of_first_weekday
               break
           if converter[week_of_month] - 1 != diff/7:
@@ -384,13 +379,9 @@ class EventStore:
           event.start_date_and_time = start_date
           event.end_date_and_time = end_date
         elif event.recurring_details['recurring_type'] == "month":
-          #print(type(start_date))
-          #print(type(today))
           while (start_date < today):
             # use timedelta to get the new month
             new_month = start_date + timedelta((event.recurring_details['separation_count'] * 31) + 1)
-            #print('new month day')
-            #print(new_month.day)
             # find the corresponding ith day of the jth month
             obj = calendar.Calendar()
             date_of_first_weekday = 1
@@ -398,14 +389,12 @@ class EventStore:
               if int(day.day) >= 8:
                 continue
               d1 = pytz.utc.localize(datetime.datetime(int(day.year), int(day.month), int(day.day)))
-              #print("checkpoint a", day.day)
               if calendar.day_name[d1.weekday()] == event.recurring_details['day_of_week']:
                 date_of_first_weekday = int(day.day)
                 break
             upcoming_date = date_of_first_weekday + ((converter[event.recurring_details['week_of_month']] - 1)*7)
             
             start_date = pytz.utc.localize(datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour, start_date.minute))
-            print('new start date', start_date)
           event.start_date_and_time = start_date
           event.end_date_and_time = start_date + duration
         event.save()
@@ -414,7 +403,7 @@ class EventStore:
           exception.delete()
     except Exception as e:
       print(str(e))
-    
+      return CustomMassenergizeError(str(e))
     return event, None
 
   def rank_event(self, args) -> (dict, MassEnergizeAPIError):

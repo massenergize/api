@@ -1177,36 +1177,6 @@ class PastEvent(models.Model):
   description = models.TextField(max_length = LONG_STR_LEN)
   start_date_and_time = models.DateTimeField()
   community = models.ForeignKey(Community, on_delete=models.CASCADE)
-class RecurringPattern(models.Model):
-  '''
-  A class used to represent the pattern in which a particular event recurs, if it does recur. 
-  (see is_recurring field in Event model)
-
-  Attributes
-  ----------
-  event: Event
-    Foreign Key tied to the event attached to this RecurringPattern. 
-  recurring_type: char
-    tells us the time interval for which the event recurs. 
-    options are "w" for weekly, "m" for monthly, and "y" for yearly. 
-  separation_count: int
-    how many of the specified time intervals the events are separated by. 
-    for instance, if recurring_type is "w" and separation_count is 2, 
-    then the events are happening once every two weeks.
-  max_occurrences: int
-    optional, specifies the maximum number of event instances to occur
-    before the event stops. 
-  day_of_week, week_of_month, month_of_year: int
-    contain the day of the week, week of the month, and month of the year
-    on which the event should recur respectively, depending on recurring_type
-  '''
-  id = models.AutoField(primary_key=True)
-  event = models.ForeignKey(Event, on_delete=models.CASCADE)
-  recurring_type = models.CharField(max_length=1, null=True)
-  separation_count = models.PositiveIntegerField(null=True)
-  max_occurrences = models.PositiveIntegerField(validators=[MaxValueValidator(10)], blank=True, null=True, default=10)
-  day_of_week = models.PositiveIntegerField(validators=[MaxValueValidator(6)], blank=True, null=True)
-  week_of_month = models.PositiveIntegerField(validators=[MaxValueValidator(3)], blank=True, null=True)
   
 class RecurringEventException(models.Model):
   '''
