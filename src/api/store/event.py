@@ -62,11 +62,32 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
   def list_recurring_event_exceptions(self, context: Context, args) -> (list, MassEnergizeAPIError):
-    event_id = args.pop("event_id", None)
-    corresponding_event: Event = Event.objects.filter(id=event_id).first()
-    e = RecurringEventException.objects.filter(event=corresponding_event)
+    community_id = args.pop("community_id", None)
+    subdomain = args.pop("subdomain", None)
+    user_id = args.pop("user_id", None)
     
-    return e, None
+    if community_id:
+      #TODO: also account for communities who are added as invited_communities
+      query =Q(community__id=community_id)
+      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      
+    elif subdomain:
+      query =  Q(community__subdomain=subdomain)
+      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      
+    elif user_id:
+      events = EventAttendee.objects.filter(attendee=user_id)
+      
+    else:
+      events = []
+    
+    exceptions = []
+    for event in events.all():
+      e = RecurringEventException.objects.filter(event=event).first()
+      if e:
+        exceptions.append(event.id)
+    
+    return exceptions, None
 
 
   def list_events(self, context: Context, args) -> (list, MassEnergizeAPIError):
@@ -166,9 +187,9 @@ class EventStore:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_event.image = media
 
-
+      if recurring and recurring_type == "week" and week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
+        
       if recurring and day_of_week: 
-        if week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
         new_event.is_recurring = True
         new_event.recurring_details = {
           "recurring_type": recurring_type, 
@@ -347,6 +368,7 @@ class EventStore:
       else:
         #this is a new update = there was a previously rescheduled event, now the CAdmin wants to get rid of it
         if rescheduled: 
+          rescheduled.rescheduled_event.delete()
           rescheduled.delete()
 
       event.save()
@@ -360,13 +382,37 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
   def update_recurring_event_date(self, context: Context, args) -> (dict, MassEnergizeAPIError):
-    event_id = args.pop('event_id', None)
-    if not event_id:
-      return None, CustomMassenergizeError("Event ID not provided")
-    event = Event.objects.filter(id=event_id).first()
-    weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
-    converter = {"first":1, "second":2, "third":3, "fourth":4}
-    try:
+    community_id = args.pop("community_id", None)
+    subdomain = args.pop("subdomain", None)
+    user_id = args.pop("user_id", None)
+    
+    
+    if community_id:
+      #TODO: also account for communities who are added as invited_communities
+      query =Q(community__id=community_id)
+      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      
+    elif subdomain:
+      # testing only
+      query =  Q(community__subdomain=subdomain)
+      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      
+
+    elif user_id:
+      events = EventAttendee.objects.filter(attendee=user_id)
+      
+    else:
+      events = []
+    
+    for event in events.iterator():
+      if not event.is_recurring or not event.recurring_details['separation_count']:
+        continue
+      weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
+      converter = {"first":1, "second":2, "third":3, "fourth":4}
+      
+      try:
+        sep_count = int(event.recurring_details['separation_count'])
+        
         start_date = event.start_date_and_time
         end_date = event.end_date_and_time
         duration = end_date - start_date
@@ -374,17 +420,21 @@ class EventStore:
         today = pytz.utc.localize(tod)
         if event.recurring_details['recurring_type'] == "week":
           while (start_date < today):
-            start_date += timedelta(7*event.recurring_details['separation_count'])
+            start_date += timedelta(7*sep_count)
             end_date = start_date + duration
           event.start_date_and_time = start_date
           event.end_date_and_time = end_date
         elif event.recurring_details['recurring_type'] == "month":
+          
           while (start_date < today):
             # use timedelta to get the new month
-            new_month = start_date + timedelta((event.recurring_details['separation_count'] * 31) + 1)
+            new_month = start_date + timedelta((sep_count * 31) + 1)
+            
             # find the corresponding ith day of the jth month
+            
             obj = calendar.Calendar()
             date_of_first_weekday = 1
+  
             for day in obj.itermonthdates(int(new_month.year), int(new_month.month)):
               if int(day.day) >= 8:
                 continue
@@ -392,19 +442,21 @@ class EventStore:
               if calendar.day_name[d1.weekday()] == event.recurring_details['day_of_week']:
                 date_of_first_weekday = int(day.day)
                 break
+            
             upcoming_date = date_of_first_weekday + ((converter[event.recurring_details['week_of_month']] - 1)*7)
             
             start_date = pytz.utc.localize(datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour, start_date.minute))
           event.start_date_and_time = start_date
           event.end_date_and_time = start_date + duration
+          
         event.save()
         exception = RecurringEventException.objects.filter(event=event).first()
         if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(event.start_date_and_time):
           exception.delete()
-    except Exception as e:
-      print(str(e))
-      return CustomMassenergizeError(str(e))
-    return event, None
+      except Exception as e:
+        print(str(e))
+        return CustomMassenergizeError(str(e))
+    return events, None
 
   def rank_event(self, args) -> (dict, MassEnergizeAPIError):
     try:

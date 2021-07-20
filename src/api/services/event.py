@@ -47,13 +47,14 @@ class EventService:
     if err: 
       print(err)
       return None, err
-    return serialize_all(exceptions), None
+    return exceptions, None
 
   def update_recurring_event_date(self, context, args) -> (list, MassEnergizeAPIError):
-    event, err = self.store.update_recurring_event_date(context, args)
+    events, err = self.store.update_recurring_event_date(context, args)
     if err:
       return None, err
-    return serialize(event), None
+    
+    return serialize_all(events), None
 
   def list_events(self, context, args) -> (list, MassEnergizeAPIError):
     

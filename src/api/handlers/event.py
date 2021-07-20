@@ -130,12 +130,6 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("event_id", int, is_required=True)
-    args, err = self.validator.verify(args, strict=True)
-
-    if err:
-      return err
-
     event_info, err = self.service.update_recurring_event_date(context, args)
     if err: 
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -181,15 +175,18 @@ class EventHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
-  @login_required
+  
   # lists any recurring event exceptions for the event
   def list_exceptions(self, request):
     context: Context = request.context
     args: dict = context.args
+    
     exceptions, err = self.service.list_recurring_event_exceptions(context, args)
+    
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
+    
     return MassenergizeResponse(data=exceptions)
 
   def list(self, request):
@@ -216,12 +213,8 @@ class EventHandler(RouteHandler):
   def update_recurring_date(self, request):
     context: Context = request.context
     args: dict = context.args
-    self.validator.expect('event_id', int, is_required=True)
-    args, err = self.validator.verify(args)
-    if err:
-      return err
-
     event_info, err = self.service.update_recurring_event_date(context, args)
+   
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
