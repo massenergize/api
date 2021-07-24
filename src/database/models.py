@@ -6,6 +6,7 @@ from django.utils import timezone
 from .utils.common import  json_loader,get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
+from django.core.validators import MaxValueValidator
 import uuid
 import time
 
@@ -1118,6 +1119,11 @@ class Event(models.Model):
   is_global: boolean
     True if this action is an event that every community should see or not.
     False otherwise.
+  is_recurring: boolean
+    if the event is recurring, this value is True 
+    and it has a RecurringPattern instance attached to it. 
+  recurring_details: JSON
+    stores information about the recurrence pattern of the event if is_recurring = True
   """
   id = models.AutoField(primary_key=True)
   name  = models.CharField(max_length = SHORT_STR_LEN)
@@ -1139,21 +1145,21 @@ class Event(models.Model):
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
   rank = models.PositiveIntegerField(default=0, blank=True, null=True)
-
-
-  def __str__(self):             
+  is_recurring = models.BooleanField(default=False, blank=True, null=True)
+  recurring_details = JSONField(blank=True, null=True)
+  def __str__(self):         
     return self.name
 
   def simple_json(self):
-    data = model_to_dict(self, exclude=['tags', 'image', 'community'])
+    data = model_to_dict(self, exclude=['tags', 'image', 'community', 'invited_communities'])
     data['start_date_and_time'] = self.start_date_and_time
     data['end_date_and_time'] = self.end_date_and_time
     data['tags'] = [t.simple_json() for t in self.tags.all()]
     data['community'] = get_json_if_not_none(self.community)
     data['image'] = None if not self.image else self.image.full_json()
+    data['invited_communities'] = [c.simple_json() for c in self.invited_communities.all()]
     data['more_info'] = self.more_info
     return data
-
 
   def full_json(self):
     return self.simple_json()
@@ -1163,6 +1169,50 @@ class Event(models.Model):
     ordering = ('rank', '-start_date_and_time',)
     db_table = 'events'
 
+# leaner class that stores information about events that have already passed
+# in the future, can use this class to revive events that may have been archived
+class PastEvent(models.Model):
+  id = models.AutoField(primary_key=True)
+  name  = models.CharField(max_length = SHORT_STR_LEN)
+  description = models.TextField(max_length = LONG_STR_LEN)
+  start_date_and_time = models.DateTimeField()
+  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  
+class RecurringEventException(models.Model):
+  '''
+  A class used to represent a RESCHEDULING of a recurring event. 
+  
+  Attributes
+  ----------
+  event: Event
+    stores the recurring event that the exception is attached to
+  rescheduled_event: Event
+    if the event instance is rescheduled, a new Event is created
+    representing the rescheduled event instance
+  is_cancelled : boolean
+    True if the event has been cancelled by CAdmin
+  is_rescheduled: boolean
+    True if event has been rescheduled by CAdmin
+  former_time: dateTime
+    Tells us when the instance was originally scheduled. Helps us figure out when to delete RecurringEventException
+  '''
+  id = models.AutoField(primary_key=True)
+  event = models.ForeignKey(Event, on_delete = models.CASCADE, related_name="recurring_event")
+  rescheduled_event = models.ForeignKey(Event, on_delete = models.CASCADE, blank=True, null=True)
+  # shouldnt be this way - blank should be false, but I don't know what to set the default to
+  former_time = models.DateTimeField(null=True, blank=True)
+
+  def __str__(self):             
+    return str(self.id)
+  
+  def simple_json(self):
+    data = model_to_dict(self, exclude=['event', 'rescheduled_event'])
+    data['id'] = str(self.id)
+    data['former_time'] = str(self.former_time)
+    data['event'] = self.event.id
+    data['rescheduled_start_time'] = str(self.rescheduled_event.start_date_and_time)
+    data['rescheduled_end_time'] = str(self.rescheduled_event.end_date_and_time)
+    return data
 
 class EventAttendee(models.Model):
   """

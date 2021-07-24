@@ -1,5 +1,6 @@
 """Handler file for all routes pertaining to events"""
 
+from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, parse_list, parse_bool, check_length, parse_date, parse_int, parse_location
 from api.services.event import EventService
@@ -31,6 +32,8 @@ class EventHandler(RouteHandler):
     self.add("/events.rsvp.update", self.rsvp_update)
     self.add("/events.rsvp.remove", self.rsvp_remove)
     self.add("/events.todo", self.save_for_later)
+    self.add("/events.exceptions.list", self.list_exceptions)
+    self.add("/events.date.update", self.update_recurring_date)
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list)
@@ -50,6 +53,7 @@ class EventHandler(RouteHandler):
     event_info, err = self.service.get_event_info(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
+    
     return MassenergizeResponse(data=event_info)
 
 
@@ -121,6 +125,15 @@ class EventHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
+  # @login_required
+  def update_recurring_date(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    event_info, err = self.service.update_recurring_event_date(context, args)
+    if err: 
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=event_info)
 
   @login_required
   def save_for_later(self, request):
@@ -149,6 +162,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('is_global', bool)
     self.validator.expect('archive', bool)
     self.validator.expect('is_published', bool)
+    self.validator.expect('is_recurring', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     args, err = self.validator.verify(args)
@@ -161,8 +175,22 @@ class EventHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
+  
+  # lists any recurring event exceptions for the event
+  def list_exceptions(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    exceptions, err = self.service.list_recurring_event_exceptions(context, args)
+    
+    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    
+    return MassenergizeResponse(data=exceptions)
 
   def list(self, request):
+    
     context: Context = request.context
     args: dict = context.args
 
@@ -170,11 +198,23 @@ class EventHandler(RouteHandler):
     self.validator.expect("subdomain", is_required=False)
     self.validator.expect("user_id", is_required=False)
     args, err = self.validator.verify(args, strict=True)
-
+    
     if err:
       return err
 
     event_info, err = self.service.list_events(context, args)
+
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+
+    return MassenergizeResponse(data=event_info)
+
+  
+  def update_recurring_date(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    event_info, err = self.service.update_recurring_event_date(context, args)
+   
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -193,6 +233,9 @@ class EventHandler(RouteHandler):
     self.validator.expect('is_published', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
+    self.validator.expect('is_recurring', bool)
+    self.validator.expect('upcoming_is_cancelled', bool)
+    self.validator.expect('upcoming_is_rescheduled', bool)
     args, err = self.validator.verify(args)
 
     if err:
