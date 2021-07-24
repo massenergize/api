@@ -72,6 +72,11 @@ class UserService:
       return None, err
     return serialize_all(events), None
 
+  def check_user_imported(self, context: Context, args) -> (list, MassEnergizeAPIError):
+    imported_info, err = self.store.check_user_imported(context, args)
+    if err:
+      return None, err
+    return imported_info, None
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     res, err = self.store.create_user(context, args)

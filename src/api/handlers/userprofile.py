@@ -49,8 +49,6 @@ class UserHandler(RouteHandler):
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
     self.add("/users.import", self.handle_contacts_csv)
-    self.add("/users.adminCommunity", self.get_admin_community)
-    
 
   @login_required
   def info(self, request):
@@ -155,8 +153,6 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=users)
   
-  
-  
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -245,48 +241,33 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
   
-  # lists id of community for which the user sending the request is the admin
-  @admins_only
-  def get_admin_community(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    # query users by user id, find the user that is sending the request
-    cadmin = UserProfile.objects.filter(id=context.user_id).first()
-    # find the community that the user is the admin of. In the next section, populate user profiles with that information
-    try:
-      for community in cadmin.communities.all():
-          admin_group = CommunityAdminGroup.objects.filter(community=community).first()
-          if cadmin in admin_group.members.all():
-            return MassenergizeResponse(data={"id":community.id, "subdomain":str(community.subdomain)})
-    except Exception as e:
-      print(str(e))
-    return CustomMassenergizeError("You are not the administrator of any community")
-    
   # checks whether a user profile has been temporarily set up as a CSV
   def check_user_imported(self, request):
     context: Context = request.context
     args: dict = context.args
-    email_address = args.get('email', None)
+    imported_info, err = self.service.check_user_imported(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=imported_info)
+
+    '''email_address = args.get('email', None)
     profile = UserProfile.objects.filter(email=email_address).first()
     if profile.accepts_terms_and_conditions:
       name = profile.full_name.split()
       first_name = name[0]
       last_name = name[1]
       return MassenergizeResponse(data={"imported":True, "firstName": first_name, "lastName": last_name, "preferredName": first_name})
-    return MassenergizeResponse(data={"imported":False})
+    return MassenergizeResponse(data={"imported":False})'''
 
   @login_required
   def complete_imported_user(self, request):
-    try:
-      context: Context = request.context
-      args: dict = context.args
-      email_address = args['email']
-      imported = None
-      profile = UserProfile.objects.filter(email=email_address).first()
-      if profile.accepts_terms_and_conditions:
-        return MassenergizeResponse(data={"completed":False}), None
-    except Exception as e:
-      return None, MassEnergizeAPIError(error=str(e))
+    context: Context = request.context
+    args: dict = context.args
+    email_address = args['email']
+    imported = None
+    profile = UserProfile.objects.filter(email=email_address).first()
+    if profile.accepts_terms_and_conditions:
+      return MassenergizeResponse(data={"completed":False}), None
     return MassenergizeResponse(data={"completed":True}), None
 
   @admins_only
