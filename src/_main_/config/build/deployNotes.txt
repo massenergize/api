@@ -1,3 +1,2 @@
-July 7th Deployment to Dev
-- Implement profile picture
-- Save page setting images
+July 23rd Deployment to Dev
+- Implement recurring events

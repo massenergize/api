@@ -123,12 +123,13 @@ class EventStore:
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
       is_recurring  = args.pop('is_recurring', False)
-      if is_recurring == "false" or is_recurring == "":
+      if is_recurring == False or is_recurring == "false" or is_recurring == "":
         recurring = False
       else: recurring = True
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
-      separation_count = int(separation_count)
+      if separation_count:
+        separation_count = int(separation_count)
     
       day_of_week = args.pop('day_of_week', None)
       start_date_and_time = args.get('start_date_and_time', None)
@@ -218,7 +219,8 @@ class EventStore:
       end_date_and_time = args.get('end_date_and_time', None)
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
-      separation_count = int(separation_count)
+      if separation_count:
+        separation_count = int(separation_count)
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
       rescheduled_start_datetime = args.pop('rescheduled_start_datetime', None)
@@ -231,6 +233,8 @@ class EventStore:
       upcoming_is_rescheduled = args.pop('upcoming_is_rescheduled', None)
 
       events = Event.objects.filter(id=event_id)
+      if not events:
+        return None, CustomMassenergizeError(f"No event with id: {event_id}")
 
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -242,11 +246,12 @@ class EventStore:
 
       events.update(**args)
       event: Event = events.first()
+
       event.is_recurring = recurring
-      event.start_date_and_time = start_date_and_time
-      event.end_date_and_time = end_date_and_time
-      if not event:
-        return None, CustomMassenergizeError(f"No event with id: {event_id}")
+      if start_date_and_time:
+        event.start_date_and_time = start_date_and_time
+      if end_date_and_time:
+        event.end_date_and_time = end_date_and_time
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
@@ -302,79 +307,83 @@ class EventStore:
           "week_of_month": week_of_month
         } 
       event.save()
+
+      if recurring:
+        if upcoming_is_cancelled and upcoming_is_rescheduled:
+          return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
+
+        # CAdmin is cancelling the upcoming event instance     
+        if not event.recurring_details:
+          event.recurring_details = { }
+        event.recurring_details["is_cancelled"] = upcoming_is_cancelled
+
       
-      if upcoming_is_cancelled and upcoming_is_rescheduled:
-        return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
+        # check if there was a previously rescheduled event instance
+        rescheduled: RecurringEventException = RecurringEventException.objects.filter(event=event).first()
 
-      # CAdmin is cancelling the upcoming event instance
-      event.recurring_details["is_cancelled"] = upcoming_is_cancelled
-      
-      
-      # check if there was a previously rescheduled event instance
-      rescheduled: RecurringEventException = RecurringEventException.objects.filter(event=event).first()
+        #CAdmin is rescheduling the upcoming event instance
+        if upcoming_is_rescheduled:
+          # only create the event and recurring event exception if the event is being newly rescheduled, 
+          # otherwise, don't do anything
+          if not rescheduled:
 
-      #CAdmin is rescheduling the upcoming event instance
-      if upcoming_is_rescheduled:
-        # only create the event and recurring event exception if the event is being newly rescheduled, 
-        # otherwise, don't do anything
-        if not rescheduled:
-          
-          rescheduled_event = Event.objects.create(
-            name = event.name + " (rescheduled)", 
-            featured_summary = event.featured_summary, 
-            start_date_and_time = rescheduled_start_datetime,
-            end_date_and_time = rescheduled_end_datetime,
-            description = event.description, 
-            community = event.community, 
-            location = event.location, 
-            image = event.image, 
-            archive = event.archive, 
-            is_global = event.is_global, 
-            external_link = event.external_link, 
-            more_info = event.more_info, 
-            is_deleted = event.is_deleted, 
-            is_published = event.is_published, 
-            rank = event.rank, 
-            is_recurring = False, 
-            recurring_details = None
-          )
-          rescheduled_event.save()
+            rescheduled_event = Event.objects.create(
+              name = event.name + " (rescheduled)", 
+              featured_summary = event.featured_summary, 
+              start_date_and_time = rescheduled_start_datetime,
+              end_date_and_time = rescheduled_end_datetime,
+              description = event.description, 
+              community = event.community, 
+              location = event.location, 
+              image = event.image, 
+              archive = event.archive, 
+              is_global = event.is_global, 
+              external_link = event.external_link, 
+              more_info = event.more_info, 
+              is_deleted = event.is_deleted, 
+              is_published = event.is_published, 
+              rank = event.rank, 
+              is_recurring = False, 
+              recurring_details = None
+            )
+            rescheduled_event.save()
 
-          old_tags = event.tags.all()
-          old_communities = event.invited_communities.all()
+            old_tags = event.tags.all()
+            old_communities = event.invited_communities.all()
 
-          for t in old_tags:
-            rescheduled_event.tags.add(t)
-          for c in old_communities:
-            rescheduled_event.invited_communities.add(c)
+            for t in old_tags:
+              rescheduled_event.tags.add(t)
+            for c in old_communities:
+              rescheduled_event.invited_communities.add(c)
 
-          rescheduled_event.save()
-          
-          rescheduled = RecurringEventException.objects.create(
-          event = event,  
-          former_time = event.start_date_and_time, 
-          rescheduled_event = rescheduled_event
-          )
+            rescheduled_event.save()
 
-        # they are trying to modify an existing event that is rescheduled
-        elif rescheduled:
-          ev = rescheduled.rescheduled_event
-          ev.start_date_and_time = rescheduled_start_datetime
-          ev.end_date_and_time = rescheduled_end_datetime
-          ev.save()
-        rescheduled.save()
+            rescheduled = RecurringEventException.objects.create(
+            event = event,  
+            former_time = event.start_date_and_time, 
+            rescheduled_event = rescheduled_event
+            )
 
-      # CAdmin is not rescheduling the upcoming event instance
-      else:
-        #this is a new update = there was a previously rescheduled event, now the CAdmin wants to get rid of it
-        if rescheduled: 
-          rescheduled.rescheduled_event.delete()
-          rescheduled.delete()
+          # they are trying to modify an existing event that is rescheduled
+          elif rescheduled:
+            ev = rescheduled.rescheduled_event
+            ev.start_date_and_time = rescheduled_start_datetime
+            ev.end_date_and_time = rescheduled_end_datetime
+            ev.save()
+          rescheduled.save()
 
-      event.save()
+        # CAdmin is not rescheduling the upcoming event instance
+        else:
+          #this is a new update = there was a previously rescheduled event, now the CAdmin wants to get rid of it
+          if rescheduled: 
+            rescheduled.rescheduled_event.delete()
+            rescheduled.delete()
+
+        event.save()
 
       if tags:
         event.tags.set(tags)
+        event.save()
       
       return event, None
     except Exception as e:
