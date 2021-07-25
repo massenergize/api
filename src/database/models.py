@@ -2,13 +2,11 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
 from datetime import date, datetime
-from django.utils import timezone
 from .utils.common import  json_loader,get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from django.core.validators import MaxValueValidator
 import uuid
-import time
 
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 ZIP_CODE_AND_STATES = json_loader('./database/raw_data/other/states.json')
