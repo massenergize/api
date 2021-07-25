@@ -12,7 +12,7 @@ from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, community_admins_only, super_admins_only, login_required
 from sentry_sdk import capture_message
-from django.utils import timezone
+
 # for import contacts endpoint - accepts a csv file and verifies correctness of email address format
 import csv, os, io, re
 
@@ -263,7 +263,7 @@ class UserHandler(RouteHandler):
     return MassenergizeResponse(data=imported_info)
 
   @admins_only
-  # @community_admins_only (not set this way for testing purposes)
+  # Community or Super Admins can do this
   def handle_contacts_csv(self, request):
     context: Context = request.context
     args: dict = context.args
