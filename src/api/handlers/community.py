@@ -59,7 +59,7 @@ class CommunityHandler(RouteHandler):
 
     # verify the body of the incoming request
     self.validator.expect("user_id", str, is_required=True)
-    self.validator.expect("community_id", str, is_required=True)
+    self.validator.expect("community_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
@@ -83,7 +83,7 @@ class CommunityHandler(RouteHandler):
 
     # verify the body of the incoming request
     self.validator.expect("user_id", str, is_required=True)
-    self.validator.expect("community_id", str, is_required=True)
+    self.validator.expect("community_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
@@ -190,7 +190,7 @@ class CommunityHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("id", str, is_required=True)
+    self.validator.expect("id", int, is_required=True)
     self.validator.rename("community_id", "id")
 
     args, err = self.validator.verify(args)

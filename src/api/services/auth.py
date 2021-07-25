@@ -84,8 +84,10 @@ class AuthService:
 
       if user and context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
         raise PermissionError
-
-      return serialize(user, full=True), None
+      #print(user)
+      s = serialize(user, full=True)
+      
+      return s, None
 
     except Exception as e:
       capture_message(str(e), level="error")

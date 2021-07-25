@@ -58,7 +58,14 @@ class PageSettingsStore:
 
     image = args.pop('image', None)
     page_setting.update(**args)
-    return page_setting.first(), None
+    page_setting = page_setting.first()
+
+    if image:
+      media = Media.objects.create(name="Page-Image", file=image)
+      page_setting.image = media
+      page_setting.save()
+
+    return page_setting, None
 
 
   def delete_page_setting(self, page_setting_id) -> (dict, MassEnergizeAPIError):

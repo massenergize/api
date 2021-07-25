@@ -16,7 +16,6 @@ from django.utils import timezone
 # for import contacts endpoint - accepts a csv file and verifies correctness of email address format
 import csv, os, io, re
 
-
 class UserHandler(RouteHandler):
 
   def __init__(self):
@@ -125,9 +124,13 @@ class UserHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args,'id','user_id')
-    user_id = args.pop('user_id', None)
-    user_info, err = self.service.update_user(context, user_id, args)
+    args, err = (self.validator
+      .rename("user_id","id").expect("id", str, is_required=True)
+      .verify(context.args))
+    if err:
+      return err
+    
+    user_info, err = self.service.update_user(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
