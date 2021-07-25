@@ -28,6 +28,7 @@ class AuthHandler(RouteHandler):
   
   def login(self, request): 
     context: Context = request.context
+    print(context)
     user_info, token, err = self.service.login(context)
     if err:
       return err

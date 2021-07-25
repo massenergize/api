@@ -424,6 +424,7 @@ class TeamStore:
         return teams, None
 
       teams = Team.objects.filter(community__id = community_id, is_deleted=False).select_related('logo', 'community')
+      
       return teams, None
 
     except Exception as e:
