@@ -1,4 +1,4 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.userprofile import UserStore
@@ -9,6 +9,7 @@ from _main_.utils.emailer.send_email import send_massenergize_rich_email
 
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 
+import re 
 class UserService:
   """
   Service Layer for all the users
@@ -152,8 +153,26 @@ class UserService:
       return None, err
     return serialize(user, full=True), None
   
-  def handle_csv(self, context, args, temporarylocation) -> (dict, MassEnergizeAPIError):
-    info, err = self.store.handle_csv(context, args, temporarylocation)
+  def handle_csv(self, context, args, filecontents) -> (dict, MassEnergizeAPIError):
+    first_name_field = args.get('first_name_field', None)
+    email_field = args.get('email_field', None)
+    invalid_emails = []
+    for csv_row in filecontents:
+      column_list = list(csv_row.keys())
+      try:
+        # prevents the first row (headers) from being read in as a user
+        if csv_row[first_name_field] == column_list[0]:
+          continue
+        # verify correctness of email address
+        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        if(re.search(regex,csv_row[email_field])):   
+          info, err = self.store.import_from_csv(context, args, csv_row)
+        else:
+          if filecontents.index(csv_row) != 0:
+            invalid_emails.append(csv_row + 1) 
+      except Exception as e:
+        print(str(e))
+        return None, CustomMassenergizeError(str(e))
     if err:
       return None, err
-    return info, None
+    return {'invalidEmails': invalid_emails}, None

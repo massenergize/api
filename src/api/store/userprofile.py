@@ -9,7 +9,7 @@ from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community, split_location_string, check_location
 import json
 # for import contacts endpoint - accepts a csv file and verifies correctness of email address format
-import csv, os, io, re
+import csv, re
 
 def _get_or_create_reu_location(args, user=None):
   unit_type=args.pop('unit_type', None)
@@ -546,7 +546,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
   
-  def handle_csv(self, context: Context, args, temporarylocation) -> (dict, MassEnergizeAPIError):
+  def import_from_csv(self, context: Context, args, csv_row) -> (dict, MassEnergizeAPIError):
     try:
       # query users by user id, find the user that is sending the request
       cadmin = UserProfile.objects.filter(id=context.user_id).first()
@@ -560,62 +560,42 @@ class UserStore:
       first_name_field = args['first_name_field']
       last_name_field = args['last_name_field']
       email_field = args['email_field']
-      # invalid_emails keeps track of any lines in the file that don't have a valid email address
-      invalid_emails = []
-      with open(temporarylocation, "r") as f:
-        reader = csv.DictReader(f, delimiter=",")
-        for row in reader:
-          column_list = list(row.keys())
-          try:
-            # prevents the first row (headers) from being read in as a user
-            if row[first_name_field] == column_list[0]:
-              continue
-            # verify correctness of email address
-            regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-            
-            if(re.search(regex,row[email_field])):   
-              user = UserProfile.objects.filter(email=row[email_field]).first()
-              if not user:
-                if row[email_field] == "" or not row[email_field]:
-                  return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
-                new_user: UserProfile = UserProfile.objects.create(
-                  full_name = row[first_name_field] + ' ' + row[last_name_field], 
-                  preferred_name = row[first_name_field], 
-                  email = row[email_field],
-                  is_vendor = False, 
-                  accepts_terms_and_conditions = False
-                )
-                new_user.save() 
-                if registered_community:
-                  new_user.communities.add(registered_community)
-              else: 
-                new_user: UserProfile = user  
-              team_name = args.get('team_name', None)
-              team = None
-              if team_name != "none":
-                team = Team.objects.filter(name=team_name).first()
-                team.members.add(new_user)
-                team.save()
-              new_user.save()
-              # send email inviting user to complete their profile
-              message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
-              mess = args.get('message', None)
-              if mess and mess != "":
-                message += "They have included a message for you here:\n"
-                message += mess
-              if team:
-                message += "You have been assigned to the following team: " + team.name + "\n"
-              link = "massenergize.org/" + str(registered_community.subdomain) + "/signup"
-              message += "Use the following link to join " + registered_community.name + ": " + link
-              send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
-            else:   
-              if reader.line_num != 0:
-                invalid_emails.append(reader.line_num) 
-          except Exception as e:
-            print(str(e))
-            return None, CustomMassenergizeError(e)
-      res = {'invalidEmails' : invalid_emails}
-      return res
+      user = UserProfile.objects.filter(email=csv_row[email_field]).first()
+      if not user:
+        if csv_row[email_field] == "" or not csv_row[email_field]:
+          return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
+        new_user: UserProfile = UserProfile.objects.create(
+          full_name = csv_row[first_name_field] + ' ' + csv_row[last_name_field], 
+          preferred_name = csv_row[first_name_field], 
+          email = csv_row[email_field],
+          is_vendor = False, 
+          accepts_terms_and_conditions = False
+        )
+        new_user.save() 
+        if registered_community:
+          new_user.communities.add(registered_community)
+      else: 
+        new_user: UserProfile = user  
+      team_name = args.get('team_name', None)
+      team = None
+      if team_name != "none":
+        team = Team.objects.filter(name=team_name).first()
+        team.members.add(new_user)
+        team.save()
+      new_user.save()
+      # send email inviting user to complete their profile
+      message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
+      mess = args.get('message', None)
+      if mess and mess != "":
+        message += "They have included a message for you here:\n"
+        message += mess
+      if team:
+        message += "You have been assigned to the following team: " + team.name + "\n"
+      link = "massenergize.org/" + str(registered_community.subdomain) + "/signup"
+      message += "Use the following link to join " + registered_community.name + ": " + link
+      send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
+      
+      return {'full_name': new_user.full_name, 'preferred_name': new_user.preferred_name}, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
