@@ -229,6 +229,7 @@ class UserStore:
 
       # allow home address to be passed in
       location = args.pop('location', '')
+      profile_picture = args.pop("profile_picture", None)
 
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
@@ -240,8 +241,20 @@ class UserStore:
           email = args.get('email'), 
           is_vendor = args.get('is_vendor', False), 
           accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False), 
-          preferences = {'color': args.get('color')}
+          preferences = {'color': args.get('color', '')}
         )
+
+        if profile_picture:
+          pic = Media()
+          pic.name = f'{new_user.full_name} profpic'
+          pic.file = profile_picture
+          pic.media_type = 'image'
+          pic.save()
+
+          new_user.profile_picture = pic
+          new_user.save()
+
+
       else:
         new_user: UserProfile = user
         # if user was imported but profile incomplete, updates user with info submitted in form
@@ -249,7 +262,6 @@ class UserStore:
           new_user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
           is_vendor = args.get('is_vendor', False)
           preferences = {'color': args.get('color')}
-
 
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
       if not community_member_exists:
@@ -259,43 +271,46 @@ class UserStore:
         #create their first household
         household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
         new_user.real_estate_units.add(household)
-    
+        
       res = {
         "user": new_user,
         "community": community
       }
       return res, None
+
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def update_user(self, context: Context, user_id, args) -> (dict, MassEnergizeAPIError):
+  def update_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      user_id = args.get('id', None)
       email = args.get('email', None)
-      # user_id = args.get('user_id', None)
 
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
 
       if context.user_is_logged_in and ((context.user_id == user_id) or (context.user_is_admin())):
         users = UserProfile.objects.filter(id=user_id)
-        if len(users) == 0:
+        if not users:
           return None, InvalidResourceError()
-        # print('id: ' + user.id)
-        user = users[0]
-        user.full_name = args['full_name']
-        user.preferred_name = args['preferred_name']
-        user.save()
-        if args['profile_picture']:
+
+        profile_picture = args.pop("profile_picture", None)
+        users.update(**args)          # print('id: ' + user.id)
+        user = users.first()
+
+        if profile_picture:
           pic = Media()
           pic.name = f'{user.full_name} profpic'
-          pic.file = args['profile_picture']
+          pic.file = profile_picture
           pic.media_type = 'image'
           pic.save()
-        user.profile_picture = pic
-        user.save()
-        return user.first(), None
+
+          user.profile_picture = pic
+          user.save()
+          
+        return user, None
       else:
         return None, CustomMassenergizeError('permission_denied')
 
