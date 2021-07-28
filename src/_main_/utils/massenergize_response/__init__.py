@@ -11,6 +11,7 @@ import json
 class MassenergizeResponse(JsonResponse):
   def __init__(self, data=None, error=None, status=200):    
     response = {"data": data, "error": error, "success": not error}
+    
     super().__init__(
       response, 
       safe=True, 

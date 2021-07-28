@@ -1,15 +1,20 @@
 """Handler file for all routes pertaining to users"""
-
+from functools import wraps
+from _main_.utils.emailer.send_email import send_massenergize_email
+from database.models import CommunityAdminGroup, UserProfile, Community, Team
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, community_admins_only, super_admins_only, login_required
+from sentry_sdk import capture_message
 
-
+# for import contacts endpoint - accepts a csv file and verifies correctness of email address format
+import csv, os, io, re
 
 class UserHandler(RouteHandler):
 
@@ -36,12 +41,13 @@ class UserHandler(RouteHandler):
     self.add("/users.households.remove", self.remove_household)
     self.add("/users.households.list", self.list_households)
     self.add("/users.events.list", self.list_events)
-
+    self.add("/users.checkImported", self.check_user_imported)
+    self.add("/users.completeImported", self.complete_imported_user)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
-
+    self.add("/users.import", self.handle_contacts_csv)
 
   @login_required
   def info(self, request):
@@ -118,9 +124,13 @@ class UserHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args,'id','user_id')
-    user_id = args.pop('user_id', None)
-    user_info, err = self.service.update_user(context, user_id, args)
+    args, err = (self.validator
+      .rename("user_id","id").expect("id", str, is_required=True)
+      .verify(context.args))
+    if err:
+      return err
+    
+    user_info, err = self.service.update_user(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
@@ -135,6 +145,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
+  # lists users that are in the community for cadmin
   @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
@@ -144,6 +155,7 @@ class UserHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=users)
+  
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -231,3 +243,45 @@ class UserHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
+  
+  # checks whether a user profile has been temporarily set up as a CSV
+  def check_user_imported(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    imported_info, err = self.service.check_user_imported(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=imported_info)
+
+  @login_required
+  def complete_imported_user(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    imported_info, err = self.service.complete_imported_user(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=imported_info)
+
+  @admins_only
+  # Community or Super Admins can do this
+  def handle_contacts_csv(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    # find the community within the team that the 
+    csv_ref = args['csv'].file 
+    # csv_ref is a bytes object, we need a csv
+    # so we copy it as a csv temporarily to the disk
+    temporarylocation="testout.csv"
+    with open(temporarylocation, 'wb') as out:
+      var = csv_ref.read()
+      out.write(var)
+    info, err = self.service.handle_csv(context, args, temporarylocation)
+    # and then delete it once we are done parsing it
+    os.remove(temporarylocation)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=info)
+    
+
+ 
+  

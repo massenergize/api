@@ -22,7 +22,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-IS_PROD = True
+IS_PROD = False
 IS_CANARY = False
 IS_LOCAL = False
 
@@ -52,6 +52,7 @@ DEBUG = False
 ALLOWED_HOSTS = [
     '0.0.0.0',
     '127.0.0.1',
+    'localhost:3000',
     'localhost',
     '.massenergize.org',
     '.massenergize.com',
@@ -236,8 +237,11 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
+

@@ -28,6 +28,7 @@ class AuthHandler(RouteHandler):
   
   def login(self, request): 
     context: Context = request.context
+    print(context)
     user_info, token, err = self.service.login(context)
     if err:
       return err
@@ -62,7 +63,6 @@ class AuthHandler(RouteHandler):
     user_info, err = self.service.whoami(context)
     if err:
       return err
-    
     return MassenergizeResponse(data=user_info)
 
 

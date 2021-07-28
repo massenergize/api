@@ -6,7 +6,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import Team, Community, UserProfile, Action, UserActionRel, TeamMember, RealEstateUnit, CommunityAdminGroup
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.utils import load_json
-from api.tests.common import signinAs, setupCC, createUsers
+from api.tests.common import signinAs, setupCC, createUsers, createImage
 
 class UserProfileTestCase(TestCase):
 
@@ -51,6 +51,8 @@ class UserProfileTestCase(TestCase):
         self.USER_ACTION_REL2 = UserActionRel.objects.filter(user=self.USER2, action=self.ACTION2).first()
         self.USER_ACTION_REL3 = UserActionRel.objects.filter(user=self.USER2, action=self.ACTION3).first()
 
+        self.PROFILE_PICTURE = createImage("https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg")
+
     @classmethod
     def tearDownClass(self):
         pass
@@ -86,6 +88,31 @@ class UserProfileTestCase(TestCase):
                                                                           "is_vendor": False,
                                                                           "community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(create_response["success"])
+    
+        # test not logged in, specify color pref
+        signinAs(self.client, None)
+        color = "10fo80"
+        create_response = self.client.post('/v3/users.create', urlencode({"accepts_terms_and_conditions": True,
+                                                                          "email": "test1a@email.com",
+                                                                          "full_name": "test name",
+                                                                          "preferred_name": "test_name",
+                                                                          "is_vendor": False,
+                                                                          "community_id": self.COMMUNITY.id,
+                                                                          "color": color}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(create_response["success"])
+        self.assertEqual(create_response["data"]["preferences"]["color"], color)
+    
+        # test creating user with a profile picture
+        create_response = self.client.post('/v3/users.create', urlencode({"accepts_terms_and_conditions": True,
+                                                                          "email": "test1b@email.com",
+                                                                          "full_name": "test name",
+                                                                          "preferred_name": "test_name",
+                                                                          "is_vendor": False,
+                                                                          "community_id": self.COMMUNITY.id,
+                                                                          "profile_picture": self.PROFILE_PICTURE}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(create_response["success"])
+        pic = create_response["data"].get("profile_picture", None)
+        self.assertNotEqual(pic, None)
     
         # test logged as user
         signinAs(self.client, self.USER)
@@ -132,14 +159,20 @@ class UserProfileTestCase(TestCase):
         # test logged as user
         signinAs(self.client, self.USER)
         update_response = self.client.post('/v3/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name1"}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertEqual(update_response["data"]["full_name"], "updated name1")
         self.assertTrue(update_response["success"])
+        self.assertEqual(update_response["data"]["full_name"], "updated name1")
+
+        # test logged as user, add a profile picture
+        update_response = self.client.post('/v3/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name1a", "profile_picture":self.PROFILE_PICTURE}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(update_response["success"])
+        self.assertNotEqual(update_response["data"].get("profile_picture", None), None)
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
         update_response = self.client.post('/v3/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name2"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(update_response["success"])        
         self.assertEqual(update_response["data"]["full_name"], "updated name2")
-        self.assertTrue(update_response["success"])
+
 
     def test_delete(self):
         user1 = UserProfile.objects.create(email="user1@email.com", full_name="user1test")

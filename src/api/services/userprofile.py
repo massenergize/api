@@ -72,6 +72,17 @@ class UserService:
       return None, err
     return serialize_all(events), None
 
+  def check_user_imported(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    imported_info, err = self.store.check_user_imported(context, args)
+    if err:
+      return None, err
+    return imported_info, None
+  
+  def complete_imported_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    imported_info, err = self.store.complete_imported_user(context, args)
+    if err:
+      return None, err
+    return imported_info, None
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     res, err = self.store.create_user(context, args)
@@ -102,8 +113,8 @@ class UserService:
     return serialize(user, full=True), None
 
 
-  def update_user(self,context, user_id, args) -> (dict, MassEnergizeAPIError):
-    user, err = self.store.update_user(context, user_id, args)
+  def update_user(self,context, args) -> (dict, MassEnergizeAPIError):
+    user, err = self.store.update_user(context, args)
     if err:
       return None, err
     return serialize(user), None
@@ -140,3 +151,9 @@ class UserService:
     if err:
       return None, err
     return serialize(user, full=True), None
+  
+  def handle_csv(self, context, args, temporarylocation) -> (dict, MassEnergizeAPIError):
+    info, err = self.store.handle_csv(context, args, temporarylocation)
+    if err:
+      return None, err
+    return info, None
