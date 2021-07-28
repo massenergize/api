@@ -276,9 +276,9 @@ class MiscellaneousStore:
   
   def create_carbon_equivalency(self, args):
     try:
-      new_carbon_equivalency = CarbonEquivalency.objects.objects.create(**args)
+      new_carbon_equivalency = CarbonEquivalency.objects.create(**args)
       new_carbon_equivalency.save()
-      return {}, None
+      return None , None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -296,7 +296,7 @@ class MiscellaneousStore:
 
 
   def get_carbon_equivalencies(self, args):
-    carbon_equivalencies = CarbonEquivalency.objects.filter(is_deleted=False)
+    carbon_equivalencies = CarbonEquivalency.objects.all()
     return carbon_equivalencies, None
 
   def delete_carbon_equivalency(self, tag_id, args):

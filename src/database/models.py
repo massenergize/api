@@ -839,7 +839,8 @@ class CarbonEquivalency(models.Model):
   reference = models.CharField(max_length=100)
   date = models.DateTimeField(auto_now=True)
 
-
+  def simple_json(self):
+    return model_to_dict(self)
 
 
 class TagCollection(models.Model):
