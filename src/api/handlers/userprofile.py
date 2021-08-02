@@ -14,7 +14,8 @@ from api.decorators import admins_only, community_admins_only, super_admins_only
 from sentry_sdk import capture_message
 
 # for import contacts endpoint - accepts a csv file and verifies correctness of email address format
-import csv, os, io, re
+import os, csv, re
+import pandas as pd
 
 class UserHandler(RouteHandler):
 
@@ -267,17 +268,29 @@ class UserHandler(RouteHandler):
   def handle_contacts_csv(self, request):
     context: Context = request.context
     args: dict = context.args
-    # find the community within the team that the 
-    csv_ref = args['csv'].file 
-    # csv_ref is a bytes object, we need a csv
-    # so we copy it as a csv temporarily to the disk
-    temporarylocation="testout.csv"
-    with open(temporarylocation, 'wb') as out:
-      var = csv_ref.read()
-      out.write(var)
-    info, err = self.service.handle_csv(context, args, temporarylocation)
+    try:
+    
+      # find the community within the team that the 
+      csv_ref = args['csv'].file 
+      # csv_ref is a bytes object, we need a csv
+      # so we copy it as a csv temporarily to the disk
+      temporarylocation="testout.csv"
+      with open(temporarylocation, 'wb') as out:
+        var = csv_ref.read()
+        out.write(var)
+      # filecontents is a list of dictionaries, with each list item representing a row in the CSV
+      filecontents = []
+      with open(temporarylocation, "r") as f:
+          reader = csv.DictReader(f, delimiter=",")
+          for row in reader:
+            filecontents.append(row)
+
+      info, err = self.service.handle_csv(context, args, filecontents)
+      os.remove(temporarylocation)
+    except Exception as e:
+      print(str(e))
     # and then delete it once we are done parsing it
-    os.remove(temporarylocation)
+    
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=info)
