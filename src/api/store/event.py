@@ -56,7 +56,7 @@ def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, w
     if local_start.date() != local_end.date():
       return True, "Recurring events must only last 1 day. Make sure your starting date and ending date are the same"  
 
-  return False, "no problem with recurring dates"
+  return False, "No problem with recurring dates"
   
 class EventStore:
   def __init__(self):
@@ -220,7 +220,7 @@ class EventStore:
         # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
         err, message = _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month)
         if err:
-          return None, CustomMassenergizeError(msg)
+          return None, CustomMassenergizeError(message)
 
         if recurring_type == "week" and week_of_month: 
           return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
@@ -254,8 +254,8 @@ class EventStore:
         separation_count = int(separation_count)
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
-      rescheduled_start_datetime = args.pop('rescheduled_start_datetime', None)
-      rescheduled_end_datetime = args.pop('rescheduled_end_datetime', None)
+      rescheduled_start_datetime = args.pop('rescheduled_start_datetime', False)
+      rescheduled_end_datetime = args.pop('rescheduled_end_datetime', False)
 
       if recurring_type != "month":
         week_of_month = None
@@ -302,7 +302,7 @@ class EventStore:
         # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
         err, message = _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month)
         if err:
-          return None, CustomMassenergizeError(msg)
+          return None, CustomMassenergizeError(message)
 
         # this seems to be an invalid check.  Even for monthly events, you have the day_of_week 
         #if week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
