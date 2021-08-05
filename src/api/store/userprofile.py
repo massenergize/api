@@ -561,56 +561,49 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
   
-  def import_from_csv(self, context: Context, args, csv_row) -> (dict, MassEnergizeAPIError):
+  def import_from_csv(self, context: Context, args, first_name, last_name, email) -> (dict, MassEnergizeAPIError):
     try:
       # query users by user id, find the user that is sending the request
       cadmin = UserProfile.objects.filter(id=context.user_id).first()
-      # find the community that the user is the admin of. In the next section, populate user profiles with that information
-      registered_community = None
-      for community in cadmin.communities.all():
-          admin_group = CommunityAdminGroup.objects.filter(community=community).first()
-          if cadmin in admin_group.members.all():
-            break
-      registered_community = community
-      first_name_field = args['first_name_field']
-      last_name_field = args['last_name_field']
-      email_field = args['email_field']
-      user = UserProfile.objects.filter(email=csv_row[email_field]).first()
+      ## find the community that the user is the admin of. In the next section, populate user profiles with that information
+      #registered_community = None
+      #for community in cadmin.communities.all():
+      #    admin_group = CommunityAdminGroup.objects.filter(community=community).first()
+      #    if cadmin in admin_group.members.all():
+      #      break
+      #registered_community = community
+      community_id = args.get("community_id", None)
+      community = Community.objects.filter(id=community_id).first()
+
+      user = UserProfile.objects.filter(email=email).first()
       if not user:
-        if csv_row[email_field] == "" or not csv_row[email_field]:
+        if not email or email == "":
           return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
         new_user: UserProfile = UserProfile.objects.create(
-          full_name = csv_row[first_name_field] + ' ' + csv_row[last_name_field], 
-          preferred_name = csv_row[first_name_field], 
-          email = csv_row[email_field],
+          full_name = first_name + ' ' + last_name, 
+          preferred_name = first_name + last_name[0].upper(), 
+          email = email,
           is_vendor = False, 
           accepts_terms_and_conditions = False
         )
         new_user.save() 
-        if registered_community:
-          new_user.communities.add(registered_community)
+        if community:
+          new_user.communities.add(community)
       else: 
         new_user: UserProfile = user  
       team_name = args.get('team_name', None)
-      team = None
-      if team_name != "none":
+      if team_name and team_name != "none":
         team = Team.objects.filter(name=team_name).first()
         team.members.add(new_user)
         team.save()
       new_user.save()
-      # send email inviting user to complete their profile
-      message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
-      mess = args.get('message', None)
-      if mess and mess != "":
-        message += "They have included a message for you here:\n"
-        message += mess
-      if team:
-        message += "You have been assigned to the following team: " + team.name + "\n"
-      link = "massenergize.org/" + str(registered_community.subdomain) + "/signup"
-      message += "Use the following link to join " + registered_community.name + ": " + link
-      send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
       
-      return {'full_name': new_user.full_name, 'preferred_name': new_user.preferred_name}, None
+      return {'cadmin': cadmin.full_name, 
+              'community': community.name,
+              'team': team_name,
+              'full_name': new_user.full_name,
+              'email': email, 
+              'preferred_name': new_user.preferred_name}, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

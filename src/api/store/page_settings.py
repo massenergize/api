@@ -1,12 +1,9 @@
-from database.models import UserProfile, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
-  CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from .utils import get_community
 from sentry_sdk import capture_message
 from database.models import Media
-
 
 class PageSettingsStore:
   def __init__(self, dataModel):
