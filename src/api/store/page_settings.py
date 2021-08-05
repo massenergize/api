@@ -1,4 +1,4 @@
-from database.models import UserProfile, Community
+from database.models import UserProfile, Community, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -61,10 +61,15 @@ class PageSettingsStore:
     page_setting = page_setting.first()
 
     if image:
-      media = Media.objects.create(name="Page-Image", file=image)
-      page_setting.image = media
+      # Page settings models support multiple images, but we currently allow just one.
+      if not image == "None":
+        media = Media.objects.create(name="Page-Image", file=image)
+        page_setting.images.clear()
+        page_setting.images.add(media)
+      else:
+        page_setting.images.clear()
+        #page_setting.images = None
       page_setting.save()
-
     return page_setting, None
 
 
