@@ -56,17 +56,16 @@ class PageSettingsStore:
     page_setting.update(**args)
     page_setting = page_setting.first()
     
+    # Page settings models support multiple images, but we currently allow just one.
     # @TODO handle uploading multiple images for pages that have many images (currently no pages actually use it yet)
     if image:
-      if not image == "None":
-        media = Media.objects.create(name="Page-Image", file=image)
-        page_setting.image = media
-        page_setting.save()
+      if image == "None":
+        page_setting.images.clear()
       else:
-        page_setting.image.delete()
-        page_setting.image = None
-        page_setting.save()
-    
+        media = Media.objects.create(name="Page-Image", file=image)
+        page_setting.images.clear()
+        page_setting.images.add(media)
+      page_setting.save()
     return page_setting, None
   
   def delete_page_setting(self, page_setting_id) -> (dict, MassEnergizeAPIError):
