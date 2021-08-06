@@ -148,7 +148,7 @@ class DownloadStore:
       if not data:
         continue
       rows.append(self._get_cells_from_dict(self.action_info_columns, 
-                    {'title': 'STATE-REPORTED', 'category' : action_category.name, 'done_count': str(data.value)}))
+                    {'title': 'STATE-REPORTED', 'category' : action_category.name, 'done_count': str(data.reported_value)}))
     return rows
 
 
