@@ -1,12 +1,15 @@
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community, Media
+from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community, Media, CommunityAdminGroup, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.emailer.send_email import send_massenergize_email
 from _main_.utils.context import Context
 from _main_.settings import DEBUG
 from django.db.models import F
 from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community, split_location_string, check_location
 import json
+# for import contacts endpoint - accepts a csv file and verifies correctness of email address format
+import csv, re
 
 def _get_or_create_reu_location(args, user=None):
   unit_type=args.pop('unit_type', None)
@@ -193,6 +196,30 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  def check_user_imported(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try: 
+      email_address = args.get('email', None)
+      profile = UserProfile.objects.filter(email=email_address).first()
+      if profile.accepts_terms_and_conditions:
+        name = profile.full_name.split()
+        first_name = name[0]
+        last_name = name[1]
+        return {"imported":True, "firstName": first_name, "lastName": last_name, "preferredName": first_name}, None
+      return {"imported":False}, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def complete_imported_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      email_address = args['email']
+      profile = UserProfile.objects.filter(email=email_address).first()
+      if profile.accepts_terms_and_conditions:
+        return MassenergizeResponse(data={"completed":False}), None
+      return MassenergizeResponse(data={"completed":True}), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -200,7 +227,7 @@ class UserStore:
       email = args.get('email', None) 
       community = get_community_or_die(context, args)
 
-      # allow home address and profile picture to be passed in
+      # allow home address to be passed in
       location = args.pop('location', '')
       profile_picture = args.pop("profile_picture", None)
 
@@ -230,6 +257,11 @@ class UserStore:
 
       else:
         new_user: UserProfile = user
+        # if user was imported but profile incomplete, updates user with info submitted in form
+        if not new_user.accepts_terms_and_conditions:
+          new_user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+          is_vendor = args.get('is_vendor', False)
+          preferences = {'color': args.get('color')}
 
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
       if not community_member_exists:
@@ -238,8 +270,8 @@ class UserStore:
 
         #create their first household
         household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
-        new_user.real_estate_units.add(household)    
-      
+        new_user.real_estate_units.add(household)
+        
       res = {
         "user": new_user,
         "community": community
@@ -528,3 +560,51 @@ class UserStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
+  
+  def import_from_csv(self, context: Context, args, first_name, last_name, email) -> (dict, MassEnergizeAPIError):
+    try:
+      # query users by user id, find the user that is sending the request
+      cadmin = UserProfile.objects.filter(id=context.user_id).first()
+      ## find the community that the user is the admin of. In the next section, populate user profiles with that information
+      #registered_community = None
+      #for community in cadmin.communities.all():
+      #    admin_group = CommunityAdminGroup.objects.filter(community=community).first()
+      #    if cadmin in admin_group.members.all():
+      #      break
+      #registered_community = community
+      community_id = args.get("community_id", None)
+      community = Community.objects.filter(id=community_id).first()
+
+      user = UserProfile.objects.filter(email=email).first()
+      if not user:
+        if not email or email == "":
+          return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
+        new_user: UserProfile = UserProfile.objects.create(
+          full_name = first_name + ' ' + last_name, 
+          preferred_name = first_name + last_name[0].upper(), 
+          email = email,
+          is_vendor = False, 
+          accepts_terms_and_conditions = False
+        )
+        new_user.save() 
+        if community:
+          new_user.communities.add(community)
+      else: 
+        new_user: UserProfile = user  
+      team_name = args.get('team_name', None)
+      if team_name and team_name != "none":
+        team = Team.objects.filter(name=team_name).first()
+        team.members.add(new_user)
+        team.save()
+      new_user.save()
+      
+      return {'cadmin': cadmin.full_name, 
+              'community': community.name,
+              'team': team_name,
+              'full_name': new_user.full_name,
+              'email': email, 
+              'preferred_name': new_user.preferred_name}, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(str(e))
+

@@ -1,14 +1,11 @@
 """Handler file for all routes pertaining to users"""
-
+from functools import wraps
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, rename_field
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
-
 
 class UserHandler(RouteHandler):
 
@@ -35,12 +32,13 @@ class UserHandler(RouteHandler):
     self.add("/users.households.remove", self.remove_household)
     self.add("/users.households.list", self.list_households)
     self.add("/users.events.list", self.list_events)
-
+    self.add("/users.checkImported", self.check_user_imported)
+    self.add("/users.completeImported", self.complete_imported_user)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
-
+    self.add("/users.import", self.handle_contacts_csv)
 
   @login_required
   def info(self, request):
@@ -138,6 +136,7 @@ class UserHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
 
+  # lists users that are in the community for cadmin
   @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
@@ -147,6 +146,7 @@ class UserHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=users)
+  
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -234,3 +234,48 @@ class UserHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=user_info)
+  
+  # checks whether a user profile has been temporarily set up as a CSV
+  def check_user_imported(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    imported_info, err = self.service.check_user_imported(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=imported_info)
+
+  @login_required
+  def complete_imported_user(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    imported_info, err = self.service.complete_imported_user(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=imported_info)
+
+  @admins_only
+  # Community or Super Admins can do this
+  def handle_contacts_csv(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    args, err = (self.validator
+      .expect("community_id", int, is_required=True)
+      .expect("csv", "file", is_required=True)
+      .expect("first_name_field", str, is_required=True)
+      .expect("last_name_field", str, is_required=True)
+      .expect("email_field", str, is_required=True)
+      .expect("team_id", int, is_required=False)      
+      .verify(context.args)
+    )
+    if err:
+      return err
+
+    info, err = self.service.handle_csv(context, args)    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=info)
+    
+
+ 
+  

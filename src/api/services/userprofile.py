@@ -1,13 +1,60 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.common import serialize, serialize_all
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
-
 from _main_.utils.emailer.send_email import send_massenergize_email
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-
 from _main_.utils.constants import COMMUNITY_URL_ROOT
+import os, csv
+import re
+
+def _parse_import_file(csvfile):
+  """
+  Helper function used to parse csv import file 
+  """
+  try:    
+    # csv_ref is a bytes object, we need a csv
+    # so we copy it as a csv temporarily to the disk
+    temporarylocation="testout.csv"
+    with open(temporarylocation, 'wb') as out:
+      var = csvfile.read()
+      out.write(var)
+    # filecontents is a list of dictionaries, with each list item representing a row in the CSV
+    filecontents = []
+    with open(temporarylocation, "r") as f:
+        reader = csv.DictReader(f, delimiter=",")
+        for row in reader:
+          filecontents.append(row)
+    # and then delete it once we are done parsing it    
+    os.remove(temporarylocation)
+  except Exception as e:
+    err = str(e)
+    return None, err
+  return filecontents, None
+
+def _send_invitation_email(user_info, mess):
+  # TODO: include community logo
+
+  # send email inviting user to complete their profile
+  cadmin_name = user_info.get("cadmin", "The Community Administrator")
+  community_name = user_info.get("community", None)
+  team_name = user_info.get("team", None)
+  subdomain = user_info.get("subdomain", "global")
+  email = user_info.get("email", None)
+
+  message = cadmin_name + " invited you to join the following MassEnergize Community: " + community_name + "\n"
+
+  if mess and mess != "":
+      message += "They have included a message for you here:\n"
+      message += "\n" + mess + "\n"
+
+  if team_name:
+    message += "You have also been assigned to the following team: " + team_name + "\n"
+
+  link = f'{COMMUNITY_URL_ROOT}/{subdomain}' + "/signup"
+  message += "Use the following link to join " + community_name + ": " + link
+  subject = cadmin_name + " invited you to join a MassEnergize Community"
+  send_massenergize_email(subject=subject , msg=message, to=email)
 
 class UserService:
   """
@@ -72,6 +119,17 @@ class UserService:
       return None, err
     return serialize_all(events), None
 
+  def check_user_imported(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    imported_info, err = self.store.check_user_imported(context, args)
+    if err:
+      return None, err
+    return imported_info, None
+  
+  def complete_imported_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    imported_info, err = self.store.complete_imported_user(context, args)
+    if err:
+      return None, err
+    return imported_info, None
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     res, err = self.store.create_user(context, args)
@@ -140,3 +198,54 @@ class UserService:
     if err:
       return None, err
     return serialize(user, full=True), None
+  
+  def handle_csv(self, context, args) -> (dict, MassEnergizeAPIError):
+
+    first_name_field = args.get('first_name_field', None)
+    last_name_field = args.get('last_name_field', None)
+    email_field = args.get('email_field', None)
+
+    custom_message = args.get('message', "")
+
+    csv_ref = args.get('csv', None)
+    if csv_ref:
+      csv_ref = csv_ref.file
+    else:
+      return None, CustomMassenergizeError("csv file not specified")
+
+    filecontents, err = _parse_import_file(csv_ref)
+    if err:
+      return None, CustomMassenergizeError(err)
+
+    invalid_emails = []
+    line = 0
+    for csv_row in filecontents:
+      column_list = list(csv_row.keys())
+      ###values_list= list(csv_row.values())
+      try:
+        # prevents the first row (headers) from being read in as a user
+        #print(csv_row[first_name_field])
+        if csv_row[first_name_field] == column_list[0]:
+          continue
+        # verify correctness of email address
+        line += 1
+        first_name = csv_row[first_name_field]
+        last_name = csv_row[last_name_field]
+        email = csv_row[email_field]
+        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        if(re.search(regex,email)):   
+          info, err = self.store.import_from_csv(context, args, first_name, last_name, email)
+
+          # send invitation e-mail to each new user
+          _send_invitation_email(info, custom_message)
+
+        else:
+          if filecontents.index(csv_row) != 0:
+            invalid_emails.append({"line":line, "email":email}) 
+
+      except Exception as e:
+        print(str(e))
+        return None, CustomMassenergizeError(str(e))
+    if err:
+      return None, err
+    return {'invalidEmails': invalid_emails}, None

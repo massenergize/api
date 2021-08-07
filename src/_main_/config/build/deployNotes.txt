@@ -1,2 +1,3 @@
-July 23rd Deployment to Dev
+Aug 5th Deployment to Dev
+- Import user import functionality
 - Implement recurring events
