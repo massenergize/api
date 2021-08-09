@@ -2,5 +2,5 @@
   "IS_PROD": false,
   "IS_CANARY": true,
   "BUILD_VERSION": "3.3.5",
-  "BUILD_VERSION_NOTES": "Aug 5th Deployment to Dev\n- Import user import functionality\n- Implement recurring events"
+  "BUILD_VERSION_NOTES": "Aug 9th Deployment to Canary\n- Import user import functionality\n- Implement recurring events"
 }
