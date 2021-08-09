@@ -80,8 +80,8 @@ class ActionHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect('community_id', is_required=False)
-    self.validator.expect('subdomain', is_required=False)
+    self.validator.expect('community_id', int, is_required=False)
+    self.validator.expect('subdomain', str, is_required=False)
 
     args, err = self.validator.verify(args)
     if err:
@@ -146,7 +146,7 @@ class ActionHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("action_id", None)
+    self.validator.expect("action_id", int, None)
     args, err = self.validator.verify(args)
     if err:
       return err   
@@ -162,7 +162,7 @@ class ActionHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("action_id", is_required=True)
+    self.validator.expect("action_id", int, is_required=True)
     args, err = self.validator.verify(args)
     if err:
       return err   

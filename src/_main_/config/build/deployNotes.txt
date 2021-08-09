@@ -1,11 +1,3 @@
-June 11th Deployment to Dev/Canary/Prod
-- Copied actions and events are not marked as templates
-- include service provider logo in info (for testimonials)
-- Fix vendor creation/editing
-- Fix most canary bugs (events, teams, edit households)
-- Fix team member and editing bugs from portal
-- Fixing several issues which arose during testing (265 266, 267)
-- Introducing routes .rank for testimonials, actions, events, vendors
-- Fix images getting lost from testimonials, don't delete in update routes
-- Owen's testing and bug fixes relating to communities, events, testimonials, actions
-
+Aug 5th Deployment to Dev
+- Import user import functionality
+- Implement recurring events

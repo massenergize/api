@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": true,
-  "BUILD_VERSION": "3.3.1",
-  "BUILD_VERSION_NOTES": "June 11th Deployment to Dev/Canary/Prod\n- Copied actions and events are not marked as templates\n- include service provider logo in info (for testimonials)\n- Fix vendor creation/editing\n- Fix most canary bugs (events, teams, edit households)\n- Fix team member and editing bugs from portal\n- Fixing several issues which arose during testing (265 266, 267)\n- Introducing routes .rank for testimonials, actions, events, vendors\n- Fix images getting lost from testimonials, don't delete in update routes\n- Owen's testing and bug fixes relating to communities, events, testimonials, actions\n\n"
+  "BUILD_VERSION": "3.3.5",
+  "BUILD_VERSION_NOTES": "Aug 5th Deployment to Dev\n- Import user import functionality\n- Implement recurring events"
 }
