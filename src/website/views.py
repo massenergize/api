@@ -50,7 +50,9 @@ def home(request):
 
 def generate_sitemap(request):
   
-  return MassenergizeResponse({})
+  return render(request, 'sitemap_template.xml', {
+    }, content_type='text/xml'
+  )
 
 
 def handler400(request, exception):
@@ -65,4 +67,6 @@ def handler404(request, exception):
   return MassenergizeResponse(error="resource_not_found")
 
 def handler500(request):
+  import traceback
+  capture_message(str(traceback.print_exc()))
   return MassenergizeResponse(error="server_error")

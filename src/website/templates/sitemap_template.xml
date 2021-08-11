@@ -1,0 +1,46 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  {% for c in subdomains %}
+   <url>
+      <loc>http://community.massenergize.org/{{subdomain}}</loc>
+      <lastmod>2005-01-01</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   {% endfor %}
+  {% for id in action_ids %}
+   <url>
+      <loc>http://community.massenergize.org/actions/{{subdomain}}</loc>
+      <lastmod>2005-01-01</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   {% endfor %}
+  {% for id in vendor_ids %}
+   <url>
+      <loc>http://community.massenergize.org/vendors/{{subdomain}}</loc>
+      <lastmod>2005-01-01</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   {% endfor %}
+  {% for id in event_ids %}
+   <url>
+      <loc>http://community.massenergize.org/events/{{subdomain}}</loc>
+      <lastmod>2005-01-01</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   {% endfor %}
+  {% for id in testimonial_ids %}
+   <url>
+      <loc>http://community.massenergize.org/testimonials/{{subdomain}}</loc>
+      <lastmod>2005-01-01</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   {% endfor %}
+</urlset> 
