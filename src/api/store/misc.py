@@ -271,3 +271,7 @@ class MiscellaneousStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+
+def generate_sitemap_for_portal():
+  return {}

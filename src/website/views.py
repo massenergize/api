@@ -48,6 +48,11 @@ def home(request):
     }
   )
 
+def generate_sitemap(request):
+  
+  return MassenergizeResponse({})
+
+
 def handler400(request, exception):
   return MassenergizeResponse(error="bad_request")
 
