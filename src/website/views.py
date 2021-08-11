@@ -4,7 +4,7 @@ from database.models import Deployment
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
-
+from api.store.misc import MiscellaneousStore
 
 # Create your views here.
 def home(request):
@@ -49,10 +49,8 @@ def home(request):
   )
 
 def generate_sitemap(request):
-  
-  return render(request, 'sitemap_template.xml', {
-    }, content_type='text/xml'
-  )
+  d = MiscellaneousStore().generate_sitemap_for_portal()
+  return render(request, 'sitemap_template.xml', d, content_type='text/xml')
 
 
 def handler400(request, exception):

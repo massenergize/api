@@ -1,4 +1,4 @@
-from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location
+from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Vendor, Event, Action
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -273,5 +273,13 @@ class MiscellaneousStore:
       return None, CustomMassenergizeError(e)
 
 
-def generate_sitemap_for_portal():
-  return {}
+  def generate_sitemap_for_portal(self):
+
+    return { 
+      'communities' : Community.objects.values('id', 'subdomain', 'updated_at'), 
+      'actions': Action.objects.select_related('community').values('id', 'community__subdomain', 'updated_at'),
+      'services': Vendor.objects.prefetch_related('communities').values('id', 'communities', 'updated_at'),
+      'events': Event.objects.select_related('community').values('id', 'community__subdomain'),
+      'teams': Team.objects.select_related('community').values('id', 'community__subdomain', 'updated_at'),
+      
+    }
