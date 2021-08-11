@@ -2288,8 +2288,8 @@ class AboutUsPageSettings(models.Model):
   title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
-  # images = models.ManyToManyField(Media, blank=True)
-  image = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL)
+  images = models.ManyToManyField(Media, blank=True)
+  #image = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   more_info = JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -2297,14 +2297,14 @@ class AboutUsPageSettings(models.Model):
   is_template = models.BooleanField(default=False, blank=True)
   
   def simple_json(self):
-    res = model_to_dict(self, exclude=['image'])
+    res = model_to_dict(self, exclude=['images'])
     res['community'] = get_json_if_not_none(self.community)
     return res
   
   def full_json(self):
     res = self.simple_json()
     # res['images'] = [i.simple_json() for i in self.images.all()]
-    res['image'] = get_json_if_not_none(self.image)
+    res['images'] = [i.simple_json() for i in self.images.all()]
     return res
   
   def __str__(self):
