@@ -7,8 +7,12 @@ from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 
 # Create your views here.
-def home(request):
-  print('hello search')
+def communities(request):
+  d = MiscellaneousStore().generate_sitemap_for_portal()
+
+  return render(request, 'communities.html', {})
+
+def actions(request):
   return MassenergizeResponse(data=True)
 
 
