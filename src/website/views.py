@@ -109,22 +109,78 @@ def event(request, id):
   return render(request, 'event.html', args)
 
 def vendors(request):
-  return render(request, 'services.html', {})
+  subdomain = _get_subdomain(request)
+  community = Community.objects.filter(subdomain__iexact=subdomain, is_deleted=False, is_published=True).first()
+  if not community:
+    return render(request, 'services.html', {})
+  args = {
+    'host': HOST,
+    'vendors': community.community_vendors.values('id', 'name','description','service_area'),
+  }
+  return render(request, 'services.html', args)
 
 def vendor(request, id):
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'team': Team.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      pk=id,
+      community__subdomain=subdomain
+    ).first(),
+  }
   return render(request, 'service.html', {})
 
 def teams(request):
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'teams': Team.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      community__subdomain=subdomain
+    ).values('id', 'name','tagline'),
+  }
   return render(request, 'teams.html', {})
 
 def team(request, id):
-  return render(request, 'team.html', {})
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'team': Team.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      pk=id,
+      community__subdomain=subdomain
+    ).first(),
+  }
+  return render(request, 'team.html', args)
 
 def testimonials(request):
-  return render(request, 'testimonials.html', {})
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'testimonials': Testimonial.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      community__subdomain=subdomain
+    ).values('id', 'title','body'),
+  }
+  return render(request, 'testimonials.html', args)
 
 def testimonial(request, id):
-  return render(request, 'testimonial.html', {})
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'testimonial': Testimonial.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      pk=id,
+      community__subdomain=subdomain
+    ).first(),
+  }
+  return render(request, 'testimonial.html', args)
 
 
 def generate_sitemap(request):

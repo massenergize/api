@@ -943,7 +943,7 @@ class Vendor(models.Model):
   more_info = JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
-  communities = models.ManyToManyField(Community, blank=True)
+  communities = models.ManyToManyField(Community, blank=True, related_name='community_vendors')
   tags = models.ManyToManyField(Tag, related_name='vendor_tags', blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
