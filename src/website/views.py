@@ -7,6 +7,8 @@ from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
 
+HOST = 'apomden.test:8000'
+
 RESERVED_LIST = set([
   '', '*', 'massenergize', 'api', 'admin', 'admin-dev', 'admin-canary', 'administrator', 'auth', 'authentication'
 ])
@@ -22,7 +24,7 @@ def _subdomain_is_valid(subdomain):
     return False
 
   # TODO: switch to using the subdomain model to check this
-  return Community.objects.filter(subdomain=subdomain).exists()
+  return Community.objects.filter(subdomain__iexact=subdomain).exists()
 
 
 # Create your views here.
@@ -37,7 +39,7 @@ def home(request):
 
 def communities(request):
   args = {
-    'host': 'apomden.test:8000',
+    'host': HOST,
     'communities': Community.objects.filter(
       is_deleted=False, 
       is_published=True
@@ -46,7 +48,15 @@ def communities(request):
   return render(request, 'communities.html', args  )
 
 def community(request, subdomain):
-  return render(request, 'community.html', {})
+  args = {
+    'host': HOST,
+    'communities': Community.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      subdomain=subdomain,
+    ).values('id', 'name',  'subdomain', 'about_community'),
+  }
+  return render(request, 'community.html', args)
 
 def actions(request):
   return render(request, 'actions.html', {})
