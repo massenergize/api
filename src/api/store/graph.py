@@ -92,7 +92,7 @@ class GraphStore:
       if not community:
         return None, InvalidResourceError()
 
-      if context.is_prod and not context.user_is_admin():
+      if not context.is_sandbox and not context.user_is_admin():
         if not community.is_published:
           return None, CustomMassenergizeError("Content Not Available Yet")
 
@@ -136,7 +136,7 @@ class GraphStore:
       if not team:
         return None, InvalidResourceError()
 
-      if context.is_prod and not context.user_is_admin():
+      if not context.is_sandbox and not context.user_is_admin():
         if not team.is_published:
           return None, CustomMassenergizeError("Content Not Available Yet")
   
