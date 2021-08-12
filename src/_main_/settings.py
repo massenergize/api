@@ -181,6 +181,8 @@ ROOT_URLCONF = '_main_.urls'
 ROOT_HOSTCONF = '_main_.hosts'
 DEFAULT_HOST = 'api'
 
+
+# firebase setup
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",
   "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
