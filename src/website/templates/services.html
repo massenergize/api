@@ -1,4 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
+  {% for v in vendors %}
+  <div>
+    <a href="/vendor/{{a.id}}"><h2>{{v.name}}</h2></a> 
+    <p>Email: {{v.email}}</p>  
+    <p>{{v.description}}</p>  
+  </div>
+  {% endfor %}
 {% endblock %}
