@@ -294,3 +294,21 @@ class EventsTestCase(TestCase):
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
+
+    def test_recurring_event(self):
+        # BHN - updated datetime strings to have "T" and "Z".  May be more forgiving format
+        #
+        # check if rejects a start_date... that does not match event pattern
+        signinAs(self.client, self.CADMIN)
+        event_update_response = self.client.post('/v3/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Friday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-04T09:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(event_update_response["success"])
+
+        # check if rejects a recurring event that goes longer than a day
+        signinAs(self.client, self.CADMIN)
+        event_update_response = self.client.post('/v3/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Wednesday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-06T09:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(event_update_response["success"])
+
+        # should be successful event
+        signinAs(self.client, self.CADMIN)
+        event_update_response = self.client.post('/v3/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Wednesday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-04T10:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(event_update_response["success"])
