@@ -50,11 +50,11 @@ def communities(request):
 def community(request, subdomain):
   args = {
     'host': HOST,
-    'communities': Community.objects.filter(
+    'community': Community.objects.filter(
       is_deleted=False, 
       is_published=True,
       subdomain=subdomain,
-    ).values('id', 'name',  'subdomain', 'about_community'),
+    ).first(),
   }
   return render(request, 'community.html', args)
 
