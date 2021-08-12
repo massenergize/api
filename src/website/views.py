@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from _main_.utils.massenergize_response import MassenergizeResponse
-from database.models import Deployment, Community
+from database.models import Deployment, Community, Event, Team, Vendor, Action, Testimonial
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
@@ -65,10 +65,29 @@ def action(request, id):
   return render(request, 'action.html', {})
 
 def events(request):
-  return render(request, 'events.html', {})
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'events': Event.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      community__subdomain=subdomain
+    ).values('id', 'name','start_date_and_time','end_date_and_time', 'featured_summary'),
+  }
+  return render(request, 'events.html', args)
 
 def event(request, id):
-  return render(request, 'event.html', {})
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'event': Event.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      pk=id,
+      community__subdomain=subdomain
+    ).first(),
+  }
+  return render(request, 'event.html', args)
 
 def vendors(request):
   return render(request, 'services.html', {})
