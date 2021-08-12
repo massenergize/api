@@ -4,7 +4,7 @@
 <ul>
   {% for c in communities %}
   <li>
-    <a href="http://{{c.subdomain}}.{{host}}" target="_blank"><h4>{{c.name}}</h4></a> 
+    <a href="http://{{c.subdomain}}.{{host}}"><h4>{{c.name}}</h4></a> 
     <p>{{c.about_community}}</p>
   </li>
   {% endfor %}
