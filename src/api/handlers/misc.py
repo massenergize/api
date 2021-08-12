@@ -19,6 +19,7 @@ class MiscellaneousHandler(RouteHandler):
   def registerRoutes(self) -> None:
     self.add("/menus.list", self.navigation_menu_list) 
     self.add("/data.backfill", self.backfill) 
+    self.add("", self.home) 
 
   def navigation_menu_list(self, request):
     context: Context = request.context
@@ -36,3 +37,7 @@ class MiscellaneousHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=goal_info)
 
+
+  def home(self, request):
+    context: Context = request.context
+    return self.service.home(context, request)

@@ -64,6 +64,7 @@ ALLOWED_HOSTS = [
 ]
 
 INSTALLED_APPS = [
+    'django_hosts',
     'authentication',
     'carbon_calculator',
     'database',
@@ -76,9 +77,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
 ]
 
 MIDDLEWARE = [
+    'django_hosts.middleware.HostsRequestMiddleware',
     'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -90,7 +93,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     #custom middlewares
-    'authentication.middleware.MassenergizeJWTAuthMiddleware'
+    'authentication.middleware.MassenergizeJWTAuthMiddleware',
+
+    'django_hosts.middleware.HostsResponseMiddleware'
 ]
 
 
@@ -127,7 +132,7 @@ APPEND_SLASH = True
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
-ROOT_URLCONF = '_main_.urls'
+
 # SESSION_COOKIE_SAMESITE = 'Strict'
 # SESSION_SAVE_EVERY_REQUEST = True
 
@@ -171,7 +176,10 @@ DATABASES = {
 #     }
 # }
 
-
+# url and hosts config
+ROOT_URLCONF = '_main_.urls'
+ROOT_HOSTCONF = '_main_.hosts'
+DEFAULT_HOST = 'api'
 
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",
