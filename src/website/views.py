@@ -10,7 +10,7 @@ from api.services.misc import MiscellaneousService
 HOST = 'apomden.test:8000'
 
 RESERVED_LIST = set([
-  '', '*', 'massenergize', 'api', 'admin', 'admin-dev', 'admin-canary', 'administrator', 'auth', 'authentication'
+  '', '*', 'massenergize', 'api', 'admin', 'admin-dev', 'admin-canary', 'administrator', 'auth', 'authentication', 'community', 'communities'
 ])
 
 def _get_subdomain(request):
@@ -59,10 +59,29 @@ def community(request, subdomain):
   return render(request, 'community.html', args)
 
 def actions(request):
-  return render(request, 'actions.html', {})
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'actions': Action.objects.filter(
+      is_deleted=False, 
+      is_published=True,
+      community__subdomain=subdomain
+    ).values('id', 'title','featured_summary'),
+  }
+  return render(request, 'actions.html', args)
 
 def action(request, id):
-  return render(request, 'action.html', {})
+  subdomain = _get_subdomain(request)
+  args = {
+    'host': HOST,
+    'action': Action.objects.filter(
+      pk=id,
+      community__subdomain=subdomain,
+      is_deleted=False, 
+      is_published=True,
+    ).first(), # TODO: handle None case
+  }
+  return render(request, 'action.html',args)
 
 def events(request):
   subdomain = _get_subdomain(request)
