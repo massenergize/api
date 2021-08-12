@@ -31,11 +31,19 @@ def home(request):
   if _subdomain_is_valid(subdomain):
     return community(request, subdomain)
 
+  # TODO: redirect here instead of just serving the request
   return communities(request)
 
 
 def communities(request):
-  return render(request, 'communities.html',{})
+  args = {
+    'host': 'apomden.test:8000',
+    'communities': Community.objects.filter(
+      is_deleted=False, 
+      is_published=True
+    ).values('id', 'name',  'subdomain', 'about_community'),
+  }
+  return render(request, 'communities.html', args  )
 
 def community(request, subdomain):
   return render(request, 'community.html', {})
