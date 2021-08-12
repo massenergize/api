@@ -25,7 +25,7 @@ urlpatterns = [
     path('v3/', include('api.urls')), #latest
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
-    path('', include('api.urls')),
+    path('', include('website.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

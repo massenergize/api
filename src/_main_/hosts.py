@@ -4,8 +4,7 @@ from django_hosts import patterns, host
 
 host_patterns = patterns(
   '',
-  host(r'search', 'website.urls', name='search'),
-  host(r'share', 'website.urls', name='share'),
-  host(r'admin', settings.ROOT_URLCONF, name='admin'),
-  host(r'^api', settings.ROOT_URLCONF, name='api'),
+  host(r'search', settings.ROOT_URLCONF, name='default'),
+  host(r'api', 'api.urls', name='api'),
+  host(r'api-dev', 'api.urls', name='api-dev'),
 )

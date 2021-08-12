@@ -181,7 +181,7 @@ DATABASES = {
 # url and hosts config
 ROOT_URLCONF = '_main_.urls'
 ROOT_HOSTCONF = '_main_.hosts'
-DEFAULT_HOST = 'api'
+DEFAULT_HOST = 'default'
 
 
 # firebase setup

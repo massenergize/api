@@ -19,6 +19,7 @@ class MiscellaneousHandler(RouteHandler):
   def registerRoutes(self) -> None:
     self.add("/menus.list", self.navigation_menu_list) 
     self.add("/data.backfill", self.backfill) 
+    self.add("/home", self.home) 
     self.add("", self.home) 
 
   def navigation_menu_list(self, request):
