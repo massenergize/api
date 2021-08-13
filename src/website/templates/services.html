@@ -5,8 +5,8 @@
   <div>
     <a href="/service/{{v.id}}"><h2>{{v.name}}</h2></a> 
     <p>Email: {{v.email}}</p>  
-    <p>{{v.description}}</p>  
+    <p>{{v.description|safe}}</p>  
   </div>
   {% endfor %}
-  <a href="/"> - Home</a>
+  <p><a href="/"> - Home</a></p>
 {% endblock %}
