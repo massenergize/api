@@ -4,8 +4,9 @@
 <ul>
   {% for t in teams %}
   <div>
-    <a href="/team/{{t.id}}"><h2>{{t.description}}</h2></a> 
+    <a href="/team/{{t.id}}"><h2>{{t.name}}</h2></a> 
     <p>{{t.tagline}}</p>  
   </div>
   {% endfor %}
+  <a href="/"> - Home</a>
 {% endblock %}

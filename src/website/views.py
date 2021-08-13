@@ -115,7 +115,7 @@ def vendors(request):
     return render(request, 'services.html', {})
   args = {
     'host': HOST,
-    'vendors': community.community_vendors.values('id', 'name','description','service_area'),
+    'vendors': community.community_vendors.filter(is_deleted=False).values('id', 'name','description','service_area'),
   }
   return render(request, 'services.html', args)
 
@@ -123,14 +123,13 @@ def vendor(request, id):
   subdomain = _get_subdomain(request)
   args = {
     'host': HOST,
-    'team': Team.objects.filter(
+    'vendor': Vendor.objects.filter(
       is_deleted=False, 
-      is_published=True,
       pk=id,
-      community__subdomain=subdomain
     ).first(),
   }
-  return render(request, 'service.html', {})
+
+  return render(request, 'service.html', args)
 
 def teams(request):
   subdomain = _get_subdomain(request)
@@ -142,7 +141,7 @@ def teams(request):
       community__subdomain=subdomain
     ).values('id', 'name','tagline'),
   }
-  return render(request, 'teams.html', {})
+  return render(request, 'teams.html', args)
 
 def team(request, id):
   subdomain = _get_subdomain(request)

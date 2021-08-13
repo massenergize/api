@@ -5,7 +5,8 @@
   {% for t in testimonials %}
   <div>
     <a href="/testimonial/{{t.id}}"><h2>{{t.title}}</h2></a> 
-    <p>{{t.body}}</p>  
+    <p>{{t.body|slice:"0:100"}}...</p>  
   </div>
   {% endfor %}
+  <a href="/"> - Home</a>
 {% endblock %}

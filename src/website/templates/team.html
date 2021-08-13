@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{team.name}}</h2>
+<p>{{team.description|safe}}</p>
+<a href="/teams"> - All Teams</a>
+<a href="/"> - Home</a>
+{% endblock %}
