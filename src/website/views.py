@@ -6,8 +6,12 @@ from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
+import html2text
+extract_text_from_html = html2text.HTML2Text()
+extract_text_from_html.ignore_links = True
 
 HOST = 'apomden.test:8000'
+PORTAL_HOST = 'https://community.massenergize.org'
 
 RESERVED_LIST = set([
   '', '*', 'massenergize', 'api', 'admin', 'admin-dev', 'admin-canary', 'administrator', 'auth', 'authentication', 'community', 'communities'
@@ -40,6 +44,7 @@ def home(request):
 def communities(request):
   args = {
     'host': HOST,
+    'title': 'Massenergize Communities',
     'communities': Community.objects.filter(
       is_deleted=False, 
       is_published=True
@@ -48,13 +53,31 @@ def communities(request):
   return render(request, 'communities.html', args  )
 
 def community(request, subdomain):
-  args = {
-    'host': HOST,
-    'community': Community.objects.filter(
+  community = Community.objects.filter(
       is_deleted=False, 
       is_published=True,
       subdomain=subdomain,
-    ).first(),
+    ).first()
+
+  meta = {
+    'site_name': 'Massenergize',
+    'subdomain': subdomain,
+    'section': f'#community#{subdomain}',
+    'title': str(community),
+    'description': extract_text_from_html.handle(community.about_community),
+    'image': community.logo.file if community.logo else {},
+    'url': f'{PORTAL_HOST}/{subdomain}' ,
+    'created_at': community.created_at,
+    'updated_at': community.updated_at,
+    'tags': ["#ClimateChange"],
+  }
+
+  args = {
+    'host': HOST,
+    'meta': meta,
+    'title': 'Massenergize Communities',
+    'subdomain': subdomain,
+    'community': community,
   }
   return render(request, 'community.html', args)
 
@@ -62,12 +85,15 @@ def actions(request):
   subdomain = _get_subdomain(request)
   args = {
     'host': HOST,
+    'title': 'Take Action',
     'actions': Action.objects.filter(
       is_deleted=False, 
       is_published=True,
       community__subdomain=subdomain
     ).values('id', 'title','featured_summary'),
   }
+
+
   return render(request, 'actions.html', args)
 
 def action(request, id):
@@ -87,6 +113,7 @@ def events(request):
   subdomain = _get_subdomain(request)
   args = {
     'host': HOST,
+    'title': 'Attend an event near you',
     'events': Event.objects.filter(
       is_deleted=False, 
       is_published=True,
@@ -115,6 +142,7 @@ def vendors(request):
     return render(request, 'services.html', {})
   args = {
     'host': HOST,
+    'title': 'Services & Vendors',
     'vendors': community.community_vendors.filter(is_deleted=False).values('id', 'name','description','service_area'),
   }
   return render(request, 'services.html', args)
@@ -135,6 +163,7 @@ def teams(request):
   subdomain = _get_subdomain(request)
   args = {
     'host': HOST,
+    'title': 'Teams',
     'teams': Team.objects.filter(
       is_deleted=False, 
       is_published=True,
@@ -160,6 +189,7 @@ def testimonials(request):
   subdomain = _get_subdomain(request)
   args = {
     'host': HOST,
+    'title': 'Testimonials and User Stories',
     'testimonials': Testimonial.objects.filter(
       is_deleted=False, 
       is_published=True,
