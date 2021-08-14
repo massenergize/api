@@ -20,7 +20,6 @@ class CommunityService:
     if err:
       return None, err
 
-    #send an email to the community admin
     return serialize(community, full=True), None
 
   def join_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):

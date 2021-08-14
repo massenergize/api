@@ -302,22 +302,23 @@ class CommunityStore:
         # on prod, we should pretend the community does not exist.
         return None, InvalidResourceError()
 
-      category_graph, err = self.graph_store.graph_actions_completed(context, {"community_id":community.id})  
-      if not err:
-        # this could be slow?
-        data = category_graph['data']
-        category_totals = [datum["reported_value"] for datum in data]
-        
-        goal = community.goal
-        total = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
+      if community.goal:
+        category_graph, err = self.graph_store.graph_actions_completed(context, {"community_id":community.id})  
+        if not err:
+          # this could be slow?
+          data = category_graph['data']
+          category_totals = [datum["reported_value"] for datum in data]
 
-        goal.attained_number_of_households = goal.initial_number_of_households + max(category_totals)
-        goal.attained_number_of_actions = goal.initial_number_of_actions + sum(category_totals)
-        goal.attained_carbon_footprint_reduction = goal.initial_carbon_footprint_reduction # no additions from state reports
+          goal = community.goal
+          total = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
 
-        newtotal = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
-        if newtotal != total:
-          goal.save()
+          goal.attained_number_of_households = goal.initial_number_of_households + max(category_totals)
+          goal.attained_number_of_actions = goal.initial_number_of_actions + sum(category_totals)
+          goal.attained_carbon_footprint_reduction = goal.initial_carbon_footprint_reduction # no additions from state reports
+
+          newtotal = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
+          if newtotal != total:
+            goal.save()
 
       return community, None
     except Exception as e:
@@ -412,6 +413,7 @@ class CommunityStore:
       images = homePage.images.all()
       #TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
       if homePage:
+
         homePage.pk = None 
         homePage.title = f"Welcome to Massenergize, {community.name}!"
         homePage.community = community
