@@ -1,3 +1,5 @@
-Aug 5th Deployment to Dev
+Aug 14th Deployment to Dev
+- Fix data issue: Donut attained values summed from State/Reported categories + initial pushed
+- Community Users download includes non-members with households in community
 - Import user import functionality
 - Implement recurring events
