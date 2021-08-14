@@ -193,9 +193,17 @@ class Goal(models.Model):
   target_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
   target_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
   
+  initial_number_of_households = models.PositiveIntegerField(default=0, blank=True)
+  initial_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
+  initial_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
+  
   attained_number_of_households = models.PositiveIntegerField(default=0, blank=True)
   attained_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
   attained_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
+  
+  organic_attained_number_of_households = models.PositiveIntegerField(default=0, blank=True)
+  organic_attained_number_of_actions = models.PositiveIntegerField(default=0, blank=True)
+  organic_attained_carbon_footprint_reduction = models.PositiveIntegerField(default=0, blank=True)
   
   target_date = models.DateField(null=True)
   
@@ -316,6 +324,7 @@ class Community(models.Model):
     
     # goal defined consistently; not differently in two places
     if self.is_geographically_focused:
+
       goal["organic_attained_number_of_households"] = (
         RealEstateUnit.objects.filter(is_deleted=False, community=self).count())
       done_actions = UserActionRel.objects.filter(real_estate_unit__community=self, status="DONE").prefetch_related(
@@ -327,7 +336,7 @@ class Community(models.Model):
       goal["organic_attained_number_of_households"] = members_count
       done_actions = UserActionRel.objects.filter(user__in=users, status="DONE").prefetch_related(
         'action__calculator_action')
-    
+
     goal["organic_attained_number_of_actions"] = (done_actions.count())
     carbon_footprint_reduction = 0
     for actionRel in done_actions:
