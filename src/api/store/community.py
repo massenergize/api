@@ -313,6 +313,8 @@ class CommunityStore:
 
         goal.attained_number_of_households = goal.initial_number_of_households + max(category_totals)
         goal.attained_number_of_actions = goal.initial_number_of_actions + sum(category_totals)
+        goal.attained_carbon_footprint_reduction = goal.initial_carbon_footprint_reduction # no additions from state reports
+
         newtotal = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
         if newtotal != total:
           goal.save()
