@@ -1,4 +1,4 @@
-Aug 14th Deployment to Dev
+Aug 15th Deployment to Canary
 - Fix data issue: Donut attained values summed from State/Reported categories + initial pushed
 - Community Users download includes non-members with households in community
 - Import user import functionality
