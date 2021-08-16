@@ -6,6 +6,7 @@ from database.models import Community, CommunityMember, UserProfile, Action, Eve
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from api.store.graph import GraphStore
 from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die, get_new_title, is_reu_in_community, check_location
 from database.utils.common import json_loader
@@ -36,6 +37,7 @@ def _clone_page_settings(pageSettings, title, community):
 class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
+    self.graph_store = GraphStore()
 
   def _check_geography_unique(self, community, geography_type, loc):
     """
@@ -300,6 +302,24 @@ class CommunityStore:
         # on prod, we should pretend the community does not exist.
         return None, InvalidResourceError()
 
+      if community.goal:
+        category_graph, err = self.graph_store.graph_actions_completed(context, {"community_id":community.id})  
+        if not err:
+          # this could be slow?
+          data = category_graph['data']
+          category_totals = [datum["reported_value"] for datum in data]
+
+          goal = community.goal
+          total = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
+
+          goal.attained_number_of_households = goal.initial_number_of_households + max(category_totals)
+          goal.attained_number_of_actions = goal.initial_number_of_actions + sum(category_totals)
+          goal.attained_carbon_footprint_reduction = goal.initial_carbon_footprint_reduction # no additions from state reports
+
+          newtotal = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
+          if newtotal != total:
+            goal.save()
+
       return community, None
     except Exception as e:
       capture_exception(e)
@@ -393,6 +413,7 @@ class CommunityStore:
       images = homePage.images.all()
       #TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
       if homePage:
+
         homePage.pk = None 
         homePage.title = f"Welcome to Massenergize, {community.name}!"
         homePage.community = community
@@ -402,23 +423,23 @@ class CommunityStore:
 
       #now create all the pages
       if not _clone_page_settings(AboutUsPageSettings, f"About {community.name}", community):
-        raise("Failed to clone settings for AboutUs page")
+        raise Exception("Failed to clone settings for AboutUs page")
       if not _clone_page_settings(ActionsPageSettings, f"Actions for {community.name}", community):
-        raise("Failed to clone settings for Actions page")
+        raise Exception("Failed to clone settings for Actions page")
       if not _clone_page_settings(ContactUsPageSettings, f"Contact Us - {community.name}", community):
-        raise("Failed to clone settings for ContactUs page")
-      if not _clone_page_settings(DonatePageSettings, f"Take Actions - {community.name}", community):
-        raise("Failed to clone settings for Donate page")
-      if not _clone_page_settings(ImpactPageSettings, f"See our Impact - {community.name}", community):
-        raise("Failed to clone settings for Impact page")
+        raise Exception("Failed to clone settings for ContactUs page")
+      if not _clone_page_settings(DonatePageSettings, f"Support {community.name}", community):
+        raise Exception("Failed to clone settings for Donate page")
+      if not _clone_page_settings(ImpactPageSettings, f"Our Impact - {community.name}", community):
+        raise Exception("Failed to clone settings for Impact page")
       if not _clone_page_settings(TeamsPageSettings, f"Teams in this community", community):
-        raise("Failed to clone settings for Teams page")
+        raise Exception("Failed to clone settings for Teams page")
       if not _clone_page_settings(VendorsPageSettings, f"Service Providers", community):
-        raise("Failed to clone settings for Vendors page")
+        raise Exception("Failed to clone settings for Vendors page")
       if not _clone_page_settings(EventsPageSettings, f"Events and Campaigns", community):
-        raise("Failed to clone settings for Events page")
+        raise Exception("Failed to clone settings for Events page")
       if not _clone_page_settings(TestimonialsPageSettings, f"Testimonials", community):
-        raise("Failed to clone settings for Testimonials page")
+        raise Exception("Failed to clone settings for Testimonials page")
     
       admin_group_name  = f"{community.name}-{community.subdomain}-Admin-Group"
       comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(name=admin_group_name, community=community)
@@ -446,7 +467,6 @@ class CommunityStore:
 
       actions_copied = set()
       for action_to_copy in global_actions:
-        print(action_to_copy.title)
         old_tags = action_to_copy.tags.all()
         old_vendors = action_to_copy.vendors.all()
         new_action: Action = action_to_copy
@@ -498,9 +518,12 @@ class CommunityStore:
       if not community:
         return None, InvalidResourceError()
 
+
       community.update(**args)
       community = community.first()
       
+      # TODO: check that locations have changed before going through the effort of 
+
       geographic = args.get('is_geographically_focused', False)
       if geographic:
         geography_type = args.get('geography_type', None)

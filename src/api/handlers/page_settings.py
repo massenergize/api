@@ -1,4 +1,4 @@
-"""Handler file for all routes pertaining to contact_us_page_settings"""
+"""Handler file for all routes pertaining to all page_settings"""
 
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field
@@ -16,7 +16,7 @@ class PageSettingsHandler(RouteHandler):
     super().__init__()
     self.pageName = pageName
     if not pageName:
-      raise('PageSettingsHandler: no page name supplied')
+      raise Exception('PageSettingsHandler: no page name supplied')
     self.registerRoutes(pageName)
     self.service = PageSettingsService(dataModel)
 
@@ -60,8 +60,7 @@ class PageSettingsHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    user_id = args.pop('user_id', None)
-    page_setting_info, err = self.service.list_page_settings(community_id, user_id)
+    page_setting_info, err = self.service.list_page_settings(community_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=page_setting_info)

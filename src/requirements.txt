@@ -1,9 +1,9 @@
-Django==3.0.14
+Django==3.1.12
 dj-database-url==0.5.0
 gunicorn==20.0.4
 psycopg2-binary==2.8.5
 whitenoise==5.1.0
-Pillow==8.1.1
+Pillow==8.2.0
 django-storages==1.9.1
 boto3==1.17.41
 django-cors-headers==3.4.0
@@ -16,3 +16,4 @@ python-dotenv==0.13.0
 pynacl==1.3.0
 sentry-sdk==0.19.5
 zipcodes==1.1.2
+termcolor==1.1.0

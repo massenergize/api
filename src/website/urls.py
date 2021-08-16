@@ -1,7 +1,8 @@
 from django.urls import path
 
-from . import views
+from website.views import home, generate_sitemap
 
 urlpatterns = [
-  path('', views.home, name='home'),
+  path('', home, name='home'),
+  path('sitemap', generate_sitemap, name='generate_sitemap'),
 ]

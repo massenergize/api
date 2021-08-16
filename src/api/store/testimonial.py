@@ -100,7 +100,7 @@ class TestimonialStore:
       else:
         testimonial_community = None
 
-      # eliminating anonymous testimonias
+      # eliminating anonymous testimonials
       new_testimonial.anonymous = False
       if not preferred_name:
         if user:
@@ -126,9 +126,10 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_testimonial(self, context: Context, testimonial_id, args) -> (dict, MassEnergizeAPIError):
+  def update_testimonial(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      testimonial = Testimonial.objects.filter(id=testimonial_id)
+      id = args.pop("id", None)
+      testimonial = Testimonial.objects.filter(id=id)
       if not testimonial:
         return None, InvalidResourceError()
       
@@ -138,14 +139,14 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       rank = args.pop('rank', None)
+      testimonial.update(**args)
       new_testimonial = testimonial.first()
 
+      # If no image passed, then we don't delete the existing one
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_testimonial.image = media
-      else:
-        new_testimonial.image = None
-
+        
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
         new_testimonial.action = testimonial_action
@@ -176,8 +177,23 @@ class TestimonialStore:
         new_testimonial.tags.set(tags_to_set)
 
       new_testimonial.save()
-      testimonial.update(**args)
       return new_testimonial, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def rank_testimonial(self, args) -> (dict, MassEnergizeAPIError):
+    try:
+      id = args.get("id", None)
+      rank = args.get("rank", None)
+
+      if id and rank:     
+        testimonials = Testimonial.objects.filter(id=id)
+        testimonials.update(rank=rank)
+        return testimonials.first(), None
+      else:
+        raise Exception("Testimonial Rank and ID not provided to testimonials.rank")
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

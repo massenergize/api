@@ -36,7 +36,15 @@ class CommunityHandler(RouteHandler):
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'community_id', 'id')
+
+    self.validator.expect('id', int)
+    self.validator.expect('subdomain', str)
+    self.validator.rename('community_id', 'id')
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
     community_info, err = self.service.get_community_info(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -47,7 +55,21 @@ class CommunityHandler(RouteHandler):
   def join(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_info, err = self.service.join_community(context, args)
+
+    # verify the body of the incoming request
+    self.validator.expect("user_id", str, is_required=True)
+    self.validator.expect("community_id", int, is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    # test for perms
+    executor_id = context.user_id
+
+    if executor_id == args.get("user_id", None):
+      community_info, err = self.service.join_community(context, args)
+    else:
+      return MassenergizeResponse(error="Executor dosen't have sufficient permissions to use community.leave on this user")
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
@@ -57,7 +79,22 @@ class CommunityHandler(RouteHandler):
   def leave(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_info, err = self.service.leave_community(context, args)
+
+    # verify the body of the incoming request
+    self.validator.expect("user_id", str, is_required=True)
+    self.validator.expect("community_id", int, is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    # test for perms
+    executor_id = context.user_id
+
+    if executor_id == args.get("user_id", None):
+      community_info, err = self.service.leave_community(context, args)
+    else:
+      return MassenergizeResponse(error="Executor dosen't have sufficient permissions to use community.leave on this user")
+
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
@@ -151,7 +188,14 @@ class CommunityHandler(RouteHandler):
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'community_id', 'id')
+    
+    self.validator.expect("id", int, is_required=True)
+    self.validator.rename("community_id", "id")
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
     community_info, err = self.service.delete_community(args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -176,4 +220,3 @@ class CommunityHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=communities)
-

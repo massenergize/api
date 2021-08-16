@@ -56,27 +56,27 @@ class HomePageSettingsStore:
         if goal_updates and home_page_setting and home_page_setting.community and home_page_setting.community.goal:
           community_goal = home_page_setting.community.goal
 
-          attained_number_of_actions = goal_updates.get('attained_number_of_actions', None)
-          if attained_number_of_actions != None:
-            community_goal.attained_number_of_actions = attained_number_of_actions
+          initial_number_of_actions = goal_updates.get('initial_number_of_actions', None)
+          if initial_number_of_actions != None:
+            community_goal.initial_number_of_actions = initial_number_of_actions
           
           target_number_of_actions = goal_updates.get('target_number_of_actions', None)
           if target_number_of_actions != None:
             community_goal.target_number_of_actions = target_number_of_actions
           
 
-          attained_number_of_households= goal_updates.get('attained_number_of_households', None)
-          if attained_number_of_households != None:
-            community_goal.attained_number_of_households = attained_number_of_households
+          initial_number_of_households= goal_updates.get('initial_number_of_households', None)
+          if initial_number_of_households != None:
+            community_goal.initial_number_of_households = initial_number_of_households
           
           target_number_of_households = goal_updates.get('target_number_of_households', None)
           if target_number_of_actions != None:
             community_goal.target_number_of_households = target_number_of_households
 
 
-          attained_carbon_footprint_reduction = goal_updates.get('attained_carbon_footprint_reduction', None)
-          if attained_carbon_footprint_reduction != None:
-            community_goal.attained_carbon_footprint_reduction = attained_carbon_footprint_reduction
+          initial_carbon_footprint_reduction = goal_updates.get('initial_carbon_footprint_reduction', None)
+          if initial_carbon_footprint_reduction != None:
+            community_goal.initial_carbon_footprint_reduction = initial_carbon_footprint_reduction
           
           target_carbon_footprint_reduction = goal_updates.get('target_carbon_footprint_reduction', None)
           if target_carbon_footprint_reduction != None:
@@ -88,7 +88,7 @@ class HomePageSettingsStore:
       #featured links (copy logic from featured_events)
       if (args.get('show_featured_links', None)):
         featured_links = args.pop('featured_links', None)
-        home_page_setting.featured_links.set(featured_links)
+        home_page_setting.featured_links = featured_links
       else:
         args.pop('featured_links', [])
 

@@ -77,7 +77,7 @@ class AdminStore:
   def add_community_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
     try:
       if not context.user_is_super_admin and  not context.user_is_community_admin:
-        return None, CustomMassenergizeError("You must be a community/super Admin to add another Super Admin")
+        return None, CustomMassenergizeError("You must be a community or super Admin to add another community Admin")
       
       name = args.pop("name", None)
       email = args.pop("email", None)
@@ -125,7 +125,7 @@ class AdminStore:
   def remove_community_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
     try:
       if not context.user_is_super_admin and not context.user_is_community_admin:
-        return None, CustomMassenergizeError("You must be a super Admin to add another Super Admin")
+        return None, CustomMassenergizeError("You must be a super or community Admin to remove a community Admin")
       
       email = args.pop("email", None)
       user_id = args.pop("user_id", None)

@@ -1,11 +1,15 @@
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community
+from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, Vendor, Action, Data, Community, Media, CommunityAdminGroup, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.emailer.send_email import send_massenergize_email
 from _main_.utils.context import Context
+from _main_.settings import DEBUG
 from django.db.models import F
 from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community, split_location_string, check_location
 import json
+# for import contacts endpoint - accepts a csv file and verifies correctness of email address format
+import csv, re
 
 def _get_or_create_reu_location(args, user=None):
   unit_type=args.pop('unit_type', None)
@@ -14,7 +18,7 @@ def _get_or_create_reu_location(args, user=None):
   # this address location now will contain the parsed address      
   address = args.pop('address', None)      
   if address:
-    # address passed as a JSON string    
+    # address passed as a JSON string  
     address = json.loads(address)
     street = address.get('street', '')
     unit_number = address.get('unit_number', '')
@@ -39,7 +43,6 @@ def _get_or_create_reu_location(args, user=None):
   # check location is valid
   location_type, valid = check_location(street, unit_number, city, state, zipcode, county, country)
   if not valid:
-    print(location_type)
     raise Exception(location_type)
 
   reuloc, created = Location.objects.get_or_create(
@@ -106,7 +109,7 @@ class UserStore:
 
   def remove_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      household_id = args.get('household_id', None) or args.get('household_id', None)
+      household_id = args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
 
@@ -142,6 +145,7 @@ class UserStore:
     try:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
+      unit_type=args.pop('unit_type', None)
       household_id = args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
@@ -150,13 +154,13 @@ class UserStore:
 
       reu = RealEstateUnit.objects.get(pk=household_id)
       reu.name = name
-      reu.unit_type = unit_type
+      reu.unit_type = args.get("unit_type", "RESIDENTIAL")
       reu.address = reuloc
 
-      verbose = False
+      verbose = DEBUG
       community = find_reu_community(reu, verbose)
       if community:
-        if verbose: print("Updating the REU with zipcode " + zipcode + " to the community " + community.name)
+        if verbose: print("Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
         reu.community = community
 
       reu.save()
@@ -192,6 +196,30 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  def check_user_imported(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try: 
+      email_address = args.get('email', None)
+      profile = UserProfile.objects.filter(email=email_address).first()
+      if profile.accepts_terms_and_conditions:
+        name = profile.full_name.split()
+        first_name = name[0]
+        last_name = name[1]
+        return {"imported":True, "firstName": first_name, "lastName": last_name, "preferredName": first_name}, None
+      return {"imported":False}, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def complete_imported_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+    try:
+      email_address = args['email']
+      profile = UserProfile.objects.filter(email=email_address).first()
+      if profile.accepts_terms_and_conditions:
+        return MassenergizeResponse(data={"completed":False}), None
+      return MassenergizeResponse(data={"completed":True}), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
@@ -199,13 +227,12 @@ class UserStore:
       email = args.get('email', None) 
       community = get_community_or_die(context, args)
 
-
       # allow home address to be passed in
       location = args.pop('location', '')
+      profile_picture = args.pop("profile_picture", None)
 
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
-      
       user = UserProfile.objects.filter(email=email).first()
       if not user:
         new_user: UserProfile = UserProfile.objects.create(
@@ -213,11 +240,28 @@ class UserStore:
           preferred_name = args.get('preferred_name', None), 
           email = args.get('email'), 
           is_vendor = args.get('is_vendor', False), 
-          accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+          accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False), 
+          preferences = {'color': args.get('color', '')}
         )
+
+        if profile_picture:
+          pic = Media()
+          pic.name = f'{new_user.full_name} profpic'
+          pic.file = profile_picture
+          pic.media_type = 'image'
+          pic.save()
+
+          new_user.profile_picture = pic
+          new_user.save()
+
+
       else:
         new_user: UserProfile = user
-
+        # if user was imported but profile incomplete, updates user with info submitted in form
+        if not new_user.accepts_terms_and_conditions:
+          new_user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+          is_vendor = args.get('is_vendor', False)
+          preferences = {'color': args.get('color')}
 
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
       if not community_member_exists:
@@ -227,33 +271,46 @@ class UserStore:
         #create their first household
         household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community, location=location)
         new_user.real_estate_units.add(household)
-    
-      
+        
       res = {
         "user": new_user,
         "community": community
       }
       return res, None
+
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def update_user(self, context: Context, user_id, args) -> (dict, MassEnergizeAPIError):
+  def update_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
+      user_id = args.get('id', None)
       email = args.get('email', None)
-      # user_id = args.get('user_id', None)
 
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
 
       if context.user_is_logged_in and ((context.user_id == user_id) or (context.user_is_admin())):
-        user = UserProfile.objects.filter(id=user_id)
-        if not user:
+        users = UserProfile.objects.filter(id=user_id)
+        if not users:
           return None, InvalidResourceError()
 
-        user.update(**args)
-        return user.first(), None
+        profile_picture = args.pop("profile_picture", None)
+        users.update(**args)          # print('id: ' + user.id)
+        user = users.first()
+
+        if profile_picture:
+          pic = Media()
+          pic.name = f'{user.full_name} profpic'
+          pic.file = profile_picture
+          pic.media_type = 'image'
+          pic.save()
+
+          user.profile_picture = pic
+          user.save()
+          
+        return user, None
       else:
         return None, CustomMassenergizeError('permission_denied')
 
@@ -270,7 +327,7 @@ class UserStore:
       if not context.user_is_admin():
 
         # if they are not an admin make sure they can only delete themselves
-        if not context.user_id != user_id:
+        if context.user_id != user_id:
           return None, NotAuthorizedError()
 
       users = UserProfile.objects.filter(id=user_id)
@@ -374,8 +431,8 @@ class UserStore:
 
   def add_action_completed(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
-      user_id = context.user_id or args.get('user_id')
-      user_email = context.user_email or args.get('user_email')
+      user_id = args.get('user_id') or context.user_id
+      user_email = args.get('user_email') or context.user_email
       action_id = args.get("action_id", None)
       household_id = args.get("household_id", None)
       vendor_id = args.get("vendor_id", None)
@@ -503,3 +560,51 @@ class UserStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
+  
+  def import_from_csv(self, context: Context, args, first_name, last_name, email) -> (dict, MassEnergizeAPIError):
+    try:
+      # query users by user id, find the user that is sending the request
+      cadmin = UserProfile.objects.filter(id=context.user_id).first()
+      ## find the community that the user is the admin of. In the next section, populate user profiles with that information
+      #registered_community = None
+      #for community in cadmin.communities.all():
+      #    admin_group = CommunityAdminGroup.objects.filter(community=community).first()
+      #    if cadmin in admin_group.members.all():
+      #      break
+      #registered_community = community
+      community_id = args.get("community_id", None)
+      community = Community.objects.filter(id=community_id).first()
+
+      user = UserProfile.objects.filter(email=email).first()
+      if not user:
+        if not email or email == "":
+          return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
+        new_user: UserProfile = UserProfile.objects.create(
+          full_name = first_name + ' ' + last_name, 
+          preferred_name = first_name + last_name[0].upper(), 
+          email = email,
+          is_vendor = False, 
+          accepts_terms_and_conditions = False
+        )
+        new_user.save() 
+        if community:
+          new_user.communities.add(community)
+      else: 
+        new_user: UserProfile = user  
+      team_name = args.get('team_name', None)
+      if team_name and team_name != "none":
+        team = Team.objects.filter(name=team_name).first()
+        team.members.add(new_user)
+        team.save()
+      new_user.save()
+      
+      return {'cadmin': cadmin.full_name, 
+              'community': community.name,
+              'team': team_name,
+              'full_name': new_user.full_name,
+              'email': email, 
+              'preferred_name': new_user.preferred_name}, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(str(e))
+

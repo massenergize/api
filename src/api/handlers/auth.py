@@ -79,7 +79,6 @@ class AuthHandler(RouteHandler):
     user_info, err = self.service.whoami(context, ip_user)
     if err:
       return err
-    
     return MassenergizeResponse(data=user_info)
 
 
