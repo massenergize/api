@@ -1,4 +1,4 @@
-from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location
+from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -277,8 +277,28 @@ class MiscellaneousStore:
   def create_carbon_equivalency(self, args):
     try:
       new_carbon_equivalency = CarbonEquivalency.objects.create(**args)
+
+      value = args.get('value', None)
+      if value:
+        new_carbon_equivalency.value = value
+
+      explanation = args.get('explanation', None)
+      if explanation:
+        new_carbon_equivalency.explanation = explanation
+
+      reference = args.get('reference', None)
+      if reference:
+        new_carbon_equivalency.reference = reference
+
+      icon = args.get("icon", None)
+      if icon:
+        cFav = Media(file=icon, name=f"{args.get('name', '')} CarbonEquivalencyFavicon")
+        cFav.save()
+        new_carbon_equivalency.icon = cFav
+
       new_carbon_equivalency.save()
-      return None , None
+      
+      return new_carbon_equivalency, None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -286,13 +306,40 @@ class MiscellaneousStore:
 
 
   def update_carbon_equivalency(self, tag_id, args):
-    carbon_equivalency = CarbonEquivalency.objects.filter(id=tag_id)
+    try:
+      carbon_equivalencies = CarbonEquivalency.objects.filter(id=tag_id)
 
-    if not carbon_equivalency:
-      return None, InvalidResourceError()
+      if not carbon_equivalencies:
+          return None, InvalidResourceError()
 
-    carbon_equivalency.update(**args)
-    return carbon_equivalency, None
+      carbon_equivalencies.update(**args)
+      carbon_equivalency = carbon_equivalencies.first()
+
+      value = args.get('value', None)
+      if value:
+        carbon_equivalency.value = value
+
+      explanation = args.get('explanation', None)
+      if explanation:
+        carbon_equivalency.explanation = explanation
+
+      reference = args.get('reference', None)
+      if reference:
+        carbon_equivalency.reference = reference
+
+      icon = args.get("icon", None)
+      if icon:
+        cFav = Media(file=icon, name=f"{args.get('name', '')} CarbonEquivalencyFavicon")
+        cFav.save()
+        carbon_equivalency.icon = cFav
+
+      carbon_equivalency.save()
+      
+      return carbon_equivalency, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def get_carbon_equivalencies(self, args):
