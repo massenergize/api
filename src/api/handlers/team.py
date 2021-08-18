@@ -65,6 +65,8 @@ class TeamHandler(RouteHandler):
     self.validator.expect("parent_id", int)
     self.validator.expect("is_published", bool)
     self.validator.expect("admin_emails", 'str_list')
+    self.validator.expect("communities", 'str_list')
+    self.validator.rename("primary_community_id", "community_id")
 
     args, err = self.validator.verify(args)
     if err:
@@ -103,6 +105,8 @@ class TeamHandler(RouteHandler):
     self.validator.expect("parent_id", int)
     self.validator.expect("is_published", bool)
     self.validator.rename("team_id", "id")
+    self.validator.expect("communities", 'str_list')
+    self.validator.rename("primary_community_id", "community_id")
 
     args, err = self.validator.verify(args)
     if err:
