@@ -653,8 +653,8 @@ class Team(models.Model):
   
   # change this from ForeignKey to ManyToManyField to allow team to span communities
   # rename community to primary_community - this is the one whose cadmin can add/delete other communities, and which is unique with name
-  communities = models.ManyToManyField(Community, related_name='team_communities', blank=True)
-  primary_community = models.ForeignKey(Community, related_name='team_community', on_delete=models.CASCADE)
+  communities = models.ManyToManyField(Community, related_name='community_teams', blank=True)
+  primary_community = models.ForeignKey(Community, related_name='primary_community_teams', on_delete=models.CASCADE)
   images = models.ManyToManyField(Media, related_name='team_images')  # 0 or more photos - could be a slide show
   video_link = models.CharField(max_length=LONG_STR_LEN, blank=True)  # allow one video
   is_closed = models.BooleanField(default=False, blank=True)  # by default, teams are open
