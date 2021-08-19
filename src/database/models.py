@@ -1218,30 +1218,29 @@ class EventAttendee(models.Model):
 
   Attributes
   ----------
-  attendee : str
-    name of the Vendor
+  user : Foreign Key of the User
+    Which user this applies to
   status: str
-    Tells if the attendee is just interested, RSVP-ed or saved for later.
+    Tells if the user is just interested, RSVP-ed or saved for later.
   event: int
-    Foreign Key to event that the attendee is going to.
+    Foreign Key to event that the user has responded to.
   """
   id = models.AutoField(primary_key=True)
-  attendee = models.ForeignKey(UserProfile, on_delete=models.CASCADE,
-                               db_index=True)
+  user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
   event = models.ForeignKey(Event, on_delete=models.CASCADE)
   status = models.CharField(
     max_length=TINY_STR_LEN,
     choices=CHOICES.get("EVENT_CHOICES", {}).items()
   )
+  updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   
   def __str__(self):
-    return '%s | %s | %s' % (
-      self.attendee, CHOICES.get("EVENT_CHOICES", {})[self.status], self.event)
+    return '%s | %s | %s' % (self.user, self.status, self.event)
   
   def simple_json(self):
     data = model_to_dict(self, ['id', 'status'])
-    data['attendee'] = get_json_if_not_none(self.attendee)
+    data['user'] = get_json_if_not_none(self.user)
     data['event'] = get_json_if_not_none(self.event)
     return data
   
@@ -1251,7 +1250,7 @@ class EventAttendee(models.Model):
   class Meta:
     verbose_name_plural = "Event Attendees"
     db_table = 'event_attendees'
-    unique_together = [['attendee', 'event']]
+    unique_together = [['user', 'event']]
 
 
 class Permission(models.Model):

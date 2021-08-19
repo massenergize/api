@@ -1,5 +1,4 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.event import EventStore
 from _main_.utils.context import Context
@@ -18,8 +17,8 @@ class EventService:
       return None, err
     return serialize(event), None
 
-  def rsvp(self, context, args) -> (dict, MassEnergizeAPIError):
-    event, err = self.store.rsvp(context, args)
+  def get_rsvp_status(self, context, args) -> (dict, MassEnergizeAPIError):
+    event, err = self.store.get_rsvp_status(context, args)
     if err:
       return None, err
     return serialize(event), None
