@@ -1,4 +1,6 @@
-Aug 14th Deployment to Dev
+Aug 19th Deployment to Dev
+- Allow teams to span communities
+April 13th & prior
 - Fix data issue: Donut attained values summed from State/Reported categories + initial pushed
 - Community Users download includes non-members with households in community
 - Import user import functionality
