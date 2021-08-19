@@ -1,12 +1,9 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
-from datetime import date, datetime
-from django.utils import timezone
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
-from django.core.validators import MaxValueValidator
 import uuid
 
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
@@ -654,8 +651,10 @@ class Team(models.Model):
   members = models.ManyToManyField(UserProfile, related_name='team_members',
                                    blank=True)
   
-  # may change this from ForeignKey to ManyToManyField to allow team to span communities
-  community = models.ForeignKey(Community, on_delete=models.CASCADE)
+  # change this from ForeignKey to ManyToManyField to allow team to span communities
+  # rename community to primary_community - this is the one whose cadmin can add/delete other communities, and which is unique with name
+  communities = models.ManyToManyField(Community, related_name='community_teams', blank=True)
+  primary_community = models.ForeignKey(Community, related_name='primary_community_teams', on_delete=models.CASCADE)
   images = models.ManyToManyField(Media, related_name='team_images')  # 0 or more photos - could be a slide show
   video_link = models.CharField(max_length=LONG_STR_LEN, blank=True)  # allow one video
   is_closed = models.BooleanField(default=False, blank=True)  # by default, teams are open
@@ -686,7 +685,7 @@ class Team(models.Model):
   
   def simple_json(self):
     res = self.info()
-    res['community'] = get_json_if_not_none(self.community)
+    res['primary_community'] = get_json_if_not_none(self.primary_community)
     res['logo'] = get_json_if_not_none(self.logo)
     res['is_closed'] = self.is_closed
     res['is_published'] = self.is_published
@@ -695,6 +694,8 @@ class Team(models.Model):
   
   def full_json(self):
     data = self.simple_json()
+    # Q: should this be in simple_json?
+    data['communities'] = [c.simple_json() for c in self.communities.all()]
     data['admins'] = [a.simple_json() for a in self.admins.all()]
     data['members'] = [m.simple_json() for m in self.members.all()]
     data['goal'] = get_json_if_not_none(self.goal)
@@ -704,7 +705,7 @@ class Team(models.Model):
   class Meta:
     ordering = ('name',)
     db_table = 'teams'
-    unique_together = [['community', 'name']]
+    unique_together = [['primary_community', 'name']]
 
 
 class TeamMember(models.Model):

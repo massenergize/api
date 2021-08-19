@@ -99,8 +99,7 @@ class MessageStore:
       if err:
         return None, err
 
-      community = team.community
-      new_message = Message.objects.create(user_name=user_name, user=user, title=title, body=body, community=team.community, team=team, is_team_admin_message=True)
+      new_message = Message.objects.create(user_name=user_name, user=user, title=title, body=body, community=team.primary_community, team=team, is_team_admin_message=True)
       new_message.save()
 
       return new_message, None 
