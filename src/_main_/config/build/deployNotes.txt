@@ -1,4 +1,4 @@
-Aug 15th Deployment to Canary
+Aug 19th Deployment to Canary and Dev
 Aug 19th Deployment to Dev
 - Allow teams to span communities
 April 13th & prior

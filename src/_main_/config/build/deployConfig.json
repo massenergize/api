@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": true,
-  "BUILD_VERSION": "3.3.7",
-  "BUILD_VERSION_NOTES": "Aug 19th Deployment to Dev\n- Allow teams to span communities\nApril 13th & prior\n- Fix data issue: Donut attained values summed from State/Reported categories + initial pushed\n- Community Users download includes non-members with households in community\n- Import user import functionality\n- Implement recurring events"
+  "BUILD_VERSION": "3.3.8",
+  "BUILD_VERSION_NOTES": "Aug 19th Deployment to Canary and Dev\nAug 19th Deployment to Dev\n- Allow teams to span communities\nApril 13th & prior\n- Fix data issue: Donut attained values summed from State/Reported categories + initial pushed\n- Community Users download includes non-members with households in community\n- Import user import functionality\n- Implement recurring events"
 }
