@@ -1,19 +1,19 @@
 from database.models import Message, UserProfile, Media, Community, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
-from django.utils.text import slugify
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_community_or_die, get_admin_communities
+from .utils import get_admin_communities
 from _main_.utils.context import Context
 from .utils import get_community, get_user
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class MessageStore:
   def __init__(self):
     self.name = "Message Store/DB"
 
-  def get_message_info(self, context, args) -> (dict, MassEnergizeAPIError):
+  def get_message_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       message_id = args.pop('message_id', None) or args.pop('id', None)
       
@@ -29,7 +29,7 @@ class MessageStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def reply_from_team_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+  def reply_from_team_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       message_id = args.pop('message_id', None) or args.pop('id', None)
       
@@ -45,7 +45,7 @@ class MessageStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def message_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def message_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       subdomain = args.pop("subdomain", None)
@@ -80,7 +80,7 @@ class MessageStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def message_team_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def message_team_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       user_name = args.pop("user_name", None)
       team_id = args.pop("team_id", None)
@@ -109,7 +109,7 @@ class MessageStore:
       return None, CustomMassenergizeError(e)
 
 
-  def reply_from_community_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+  def reply_from_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       message_id = args.pop('message_id', None) or args.pop('id', None)
       title = args.pop('title', None)
@@ -129,7 +129,7 @@ class MessageStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_message(self, message_id) -> (dict, MassEnergizeAPIError):
+  def delete_message(self, message_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       messages = Message.objects.filter(id=message_id)
       messages.update(is_deleted=True)

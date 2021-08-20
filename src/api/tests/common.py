@@ -53,12 +53,18 @@ def signinAs(client, user):
 
 def createUsers():
 
-    user, _ = UserProfile.objects.get_or_create(full_name="Regular User",email="user@test.com")
+    user, created = UserProfile.objects.get_or_create(full_name="Regular User",email="user@test.com")
+    if created:
+        user.save()
 
-    cadmin, _ = UserProfile.objects.get_or_create(full_name="Community Admin",email="cadmin@test.com",is_community_admin=True)
+    cadmin, created = UserProfile.objects.get_or_create(full_name="Community Admin",email="cadmin@test.com",is_community_admin=True)
+    if created:
+        cadmin.save()
 
-    sadmin, _ = UserProfile.objects.get_or_create(full_name="Super Admin",email="sadmin@test.com", is_super_admin=True)
-
+    sadmin, created = UserProfile.objects.get_or_create(full_name="Super Admin",email="sadmin@test.com", is_super_admin=True)
+    if created:
+        sadmin.save()
+        
     return user, cadmin, sadmin
 
 def createImage(picURL=None):

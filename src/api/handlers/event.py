@@ -7,7 +7,6 @@ from api.services.event import EventService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
 
 
@@ -28,7 +27,7 @@ class EventHandler(RouteHandler):
     self.add("/events.delete", self.delete)
     self.add("/events.remove", self.delete)
     self.add("/events.rank", self.rank)
-    self.add("/events.rsvp", self.rsvp)
+    self.add("/events.rsvp.get", self.get_rsvp_status)
     self.add("/events.rsvp.update", self.rsvp_update)
     self.add("/events.rsvp.remove", self.rsvp_remove)
     self.add("/events.todo", self.save_for_later)
@@ -75,7 +74,7 @@ class EventHandler(RouteHandler):
 
 
   @login_required
-  def rsvp(self, request):
+  def get_rsvp_status(self, request):
     context: Context = request.context
     args: dict = context.args
     
@@ -85,7 +84,7 @@ class EventHandler(RouteHandler):
     if err:
       return err
 
-    event_info, err = self.service.rsvp(context, args)
+    event_info, err = self.service.get_rsvp_status(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -114,8 +113,9 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("rsvp_id", int, is_required=True)
-    args, err = self.validator.verify(args, strict=True)
+    self.validator.expect("rsvp_id", int)
+    self.validator.expect("event_id", int)
+    args, err = self.validator.verify(args)
 
     if err:
       return err

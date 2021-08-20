@@ -1,16 +1,14 @@
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
-from django.utils import timezone
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from .utils import get_user_or_die
-#from _main_.utils.common import parse_date
 import datetime
 from datetime import timedelta
 import calendar
 import pytz
+from typing import Tuple
 
 def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month):
 
@@ -62,7 +60,7 @@ class EventStore:
   def __init__(self):
     self.name = "Event Store/DB"
 
-  def get_event_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_event_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id")
 
@@ -75,7 +73,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def copy_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def copy_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id")
 
@@ -109,7 +107,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_recurring_event_exceptions(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_recurring_event_exceptions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       subdomain = args.pop("subdomain", None)
@@ -126,7 +124,7 @@ class EventStore:
         events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
 
       elif user_id:
-        events = EventAttendee.objects.filter(attendee=user_id)
+        events = EventAttendee.objects.filter(user_id=user_id)
 
       elif event_id:
         events = Event.objects.filter(id=event_id).select_related('image', 'community').prefetch_related('tags', 'invited_communities')
@@ -146,7 +144,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_events(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
@@ -161,7 +159,7 @@ class EventStore:
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
       
     elif user_id:
-      events = EventAttendee.objects.filter(attendee=user_id)
+      events = EventAttendee.objects.filter(user_id=user_id)
       
     else:
       events = []
@@ -412,7 +410,7 @@ class EventStore:
       
 
     elif user_id:
-      events = EventAttendee.objects.filter(attendee=user_id)
+      events = EventAttendee.objects.filter(user_id=user_id)
       
     else:
       events = []
@@ -503,7 +501,7 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_events_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_events_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
 
@@ -544,7 +542,7 @@ class EventStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def rsvp(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_rsvp_status(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       event_id = args.pop("event_id", None)
       args: dict = context.args
@@ -553,10 +551,11 @@ class EventStore:
       if not event:
         return None, InvalidResourceError()
 
-      event_attendee = EventAttendee.objects.create(
-        event=event, attendee=user, status="RSVP")
-
-      return event_attendee, None
+      event_attendee = EventAttendee.objects.filter(event=event, user=user)
+      if event_attendee:
+        return event_attendee.first(), None
+      else:
+        return None, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -565,16 +564,23 @@ class EventStore:
     try:
       event_id = args.pop("event_id", None)
       status = args.pop("status", "SAVE")
-
-      args: dict = context.args
-      user = get_user_or_die(context, args)
+      user = get_user_or_die(context, args)      
       event = Event.objects.filter(pk=event_id).first()
       if not event:
         return None, InvalidResourceError()
 
-      event_attendee = EventAttendee.objects.filter(
-        event=event, attendee=user).update(status=status)
-
+      event_attendees = EventAttendee.objects.filter(event=event, user=user, is_deleted=False)
+      if event_attendees:
+        event_attendee = event_attendees.first()
+        if status=="Not Going":
+          event_attendee.delete()
+        else:
+          event_attendee.status = status
+          event_attendee.save()
+      elif status != "Not Going":
+        event_attendee = EventAttendee.objects.create(event=event, user=user, status=status)
+      else:
+        return None, None
       return event_attendee, None
       
     except Exception as e:
@@ -584,8 +590,19 @@ class EventStore:
   def rsvp_remove(self, context: Context, args) -> (dict, MassEnergizeAPIError):
     try:
       rsvp_id = args.pop("rsvp_id", None)
+      event_id = args.pop("event_id", None)
+      user = get_user_or_die(context, args)
 
-      result = EventAttendee.objects.filter(pk=rsvp_id).delete()
+      if rsvp_id:
+        result = EventAttendee.objects.filter(pk=rsvp_id).delete()
+      elif event_id:
+        event = Event.objects.filter(pk=event_id).first()
+        if not event:
+          return None, InvalidResourceError()
+        result = EventAttendee.objects.filter(event=event, user=user).delete()
+      else:
+        raise Exception("events.rsvp.remove: must specify rsvp or event id")
+          
       return result, None
     except Exception as e:
       capture_message(str(e), level="error")
