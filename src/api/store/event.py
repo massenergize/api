@@ -571,10 +571,15 @@ class EventStore:
       event_attendees = EventAttendee.objects.filter(event=event, user=user, is_deleted=False)
       if event_attendees:
         event_attendee = event_attendees.first()
-        event_attendee.status = status
-        event_attendee.save()
+        if status=="Not Going":
+          event_attendee.delete()
+        else:
+          event_attendee.status = status
+          event_attendee.save()
       elif status != "Not Going":
         event_attendee = EventAttendee.objects.create(event=event, user=user, status=status)
+      else:
+        return None, None
       return event_attendee, None
       
     except Exception as e:
