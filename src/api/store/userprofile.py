@@ -8,8 +8,7 @@ from django.db.models import F
 from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community, split_location_string, check_location
 import json
-# for import contacts endpoint - accepts a csv file and verifies correctness of email address format
-import csv, re
+from typing import Tuple
 
 def _get_or_create_reu_location(args, user=None):
   unit_type=args.pop('unit_type', None)
@@ -91,7 +90,7 @@ class UserStore:
     
     return False 
 
-  def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       #email = args.get('email', None)
       #user_id = args.get('user_id', None)
@@ -107,7 +106,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def remove_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def remove_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       household_id = args.get('household_id', None)
       if not household_id:
@@ -119,7 +118,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def add_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def add_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
@@ -141,7 +140,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def edit_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def edit_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
@@ -169,7 +168,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def list_households(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def list_households(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
 
@@ -178,7 +177,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def list_users(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_users(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     community,err = get_community(community_id)
     
     if not community:
@@ -186,7 +185,7 @@ class UserStore:
       return [], None
     return community.userprofile_set.all(), None
 
-  def list_events_for_user(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
       if not user:
@@ -196,7 +195,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def check_user_imported(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def check_user_imported(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try: 
       email_address = args.get('email', None)
       profile = UserProfile.objects.filter(email=email_address).first()
@@ -210,7 +209,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def complete_imported_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def complete_imported_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       email_address = args['email']
       profile = UserProfile.objects.filter(email=email_address).first()
@@ -221,7 +220,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
 
       email = args.get('email', None) 
@@ -283,7 +282,7 @@ class UserStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user_id = args.get('id', None)
       email = args.get('email', None)
@@ -318,7 +317,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def delete_user(self, context: Context, user_id) -> (dict, MassEnergizeAPIError):
+  def delete_user(self, context: Context, user_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       if not user_id:
         return None, InvalidResourceError()
@@ -338,7 +337,7 @@ class UserStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_users_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_users_for_community_admin(self,  context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_users_for_super_admin(context)
@@ -380,7 +379,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def add_action_todo(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def add_action_todo(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
       action_id = args.get("action_id", None)
@@ -429,7 +428,7 @@ class UserStore:
       traceback.print_exc()
       return None, CustomMassenergizeError(str(e))
 
-  def add_action_completed(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def add_action_completed(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user_id = args.get('user_id') or context.user_id
       user_email = args.get('user_email') or context.user_email
@@ -508,7 +507,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def list_todo_actions(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def list_todo_actions(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
 
       if not context.user_is_logged_in:
@@ -528,7 +527,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def list_completed_actions(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def list_completed_actions(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
 
       if not context.user_is_logged_in:
@@ -548,7 +547,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def remove_user_action(self, context: Context, user_action_id) -> (dict, MassEnergizeAPIError):
+  def remove_user_action(self, context: Context, user_action_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       if not context.user_is_logged_in:
         return [], CustomMassenergizeError("sign_in_required")
@@ -561,7 +560,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
   
-  def import_from_csv(self, context: Context, args, first_name, last_name, email) -> (dict, MassEnergizeAPIError):
+  def import_from_csv(self, context: Context, args, first_name, last_name, email) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       # query users by user id, find the user that is sending the request
       cadmin = UserProfile.objects.filter(id=context.user_id).first()

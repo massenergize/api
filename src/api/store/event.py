@@ -8,6 +8,7 @@ import datetime
 from datetime import timedelta
 import calendar
 import pytz
+from typing import Tuple
 
 def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month):
 
@@ -59,7 +60,7 @@ class EventStore:
   def __init__(self):
     self.name = "Event Store/DB"
 
-  def get_event_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_event_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id")
 
@@ -72,7 +73,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def copy_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def copy_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id")
 
@@ -106,7 +107,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_recurring_event_exceptions(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_recurring_event_exceptions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       subdomain = args.pop("subdomain", None)
@@ -143,7 +144,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_events(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
@@ -500,7 +501,7 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_events_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_events_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
 

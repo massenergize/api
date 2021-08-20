@@ -7,6 +7,7 @@ from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 import os, csv
 import re
+from typing import Tuple
 
 def _parse_import_file(csvfile):
   """
@@ -64,74 +65,74 @@ class UserService:
   def __init__(self):
     self.store =  UserStore()
 
-  def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.get_user_info(context, args)
     if err:
       return None, err
     return serialize(user, full=True), None
 
-  def add_household(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+  def add_household(self,context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     household, err = self.store.add_household(context, args)
     if err:
       return None, err
     return serialize(household, full=True), None
 
-  def edit_household(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+  def edit_household(self,context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     household, err = self.store.edit_household(context, args)
     if err:
       return None, err
     return serialize(household, full=True), None
 
-  def remove_household(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+  def remove_household(self,context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     household, err = self.store.remove_household(context, args)
     if err:
       return None, err
     return household, None
 
-  def list_users(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_users(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     user, err = self.store.list_users(community_id)
     if err:
       return None, err
     return serialize_all(user), None
 
 
-  def list_actions_todo(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_actions_todo(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     actions_todo, err = self.store.list_todo_actions(context, args)
     if err:
       return None, err
     return serialize_all(actions_todo), None
 
-  def list_actions_completed(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     actions_completed, err = self.store.list_completed_actions(context, args)
     if err:
       return None, err
     return serialize_all(actions_completed), None
 
-  def remove_user_action(self, context: Context, user_action_id) -> (list, MassEnergizeAPIError):
+  def remove_user_action(self, context: Context, user_action_id) -> Tuple[list, MassEnergizeAPIError]:
     result, err = self.store.remove_user_action(context, user_action_id)
     if err:
       return None, err
     return result, None
 
-  def list_events_for_user(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def  list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.list_events_for_user(context, args)
     if err:
       return None, err
     return serialize_all(events), None
 
-  def check_user_imported(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def check_user_imported(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     imported_info, err = self.store.check_user_imported(context, args)
     if err:
       return None, err
     return imported_info, None
   
-  def complete_imported_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def complete_imported_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     imported_info, err = self.store.complete_imported_user(context, args)
     if err:
       return None, err
     return imported_info, None
 
-  def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     res, err = self.store.create_user(context, args)
     if err:
       return None, err
@@ -160,46 +161,46 @@ class UserService:
     return serialize(user, full=True), None
 
 
-  def update_user(self,context, args) -> (dict, MassEnergizeAPIError):
+  def update_user(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.update_user(context, args)
     if err:
       return None, err
     return serialize(user), None
 
-  def delete_user(self, context: Context, user_id) -> (dict, MassEnergizeAPIError):
+  def delete_user(self, context: Context, user_id) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.delete_user(context, user_id)
     if err:
       return None, err
     return serialize(user), None
 
 
-  def list_users_for_community_admin(self, context, community_id) -> (list, MassEnergizeAPIError):
+  def list_users_for_community_admin(self, context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     users, err = self.store.list_users_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(users), None
 
 
-  def list_users_for_super_admin(self, context) -> (list, MassEnergizeAPIError):
+  def list_users_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     users, err = self.store.list_users_for_super_admin(context)
     if err:
       return None, err
     return serialize_all(users), None
 
 
-  def add_action_todo(self, context, args) -> (dict, MassEnergizeAPIError):
+  def add_action_todo(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.add_action_todo(context, args)
     if err:
       return None, err
     return serialize(user, full=True), None
 
-  def add_action_completed(self, context, args) -> (dict, MassEnergizeAPIError):
+  def add_action_completed(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.add_action_completed(context, args)
     if err:
       return None, err
     return serialize(user, full=True), None
   
-  def handle_csv(self, context, args) -> (dict, MassEnergizeAPIError):
+  def handle_csv(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
 
     first_name_field = args.get('first_name_field', None)
     last_name_field = args.get('last_name_field', None)

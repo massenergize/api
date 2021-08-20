@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.postgres.fields import JSONField
 from database.utils.constants import *
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
@@ -43,7 +42,7 @@ class Location(models.Model):
                            choices=ZIP_CODE_AND_STATES.items(), blank=True)
   country = models.CharField(max_length=SHORT_STR_LEN,
                              default="US", blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   
   def __str__(self):
     if self.location_type == 'STATE_ONLY':
@@ -140,7 +139,7 @@ class Policy(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   is_global = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_published = models.BooleanField(default=False, blank=True)
   
   def __str__(self):
@@ -206,7 +205,7 @@ class Goal(models.Model):
   
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   
   def __str__(self):
@@ -275,7 +274,7 @@ class Community(models.Model):
   is_geographically_focused = models.BooleanField(default=False, blank=True)
   
   # deprecated: location of community was originally a JSON string; now defined below in locations (link to Location model)
-  location = JSONField(blank=True, null=True)
+  location = models.JSONField(blank=True, null=True)
   
   # new - define the geographic area for a community (zipcodes, towns/cities, counties, states, countries)
   geography_type = models.CharField(
@@ -291,7 +290,7 @@ class Community(models.Model):
   accepted_terms_and_conditions = models.BooleanField(default=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
   
@@ -411,7 +410,7 @@ class RealEstateUnit(models.Model):
     choices=CHOICES.get("REAL_ESTATE_TYPES", {}).items()
   )
   community = models.ForeignKey(Community, null=True, on_delete=models.SET_NULL, blank=True)
-  location = JSONField(blank=True, null=True)
+  location = models.JSONField(blank=True, null=True)
   # added 1/28/21 - redundant to location, address will have Zip code, defining which community the REU is in
   address = models.ForeignKey(Location, null=True, on_delete=models.SET_NULL)
   created_at = models.DateTimeField(auto_now_add=True)
@@ -509,7 +508,7 @@ class UserProfile(models.Model):
                                       blank=True, null=True, related_name="profile_picture")
   preferred_name = models.CharField(max_length=SHORT_STR_LEN, null=True)
   email = models.EmailField(unique=True, db_index=True)
-  user_info = JSONField(blank=True, null=True)
+  user_info = models.JSONField(blank=True, null=True)
   real_estate_units = models.ManyToManyField(RealEstateUnit,
                                              related_name='user_real_estate_units', blank=True)
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
@@ -518,12 +517,12 @@ class UserProfile(models.Model):
   is_super_admin = models.BooleanField(default=False, blank=True)
   is_community_admin = models.BooleanField(default=False, blank=True)
   is_vendor = models.BooleanField(default=False, blank=True)
-  other_info = JSONField(blank=True, null=True)
+  other_info = models.JSONField(blank=True, null=True)
   accepts_terms_and_conditions = models.BooleanField(default=False, blank=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  preferences = JSONField(default=dict, null=True, blank=True)
+  preferences = models.JSONField(default=dict, null=True, blank=True)
   
   def __str__(self):
     return self.email
@@ -658,7 +657,7 @@ class Team(models.Model):
   images = models.ManyToManyField(Media, related_name='team_images')  # 0 or more photos - could be a slide show
   video_link = models.CharField(max_length=LONG_STR_LEN, blank=True)  # allow one video
   is_closed = models.BooleanField(default=False, blank=True)  # by default, teams are open
-  team_page_options = JSONField(blank=True, null=True)  # settable team page options
+  team_page_options = models.JSONField(blank=True, null=True)  # settable team page options
   parent = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)  # for the case of sub-teams
   
   goal = models.ForeignKey(Goal, blank=True, null=True, on_delete=models.SET_NULL)
@@ -759,11 +758,11 @@ class Service(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
   description = models.CharField(max_length=LONG_STR_LEN, blank=True)
-  service_location = JSONField(blank=True, null=True)
+  service_location = models.JSONField(blank=True, null=True)
   image = models.ForeignKey(Media, blank=True, null=True,
                             on_delete=models.SET_NULL)
   icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  info = JSONField(blank=True, null=True)
+  info = models.JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -937,19 +936,19 @@ class Vendor(models.Model):
                            on_delete=models.SET_NULL, related_name='vender_logo')
   banner = models.ForeignKey(Media, blank=True, null=True,
                              on_delete=models.SET_NULL, related_name='vendor_banner')
-  address = JSONField(blank=True, null=True)
-  key_contact = JSONField(blank=True, null=True)
+  address = models.JSONField(blank=True, null=True)
+  key_contact = models.JSONField(blank=True, null=True)
   service_area = models.CharField(max_length=SHORT_STR_LEN)
-  service_area_states = JSONField(blank=True, null=True)
+  service_area_states = models.JSONField(blank=True, null=True)
   services = models.ManyToManyField(Service, blank=True)
-  properties_serviced = JSONField(blank=True, null=True)
+  properties_serviced = models.JSONField(blank=True, null=True)
   onboarding_date = models.DateTimeField(auto_now_add=True)
   onboarding_contact = models.ForeignKey(UserProfile, blank=True,
                                          null=True, on_delete=models.SET_NULL, related_name='onboarding_contact')
-  verification_checklist = JSONField(blank=True, null=True)
+  verification_checklist = models.JSONField(blank=True, null=True)
   is_verified = models.BooleanField(default=False, blank=True)
-  location = JSONField(blank=True, null=True)
-  more_info = JSONField(blank=True, null=True)
+  location = models.JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   communities = models.ManyToManyField(Community, blank=True)
@@ -1037,7 +1036,7 @@ class Action(models.Model):
   primary_category = models.ForeignKey(Tag, related_name='action_category', on_delete=models.SET_NULL, null=True)
   # then - an action could have multiple secondary categories
   tags = models.ManyToManyField(Tag, related_name='action_tags', blank=True)
-  geographic_area = JSONField(blank=True, null=True)
+  geographic_area = models.JSONField(blank=True, null=True)
   icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL,
                             null=True, blank=True)
@@ -1129,19 +1128,19 @@ class Event(models.Model):
                                                related_name="invited_communites", blank=True)
   start_date_and_time = models.DateTimeField(db_index=True)
   end_date_and_time = models.DateTimeField(db_index=True)
-  location = JSONField(blank=True, null=True)
+  location = models.JSONField(blank=True, null=True)
   tags = models.ManyToManyField(Tag, blank=True)
   image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True)
   archive = models.BooleanField(default=False, blank=True)
   is_global = models.BooleanField(default=False, blank=True)
   external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   is_external_event = models.BooleanField(default=False, blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
   rank = models.PositiveIntegerField(default=0, blank=True, null=True)
   is_recurring = models.BooleanField(default=False, blank=True, null=True)
-  recurring_details = JSONField(blank=True, null=True)
+  recurring_details = models.JSONField(blank=True, null=True)
   
   def __str__(self):
     return self.name
@@ -1475,7 +1474,7 @@ class CommunityAdminGroup(models.Model):
   community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True)
   members = models.ManyToManyField(UserProfile, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
-  pending_admins = JSONField(blank=True, null=True)
+  pending_admins = models.JSONField(blank=True, null=True)
   
   def __str__(self):
     return self.name
@@ -1557,7 +1556,7 @@ class Data(models.Model):
                           null=True, db_index=True)
   community = models.ForeignKey(Community, blank=True,
                                 on_delete=models.SET_NULL, null=True, db_index=True)
-  info = JSONField(blank=True, null=True)
+  info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   
@@ -1622,7 +1621,7 @@ class Button(models.Model):
   icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   url = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   color = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  info = JSONField(blank=True, null=True)
+  info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   
@@ -1728,7 +1727,7 @@ class Menu(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=LONG_STR_LEN, unique=True)
-  content = JSONField(blank=True, null=True)
+  content = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
   
@@ -1798,7 +1797,7 @@ class PageSection(models.Model):
   slider = models.ForeignKey(Slider, on_delete=models.SET_NULL,
                              null=True, blank=True)
   graphs = models.ManyToManyField(Graph, blank=True, related_name='graphs')
-  info = JSONField(blank=True, null=True)
+  info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
   
@@ -1842,7 +1841,7 @@ class Page(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   community = models.ForeignKey(Community, on_delete=models.CASCADE, db_index=True)
   sections = models.ManyToManyField(PageSection, blank=True)
-  info = JSONField(blank=True, null=True)
+  info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
   
@@ -1891,7 +1890,7 @@ class BillingStatement(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   start_date = models.DateTimeField(blank=True, db_index=True)
   end_date = models.DateTimeField(blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, db_index=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)
@@ -2049,7 +2048,7 @@ class PageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
@@ -2122,7 +2121,7 @@ class HomePageSettings(models.Model):
   images = models.ManyToManyField(Media, related_name='homepage_images', blank=True)
   
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  featured_links = JSONField(blank=True, null=True)
+  featured_links = models.JSONField(blank=True, null=True)
   featured_events = models.ManyToManyField(Event, blank=True)
   featured_stats = models.ManyToManyField(Data, blank=True)
   
@@ -2138,7 +2137,7 @@ class HomePageSettings(models.Model):
   
   show_footer_subscribe = models.BooleanField(default=True, blank=True)
   show_footer_social_media = models.BooleanField(default=True, blank=True)
-  social_media_links = JSONField(blank=True, null=True)
+  social_media_links = models.JSONField(blank=True, null=True)
   
   is_template = models.BooleanField(default=False, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -2181,7 +2180,7 @@ class ActionsPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
@@ -2219,7 +2218,7 @@ class ContactUsPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
@@ -2261,7 +2260,7 @@ class DonatePageSettings(models.Model):
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   donation_link = models.CharField(max_length=LONG_STR_LEN, blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
@@ -2300,7 +2299,7 @@ class AboutUsPageSettings(models.Model):
   images = models.ManyToManyField(Media, blank=True)
   #image = models.ForeignKey(Media, blank=True, null=True, on_delete=models.SET_NULL)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
@@ -2339,7 +2338,7 @@ class ImpactPageSettings(models.Model):
   description = models.TextField(max_length=LONG_STR_LEN, blank=True)
   images = models.ManyToManyField(Media, blank=True)
   featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  more_info = JSONField(blank=True, null=True)
+  more_info = models.JSONField(blank=True, null=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=True)
   is_template = models.BooleanField(default=False, blank=True)
@@ -2489,8 +2488,8 @@ class ActivityLog(models.Model):
   community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   status = models.CharField(max_length=SHORT_STR_LEN, default='success', blank=True)
-  trace = JSONField(blank=True, null=True)
-  request_body = JSONField(blank=True, null=True)
+  trace = models.JSONField(blank=True, null=True)
+  request_body = models.JSONField(blank=True, null=True)
   
   # add response or error field
   
