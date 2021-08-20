@@ -1,17 +1,17 @@
-from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Vendor, Event, Action
-from _main_.utils.massenergize_errors import CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from database.models import Community, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Vendor, Event, Action
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.context import Context
 from database.utils.common import json_loader
 from .utils import find_reu_community, split_location_string, check_location
 from sentry_sdk import capture_message
+from typing import Tuple
 
 
 class MiscellaneousStore:
     def __init__(self):
         self.name = "Miscellaneous Store/DB"
 
-    def navigation_menu_list(self, context: Context, args) -> (list, CustomMassenergizeError):
+    def navigation_menu_list(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             main_menu = Menu.objects.all()
             return main_menu, None
@@ -19,14 +19,14 @@ class MiscellaneousStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def backfill(self, context: Context, args) -> (list, CustomMassenergizeError):
+    def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         # return self.backfill_teams(context, args)
         # return self.backfill_community_members(context, args)
         # return self.backfill_graph_default_data(context, args)
         return self.backfill_real_estate_units(context, args)
         # return self.backfill_tag_data(context, args)
 
-    def backfill_teams(self, context: Context, args) -> (list, CustomMassenergizeError):
+    def backfill_teams(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             teams = Team.objects.all()
             for team in teams:
@@ -57,7 +57,7 @@ class MiscellaneousStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def backfill_community_members(self, context: Context, args) -> (list, CustomMassenergizeError):
+    def backfill_community_members(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             users = UserProfile.objects.all()
             for user in users:
