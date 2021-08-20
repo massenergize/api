@@ -1,4 +1,5 @@
-Aug 19th Deployment to Dev
+Aug 20th Deployment to Dev
+- Event RSVPs support
 - Allow teams to span communities
 April 13th & prior
 - Fix data issue: Donut attained values summed from State/Reported categories + initial pushed
