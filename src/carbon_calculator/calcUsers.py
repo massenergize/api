@@ -44,7 +44,7 @@ def QueryAllCalcUsers(args):
     if users:
         userInfo = []
         for q in users:
-            if not q.other_info or not other_info.get("CarbonSaver", None):
+            if not q.other_info or not q.other_info.get("CarbonSaver", None):
                 continue
 
             groups = q.other_info["CarbonSaver"]["groups"]
@@ -266,7 +266,9 @@ def ExportCalcUsers(fileName, event):
             rowtext = ["First Name","Last Name","e-mail","Locality","Groups","Over13","AcceptsTNC","Created","Updated"]
             actionList = []
             if event=='':   #all events
-                users = UserProfile.objects.filter(other_info)
+                # this needs to be fixed
+                #users = UserProfile.objects.filter(other_info)
+                users = UserProfile.objects.all()
                 actions = Action.objects.all()
                 for action in actions:
                     rowtext.append(action.name)
@@ -297,8 +299,8 @@ def ExportCalcUsers(fileName, event):
                     #grouplist = user.groups.all()
                     groupList =  user.group_set.all()
 
-                    if grouplist:
-                        for group in grouplist:
+                    if groupList:
+                        for group in groupList:
                             groups.append(group.displayname)
                     
                     rowtext =  [user.first_name, user.last_name, user.email, user.locality, 

@@ -4,13 +4,14 @@ from _main_.utils.context import Context
 from .utils import get_community
 from sentry_sdk import capture_message
 from database.models import Media
+from typing import Tuple
 
 class PageSettingsStore:
   def __init__(self, dataModel):
     self.name = "ContactUsPageSettings Store/DB"
     self.pageSettingsModel = dataModel
   
-  def get_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+  def get_page_setting_info(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community_id = args.get('community__id', None)
       subdomain = args.get('community__subdomain', None)
@@ -32,13 +33,13 @@ class PageSettingsStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def list_page_settings(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_page_settings(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     page_settings = self.pageSettingsModel.objects.filter(community__id=community_id)
     if not page_settings:
       return [], None
     return page_settings, None
   
-  def create_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+  def create_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       new_page_setting = self.pageSettingsModel.create(**args)
       new_page_setting.save()
@@ -46,7 +47,7 @@ class PageSettingsStore:
     except Exception:
       return None, ServerError()
   
-  def update_page_setting(self, page_setting_id, args) -> (dict, MassEnergizeAPIError):
+  def update_page_setting(self, page_setting_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     page_setting = self.pageSettingsModel.objects.filter(id=page_setting_id)
     if not page_setting:
       return None, InvalidResourceError()
@@ -68,7 +69,7 @@ class PageSettingsStore:
       page_setting.save()
     return page_setting, None
   
-  def delete_page_setting(self, page_setting_id) -> (dict, MassEnergizeAPIError):
+  def delete_page_setting(self, page_setting_id) -> Tuple[dict, MassEnergizeAPIError]:
     page_settings = self.pageSettingsModel.objects.filter(id=page_setting_id)
     if not page_settings:
       return None, InvalidResourceError()
@@ -76,7 +77,7 @@ class PageSettingsStore:
     page_settings.update(**{'is_deleted': True})
     return page_settings.first(), None
   
-  def list_page_settings_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_page_settings_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     page_settings = self.pageSettingsModel.objects.filter(community__id=community_id)
     return page_settings, None
   

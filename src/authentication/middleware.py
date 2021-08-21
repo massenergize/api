@@ -5,8 +5,9 @@ from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenerg
 from _main_.utils.context import Context
 from _main_.settings import SECRET_KEY
 from firebase_admin import auth
-import json, jwt
+import jwt
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class MassenergizeJWTAuthMiddleware:
 
@@ -25,7 +26,7 @@ class MassenergizeJWTAuthMiddleware:
     return response
   
 
-  def _get_decoded_token(self, token) -> (dict, MassEnergizeAPIError):
+  def _get_decoded_token(self, token) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       payload = jwt.decode(token, SECRET_KEY, algorithm='HS256', options={"verify_exp": False})
       return payload, None

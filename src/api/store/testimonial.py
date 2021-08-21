@@ -4,12 +4,13 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class TestimonialStore:
   def __init__(self):
     self.name = "Testimonial Store/DB"
 
-  def get_testimonial_info(self,  context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_testimonial_info(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       testimonial = Testimonial.objects.filter(**args).first()
       if not testimonial:
@@ -20,7 +21,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_testimonials(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_testimonials(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       subdomain = args.pop('subdomain', None)
       community_id = args.pop('community_id', None)
@@ -56,7 +57,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_testimonial(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -126,7 +127,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_testimonial(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.pop("id", None)
       testimonial = Testimonial.objects.filter(id=id)
@@ -183,7 +184,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def rank_testimonial(self, args) -> (dict, MassEnergizeAPIError):
+  def rank_testimonial(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
@@ -199,7 +200,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_testimonial(self, context: Context, testimonial_id) -> (dict, MassEnergizeAPIError):
+  def delete_testimonial(self, context: Context, testimonial_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       testimonials = Testimonial.objects.filter(id=testimonial_id)
       testimonials.update(is_deleted=True, is_published=False)
@@ -209,7 +210,7 @@ class TestimonialStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_testimonials_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_testimonials_for_community_admin(self,  context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_testimonials_for_super_admin(context)

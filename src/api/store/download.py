@@ -8,6 +8,7 @@ from api.store.team import get_team_users
 from api.store.tag_collection import TagCollectionStore
 from django.db.models import Q
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class DownloadStore:
 
@@ -496,7 +497,7 @@ class DownloadStore:
     return data
 
 
-  def users_download(self, context: Context, community_id, team_id) -> (list, MassEnergizeAPIError):
+  def users_download(self, context: Context, community_id, team_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       self.community_id = community_id
       if team_id:
@@ -527,7 +528,7 @@ class DownloadStore:
       return None, CustomMassenergizeError(e)
 
 
-  def actions_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       self.community_id = community_id
       if community_id:
@@ -546,7 +547,7 @@ class DownloadStore:
       return None, CustomMassenergizeError(e)
 
 
-  def communities_download(self, context: Context) -> (list, MassEnergizeAPIError):
+  def communities_download(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
@@ -556,7 +557,7 @@ class DownloadStore:
       return None, CustomMassenergizeError(e)
 
 
-  def teams_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def teams_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     self.community_id = community_id
     try:
       if context.user_is_community_admin or context.user_is_super_admin:

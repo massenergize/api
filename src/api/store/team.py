@@ -1,6 +1,5 @@
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
@@ -9,6 +8,7 @@ from .utils import get_community_or_die, get_user_or_die, get_admin_communities
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
+from typing import Tuple
 
 def can_set_parent(parent, this_team=None):
   if parent.parent:
@@ -32,7 +32,7 @@ class TeamStore:
   def __init__(self):
     self.name = "Team Store/DB"
 
-  def get_team_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_team_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       team_id = args.get("id", None)
       team = Team.objects.filter(id=team_id).first()
@@ -65,7 +65,7 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
 
       
-  def list_teams(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_teams(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
@@ -80,7 +80,7 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
 
 
-  def team_stats(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def team_stats(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community = get_community_or_die(context, args)
       teams = Team.objects.filter(communities__id=community.id, is_deleted=False)
@@ -116,7 +116,7 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_team(self, context:Context, args) -> (dict, MassEnergizeAPIError):
+  def create_team(self, context:Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     team = None
     try:
       # generally a Team will have one community, but in principle it could span multiple.  If it 
@@ -213,7 +213,7 @@ class TeamStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def update_team(self, context, args) -> (dict, MassEnergizeAPIError):
+  def update_team(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       team_id = args.get('id', None)
       community_id = args.pop('community_id', None)
@@ -303,7 +303,7 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
     
 
-  def delete_team(self, args) -> (dict, MassEnergizeAPIError):
+  def delete_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       team_id = args["id"]
       teams = Team.objects.filter(id=team_id)
@@ -323,7 +323,7 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
 
 
-  def join_team(self, args) -> (Team, MassEnergizeAPIError):
+  def join_team(self, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get("id", None)
       user_id = args.get("user_id", None)
@@ -339,7 +339,7 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def leave_team(self, args) -> (Team, MassEnergizeAPIError):
+  def leave_team(self, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get("id", None)
       user_id = args.get("user_id", None)
@@ -356,7 +356,7 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def add_team_member(self, args) -> (Team, MassEnergizeAPIError):
+  def add_team_member(self, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get("id", None)
       user_id = args.get("user_id", None)
@@ -372,7 +372,7 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def remove_team_member(self, args) -> (Team, MassEnergizeAPIError):
+  def remove_team_member(self, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get('id', None)
       user_id = args.get('user_id', None)
@@ -387,7 +387,7 @@ class TeamStore:
       return None, CustomMassenergizeError(e)
 
 
-  def members(self, context: Context, args) -> (Team, MassEnergizeAPIError):
+  def members(self, context: Context, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       if not context.user_is_admin():
         return None, NotAuthorizedError()
@@ -401,7 +401,7 @@ class TeamStore:
       return None, InvalidResourceError()
 
 # shouldnt return user id (potential security issue?)
-  def members_preferred_names(self, context: Context, args) -> (Team, MassEnergizeAPIError):
+  def members_preferred_names(self, context: Context, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get('team_id', None)
       if not team_id:
@@ -424,7 +424,7 @@ class TeamStore:
       return None, InvalidResourceError()
 
 
-  def list_teams_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_teams_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_teams_for_super_admin(context)

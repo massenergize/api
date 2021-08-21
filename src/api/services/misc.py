@@ -3,7 +3,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.misc import MiscellaneousStore
 from _main_.utils.context import Context
-
+from typing import Tuple
 
 class MiscellaneousService:
   """
@@ -14,13 +14,13 @@ class MiscellaneousService:
     self.store =  MiscellaneousStore()
 
   
-  def navigation_menu_list(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def navigation_menu_list(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     main_menu_items, err = self.store.navigation_menu_list(context, args)
     if err:
       return None, err
     return serialize_all(main_menu_items), None
   
-  def backfill(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def backfill(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     result, err = self.store.backfill(context, args)
     if err:
       return None, err
