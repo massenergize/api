@@ -1,5 +1,5 @@
 from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
-from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
+from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
 from _main_.utils.context import Context
 from database.utils.common import json_loader
 from database.models import CarbonEquivalency
@@ -267,93 +267,89 @@ class MiscellaneousStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
+ 
+    def create_carbon_equivalency(self, args):
+      try:
+        icon = args.pop("icon", None)      
+        new_carbon_equivalency = CarbonEquivalency.objects.create(**args)
+  
+        if icon:
+          cFav = Media(file=icon, name=f"{args.get('name', '')} CarbonEquivalencyFavicon")
+          cFav.save()
+          new_carbon_equivalency.icon = cFav
+          new_carbon_equivalency.save()
+        
+        return new_carbon_equivalency, None
+  
+      except Exception as e:
+        capture_message(str(e), level="error")
+        return None, CustomMassenergizeError(e)
   
   
-  def create_carbon_equivalency(self, args):
-    try:
-      icon = args.pop("icon", None)      
-      new_carbon_equivalency = CarbonEquivalency.objects.create(**args)
-
-      if icon:
-        cFav = Media(file=icon, name=f"{args.get('name', '')} CarbonEquivalencyFavicon")
-        cFav.save()
-        new_carbon_equivalency.icon = cFav
-        new_carbon_equivalency.save()
-      
-      return new_carbon_equivalency, None
-
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
-
-
-  def update_carbon_equivalency(self, tag_id, args):
-    try:
-      icon = args.pop("icon", None)
-
-      carbon_equivalencies = CarbonEquivalency.objects.filter(id=tag_id)
-
-      if not carbon_equivalencies:
-          return None, InvalidResourceError()
-
-      carbon_equivalencies.update(**args)
-      carbon_equivalency = carbon_equivalencies.first()
-
-      if icon:
-        cFav = Media(file=icon, name=f"{args.get('name', '')} CarbonEquivalencyFavicon")
-        cFav.save()
-        carbon_equivalency.icon = cFav
-        carbon_equivalency.save()
-      
+    def update_carbon_equivalency(self, tag_id, args):
+      try:
+        icon = args.pop("icon", None)
+  
+        carbon_equivalencies = CarbonEquivalency.objects.filter(id=tag_id)
+  
+        if not carbon_equivalencies:
+            return None, InvalidResourceError()
+  
+        carbon_equivalencies.update(**args)
+        carbon_equivalency = carbon_equivalencies.first()
+  
+        if icon:
+          cFav = Media(file=icon, name=f"{args.get('name', '')} CarbonEquivalencyFavicon")
+          cFav.save()
+          carbon_equivalency.icon = cFav
+          carbon_equivalency.save()
+        
+        return carbon_equivalency, None
+  
+      except Exception as e:
+        capture_message(str(e), level="error")
+        return None, CustomMassenergizeError(e)
+  
+  
+    def get_carbon_equivalencies(self, args):
+      carbon_equivalencies = CarbonEquivalency.objects.all()
+      return carbon_equivalencies, None
+  
+    def delete_carbon_equivalency(self, tag_id, args):
+      carbon_equivalency = CarbonEquivalency.objects.filter(id=tag_id)
+  
+      if not carbon_equivalency:
+        return None, InvalidResourceError()
+  
+      carbon_equivalency.delete(**args)
       return carbon_equivalency, None
-
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
-
-
-  def get_carbon_equivalencies(self, args):
-    carbon_equivalencies = CarbonEquivalency.objects.all()
-    return carbon_equivalencies, None
-
-  def delete_carbon_equivalency(self, tag_id, args):
-    carbon_equivalency = CarbonEquivalency.objects.filter(id=tag_id)
-
-    if not carbon_equivalency:
-      return None, InvalidResourceError()
-
-    carbon_equivalency.delete(**args)
-    return carbon_equivalency, None
-
-    def generate_sitemap_for_portal(self):
-        return {
-            'communities': Community.objects.filter(
-              is_deleted=False, 
-              is_published=True
-            ).values('id', 'subdomain', 'updated_at'),
-            'actions': Action.objects.filter(
-              is_deleted=False, 
-              is_published=True,
-              community__is_published=True,
-              community__is_deleted=False,
-            ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
-            'services': Vendor.objects.filter(
-              is_deleted=False, 
-              is_published=True
-            ).prefetch_related('communities').values('id', 'communities__subdomain', 'updated_at'),
-            'events': Event.objects.filter(
-              is_deleted=False, 
-              is_published=True,
-              community__is_published=True,
-              community__is_deleted=False,
-            ).select_related('community').values('id', 'community__subdomain'),
-            'teams': Team.objects.filter(
-              is_deleted=False, 
-              is_published=True,
-              community__is_published=True,
-              community__is_deleted=False,
-            ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
-        }
+  
+      def generate_sitemap_for_portal(self):
+          return {
+              'communities': Community.objects.filter(
+                is_deleted=False, 
+                is_published=True
+              ).values('id', 'subdomain', 'updated_at'),
+              'actions': Action.objects.filter(
+                is_deleted=False, 
+                is_published=True,
+                community__is_published=True,
+                community__is_deleted=False,
+              ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
+              'services': Vendor.objects.filter(
+                is_deleted=False, 
+                is_published=True
+              ).prefetch_related('communities').values('id', 'communities__subdomain', 'updated_at'),
+              'events': Event.objects.filter(
+                is_deleted=False, 
+                is_published=True,
+                community__is_published=True,
+                community__is_deleted=False,
+              ).select_related('community').values('id', 'community__subdomain'),
+              'teams': Team.objects.filter(
+                is_deleted=False, 
+                is_published=True,
+                community__is_published=True,
+                community__is_deleted=False,
+              ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
+          }

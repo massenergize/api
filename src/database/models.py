@@ -843,9 +843,19 @@ class CarbonEquivalency(models.Model):
   reference = models.CharField(max_length=100)
   date = models.DateTimeField(auto_now=True)
 
+  def __str__(self):
+    return self.name
+
   def simple_json(self):
     return model_to_dict(self)
 
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    verbose_name_plural = "CarbonEquivalencies"
+    ordering = ('id',)
+    db_table = 'carbon_equivalencies'
 
 class TagCollection(models.Model):
   """
