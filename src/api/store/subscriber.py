@@ -4,12 +4,13 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class SubscriberStore:
   def __init__(self):
     self.name = "Subscriber Store/DB"
 
-  def get_subscriber_info(self, subscriber_id) -> (dict, MassEnergizeAPIError):
+  def get_subscriber_info(self, subscriber_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       subscriber = Subscriber.objects.get(id=subscriber_id)
       if not subscriber:
@@ -19,14 +20,14 @@ class SubscriberStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_subscribers(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_subscribers(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     subscribers = Subscriber.objects.filter(community__id=community_id)
     if not subscribers:
       return [], None
     return subscribers, None
 
 
-  def create_subscriber(self, community_id, args) -> (dict, MassEnergizeAPIError):
+  def create_subscriber(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       
       new_subscriber = Subscriber.objects.create(**args)
@@ -42,7 +43,7 @@ class SubscriberStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_subscriber(self, subscriber_id, args) -> (dict, MassEnergizeAPIError):
+  def update_subscriber(self, subscriber_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       subscriber = Subscriber.objects.filter(id=subscriber_id)
@@ -62,7 +63,7 @@ class SubscriberStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def delete_subscriber(self, subscriber_id) -> (Subscriber, MassEnergizeAPIError):
+  def delete_subscriber(self, subscriber_id) -> Tuple[Subscriber, MassEnergizeAPIError]:
     try:
       #find the subscriber
       subscribers_to_delete = Subscriber.objects.filter(id=subscriber_id)
@@ -74,7 +75,7 @@ class SubscriberStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def copy_subscriber(self, subscriber_id) -> (Subscriber, MassEnergizeAPIError):
+  def copy_subscriber(self, subscriber_id) -> Tuple[Subscriber, MassEnergizeAPIError]:
     try:
       #find the subscriber
       subscriber_to_copy = Subscriber.objects.filter(id=subscriber_id).first()
@@ -91,7 +92,7 @@ class SubscriberStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def list_subscribers_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_subscribers_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_subscribers_for_super_admin(context)

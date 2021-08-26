@@ -5,13 +5,13 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message
-
+from typing import Tuple
 
 class ActionStore:
   def __init__(self):
     self.name = "Action Store/DB"
 
-  def get_action_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_action_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       action_id = args.get("id", None)
       actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
@@ -29,7 +29,7 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_actions(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_actions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try: 
       actions = []
       community_id = args.get('community_id', None)
@@ -55,7 +55,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
@@ -101,7 +101,7 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def copy_action(self, context: Context, args) -> (Action, MassEnergizeAPIError):
+  def copy_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       action_id = args.get("action_id", None)
       #find the action
@@ -125,7 +125,7 @@ class ActionStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def update_action(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       action_id = args.pop('action_id', None)
       action = Action.objects.filter(id=action_id)
@@ -180,7 +180,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def rank_action(self, args) -> (Action, MassEnergizeAPIError):
+  def rank_action(self, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
@@ -195,7 +195,7 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def delete_action(self, context: Context, args) -> (Action, MassEnergizeAPIError):
+  def delete_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       action_id = args.get("action_id", None)
       #find the action
@@ -207,7 +207,7 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def list_actions_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_actions_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_actions_for_super_admin(context)

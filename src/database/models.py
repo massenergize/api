@@ -811,6 +811,52 @@ class ActionProperty(models.Model):
     db_table = 'action_properties'
 
 
+class CarbonEquivalency(models.Model):
+  """
+  Represents an carbon equivalency that can make 
+  carbon impact more comprehensible to users.
+
+  Attributes
+  ----------
+  name : str
+    Name of the unit used. E.g. "Tree"
+  value: int
+    Value of carbon (in Lbs) for comparison against 
+    impact.
+  icon: 
+    Graphic representing the appropriate equivalancey.
+  explanation: str
+    Additional information on the equivelancy. E.g. 
+    "A typical hardwood tree can absorb as much as 48 
+    pounds of carbon dioxide per year"
+  reference: str
+    Source of information used. Link, book, study, etc.
+  date: DateTime
+    Timestamp of when the equivilancy was last modified.
+  """
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=50)
+  value = models.BigIntegerField()
+  icon = models.ForeignKey(Media, on_delete=models.SET_NULL, 
+    blank=True, null=True)
+  explanation = models.CharField(max_length=100)
+  reference = models.CharField(max_length=100)
+  date = models.DateTimeField(auto_now=True)
+
+  def __str__(self):
+    return self.name
+
+  def simple_json(self):
+    return model_to_dict(self)
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    verbose_name_plural = "CarbonEquivalencies"
+    ordering = ('id',)
+    db_table = 'carbon_equivalencies'
+
 class TagCollection(models.Model):
   """
   A class used to represent a collection of Tags.
