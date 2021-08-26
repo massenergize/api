@@ -2,31 +2,32 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
+from typing import Tuple
 
 class DownloadService:
 
     def __init__(self):
       self.store = DownloadStore()
 
-    def users_download(self, context: Context, community_id=None, team_id=None) -> (list, MassEnergizeAPIError):
+    def users_download(self, context: Context, community_id=None, team_id=None) -> Tuple[list, MassEnergizeAPIError]:
       users_download, err = self.store.users_download(context, community_id, team_id)
       if err:
         return None, err
       return users_download, None
 
-    def actions_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
       actions_download, err = self.store.actions_download(context, community_id)
       if err:
         return None, err
       return actions_download, None
 
-    def communities_download(self, context: Context) -> (list, MassEnergizeAPIError):
+    def communities_download(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
       communities_download, err = self.store.communities_download(context)
       if err:
         return None, err
       return communities_download, None
 
-    def teams_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+    def teams_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
       teams_download, err = self.store.teams_download(context, community_id)
       if err:
         return None, err

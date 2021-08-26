@@ -1,6 +1,5 @@
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
@@ -9,12 +8,59 @@ import datetime
 from datetime import timedelta
 import calendar
 import pytz
+from typing import Tuple
 
+def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month):
+
+  converter = {"first":1, "second":2, "third":3, "fourth":4}
+
+  if start_date_and_time:
+ 
+    # the date check below fails because the local date (in Massachusetts) is different than the UTC date
+    # need to also save the location (as a Location) and get the time zone from that.
+    # KLUGE: assume Massachusetts for now                    
+    dt = datetime.datetime.strptime(start_date_and_time, '%Y-%m-%dT%H:%M:%SZ')  
+    local_start = dt - timedelta(hours=4)
+    #print(local_start)
+
+    dt = datetime.datetime.strptime(end_date_and_time, '%Y-%m-%dT%H:%M:%SZ')  
+    local_end = dt - timedelta(hours=4)
+
+    # check if weekday matches the start_date_and_time
+    if calendar.day_name[local_start.weekday()] != day_of_week:
+      return True, "Starting date and time does not match the recurrence pattern for the event"
+
+    # if necessary, check if week of month matches the start_date...
+    if week_of_month:
+      # let's say the date passed in represents the Nth occurence of a particular weekday in the month 
+      # we find N
+      # get the first instance of the same weekday in the month
+      obj = calendar.Calendar()
+      date_of_first_weekday = 1
+      for d in obj.itermonthdates(int(local_start.year), int(local_start.month)):
+        if int(d.day >= 8):
+          continue
+        d1 = datetime.datetime(int(d.year), int(d.month), int(d.day))
+        if calendar.day_name[d1.weekday()] == day_of_week:
+          date_of_first_weekday = int(d1.day)
+          diff = local_start.day - date_of_first_weekday
+          break
+      if converter[week_of_month] - 1 != diff/7:
+        return True, "Starting date and time does not match the recurrence pattern for the event"
+
+    # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
+
+    # check that if the event does not go longer than a day (recurring events cannot go longer than 1 day)
+    if local_start.date() != local_end.date():
+      return True, "Recurring events must only last 1 day. Make sure your starting date and ending date are the same"  
+
+  return False, "No problem with recurring dates"
+  
 class EventStore:
   def __init__(self):
     self.name = "Event Store/DB"
 
-  def get_event_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_event_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id")
 
@@ -27,7 +73,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def copy_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def copy_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id")
 
@@ -61,7 +107,44 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_recurring_event_exceptions(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_recurring_event_exceptions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+      community_id = args.pop("community_id", None)
+      subdomain = args.pop("subdomain", None)
+      user_id = args.pop("user_id", None)
+      event_id = args.pop("event_id", None)
+
+      if community_id:
+        #TODO: also account for communities who are added as invited_communities
+        query =Q(community__id=community_id)
+        events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+
+      elif subdomain:
+        query =  Q(community__subdomain=subdomain)
+        events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+
+      elif user_id:
+        events = EventAttendee.objects.filter(user_id=user_id)
+
+      elif event_id:
+        events = Event.objects.filter(id=event_id).select_related('image', 'community').prefetch_related('tags', 'invited_communities')
+
+      else:
+        # not information required
+        raise Exception("events.exceptions.list requires community, subdomain, user or event id")
+
+      exceptions = []
+      for event in events.all():
+        e = RecurringEventException.objects.filter(event=event).first()
+        if e:
+          exceptions.append(event.id)
+
+      return exceptions, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def list_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
@@ -76,36 +159,7 @@ class EventStore:
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
       
     elif user_id:
-      events = EventAttendee.objects.filter(attendee=user_id)
-      
-    else:
-      events = []
-    
-    exceptions = []
-    for event in events.all():
-      e = RecurringEventException.objects.filter(event=event).first()
-      if e:
-        exceptions.append(event.id)
-    
-    return exceptions, None
-
-
-  def list_events(self, context: Context, args) -> (list, MassEnergizeAPIError):
-    community_id = args.pop("community_id", None)
-    subdomain = args.pop("subdomain", None)
-    user_id = args.pop("user_id", None)
-    
-    if community_id:
-      #TODO: also account for communities who are added as invited_communities
-      query =Q(community__id=community_id)
-      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
-      
-    elif subdomain:
-      query =  Q(community__subdomain=subdomain)
-      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
-      
-    elif user_id:
-      events = EventAttendee.objects.filter(attendee=user_id)
+      events = EventAttendee.objects.filter(user_id=user_id)
       
     else:
       events = []
@@ -116,12 +170,15 @@ class EventStore:
     return events, None
 
 
-  def create_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
+      start_date_and_time = args.get('start_date_and_time', None)
+      end_date_and_time = args.get('end_date_and_time', None)
+
       is_recurring  = args.pop('is_recurring', False)
       if is_recurring == False or is_recurring == "false" or is_recurring == "":
         recurring = False
@@ -132,15 +189,11 @@ class EventStore:
         separation_count = int(separation_count)
     
       day_of_week = args.pop('day_of_week', None)
-      start_date_and_time = args.get('start_date_and_time', None)
-      end_date_and_time = args.get('end_date_and_time', None)
       week_of_month = args.pop("week_of_month", None)
       if recurring_type != "month":
         week_of_month = None
+
       have_address = args.pop('have_address', False)
-      # since this gets passed in as an English word, we need to convert it to an integer first
-      converter = {"first":1, "second":2, "third":3, "fourth":4}
-          
       if not have_address:
         args['location'] = None
 
@@ -148,38 +201,7 @@ class EventStore:
         community = Community.objects.get(pk=community)
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community_id")
-      # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
-      if recurring  and start_date_and_time:
-        # extract month, day and year from start_date_and_time
-        date = start_date_and_time[0:10:1].split('-')
-        day = datetime.datetime(int(date[0]), int(date[1]), int(date[2]))
-        # check if weekday matches the start_date_and_time
-        if calendar.day_name[day.weekday()] != day_of_week:
-          return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
-        # if necessary, check if week of month matches the start_date...
-        if week_of_month:
-          # let's say the date passed in represents the Nth occurence of a particular weekday in the month 
-          # we find N
-          # get the first instance of the same weekday in the month
-          obj = calendar.Calendar()
-          date_of_first_weekday = 1
-          for d in obj.itermonthdates(int(day.year), int(day.month)):
-            if int(d.day >= 8):
-              continue
-            d1 = datetime.datetime(int(d.year), int(d.month), int(d.day))
-            if calendar.day_name[d1.weekday()] == day_of_week:
-              date_of_first_weekday = int(d1.day)
-              diff = day.day - date_of_first_weekday
-              break
-          if converter[week_of_month] - 1 != diff/7:
-            return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
-        end_date = end_date_and_time[0:10:1].split('-')
-        end_day = datetime.datetime(int(end_date[0]), int(end_date[1]), int(end_date[2]))
-        # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
 
-        # check that if the event does not go longer than a day (recurring events cannot go longer than 1 day)
-        if day.date() != end_day.date():
-          return None, CustomMassenergizeError("Recurring events must only last 1 day. Make sure your starting date and ending date are the same")
       new_event: Event = Event.objects.create(**args)
       if community:
         new_event.community = community
@@ -188,9 +210,19 @@ class EventStore:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_event.image = media
 
-      if recurring and recurring_type == "week" and week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
+      if tags:
+        new_event.tags.set(tags)
+
+      if recurring:
+
+        # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
+        err, message = _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month)
+        if err:
+          return None, CustomMassenergizeError(message)
+
+        if recurring_type == "week" and week_of_month: 
+          return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
         
-      if recurring and day_of_week: 
         new_event.is_recurring = True
         new_event.recurring_details = {
           "recurring_type": recurring_type, 
@@ -199,34 +231,30 @@ class EventStore:
           "week_of_month": week_of_month
         } 
 
-      new_event.save()
-      
-      if tags:
-        new_event.tags.set(tags)
-
+      new_event.save()      
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop('event_id', None)
       image = args.pop('image', None)
       tags = args.pop('tags', [])
-      recurring  = args.get('is_recurring', False)
       start_date_and_time = args.get('start_date_and_time', None)
       end_date_and_time = args.get('end_date_and_time', None)
+
+      recurring  = args.get('is_recurring', False)
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
       if separation_count:
         separation_count = int(separation_count)
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
-      rescheduled_start_datetime = args.pop('rescheduled_start_datetime', None)
-      rescheduled_end_datetime = args.pop('rescheduled_end_datetime', None)
+      rescheduled_start_datetime = args.pop('rescheduled_start_datetime', False)
+      rescheduled_end_datetime = args.pop('rescheduled_end_datetime', False)
 
-      
       if recurring_type != "month":
         week_of_month = None
       upcoming_is_cancelled = args.pop("upcoming_is_cancelled", None)
@@ -261,54 +289,32 @@ class EventStore:
         event.community = community
       else:
         event.community = None
-      # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
 
-      converter = {"first":1, "second":2, "third":3, "fourth":4}
-      
-      if recurring  and start_date_and_time:
-        # extract month, day and year from start_date_and_time
-        date = start_date_and_time[0:10:1].split('-')
-        day = datetime.datetime(int(date[0]), int(date[1]), int(date[2]))
-        # check if weekday matches the start_date_and_time
-        if calendar.day_name[day.weekday()] != day_of_week:
-          return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
-        # if necessary, check if week of month matches the start_date...
-        if week_of_month:
-          # let's say the date passed in represents the Nth occurence of a particular weekday in the month 
-          # we find N
-          # get the first instance of the same weekday in the month
-          obj = calendar.Calendar()
-          date_of_first_weekday = 1
-          for d in obj.itermonthdates(int(day.year), int(day.month)):
-            if int(d.day >= 8):
-              continue
-            d1 = datetime.datetime(int(d.year), int(d.month), int(d.day))
-            if calendar.day_name[d1.weekday()] == day_of_week:
-              date_of_first_weekday = int(d1.day)
-              diff = day.day - date_of_first_weekday
-              break
-          if converter[week_of_month] - 1 != diff/7:
-            return None, CustomMassenergizeError("Starting date and time does not match the recurrence pattern for the event")
-        end_date = end_date_and_time[0:10:1].split('-')
-        end_day = datetime.datetime(int(end_date[0]), int(end_date[1]), int(end_date[2]))
-        # TODO: check that starting date and time is earlier than ending date and time (need to edit substring thingy)
+      if tags:
+        event.tags.set(tags)
 
-        # check that if the event does not go longer than a day (recurring events cannot go longer than 1 day)
-        if day.date() != end_day.date():
-          return None, CustomMassenergizeError("Recurring events must only last 1 day. Make sure your starting date and ending date are the same")  
-
-      if recurring and day_of_week: 
-        if week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
-        event.is_recurring = True
-        event.recurring_details = {
-          "recurring_type": recurring_type, 
-          "separation_count": separation_count, 
-          "day_of_week": day_of_week, 
-          "week_of_month": week_of_month
-        } 
       event.save()
 
       if recurring:
+
+        # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
+        err, message = _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month)
+        if err:
+          return None, CustomMassenergizeError(message)
+
+        # this seems to be an invalid check.  Even for monthly events, you have the day_of_week 
+        #if week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
+        if recurring_type == "week" and week_of_month: 
+          return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
+
+        event.is_recurring = True
+        event.recurring_details = {
+            "recurring_type": recurring_type, 
+            "separation_count": separation_count, 
+            "day_of_week": day_of_week, 
+            "week_of_month": week_of_month
+        } 
+
         if upcoming_is_cancelled and upcoming_is_rescheduled:
           return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
 
@@ -317,7 +323,7 @@ class EventStore:
           event.recurring_details = { }
         event.recurring_details["is_cancelled"] = upcoming_is_cancelled
 
-      
+
         # check if there was a previously rescheduled event instance
         rescheduled: RecurringEventException = RecurringEventException.objects.filter(event=event).first()
 
@@ -363,7 +369,7 @@ class EventStore:
             former_time = event.start_date_and_time, 
             rescheduled_event = rescheduled_event
             )
-
+#
           # they are trying to modify an existing event that is rescheduled
           elif rescheduled:
             ev = rescheduled.rescheduled_event
@@ -380,17 +386,13 @@ class EventStore:
             rescheduled.delete()
 
         event.save()
-
-      if tags:
-        event.tags.set(tags)
-        event.save()
       
       return event, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_recurring_event_date(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_recurring_event_date(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
@@ -408,7 +410,7 @@ class EventStore:
       
 
     elif user_id:
-      events = EventAttendee.objects.filter(attendee=user_id)
+      events = EventAttendee.objects.filter(user_id=user_id)
       
     else:
       events = []
@@ -467,7 +469,7 @@ class EventStore:
         return CustomMassenergizeError(str(e))
     return events, None
 
-  def rank_event(self, args) -> (dict, MassEnergizeAPIError):
+  def rank_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get('id', None)
       rank = args.get('rank', None)
@@ -483,7 +485,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def delete_event(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+  def delete_event(self, context: Context, event_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       events = Event.objects.filter(id=event_id)
       if not events:
@@ -499,7 +501,7 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_events_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_events_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
 
@@ -540,7 +542,7 @@ class EventStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def rsvp(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_rsvp_status(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id", None)
       args: dict = context.args
@@ -549,39 +551,58 @@ class EventStore:
       if not event:
         return None, InvalidResourceError()
 
-      event_attendee = EventAttendee.objects.create(
-        event=event, attendee=user, status="RSVP")
-
-      return event_attendee, None
+      event_attendee = EventAttendee.objects.filter(event=event, user=user)
+      if event_attendee:
+        return event_attendee.first(), None
+      else:
+        return None, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rsvp_update(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def rsvp_update(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id", None)
       status = args.pop("status", "SAVE")
-
-      args: dict = context.args
-      user = get_user_or_die(context, args)
+      user = get_user_or_die(context, args)      
       event = Event.objects.filter(pk=event_id).first()
       if not event:
         return None, InvalidResourceError()
 
-      event_attendee = EventAttendee.objects.filter(
-        event=event, attendee=user).update(status=status)
-
+      event_attendees = EventAttendee.objects.filter(event=event, user=user, is_deleted=False)
+      if event_attendees:
+        event_attendee = event_attendees.first()
+        if status=="Not Going":
+          event_attendee.delete()
+        else:
+          event_attendee.status = status
+          event_attendee.save()
+      elif status != "Not Going":
+        event_attendee = EventAttendee.objects.create(event=event, user=user, status=status)
+      else:
+        return None, None
       return event_attendee, None
       
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rsvp_remove(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def rsvp_remove(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       rsvp_id = args.pop("rsvp_id", None)
+      event_id = args.pop("event_id", None)
+      user = get_user_or_die(context, args)
 
-      result = EventAttendee.objects.filter(pk=rsvp_id).delete()
+      if rsvp_id:
+        result = EventAttendee.objects.filter(pk=rsvp_id).delete()
+      elif event_id:
+        event = Event.objects.filter(pk=event_id).first()
+        if not event:
+          return None, InvalidResourceError()
+        result = EventAttendee.objects.filter(event=event, user=user).delete()
+      else:
+        raise Exception("events.rsvp.remove: must specify rsvp or event id")
+          
       return result, None
     except Exception as e:
       capture_message(str(e), level="error")

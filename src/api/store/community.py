@@ -6,10 +6,11 @@ from database.models import Community, CommunityMember, UserProfile, Action, Eve
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from api.store.graph import GraphStore
 from django.db.models import Q
 from .utils import get_community_or_die, get_user_or_die, get_new_title, is_reu_in_community, check_location
 from database.utils.common import json_loader
-import random
+from typing import Tuple
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
 
@@ -36,6 +37,7 @@ def _clone_page_settings(pageSettings, title, community):
 class CommunityStore:
   def __init__(self):
     self.name = "Community Store/DB"
+    self.graph_store = GraphStore()
 
   def _check_geography_unique(self, community, geography_type, loc):
     """
@@ -281,7 +283,7 @@ class CommunityStore:
             reu.community = None
             reu.save()
   
-  def get_community_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_community_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       subdomain = args.get('subdomain', None)
       community_id = args.get('id', None)
@@ -300,13 +302,31 @@ class CommunityStore:
         # on prod, we should pretend the community does not exist.
         return None, InvalidResourceError()
 
+      if community.goal:
+        category_graph, err = self.graph_store.graph_actions_completed(context, {"community_id":community.id})  
+        if not err:
+          # this could be slow?
+          data = category_graph['data']
+          category_totals = [datum["reported_value"] for datum in data]
+
+          goal = community.goal
+          total = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
+
+          goal.attained_number_of_households = goal.initial_number_of_households + max(category_totals)
+          goal.attained_number_of_actions = goal.initial_number_of_actions + sum(category_totals)
+          goal.attained_carbon_footprint_reduction = goal.initial_carbon_footprint_reduction # no additions from state reports
+
+          newtotal = goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
+          if newtotal != total:
+            goal.save()
+
       return community, None
     except Exception as e:
       capture_exception(e)
       return None, CustomMassenergizeError(e)
 
 
-  def join_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def join_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
@@ -323,7 +343,7 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def leave_community(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def leave_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community = get_community_or_die(context, args)
       user = get_user_or_die(context, args)
@@ -340,7 +360,7 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_communities(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_communities(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.is_sandbox:
         communities = Community.objects.filter(is_deleted=False, is_approved=True).exclude(subdomain='template')
@@ -355,7 +375,7 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_community(self,context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_community(self,context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     community = None
     try:
       logo = args.pop('logo', None)
@@ -393,6 +413,7 @@ class CommunityStore:
       images = homePage.images.all()
       #TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
       if homePage:
+
         homePage.pk = None 
         homePage.title = f"Welcome to Massenergize, {community.name}!"
         homePage.community = community
@@ -483,7 +504,7 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_community(self, community_id, args) -> (dict, MassEnergizeAPIError):
+  def update_community(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       logo = args.pop('logo', None)
 
@@ -526,7 +547,7 @@ class CommunityStore:
       capture_exception(e)
       return None, CustomMassenergizeError(e)
 
-  def delete_community(self, args) -> (dict, MassEnergizeAPIError):
+  def delete_community(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       communities = Community.objects.filter(**args)
       if len(communities) > 1:
@@ -543,7 +564,7 @@ class CommunityStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_communities_for_community_admin(self, context: Context) -> (list, MassEnergizeAPIError):
+  def list_communities_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     try:
       # if not context.user_is_community_admin and not context.user_is_community_admin:
       #   return None, CustomMassenergizeError("You are not a super admin or community admin")

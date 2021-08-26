@@ -7,12 +7,13 @@ from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class VendorStore:
   def __init__(self):
     self.name = "Vendor Store/DB"
 
-  def get_vendor_info(self, context, args) -> (dict, MassEnergizeAPIError):
+  def get_vendor_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       vendor_id = args.pop('vendor_id', None) or args.pop('id', None)
       
@@ -29,7 +30,7 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_vendors(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_vendors(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       subdomain = args.pop('subdomain', None)
       community_id = args.pop('community_id', None)
@@ -55,7 +56,7 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_vendor(self, ctx: Context, args) -> (Vendor, MassEnergizeAPIError):
+  def create_vendor(self, ctx: Context, args) -> Tuple[Vendor, MassEnergizeAPIError]:
     try:
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
@@ -102,7 +103,7 @@ class VendorStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_vendor(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_vendor(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     
     try:
       vendor_id = args.pop('vendor_id', None)
@@ -162,7 +163,7 @@ class VendorStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rank_vendor(self, args) -> (dict, MassEnergizeAPIError):
+  def rank_vendor(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
@@ -178,7 +179,7 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_vendor(self, vendor_id) -> (dict, MassEnergizeAPIError):
+  def delete_vendor(self, vendor_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       vendors = Vendor.objects.filter(id=vendor_id)
       vendors.update(is_deleted=True)
@@ -189,7 +190,7 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def copy_vendor(self, vendor_id) -> (Vendor, MassEnergizeAPIError):
+  def copy_vendor(self, vendor_id) -> Tuple[Vendor, MassEnergizeAPIError]:
     try:
       vendor: Vendor = Vendor.objects.get(id=vendor_id)
       if not vendor:
@@ -206,7 +207,7 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_vendors_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_vendors_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_vendors_for_super_admin(context)

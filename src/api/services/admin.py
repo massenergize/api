@@ -5,7 +5,7 @@ from api.store.admin import AdminStore
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_SANDBOX_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-
+from typing import Tuple
 
 class AdminService:
     """
@@ -15,7 +15,7 @@ class AdminService:
     def __init__(self):
         self.store = AdminStore()
 
-    def add_super_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    def add_super_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admin, err = self.store.add_super_admin(context, args)
         if err:
             return None, err
@@ -30,19 +30,19 @@ class AdminService:
             subject, admin.email, 'new_admin_email.html', content_variables)
         return serialize(admin, full=True), None
 
-    def remove_super_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    def remove_super_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admin, err = self.store.remove_super_admin(context, args)
         if err:
             return None, err
         return serialize(admin, full=True), None
 
-    def list_super_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    def list_super_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admins, err = self.store.list_super_admin(context, args)
         if err:
             return None, err
         return serialize_all(admins), None
 
-    def add_community_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    def add_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         res, err = self.store.add_community_admin(context, args)
 
         if err:
@@ -60,19 +60,19 @@ class AdminService:
             subject, res["email"], 'new_admin_email.html', content_variables)
         return res, None
 
-    def remove_community_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    def remove_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admin, err = self.store.remove_community_admin(context, args)
         if err:
             return None, err
         return serialize(admin, full=True), None
 
-    def list_community_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    def list_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admins, err = self.store.list_community_admin(context, args)
         if err:
             return None, err
         return serialize(admins), None
 
-    def message_admin(self, context, args) -> (dict, MassEnergizeAPIError):
+    def message_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admins, err = self.store.message_admin(context, args)
         if err:
             return None, err
@@ -80,7 +80,7 @@ class AdminService:
         # need to define a send email function
         return serialize(admins), None
 
-    def list_admin_messages(self, context, args) -> (dict, MassEnergizeAPIError):
+    def list_admin_messages(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admins, err = self.store.list_admin_messages(context, args)
         if err:
             return None, err

@@ -8,8 +8,7 @@ from django.db.models import F
 from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, find_reu_community, split_location_string, check_location
 import json
-# for import contacts endpoint - accepts a csv file and verifies correctness of email address format
-import csv, os, io, re
+from typing import Tuple
 
 def _get_or_create_reu_location(args, user=None):
   unit_type=args.pop('unit_type', None)
@@ -91,7 +90,7 @@ class UserStore:
     
     return False 
 
-  def get_user_info(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       #email = args.get('email', None)
       #user_id = args.get('user_id', None)
@@ -107,7 +106,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def remove_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def remove_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       household_id = args.get('household_id', None)
       if not household_id:
@@ -119,7 +118,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def add_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def add_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
@@ -141,7 +140,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def edit_household(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def edit_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
       name = args.pop('name', None)
@@ -169,7 +168,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def list_households(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def list_households(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
 
@@ -178,7 +177,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def list_users(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_users(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     community,err = get_community(community_id)
     
     if not community:
@@ -186,17 +185,17 @@ class UserStore:
       return [], None
     return community.userprofile_set.all(), None
 
-  def list_events_for_user(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
       if not user:
         return []
-      return EventAttendee.objects.filter(attendee=user), None
+      return EventAttendee.objects.filter(user=user), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def check_user_imported(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def check_user_imported(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try: 
       email_address = args.get('email', None)
       profile = UserProfile.objects.filter(email=email_address).first()
@@ -210,7 +209,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def complete_imported_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def complete_imported_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       email_address = args['email']
       profile = UserProfile.objects.filter(email=email_address).first()
@@ -221,7 +220,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def create_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
 
       email = args.get('email', None) 
@@ -283,7 +282,7 @@ class UserStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_user(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user_id = args.get('id', None)
       email = args.get('email', None)
@@ -318,7 +317,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def delete_user(self, context: Context, user_id) -> (dict, MassEnergizeAPIError):
+  def delete_user(self, context: Context, user_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       if not user_id:
         return None, InvalidResourceError()
@@ -338,7 +337,7 @@ class UserStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_users_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_users_for_community_admin(self,  context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_users_for_super_admin(context)
@@ -380,7 +379,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def add_action_todo(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def add_action_todo(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
       action_id = args.get("action_id", None)
@@ -429,7 +428,7 @@ class UserStore:
       traceback.print_exc()
       return None, CustomMassenergizeError(str(e))
 
-  def add_action_completed(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def add_action_completed(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user_id = args.get('user_id') or context.user_id
       user_email = args.get('user_email') or context.user_email
@@ -508,7 +507,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def list_todo_actions(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def list_todo_actions(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
 
       if not context.user_is_logged_in:
@@ -528,7 +527,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def list_completed_actions(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def list_completed_actions(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
 
       if not context.user_is_logged_in:
@@ -548,7 +547,7 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def remove_user_action(self, context: Context, user_action_id) -> (dict, MassEnergizeAPIError):
+  def remove_user_action(self, context: Context, user_action_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       if not context.user_is_logged_in:
         return [], CustomMassenergizeError("sign_in_required")
@@ -561,76 +560,49 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
   
-  def handle_csv(self, context: Context, args, temporarylocation) -> (dict, MassEnergizeAPIError):
+  def import_from_csv(self, context: Context, args, first_name, last_name, email) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       # query users by user id, find the user that is sending the request
       cadmin = UserProfile.objects.filter(id=context.user_id).first()
-      # find the community that the user is the admin of. In the next section, populate user profiles with that information
-      registered_community = None
-      for community in cadmin.communities.all():
-          admin_group = CommunityAdminGroup.objects.filter(community=community).first()
-          if cadmin in admin_group.members.all():
-            break
-      registered_community = community
-      first_name_field = args['first_name_field']
-      last_name_field = args['last_name_field']
-      email_field = args['email_field']
-      # invalid_emails keeps track of any lines in the file that don't have a valid email address
-      invalid_emails = []
-      with open(temporarylocation, "r") as f:
-        reader = csv.DictReader(f, delimiter=",")
-        for row in reader:
-          column_list = list(row.keys())
-          try:
-            # prevents the first row (headers) from being read in as a user
-            if row[first_name_field] == column_list[0]:
-              continue
-            # verify correctness of email address
-            regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-            
-            if(re.search(regex,row[email_field])):   
-              user = UserProfile.objects.filter(email=row[email_field]).first()
-              if not user:
-                if row[email_field] == "" or not row[email_field]:
-                  return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
-                new_user: UserProfile = UserProfile.objects.create(
-                  full_name = row[first_name_field] + ' ' + row[last_name_field], 
-                  preferred_name = row[first_name_field], 
-                  email = row[email_field],
-                  is_vendor = False, 
-                  accepts_terms_and_conditions = False
-                )
-                new_user.save() 
-                if registered_community:
-                  new_user.communities.add(registered_community)
-              else: 
-                new_user: UserProfile = user  
-              team_name = args.get('team_name', None)
-              team = None
-              if team_name != "none":
-                team = Team.objects.filter(name=team_name).first()
-                team.members.add(new_user)
-                team.save()
-              new_user.save()
-              # send email inviting user to complete their profile
-              message = cadmin.full_name + " invited you to join the following MassEnergize Community: " + registered_community.name + "\n"
-              mess = args.get('message', None)
-              if mess and mess != "":
-                message += "They have included a message for you here:\n"
-                message += mess
-              if team:
-                message += "You have been assigned to the following team: " + team.name + "\n"
-              link = "massenergize.org/" + str(registered_community.subdomain) + "/signup"
-              message += "Use the following link to join " + registered_community.name + ": " + link
-              send_massenergize_email(subject= cadmin.full_name + " invited you to join a MassEnergize Community", msg=message, to=new_user.email)
-            else:   
-              if reader.line_num != 0:
-                invalid_emails.append(reader.line_num) 
-          except Exception as e:
-            print(str(e))
-            return None, CustomMassenergizeError(e)
-      res = {'invalidEmails' : invalid_emails}
-      return res
+      ## find the community that the user is the admin of. In the next section, populate user profiles with that information
+      #registered_community = None
+      #for community in cadmin.communities.all():
+      #    admin_group = CommunityAdminGroup.objects.filter(community=community).first()
+      #    if cadmin in admin_group.members.all():
+      #      break
+      #registered_community = community
+      community_id = args.get("community_id", None)
+      community = Community.objects.filter(id=community_id).first()
+
+      user = UserProfile.objects.filter(email=email).first()
+      if not user:
+        if not email or email == "":
+          return None, CustomMassenergizeError("One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
+        new_user: UserProfile = UserProfile.objects.create(
+          full_name = first_name + ' ' + last_name, 
+          preferred_name = first_name + last_name[0].upper(), 
+          email = email,
+          is_vendor = False, 
+          accepts_terms_and_conditions = False
+        )
+        new_user.save() 
+        if community:
+          new_user.communities.add(community)
+      else: 
+        new_user: UserProfile = user  
+      team_name = args.get('team_name', None)
+      if team_name and team_name != "none":
+        team = Team.objects.filter(name=team_name).first()
+        team.members.add(new_user)
+        team.save()
+      new_user.save()
+      
+      return {'cadmin': cadmin.full_name, 
+              'community': community.name,
+              'team': team_name,
+              'full_name': new_user.full_name,
+              'email': email, 
+              'preferred_name': new_user.preferred_name}, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

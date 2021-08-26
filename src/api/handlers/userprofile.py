@@ -1,20 +1,11 @@
 """Handler file for all routes pertaining to users"""
 from functools import wraps
-from _main_.utils.emailer.send_email import send_massenergize_email
-from database.models import CommunityAdminGroup, UserProfile, Community, Team
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, rename_field
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
-from types import FunctionType as function
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from api.decorators import admins_only, community_admins_only, super_admins_only, login_required
-from sentry_sdk import capture_message
-
-# for import contacts endpoint - accepts a csv file and verifies correctness of email address format
-import csv, os, io, re
+from api.decorators import admins_only, super_admins_only, login_required
 
 class UserHandler(RouteHandler):
 
@@ -267,17 +258,20 @@ class UserHandler(RouteHandler):
   def handle_contacts_csv(self, request):
     context: Context = request.context
     args: dict = context.args
-    # find the community within the team that the 
-    csv_ref = args['csv'].file 
-    # csv_ref is a bytes object, we need a csv
-    # so we copy it as a csv temporarily to the disk
-    temporarylocation="testout.csv"
-    with open(temporarylocation, 'wb') as out:
-      var = csv_ref.read()
-      out.write(var)
-    info, err = self.service.handle_csv(context, args, temporarylocation)
-    # and then delete it once we are done parsing it
-    os.remove(temporarylocation)
+
+    args, err = (self.validator
+      .expect("community_id", int, is_required=True)
+      .expect("csv", "file", is_required=True)
+      .expect("first_name_field", str, is_required=True)
+      .expect("last_name_field", str, is_required=True)
+      .expect("email_field", str, is_required=True)
+      .expect("team_id", int, is_required=False)      
+      .verify(context.args)
+    )
+    if err:
+      return err
+
+    info, err = self.service.handle_csv(context, args)    
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=info)
