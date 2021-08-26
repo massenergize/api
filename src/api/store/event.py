@@ -170,7 +170,7 @@ class EventStore:
     return events, None
 
 
-  def create_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     
     try:
       image = args.pop('image', None)
@@ -237,7 +237,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_event(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop('event_id', None)
       image = args.pop('image', None)
@@ -392,7 +392,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_recurring_event_date(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def update_recurring_event_date(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
@@ -469,7 +469,7 @@ class EventStore:
         return CustomMassenergizeError(str(e))
     return events, None
 
-  def rank_event(self, args) -> (dict, MassEnergizeAPIError):
+  def rank_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get('id', None)
       rank = args.get('rank', None)
@@ -485,7 +485,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def delete_event(self, context: Context, event_id) -> (dict, MassEnergizeAPIError):
+  def delete_event(self, context: Context, event_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       events = Event.objects.filter(id=event_id)
       if not events:
@@ -542,7 +542,7 @@ class EventStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def get_rsvp_status(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_rsvp_status(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id", None)
       args: dict = context.args
@@ -560,7 +560,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rsvp_update(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def rsvp_update(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id", None)
       status = args.pop("status", "SAVE")
@@ -587,7 +587,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rsvp_remove(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def rsvp_remove(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       rsvp_id = args.pop("rsvp_id", None)
       event_id = args.pop("event_id", None)

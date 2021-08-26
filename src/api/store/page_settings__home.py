@@ -3,12 +3,13 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class HomePageSettingsStore:
   def __init__(self):
     self.name = "HomePageSettings Store/DB"
 
-  def get_home_page_setting_info(self, args) -> (dict, MassEnergizeAPIError):
+  def get_home_page_setting_info(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       home_page_setting = HomePageSettings.objects.filter(**args).first()
       if not home_page_setting:
@@ -19,14 +20,14 @@ class HomePageSettingsStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_home_page_settings(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_home_page_settings(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     home_page_settings = HomePageSettings.objects.filter(community__id=community_id)
     if not home_page_settings:
       return [], None
     return home_page_settings, None
 
 
-  def create_home_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+  def create_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       new_home_page_setting = HomePageSettings.create(**args)
       new_home_page_setting.save()
@@ -35,7 +36,7 @@ class HomePageSettingsStore:
       return None, ServerError()
 
 
-  def update_home_page_setting(self, args) -> (dict, MassEnergizeAPIError):
+  def update_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       home_page_id = args.get('id', None)
       home_page_setting = HomePageSettings.objects.filter(id=home_page_id).first()
@@ -128,13 +129,13 @@ class HomePageSettingsStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_home_page_setting(self, home_page_setting_id) -> (dict, MassEnergizeAPIError):
+  def delete_home_page_setting(self, home_page_setting_id) -> Tuple[dict, MassEnergizeAPIError]:
     home_page_settings = HomePageSettings.objects.filter(id=home_page_setting_id)
     if not home_page_settings:
       return None, InvalidResourceError()
 
 
-  def list_home_page_settings_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_home_page_settings_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     home_page_settings = HomePageSettings.objects.filter(community__id = community_id)
     return home_page_settings, None
 

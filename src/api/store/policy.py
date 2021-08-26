@@ -4,12 +4,13 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class PolicyStore:
   def __init__(self):
     self.name = "Policy Store/DB"
 
-  def get_policy_info(self, policy_id) -> (dict, MassEnergizeAPIError):
+  def get_policy_info(self, policy_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       policy = Policy.objects.get(id=policy_id)
       if not policy:
@@ -19,7 +20,7 @@ class PolicyStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_policies(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_policies(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       policies = Policy.objects.filter(is_deleted=False)
       return policies, None
@@ -28,7 +29,7 @@ class PolicyStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_policy(self, community_id, args) -> (dict, MassEnergizeAPIError):
+  def create_policy(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       new_policy = Policy.objects.create(**args)
       new_policy.save()
@@ -42,7 +43,7 @@ class PolicyStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_policy(self, policy_id, args) -> (dict, MassEnergizeAPIError):
+  def update_policy(self, policy_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       policy = Policy.objects.filter(id=policy_id)
@@ -62,7 +63,7 @@ class PolicyStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def delete_policy(self, policy_id) -> (Policy, MassEnergizeAPIError):
+  def delete_policy(self, policy_id) -> Tuple[Policy, MassEnergizeAPIError]:
     try:
       #find the policy
       policies_to_delete = Policy.objects.filter(id=policy_id)
@@ -74,7 +75,7 @@ class PolicyStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def copy_policy(self, policy_id) -> (Policy, MassEnergizeAPIError):
+  def copy_policy(self, policy_id) -> Tuple[Policy, MassEnergizeAPIError]:
     try:
       #find the policy
       policy_to_copy = Policy.objects.filter(id=policy_id).first()
@@ -91,7 +92,7 @@ class PolicyStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def list_policies_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_policies_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_policies_for_super_admin(context)

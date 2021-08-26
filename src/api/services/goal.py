@@ -7,6 +7,8 @@ from _main_.utils.context import Context
 
 from _main_.utils.utils import get_models_and_field_types
 from database import models
+from typing import Tuple
+
 MODELS_AND_FIELDS = get_models_and_field_types(models)
 
 class GoalService:
@@ -33,20 +35,20 @@ class GoalService:
 
 
   
-  def get_goal_info(self, goal_id) -> (dict, MassEnergizeAPIError):
+  def get_goal_info(self, goal_id) -> Tuple[dict, MassEnergizeAPIError]:
     goal, err = self.store.get_goal_info(goal_id)
     if err:
       return None, err
     return serialize(goal, full=True), None
 
-  def list_goals(self, community_id, subdomain, team_id, user_id) -> (list, MassEnergizeAPIError):
+  def list_goals(self, community_id, subdomain, team_id, user_id) -> Tuple[list, MassEnergizeAPIError]:
     goals, err = self.store.list_goals(community_id, subdomain, team_id, user_id)
     if err:
       return None, err
     return serialize_all(goals), None
 
 
-  def create_goal(self, community_id, team_id, user_id, args) -> (dict, MassEnergizeAPIError):
+  def create_goal(self, community_id, team_id, user_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     #validate the args
     ok, err = self.validate(args)
     if not ok:
@@ -58,33 +60,33 @@ class GoalService:
     return serialize(goal), None
 
 
-  def update_goal(self, goal_id, args) -> (dict, MassEnergizeAPIError):
+  def update_goal(self, goal_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     goal, err = self.store.update_goal(goal_id, args)
     if err:
       return None, err
     return serialize(goal), None
 
-  def delete_goal(self, goal_id) -> (dict, MassEnergizeAPIError):
+  def delete_goal(self, goal_id) -> Tuple[dict, MassEnergizeAPIError]:
     goal, err = self.store.delete_goal(goal_id)
     if err:
       return None, err
     return serialize(goal), None
 
-  def copy_goal(self, goal_id) -> (dict, MassEnergizeAPIError):
+  def copy_goal(self, goal_id) -> Tuple[dict, MassEnergizeAPIError]:
     goal, err = self.store.copy_goal(goal_id)
     if err:
       return None, err
     return serialize(goal), None
 
 
-  def list_goals_for_community_admin(self,context, community_id) -> (list, MassEnergizeAPIError):
+  def list_goals_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     goals, err = self.store.list_goals_for_community_admin(context, community_id)
     if err:
       return None, err
     return serialize_all(goals), None
 
 
-  def list_goals_for_super_admin(self) -> (list, MassEnergizeAPIError):
+  def list_goals_for_super_admin(self) -> Tuple[list, MassEnergizeAPIError]:
     goals, err = self.store.list_goals_for_super_admin()
     if err:
       return None, err
