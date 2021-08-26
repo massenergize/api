@@ -1,4 +1,5 @@
-Aug 20th Deployment to Dev
+Aug 26th Deployment to Dev
+- Backend support for CarbonEquivalencies
 - Event RSVPs support
 - Allow teams to span communities
 April 13th & prior
