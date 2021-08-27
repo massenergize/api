@@ -48,6 +48,8 @@
     <meta property="article:tag" content="{{tag}}" />
     {% endfor %}
 
+    <meta http-equiv="refresh" content="5; URL={{meta.redirect_to}}" />
+
     <style>
       .container {
 
@@ -77,9 +79,9 @@
         Featured
       </div>
       <div class="card-body">
-        <h5 class="card-title">Special title treatment</h5>
-        <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-        <a href="#" class="btn btn-primary">Go somewhere</a>
+        <h5 class="card-title">Hello</h5>
+        <p class="card-text">If you are not redirected in five seconds, <a href="https://www.bitdegree.org/">click here</a>.</p>
+        <a href="{{meta.redirect_to}}" class="btn btn-primary">Click here</a>
       </div>
       <div class="card-footer text-muted">
         2 days ago

@@ -114,6 +114,7 @@ def community(request, subdomain):
         {
             "subdomain": subdomain,
             "section": f"#community#{subdomain}",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}",
             "title": str(community),
             "description": extract_text_from_html.handle(community.about_community),
             "image": community.logo.file if community.logo else {},
