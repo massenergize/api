@@ -76,11 +76,12 @@
     </header>
     <div class="card text-center">
       <div class="card-header">
-        Featured
+        {{meta.title}}
       </div>
       <div class="card-body">
-        <h5 class="card-title">Hello</h5>
-        <p class="card-text">If you are not redirected in five seconds, <a href="https://www.bitdegree.org/">click here</a>.</p>
+        <h5 class="card-title">{{meta.title}}</h5>
+        <p>Our mission at massenergize is to support community leaders with tools to help them motivate residents and businesses to reduce greenhouse gas emissions and prepare for a changing climate.</p>
+        <p class="card-text">If you are not redirected in five seconds, <a href="{{meta.redirect_to}}">click here</a>.</p>
         <a href="{{meta.redirect_to}}" class="btn btn-primary">Click here</a>
       </div>
       <div class="card-footer text-muted">
@@ -89,7 +90,7 @@
     </div>
     <main class="container">
       {% block content %} {% endblock %}
-      <p><a href="/"> - Home</a></p>
+      <p><a href="/">Home</a></p>
       <p><a href="{{meta.host}}">All Communities</a></p>
     </main>
   </body>

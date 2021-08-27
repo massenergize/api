@@ -23,7 +23,7 @@ extract_text_from_html.ignore_links = True
 
 HOST_DOMAIN = "massenergize.test:8000"
 HOST = f"http://{HOST_DOMAIN}"
-PORTAL_HOST = "https://community.massenergize.org"
+PORTAL_HOST = "https://community-dev.massenergize.org"
 
 RESERVED_LIST = set(
     [
@@ -90,7 +90,10 @@ def home(request):
 def communities(request):
     meta = META
     meta.update(
-        {"title": "Massenergize Communities",}
+        {
+            "title": "Massenergize Communities",
+            "redirect_to": f"{PORTAL_HOST}",
+        }
     )
     args = {
         "meta": META,
@@ -103,7 +106,9 @@ def communities(request):
 
 def community(request, subdomain):
     community = Community.objects.filter(
-        is_deleted=False, is_published=True, subdomain__iexact=subdomain,
+        is_deleted=False,
+        is_published=True,
+        subdomain__iexact=subdomain,
     ).first()
 
     if not community:
@@ -136,7 +141,11 @@ def actions(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": "Take Action",}
+        {
+            "subdomain": subdomain,
+            "title": "Take Action",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/actions",
+        }
     )
     args = {
         "meta": meta,
@@ -150,19 +159,25 @@ def actions(request):
 
 def action(request, id):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
+    action = Action.objects.filter(
+        pk=id,
+        community__subdomain__iexact=subdomain,
+        is_deleted=False,
+        is_published=True,
+    ).first()
+
+    if not action:
+        raise Http404
+
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": "Take Action",}
+        {
+            "subdomain": subdomain,
+            "title": "Take Action",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/action/{id}",
+        }
     )
-    args = {
-        "meta": meta,
-        "action": Action.objects.filter(
-            pk=id,
-            community__subdomain__iexact=subdomain,
-            is_deleted=False,
-            is_published=True,
-        ).first(),  # TODO: handle None case
-    }
+    args = {"meta": meta, "action": action}
     return render(request, "action.html", args)
 
 
@@ -170,7 +185,11 @@ def events(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": "Attend an event near you",}
+        {
+            "subdomain": subdomain,
+            "title": "Attend an event near you",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/events",
+        }
     )
     args = {
         "meta": meta,
@@ -197,7 +216,11 @@ def event(request, id):
 
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": str(event),}
+        {
+            "subdomain": subdomain,
+            "title": str(event),
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/event/{id}",
+        }
     )
     args = {
         "host": HOST,
@@ -216,7 +239,11 @@ def vendors(request):
 
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": "Services & Vendors",}
+        {
+            "subdomain": subdomain,
+            "title": "Services & Vendors",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/services",
+        }
     )
 
     args = {
@@ -237,7 +264,11 @@ def vendor(request, id):
 
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": str(vendor),}
+        {
+            "subdomain": subdomain,
+            "title": str(vendor),
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/services/{id}",
+        }
     )
 
     args = {
@@ -252,7 +283,11 @@ def teams(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": "Teams",}
+        {
+            "subdomain": subdomain,
+            "title": "Teams",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/teams",
+        }
     )
 
     args = {
@@ -278,7 +313,11 @@ def team(request, id):
 
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": str(team),}
+        {
+            "subdomain": subdomain,
+            "title": str(team),
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/teams/{id}",
+        }
     )
 
     args = {
@@ -292,7 +331,11 @@ def testimonials(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": "Teams",}
+        {
+            "subdomain": subdomain,
+            "title": "Teams",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/testimonials",
+        }
     )
 
     args = {
@@ -319,7 +362,11 @@ def testimonial(request, id):
 
     meta = META
     meta.update(
-        {"subdomain": subdomain, "title": str(testimonial),}
+        {
+            "subdomain": subdomain,
+            "title": str(testimonial),
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/testimonials/{id}",
+        }
     )
 
     args = {
