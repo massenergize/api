@@ -77,10 +77,8 @@ def _subdomain_is_valid(subdomain):
     return Community.objects.filter(subdomain__iexact=subdomain).exists()
 
 
-# Create your views here.
 def home(request):
     subdomain = _get_subdomain(request, False)
-    print(subdomain)
     if not subdomain:
         return communities(request)
     elif _subdomain_is_valid(subdomain):
@@ -92,9 +90,7 @@ def home(request):
 def communities(request):
     meta = META
     meta.update(
-        {
-            "title": "Massenergize Communities",
-        }
+        {"title": "Massenergize Communities",}
     )
     args = {
         "meta": META,
@@ -107,9 +103,7 @@ def communities(request):
 
 def community(request, subdomain):
     community = Community.objects.filter(
-        is_deleted=False,
-        is_published=True,
-        subdomain=subdomain,
+        is_deleted=False, is_published=True, subdomain__iexact=subdomain,
     ).first()
 
     if not community:
@@ -141,15 +135,12 @@ def actions(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": "Take Action",
-        }
+        {"subdomain": subdomain, "title": "Take Action",}
     )
     args = {
         "meta": meta,
         "actions": Action.objects.filter(
-            is_deleted=False, is_published=True, community__subdomain=subdomain
+            is_deleted=False, is_published=True, community__subdomain__iexact=subdomain
         ).values("id", "title", "featured_summary"),
     }
 
@@ -160,16 +151,13 @@ def action(request, id):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": "Take Action",
-        }
+        {"subdomain": subdomain, "title": "Take Action",}
     )
     args = {
         "meta": meta,
         "action": Action.objects.filter(
             pk=id,
-            community__subdomain=subdomain,
+            community__subdomain__iexact=subdomain,
             is_deleted=False,
             is_published=True,
         ).first(),  # TODO: handle None case
@@ -181,15 +169,12 @@ def events(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": "Attend an event near you",
-        }
+        {"subdomain": subdomain, "title": "Attend an event near you",}
     )
     args = {
         "meta": meta,
         "events": Event.objects.filter(
-            is_deleted=False, is_published=True, community__subdomain=subdomain
+            is_deleted=False, is_published=True, community__subdomain__iexact=subdomain
         ).values(
             "id", "name", "start_date_and_time", "end_date_and_time", "featured_summary"
         ),
@@ -200,7 +185,10 @@ def events(request):
 def event(request, id):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     event = Event.objects.filter(
-        is_deleted=False, is_published=True, pk=id, community__subdomain=subdomain
+        is_deleted=False,
+        is_published=True,
+        pk=id,
+        community__subdomain__iexact=subdomain,
     ).first()
 
     if not event:
@@ -208,10 +196,7 @@ def event(request, id):
 
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": str(event),
-        }
+        {"subdomain": subdomain, "title": str(event),}
     )
     args = {
         "host": HOST,
@@ -230,10 +215,7 @@ def vendors(request):
 
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": "Services & Vendors",
-        }
+        {"subdomain": subdomain, "title": "Services & Vendors",}
     )
 
     args = {
@@ -254,10 +236,7 @@ def vendor(request, id):
 
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": str(vendor),
-        }
+        {"subdomain": subdomain, "title": str(vendor),}
     )
 
     args = {
@@ -272,16 +251,13 @@ def teams(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": "Teams",
-        }
+        {"subdomain": subdomain, "title": "Teams",}
     )
 
     args = {
         "meta": meta,
         "teams": Team.objects.filter(
-            is_deleted=False, is_published=True, community__subdomain=subdomain
+            is_deleted=False, is_published=True, community__subdomain__iexact=subdomain
         ).values("id", "name", "tagline"),
     }
     return render(request, "teams.html", args)
@@ -290,7 +266,10 @@ def teams(request):
 def team(request, id):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     team = Team.objects.filter(
-        is_deleted=False, is_published=True, pk=id, community__subdomain=subdomain
+        is_deleted=False,
+        is_published=True,
+        pk=id,
+        community__subdomain__iexact=subdomain,
     ).first()
 
     if not team:
@@ -298,10 +277,7 @@ def team(request, id):
 
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": str(team),
-        }
+        {"subdomain": subdomain, "title": str(team),}
     )
 
     args = {
@@ -315,17 +291,14 @@ def testimonials(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": "Teams",
-        }
+        {"subdomain": subdomain, "title": "Teams",}
     )
 
     args = {
         "meta": meta,
         "title": "Testimonials and User Stories",
         "testimonials": Testimonial.objects.filter(
-            is_deleted=False, is_published=True, community__subdomain=subdomain
+            is_deleted=False, is_published=True, community__subdomain__iexact=subdomain
         ).values("id", "title", "body"),
     }
     return render(request, "testimonials.html", args)
@@ -334,7 +307,10 @@ def testimonials(request):
 def testimonial(request, id):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
     testimonial = Testimonial.objects.filter(
-        is_deleted=False, is_published=True, pk=id, community__subdomain=subdomain
+        is_deleted=False,
+        is_published=True,
+        pk=id,
+        community__subdomain__iexact=subdomain,
     ).first()
 
     if not testimonial:
@@ -342,10 +318,7 @@ def testimonial(request, id):
 
     meta = META
     meta.update(
-        {
-            "subdomain": subdomain,
-            "title": str(testimonial),
-        }
+        {"subdomain": subdomain, "title": str(testimonial),}
     )
 
     args = {
