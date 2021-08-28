@@ -8,6 +8,7 @@ from database.models import Deployment
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
+from typing import Tuple
 
 class MiscellaneousService:
   """
@@ -18,13 +19,13 @@ class MiscellaneousService:
     self.store =  MiscellaneousStore()
 
   
-  def navigation_menu_list(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def navigation_menu_list(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     main_menu_items, err = self.store.navigation_menu_list(context, args)
     if err:
       return None, err
     return serialize_all(main_menu_items), None
   
-  def backfill(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def backfill(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     result, err = self.store.backfill(context, args)
     if err:
       return None, err
@@ -70,3 +71,27 @@ class MiscellaneousService:
         'SITE_FONT_COLOR': SITE_FONT_COLOR
       }
     )
+
+  def create_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    carbon_data, err = self.store.create_carbon_equivalency(args)
+    if err:
+      return None, err
+    return serialize(carbon_data), None
+
+  def update_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    carbon_data, err = self.store.update_carbon_equivalency(args)
+    if err:
+      return None, err
+    return serialize(carbon_data), None
+  
+  def get_carbon_equivalencies(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    carbon_data, err = self.store.get_carbon_equivalencies(args)
+    if err:
+      return None, err
+    return serialize_all(carbon_data), None
+
+  def delete_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    carbon_data, err = self.store.delete_carbon_equivalency(args)
+    if err:
+      return None, err
+    return serialize(carbon_data), None

@@ -6,7 +6,7 @@ from django.db.models import Q, prefetch_related_objects
 from api.store.team import get_team_users
 from .utils import get_community
 from sentry_sdk import capture_message
-
+from typing import Tuple
 
 def get_households_engaged(community: Community):
 
@@ -46,7 +46,7 @@ class GraphStore:
   def __init__(self):
     self.name = "Graph Store/DB"
 
-  def get_graph_info(self,  context: Context, args) -> (dict, MassEnergizeAPIError):
+  def get_graph_info(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       graph = Graph.objects.filter(**args).first()
       if not graph:
@@ -57,7 +57,7 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_graphs(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_graphs(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       graphs = []
       actions_completed_graph, err = self.graph_actions_completed(context, args)
@@ -80,7 +80,7 @@ class GraphStore:
 
 
 
-  def graph_actions_completed(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
+  def graph_actions_completed(self, context: Context, args) -> Tuple[Graph, MassEnergizeAPIError]:
     try:
       subdomain = args.get('subdomain', None)
       community_id = args.get('community_id', None)
@@ -92,7 +92,7 @@ class GraphStore:
       if not community:
         return None, InvalidResourceError()
 
-      if context.is_prod and not context.user_is_admin():
+      if not context.is_sandbox and not context.user_is_admin():
         if not community.is_published:
           return None, CustomMassenergizeError("Content Not Available Yet")
 
@@ -123,7 +123,7 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-  def graph_actions_completed_by_team(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
+  def graph_actions_completed_by_team(self, context: Context, args) -> Tuple[Graph, MassEnergizeAPIError]:
     try:
 
       team_id = args.get('team_id', None)
@@ -136,7 +136,7 @@ class GraphStore:
       if not team:
         return None, InvalidResourceError()
 
-      if context.is_prod and not context.user_is_admin():
+      if not context.is_sandbox and not context.user_is_admin():
         if not team.is_published:
           return None, CustomMassenergizeError("Content Not Available Yet")
   
@@ -171,7 +171,7 @@ class GraphStore:
 
 
 
-  def graph_communities_impact(self, context: Context, args) -> (Graph, MassEnergizeAPIError):
+  def graph_communities_impact(self, context: Context, args) -> Tuple[Graph, MassEnergizeAPIError]:
     try:
       subdomain = args.get('subdomain', None)
       community_id = args.get('community_id', None)
@@ -200,7 +200,7 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_graph(self, context: Context, args) -> (dict, MassEnergizeAPIError):
+  def create_graph(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -249,7 +249,7 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_graph(self, context:Context, args:dict) -> (dict, MassEnergizeAPIError):
+  def update_graph(self, context:Context, args:dict) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       for k,v in args.items():
         if 'reported_value' in k:
@@ -267,7 +267,7 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_data(self, context:Context, args:dict) -> (dict, MassEnergizeAPIError):
+  def update_data(self, context:Context, args:dict) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       value = args.get('value')
       data_id = args.get('data_id')
@@ -284,7 +284,7 @@ class GraphStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def delete_data(self, context:Context, data_id) -> (dict, MassEnergizeAPIError):
+  def delete_data(self, context:Context, data_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       result = Data.objects.filter(pk=data_id).delete()
       return result, None
@@ -293,7 +293,7 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_graph(self, context: Context, graph_id) -> (dict, MassEnergizeAPIError):
+  def delete_graph(self, context: Context, graph_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       graphs = Graph.objects.filter(id=graph_id)
       graphs.update(is_deleted=True, is_published=False)
@@ -303,7 +303,7 @@ class GraphStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_graphs_for_community_admin(self,  context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def list_graphs_for_community_admin(self,  context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_graphs_for_super_admin(context)

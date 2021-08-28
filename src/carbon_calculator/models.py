@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import JSONField
 from django.forms.models import model_to_dict
 from database.utils.constants import SHORT_STR_LEN, TINY_STR_LEN
 from database.utils.common import  json_loader, get_json_if_not_none
@@ -67,7 +66,7 @@ class Action(models.Model):
     description = models.CharField(max_length=MED_STR_LEN, blank=True) #"Action short description"
     helptext = models.CharField(max_length=MED_STR_LEN, blank=True) #"This text explains what the action is about, in 20 words or less."
     average_points = models.PositiveIntegerField(default=0)
-    questions = JSONField(blank=True)    # list of questions by name
+    questions = models.JSONField(blank=True)    # list of questions by name
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
 
     def info(self):
@@ -114,17 +113,17 @@ class Question(models.Model):
     question_text = models.CharField(max_length=MED_STR_LEN, blank=False)
     question_type = models.CharField(max_length=TINY_STR_LEN, choices=RESPONSE_TYPES, default=CHOICE)
     response_1 = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    skip_1 = JSONField(blank=True, null=True)
+    skip_1 = models.JSONField(blank=True, null=True)
     response_2 = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    skip_2 = JSONField(blank=True, null=True)
+    skip_2 = models.JSONField(blank=True, null=True)
     response_3 = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    skip_3 = JSONField(blank=True, null=True)
+    skip_3 = models.JSONField(blank=True, null=True)
     response_4 = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    skip_4 = JSONField(blank=True, null=True)
+    skip_4 = models.JSONField(blank=True, null=True)
     response_5 = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    skip_5 = JSONField(blank=True, null=True)
+    skip_5 = models.JSONField(blank=True, null=True)
     response_6 = models.CharField(max_length=SHORT_STR_LEN, null=True)
-    skip_6 = JSONField(blank=True, null=True)
+    skip_6 = models.JSONField(blank=True, null=True)
     minimum_value = models.FloatField(null=True)
     maximum_value = models.FloatField(null=True)
     typical_value = models.FloatField(null=True)
@@ -147,7 +146,7 @@ class Station(models.Model):
     displayname = models.CharField(max_length=NAME_STR_LEN,blank=True)
     description = models.CharField(max_length=SHORT_STR_LEN)
     icon = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_station_icon')
-    actions = JSONField(blank=True, null=True)
+    actions = models.JSONField(blank=True, null=True)
 
     def simple_json(self):
         return model_to_dict(self)
@@ -240,7 +239,7 @@ class Event(models.Model):
     location = models.CharField(max_length=SHORT_STR_LEN,blank=True)
 #    stations = models.ForeignKey(Station, on_delete=models.SET_NULL, 
 #        null=True, blank=True, related_name='cc_station_picture')
-    stationslist = JSONField(null=True, blank=True)
+    stationslist = models.JSONField(null=True, blank=True)
     groups = models.ManyToManyField(Group,blank=True)
     host_org = models.ManyToManyField(Org,blank=True,related_name='host_orgs')
     sponsor_org = models.ManyToManyField(Org,blank=True,related_name='sponsor_orgs')
@@ -278,7 +277,7 @@ class ActionPoints(models.Model):
     action = models.CharField(max_length=NAME_STR_LEN, blank=True)
 
 #    the questions and answers
-    choices = JSONField(blank=True)
+    choices = models.JSONField(blank=True)
 
     #next two fields added 11/15/20
     action_date = models.DateTimeField(auto_now_add=True, null=True)
