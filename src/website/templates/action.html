@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{action.title}}</h2>
+<p>Summary: {{action.featured_summary}}</p>
+<h4>Description</h4>
+<p>{{action.description|safe }}</p>
+<h4>Deep Dive</h4>
+<p>{{action.deep_dive|safe }}</p>
+<h4>Steps to Take</h4>
+<p>{{action.steps_to_take|safe }}</p>
+
+<a href="/actions"> - All Actions</a>
+{% endblock %}

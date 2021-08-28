@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{community.name}}</h1>
+<h6>Community Organizer: {{community.owner_name}}</h6>
+<p>{{community.about_community}}</p>
+
+<ul>
+  <li><a href="/events" >Events</a></li>
+  <li><a href="/actions" >Actions</a></li>
+  <li><a href="/teams" >Teams</a></li>
+  <li><a href="/services" >Services/Vendors</a></li>
+  <li><a href="/testimonials" >Testimonials</a></li>
+</ul>
+{% endblock %}

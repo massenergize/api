@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{vendor.name}}</h2>
+<h6>Service Area: {{vendor.service_area}}</h6>
+<p>{{vendor.description|safe}}</p>
+<h4>Service Area</h4>
+<a href="/services"> - All Vendor/Services</a>
+{% endblock %}

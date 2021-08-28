@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% for a in actions %}
+  <div>
+    <a href="/action/{{a.id}}"><h2>{{a.title}}</h2></a> 
+    <p>{{a.featured_summary}}</p>  
+  </div>
+  {% endfor %}
+{% endblock %}
