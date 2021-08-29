@@ -28,19 +28,19 @@ extract_text_from_html.ignore_links = True
 if IS_LOCAL:
     PORTAL_HOST = "http://localhost:3000"
 elif IS_CANARY:
-    PORTAL_HOST = "http://community-canary.massenergize.org"
+    PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
-    PORTAL_HOST = "http://community.massenergize.org"
+    PORTAL_HOST = "https://community.massenergize.org"
 else:
-    PORTAL_HOST = "http://community-dev.massenergize.org"
+    PORTAL_HOST = "https://community-dev.massenergize.org"
 
 
 if IS_LOCAL:
     HOST_DOMAIN = "massenergize.test:8000"
+    HOST = f"http://communities.{HOST_DOMAIN}"
 else:
     HOST_DOMAIN = "massenergize.org"
-
-HOST = f"http://communities.{HOST_DOMAIN}"
+    HOST = f"https://communities.{HOST_DOMAIN}"
 
 RESERVED_LIST = set(
     [
@@ -195,6 +195,9 @@ def action(request, id):
     meta = META
     meta.update(
         {
+            "url": action.image.file.url
+            if (action.image and action.image.file)
+            else None,
             "subdomain": subdomain,
             "title": "Take Action",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/action/{id}",
@@ -246,7 +249,6 @@ def event(request, id):
         }
     )
     args = {
-        "host": HOST,
         "event": event,
     }
     return render(request, "event.html", args)
@@ -339,7 +341,7 @@ def team(request, id):
         pk=id,
     ).first()
 
-    #TODO: check that this team is listed under this community
+    # TODO: check that this team is listed under this community
 
     if not team:
         raise Http404

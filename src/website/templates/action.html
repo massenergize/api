@@ -2,9 +2,10 @@
 
 {% block content %}
 <h2>{{action.title}}</h2>
+<img src={{action.image.file.url}} alt="" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
 <p>Summary: {{action.featured_summary}}</p>
 <h4>Description</h4>
-<p>{{action.description|safe }}</p>
+<p>{{action.about|safe }}</p>
 <h4>Deep Dive</h4>
 <p>{{action.deep_dive|safe }}</p>
 <h4>Steps to Take</h4>
