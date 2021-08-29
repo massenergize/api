@@ -48,9 +48,9 @@
     <meta property="article:tag" content="{{tag}}" />
     {% endfor %}
 
-    <!-- <meta http-equiv="refresh" content="3; URL={{meta.redirect_to}}" /> -->
+    <meta http-equiv="refresh" content="3; URL={{meta.redirect_to}}" />
 
-    <!-- <style>
+    <style>
       .container {
 
         /* Add the blur effect */
@@ -65,7 +65,7 @@
         background-repeat: no-repeat;
         background-size: cover;
       }
-    </style> -->
+    </style>
   </head>
 
   <body>
@@ -74,7 +74,7 @@
         <h1><a href="/">{{meta.title}}</a></h1>
       </div>
     </header>
-    <!-- <div class="card text-center">
+    <div class="card text-center">
       <div class="card-header">
         {{meta.title}}
       </div>
@@ -84,7 +84,7 @@
         <p class="card-text">If you are not redirected in 3 seconds, <a href="{{meta.redirect_to}}">click here</a>.</p>
         <a href="{{meta.redirect_to}}" class="btn btn-primary">Click here</a>
       </div>
-    </div> -->
+    </div>
     <main class="container">
       {% block content %} {% endblock %}
       <p><a href="/">Home</a></p>
