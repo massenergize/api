@@ -286,11 +286,12 @@ class MiscellaneousStore:
         return None, CustomMassenergizeError(e)
   
   
-    def update_carbon_equivalency(self, tag_id, args):
+    def update_carbon_equivalency(self, args):
       try:
+        id = args.get("id", None)
         icon = args.pop("icon", None)
   
-        carbon_equivalencies = CarbonEquivalency.objects.filter(id=tag_id)
+        carbon_equivalencies = CarbonEquivalency.objects.filter(id=id)
   
         if not carbon_equivalencies:
             return None, InvalidResourceError()
@@ -312,7 +313,17 @@ class MiscellaneousStore:
   
   
     def get_carbon_equivalencies(self, args):
-      carbon_equivalencies = CarbonEquivalency.objects.all()
+
+      id = args.get("id", None)
+      if id:
+        carbon_equivalencies = CarbonEquivalency.objects.filter(id=id)
+        if not carbon_equivalencies:
+          return None, InvalidResourceError()
+        else:
+          carbon_equivalencies = carbon_equivalencies.first()
+
+      else:
+        carbon_equivalencies = CarbonEquivalency.objects.all()
       return carbon_equivalencies, None
   
     def delete_carbon_equivalency(self, tag_id, args):

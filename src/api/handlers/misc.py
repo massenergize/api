@@ -23,6 +23,7 @@ class MiscellaneousHandler(RouteHandler):
     self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
     self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
     self.add("/data.carbonEquivalency.get", self.get_carbon_equivalencies)
+    self.add("/data.carbonEquivalency.info", self.get_carbon_equivalencies)
     self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
     self.add("/home", self.home) 
     self.add("", self.home) 
@@ -60,6 +61,11 @@ class MiscellaneousHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
+    # if id passed, return just one, otherwise all
+    self.validator.expect("id", int, is_required=True)
+    self.validator.rename("carbon_equivalency_id", "id")
+    args, err = self.validator.verify(args)
+
     carbon_info, err = self.service.update_carbon_equivalency(args)
 
     if err:
@@ -69,6 +75,11 @@ class MiscellaneousHandler(RouteHandler):
   def get_carbon_equivalencies(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    # if id passed, return just one, otherwise all
+    self.validator.expect("id", int)
+    self.validator.rename("carbon_equivalency_id", "id")
+    args, err = self.validator.verify(args)
     
     carbon_info, err = self.service.get_carbon_equivalencies(args)
 
