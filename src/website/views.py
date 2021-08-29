@@ -249,6 +249,7 @@ def event(request, id):
         }
     )
     args = {
+        "meta": meta,
         "event": event,
     }
     return render(request, "event.html", args)
