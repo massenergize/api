@@ -200,7 +200,7 @@ def action(request, id):
             else None,
             "subdomain": subdomain,
             "title": "Take Action",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/action/{id}",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/actions/{id}",
         }
     )
     args = {"meta": meta, "action": action}
@@ -245,7 +245,7 @@ def event(request, id):
         {
             "subdomain": subdomain,
             "title": str(event),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/event/{id}",
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/events/{id}",
         }
     )
     args = {
