@@ -48,9 +48,9 @@
     <meta property="article:tag" content="{{tag}}" />
     {% endfor %}
 
-    <meta http-equiv="refresh" content="5; URL={{meta.redirect_to}}" />
+    <!-- <meta http-equiv="refresh" content="3; URL={{meta.redirect_to}}" /> -->
 
-    <style>
+    <!-- <style>
       .container {
 
         /* Add the blur effect */
@@ -65,7 +65,7 @@
         background-repeat: no-repeat;
         background-size: cover;
       }
-    </style>
+    </style> -->
   </head>
 
   <body>
@@ -74,20 +74,17 @@
         <h1><a href="/">{{meta.title}}</a></h1>
       </div>
     </header>
-    <div class="card text-center">
+    <!-- <div class="card text-center">
       <div class="card-header">
         {{meta.title}}
       </div>
       <div class="card-body">
         <h5 class="card-title">{{meta.title}}</h5>
         <p>Our mission at massenergize is to support community leaders with tools to help them motivate residents and businesses to reduce greenhouse gas emissions and prepare for a changing climate.</p>
-        <p class="card-text">If you are not redirected in five seconds, <a href="{{meta.redirect_to}}">click here</a>.</p>
+        <p class="card-text">If you are not redirected in 3 seconds, <a href="{{meta.redirect_to}}">click here</a>.</p>
         <a href="{{meta.redirect_to}}" class="btn btn-primary">Click here</a>
       </div>
-      <div class="card-footer text-muted">
-        2 days ago
-      </div>
-    </div>
+    </div> -->
     <main class="container">
       {% block content %} {% endblock %}
       <p><a href="/">Home</a></p>

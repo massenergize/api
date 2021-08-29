@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{page.title}}</h2>
+<h4>{{page.sub_title}}</h2>
+<p>{{page.description|safe }}</p>
+
+{% if page.featured_video_link != '' %}
+<a href="{{page.featured_video_link}}">Watch featured video</a>
+{% endif %}
+
+{% for image in page.images.all %}
+<img src={{image.file.url}} alt="" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
+{% endfor %}
+
+{% endblock %}

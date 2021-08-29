@@ -1,5 +1,12 @@
+import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.massenergize_response import MassenergizeResponse
+from django.http import Http404
+from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, IS_LOCAL
+from sentry_sdk import capture_message
+from _main_.utils.utils import load_json, load_text_contents
+from api.store.misc import MiscellaneousStore
+from api.services.misc import MiscellaneousService
 from database.models import (
     Deployment,
     Community,
@@ -8,22 +15,32 @@ from database.models import (
     Vendor,
     Action,
     Testimonial,
+    AboutUsPageSettings,
+    ContactUsPageSettings,
+    DonatePageSettings,
+    ImpactPageSettings,
 )
-from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
-from sentry_sdk import capture_message
-from _main_.utils.utils import load_json, load_text_contents
-from api.store.misc import MiscellaneousStore
-from api.services.misc import MiscellaneousService
-import html2text
-from django.http import Http404
-
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
 
-HOST_DOMAIN = "massenergize.test:8000"
-HOST = f"http://{HOST_DOMAIN}"
-PORTAL_HOST = "https://community-dev.massenergize.org"
+
+if IS_LOCAL:
+    PORTAL_HOST = "http://localhost:3000"
+elif IS_CANARY:
+    PORTAL_HOST = "http://community-canary.massenergize.org"
+elif IS_PROD:
+    PORTAL_HOST = "http://community.massenergize.org"
+else:
+    PORTAL_HOST = "http://community-dev.massenergize.org"
+
+
+if IS_LOCAL:
+    HOST_DOMAIN = "massenergize.test:8000"
+else:
+    HOST_DOMAIN = "massenergize.org"
+
+HOST = f"http://communities.{HOST_DOMAIN}"
 
 RESERVED_LIST = set(
     [
@@ -37,6 +54,8 @@ RESERVED_LIST = set(
         "administrator",
         "auth",
         "authentication",
+        "community-dev",
+        "community-canary",
         "community",
         "communities",
     ]
@@ -79,7 +98,7 @@ def _subdomain_is_valid(subdomain):
 
 def home(request):
     subdomain = _get_subdomain(request, False)
-    if not subdomain:
+    if not subdomain or subdomain == "communities":
         return communities(request)
     elif _subdomain_is_valid(subdomain):
         return community(request, subdomain)
@@ -114,6 +133,13 @@ def community(request, subdomain):
     if not community:
         raise Http404
 
+    about = (
+        AboutUsPageSettings.objects.filter(
+            is_deleted=False, community__subdomain__iexact=subdomain
+        ).first()
+        or {}
+    )
+
     meta = META
     meta.update(
         {
@@ -130,10 +156,7 @@ def community(request, subdomain):
         }
     )
 
-    args = {
-        "meta": meta,
-        "community": community,
-    }
+    args = {"meta": meta, "community": community, "about": about}
     return render(request, "community.html", args)
 
 
@@ -281,6 +304,17 @@ def vendor(request, id):
 
 def teams(request):
     subdomain = _get_subdomain(request, enforce_is_valid=True)
+    community = Community.objects.filter(
+        subdomain__iexact=subdomain, is_deleted=False, is_published=True
+    ).first()
+
+    teams = community.community_teams.filter(
+        is_deleted=False, is_published=True
+    ).values("id", "name", "tagline") | community.primary_community_teams.filter(
+        is_deleted=False, is_published=True
+    ).values(
+        "id", "name", "tagline"
+    )
     meta = META
     meta.update(
         {
@@ -292,9 +326,7 @@ def teams(request):
 
     args = {
         "meta": meta,
-        "teams": Team.objects.filter(
-            is_deleted=False, is_published=True, community__subdomain__iexact=subdomain
-        ).values("id", "name", "tagline"),
+        "teams": teams,
     }
     return render(request, "teams.html", args)
 
@@ -305,8 +337,9 @@ def team(request, id):
         is_deleted=False,
         is_published=True,
         pk=id,
-        community__subdomain__iexact=subdomain,
     ).first()
+
+    #TODO: check that this team is listed under this community
 
     if not team:
         raise Http404
@@ -376,6 +409,110 @@ def testimonial(request, id):
     return render(request, "testimonial.html", args)
 
 
+def about_us(request):
+    subdomain = _get_subdomain(request, enforce_is_valid=True)
+    page = AboutUsPageSettings.objects.filter(
+        is_deleted=False, community__subdomain__iexact=subdomain
+    ).first()
+
+    if not page:
+        raise Http404
+
+    meta = META
+    meta.update(
+        {
+            "subdomain": subdomain,
+            "title": str(page),
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/aboutus",
+        }
+    )
+
+    args = {
+        "meta": meta,
+        "page": page,
+    }
+
+    return render(request, "page__about_us.html", args)
+
+
+def donate(request):
+    subdomain = _get_subdomain(request, enforce_is_valid=True)
+    page = DonatePageSettings.objects.filter(
+        is_deleted=False, community__subdomain__iexact=subdomain
+    ).first()
+
+    if not page:
+        raise Http404
+
+    meta = META
+    meta.update(
+        {
+            "subdomain": subdomain,
+            "title": str(page),
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/donate",
+        }
+    )
+
+    args = {
+        "meta": meta,
+        "page": page,
+    }
+
+    return render(request, "page__donate.html", args)
+
+
+def impact(request):
+    subdomain = _get_subdomain(request, enforce_is_valid=True)
+    page = ImpactPageSettings.objects.filter(
+        is_deleted=False, community__subdomain__iexact=subdomain
+    ).first()
+
+    if not page:
+        raise Http404
+
+    meta = META
+    meta.update(
+        {
+            "subdomain": subdomain,
+            "title": str(page),
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/impact",
+        }
+    )
+
+    args = {
+        "meta": meta,
+        "page": page,
+    }
+
+    return render(request, "page__impact.html", args)
+
+
+def contact_us(request):
+    subdomain = _get_subdomain(request, enforce_is_valid=True)
+    page = ContactUsPageSettings.objects.filter(
+        is_deleted=False, community__subdomain__iexact=subdomain
+    ).first()
+
+    if not page:
+        raise Http404
+
+    meta = META
+    meta.update(
+        {
+            "subdomain": subdomain,
+            "title": str(page),
+            "redirect_to": f"{PORTAL_HOST}/{subdomain}/impact",
+        }
+    )
+
+    args = {
+        "meta": meta,
+        "page": page,
+    }
+
+    return render(request, "page__contact_us.html", args)
+
+
 def generate_sitemap(request):
     d = MiscellaneousStore().generate_sitemap_for_portal()
     return render(request, "sitemap_template.xml", d, content_type="text/xml")
@@ -396,7 +533,5 @@ def handler404(request, exception):
 
 
 def handler500(request):
-    import traceback
-
     capture_message(str(traceback.print_exc()))
     return MassenergizeResponse(error="server_error")

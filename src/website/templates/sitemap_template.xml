@@ -19,6 +19,30 @@
       <priority>0.9</priority>
    </url>
    {% endfor %}
+  {% for c in communities %}
+   <url>
+      <loc>http://community.massenergize.org/{{c.subdomain}}/donate</loc>
+      <lastmod>{{c.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   {% endfor %}
+  {% for c in communities %}
+   <url>
+      <loc>http://community.massenergize.org/{{c.subdomain}}/contactus</loc>
+      <lastmod>{{c.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   {% endfor %}
+  {% for c in communities %}
+   <url>
+      <loc>http://community.massenergize.org/{{c.subdomain}}/impact</loc>
+      <lastmod>{{c.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   {% endfor %}
   {% for a in actions %}
    <url>
       <loc>http://community.massenergize.org/{{a.community__subdomain}}/actions/{{a.id}}</loc>
