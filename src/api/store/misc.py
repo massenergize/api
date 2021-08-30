@@ -7,7 +7,6 @@ from .utils import find_reu_community, split_location_string, check_location
 from sentry_sdk import capture_message
 from typing import Tuple
 
-
 class MiscellaneousStore:
     def __init__(self):
         self.name = "Miscellaneous Store/DB"
@@ -270,15 +269,7 @@ class MiscellaneousStore:
  
     def create_carbon_equivalency(self, args):
       try:
-        icon = args.pop("icon", None)      
-        new_carbon_equivalency = CarbonEquivalency.objects.create(**args)
-  
-        if icon:
-          cFav = Media(file=icon, name=f"{args.get('name', '')} CarbonEquivalencyFavicon")
-          cFav.save()
-          new_carbon_equivalency.icon = cFav
-          new_carbon_equivalency.save()
-        
+        new_carbon_equivalency = CarbonEquivalency.objects.create(**args)        
         return new_carbon_equivalency, None
   
       except Exception as e:
@@ -289,7 +280,6 @@ class MiscellaneousStore:
     def update_carbon_equivalency(self, args):
       try:
         id = args.get("id", None)
-        icon = args.pop("icon", None)
   
         carbon_equivalencies = CarbonEquivalency.objects.filter(id=id)
   
@@ -298,13 +288,7 @@ class MiscellaneousStore:
   
         carbon_equivalencies.update(**args)
         carbon_equivalency = carbon_equivalencies.first()
-  
-        if icon:
-          cFav = Media(file=icon, name=f"{args.get('name', '')} CarbonEquivalencyFavicon")
-          cFav.save()
-          carbon_equivalency.icon = cFav
-          carbon_equivalency.save()
-        
+          
         return carbon_equivalency, None
   
       except Exception as e:
@@ -335,32 +319,32 @@ class MiscellaneousStore:
       carbon_equivalency.delete(**args)
       return carbon_equivalency, None
   
-      def generate_sitemap_for_portal(self):
-          return {
-              'communities': Community.objects.filter(
-                is_deleted=False, 
-                is_published=True
-              ).values('id', 'subdomain', 'updated_at'),
-              'actions': Action.objects.filter(
-                is_deleted=False, 
-                is_published=True,
-                community__is_published=True,
-                community__is_deleted=False,
-              ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
-              'services': Vendor.objects.filter(
-                is_deleted=False, 
-                is_published=True
-              ).prefetch_related('communities').values('id', 'communities__subdomain', 'updated_at'),
-              'events': Event.objects.filter(
-                is_deleted=False, 
-                is_published=True,
-                community__is_published=True,
-                community__is_deleted=False,
-              ).select_related('community').values('id', 'community__subdomain'),
-              'teams': Team.objects.filter(
-                is_deleted=False, 
-                is_published=True,
-                community__is_published=True,
-                community__is_deleted=False,
-              ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
-          }
+    def generate_sitemap_for_portal(self):
+        return {
+            'communities': Community.objects.filter(
+              is_deleted=False, 
+              is_published=True
+            ).values('id', 'subdomain', 'updated_at'),
+            'actions': Action.objects.filter(
+              is_deleted=False, 
+              is_published=True,
+              community__is_published=True,
+              community__is_deleted=False,
+            ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
+            'services': Vendor.objects.filter(
+              is_deleted=False, 
+              is_published=True
+            ).prefetch_related('communities').values('id', 'communities__subdomain', 'updated_at'),
+            'events': Event.objects.filter(
+              is_deleted=False, 
+              is_published=True,
+              community__is_published=True,
+              community__is_deleted=False,
+            ).select_related('community').values('id', 'community__subdomain'),
+            'teams': Team.objects.filter(
+              is_deleted=False, 
+              is_published=True,
+              community__is_published=True,
+              community__is_deleted=False,
+            ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
+        }

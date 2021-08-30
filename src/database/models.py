@@ -821,8 +821,7 @@ class CarbonEquivalency(models.Model):
   name : str
     Name of the unit used. E.g. "Tree"
   value: int
-    Value of carbon (in Lbs) for comparison against 
-    impact.
+    Value is carbon quantity of this per metric ton CO2.  Use https://www.epa.gov/energy/greenhouse-gas-equivalencies-calculator
   icon: 
     Graphic representing the appropriate equivalancey.
   explanation: str
@@ -836,9 +835,8 @@ class CarbonEquivalency(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=50)
-  value = models.BigIntegerField()
-  icon = models.ForeignKey(Media, on_delete=models.SET_NULL, 
-    blank=True, null=True)
+  value = models.FloatField()
+  icon = models.CharField(max_length=50)
   explanation = models.CharField(max_length=100)
   reference = models.CharField(max_length=100)
   date = models.DateTimeField(auto_now=True)
