@@ -1,4 +1,4 @@
-from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
+from database.models import Action,Vendor, Event, Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
 from _main_.utils.context import Context
 from database.utils.common import json_loader
@@ -324,32 +324,26 @@ class MiscellaneousStore:
       carbon_equivalency.delete(**args)
       return carbon_equivalency, None
   
-      def generate_sitemap_for_portal(self):
-          return {
-              'communities': Community.objects.filter(
-                is_deleted=False, 
-                is_published=True
-              ).values('id', 'subdomain', 'updated_at'),
-              'actions': Action.objects.filter(
-                is_deleted=False, 
-                is_published=True,
-                community__is_published=True,
-                community__is_deleted=False,
-              ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
-              'services': Vendor.objects.filter(
-                is_deleted=False, 
-                is_published=True
-              ).prefetch_related('communities').values('id', 'communities__subdomain', 'updated_at'),
-              'events': Event.objects.filter(
-                is_deleted=False, 
-                is_published=True,
-                community__is_published=True,
-                community__is_deleted=False,
-              ).select_related('community').values('id', 'community__subdomain'),
-              'teams': Team.objects.filter(
-                is_deleted=False, 
-                is_published=True,
-                community__is_published=True,
-                community__is_deleted=False,
-              ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
-          }
+    def generate_sitemap_for_portal(self):
+        return {
+            'communities': Community.objects.filter(
+            is_deleted=False, 
+            is_published=True
+            ).values('id', 'subdomain', 'updated_at'),
+            'actions': Action.objects.filter(
+            is_deleted=False, 
+            is_published=True,
+            community__is_published=True,
+            community__is_deleted=False,
+            ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
+            'services': Vendor.objects.filter(
+            is_deleted=False, 
+            is_published=True
+            ).prefetch_related('communities').values('id', 'communities__subdomain', 'updated_at'),
+            'events': Event.objects.filter(
+            is_deleted=False, 
+            is_published=True,
+            community__is_published=True,
+            community__is_deleted=False,
+            ).select_related('community').values('id', 'community__subdomain'),
+        }

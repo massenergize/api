@@ -20,5 +20,6 @@ urlpatterns = [
   path('donate', views.donate, name='donate'),
   path('contactus', views.contact_us, name='contact_us'),
   path('impact', views.impact, name='impact'),
+  path('sitemap.xml', views.generate_sitemap_main, name='generate_sitemap_main'),
   path('sitemap', views.generate_sitemap, name='generate_sitemap'),
 ]
