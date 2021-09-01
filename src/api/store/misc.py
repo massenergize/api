@@ -310,13 +310,14 @@ class MiscellaneousStore:
         carbon_equivalencies = CarbonEquivalency.objects.all()
       return carbon_equivalencies, None
   
-    def delete_carbon_equivalency(self, tag_id, args):
-      carbon_equivalency = CarbonEquivalency.objects.filter(id=tag_id)
+    def delete_carbon_equivalency(self, args):
+      id = args.get('id', None)
+      carbon_equivalency = CarbonEquivalency.objects.filter(id=id)
   
       if not carbon_equivalency:
         return None, InvalidResourceError()
   
-      carbon_equivalency.delete(**args)
+      carbon_equivalency.delete()
       return carbon_equivalency, None
   
     def generate_sitemap_for_portal(self):

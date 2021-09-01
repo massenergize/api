@@ -821,7 +821,7 @@ class CarbonEquivalency(models.Model):
   name : str
     Name of the unit used. E.g. "Tree"
   value: int
-    Value is carbon quantity of this per metric ton CO2.  Use https://www.epa.gov/energy/greenhouse-gas-equivalencies-calculator
+    Value is how many pounds per year of CO2 per unit of this.  Use https://www.epa.gov/energy/greenhouse-gas-equivalencies-calculator
   icon: 
     Graphic representing the appropriate equivalancey.
   explanation: str

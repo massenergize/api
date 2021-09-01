@@ -90,6 +90,10 @@ class MiscellaneousHandler(RouteHandler):
   def delete_carbon_equivalency(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    self.validator.expect("id", int, is_required=True)
+    self.validator.rename("carbon_equivalency_id", "id")
+    args, err = self.validator.verify(args)
     
     carbon_info, err = self.service.delete_carbon_equivalency(args)
 
