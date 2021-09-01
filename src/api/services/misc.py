@@ -8,6 +8,7 @@ from database.models import Deployment
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
+from django.db.models.query import QuerySet
 from typing import Tuple
 
 class MiscellaneousService:
@@ -88,7 +89,10 @@ class MiscellaneousService:
     carbon_data, err = self.store.get_carbon_equivalencies(args)
     if err:
       return None, err
-    return serialize_all(carbon_data), None
+    if type(carbon_data)==QuerySet:
+      return serialize_all(carbon_data), None
+    else:
+      return serialize(carbon_data), None
 
   def delete_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     carbon_data, err = self.store.delete_carbon_equivalency(args)
