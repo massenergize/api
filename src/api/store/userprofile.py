@@ -308,6 +308,9 @@ class UserStore:
 
           user.profile_picture = pic
           user.save()
+        else:
+          user.profile_picture = None
+          user.save()
           
         return user, None
       else:
