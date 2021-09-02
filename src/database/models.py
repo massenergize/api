@@ -821,8 +821,7 @@ class CarbonEquivalency(models.Model):
   name : str
     Name of the unit used. E.g. "Tree"
   value: int
-    Value of carbon (in Lbs) for comparison against 
-    impact.
+    Value is how many pounds per year of CO2 per unit of this.  Use https://www.epa.gov/energy/greenhouse-gas-equivalencies-calculator
   icon: 
     Graphic representing the appropriate equivalancey.
   explanation: str
@@ -836,9 +835,8 @@ class CarbonEquivalency(models.Model):
   """
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=50)
-  value = models.BigIntegerField()
-  icon = models.ForeignKey(Media, on_delete=models.SET_NULL, 
-    blank=True, null=True)
+  value = models.FloatField()
+  icon = models.CharField(max_length=50)
   explanation = models.CharField(max_length=100)
   reference = models.CharField(max_length=100)
   date = models.DateTimeField(auto_now=True)
@@ -997,7 +995,7 @@ class Vendor(models.Model):
   more_info = models.JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
-  communities = models.ManyToManyField(Community, blank=True)
+  communities = models.ManyToManyField(Community, blank=True, related_name='community_vendors')
   tags = models.ManyToManyField(Tag, related_name='vendor_tags', blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   is_published = models.BooleanField(default=False, blank=True)

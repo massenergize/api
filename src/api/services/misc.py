@@ -3,6 +3,12 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.misc import MiscellaneousStore
 from _main_.utils.context import Context
+from django.shortcuts import render
+from database.models import Deployment
+from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
+from sentry_sdk import capture_message
+from _main_.utils.utils import load_json, load_text_contents
+from django.db.models.query import QuerySet
 from typing import Tuple
 
 class MiscellaneousService:
@@ -26,6 +32,47 @@ class MiscellaneousService:
       return None, err
     return result, None
 
+
+  def home(self, ctx: Context, request):
+    deployments = Deployment.objects.all()[:3]
+    build_info = load_json(BASE_DIR + "/_main_/config/build/deployConfig.json")
+    deploy_notes = load_text_contents(BASE_DIR + "/_main_/config/build/deployNotes.txt")
+    
+    deployment = Deployment.objects.filter(version=build_info.get('BUILD_VERSION', "")).first()
+    if deployment:
+      if deployment.notes != deploy_notes:
+        deployment.notes = deploy_notes
+        deployment.save()
+    else:
+      deployment = Deployment.objects.create(
+        version=build_info.get('BUILD_VERSION', ''),
+        notes=deploy_notes
+      )
+
+
+    if IS_PROD:
+      SITE_TITLE = 'MassEnergize-API'
+      SITE_BACKGROUND_COLOR = '#310161'
+      SITE_FONT_COLOR = 'white'
+    elif IS_CANARY:
+      SITE_TITLE = 'CANARY: MassEnergize-API'
+      SITE_BACKGROUND_COLOR = '#310161'
+      SITE_FONT_COLOR = 'white'
+    else:
+      SITE_TITLE = 'DEV: MassEnergize-API'
+      SITE_BACKGROUND_COLOR = '#0b5466'
+      SITE_FONT_COLOR = 'white'
+
+    return render(request, 'index.html', {
+        'deployments': deployments,
+        "BUILD_INFO": build_info,
+        "DEPLOY_NOTES": deploy_notes,
+        'SITE_TITLE': SITE_TITLE,
+        'SITE_BACKGROUND_COLOR': SITE_BACKGROUND_COLOR,
+        'SITE_FONT_COLOR': SITE_FONT_COLOR
+      }
+    )
+
   def create_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     carbon_data, err = self.store.create_carbon_equivalency(args)
     if err:
@@ -42,7 +89,10 @@ class MiscellaneousService:
     carbon_data, err = self.store.get_carbon_equivalencies(args)
     if err:
       return None, err
-    return serialize_all(carbon_data), None
+    if type(carbon_data)==QuerySet:
+      return serialize_all(carbon_data), None
+    else:
+      return serialize(carbon_data), None
 
   def delete_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     carbon_data, err = self.store.delete_carbon_equivalency(args)

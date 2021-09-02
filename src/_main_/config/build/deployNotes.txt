@@ -1,4 +1,5 @@
-Aug 26th Deployment to Dev and Canary
+Aug 28th Deployment to Dev
+- URLs and search-engine fix
 - Backend support for CarbonEquivalencies
 - Event RSVPs support
 - Allow teams to span communities

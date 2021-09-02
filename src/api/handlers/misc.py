@@ -23,7 +23,10 @@ class MiscellaneousHandler(RouteHandler):
     self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
     self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
     self.add("/data.carbonEquivalency.get", self.get_carbon_equivalencies)
+    self.add("/data.carbonEquivalency.info", self.get_carbon_equivalencies)
     self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
+    self.add("/home", self.home) 
+    self.add("", self.home) 
 
   def navigation_menu_list(self, request):
     context: Context = request.context
@@ -41,6 +44,7 @@ class MiscellaneousHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=goal_info)
 
+
   @super_admins_only
   def create_carbon_equivalency(self, request):
     context: Context = request.context
@@ -57,6 +61,11 @@ class MiscellaneousHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
+    # if id passed, return just one, otherwise all
+    self.validator.expect("id", int, is_required=True)
+    self.validator.rename("carbon_equivalency_id", "id")
+    args, err = self.validator.verify(args)
+
     carbon_info, err = self.service.update_carbon_equivalency(args)
 
     if err:
@@ -66,6 +75,11 @@ class MiscellaneousHandler(RouteHandler):
   def get_carbon_equivalencies(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    # if id passed, return just one, otherwise all
+    self.validator.expect("id", int)
+    self.validator.rename("carbon_equivalency_id", "id")
+    args, err = self.validator.verify(args)
     
     carbon_info, err = self.service.get_carbon_equivalencies(args)
 
@@ -76,6 +90,10 @@ class MiscellaneousHandler(RouteHandler):
   def delete_carbon_equivalency(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    self.validator.expect("id", int, is_required=True)
+    self.validator.rename("carbon_equivalency_id", "id")
+    args, err = self.validator.verify(args)
     
     carbon_info, err = self.service.delete_carbon_equivalency(args)
 
@@ -83,3 +101,6 @@ class MiscellaneousHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=carbon_info)
 
+  def home(self, request):
+    context: Context = request.context
+    return self.service.home(context, request)

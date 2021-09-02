@@ -45,7 +45,7 @@ class VendorStore:
       if not community:
         return [], None
       
-      vendors = community.vendor_set.filter(is_deleted=False)
+      vendors = community.community_vendors.filter(is_deleted=False)
 
       if not context.is_sandbox:
         vendors = vendors.filter(is_published=True)
@@ -226,14 +226,14 @@ class VendorStore:
         vendors = None
         for c in communities:
           if vendors is not None:
-            vendors |= c.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+            vendors |= c.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
           else:
-            vendors = c.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+            vendors = c.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
 
         return vendors.distinct(), None
 
       community = get_community_or_die(context, {'community_id': community_id})
-      vendors = community.vendor_set.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+      vendors = community.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
       return vendors, None
     except Exception as e:
       capture_message(str(e), level="error")

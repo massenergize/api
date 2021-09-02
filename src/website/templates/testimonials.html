@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<ul>
+  {% for t in testimonials %}
+  <div>
+    <a href="/testimonial/{{t.id}}"><h2>{{t.title}}</h2></a> 
+    <p>{{t.body|slice:"0:100"}}...</p>  
+  </div>
+  {% endfor %}
+{% endblock %}
