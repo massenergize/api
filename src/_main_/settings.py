@@ -180,7 +180,7 @@ DATABASES = {
 # }
 
 # url and hosts config
-ROOT_URLCONF = '_main_.urls'
+ROOT_URLCONF = 'website.urls'
 ROOT_HOSTCONF = '_main_.hosts'
 DEFAULT_HOST = 'default'
 
