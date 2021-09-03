@@ -7,6 +7,7 @@ from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
+from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
 from database.models import (
     Deployment,
     Community,
@@ -42,24 +43,6 @@ else:
     HOST_DOMAIN = "massenergize.org"
     HOST = f"https://communities.{HOST_DOMAIN}"
 
-RESERVED_LIST = set(
-    [
-        "",
-        "*",
-        "massenergize",
-        "api",
-        "admin",
-        "admin-dev",
-        "admin-canary",
-        "administrator",
-        "auth",
-        "authentication",
-        "community-dev",
-        "community-canary",
-        "community",
-        "communities",
-    ]
-)
 
 META = {
     "site_name": "Massenergize",
@@ -89,7 +72,7 @@ def _get_subdomain(request, enforce_is_valid=False):
 
 
 def _subdomain_is_valid(subdomain):
-    if subdomain in RESERVED_LIST:
+    if subdomain in RESERVED_SUBDOMAIN_LIST:
         return False
 
     # TODO: switch to using the subdomain model to check this
