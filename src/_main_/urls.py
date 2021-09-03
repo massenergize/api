@@ -21,7 +21,6 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('cc/',include('carbon_calculator.urls')),
-    path('', include('api.urls')),
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
     path('', include('website.urls')),

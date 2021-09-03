@@ -7,6 +7,7 @@ from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
+from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
 from database.models import (
     Deployment,
     Community,
@@ -42,24 +43,6 @@ else:
     HOST_DOMAIN = "massenergize.org"
     HOST = f"https://communities.{HOST_DOMAIN}"
 
-RESERVED_LIST = set(
-    [
-        "",
-        "*",
-        "massenergize",
-        "api",
-        "admin",
-        "admin-dev",
-        "admin-canary",
-        "administrator",
-        "auth",
-        "authentication",
-        "community-dev",
-        "community-canary",
-        "community",
-        "communities",
-    ]
-)
 
 META = {
     "site_name": "Massenergize",
@@ -69,6 +52,8 @@ META = {
     "portal_host": PORTAL_HOST,
     "section": f"#community",
     "tags": ["#ClimateChange"],
+    "show_raw_pages_no_redirect": False,
+    "is_local": IS_LOCAL
 }
 
 
@@ -89,16 +74,25 @@ def _get_subdomain(request, enforce_is_valid=False):
 
 
 def _subdomain_is_valid(subdomain):
-    if subdomain in RESERVED_LIST:
+    if subdomain in RESERVED_SUBDOMAIN_LIST:
         return False
 
     # TODO: switch to using the subdomain model to check this
     return Community.objects.filter(subdomain__iexact=subdomain).exists()
 
+def _extract(html):
+    res = extract_text_from_html.handle(html) 
+    return f"{res.strip()[:250]}..."
+
+
+def _get_file_url(image):
+    if not image:
+        return None
+    return image.file.url if image.file else None
 
 def home(request):
     subdomain = _get_subdomain(request, False)
-    if not subdomain or subdomain == "communities":
+    if not subdomain or subdomain == "communities" or subdomain == "search":
         return communities(request)
     elif _subdomain_is_valid(subdomain):
         return community(request, subdomain)
@@ -143,12 +137,12 @@ def community(request, subdomain):
     meta = META
     meta.update(
         {
+            "image_url": _get_file_url(community.logo),    
             "subdomain": subdomain,
             "section": f"#community#{subdomain}",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}",
             "title": str(community),
-            "description": extract_text_from_html.handle(community.about_community),
-            "image": community.logo.file if community.logo else {},
+            "description": _extract(about.description),
             "url": f"{PORTAL_HOST}/{subdomain}",
             "created_at": community.created_at,
             "updated_at": community.updated_at,
@@ -195,12 +189,14 @@ def action(request, id):
     meta = META
     meta.update(
         {
-            "url": action.image.file.url
-            if (action.image and action.image.file)
-            else None,
+            "image_url":_get_file_url(action.image),
             "subdomain": subdomain,
-            "title": "Take Action",
+            "title": action.title,
+            "description": _extract(action.about),
+            "url": f"{PORTAL_HOST}/{subdomain}/actions/{id}",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/actions/{id}",
+            "created_at": action.created_at,
+            "updated_at": action.updated_at
         }
     )
     args = {"meta": meta, "action": action}
@@ -244,8 +240,12 @@ def event(request, id):
     meta.update(
         {
             "subdomain": subdomain,
-            "title": str(event),
+            "title": event.name,
+            "image_url":_get_file_url(event.image),
+            "subdomain": subdomain,
+            "description": _extract(event.description),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/events/{id}",
+            "url": f"{PORTAL_HOST}/{subdomain}/events/{id}",
         }
     )
     args = {
@@ -292,8 +292,14 @@ def vendor(request, id):
     meta.update(
         {
             "subdomain": subdomain,
-            "title": str(vendor),
+            "title": vendor.name,
+            "image_url":_get_file_url(vendor.logo),
+            "subdomain": subdomain,
+            "description": _extract(vendor.description),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/services/{id}",
+            "url": f"{PORTAL_HOST}/{subdomain}/services/{id}",
+            "created_at": vendor.created_at,
+            "updated_at": vendor.updated_at
         }
     )
 
@@ -351,8 +357,14 @@ def team(request, id):
     meta.update(
         {
             "subdomain": subdomain,
-            "title": str(team),
+            "title": team.name,
+            "image_url": _get_file_url(team.logo),
+            "subdomain": subdomain,
+            "description": _extract(team.description),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/teams/{id}",
+            "url": f"{PORTAL_HOST}/{subdomain}/teams/{id}",
+            "created_at": team.created_at,
+            "updated_at": team.updated_at
         }
     )
 
@@ -401,7 +413,13 @@ def testimonial(request, id):
         {
             "subdomain": subdomain,
             "title": str(testimonial),
+            "image_url": _get_file_url(testimonial.image),
+            "subdomain": subdomain,
+            "description": _extract(testimonial.body),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/testimonials/{id}",
+            "url": f"{PORTAL_HOST}/{subdomain}/testimonials/{id}",
+            "created_at": testimonial.created_at,
+            "updated_at": testimonial.updated_at
         }
     )
 
@@ -519,6 +537,10 @@ def contact_us(request):
 def generate_sitemap(request):
     d = MiscellaneousStore().generate_sitemap_for_portal()
     return render(request, "sitemap_template.xml", d, content_type="text/xml")
+
+def generate_sitemap_main(request):
+    d = MiscellaneousStore().generate_sitemap_for_portal()
+    return render(request, "sitemap_template_new.xml", d, content_type="text/xml")
 
 
 def handler400(request, exception):

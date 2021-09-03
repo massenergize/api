@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if meta.image_url %}
+<img src={{meta.image_url}} alt="{{community.name}}" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
+{% endif %}
 <h2>{{team.name}}</h2>
 <p>{{team.description|safe}}</p>
 <a href="/teams"> - All Teams</a>
