@@ -1,4 +1,4 @@
-from database.models import Action,Vendor, Event, Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
+from database.models import Action,Vendor, Subdomain, Event, Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
 from _main_.utils.context import Context
 from database.utils.common import json_loader
@@ -20,11 +20,18 @@ class MiscellaneousStore:
             return None, CustomMassenergizeError(e)
 
     def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        # return self.backfill_teams(context, args)
-        # return self.backfill_community_members(context, args)
-        # return self.backfill_graph_default_data(context, args)
-        return self.backfill_real_estate_units(context, args)
-        # return self.backfill_tag_data(context, args)
+        return self.backfill_subdomans(), None
+    
+    def backfill_subdomans(self):
+        print(Subdomain.objects.all())
+        for c in Community.objects.all():
+            try:
+                Subdomain(name=c.subdomain, in_use=True, community=c).save()
+            except Exception as e:
+                print(e)
+            
+        
+
 
     def backfill_teams(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
