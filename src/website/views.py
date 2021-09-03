@@ -52,6 +52,8 @@ META = {
     "portal_host": PORTAL_HOST,
     "section": f"#community",
     "tags": ["#ClimateChange"],
+    "show_raw_pages_no_redirect": False,
+    "is_local": IS_LOCAL
 }
 
 

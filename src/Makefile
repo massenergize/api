@@ -70,4 +70,4 @@ export GENERATE_INPUTS=$(generate_inputs)
 test:	
 	python -W ignore manage.py test $(package)
 	python -W ignore manage.py test api
-.PHONY: test 
+.PHONY: test

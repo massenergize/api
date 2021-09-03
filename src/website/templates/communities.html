@@ -4,7 +4,11 @@
 <ul>
   {% for c in communities %}
   <li>
+    {% if meta.is_local %}
+    <a href="http://{{c.subdomain}}.{{meta.host_domain}}"><h4>{{c.name}}</h4></a> 
+    {% else %}
     <a href="https://{{c.subdomain}}.{{meta.host_domain}}"><h4>{{c.name}}</h4></a> 
+    {% endif %}
     <p>{{c.about_community}}</p>
   </li>
   {% endfor %}

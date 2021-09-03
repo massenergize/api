@@ -23,7 +23,6 @@ class MiscellaneousStore:
         return self.backfill_subdomans(), None
     
     def backfill_subdomans(self):
-        print(Subdomain.objects.all())
         for c in Community.objects.all():
             try:
                 Subdomain(name=c.subdomain, in_use=True, community=c).save()
