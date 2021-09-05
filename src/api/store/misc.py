@@ -1,4 +1,4 @@
-from database.models import Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
+from database.models import Action,Vendor, Subdomain, Event, Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
 from _main_.utils.context import Context
 from database.utils.common import json_loader
@@ -20,11 +20,17 @@ class MiscellaneousStore:
             return None, CustomMassenergizeError(e)
 
     def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        # return self.backfill_teams(context, args)
-        # return self.backfill_community_members(context, args)
-        # return self.backfill_graph_default_data(context, args)
-        return self.backfill_real_estate_units(context, args)
-        # return self.backfill_tag_data(context, args)
+        return self.backfill_subdomans(), None
+    
+    def backfill_subdomans(self):
+        for c in Community.objects.all():
+            try:
+                Subdomain(name=c.subdomain, in_use=True, community=c).save()
+            except Exception as e:
+                print(e)
+            
+        
+
 
     def backfill_teams(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
@@ -323,29 +329,23 @@ class MiscellaneousStore:
     def generate_sitemap_for_portal(self):
         return {
             'communities': Community.objects.filter(
-              is_deleted=False, 
-              is_published=True
+            is_deleted=False, 
+            is_published=True
             ).values('id', 'subdomain', 'updated_at'),
             'actions': Action.objects.filter(
-              is_deleted=False, 
-              is_published=True,
-              community__is_published=True,
-              community__is_deleted=False,
+            is_deleted=False, 
+            is_published=True,
+            community__is_published=True,
+            community__is_deleted=False,
             ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
             'services': Vendor.objects.filter(
-              is_deleted=False, 
-              is_published=True
+            is_deleted=False, 
+            is_published=True
             ).prefetch_related('communities').values('id', 'communities__subdomain', 'updated_at'),
             'events': Event.objects.filter(
-              is_deleted=False, 
-              is_published=True,
-              community__is_published=True,
-              community__is_deleted=False,
+            is_deleted=False, 
+            is_published=True,
+            community__is_published=True,
+            community__is_deleted=False,
             ).select_related('community').values('id', 'community__subdomain'),
-            'teams': Team.objects.filter(
-              is_deleted=False, 
-              is_published=True,
-              community__is_published=True,
-              community__is_deleted=False,
-            ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
         }

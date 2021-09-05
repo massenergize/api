@@ -60,6 +60,7 @@ ALLOWED_HOSTS = [
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
+    '.massenergize.test'
 ]
 
 if IS_LOCAL:
@@ -79,7 +80,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
 ]
 
 MIDDLEWARE = [
@@ -114,6 +114,7 @@ AWS_STORAGE_BUCKET_NAME  = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
+AWS_QUERYSTRING_AUTH = False
 
 #-------- OTHER CONFIGURATION ---------------------#
 SECURE_SSL_REDIRECT = False
@@ -179,7 +180,7 @@ DATABASES = {
 # }
 
 # url and hosts config
-ROOT_URLCONF = '_main_.urls'
+ROOT_URLCONF = 'website.urls'
 ROOT_HOSTCONF = '_main_.hosts'
 DEFAULT_HOST = 'default'
 

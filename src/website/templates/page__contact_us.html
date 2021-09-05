@@ -10,7 +10,7 @@
 {% endif %}
 
 {% for image in page.images.all %}
-<img src={{image.file.url}} alt="" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
+<img src={{image.file.url}} alt="{{page.title}}" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
 {% endfor %}
 
 {% endblock %}

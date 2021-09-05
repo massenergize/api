@@ -1,4 +1,5 @@
-Sep 1st Deployment to Dev and Canary
+Sep 5th Deployment to Dev
+- Fixes to Profile Picture
 - URLs and search-engine fix
 - Backend support for CarbonEquivalencies
 - Event RSVPs support
