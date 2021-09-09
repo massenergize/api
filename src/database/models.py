@@ -837,6 +837,7 @@ class CarbonEquivalency(models.Model):
   name = models.CharField(max_length=50)
   value = models.FloatField()
   icon = models.CharField(max_length=50)
+  title = models.CharField(max_length=40, null=True, blank = True)
   explanation = models.CharField(max_length=100)
   reference = models.CharField(max_length=100)
   date = models.DateTimeField(auto_now=True)
