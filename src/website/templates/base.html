@@ -55,13 +55,13 @@
     {% endfor %}
     
     {% if not meta.stay_put %}
-    <meta http-equiv="refresh" content="1; URL={{meta.redirect_to}}" />
+    <meta http-equiv="refresh" content="0.1; URL={{meta.redirect_to}}" />
     <style>
         .container {
         font-family:"Google Sans";
         /* Add the blur effect */
-        filter: blur(0px);
-        -webkit-filter: blur(0px);
+        filter: blur(18px);
+        -webkit-filter: blur(18px);
 
         /* Full height */
         height: 100%;
