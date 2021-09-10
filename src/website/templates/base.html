@@ -54,31 +54,8 @@
     <meta property="article:tag" content="{{tag}}"/>
     {% endfor %}
 
-    {% if not meta.show_raw_pages_no_redirect %}
-    <!--    <meta http-equiv="refresh" content="1; URL={{meta.redirect_to}}" />-->
-
-    <style>
-
-      .container {
-          font-family:"Google Sans";
-        /* Add the blur effect */
-        filter: blur(0px);
-        -webkit-filter: blur(0px);
-
-        /* Full height */
-        height: 100%;
-
-        /* Center and scale the image nicely */
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-      }
-
-
-
-
-
-    </style>
+    {% if not meta.stay_put %}
+       <meta http-equiv="refresh" content="1; URL={{meta.redirect_to}}" />
     {% endif %}
 </head>
 

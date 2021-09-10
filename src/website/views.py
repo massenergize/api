@@ -106,6 +106,7 @@ def communities(request):
         {
             "title": "Massenergize Communities",
             "redirect_to": f"{PORTAL_HOST}",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
     args = {

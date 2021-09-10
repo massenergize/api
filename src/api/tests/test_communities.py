@@ -110,13 +110,13 @@ class CommunitiesTestCase(TestCase):
     signinAs(self.client, None)
 
     # successfully retrieve information about a community, even if not signed in
-    info_response = self.client.post('/communities.info', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/communities.info', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(info_response["success"])
     self.assertEqual(self.COMMUNITY.name, info_response['data']['name'])
 
     signinAs(self.client, self.USER)
     # don't retrieve information about a community which is not published
-    info_response = self.client.post('/communities.info', urlencode({"community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/communities.info', urlencode({"community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(info_response["success"])
 
     # test for Community Admin
@@ -124,11 +124,11 @@ class CommunitiesTestCase(TestCase):
 
     # don't retrieve information about an unpublished community if you;'re a cadmin
     # Need to be in sandbox
-    info_response = self.client.post('/communities.info', urlencode({"community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/communities.info', urlencode({"community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(info_response["success"])
 
     # if no ID passed, return error
-    info_response = self.client.post('/communities.info', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/communities.info', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(info_response["success"])
 
 
@@ -139,28 +139,28 @@ class CommunitiesTestCase(TestCase):
 
     name = "Cooler World"
     subdomain = "planetearth"
-    create_response = self.client.post('/communities.create', urlencode({ "name": name, "subdomain": subdomain}), content_type="application/x-www-form-urlencoded").toDict()
+    create_response = self.client.post('/api/communities.create', urlencode({ "name": name, "subdomain": subdomain}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(create_response["success"])
 
     # attempt to create team if regular user signed in
     signinAs(self.client, self.USER1)
-    create_response = self.client.post('/communities.create', urlencode({"name": name, "subdomain": subdomain}), content_type="application/x-www-form-urlencoded").toDict()
+    create_response = self.client.post('/api/communities.create', urlencode({"name": name, "subdomain": subdomain}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(create_response["success"])
 
     # attempt to create community when signed in as a CADMIN
     signinAs(self.client, self.CADMIN)
-    create_response = self.client.post('/communities.create', urlencode({"name": name, "subdomain": subdomain}), content_type="application/x-www-form-urlencoded").toDict()
+    create_response = self.client.post('/api/communities.create', urlencode({"name": name, "subdomain": subdomain}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(create_response["success"])
 
     # attempt to create community when signed in as a SADMIN
     # first without accepting terms and conditions
     signinAs(self.client, self.SADMIN)
-    create_response = self.client.post('/communities.create', urlencode({"name": name, "subdomain": subdomain}), content_type="application/x-www-form-urlencoded").toDict()
+    create_response = self.client.post('/api/communities.create', urlencode({"name": name, "subdomain": subdomain}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(create_response["success"])
 
     # ok, accept terms and conditions
     # damn you still cant create a community unless you have templates of all the page settings
-    create_response = self.client.post('/communities.create', urlencode({"name": name, "subdomain": subdomain, "accepted_terms_and_conditions":True}), content_type="application/x-www-form-urlencoded").toDict()
+    create_response = self.client.post('/api/communities.create', urlencode({"name": name, "subdomain": subdomain, "accepted_terms_and_conditions":True}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(create_response["success"])
 
 
@@ -169,7 +169,7 @@ class CommunitiesTestCase(TestCase):
   def test_list(self):
 
     signinAs(self.client, self.USER1)
-    list_response = self.client.post('/communities.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
 
     self.assertTrue(list_response["success"])
     self.assertIs(1, len(list_response['data']))
@@ -182,26 +182,26 @@ class CommunitiesTestCase(TestCase):
     # try to update the community without being signed in
     signinAs(self.client, None)
     new_name = "QAnon followers"
-    update_response = self.client.post('/communities.update', urlencode({"id": self.COMMUNITY.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/communities.update', urlencode({"id": self.COMMUNITY.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(update_response["success"])
 
     # try to update the community signed in but not a team or community admin
     signinAs(self.client, self.USER)
     new_name = "Isolationists"
-    update_response = self.client.post('/communities.update', urlencode({"id": self.COMMUNITY.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/communities.update', urlencode({"id": self.COMMUNITY.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(update_response["success"])
 
     #update the community as a CADMIN of the correct community
     signinAs(self.client, self.CADMIN)
     new_name = "Arlingtonians"
-    update_response = self.client.post('/communities.update', urlencode({"id": self.COMMUNITY.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/communities.update', urlencode({"id": self.COMMUNITY.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(update_response["success"])
     self.assertEqual(new_name, update_response["data"]["name"])
 
     #update the community as a SADMIN
     signinAs(self.client, self.SADMIN)
     new_name = "Arlington Rocks"
-    update_response = self.client.post('/communities.update', urlencode({"id": self.COMMUNITY2.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/communities.update', urlencode({"id": self.COMMUNITY2.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(update_response["success"])
     self.assertEqual(new_name, update_response["data"]["name"])
 
@@ -214,7 +214,7 @@ class CommunitiesTestCase(TestCase):
       'name': "sadmin_test",
       'accepted_terms_and_conditions': True
     })
-    delete_response = self.client.post('/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()
+    delete_response = self.client.post('/api/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(delete_response["success"])
 
     # test can cadmin delete community
@@ -224,7 +224,7 @@ class CommunitiesTestCase(TestCase):
       'name': "cadmin_test",
       'accepted_terms_and_conditions': True
     })
-    delete_response = self.client.post('/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()  
+    delete_response = self.client.post('/api/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()  
     self.assertTrue(delete_response["success"])
 
     # test can user delete community
@@ -234,7 +234,7 @@ class CommunitiesTestCase(TestCase):
       'name': "user_test",
       'accepted_terms_and_conditions': True
     })
-    delete_response = self.client.post('/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()
+    delete_response = self.client.post('/api/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(delete_response["success"])
 
     # test can no logged in delete community
@@ -244,101 +244,101 @@ class CommunitiesTestCase(TestCase):
       'name': "anon_test",
       'accepted_terms_and_conditions': True
     })
-    delete_response = self.client.post('/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()
+    delete_response = self.client.post('/api/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(delete_response["success"])
 
   def test_leave(self): # same as removeMember
     # test leave not logged in
     signinAs(self.client, None)
-    leave_response = self.client.post('/communities.leave', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/communities.leave', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(leave_response["success"])
 
     # test leave logged as different user
     signinAs(self.client, self.USER)
-    leave_response = self.client.post('/communities.leave', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/communities.leave', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(leave_response["success"])
 
     # test leave user not in team
     signinAs(self.client, self.USER1)
-    leave_response = self.client.post('/communities.leave', urlencode({"community_id": self.COMMUNITY2.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/communities.leave', urlencode({"community_id": self.COMMUNITY2.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(leave_response["success"])
 
     # test leave logged as admin
     signinAs(self.client, self.SADMIN)
-    leave_response = self.client.post('/communities.leave', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/communities.leave', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(leave_response["success"])
 
     # test leave logged as same user
     signinAs(self.client, self.USER1)
-    leave_response = self.client.post('/communities.leave', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/communities.leave', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(leave_response["success"])
 
   def test_join(self): # same as addMember
     
     # test community not signed in
     signinAs(self.client, None)
-    join_response = self.client.post('/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    join_response = self.client.post('/api/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(join_response["success"])
 
     # test community as different user
     signinAs(self.client, self.USER)
-    join_response = self.client.post('/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    join_response = self.client.post('/api/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(join_response["success"])
 
     # test community as different admin user
     signinAs(self.client, self.SADMIN)
-    join_response = self.client.post('/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    join_response = self.client.post('/api/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(join_response["success"])
 
     # test community as same user
     signinAs(self.client, self.USER3)
-    join_response = self.client.post('/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    join_response = self.client.post('/api/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(join_response["success"])
 
   def test_list_CAdmin(self):
     # test list for cadmin not logged in
     signinAs(self.client, None)
-    list_response = self.client.post('/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for cadmin logged as user
     signinAs(self.client, self.USER)
-    list_response = self.client.post('/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for cadmin logged as cadmin
     signinAs(self.client, self.CADMIN) # cadmin can list for any community?
-    list_response = self.client.post('/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
 
     # test list for cadmin logged as cadmin not in community
     # cadmin can list for any community?
-    list_response = self.client.post('/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
 
     # test list for cadmin logged as sadmin
     signinAs(self.client, self.SADMIN)
-    list_response = self.client.post('/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
 
   def test_list_SAdmin(self):
     # test list for sadmin not logged in
     signinAs(self.client, None)
-    list_response = self.client.post('/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for sadmin logged as user
     signinAs(self.client, self.USER)
-    list_response = self.client.post('/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for sadmin logged as cadmin
     signinAs(self.client, self.CADMIN)
-    list_response = self.client.post('/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for sadmin logged as sadmin
     signinAs(self.client, self.SADMIN)
-    list_response = self.client.post('/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/communities.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
     
