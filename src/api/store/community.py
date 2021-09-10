@@ -853,7 +853,7 @@ def can_use_this_subdomain(subdomain: str, community: Community=None) -> bool:
         return True
     
     # a community should be able to reuse an old domain of theirs
-    if community and Subdomain.objects.filter(name=subdomain, community=community).exists():
+    if community and Subdomain.objects.filter(name__iexact=subdomain, community=community).exists():
         return True
 
     return False
