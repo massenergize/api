@@ -110,28 +110,28 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, None)
 
     # successfully retrieve information about a team that has been published
-    info_response = self.client.post('/teams.info', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/teams.info', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(info_response["success"])
     self.assertEqual(self.TEAM1.name, info_response['data']['name'])
 
     # don't retrieve information about a team that has not been published
-    info_response = self.client.post('/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(info_response["success"])
 
     signinAs(self.client, self.USER)
     # don't retrieve information about a team that has not been published
-    info_response = self.client.post('/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(info_response["success"])
 
     # test for Community Admin
     signinAs(self.client, self.CADMIN)
 
     # retrieve information about an unpublished team if you;'re a cadmin
-    info_response = self.client.post('/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/teams.info', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(info_response["success"])
 
     # if no ID passed, return error
-    info_response = self.client.post('/teams.info', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    info_response = self.client.post('/api/teams.info', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(info_response["success"])
 
 
@@ -142,13 +142,13 @@ class TeamsTestCase(TestCase):
 
     name = "Foo Bar"
 
-    create_response = self.client.post('/teams.create', urlencode({"name": name, "primary_community_id": self.COMMUNITY.id, 
+    create_response = self.client.post('/api/teams.create', urlencode({"name": name, "primary_community_id": self.COMMUNITY.id, 
                                       "communities": str(self.COMMUNITY.id),  "admin_emails": self.USER1.email}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(create_response["success"])
 
     # attempt to create team if regular user signed in
     signinAs(self.client, self.USER1)
-    create_response = self.client.post('/teams.create', urlencode({"name": name, "primary_community_id": self.COMMUNITY.id, 
+    create_response = self.client.post('/api/teams.create', urlencode({"name": name, "primary_community_id": self.COMMUNITY.id, 
                                       "communities": str(self.COMMUNITY.id),  "admin_emails": self.USER1.email}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(create_response["success"])
 
@@ -156,7 +156,7 @@ class TeamsTestCase(TestCase):
     # attempt to create team spanning 2 communities
     name = "Foo Bar1"
     communities = str(self.COMMUNITY.id) + ',' + str(self.COMMUNITY2.id)   
-    create_response = self.client.post('/teams.create', urlencode({"name": name, "community_id": self.COMMUNITY.id, 
+    create_response = self.client.post('/api/teams.create', urlencode({"name": name, "community_id": self.COMMUNITY.id, 
                                         "communities": communities, "admin_emails": self.USER1.email}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(create_response["success"])
 
@@ -169,7 +169,7 @@ class TeamsTestCase(TestCase):
 
     print("test_list")
     signinAs(self.client, self.USER1)
-    list_response = self.client.post('/teams.list', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.list', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
 
     # only one team approved
     self.assertTrue(list_response["success"])
@@ -188,7 +188,7 @@ class TeamsTestCase(TestCase):
     UserActionRel.objects.create(user=self.USER2, action=action1, status="DONE", real_estate_unit=reu)
     UserActionRel.objects.create(user=self.USER2, action=action2, status="DONE", real_estate_unit=reu)
 
-    stats_response = self.client.post('/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    stats_response = self.client.post('/api/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(stats_response["success"])
 
     self.assertIs(1, len(stats_response['data']))
@@ -196,7 +196,7 @@ class TeamsTestCase(TestCase):
     self.TEAM2.is_published = True
     self.TEAM2.save()
 
-    stats_response = self.client.post('/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    stats_response = self.client.post('/api/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
 
     self.assertTrue(stats_response["success"])
 
@@ -224,20 +224,20 @@ class TeamsTestCase(TestCase):
     # try to update the community without being signed in
     signinAs(self.client, None)
     new_name = "QAnon followers"
-    update_response = self.client.post('/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(update_response["success"])
 
     # try to update the community signed in but not a team or community admin
     signinAs(self.client, self.USER)
     new_name = "Isolationists"
-    update_response = self.client.post('/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(update_response["success"])
 
     # try to update the community signed as team admin
     signinAs(self.client, self.USER1)
     new_name = "Isolationists"
     new_tagline = "Team dealing with covid"
-    update_response = self.client.post('/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name, "tagline": new_tagline}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name, "tagline": new_tagline}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(update_response["success"])
     self.assertEqual(new_name, update_response["data"]["name"])
     self.assertEqual(new_tagline, update_response["data"]["tagline"])
@@ -245,7 +245,7 @@ class TeamsTestCase(TestCase):
     #update the team as a CADMIN of the correct community
     signinAs(self.client, self.CADMIN)
     new_name = "Arlingtonians"
-    update_response = self.client.post('/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name, "parent": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name, "parent": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(update_response["success"])
     self.assertEqual(new_name, update_response["data"]["name"])
     self.assertEqual(self.TEAM1.primary_community.id, update_response["data"]["primary_community"]["id"])
@@ -253,7 +253,7 @@ class TeamsTestCase(TestCase):
 
     #update the team as a CADMIN of the correct community, adding another community to the team
     communities = str(self.COMMUNITY.id) + "," + str(self.COMMUNITY2.id)
-    update_response = self.client.post('/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name, "parent": self.TEAM2.id, "communities":communities}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name, "parent": self.TEAM2.id, "communities":communities}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(update_response["success"])
     self.assertEqual(new_name, update_response["data"]["name"])
     self.assertEqual(self.TEAM1.primary_community.id, update_response["data"]["primary_community"]["id"])
@@ -262,7 +262,7 @@ class TeamsTestCase(TestCase):
     #update the team as a SADMIN
     signinAs(self.client, self.SADMIN)
     new_name = "Arlington Rocks"
-    update_response = self.client.post('/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+    update_response = self.client.post('/api/teams.update', urlencode({"id": self.TEAM1.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(update_response["success"])
     self.assertEqual(new_name, update_response["data"]["name"])
 
@@ -274,7 +274,7 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, self.SADMIN)
     
     team = Team.objects.create(primary_community=self.COMMUNITY, name="sadmin_test_team", is_published=True)
-    delete_response = self.client.post('/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
+    delete_response = self.client.post('/api/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(delete_response["success"])
     #self.assertTrue(delete_response["data"]["is_deleted"])
 
@@ -282,12 +282,12 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, self.CADMIN)
     
     team = Team.objects.create(primary_community=self.COMMUNITY, name="cadmin_test_team", is_published=True)
-    delete_response1 = self.client.post('/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
+    delete_response1 = self.client.post('/api/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(delete_response1["success"])
     #self.assertTrue(delete_response1["data"]["is_deleted"])
 
     team = Team.objects.create(primary_community=self.COMMUNITY, name="cadmin_test_team", is_published=True)
-    delete_response2 = self.client.post('/teams.delete', urlencode({"id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
+    delete_response2 = self.client.post('/api/teams.delete', urlencode({"id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(delete_response2["success"])
     #self.assertTrue(delete_response2["data"]["is_deleted"])
 
@@ -295,7 +295,7 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, self.USER)
     
     team = Team.objects.create(primary_community=self.COMMUNITY, name="user_test_team", is_published=True)
-    delete_response = self.client.post('/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
+    delete_response = self.client.post('/api/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(delete_response["success"])
     #self.assertFalse(delete_response["data"]["is_deleted"])
 
@@ -303,7 +303,7 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, None)
     
     team = Team.objects.create(primary_community=self.COMMUNITY, name="none_test_team", is_published=True)
-    delete_response = self.client.post('/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
+    delete_response = self.client.post('/api/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(delete_response["success"])
     #self.assertFalse(delete_response["data"]["is_deleted"])
 
@@ -311,37 +311,37 @@ class TeamsTestCase(TestCase):
     
     # test leave not logged in
     signinAs(self.client, None)
-    leave_response = self.client.post('/teams.leave', urlencode({"team_id": self.TEAM1.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/teams.leave', urlencode({"team_id": self.TEAM1.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(leave_response["success"])
 
     # test leave logged as different user
     signinAs(self.client, self.USER)
-    leave_response = self.client.post('/teams.leave', urlencode({"team_id": self.TEAM1.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/teams.leave', urlencode({"team_id": self.TEAM1.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(leave_response["success"])
 
     # test leave user not in team
     signinAs(self.client, self.USER1)
-    leave_response = self.client.post('/teams.leave', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/teams.leave', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(leave_response["success"])
 
     # test leave logged as admin
     signinAs(self.client, self.SADMIN)
-    leave_response = self.client.post('/teams.leave', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/teams.leave', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(leave_response["success"])
 
     # get team members
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     members_num = len(members_response["data"])
 
     # test leave logged as same user
     signinAs(self.client, self.USER1)
-    leave_response = self.client.post('/teams.leave', urlencode({"team_id": self.TEAM1.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    leave_response = self.client.post('/api/teams.leave', urlencode({"team_id": self.TEAM1.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(leave_response["success"])
 
     # test user actually left
     signinAs(self.client, self.SADMIN)
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     self.assertTrue(len(members_response["data"]) < members_num)
 
@@ -349,30 +349,30 @@ class TeamsTestCase(TestCase):
 
     # test remove member not logged in
     signinAs(self.client, None)
-    remove_response = self.client.post('/teams.removeMember', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    remove_response = self.client.post('/api/teams.removeMember', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(remove_response["success"])
 
     # test remove member as normal user
     signinAs(self.client, self.USER)
-    remove_response = self.client.post('/teams.removeMember', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    remove_response = self.client.post('/api/teams.removeMember', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(remove_response["success"])
   
     # test remove member as admin but member not in team
     signinAs(self.client, self.SADMIN)
-    remove_response = self.client.post('/teams.removeMember', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
+    remove_response = self.client.post('/api/teams.removeMember', urlencode({"team_id": self.TEAM2.id, "user_id": self.USER1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(remove_response["success"])
 
     # check members in team
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     members_num = len(members_response["data"])
 
     # test remove member as admin
-    remove_response = self.client.post('/teams.removeMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
+    remove_response = self.client.post('/api/teams.removeMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(remove_response["success"])
 
     # check member is no longer in team
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     self.assertTrue(len(members_response["data"]) < members_num)
 
@@ -380,32 +380,32 @@ class TeamsTestCase(TestCase):
     
     # test join not signed in
     signinAs(self.client, None)
-    join_response = self.client.post('/teams.join', urlencode({"team_id": self.TEAM3.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    join_response = self.client.post('/api/teams.join', urlencode({"team_id": self.TEAM3.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(join_response["success"])
 
     # test join as different user
     signinAs(self.client, self.USER)
-    join_response = self.client.post('/teams.join', urlencode({"team_id": self.TEAM3.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    join_response = self.client.post('/api/teams.join', urlencode({"team_id": self.TEAM3.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(join_response["success"])
 
     # test join as different admin user
     signinAs(self.client, self.SADMIN)
-    join_response = self.client.post('/teams.join', urlencode({"team_id": self.TEAM3.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    join_response = self.client.post('/api/teams.join', urlencode({"team_id": self.TEAM3.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(join_response["success"])
 
     # check that users not in team
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     members_num = len(members_response["data"])
 
     # test join as same user
     signinAs(self.client, self.USER3)
-    join_response = self.client.post('/teams.join', urlencode({"team_id": self.TEAM3.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    join_response = self.client.post('/api/teams.join', urlencode({"team_id": self.TEAM3.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(join_response["success"])
 
     # check that users now in team
     signinAs(self.client, self.SADMIN)
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM3.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     self.assertTrue(len(members_response["data"]) > members_num)
 
@@ -413,26 +413,26 @@ class TeamsTestCase(TestCase):
     
     # test add member not signed in
     signinAs(self.client, None)
-    add_response = self.client.post('/teams.addMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
+    add_response = self.client.post('/api/teams.addMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(add_response["success"])
 
     # test add member as user
     signinAs(self.client, self.USER)
-    add_response = self.client.post('/teams.addMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
+    add_response = self.client.post('/api/teams.addMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(add_response["success"])
 
     # check that users not in team
     signinAs(self.client, self.SADMIN)
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     members_num = len(members_response["data"])
 
     # test add member as admin
-    add_response = self.client.post('/teams.addMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
+    add_response = self.client.post('/api/teams.addMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(add_response["success"])
 
     # check that users now in team
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     self.assertTrue(len(members_response["data"]) > members_num)
 
@@ -440,44 +440,44 @@ class TeamsTestCase(TestCase):
     
     # test message admin not logged in
     signinAs(self.client, None)
-    message_response = self.client.post('/teams.messageAdmin', urlencode({"user_name": self.USER.full_name, "team_id": self.TEAM5.id, "title": "test message", "email": self.USER.email, "message": "test message"}), content_type="application/x-www-form-urlencoded").toDict()
+    message_response = self.client.post('/api/teams.messageAdmin', urlencode({"user_name": self.USER.full_name, "team_id": self.TEAM5.id, "title": "test message", "email": self.USER.email, "message": "test message"}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(message_response["success"])
 
     # test message admin logged as user
     signinAs(self.client, self.USER)
-    message_response = self.client.post('/teams.messageAdmin', urlencode({"user_name": self.USER.full_name, "team_id": self.TEAM5.id, "title": "test message", "email": self.USER.email, "message": "test message"}), content_type="application/x-www-form-urlencoded").toDict()
+    message_response = self.client.post('/api/teams.messageAdmin', urlencode({"user_name": self.USER.full_name, "team_id": self.TEAM5.id, "title": "test message", "email": self.USER.email, "message": "test message"}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(message_response["success"])
 
     # test message admin logged as user on team
     signinAs(self.client, self.USER5)
-    message_response = self.client.post('/teams.messageAdmin', urlencode({"user_name": self.USER.full_name, "team_id": self.TEAM5.id, "title": "test message", "email": self.USER.email, "message": "test message"}), content_type="application/x-www-form-urlencoded").toDict()
+    message_response = self.client.post('/api/teams.messageAdmin', urlencode({"user_name": self.USER.full_name, "team_id": self.TEAM5.id, "title": "test message", "email": self.USER.email, "message": "test message"}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(message_response["success"])
 
     # test message admin bad args
     signinAs(self.client, self.USER5)
-    message_response = self.client.post('/teams.messageAdmin', urlencode({"these": self.USER.full_name, "args": self.TEAM5.id, "make": "test message", "no": self.USER.email, "sense!": "test message"}), content_type="application/x-www-form-urlencoded").toDict()
+    message_response = self.client.post('/api/teams.messageAdmin', urlencode({"these": self.USER.full_name, "args": self.TEAM5.id, "make": "test message", "no": self.USER.email, "sense!": "test message"}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(message_response["success"])
 
   def test_members(self): # implement validator
 
     # test members not logged in
     signinAs(self.client, None)
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(members_response["success"])
 
     # test members logged as user
     signinAs(self.client, self.USER)
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(members_response["success"])
 
     # test members logged as admin
     signinAs(self.client, self.SADMIN)
-    members_response = self.client.post('/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
     self.assertEqual(members_response["data"][0]["user"]["id"], str(self.USER5.id))
 
     # test members no given team
-    members_response = self.client.post('/teams.members', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    members_response = self.client.post('/api/teams.members', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(members_response["success"])
 
 
@@ -485,71 +485,71 @@ class TeamsTestCase(TestCase):
     
     # test members preffered name not logged in
     signinAs(self.client, None)
-    members_name_response = self.client.post('/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_name_response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_name_response["success"])
     self.assertEqual(members_name_response["data"][0]["preferred_name"], self.USER5.preferred_name)
 
     # test members preffered name logged as user
     signinAs(self.client, self.USER)
-    members_name_response = self.client.post('/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_name_response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_name_response["success"])
     self.assertEqual(members_name_response["data"][0]["preferred_name"], self.USER5.preferred_name)
 
     # test members preffered name logged as admin
     signinAs(self.client, self.SADMIN)
-    members_name_response = self.client.post('/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    members_name_response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_name_response["success"])
     self.assertEqual(members_name_response["data"][0]["preferred_name"], self.USER5.preferred_name)
 
     # test members preffered name no given team
-    members_name_response = self.client.post('/teams.members.preferredNames', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    members_name_response = self.client.post('/api/teams.members.preferredNames', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(members_name_response["success"])
 
   def test_list_CAdmin(self):
 
     # test list for cadmin not logged in
     signinAs(self.client, None)
-    list_response = self.client.post('/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for cadmin logged as user
     signinAs(self.client, self.USER)
-    list_response = self.client.post('/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for cadmin logged as cadmin
     signinAs(self.client, self.CADMIN) # cadmin can list for any community?
-    list_response = self.client.post('/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
 
     # test list for cadmin logged as cadmin not in community
     # cadmin can list for any community?
-    list_response = self.client.post('/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
 
     # test list for cadmin logged as sadmin
     signinAs(self.client, self.SADMIN)
-    list_response = self.client.post('/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForCommunityAdmin', urlencode({"primary_community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])
 
   def test_list_SAdmin(self):
 
     # test list for sadmin not logged in
     signinAs(self.client, None)
-    list_response = self.client.post('/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for sadmin logged as user
     signinAs(self.client, self.USER)
-    list_response = self.client.post('/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for sadmin logged as cadmin
     signinAs(self.client, self.CADMIN)
-    list_response = self.client.post('/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertFalse(list_response["success"])
 
     # test list for sadmin logged as sadmin
     signinAs(self.client, self.SADMIN)
-    list_response = self.client.post('/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    list_response = self.client.post('/api/teams.listForSuperAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(list_response["success"])

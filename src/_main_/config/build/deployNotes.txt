@@ -1,6 +1,6 @@
-Sep 5th Deployment to Dev
+Sep 10th Deployment to Dev
+- URLs and search-engine fixes
 - Fixes to Profile Picture
-- URLs and search-engine fix
 - Backend support for CarbonEquivalencies
 - Event RSVPs support
 - Allow teams to span communities

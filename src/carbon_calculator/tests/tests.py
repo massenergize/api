@@ -72,7 +72,7 @@ class CarbonCalculatorTest(TestCase):
         response = self.client.get('/cc/')
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get('/cc/info/')
+        response = self.client.get('/cc/info')
         self.assertEqual(response.status_code, 200)
 
         #for some reason this URL doesn't want the trailing slash

@@ -48,71 +48,71 @@ class ActionHandlerTest(TestCase):
     def test_info(self):
         # test not logged in
         signinAs(self.client, None)
-        info_response = self.client.post('/testimonials.info', urlencode({"testimonial_id": self.TESTIMONIAL1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        info_response = self.client.post('/api/testimonials.info', urlencode({"testimonial_id": self.TESTIMONIAL1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(info_response["success"])
         self.assertEqual(info_response["data"]["title"], self.TESTIMONIAL1.title)
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        info_response = self.client.post('/testimonials.info', urlencode({"testimonial_id": self.TESTIMONIAL1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        info_response = self.client.post('/api/testimonials.info', urlencode({"testimonial_id": self.TESTIMONIAL1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(info_response["success"])
         self.assertEqual(info_response["data"]["title"], self.TESTIMONIAL1.title)
 
         # test logged in as admin
         signinAs(self.client, self.SADMIN)
-        info_response = self.client.post('/testimonials.info', urlencode({"testimonial_id": self.TESTIMONIAL1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        info_response = self.client.post('/api/testimonials.info', urlencode({"testimonial_id": self.TESTIMONIAL1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(info_response["success"])
         self.assertEqual(info_response["data"]["title"], self.TESTIMONIAL1.title)
     
     def test_create(self):
         # test not logged in
         signinAs(self.client, None)
-        create_response = self.client.post('/testimonials.create', urlencode({"title": "none_logged"}), content_type="application/x-www-form-urlencoded").toDict()
+        create_response = self.client.post('/api/testimonials.create', urlencode({"title": "none_logged"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(create_response["success"])
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        create_response = self.client.post('/testimonials.create', urlencode({"title": "user_logged"}), content_type="application/x-www-form-urlencoded").toDict()
+        create_response = self.client.post('/api/testimonials.create', urlencode({"title": "user_logged"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(create_response["success"])
         self.assertEqual(create_response["data"]["title"], "user_logged")
 
         # test logged in as admin
         signinAs(self.client, self.SADMIN)
-        create_response = self.client.post('/testimonials.create', urlencode({"title": "admin_logged"}), content_type="application/x-www-form-urlencoded").toDict()
+        create_response = self.client.post('/api/testimonials.create', urlencode({"title": "admin_logged"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(create_response["success"])
         self.assertEqual(create_response["data"]["title"], "admin_logged")
 
     def test_list(self):
         # test not logged in
         signinAs(self.client, None)
-        list_response = self.client.post('/testimonials.list', urlencode({"user_id": self.SADMIN.id}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.list', urlencode({"user_id": self.SADMIN.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(list_response["success"])
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        list_response = self.client.post('/testimonials.list', urlencode({"user_id": self.SADMIN.id}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.list', urlencode({"user_id": self.SADMIN.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(list_response["success"])
 
         # test logged in as admin
         signinAs(self.client, self.SADMIN)
-        list_response = self.client.post('/testimonials.list', urlencode({"user_id": self.SADMIN.id}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.list', urlencode({"user_id": self.SADMIN.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(list_response["success"])
 
     # TODO dosent update is_approved
     def test_update(self):
         # test not logged in
         signinAs(self.client, None)
-        update_response = self.client.post('/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
+        update_response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(update_response["success"])
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        update_response = self.client.post('/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
+        update_response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(update_response["success"])
 
         # test logged in as admin
         signinAs(self.client, self.SADMIN)
-        update_response = self.client.post('/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
+        update_response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(update_response["success"])
         self.assertTrue(update_response["data"]["is_approved"])
 
@@ -123,73 +123,73 @@ class ActionHandlerTest(TestCase):
 
         # test not logged in
         signinAs(self.client, None)
-        delete_response = self.client.post('/testimonials.delete', urlencode({"testimonial_id": testimonial.id}), content_type="application/x-www-form-urlencoded").toDict()
+        delete_response = self.client.post('/api/testimonials.delete', urlencode({"testimonial_id": testimonial.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(delete_response["success"])
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        delete_response = self.client.post('/testimonials.delete', urlencode({"testimonial_id": testimonial.id}), content_type="application/x-www-form-urlencoded").toDict()
+        delete_response = self.client.post('/api/testimonials.delete', urlencode({"testimonial_id": testimonial.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(delete_response["success"])
 
         # test logged in as admin
         signinAs(self.client, self.SADMIN)
-        delete_response = self.client.post('/testimonials.delete', urlencode({"testimonial_id": testimonial.id}), content_type="application/x-www-form-urlencoded").toDict()
+        delete_response = self.client.post('/api/testimonials.delete', urlencode({"testimonial_id": testimonial.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(delete_response["success"])
 
     def test_rank(self):
         # test not logged in
         signinAs(self.client, None)
-        rank_response = self.client.post('/testimonials.rank', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
+        rank_response = self.client.post('/api/testimonials.rank', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(rank_response["success"])
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        rank_response = self.client.post('/testimonials.rank', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
+        rank_response = self.client.post('/api/testimonials.rank', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(rank_response["success"])
 
         # test logged in as admin
         signinAs(self.client, self.SADMIN)
-        rank_response = self.client.post('/testimonials.rank', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
+        rank_response = self.client.post('/api/testimonials.rank', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(rank_response["success"])
 
     def test_cadmin_list(self):
         # test not logged in
         signinAs(self.client, None)
-        list_response = self.client.post('/testimonials.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(list_response["success"])
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        list_response = self.client.post('/testimonials.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(list_response["success"])
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        list_response = self.client.post('/testimonials.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(list_response["success"])
 
         # test logged in as sadmin
         signinAs(self.client, self.SADMIN)
-        list_response = self.client.post('/testimonials.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(list_response["success"])
 
     def test_sadmin_list(self):
         # test not logged in
         signinAs(self.client, None)
-        list_response = self.client.post('/testimonials.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(list_response["success"])
 
         # test logged in as user
         signinAs(self.client, self.USER)
-        list_response = self.client.post('/testimonials.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(list_response["success"])
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        list_response = self.client.post('/testimonials.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(list_response["success"])
 
         # test logged in as sadmin
         signinAs(self.client, self.SADMIN)
-        list_response = self.client.post('/testimonials.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/testimonials.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(list_response["success"])

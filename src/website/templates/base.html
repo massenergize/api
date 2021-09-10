@@ -9,8 +9,14 @@
       integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
       crossorigin="anonymous"
     />
+
     <link
       href="//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="//fonts.googleapis.com/css?family=Google+Sans:400,500,600,400i,700,800,900"
       rel="stylesheet"
       type="text/css"
     />
@@ -47,16 +53,15 @@
     {% for tag in meta.tags %}
     <meta property="article:tag" content="{{tag}}" />
     {% endfor %}
-
-    {% if not meta.show_raw_pages_no_redirect %}
-    <meta http-equiv="refresh" content="1; URL={{meta.redirect_to}}" />
-
+    
+    {% if not meta.stay_put %}
+    <meta http-equiv="refresh" content="0.1; URL={{meta.redirect_to}}" />
     <style>
-      .container {
-
+        .container {
+        font-family:"Google Sans";
         /* Add the blur effect */
-        filter: blur(8px);
-        -webkit-filter: blur(8px);
+        filter: blur(18px);
+        -webkit-filter: blur(18px);
 
         /* Full height */
         height: 100%;
@@ -65,35 +70,21 @@
         background-position: center;
         background-repeat: no-repeat;
         background-size: cover;
-      }
+        }
     </style>
     {% endif %}
   </head>
 
+  {% block styling %} {% endblock %}
+  {% block javascript %} {% endblock %}
   <body>
-    <header class="page-header">
-      <div class="container">
-        <h1><a href="/">{{meta.title}}</a></h1>
-      </div>
-    </header>
-    {% if not meta.show_raw_pages_no_redirect %}
-    <div class="card text-center">
-      <div class="card-header">
-        {{meta.title}}
-      </div>
-      <div class="card-body">
-        <h5 class="card-title">{{meta.title}}</h5>
-        <p>Our mission at massenergize is to support community leaders with tools to help them motivate residents and businesses to reduce greenhouse gas emissions and prepare for a changing climate.</p>
-        <p class="card-text">If you are not redirected in 3 seconds, <a href="{{meta.redirect_to}}">click here</a>.</p>
-        <a href="{{meta.redirect_to}}" class="btn btn-primary">Click here</a>
-      </div>
-    </div>
-    {% endif %}
     <main class="container">
-
+      <!--    For google bots so we can make it invisible-->
+      <div style="width: 2px; height: 1px; opacity: 0; position: fixed">
+        <p><a href="/">Home</a></p>
+        <p><a href="{{meta.host}}">All Communities</a></p>
+      </div>
       {% block content %} {% endblock %}
-      <p><a href="/">Home</a></p>
-      <p><a href="{{meta.host}}">All Communities</a></p>
     </main>
   </body>
 </html>
