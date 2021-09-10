@@ -147,6 +147,7 @@ def community(request, subdomain):
             "created_at": community.created_at,
             "updated_at": community.updated_at,
             "tags": ["#ClimateChange", community.subdomain],
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -162,6 +163,7 @@ def actions(request):
             "subdomain": subdomain,
             "title": "Take Action",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/actions",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
     args = {
@@ -196,7 +198,8 @@ def action(request, id):
             "url": f"{PORTAL_HOST}/{subdomain}/actions/{id}",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/actions/{id}",
             "created_at": action.created_at,
-            "updated_at": action.updated_at
+            "updated_at": action.updated_at,
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
     args = {"meta": meta, "action": action}
@@ -211,6 +214,7 @@ def events(request):
             "subdomain": subdomain,
             "title": "Attend an event near you",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/events",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
     args = {
@@ -246,6 +250,7 @@ def event(request, id):
             "description": _extract(event.description),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/events/{id}",
             "url": f"{PORTAL_HOST}/{subdomain}/events/{id}",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
     args = {
@@ -269,6 +274,7 @@ def vendors(request):
             "subdomain": subdomain,
             "title": "Services & Vendors",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/services",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -299,7 +305,8 @@ def vendor(request, id):
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/services/{id}",
             "url": f"{PORTAL_HOST}/{subdomain}/services/{id}",
             "created_at": vendor.created_at,
-            "updated_at": vendor.updated_at
+            "updated_at": vendor.updated_at,
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -330,6 +337,7 @@ def teams(request):
             "subdomain": subdomain,
             "title": "Teams",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/teams",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -364,7 +372,8 @@ def team(request, id):
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/teams/{id}",
             "url": f"{PORTAL_HOST}/{subdomain}/teams/{id}",
             "created_at": team.created_at,
-            "updated_at": team.updated_at
+            "updated_at": team.updated_at,
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -383,6 +392,7 @@ def testimonials(request):
             "subdomain": subdomain,
             "title": "Teams",
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/testimonials",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -419,7 +429,8 @@ def testimonial(request, id):
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/testimonials/{id}",
             "url": f"{PORTAL_HOST}/{subdomain}/testimonials/{id}",
             "created_at": testimonial.created_at,
-            "updated_at": testimonial.updated_at
+            "updated_at": testimonial.updated_at,
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -445,6 +456,7 @@ def about_us(request):
             "subdomain": subdomain,
             "title": str(page),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/aboutus",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -471,6 +483,7 @@ def donate(request):
             "subdomain": subdomain,
             "title": str(page),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/donate",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -497,6 +510,7 @@ def impact(request):
             "subdomain": subdomain,
             "title": str(page),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/impact",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
@@ -523,6 +537,7 @@ def contact_us(request):
             "subdomain": subdomain,
             "title": str(page),
             "redirect_to": f"{PORTAL_HOST}/{subdomain}/impact",
+            "stay_put": request.GET.get('stay_put', None),
         }
     )
 
