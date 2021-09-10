@@ -23,6 +23,7 @@ urlpatterns = [
     path('cc/',include('carbon_calculator.urls')),
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
+    path('api/', include('api.urls')),
     path('', include('website.urls')),
 ]
 

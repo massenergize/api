@@ -38,9 +38,9 @@ class UserProfileTestCase(TestCase):
         self.ACTION3 = Action.objects.create()
         self.ACTION4 = Action.objects.create()
 
-        response = self.client.post('/users.actions.completed.add', urlencode({"user_id": self.USER2.id, "action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
-        self.client.post('/users.actions.completed.add', urlencode({"user_id": self.USER2.id, "action_id": self.ACTION2.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded")
-        self.client.post('/users.actions.completed.add', urlencode({"user_id": self.USER2.id, "action_id": self.ACTION3.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded")
+        response = self.client.post('/api/users.actions.completed.add', urlencode({"user_id": self.USER2.id, "action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.client.post('/api/users.actions.completed.add', urlencode({"user_id": self.USER2.id, "action_id": self.ACTION2.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded")
+        self.client.post('/api/users.actions.completed.add', urlencode({"user_id": self.USER2.id, "action_id": self.ACTION3.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded")
 
         self.ACTION.save()
         self.ACTION2.save()
@@ -65,23 +65,23 @@ class UserProfileTestCase(TestCase):
     def test_info(self):
         # test not logged in
         signinAs(self.client, None)
-        info_response = self.client.post('/users.info', urlencode({"user_id": self.USER.id, "community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        info_response = self.client.post('/api/users.info', urlencode({"user_id": self.USER.id, "community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(info_response["success"])
     
         # test logged as user
         signinAs(self.client, self.USER)
-        info_response = self.client.post('/users.info', urlencode({"user_id": self.USER.id, "community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        info_response = self.client.post('/api/users.info', urlencode({"user_id": self.USER.id, "community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(info_response["success"])
     
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        info_response = self.client.post('/users.info', urlencode({"user_id": self.USER.id, "community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        info_response = self.client.post('/api/users.info', urlencode({"user_id": self.USER.id, "community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(info_response["success"])
 
     def test_create(self):
         # test not logged in
         signinAs(self.client, None)
-        create_response = self.client.post('/users.create', urlencode({"accepts_terms_and_conditions": True,
+        create_response = self.client.post('/api/users.create', urlencode({"accepts_terms_and_conditions": True,
                                                                           "email": "test@email.com",
                                                                           "full_name": "test name",
                                                                           "preferred_name": "test_name",
@@ -92,7 +92,7 @@ class UserProfileTestCase(TestCase):
         # test not logged in, specify color pref
         signinAs(self.client, None)
         color = "10fo80"
-        create_response = self.client.post('/users.create', urlencode({"accepts_terms_and_conditions": True,
+        create_response = self.client.post('/api/users.create', urlencode({"accepts_terms_and_conditions": True,
                                                                           "email": "test1a@email.com",
                                                                           "full_name": "test name",
                                                                           "preferred_name": "test_name",
@@ -103,7 +103,7 @@ class UserProfileTestCase(TestCase):
         self.assertEqual(create_response["data"]["preferences"]["color"], color)
     
         # test creating user with a profile picture
-        create_response = self.client.post('/users.create', urlencode({"accepts_terms_and_conditions": True,
+        create_response = self.client.post('/api/users.create', urlencode({"accepts_terms_and_conditions": True,
                                                                           "email": "test1b@email.com",
                                                                           "full_name": "test name",
                                                                           "preferred_name": "test_name",
@@ -116,7 +116,7 @@ class UserProfileTestCase(TestCase):
     
         # test logged as user
         signinAs(self.client, self.USER)
-        create_response = self.client.post('/users.create', urlencode({"accepts_terms_and_conditions": True,
+        create_response = self.client.post('/api/users.create', urlencode({"accepts_terms_and_conditions": True,
                                                                           "email": "test1@email.com",
                                                                           "full_name": "test name1",
                                                                           "preferred_name": "test_name1",
@@ -126,7 +126,7 @@ class UserProfileTestCase(TestCase):
     
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        create_response = self.client.post('/users.create', urlencode({"accepts_terms_and_conditions": True,
+        create_response = self.client.post('/api/users.create', urlencode({"accepts_terms_and_conditions": True,
                                                                           "email": "test2@email.com",
                                                                           "full_name": "test name2",
                                                                           "preferred_name": "test_name2",
@@ -137,39 +137,39 @@ class UserProfileTestCase(TestCase):
     def test_list(self):
         # test not logged in
         signinAs(self.client, None)
-        list_response = self.client.post('/users.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/users.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(list_response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        list_response = self.client.post('/users.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/users.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(list_response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        list_response = self.client.post('/users.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        list_response = self.client.post('/api/users.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(list_response["success"])
 
     def test_update(self):
         # test not logged in
         signinAs(self.client, None)
-        update_response = self.client.post('/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name"}), content_type="application/x-www-form-urlencoded").toDict()
+        update_response = self.client.post('/api/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(update_response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        update_response = self.client.post('/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name1"}), content_type="application/x-www-form-urlencoded").toDict()
+        update_response = self.client.post('/api/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name1"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(update_response["success"])
         self.assertEqual(update_response["data"]["full_name"], "updated name1")
 
         # test logged as user, add a profile picture
-        update_response = self.client.post('/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name1a", "profile_picture":self.PROFILE_PICTURE}), content_type="application/x-www-form-urlencoded").toDict()
+        update_response = self.client.post('/api/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name1a", "profile_picture":self.PROFILE_PICTURE}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(update_response["success"])
         self.assertNotEqual(update_response["data"].get("profile_picture", None), None)
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        update_response = self.client.post('/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name2"}), content_type="application/x-www-form-urlencoded").toDict()
+        update_response = self.client.post('/api/users.update', urlencode({"user_id": self.USER.id, "full_name": "updated name2"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(update_response["success"])        
         self.assertEqual(update_response["data"]["full_name"], "updated name2")
 
@@ -182,136 +182,136 @@ class UserProfileTestCase(TestCase):
 
         # test not logged in
         signinAs(self.client, None)
-        delete_response = self.client.post('/users.delete', urlencode({"user_id": user1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        delete_response = self.client.post('/api/users.delete', urlencode({"user_id": user1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(delete_response["success"])
 
         # test logged in
         signinAs(self.client, user1)
-        delete_response = self.client.post('/users.delete', urlencode({"user_id": user1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        delete_response = self.client.post('/api/users.delete', urlencode({"user_id": user1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(delete_response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        delete_response = self.client.post('/users.delete', urlencode({"user_id": user2.id}), content_type="application/x-www-form-urlencoded").toDict()
+        delete_response = self.client.post('/api/users.delete', urlencode({"user_id": user2.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(delete_response["success"])
 
     def test_add_action_completed(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.actions.completed.add', urlencode({"action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.completed.add', urlencode({"action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/users.actions.completed.add', urlencode({"action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.completed.add', urlencode({"action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as adming
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.actions.completed.add', urlencode({"user_id": self.USER.id, "action_id": self.ACTION2.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.completed.add', urlencode({"user_id": self.USER.id, "action_id": self.ACTION2.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_add_action_todo(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.actions.todo.add', urlencode({"action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.todo.add', urlencode({"action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/users.actions.todo.add', urlencode({"action_id": self.ACTION3.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.todo.add', urlencode({"action_id": self.ACTION3.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as adming
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.actions.todo.add', urlencode({"user_id": self.USER.id, "action_id": self.ACTION4.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.todo.add', urlencode({"user_id": self.USER.id, "action_id": self.ACTION4.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list_actions_todo(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.actions.todo.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.todo.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/users.actions.todo.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.todo.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.actions.todo.list', urlencode({"user_id": self.USER.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.todo.list', urlencode({"user_id": self.USER.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list_actions_completed(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.actions.completed.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.completed.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/users.actions.completed.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.completed.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.actions.completed.list', urlencode({"user_id": self.USER.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.completed.list', urlencode({"user_id": self.USER.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_remove_user_action(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.actions.remove', urlencode({"id": self.USER_ACTION_REL.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.remove', urlencode({"id": self.USER_ACTION_REL.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER2)
-        response = self.client.post('/users.actions.remove', urlencode({"id": self.USER_ACTION_REL2.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.remove', urlencode({"id": self.USER_ACTION_REL2.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.actions.remove', urlencode({"user_id": self.USER2.id, "id": self.USER_ACTION_REL3.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.actions.remove', urlencode({"user_id": self.USER2.id, "id": self.USER_ACTION_REL3.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
     
     def test_add_household(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.households.add', urlencode({"name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}'}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.add', urlencode({"name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}'}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER2)
-        response = self.client.post('/users.households.add', urlencode({"name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}'}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.add', urlencode({"name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}'}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.households.add', urlencode({"user_id": self.USER2.id, "name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}'}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.add', urlencode({"user_id": self.USER2.id, "name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}'}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_edit_household(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.households.edit', urlencode({"name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}', "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.edit', urlencode({"name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}', "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER2)
-        response = self.client.post('/users.households.edit', urlencode({"name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}', "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.edit', urlencode({"name": "my house", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}', "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.households.edit', urlencode({"user_id": self.USER2.id, "name": "my house2", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}', "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.edit', urlencode({"user_id": self.USER2.id, "name": "my house2", "unit_type": "RESIDENTIAL", "address": '{"zipcode":"01742"}', "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_delete_household(self):
@@ -320,93 +320,93 @@ class UserProfileTestCase(TestCase):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.households.remove', urlencode({"household_id": house1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.remove', urlencode({"household_id": house1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER2)
-        response = self.client.post('/users.households.remove', urlencode({"household_id": house1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.remove', urlencode({"household_id": house1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.households.remove', urlencode({"household_id": house2.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.remove', urlencode({"household_id": house2.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list_household(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.households.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER2)
-        response = self.client.post('/users.households.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.households.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.households.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list_events(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.events.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.events.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER2)
-        response = self.client.post('/users.events.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.events.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.events.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.events.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list_for_cadmin(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER2)
-        response = self.client.post('/users.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        response = self.client.post('/users.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.listForCommunityAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list_for_sadmin(self):
 
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER2)
-        response = self.client.post('/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        response = self.client.post('/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])

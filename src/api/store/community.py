@@ -742,12 +742,12 @@ class CommunityStore:
                 return None, InvalidResourceError()
 
             # let's make sure we can use this subdomain
-            community = filter_set.first()
             subdomain = args.get('subdomain', None)
-            if subdomain and not can_use_this_subdomain(subdomain, community):
+            if subdomain and not can_use_this_subdomain(subdomain, filter_set.first()):
                 raise Exception("Subdomain is already reserved.  Please, choose a different subdomain")
 
             filter_set.update(**args)
+            community = filter_set.first()
 
             # TODO: check that locations have changed before going through the effort of
 
@@ -763,7 +763,6 @@ class CommunityStore:
                 community.logo = cLogo
                 community.save()
 
-            return community, None
             if favicon:
                 cFavicon = Media(
                     file=favicon, name=f"{args.get('name', '')} CommunityFavicon"
@@ -774,6 +773,8 @@ class CommunityStore:
 
             if subdomain:
                 reserve_subdomain(subdomain, community)
+            
+            return community, None
 
         except Exception as e:
             capture_exception(e)

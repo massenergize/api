@@ -34,7 +34,7 @@ class CarbonEquivalenciesTestCase(TestCase):
     def test_create(self):
         # test not logged
         signinAs(self.client, None)
-        response = self.client.post('/data.carbonEquivalency.create', urlencode({
+        response = self.client.post('/api/data.carbonEquivalency.create', urlencode({
                                                                            "name": "test_none",
                                                                            "value":  300,
                                                                            "explanation": "explanation_text",
@@ -43,7 +43,7 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/data.carbonEquivalency.create', urlencode({
+        response = self.client.post('/api/data.carbonEquivalency.create', urlencode({
                                                                            "name": "test_user",
                                                                            "value":  300,
                                                                            "explanation": "explanation_text",
@@ -52,7 +52,7 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        response = self.client.post('/data.carbonEquivalency.create', urlencode({
+        response = self.client.post('/api/data.carbonEquivalency.create', urlencode({
                                                                            "name": "test_cadmin",
                                                                            "value":  300,
                                                                            "explanation": "explanation_text",
@@ -61,7 +61,7 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/data.carbonEquivalency.create', urlencode({
+        response = self.client.post('/api/data.carbonEquivalency.create', urlencode({
                                                                            "name": "test_sadmin",
                                                                            "value":  300,
                                                                            "explanation": "explanation_text",
@@ -70,39 +70,39 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test bad args
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/data.carbonEquivalency.create', urlencode({"community_id": 3,
+        response = self.client.post('/api/data.carbonEquivalency.create', urlencode({"community_id": 3,
                                                                            "name": "test_bad_args"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
     
     def test_get(self):
         # test not logged
         signinAs(self.client, None)
-        response = self.client.get('/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.get('/api/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertGreater(len(response["data"]), 0)
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.get('/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.get('/api/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertGreater(len(response["data"]), 0)
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        response = self.client.get('/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.get('/api/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertGreater(len(response["data"]), 0)
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
-        response = self.client.get('/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.get('/api/data.carbonEquivalency.get', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertGreater(len(response["data"]), 0)
 
         # test get one
         signinAs(self.client, self.USER)
         print(self.CARBON_EQUIVALENCY.id)
-        response = self.client.post('/data.carbonEquivalency.get', urlencode({"id": self.CARBON_EQUIVALENCY.id}), content_type="application/x-www-form-urlencoded")
+        response = self.client.post('/api/data.carbonEquivalency.get', urlencode({"id": self.CARBON_EQUIVALENCY.id}), content_type="application/x-www-form-urlencoded")
         print(response)
         response = response.toDict()
         self.assertTrue(response["success"])
@@ -111,7 +111,7 @@ class CarbonEquivalenciesTestCase(TestCase):
         # test not logged
         signinAs(self.client, None)
 
-        response = self.client.post('/data.carbonEquivalency.update', urlencode({
+        response = self.client.post('/api/data.carbonEquivalency.update', urlencode({
                                                                             "id": self.CARBON_EQUIVALENCY.id,
                                                                             "name": "Another name",
                                                                             "value":  300,
@@ -121,7 +121,7 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/data.carbonEquivalency.update', urlencode({
+        response = self.client.post('/api/data.carbonEquivalency.update', urlencode({
                                                                             "id": self.CARBON_EQUIVALENCY.id,
                                                                              "name": "Another name",
                                                                             "value":  300,
@@ -131,7 +131,7 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        response = self.client.post('/data.carbonEquivalency.update', urlencode({
+        response = self.client.post('/api/data.carbonEquivalency.update', urlencode({
                                                                             "id": self.CARBON_EQUIVALENCY.id,
                                                                              "name": "Another name",
                                                                             "value":  300,
@@ -141,7 +141,7 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/data.carbonEquivalency.update', urlencode({
+        response = self.client.post('/api/data.carbonEquivalency.update', urlencode({
                                                                             "id": self.CARBON_EQUIVALENCY.id,
                                                                              "name": "Another name",
                                                                             "value":  300,
@@ -152,6 +152,6 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test bad args
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/data.carbonEquivalency.update', urlencode({"community_id": 333,
+        response = self.client.post('/api/data.carbonEquivalency.update', urlencode({"community_id": 333,
                                                                            "name": "test_bad_args"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
