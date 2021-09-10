@@ -1,9 +1,10 @@
-from django.urls import path
+from django.urls import path, include
 
 from website import views
 
 urlpatterns = [
-  path('', views.home, name='home'),
+  path('', include('api.urls')),
+  path('home', views.home, name='home'),
   path('communities', views.communities, name='communities'),
   path('community/<slug:subdomain>', views.community, name='community'),
   path('actions', views.actions, name='actions'),
