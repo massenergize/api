@@ -3,7 +3,7 @@ from django.conf import settings as django_settings
 from urllib.parse import urlencode
 from _main_.settings import BASE_DIR
 from _main_.utils.massenergize_response import MassenergizeResponse
-from database.models import Team, Community, UserProfile, Goal, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup
+from database.models import Team, Community, UserProfile, Goal, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, Subdomain
 from _main_.utils.utils import load_json
 from api.tests.common import signinAs, setupCC, createUsers
 
@@ -32,12 +32,19 @@ class CommunitiesTestCase(TestCase):
       'is_approved': True
     })
 
+    # also reserve the subdomain
+    Subdomain.objects.create(name=self.COMMUNITY.subdomain.lower(), community=self.COMMUNITY, in_use=True)
+
+
     self.COMMUNITY2 = Community.objects.create(**{
       'subdomain': "alternate_community",
       'name': "alternate_community",
       'accepted_terms_and_conditions': True,
       'is_approved': True
     })
+
+    # also reserve the subdomain
+    Subdomain.objects.create(name=self.COMMUNITY2.subdomain.lower(), community=self.COMMUNITY2, in_use=True)
 
     admin_group_name  = f"{self.COMMUNITY.name}-{self.COMMUNITY.subdomain}-Admin-Group"
     self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
