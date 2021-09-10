@@ -1,16 +1,154 @@
 {% extends "base.html" %}
+{% block javascript %}
+<script>
+        function onCommunitySelected(selectElement){
+            const subdomain = selectElement.value;
+            const hostDomain = selectElement.getAttribute("data-host-domain")
+            window.location = `http://${subdomain}.${hostDomain}`;
+        }
 
-{% block content %}
-<ul>
-  {% for c in communities %}
-  <li>
-    {% if meta.is_local %}
-    <a href="http://{{c.subdomain}}.{{meta.host_domain}}"><h4>{{c.name}}</h4></a> 
-    {% else %}
-    <a href="https://{{c.subdomain}}.{{meta.host_domain}}"><h4>{{c.name}}</h4></a> 
-    {% endif %}
-    <p>{{c.about_community}}</p>
-  </li>
-  {% endfor %}
-</ul>
+
+
+
+
+
+
+
+</script>
 {% endblock %}
+{% block content %}
+<div class="all-coms-root-container">
+    <div class="content-wrapper">
+        <img src="https://community.massenergize.org/static/media/logo.ee45265d.png" class="me-logo"/>
+        <h1><span style="color:rgb(237, 92, 23)">Welcome to</span> our <span
+                style="color:#8dc443">Community Portal</span></h1>
+        <div class="custom-select-wrapper">
+            <div class="select-envelope">
+                <select class="custom-select" onChange="onCommunitySelected(this)"
+                        data-host-domain="{{meta.host_domain}}">
+                    <option value="{{c.subdomain}}">Choose your community...</option>
+                    {% for c in communities %}
+                    <option value="{{c.subdomain}}">{{c.name}}</option>
+                    {% endfor %}
+
+                </select>
+            </div>
+        </div>
+        <a href="http://www.massenergize.org" target="_blank" style="color:rgb(73, 172, 35); text-decoration:underline">Find
+            out how to start your own
+            MassEnergize community site here</a>
+        <ul>
+
+            <!--    {% for c in communities %}-->
+            <!--    <li >-->
+            <!--        {% if meta.is_local %}-->
+            <!--        <a href="http://{{c.subdomain}}.{{meta.host_domain}}" ><h4>{{c.name}}</h4></a>-->
+            <!--        {% else %}-->
+            <!--        <a href="https://{{c.subdomain}}.{{meta.host_domain}}"><h4>{{c.name}}</h4></a>-->
+            <!--        {% endif %}-->
+            <!--        <p>{{c.about_community}}</p>-->
+            <!--    </li>-->
+            <!--    {% endfor %}-->
+        </ul>
+    </div>
+
+</div>
+{% endblock %}
+
+
+<!---------------- EXTRA STYLING ------------------>
+
+{% block styling %}
+<style>
+
+
+.me-logo{
+    margin: 0px auto 10px;
+    display: block;
+    max-width: 200px;
+
+}
+.custom-select-wrapper{
+    width:100%;
+    padding:10px 16%;
+    cursor:pointer;
+   }
+
+   .custom-select:focus{
+    box-shadow: 0 0 0;
+   }
+
+   .select-envelope{
+    padding:2px;
+    border-radius:55px;
+    border:2px solid rgb(237, 92, 23);
+   }
+.custom-select{
+    font-family:"Google Sans";
+    cursor:pointer;
+    width:88%;
+    margin-left: 20px;
+    margin-right: 20px;
+    border:0px;
+}
+
+.content-wrapper h1{
+
+    font-weight:500;
+    text-shadow:-1px 1px 1px #a5a5a5;
+
+}
+.content-wrapper{
+
+        margin-top:-230px;
+        width:100%;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+}
+    .all-coms-root-container{
+
+        height:100vh;
+        width:100%;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</style>
+
+{% endblock %}
+
+<!------------------------------------------------->
