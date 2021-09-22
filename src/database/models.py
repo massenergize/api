@@ -2508,6 +2508,7 @@ class Message(models.Model):
     res["community"] = get_summary_info(self.community)
     res["team"] = get_summary_info(self.team)
     res["user"] = get_summary_info(self.user)
+    res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
     return res
   
   def full_json(self):
