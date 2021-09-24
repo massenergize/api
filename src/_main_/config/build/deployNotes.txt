@@ -1,4 +1,4 @@
-Sep 24th Deployment to Dev
+Sep 24th Deployment to Dev/Canary
 - Message dated
 - Separate initial vs attained values
 - URLs and search-engine fixes
