@@ -479,7 +479,9 @@ class CommunityStore:
 
                     goal = community.goal
                     total = ( 
-                        goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
+                        goal.attained_number_of_households 
+                        + goal.attained_number_of_actions 
+                        + goal.attained_carbon_footprint_reduction
                     )
 
                     goal.attained_number_of_households = max(category_totals)                    
@@ -487,7 +489,9 @@ class CommunityStore:
                     goal.attained_carbon_footprint_reduction = 0
                 
                     newtotal = ( 
-                        goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
+                        goal.attained_number_of_households 
+                        + goal.attained_number_of_actions 
+                        + goal.attained_carbon_footprint_reduction
                     )
                     if newtotal != total:
                         goal.save()
