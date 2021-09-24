@@ -19,10 +19,10 @@ class Validator:
     return self
 
   def expect_one_of(self, lst):
-    for (field_name, field_type, is_required) in lst:
+    for (field_name, field_type) in lst:
       self.fields[field_name] = {
         "type": field_type,
-        "is_required": is_required
+        "is_required": False
       }
     return self
 
