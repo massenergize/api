@@ -1,4 +1,6 @@
-Sep 10th Deployment to Dev
+Sep 24th Deployment to Dev
+- Message dated
+- Separate initial vs attained values
 - URLs and search-engine fixes
 - Fixes to Profile Picture
 - Backend support for CarbonEquivalencies
