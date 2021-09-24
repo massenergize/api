@@ -1,6 +1,8 @@
+from _main_.utils.utils import strip_website
 from database.models import (
     Community,
     CommunityMember,
+    CustomCommunityWebsiteDomain,
     UserProfile,
     Action,
     Event,
@@ -441,22 +443,8 @@ class CommunityStore:
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            subdomain = args.get("subdomain")
-            community_id = args.get("id")
-
-            if not community_id and not subdomain:
-                return None, CustomMassenergizeError(
-                    "Missing community_id or subdomain field"
-                )
-
-            community: Community = (
-                Community.objects.select_related("logo", "favicon", "goal")
-                .filter(Q(pk=community_id) | Q(subdomain=subdomain))
-                .first()
-            )
-            if not community:
-                return None, InvalidResourceError()
-
+            community = get_community_or_die(context, args)
+            print(community)
             # context.is_prod now means the prod database site.
             # if (not community.is_published) and context.is_prod and (not context.is_admin_site):
             if (
@@ -826,6 +814,20 @@ class CommunityStore:
 
             communities = Community.objects.filter(is_deleted=False)
             return communities, None
+        except Exception as e:
+            capture_exception(e)
+            return None, CustomMassenergizeError(str(e))
+
+    def add_custom_website(self, context, args={}):
+        try:
+            community = get_community_or_die(context, args)
+            website = args.get('website')
+            website = strip_website(website)
+            community_website = CustomCommunityWebsiteDomain.objects.filter(website=website, community=community).first()
+            if not community_website:
+                community_website = CustomCommunityWebsiteDomain(website=website, community=community)
+                community_website.save()
+            return community_website, None
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(str(e))
