@@ -441,8 +441,8 @@ class CommunityStore:
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            subdomain = args.get("subdomain")
-            community_id = args.get("id")
+            subdomain = args.get("subdomain", None)
+            community_id = args.get("id", None)
 
             if not community_id and not subdomain:
                 return None, CustomMassenergizeError(
@@ -765,7 +765,7 @@ class CommunityStore:
                 community.favicon = cFavicon
                 community.save()
 
-            if subdomain:
+            if subdomain and not Subdomain.objects.filter(name=subdomain):
                 reserve_subdomain(subdomain, community)
             
             return community, None
@@ -800,12 +800,12 @@ class CommunityStore:
         try:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
-            if context.user_is_community_admin:
+            if context.user_is_super_admin:
+                return self.list_communities_for_super_admin(context)
+            elif context.user_is_community_admin:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 return [a.community for a in admin_groups], None
-            elif context.user_is_super_admin:
-                return self.list_communities_for_super_admin(context)
             else:
                 return [], None
 
