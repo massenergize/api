@@ -478,26 +478,16 @@ class CommunityStore:
                     category_totals = [datum["reported_value"] for datum in data]
 
                     goal = community.goal
-                    total = (
-                        goal.attained_number_of_households
-                        + goal.attained_number_of_actions
-                        + goal.attained_carbon_footprint_reduction
+                    total = ( 
+                        goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
                     )
 
-                    goal.attained_number_of_households = (
-                        goal.initial_number_of_households + max(category_totals)
-                    )
-                    goal.attained_number_of_actions = (
-                        goal.initial_number_of_actions + sum(category_totals)
-                    )
-                    goal.attained_carbon_footprint_reduction = (
-                        goal.initial_carbon_footprint_reduction
-                    )  # no additions from state reports
-
-                    newtotal = (
-                        goal.attained_number_of_households
-                        + goal.attained_number_of_actions
-                        + goal.attained_carbon_footprint_reduction
+                    goal.attained_number_of_households = max(category_totals)                    
+                    goal.attained_number_of_actions = sum(category_totals)                   
+                    goal.attained_carbon_footprint_reduction = 0
+                
+                    newtotal = ( 
+                        goal.attained_number_of_households + goal.attained_number_of_actions + goal.attained_carbon_footprint_reduction
                     )
                     if newtotal != total:
                         goal.save()
