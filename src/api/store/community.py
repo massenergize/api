@@ -443,6 +443,7 @@ class CommunityStore:
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
+            print(args)
             community = get_community_or_die(context, args)
             print(community)
             # context.is_prod now means the prod database site.
@@ -818,8 +819,9 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(str(e))
 
-    def add_custom_website(self, context, args={}):
+    def add_custom_website(self, context, args):
         try:
+            print(args)
             community = get_community_or_die(context, args)
             website = args.get('website')
             website = strip_website(website)

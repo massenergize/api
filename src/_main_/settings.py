@@ -61,6 +61,7 @@ ALLOWED_HOSTS = [
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
     '.massenergize.test',
+    '*'
 ]
 
 if IS_LOCAL:

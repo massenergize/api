@@ -43,16 +43,24 @@ def get_community_or_die(context: Context, args) -> Community:
     community = Community.objects.select_related("logo", "favicon", "goal").filter(pk=community_id).first()
   elif subdomain and subdomain != 'home':
     community = Community.objects.select_related("logo", "favicon", "goal").filter(subdomain__iexact=subdomain).first()
+
   elif referrer_website:
+    # since we dont have a subdomain or community_id, we will fall back to the referrer site
     website = strip_website(referrer_website)
     community_website = CustomCommunityWebsiteDomain.objects.select_related("community").filter(website__iexact=website).first()
     if community_website:
       community = community_website.community
-  
+    elif website.endswith("massenergize.org") or website.endswith("massenergize.test:3000"):
+      domain_components = website.split(".")
+      if len(domain_components) >= 3:
+        # if there is a subdomain there will be at least three parts
+        subdomain = domain_components[0]
+        community = Community.objects.select_related("logo", "favicon", "goal").filter(subdomain__iexact=subdomain).first()
+
   if not community:
     # we explored all our options and could not get a community
     raise Exception("Please provide a valid community_id or subdomain")
-  print(community, type(community))
+
   return community
 
 def get_user_or_die(context, args):

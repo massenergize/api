@@ -66,6 +66,8 @@ def get_models_and_field_types(models):
   return result
 
 def strip_website(url: str)-> str:
+  if not url:
+    return None 
   url = url.replace("http://","")
   url = url.replace("https://","")
   url = url.replace("www.","")

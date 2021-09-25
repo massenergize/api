@@ -235,7 +235,7 @@ class CommunityHandler(RouteHandler):
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
-    print(args)
+
     communities, err = self.service.add_custom_website(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
