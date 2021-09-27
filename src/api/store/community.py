@@ -853,23 +853,35 @@ def can_use_this_subdomain(subdomain: str, community: Community=None) -> bool:
     return False
 
 def reserve_subdomain(subdomain: str, community: Community=None):
-    # first check that we can use this domain 
-    if not can_use_this_subdomain(subdomain, community):
-        return False
+    if not community:
+        raise Exception('community is required to set a subdomain')
 
     # if we are here then the subdomain is available to be used by this community
     # now let's make sure it is all lower case
     subdomain = subdomain.lower()
 
+    # if subdomain is in use for this community just return right away
+    if Subdomain.objects.filter(community=community, subdomain__iexact=subdomain, in_use=True).update(in_use=False):
+        return
+
+    # first check that we can use this domain 
+    if not can_use_this_subdomain(subdomain, community):
+        raise Exception(f'This community cannot reserve the subdomain: {subdomain}')
+
+
     # mark the old subdomains for this community to un-used
     Subdomain.objects.filter(community=community, in_use=True).update(in_use=False)
     
-    # let's do a search for if subdomain is already created for this community
-    subdomain_search = Subdomain.objects.filter(community=community, subdomain__iexact=subdomain)
-    if not subdomain_search.exists():
-        # if subdomain is not really created then create a new one
+    # let's do a search for this subdomain 
+    subdomain_search = Subdomain.objects.filter(subdomain__iexact=subdomain)
+    if subdomain_search.exists():
+        # because we call can_use_this_subdomain() above, we know that if we 
+        # here then the community owns this domain already.  If another community owned
+        # this domain we would have raised an exception
+        # Hence we can go ahead and update this this subdomain to in-use
+        subdomain_search.update(in_use=True)
+    else:
+        # if subdomain does not exist then we need to create a new one
         new_subdomain = Subdomain(name=subdomain, community=community, in_use=True)
         new_subdomain.save()
-    else:
-        # if we are here then the subdomain already exists for this community so let's flip it to in-use
-        subdomain_search.update(in_use=True)
+
