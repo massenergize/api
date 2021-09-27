@@ -765,8 +765,8 @@ class CommunityStore:
                 community.favicon = cFavicon
                 community.save()
 
-            if subdomain and not Subdomain.objects.filter(name=subdomain):
-                reserve_subdomain(subdomain, community)
+            # let's make sure we reserve this subdomain
+            reserve_subdomain(subdomain, community)
             
             return community, None
 
@@ -853,13 +853,23 @@ def can_use_this_subdomain(subdomain: str, community: Community=None) -> bool:
     return False
 
 def reserve_subdomain(subdomain: str, community: Community=None):
+    # first check that we can use this domain 
+    if not can_use_this_subdomain(subdomain, community):
+        return False
+
+    # if we are here then the subdomain is available to be used by this community
+    # now let's make sure it is all lower case
     subdomain = subdomain.lower()
 
-    if subdomain in RESERVED_SUBDOMAIN_LIST:
-        return False
-    # mark the old subdomains for this community to unused
+    # mark the old subdomains for this community to un-used
     Subdomain.objects.filter(community=community, in_use=True).update(in_use=False)
     
-    # store this new one is what as the one in use
-    new_subdomain = Subdomain(name=subdomain, community=community, in_use=True)
-    new_subdomain.save()
+    # let's do a search for if subdomain is already created for this community
+    subdomain_search = Subdomain.objects.filter(community=community, subdomain__iexact=subdomain)
+    if not subdomain_search.exists():
+        # if subdomain is not really created then create a new one
+        new_subdomain = Subdomain(name=subdomain, community=community, in_use=True)
+        new_subdomain.save()
+    else:
+        # if we are here then the subdomain already exists for this community so let's flip it to in-use
+        Subdomain.objects.filter(community=community, in_use=False)
