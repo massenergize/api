@@ -875,9 +875,9 @@ def reserve_subdomain(subdomain: str, community: Community=None):
     # let's do a search for this subdomain 
     subdomain_search = Subdomain.objects.filter(subdomain__iexact=subdomain)
     if subdomain_search.exists():
-        # because we call can_use_this_subdomain() above, we know that if we 
-        # here then the community owns this domain already.  If another community owned
-        # this domain we would have raised an exception
+        # because we call can_use_this_subdomain() above, we know that:
+        #  if we get here then the community owns this domain already.  
+        # If another community owned this domain we would have raised an exception
         # Hence we can go ahead and update this this subdomain to in-use
         subdomain_search.update(in_use=True)
     else:
