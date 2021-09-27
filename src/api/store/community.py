@@ -766,7 +766,8 @@ class CommunityStore:
                 community.save()
 
             # let's make sure we reserve this subdomain
-            reserve_subdomain(subdomain, community)
+            if subdomain:
+                reserve_subdomain(subdomain, community)
             
             return community, None
 
