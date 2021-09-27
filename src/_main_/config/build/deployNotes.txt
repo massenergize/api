@@ -1,5 +1,5 @@
-Sep 24th Deployment to Dev/Canary
-- Message dated
+Sep 27th Deployment to Dev/Canary
+- Message dates passed back on messages.info
 - Separate initial vs attained values
 - URLs and search-engine fixes
 - Fixes to Profile Picture
