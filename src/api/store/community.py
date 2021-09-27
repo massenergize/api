@@ -872,4 +872,4 @@ def reserve_subdomain(subdomain: str, community: Community=None):
         new_subdomain.save()
     else:
         # if we are here then the subdomain already exists for this community so let's flip it to in-use
-        Subdomain.objects.filter(community=community, in_use=False)
+        subdomain_search.update(in_use=True)
