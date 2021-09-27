@@ -441,8 +441,8 @@ class CommunityStore:
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            subdomain = args.get("subdomain")
-            community_id = args.get("id")
+            subdomain = args.get("subdomain", None)
+            community_id = args.get("id", None)
 
             if not community_id and not subdomain:
                 return None, CustomMassenergizeError(
@@ -765,6 +765,7 @@ class CommunityStore:
                 community.favicon = cFavicon
                 community.save()
 
+            # let's make sure we reserve this subdomain
             if subdomain:
                 reserve_subdomain(subdomain, community)
             
@@ -800,12 +801,12 @@ class CommunityStore:
         try:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
-            if context.user_is_community_admin:
+            if context.user_is_super_admin:
+                return self.list_communities_for_super_admin(context)
+            elif context.user_is_community_admin:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 return [a.community for a in admin_groups], None
-            elif context.user_is_super_admin:
-                return self.list_communities_for_super_admin(context)
             else:
                 return [], None
 
@@ -853,13 +854,35 @@ def can_use_this_subdomain(subdomain: str, community: Community=None) -> bool:
     return False
 
 def reserve_subdomain(subdomain: str, community: Community=None):
+    if not community:
+        raise Exception('community is required to set a subdomain')
+
+    # if we are here then the subdomain is available to be used by this community
+    # now let's make sure it is all lower case
     subdomain = subdomain.lower()
 
-    if subdomain in RESERVED_SUBDOMAIN_LIST:
-        return False
-    # mark the old subdomains for this community to unused
+    # if subdomain is in use for this community just return right away
+    if Subdomain.objects.filter(community=community, subdomain__iexact=subdomain, in_use=True):
+        return
+
+    # first check that we can use this domain 
+    if not can_use_this_subdomain(subdomain, community):
+        raise Exception(f'This community cannot reserve the subdomain: {subdomain}')
+
+
+    # mark the old subdomains for this community to un-used
     Subdomain.objects.filter(community=community, in_use=True).update(in_use=False)
     
-    # store this new one is what as the one in use
-    new_subdomain = Subdomain(name=subdomain, community=community, in_use=True)
-    new_subdomain.save()
+    # let's do a search for this subdomain 
+    subdomain_search = Subdomain.objects.filter(subdomain__iexact=subdomain)
+    if subdomain_search.exists():
+        # because we call can_use_this_subdomain() above, we know that:
+        #  if we get here then the community owns this domain already.  
+        # If another community owned this domain we would have raised an exception
+        # Hence we can go ahead and update this this subdomain to in-use
+        subdomain_search.update(in_use=True)
+    else:
+        # if subdomain does not exist then we need to create a new one
+        new_subdomain = Subdomain(name=subdomain, community=community, in_use=True)
+        new_subdomain.save()
+
