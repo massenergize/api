@@ -443,9 +443,8 @@ class CommunityStore:
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            print(args)
             community = get_community_or_die(context, args)
-            print(community)
+
             # context.is_prod now means the prod database site.
             # if (not community.is_published) and context.is_prod and (not context.is_admin_site):
             if (

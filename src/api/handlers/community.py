@@ -39,11 +39,10 @@ class CommunityHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect('id', int)
+    self.validator.expect('community_id', int)
     self.validator.expect('subdomain', str)
-    self.validator.rename('community_id', 'id')
+    self.validator.rename('id', 'community_id')   
     args, err = self.validator.verify(args, strict=True)
-
     if err:
       return err
 
