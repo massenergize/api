@@ -861,7 +861,7 @@ def reserve_subdomain(subdomain: str, community: Community=None):
     subdomain = subdomain.lower()
 
     # if subdomain is in use for this community just return right away
-    if Subdomain.objects.filter(community=community, subdomain__iexact=subdomain, in_use=True).update(in_use=True):
+    if Subdomain.objects.filter(community=community, subdomain__iexact=subdomain, in_use=True):
         return
 
     # first check that we can use this domain 
