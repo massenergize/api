@@ -4,7 +4,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q, prefetch_related_objects
 from api.store.team import get_team_users
-from .utils import get_community
+from .utils import get_community_or_die
 from sentry_sdk import capture_message
 from typing import Tuple
 
@@ -251,6 +251,43 @@ class GraphStore:
 
   def update_graph(self, context:Context, args:dict) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      community = get_community_or_die(context, args)
+
+      goal_updates = args.pop('goal', None)
+      community_goal = community.goal
+
+      if goal_updates and community_goal:
+          # Decision 9/1
+          initial_number_of_actions = goal_updates.get('initial_number_of_actions', None)
+          if initial_number_of_actions != None:
+            community_goal.initial_number_of_actions = 0 # initial_number_of_actions
+          
+          target_number_of_actions = goal_updates.get('target_number_of_actions', None)
+          if target_number_of_actions != None:
+            community_goal.target_number_of_actions = target_number_of_actions
+          
+
+          initial_number_of_households= goal_updates.get('initial_number_of_households', None)
+          if initial_number_of_households != None:
+            community_goal.initial_number_of_households = initial_number_of_households
+          
+          target_number_of_households = goal_updates.get('target_number_of_households', None)
+          if target_number_of_actions != None:
+            community_goal.target_number_of_households = target_number_of_households
+
+
+          initial_carbon_footprint_reduction = goal_updates.get('initial_carbon_footprint_reduction', None)
+          if initial_carbon_footprint_reduction != None:
+            community_goal.initial_carbon_footprint_reduction = initial_carbon_footprint_reduction
+          
+          target_carbon_footprint_reduction = goal_updates.get('target_carbon_footprint_reduction', None)
+          if target_carbon_footprint_reduction != None:
+            community_goal.target_carbon_footprint_reduction = target_carbon_footprint_reduction
+
+
+          community_goal.save()
+
+
       for k,v in args.items():
         if 'reported_value' in k:
           data_id = k.split('_')[-1]

@@ -103,21 +103,23 @@ class HomePageSettingsHandler(RouteHandler):
 
     #statistics
     args['show_featured_stats'] = parse_bool(args.pop('show_featured_stats'))
-    args['goal'] = {
-      'initial_number_of_actions': parse_int(args.pop('initial_number_of_actions', 0)),
-      'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
-      'initial_number_of_households': parse_int(args.pop('initial_number_of_households', 0)),
-      'target_number_of_households': parse_int(args.pop('target_number_of_households', 0)),
-      'initial_carbon_footprint_reduction': parse_int(args.pop('initial_carbon_footprint_reduction', 0)),
-      'target_carbon_footprint_reduction': parse_int(args.pop('target_carbon_footprint_reduction', 0))
-    }
 
-    args.pop('attained_number_of_households', None)
-    args.pop('attained_number_of_actions', None)
-    args.pop('attained_carbon_footprint_reduction', None)
-    args.pop('organic_attained_number_of_households', None)
-    args.pop('organic_attained_number_of_actions', None)
-    args.pop('organic_attained_carbon_footprint_reduction', None)
+    # goals etc to be moved to graphs.update
+    #args['goal'] = {
+    #  'initial_number_of_actions': parse_int(args.pop('initial_number_of_actions', 0)),
+    #  'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
+    #  'initial_number_of_households': parse_int(args.pop('initial_number_of_households', 0)),
+    #  'target_number_of_households': parse_int(args.pop('target_number_of_households', 0)),
+    #  'initial_carbon_footprint_reduction': parse_int(args.pop('initial_carbon_footprint_reduction', 0)),
+    #  'target_carbon_footprint_reduction': parse_int(args.pop('target_carbon_footprint_reduction', 0))
+    #}
+
+    #args.pop('attained_number_of_households', None)
+    #args.pop('attained_number_of_actions', None)
+    #args.pop('attained_carbon_footprint_reduction', None)
+    #args.pop('organic_attained_number_of_households', None)
+    #args.pop('organic_attained_number_of_actions', None)
+    #args.pop('organic_attained_carbon_footprint_reduction', None)
 
     home_page_setting_info, err = self.service.update_home_page_setting(args)
 

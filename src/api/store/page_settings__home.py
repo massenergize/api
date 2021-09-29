@@ -50,41 +50,41 @@ class HomePageSettingsStore:
       else:
         args.pop('featured_events', [])
 
-
+      # goals to be moved to graphs.update
       #stats
-      goal_updates = args.pop('goal', None)
-      if (args.get('show_featured_stats', None)):
-        if goal_updates and home_page_setting and home_page_setting.community and home_page_setting.community.goal:
-          community_goal = home_page_setting.community.goal
-
-          initial_number_of_actions = goal_updates.get('initial_number_of_actions', None)
-          if initial_number_of_actions != None:
-            community_goal.initial_number_of_actions = initial_number_of_actions
-          
-          target_number_of_actions = goal_updates.get('target_number_of_actions', None)
-          if target_number_of_actions != None:
-            community_goal.target_number_of_actions = target_number_of_actions
-          
-
-          initial_number_of_households= goal_updates.get('initial_number_of_households', None)
-          if initial_number_of_households != None:
-            community_goal.initial_number_of_households = initial_number_of_households
-          
-          target_number_of_households = goal_updates.get('target_number_of_households', None)
-          if target_number_of_actions != None:
-            community_goal.target_number_of_households = target_number_of_households
-
-
-          initial_carbon_footprint_reduction = goal_updates.get('initial_carbon_footprint_reduction', None)
-          if initial_carbon_footprint_reduction != None:
-            community_goal.initial_carbon_footprint_reduction = initial_carbon_footprint_reduction
-          
-          target_carbon_footprint_reduction = goal_updates.get('target_carbon_footprint_reduction', None)
-          if target_carbon_footprint_reduction != None:
-            community_goal.target_carbon_footprint_reduction = target_carbon_footprint_reduction
-
-
-          community_goal.save()
+      #goal_updates = args.pop('goal', None)
+      #if (args.get('show_featured_stats', None)):
+        #if goal_updates and home_page_setting and home_page_setting.community and home_page_setting.community.goal:
+        #  community_goal = home_page_setting.community.goal
+#
+        #  initial_number_of_actions = goal_updates.get('initial_number_of_actions', None)
+        #  if initial_number_of_actions != None:
+        #    community_goal.initial_number_of_actions = initial_number_of_actions
+        #  
+        #  target_number_of_actions = goal_updates.get('target_number_of_actions', None)
+        #  if target_number_of_actions != None:
+        #    community_goal.target_number_of_actions = target_number_of_actions
+        #  
+#
+        #  initial_number_of_households= goal_updates.get('initial_number_of_households', None)
+        #  if initial_number_of_households != None:
+        #    community_goal.initial_number_of_households = initial_number_of_households
+        #  
+        #  target_number_of_households = goal_updates.get('target_number_of_households', None)
+        #  if target_number_of_actions != None:
+        #    community_goal.target_number_of_households = target_number_of_households
+#
+#
+        #  initial_carbon_footprint_reduction = goal_updates.get('initial_carbon_footprint_reduction', None)
+        #  if initial_carbon_footprint_reduction != None:
+        #    community_goal.initial_carbon_footprint_reduction = initial_carbon_footprint_reduction
+        #  
+        #  target_carbon_footprint_reduction = goal_updates.get('target_carbon_footprint_reduction', None)
+        #  if target_carbon_footprint_reduction != None:
+        #    community_goal.target_carbon_footprint_reduction = target_carbon_footprint_reduction
+#
+#
+        #  community_goal.save()
 
       #featured links (copy logic from featured_events)
       if (args.get('show_featured_links', None)):

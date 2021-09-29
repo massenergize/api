@@ -145,6 +145,23 @@ class GraphHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    # moved here from home_page_settings
+    args['goal'] = {
+      'initial_number_of_actions': parse_int(args.pop('initial_number_of_actions', 0)),
+      'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
+      'initial_number_of_households': parse_int(args.pop('initial_number_of_households', 0)),
+      'target_number_of_households': parse_int(args.pop('target_number_of_households', 0)),
+      'initial_carbon_footprint_reduction': parse_int(args.pop('initial_carbon_footprint_reduction', 0)),
+      'target_carbon_footprint_reduction': parse_int(args.pop('target_carbon_footprint_reduction', 0))
+    }
+    args.pop('attained_number_of_households', None)
+    args.pop('attained_number_of_actions', None)
+    args.pop('attained_carbon_footprint_reduction', None)
+    args.pop('organic_attained_number_of_households', None)
+    args.pop('organic_attained_number_of_actions', None)
+    args.pop('organic_attained_carbon_footprint_reduction', None)
+
     graph_info, err = self.service.update_graph(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -153,7 +170,7 @@ class GraphHandler(RouteHandler):
   @login_required
   def update_data(self, request):
     context: Context = request.context
-    args: dict = context.args
+    args: dict = context.args    
     graph_info, err = self.service.update_data(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
