@@ -17,7 +17,7 @@ class TeamStore:
 
 
   def list_teams(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    teams = Team.objects.filter(community__id=community_id)
+    teams = Team.objects.filter(communities__id=community_id)
     if not teams:
       return [], None
     return teams, None
@@ -47,7 +47,7 @@ class TeamStore:
 
 
   def list_teams_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    teams = Team.objects.filter(community__id = community_id)
+    teams = Team.objects.filter(communities__id = community_id)
     return teams, None
 
 
