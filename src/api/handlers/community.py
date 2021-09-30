@@ -223,14 +223,14 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=communities)
 
 
-  # @admins_only
+  @admins_only
   def add_custom_website(self, request):
     context: Context  = request.context
     args: dict = context.args
     # verify the body of the incoming request
     self.validator.expect("website", str, is_required=True)
     self.validator.expect("subdomain", str)
-    self.validator.expect("community_id", str)
+    self.validator.expect("community_id", int)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err

@@ -50,7 +50,7 @@ def get_community_or_die(context: Context, args) -> Community:
     community_website = CustomCommunityWebsiteDomain.objects.select_related("community").filter(website__iexact=website).first()
     if community_website:
       community = community_website.community
-    elif website.endswith("massenergize.org") or website.endswith("massenergize.test:3000"):
+    elif website.endswith("massenergize.org"):
       domain_components = website.split(".")
       if len(domain_components) >= 3:
         # if there is a subdomain there will be at least three parts
