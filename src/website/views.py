@@ -105,7 +105,7 @@ def communities(request):
         {
             "title": "Massenergize Communities",
             "redirect_to": f"{PORTAL_HOST}",
-            "stay_put": request.GET.get('stay_put', None),
+            "stay_put": True,
         }
     )
     args = {
@@ -155,8 +155,9 @@ def community(request, subdomain):
     return render(request, "community.html", args)
 
 
-def actions(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def actions(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
         {
@@ -176,8 +177,9 @@ def actions(request):
     return render(request, "actions.html", args)
 
 
-def action(request, id):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def action(request, id, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     action = Action.objects.filter(
         pk=id,
         community__subdomain__iexact=subdomain,
@@ -206,8 +208,9 @@ def action(request, id):
     return render(request, "action.html", args)
 
 
-def events(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def events(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
         {
@@ -228,8 +231,9 @@ def events(request):
     return render(request, "events.html", args)
 
 
-def event(request, id):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def event(request, id, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     event = Event.objects.filter(
         is_deleted=False,
         is_published=True,
@@ -260,8 +264,9 @@ def event(request, id):
     return render(request, "event.html", args)
 
 
-def vendors(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def vendors(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     community = Community.objects.filter(
         subdomain__iexact=subdomain, is_deleted=False, is_published=True
     ).first()
@@ -287,8 +292,9 @@ def vendors(request):
     return render(request, "services.html", args)
 
 
-def vendor(request, id):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def vendor(request, id, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     vendor = Vendor.objects.filter(is_deleted=False, pk=id).first()
 
     if not vendor:
@@ -318,8 +324,9 @@ def vendor(request, id):
     return render(request, "service.html", args)
 
 
-def teams(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def teams(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     community = Community.objects.filter(
         subdomain__iexact=subdomain, is_deleted=False, is_published=True
     ).first()
@@ -348,8 +355,9 @@ def teams(request):
     return render(request, "teams.html", args)
 
 
-def team(request, id):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def team(request, id, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     team = Team.objects.filter(
         is_deleted=False,
         is_published=True,
@@ -384,8 +392,9 @@ def team(request, id):
     return render(request, "team.html", args)
 
 
-def testimonials(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def testimonials(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     meta = META
     meta.update(
         {
@@ -406,8 +415,9 @@ def testimonials(request):
     return render(request, "testimonials.html", args)
 
 
-def testimonial(request, id):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def testimonial(request, id, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     testimonial = Testimonial.objects.filter(
         is_deleted=False,
         is_published=True,
@@ -441,8 +451,9 @@ def testimonial(request, id):
     return render(request, "testimonial.html", args)
 
 
-def about_us(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def about_us(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     page = AboutUsPageSettings.objects.filter(
         is_deleted=False, community__subdomain__iexact=subdomain
     ).first()
@@ -468,8 +479,9 @@ def about_us(request):
     return render(request, "page__about_us.html", args)
 
 
-def donate(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def donate(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     page = DonatePageSettings.objects.filter(
         is_deleted=False, community__subdomain__iexact=subdomain
     ).first()
@@ -495,8 +507,9 @@ def donate(request):
     return render(request, "page__donate.html", args)
 
 
-def impact(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def impact(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     page = ImpactPageSettings.objects.filter(
         is_deleted=False, community__subdomain__iexact=subdomain
     ).first()
@@ -522,8 +535,9 @@ def impact(request):
     return render(request, "page__impact.html", args)
 
 
-def contact_us(request):
-    subdomain = _get_subdomain(request, enforce_is_valid=True)
+def contact_us(request, subdomain=None):
+    if not subdomain:
+        subdomain = _get_subdomain(request, enforce_is_valid=True)
     page = ContactUsPageSettings.objects.filter(
         is_deleted=False, community__subdomain__iexact=subdomain
     ).first()

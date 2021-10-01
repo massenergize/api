@@ -33,10 +33,8 @@ class HomePageSettingsHandler(RouteHandler):
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'community_id', 'community__id')
-    args = rename_field(args, 'subdomain', 'community__subdomain')
     args = rename_field(args, 'home_page_id', 'id')
-    home_page_setting_info, err = self.service.get_home_page_setting_info(args)
+    home_page_setting_info, err = self.service.get_home_page_setting_info(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=home_page_setting_info)

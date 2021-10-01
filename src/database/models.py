@@ -612,6 +612,28 @@ class Subdomain(models.Model):
     db_table = 'subdomains'
 
 
+class CustomCommunityWebsiteDomain(models.Model):
+  id = models.AutoField(primary_key=True)
+  website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, related_name="community_website")
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  
+  def __str__(self):
+    return f"{self.website}-{self.community}"
+  
+  def simple_json(self):
+    res = model_to_dict(self, ['id', 'website', 'created_at', 'updated_at'])
+    res['community'] = get_summary_info(self.community)
+    return res
+  
+  def full_json(self):
+    return self.simple_json()
+  
+  class Meta:
+    db_table = 'custom_community_website_domain'
+
+
 class Team(models.Model):
   """
   A class used to represent a Team in a community

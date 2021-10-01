@@ -1,3 +1,4 @@
+from api.store.utils import get_community_or_die
 from database.models import HomePageSettings, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -9,8 +10,9 @@ class HomePageSettingsStore:
   def __init__(self):
     self.name = "HomePageSettings Store/DB"
 
-  def get_home_page_setting_info(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def get_home_page_setting_info(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      args['community'] = get_community_or_die(context, args)
       home_page_setting = HomePageSettings.objects.filter(**args).first()
       if not home_page_setting:
         return None, InvalidResourceError()
