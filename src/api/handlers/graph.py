@@ -146,7 +146,7 @@ class GraphHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    # moved here from home_page_settings
+    # 9/29/21 moved from home_page_settings route
     args['goal'] = {
       'initial_number_of_actions': parse_int(args.pop('initial_number_of_actions', 0)),
       'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
@@ -170,7 +170,7 @@ class GraphHandler(RouteHandler):
   @login_required
   def update_data(self, request):
     context: Context = request.context
-    args: dict = context.args    
+    args: dict = context.args
     graph_info, err = self.service.update_data(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
