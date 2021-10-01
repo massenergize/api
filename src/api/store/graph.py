@@ -252,15 +252,13 @@ class GraphStore:
   def update_graph(self, context:Context, args:dict) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community = get_community_or_die(context, args)
-
-      goal_updates = args.pop('goal', None)
       community_goal = community.goal
 
+      goal_updates = args.pop('goal', None)
+
       if goal_updates and community_goal:
-          # Decision 9/27 not to use "initial_number_of_actions"
-          initial_number_of_actions = goal_updates.get('initial_number_of_actions', None)
-          if initial_number_of_actions != None:
-            community_goal.initial_number_of_actions = 0 # initial_number_of_actions
+          # Decision 9/2021 - Don't use initial_number_of_actions
+          community_goal.initial_number_of_actions = 0
           
           target_number_of_actions = goal_updates.get('target_number_of_actions', None)
           if target_number_of_actions != None:
@@ -283,7 +281,6 @@ class GraphStore:
           target_carbon_footprint_reduction = goal_updates.get('target_carbon_footprint_reduction', None)
           if target_carbon_footprint_reduction != None:
             community_goal.target_carbon_footprint_reduction = target_carbon_footprint_reduction
-
 
           community_goal.save()
 
