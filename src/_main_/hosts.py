@@ -7,7 +7,7 @@ host_patterns = patterns(
   host(r'api-dev', 'api.urls', name='api-dev'),
   host(r'api-canary', 'api.urls', name='api-canary'),
   host(r'communities', settings.ROOT_URLCONF, name=settings.DEFAULT_HOST),
-  host(r'mc', '_main_.admin_urls', name='mc'),
-  host(r'missioncontrol', '_main_.admin_urls', name='missioncontrol'),
-  host(r'admin', '_main_.admin_urls', name='admin'),
+  host(r'mc', '_main_.admin_urls', name='missioncontrol'),
+  host(r'mc-dev', '_main_.admin_urls', name='missioncontrol-dev'),
+  host(r'mc-canary', '_main_.admin_urls', name='missioncontrol-canary'),
 )
