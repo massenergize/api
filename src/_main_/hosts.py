@@ -10,4 +10,7 @@ host_patterns = patterns(
   host(r'mc', '_main_.admin_urls', name='missioncontrol'),
   host(r'mc-dev', '_main_.admin_urls', name='missioncontrol-dev'),
   host(r'mc-canary', '_main_.admin_urls', name='missioncontrol-canary'),
+  host(r'djangoadmin', '_main_.admin_urls', name='djangoadmin'),
+  host(r'djangoadmin-dev', '_main_.admin_urls', name='djangoadmin-dev'),
+  host(r'djangoadmin-canary', '_main_.admin_urls', name='djangoadmin-canary'),
 )
