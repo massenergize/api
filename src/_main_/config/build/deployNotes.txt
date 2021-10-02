@@ -1,6 +1,6 @@
-Sep 29th Deployment to De/Canary
+Oct 1st Deployment to De/Canary
 - SEO Phase II
-- Message dated
+- Messages dated
 - Separate initial vs attained values
 - URLs and search-engine fixes
 - Fixes to Profile Picture
