@@ -13,8 +13,8 @@ class HomePageSettingsService:
   def __init__(self):
     self.store =  HomePageSettingsStore()
 
-  def get_home_page_setting_info(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    home_page_setting, err = self.store.get_home_page_setting_info(args)
+  def get_home_page_setting_info(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    home_page_setting, err = self.store.get_home_page_setting_info(context, args)
     if err:
       return None, err
     return serialize(home_page_setting, full=True), None

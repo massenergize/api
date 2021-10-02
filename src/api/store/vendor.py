@@ -199,7 +199,7 @@ class VendorStore:
       vendor.pk = None
       vendor.is_published = False
       vendor.is_verified = False
-      vendor.name = vendor.name + "-Copy"
+      vendor.name = f"{vendor.name}-Copy-{random.randint(1,100000)}"
       vendor.save()
       return vendor, None
     except Exception as e:

@@ -363,14 +363,15 @@ class DownloadStore:
   def _community_users_download(self, community_id):
     users = [cm.user for cm in CommunityMember.objects.filter(community__id=community_id, \
             is_deleted=False, user__is_deleted=False).select_related('user')] \
-              + list(Subscriber.objects.filter(community__id=community_id, is_deleted=False)) \
-  
+              + list(Subscriber.objects.filter(community__id=community_id, is_deleted=False))
+
     community_households = list(RealEstateUnit.objects.filter(community__id=community_id, is_deleted=False))
 
 
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
-    teams = Team.objects.filter(community__id=community_id, is_deleted=False)
+
+    teams = Team.objects.filter(communities__id=community_id, is_deleted=False)
 
     columns = self.user_info_columns \
                 + ['TEAM'] \
@@ -382,7 +383,6 @@ class DownloadStore:
     data = [columns, sub_columns]
 
     for user in users:
-
       #BHN 20.1.10 Put teams list in one cell, ahead of actions 
       row = self._get_user_info_cells(user) \
           + self._get_user_teams_cells(user, teams) \
@@ -482,7 +482,7 @@ class DownloadStore:
 
 
   def _community_teams_download(self, community_id):
-    teams = Team.objects.filter(community__id=community_id, is_deleted=False)
+    teams = Team.objects.filter(communities__id=community_id, is_deleted=False)
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)).filter(is_deleted=False)
 
     columns = self.team_info_columns + [action.title for action in actions]
@@ -511,7 +511,6 @@ class DownloadStore:
         elif community_id:
           return (self._community_users_download(community_id), community_name), None
         else:
-
           return (self._all_users_download(), None), None
       elif context.user_is_community_admin:
         if team_id:

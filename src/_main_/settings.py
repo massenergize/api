@@ -60,7 +60,7 @@ ALLOWED_HOSTS = [
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
-    '.massenergize.test',
+    '.massenergize.test'
 ]
 
 if IS_LOCAL:

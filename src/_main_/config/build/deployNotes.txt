@@ -1,4 +1,5 @@
-Sep 27th Deployment to Dev/Canary
+Oct 1st Deployment to De/Canary
+- SEO Phase II
 - Message dates passed back on messages.info
 - Separate initial vs attained values
 - URLs and search-engine fixes
@@ -6,7 +7,6 @@ Sep 27th Deployment to Dev/Canary
 - Backend support for CarbonEquivalencies
 - Event RSVPs support
 - Allow teams to span communities
-April 13th & prior
 - Fix data issue: Donut attained values summed from State/Reported categories + initial pushed
 - Community Users download includes non-members with households in community
 - Import user import functionality

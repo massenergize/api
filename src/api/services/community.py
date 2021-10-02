@@ -81,6 +81,12 @@ class CommunityService:
       return None, err
     return serialize_all(communities), None
 
+  def add_custom_website(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    communities, err = self.store.add_custom_website(context, args)
+    if err:
+      return None, err
+    return serialize(communities), None
+
   def get_graphs(self, context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_communities_for_super_admin(context)
     if err:

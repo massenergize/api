@@ -25,6 +25,7 @@ class Context:
     self.user_is_community_admin = False
     self.community = None
     self.is_admin_site = False
+    self.request = None
 
   def set_user_credentials(self, decoded_token):
     self.user_is_logged_in = True
@@ -37,6 +38,7 @@ class Context:
   def set_request_body(self, request):
     #get the request args
     self.args = get_request_contents(request)
+    self.request = request
     self.is_sandbox = parse_bool(self.args.pop('__is_sandbox', False))
     self.community = self.args.pop('__community', None)
     self.is_admin_site = parse_bool(self.args.pop('__is_admin_site', False))

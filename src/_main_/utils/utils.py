@@ -64,3 +64,12 @@ def get_models_and_field_types(models):
       if hasattr(f, 'blank') and f.blank == False:
         result[m]["required_fields"].add(f.name)   
   return result
+
+def strip_website(url: str)-> str:
+  if not url:
+    return None 
+  url = url.replace("http://","")
+  url = url.replace("https://","")
+  url = url.replace("www.","")
+  url = url.split("/")[0] # deal with trailing spaces
+  return url.strip()

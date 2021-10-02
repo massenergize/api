@@ -78,7 +78,7 @@
   {% block styling %} {% endblock %}
   {% block javascript %} {% endblock %}
   <body>
-    <main class="container">
+    <main class="container" {% if not meta.stay_put %}hidden{% endif %}>
       <!--    For google bots so we can make it invisible-->
       <div style="width: 2px; height: 1px; opacity: 0; position: fixed">
         <p><a href="/">Home</a></p>
