@@ -293,7 +293,8 @@ class EventStore:
       if tags:
         event.tags.set(tags)
 
-      event.save()
+      # Don't save early if there is a chance to error out
+      # event.save()
 
       if recurring:
 
@@ -385,7 +386,7 @@ class EventStore:
             rescheduled.rescheduled_event.delete()
             rescheduled.delete()
 
-        event.save()
+      event.save()
       
       return event, None
     except Exception as e:
@@ -401,12 +402,12 @@ class EventStore:
     if community_id:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
-      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query, is_published=True, is_deleted=False)
       
     elif subdomain:
       # testing only
       query =  Q(community__subdomain=subdomain)
-      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query, is_published=True, is_deleted=False)
       
 
     elif user_id:
@@ -416,9 +417,10 @@ class EventStore:
       events = []
     
     for event in events.iterator():
-      if not event.is_recurring or not event.recurring_details['separation_count']:
+      # protect against recurring event with no recurring details saved
+      if not event.is_recurring or not event.recurring_details or not event.recurring_details['separation_count']:
         continue
-      weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
+      #weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
       converter = {"first":1, "second":2, "third":3, "fourth":4}
       
       try:
