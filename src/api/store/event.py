@@ -10,21 +10,31 @@ import calendar
 import pytz
 from typing import Tuple
 
+def _local_datetime(date_and_time):
+  # the local date (in Massachusetts) is different than the UTC date
+  # need to also save the location (as a Location) and get the time zone from that.
+  # KLUGE: assume Massachusetts for now                    
+  dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%dT%H:%M:%SZ')
+  local_datetime = dt - timedelta(hours=4)
+  return local_datetime
+
+def _UTC_datetime(date_and_time):
+  # the local date (in Massachusetts) is different than the UTC date
+  # need to also save the location (as a Location) and get the time zone from that.
+  # KLUGE: assume Massachusetts for now
+  dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S')
+  UTC_datetime = dt + timedelta(hours=4)
+  return UTC_datetime
+
 def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month):
 
   converter = {"first":1, "second":2, "third":3, "fourth":4}
 
-  if start_date_and_time:
+  if start_date_and_time and end_date_and_time:
  
     # the date check below fails because the local date (in Massachusetts) is different than the UTC date
-    # need to also save the location (as a Location) and get the time zone from that.
-    # KLUGE: assume Massachusetts for now                    
-    dt = datetime.datetime.strptime(start_date_and_time, '%Y-%m-%dT%H:%M:%SZ')  
-    local_start = dt - timedelta(hours=4)
-    #print(local_start)
-
-    dt = datetime.datetime.strptime(end_date_and_time, '%Y-%m-%dT%H:%M:%SZ')  
-    local_end = dt - timedelta(hours=4)
+    local_start = _local_datetime(start_date_and_time)
+    local_end = _local_datetime(end_date_and_time)
 
     # check if weekday matches the start_date_and_time
     if calendar.day_name[local_start.weekday()] != day_of_week:
@@ -176,13 +186,24 @@ class EventStore:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
+
       start_date_and_time = args.get('start_date_and_time', None)
       end_date_and_time = args.get('end_date_and_time', None)
-
       is_recurring  = args.pop('is_recurring', False)
-      if is_recurring == False or is_recurring == "false" or is_recurring == "":
-        recurring = False
-      else: recurring = True
+
+      if is_recurring:
+        local_start = _local_datetime(start_date_and_time)
+        local_end = _local_datetime(end_date_and_time)
+        # if specified a different end date from start date, make this the last end date 
+        if local_start.date() != local_end.date():
+          final_date = local_end.date()
+          # fix the end_date_and_time to have same date as start
+          end_datetime = datetime.datetime.combine(local_start.date(), local_end.time())
+          end_date_and_time = _UTC_datetime(end_datetime).strftime('%Y-%m-%dT%H:%M:%SZ')
+        else:
+          final_start = local_start + timedelta(years=1)
+          final_date = final_start.date()
+
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
       if separation_count:
@@ -213,7 +234,7 @@ class EventStore:
       if tags:
         new_event.tags.set(tags)
 
-      if recurring:
+      if is_recurring:
 
         # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
         err, message = _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month)
@@ -228,7 +249,8 @@ class EventStore:
           "recurring_type": recurring_type, 
           "separation_count": separation_count, 
           "day_of_week": day_of_week, 
-          "week_of_month": week_of_month
+          "week_of_month": week_of_month,
+          "final_date": str(final_date)
         } 
 
       new_event.save()      
@@ -242,23 +264,56 @@ class EventStore:
       event_id = args.pop('event_id', None)
       image = args.pop('image', None)
       tags = args.pop('tags', [])
+
       start_date_and_time = args.get('start_date_and_time', None)
       end_date_and_time = args.get('end_date_and_time', None)
 
-      recurring  = args.get('is_recurring', False)
+      is_recurring  = args.pop('is_recurring', False)
       recurring_type = args.pop('recurring_type', None)
       separation_count = args.pop('separation_count', None)
-      if separation_count:
-        separation_count = int(separation_count)
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
       rescheduled_start_datetime = args.pop('rescheduled_start_datetime', False)
       rescheduled_end_datetime = args.pop('rescheduled_end_datetime', False)
-
-      if recurring_type != "month":
-        week_of_month = None
       upcoming_is_cancelled = args.pop("upcoming_is_cancelled", None)
       upcoming_is_rescheduled = args.pop('upcoming_is_rescheduled', None)
+
+      if is_recurring:
+
+        #validate recurring details before updating event
+        local_start = _local_datetime(start_date_and_time)
+        local_end = _local_datetime(end_date_and_time)
+
+        # if specified a different end date from start date, make this the last end date 
+        if local_start.date() != local_end.date():
+          final_date = local_end.date()
+          # fix the end_date_and_time to have same date as start
+          end_datetime = datetime.datetime.combine(local_start.date(), local_end.time())
+          end_date_and_time = _UTC_datetime(end_datetime).strftime('%Y-%m-%dT%H:%M:%SZ')
+          args["end_date_and_time"] = end_date_and_time
+        else:
+          final_start = local_start + timedelta(weeks=52)
+          final_date = final_start.date()
+
+        if separation_count:
+          separation_count = int(separation_count)
+ 
+        if recurring_type != "month":
+          week_of_month = None
+
+        # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
+        err, message = _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month)
+        if err:
+          return None, CustomMassenergizeError(message)
+
+        # this seems to be an invalid check.  Even for monthly events, you have the day_of_week 
+        #if week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
+        if recurring_type == "week" and week_of_month: 
+          return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
+
+        if upcoming_is_cancelled and upcoming_is_rescheduled:
+          return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
+
 
       events = Event.objects.filter(id=event_id)
       if not events:
@@ -272,14 +327,9 @@ class EventStore:
       if community:
         community = Community.objects.filter(pk=community).first()
 
+      # update the event instance
       events.update(**args)
       event: Event = events.first()
-
-      event.is_recurring = recurring
-      if start_date_and_time:
-        event.start_date_and_time = start_date_and_time
-      if end_date_and_time:
-        event.end_date_and_time = end_date_and_time
 
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
@@ -293,37 +343,19 @@ class EventStore:
       if tags:
         event.tags.set(tags)
 
-      # Don't save early if there is a chance to error out
-      # event.save()
-
-      if recurring:
-
-        # check that the event's start date coincides with the recurrence pattern if it is listed as recurring
-        err, message = _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, week_of_month)
-        if err:
-          return None, CustomMassenergizeError(message)
-
-        # this seems to be an invalid check.  Even for monthly events, you have the day_of_week 
-        #if week_of_month: return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
-        if recurring_type == "week" and week_of_month: 
-          return None, CustomMassenergizeError("Cannot fill out week of month field if your event is weekly")
+      if is_recurring:
 
         event.is_recurring = True
         event.recurring_details = {
             "recurring_type": recurring_type, 
             "separation_count": separation_count, 
             "day_of_week": day_of_week, 
-            "week_of_month": week_of_month
+            "week_of_month": week_of_month,
+            "final_date": str(final_date)
         } 
 
-        if upcoming_is_cancelled and upcoming_is_rescheduled:
-          return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
-
         # CAdmin is cancelling the upcoming event instance     
-        if not event.recurring_details:
-          event.recurring_details = { }
         event.recurring_details["is_cancelled"] = upcoming_is_cancelled
-
 
         # check if there was a previously rescheduled event instance
         rescheduled: RecurringEventException = RecurringEventException.objects.filter(event=event).first()
@@ -386,9 +418,10 @@ class EventStore:
             rescheduled.rescheduled_event.delete()
             rescheduled.delete()
 
-      event.save()
-      
+      # successful return
+      event.save()      
       return event, None
+
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -416,10 +449,31 @@ class EventStore:
     else:
       events = []
     
+    tod = datetime.datetime.utcnow() 
+    today = pytz.utc.localize(tod)
+
     for event in events.iterator():
       # protect against recurring event with no recurring details saved
       if not event.is_recurring or not event.recurring_details or not event.recurring_details['separation_count']:
         continue
+
+      starttime = event.start_date_and_time.strftime("%H:%M:%S+00:00")
+
+      # nothing to do if scheduled event in the future
+      if event.start_date_and_time > today:
+        continue
+
+      # if the final date is in the past, don't update the date
+      
+      final_date = event.recurring_details.get('final_date', None)
+
+      if final_date:
+        final_date = final_date + ' ' + starttime
+        final_date = datetime.datetime.strptime(final_date, "%Y-%m-%d %H:%M:%S+00:00")
+        final_date = pytz.utc.localize(final_date)
+        if today > final_date:
+          continue
+
       #weekdays = {"Monday":0, "Tuesday":1, "Wednesday":2, "Thursday":3, "Friday":4, "Saturday":5, "Sunday":6}
       converter = {"first":1, "second":2, "third":3, "fourth":4}
       
@@ -429,8 +483,6 @@ class EventStore:
         start_date = event.start_date_and_time
         end_date = event.end_date_and_time
         duration = end_date - start_date
-        tod = datetime.datetime.utcnow() 
-        today = pytz.utc.localize(tod)
         if event.recurring_details['recurring_type'] == "week":
           while (start_date < today):
             start_date += timedelta(7*sep_count)
@@ -466,6 +518,7 @@ class EventStore:
         exception = RecurringEventException.objects.filter(event=event).first()
         if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(event.start_date_and_time):
           exception.delete()
+
       except Exception as e:
         print(str(e))
         return CustomMassenergizeError(str(e))
