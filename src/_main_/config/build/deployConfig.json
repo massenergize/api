@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "3.3.25",
+  "BUILD_VERSION": "3.3.27",
   "BUILD_VERSION_NOTES": "Oct 1st Deployment to De/Canary\n- SEO Phase II\n- Messages dated\n- Separate initial vs attained values\n- URLs and search-engine fixes\n- Fixes to Profile Picture\n- Backend support for CarbonEquivalencies\n- Event RSVPs support\n- Allow teams to span communities\n- Fix data issue: Donut attained values summed from State/Reported categories + initial pushed\n- Community Users download includes non-members with households in community\n- Import user import functionality\n- Implement recurring events"
 }
