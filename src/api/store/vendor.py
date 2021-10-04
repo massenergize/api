@@ -8,6 +8,7 @@ from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
+import random
 
 class VendorStore:
   def __init__(self):
