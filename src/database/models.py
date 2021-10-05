@@ -315,6 +315,11 @@ class Community(models.Model):
     else:
       admins = []
     
+    customDomain: CustomCommunityWebsiteDomain = CustomCommunityWebsiteDomain.objects.filter(community__id=self.pk)
+    website = None
+    if customDomain:
+      website = customDomain.first().website
+
     # get the community goal
     goal = get_json_if_not_none(self.goal) or {}
     
@@ -362,6 +367,7 @@ class Community(models.Model):
       "id": self.id,
       "name": self.name,
       "subdomain": self.subdomain,
+      "website": website,
       "owner_name": self.owner_name,
       "owner_email": self.owner_email,
       "owner_phone_number": self.owner_phone_number,
