@@ -56,6 +56,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '.massenergize.org',
     '.massenergize.com',
+    '.massenergize.dev',
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
@@ -65,6 +66,7 @@ ALLOWED_HOSTS = [
 
 if IS_LOCAL:
     ALLOWED_HOSTS = ['*']
+    
 
 INSTALLED_APPS = [
     'django_hosts',

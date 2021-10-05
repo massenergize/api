@@ -292,12 +292,13 @@ class EventsTestCase(TestCase):
         response = self.client.post('/api/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Friday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-04T09:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
-        # check if rejects a recurring event that goes longer than a day
+        # Now accepts a recurring event that goes longer than a day
         signinAs(self.client, self.CADMIN)
-        response = self.client.post('/api/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Wednesday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-06T09:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertFalse(response["success"])
+        response = self.client.post('/api/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Wednesday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-10-06T09:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
 
         # should be successful event
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Wednesday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-04T10:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
+        print(response)
         self.assertTrue(response["success"])
