@@ -191,26 +191,29 @@ class EventStore:
       end_date_and_time = args.get('end_date_and_time', None)
       is_recurring  = args.pop('is_recurring', False)
 
+      recurring_type = args.pop('recurring_type', None)
+      separation_count = args.pop('separation_count', None)
+      day_of_week = args.pop('day_of_week', None)
+      week_of_month = args.pop("week_of_month", None)
+      final_date = args.pop('final_date', None)
+
       if is_recurring:
+        if final_date:
+          final_date = _local_datetime(final_date).date()
+
         local_start = _local_datetime(start_date_and_time)
         local_end = _local_datetime(end_date_and_time)
-        # if specified a different end date from start date, make this the last end date 
+
+        # if specified a different end date from start date, fix this 
         if local_start.date() != local_end.date():
-          final_date = local_end.date()
+ 
           # fix the end_date_and_time to have same date as start
           end_datetime = datetime.datetime.combine(local_start.date(), local_end.time())
           end_date_and_time = _UTC_datetime(end_datetime).strftime('%Y-%m-%dT%H:%M:%SZ')
-        else:
-          final_start = local_start + timedelta(years=1)
-          final_date = final_start.date()
 
-      recurring_type = args.pop('recurring_type', None)
-      separation_count = args.pop('separation_count', None)
       if separation_count:
         separation_count = int(separation_count)
     
-      day_of_week = args.pop('day_of_week', None)
-      week_of_month = args.pop("week_of_month", None)
       if recurring_type != "month":
         week_of_month = None
 
@@ -277,24 +280,25 @@ class EventStore:
       rescheduled_end_datetime = args.pop('rescheduled_end_datetime', False)
       upcoming_is_cancelled = args.pop("upcoming_is_cancelled", None)
       upcoming_is_rescheduled = args.pop('upcoming_is_rescheduled', None)
+      final_date = args.pop('final_date', None)
 
       if is_recurring:
+
+        if final_date:
+          final_date = _local_datetime(final_date).date()
 
         #validate recurring details before updating event
         local_start = _local_datetime(start_date_and_time)
         local_end = _local_datetime(end_date_and_time)
 
-        # if specified a different end date from start date, make this the last end date 
+        # if specified a different end date from start date, fix it 
         if local_start.date() != local_end.date():
-          final_date = local_end.date()
+
           # fix the end_date_and_time to have same date as start
           end_datetime = datetime.datetime.combine(local_start.date(), local_end.time())
           end_date_and_time = _UTC_datetime(end_datetime).strftime('%Y-%m-%dT%H:%M:%SZ')
           args["end_date_and_time"] = end_date_and_time
-        else:
-          final_start = local_start + timedelta(weeks=52)
-          final_date = final_start.date()
-
+ 
         if separation_count:
           separation_count = int(separation_count)
  
@@ -467,7 +471,7 @@ class EventStore:
       
       final_date = event.recurring_details.get('final_date', None)
 
-      if final_date:
+      if final_date and final_date != 'None':
         final_date = final_date + ' ' + starttime
         final_date = datetime.datetime.strptime(final_date, "%Y-%m-%d %H:%M:%S+00:00")
         final_date = pytz.utc.localize(final_date)

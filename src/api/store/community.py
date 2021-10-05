@@ -146,6 +146,34 @@ class CommunityStore:
                     print(message)
                     raise Exception(message)
 
+    def _are_locations_updated(self, geography_type, locations, community):
+        """
+        Check the locations for an updated geographic community to see if they are changed
+        """
+        if not community.locations:
+            return True
+
+        # this is a list of zipcodes, towns, cities, counties, states
+        location_list = locations.replace(", ", ",").split(",")  # passed as comma separated list
+        if len(location_list) == community.locations.all().count():
+            for loc in community.locations.all():
+                if geography_type == "ZIPCODE" and not loc.zipcode in location_list:
+                    return True
+                elif geography_type == "CITY" and not loc.city in location_list:
+                    return True
+                elif geography_type == "COUNTY" and not loc.county in location_list:
+                    return True
+                elif geography_type == "STATE" and not loc.state in location_list:
+                    return True
+                elif geography_type == "COUNTRY" and not loc.country in location_list:
+                    return True
+        else:
+            # different number, must have changed
+            return True
+
+        # Locations not updated
+        return False
+
     def _update_locations(self, geography_type, locations, community):
         """
         Fill the locations for an updated geographic community
@@ -562,6 +590,9 @@ class CommunityStore:
 
             logo = args.pop("logo", None)
 
+            # custom website url can be included
+            website = args.pop("website", None)
+
             # The set of locations (zipcodes, cities, counties, states), stored as Location models, are what determines a boundary for a geograpically focussed community
             # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
             # These we can deal with by having the Location include city and or state fields
@@ -593,6 +624,16 @@ class CommunityStore:
             community.goal = community_goal
             community.save()
 
+            # do this before all the cloning in case of failure
+            reserve_subdomain(subdomain, community)
+
+            # save custom website if specified
+            if website:               
+                ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
+                if err:
+                    raise Exception("Failed to save custom website: "+str(err))
+
+            # clone everything for this community
             homePage = HomePageSettings.objects.filter(is_template=True).first()
             images = homePage.images.all()
             # TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
@@ -699,8 +740,6 @@ class CommunityStore:
                 if num_copied >= MAX_TEMPLATE_ACTIONS:
                     break
 
-
-            reserve_subdomain(subdomain, community)
             return community, None
         except Exception as e:
             if community:
@@ -709,8 +748,11 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
-    def update_community(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
+    def update_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
+            community_id = args.pop("community_id", None)
+            website = args.pop("website", None)
+
             logo = args.pop("logo", None)
 
             # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
@@ -736,8 +778,9 @@ class CommunityStore:
             geographic = args.get("is_geographically_focused", False)
             if geographic:
                 geography_type = args.get("geography_type", None)
-                self._update_locations(geography_type, locations, community)
-                self._update_real_estate_units_with_community(community)
+                if self._are_locations_updated(geography_type, locations, community):
+                    self._update_locations(geography_type, locations, community)
+                    self._update_real_estate_units_with_community(community)
 
             if logo:
                 cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
@@ -756,7 +799,13 @@ class CommunityStore:
             # let's make sure we reserve this subdomain
             if subdomain:
                 reserve_subdomain(subdomain, community)
-            
+
+            # save custom website if specified
+            if website:               
+                ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
+                if err:
+                    raise Exception("Failed to save custom website: "+str(err))
+
             return community, None
 
         except Exception as e:
@@ -815,10 +864,10 @@ class CommunityStore:
 
     def add_custom_website(self, context, args):
         try:
-            print(args)
             community = get_community_or_die(context, args)
             website = args.get('website')
             website = strip_website(website)
+
             community_website = CustomCommunityWebsiteDomain.objects.filter(website=website, community=community).first()
             if not community_website:
                 community_website = CustomCommunityWebsiteDomain(website=website, community=community)
@@ -865,19 +914,18 @@ def reserve_subdomain(subdomain: str, community: Community=None):
     subdomain = subdomain.lower()
 
     # if subdomain is in use for this community just return right away
-    if Subdomain.objects.filter(community=community, subdomain__iexact=subdomain, in_use=True):
+    if Subdomain.objects.filter(community=community, name__iexact=subdomain, in_use=True):
         return
 
     # first check that we can use this domain 
     if not can_use_this_subdomain(subdomain, community):
         raise Exception(f'This community cannot reserve the subdomain: {subdomain}')
 
-
     # mark the old subdomains for this community to un-used
     Subdomain.objects.filter(community=community, in_use=True).update(in_use=False)
     
     # let's do a search for this subdomain 
-    subdomain_search = Subdomain.objects.filter(subdomain__iexact=subdomain)
+    subdomain_search = Subdomain.objects.filter(name__iexact=subdomain)
     if subdomain_search.exists():
         # because we call can_use_this_subdomain() above, we know that:
         #  if we get here then the community owns this domain already.  
