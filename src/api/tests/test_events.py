@@ -300,5 +300,4 @@ class EventsTestCase(TestCase):
         # should be successful event
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Wednesday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-04T10:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
-        print(response)
         self.assertTrue(response["success"])

@@ -55,8 +55,8 @@ class CommunityService:
     return serialize(community), None
 
 
-  def update_community(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
-    community, err = self.store.update_community(community_id ,args)
+  def update_community(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    community, err = self.store.update_community(context ,args)
     if err:
       return None, err
     return serialize(community), None

@@ -300,11 +300,9 @@ class UserStore:
           return None, InvalidResourceError()
         
         profile_picture = args.pop("profile_picture", None)
-        users.update(**args)  # print('id: ' + user.id)
+        users.update(**args)
         user = users.first()
         
-      
-        print(profile_picture)
         if profile_picture:
           if profile_picture == "reset":
             user.profile_picture = None
