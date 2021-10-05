@@ -562,6 +562,9 @@ class CommunityStore:
 
             logo = args.pop("logo", None)
 
+            # custom website url can be included
+            website = args.pop("website", None)
+
             # The set of locations (zipcodes, cities, counties, states), stored as Location models, are what determines a boundary for a geograpically focussed community
             # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
             # These we can deal with by having the Location include city and or state fields
@@ -593,6 +596,16 @@ class CommunityStore:
             community.goal = community_goal
             community.save()
 
+            # do this before all the cloning in case of failure
+            reserve_subdomain(subdomain, community)
+
+            # save custom website if specified
+            if website:               
+                community_website, err = self.add_custom_website(self, context, {"website": website})
+                if err:
+                    raise Exception("Failed to save custom website: "+str(err))
+
+            # clone everything for this community
             homePage = HomePageSettings.objects.filter(is_template=True).first()
             images = homePage.images.all()
             # TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
@@ -699,8 +712,6 @@ class CommunityStore:
                 if num_copied >= MAX_TEMPLATE_ACTIONS:
                     break
 
-
-            reserve_subdomain(subdomain, community)
             return community, None
         except Exception as e:
             if community:
@@ -709,8 +720,11 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
-    def update_community(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
+    def update_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
+            community_id = args.pop("community_id", None)
+            website = args.pop("website", None)
+
             logo = args.pop("logo", None)
 
             # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
@@ -756,7 +770,13 @@ class CommunityStore:
             # let's make sure we reserve this subdomain
             if subdomain:
                 reserve_subdomain(subdomain, community)
-            
+
+            # save custom website if specified
+            if website:               
+                community_website, err = self.add_custom_website(self, context, {"website": website})
+                if err:
+                    raise Exception("Failed to save custom website: "+str(err))
+
             return community, None
 
         except Exception as e:
@@ -815,7 +835,6 @@ class CommunityStore:
 
     def add_custom_website(self, context, args):
         try:
-            print(args)
             community = get_community_or_die(context, args)
             website = args.get('website')
             website = strip_website(website)

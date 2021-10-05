@@ -147,8 +147,9 @@ class CommunityHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'community_id', 'id')
-    community_id = args.pop('id', None)
+
+    args = rename_field(args, 'id', 'community_id')
+    community_id = args.get('community_id', None)
     if not community_id:
       return MassenergizeResponse(error='Please provide an ID')
 
@@ -179,7 +180,7 @@ class CommunityHandler(RouteHandler):
     args = rename_field(args, 'image', 'logo')
     args = parse_location(args)
 
-    community_info, err = self.service.update_community(community_id ,args)
+    community_info, err = self.service.update_community(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
