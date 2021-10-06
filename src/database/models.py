@@ -567,6 +567,36 @@ class UserProfile(models.Model):
     db_table = 'user_profiles'
     ordering = ('-created_at',)
 
+class DeviceProfile(models.Model):
+  """
+  A class used to represent a MassEnergize User's Device
+
+  Attributes
+  ----------
+  user_profiles : JSON 
+    A JSON object containing all user ids (as foreign keys) for any users 
+    asociated with this device.
+  IP_address: Char
+    The asociated IP address with this device.
+  device_type: Char
+    The type of device we see from the HTTP request.
+  operating_system:
+    The operating system we see from the HTTP request.
+  browser:
+    The browser we see from the HTTP request.
+  visit_history:
+    A JSON object containing a history of dates.
+
+  #TODO: 
+  """
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+  user_profiles = models.JSONField()
+  IP_address = models.CharField()
+  device_type = models.CharField()
+  operating_system = models.CharField()
+  browser = models.CharField()
+  visit_history = models.JSONField()
+
 
 class CommunityMember(models.Model):
   id = models.AutoField(primary_key=True)
