@@ -11,17 +11,17 @@ import json
 from typing import Tuple
 
 
-class DeviceStore:
+class DeviceProfileStore:
 
   def __init__(self):
-    self.name = "Device Store/DB"
+    self.name = "Device Profile Store/DB"
 
-  def get_device_info(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def get_device_profile_info(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      device = DeviceProfile.objects.filter(**args).first()
-      if not device:
+      device_profile = DeviceProfile.objects.filter(**args).first()
+      if not device_profile:
         return None, InvalidResourceError()
-      return device, None
+      return device_profile, None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -50,7 +50,7 @@ class DeviceStore:
     if browser_version:
       new_device_profile.browser_version = browser_version
     
-  def create_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_device_profile(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:     
       new_device_profile: DeviceProfile = DeviceProfile.objects.create(**args)
 
@@ -84,10 +84,10 @@ class DeviceStore:
   
   def delete_device_profile(self, context: Context, id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      device_profiles = DeviceStore.objects.filter(id=id)
+      device_profiles = DeviceProfileStore.objects.filter(id=id)
       device_profiles.update(is_deleted=True)
       return device_profiles.first(), None
-      
+
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
