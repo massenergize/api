@@ -504,6 +504,8 @@ class UserProfile(models.Model):
   created_at: DateTime
     The date and time of the last time any updates were made to the information
     about this goal
+  visit_log:
+    A JSON object containing a history of dates.
 
   #TODO: roles field: if we have this do we need is_superadmin etc? also why
   #  not just one?  why many to many
@@ -529,6 +531,7 @@ class UserProfile(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   preferences = models.JSONField(default=dict, null=True, blank=True)
+  visit_log = models.JSONField(default=dict)
   
   def __str__(self):
     return self.email
@@ -584,7 +587,7 @@ class DeviceProfile(models.Model):
     The operating system we see from the HTTP request.
   browser:
     The browser we see from the HTTP request.
-  visit_history:
+  visit_log:
     A JSON object containing a history of dates.
 
   #TODO: 
@@ -595,7 +598,7 @@ class DeviceProfile(models.Model):
   device_type = models.CharField()
   operating_system = models.CharField()
   browser = models.CharField()
-  visit_history = models.JSONField()
+  visit_log = models.JSONField()
 
 
 class CommunityMember(models.Model):
