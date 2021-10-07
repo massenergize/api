@@ -531,7 +531,7 @@ class UserProfile(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   preferences = models.JSONField(default=dict, null=True, blank=True)
-  visit_log = models.JSONField(default=dict)
+  visit_log = models.JSONField(default=dict, null=True, blank=True)
   
   def __str__(self):
     return self.email
@@ -593,12 +593,12 @@ class DeviceProfile(models.Model):
   #TODO: 
   """
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-  user_profiles = models.JSONField()
-  IP_address = models.CharField()
-  device_type = models.CharField()
-  operating_system = models.CharField()
-  browser = models.CharField()
-  visit_log = models.JSONField()
+  user_profiles = models.JSONField(null=True, blank=True)
+  IP_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  visit_log = models.JSONField(default=dict, null=True, blank=True)
 
 
 class CommunityMember(models.Model):
