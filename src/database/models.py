@@ -504,8 +504,11 @@ class UserProfile(models.Model):
   created_at: DateTime
     The date and time of the last time any updates were made to the information
     about this goal
+  devices:
+    A JSON object containing all the associated devices with this profile.
   visit_log:
-    A JSON object containing a history of dates.
+    A JSON object containing a history of dates. Activity is logged here when a 
+    user is signed in.
 
   #TODO: roles field: if we have this do we need is_superadmin etc? also why
   #  not just one?  why many to many
@@ -531,6 +534,7 @@ class UserProfile(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   preferences = models.JSONField(default=dict, null=True, blank=True)
+  devices = models.JSONField(default=dict, null=True, blank=True)
   visit_log = models.JSONField(default=dict, null=True, blank=True)
   
   def __str__(self):
@@ -588,13 +592,15 @@ class DeviceProfile(models.Model):
   browser:
     The browser we see from the HTTP request.
   visit_log:
-    A JSON object containing a history of dates.
+    A JSON object containing a history of dates. Activity will only be 
+    logged here if there is a user attached to the device and they are 
+    logged in.
 
   #TODO: 
   """
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
   user_profiles = models.JSONField(null=True, blank=True)
-  IP_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
   device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
   operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
   browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
