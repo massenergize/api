@@ -81,3 +81,13 @@ class DeviceStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+  
+  def delete_device_profile(self, context: Context, id) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      device_profiles = DeviceStore.objects.filter(id=id)
+      device_profiles.update(is_deleted=True)
+      return device_profiles.first(), None
+      
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)

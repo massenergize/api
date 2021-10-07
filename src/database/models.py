@@ -605,6 +605,7 @@ class DeviceProfile(models.Model):
   operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
   browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
   visit_log = models.JSONField(default=dict, null=True, blank=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
 
 
 class CommunityMember(models.Model):
