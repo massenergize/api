@@ -13,4 +13,7 @@ host_patterns = patterns(
   host(r'djangoadmin', '_main_.admin_urls', name='djangoadmin'),
   host(r'djangoadmin-dev', '_main_.admin_urls', name='djangoadmin-dev'),
   host(r'djangoadmin-canary', '_main_.admin_urls', name='djangoadmin-canary'),
+  host(r'cc', 'carbon_calculator.urls', name='carbon_calculator'),
+  host(r'cc-dev', 'carbon_calculator.urls', name='carbon_calculator-dev'),
+  host(r'cc-canary', 'carbon_calculator.urls', name='carbon_calculator-canary'),
 )
