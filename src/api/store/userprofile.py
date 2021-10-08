@@ -1,5 +1,5 @@
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
-  Vendor, Action, Data, Community, Media, CommunityAdminGroup, Team
+  Vendor, Action, Data, Community, Media, TeamMember, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -565,16 +565,21 @@ class UserStore:
     try:
       # query users by user id, find the user that is sending the request
       cadmin = UserProfile.objects.filter(id=context.user_id).first()
-      ## find the community that the user is the admin of. In the next section, populate user profiles with that information
-      # registered_community = None
-      # for community in cadmin.communities.all():
-      #    admin_group = CommunityAdminGroup.objects.filter(community=community).first()
-      #    if cadmin in admin_group.members.all():
-      #      break
-      # registered_community = community
+
+      #find the community that the user is the admin of. In the next section, populate user profiles with that information
       community_id = args.get("community_id", None)
       community = Community.objects.filter(id=community_id).first()
-      
+      location = community.location.get("city", "")
+      if location != "":
+        location += ", "
+      location += community.location.get("state", "MA")
+      location = "in " + location
+
+      team_name = args.get('team_name', None)
+      team = None
+      if team_name and team_name != "none":
+        team = Team.objects.filter(name=team_name).first()
+
       user = UserProfile.objects.filter(email=email).first()
       if not user:
         if not email or email == "":
@@ -592,19 +597,34 @@ class UserStore:
           new_user.communities.add(community)
       else:
         new_user: UserProfile = user
-      team_name = args.get('team_name', None)
-      if team_name and team_name != "none":
-        team = Team.objects.filter(name=team_name).first()
-        team.members.add(new_user)
+
+      
+      team_leader = None
+      if team:
+        admins = TeamMember.objects.filter(team=team, is_admin=True)  
+        if admins:
+          team_leader: UserProfile = admins.first().user
+
+        new_member, _ = TeamMember.objects.get_or_create(user=new_user, team=team)
+        new_member.save()
         team.save()
       new_user.save()
-      
-      return {'cadmin': cadmin.full_name,
+      ret = {'cadmin': cadmin.full_name,
               'community': community.name,
-              'team': team_name,
+              'community_logo': community.logo.file.url,
+              'community_info': community.about_community,
+              'location': location,
+              'subdomain': community.subdomain,
+              'team_name': team_name,
+              'team_leader': team_leader.full_name,
+              'team_leader_firstname': team_leader.full_name.split(" ")[0],
+              'team_leader_email': team_leader.email,
+              'first_name': first_name, 
               'full_name': new_user.full_name,
               'email': email,
-              'preferred_name': new_user.preferred_name}, None
+              'preferred_name': new_user.preferred_name}
+
+      return ret, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
