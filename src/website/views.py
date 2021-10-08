@@ -20,6 +20,7 @@ from database.models import (
     ContactUsPageSettings,
     DonatePageSettings,
     ImpactPageSettings,
+    CustomCommunityWebsiteDomain,
 )
 
 extract_text_from_html = html2text.HTML2Text()
@@ -40,7 +41,7 @@ else:
 
 
 if IS_LOCAL:
-    HOST_DOMAIN = "massenergize.test:8000"
+    HOST_DOMAIN = "massenergize.dev"
     HOST = f"http://communities.{HOST_DOMAIN}"
 elif IS_PROD or IS_CANARY:
     #TODO treat canary as a separate thing
@@ -125,6 +126,9 @@ def communities(request):
 
 
 def community(request, subdomain):
+    if not subdomain:
+        return communities(request)
+
     community = Community.objects.filter(
         is_deleted=False,
         is_published=True,
@@ -141,13 +145,18 @@ def community(request, subdomain):
         or {}
     )
 
+    redirect_to = f"{subdomain}.{HOST_DOMAIN}"
+    community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
+    if community_website_search:
+        redirect_to = f"{community_website_search.website}" 
+    
     meta = META
     meta.update(
         {
             "image_url": _get_file_url(community.logo),    
             "subdomain": subdomain,
             "section": f"#community#{subdomain}",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}",
+            "redirect_to": redirect_to,
             "title": str(community),
             "description": _extract(about.description),
             "url": f"{PORTAL_HOST}/{subdomain}",
