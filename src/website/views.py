@@ -25,22 +25,29 @@ from database.models import (
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
 
+HOME_SUBDOMAIN_SET = set(["communities", "search", "community"])
 
 if IS_LOCAL:
-    PORTAL_HOST = "http://localhost:3000"
+    #TODO: update this with localhost if you are running the frontend locally
+    PORTAL_HOST = "https://community.massenergize.dev"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
 else:
-    PORTAL_HOST = "https://community-dev.massenergize.org"
+    # we know it is dev 
+    PORTAL_HOST = "https://community.massenergize.dev"
 
 
 if IS_LOCAL:
     HOST_DOMAIN = "massenergize.test:8000"
     HOST = f"http://communities.{HOST_DOMAIN}"
-else:
+elif IS_PROD or IS_CANARY:
+    #TODO treat canary as a separate thing
     HOST_DOMAIN = "massenergize.org"
+    HOST = f"https://communities.{HOST_DOMAIN}"
+else:
+    HOST_DOMAIN = "massenergize.dev"
     HOST = f"https://communities.{HOST_DOMAIN}"
 
 
@@ -91,7 +98,7 @@ def _get_file_url(image):
 
 def home(request):
     subdomain = _get_subdomain(request, False)
-    if not subdomain or subdomain == "communities" or subdomain == "search":
+    if not subdomain or subdomain in HOME_SUBDOMAIN_SET :
         return communities(request)
     elif _subdomain_is_valid(subdomain):
         return community(request, subdomain)
