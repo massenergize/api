@@ -7,7 +7,6 @@ from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
-from api.store.deviceprofile import DeviceStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
 from database.models import (
     Deployment,
@@ -17,6 +16,7 @@ from database.models import (
     Vendor,
     Action,
     Testimonial,
+    DeviceProfile,
     AboutUsPageSettings,
     ContactUsPageSettings,
     DonatePageSettings,
@@ -115,28 +115,45 @@ def _get_file_url(image):
         return None
     return image.file.url if image.file else None
 
-def _get_cookie(request, key):
+def _get_cookie(request, key): # TODO 
     cookie = request.COOKIES.get(key)
     if len(cookie) > 0:
         return cookie
     else:
         return None 
 
-def _set_cookie(response, key, value):
+def _set_cookie(response, key, value): # TODO 
     # set cookie on response before sending
     # cookie expiration set to 1yr
     MAX_AGE = 31536000
 
     response.set_cookie(key, value, MAX_AGE, samesite='Strict')
 
-def _get_device(device_id):
+def _get_device(device_id): # TODO 
     pass
 
-def _log_device(device_id):
+def _log_device(device_id): # TODO 
     pass
 
-def _log_user(device_id):
+def _log_user(device_id): # TODO 
     pass
+
+def _log_device(request, response):
+
+    # Cookies
+    # get cookie
+    cookie = _get_cookie(request, "device")
+
+    # have we seen this device before?
+    if cookie: # yes
+        try:
+            device = DeviceProfile.objects.filter(id=cookie).first()
+        except Exception as e:
+            pass # TODO do something if device is not in database
+        DeviceProfile.objects.create() # TODO update device log
+    else: # no
+        device = device_store.create_device() # TODO create device profile
+        _set_cookie(response, "device", device.id) # TODO save cookie
 
 def home(request):
     subdomain = _get_subdomain(request, False)
@@ -209,17 +226,7 @@ def community(request, subdomain):
 
     response = render(request, "community.html", args)
 
-    # Cookies
-    # get cookie
-    cookie = _get_cookie(request, "device")
-    device_store = DeviceStore()
-
-    # have we seen this device before?
-    if cookie: # yes
-        device_store.update_device() # update device log
-    else: # no
-        device = device_store.create_device() # create device profile
-        _set_cookie(response, "device", device.id) # 
+    _log_device(request, response)
 
     return response
 
