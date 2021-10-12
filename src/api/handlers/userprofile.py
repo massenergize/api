@@ -270,7 +270,6 @@ class UserHandler(RouteHandler):
     )
     if err:
       return err
-
     info, err = self.service.handle_csv(context, args)    
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

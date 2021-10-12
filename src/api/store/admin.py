@@ -3,7 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassene
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from .utils import get_community, get_user, get_community_or_die, send_slack_message
-import json
+from api.store.community import CommunityStore
 from _main_.utils.constants import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -108,6 +108,9 @@ class AdminStore:
       
 
       admin_group.save()
+
+      # make sure admin is a member of the community, if not add them
+      CommunityStore.join_community(context, {"community_id": community.id, "user_id":user.id})
 
       res = {
         "name": user.preferred_name,

@@ -20,27 +20,35 @@ from database.models import (
     ContactUsPageSettings,
     DonatePageSettings,
     ImpactPageSettings,
+    CustomCommunityWebsiteDomain,
 )
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
 
+HOME_SUBDOMAIN_SET = set(["communities", "search", "community"])
 
 if IS_LOCAL:
-    PORTAL_HOST = "http://localhost:3000"
+    #TODO: update this with localhost if you are running the frontend locally
+    PORTAL_HOST = "https://community.massenergize.dev"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
 else:
-    PORTAL_HOST = "https://community-dev.massenergize.org"
+    # we know it is dev 
+    PORTAL_HOST = "https://community.massenergize.dev"
 
 
 if IS_LOCAL:
-    HOST_DOMAIN = "massenergize.test:8000"
+    HOST_DOMAIN = "massenergize.dev"
     HOST = f"http://communities.{HOST_DOMAIN}"
-else:
+elif IS_PROD or IS_CANARY:
+    #TODO treat canary as a separate thing
     HOST_DOMAIN = "massenergize.org"
+    HOST = f"https://communities.{HOST_DOMAIN}"
+else:
+    HOST_DOMAIN = "massenergize.dev"
     HOST = f"https://communities.{HOST_DOMAIN}"
 
 
@@ -83,6 +91,23 @@ def _extract(html):
     res = extract_text_from_html.handle(html) 
     return f"{res.strip()[:250]}..."
 
+def _get_redirect_url(subdomain, community=None):
+
+    if not community:
+        community = Community.objects.filter(
+            is_deleted=False,
+            is_published=True,
+            subdomain__iexact=subdomain,
+        ).first()
+
+    if not community:
+        raise Http404
+
+    redirect_url = f"{subdomain}.{HOST_DOMAIN}"
+    community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
+    if community_website_search:
+        redirect_url = f"https://{community_website_search.website}" 
+    return redirect_url
 
 def _get_file_url(image):
     if not image:
@@ -98,7 +123,7 @@ def _set_cookie(http_response, key, value):
 
 def home(request):
     subdomain = _get_subdomain(request, False)
-    if not subdomain or subdomain == "communities" or subdomain == "search":
+    if not subdomain or subdomain in HOME_SUBDOMAIN_SET :
         return communities(request)
     elif _subdomain_is_valid(subdomain):
         return community(request, subdomain)
@@ -125,6 +150,9 @@ def communities(request):
 
 
 def community(request, subdomain):
+    if not subdomain:
+        return communities(request)
+
     community = Community.objects.filter(
         is_deleted=False,
         is_published=True,
@@ -141,13 +169,15 @@ def community(request, subdomain):
         or {}
     )
 
+    redirect_url = _get_redirect_url(subdomain, community)
+    
     meta = META
     meta.update(
         {
             "image_url": _get_file_url(community.logo),    
             "subdomain": subdomain,
             "section": f"#community#{subdomain}",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}",
+            "redirect_to": redirect_url,
             "title": str(community),
             "description": _extract(about.description),
             "url": f"{PORTAL_HOST}/{subdomain}",
@@ -170,12 +200,15 @@ def community(request, subdomain):
 def actions(request, subdomain=None):
     if not subdomain:
         subdomain = _get_subdomain(request, enforce_is_valid=True)
+        
+    redirect_url = _get_redirect_url(subdomain, None)
+
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": "Take Action",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/actions",
+            "redirect_to": f"{redirect_url}/actions",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -192,6 +225,7 @@ def actions(request, subdomain=None):
 def action(request, id, subdomain=None):
     if not subdomain:
         subdomain = _get_subdomain(request, enforce_is_valid=True)
+
     action = Action.objects.filter(
         pk=id,
         community__subdomain__iexact=subdomain,
@@ -202,6 +236,7 @@ def action(request, id, subdomain=None):
     if not action:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
@@ -209,8 +244,8 @@ def action(request, id, subdomain=None):
             "subdomain": subdomain,
             "title": action.title,
             "description": _extract(action.about),
-            "url": f"{PORTAL_HOST}/{subdomain}/actions/{id}",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/actions/{id}",
+            "url": f"{redirect_url}/actions/{id}",
+            "redirect_to": f"{redirect_url}/actions/{id}",
             "created_at": action.created_at,
             "updated_at": action.updated_at,
             "stay_put": request.GET.get('stay_put', None),
@@ -223,12 +258,13 @@ def action(request, id, subdomain=None):
 def events(request, subdomain=None):
     if not subdomain:
         subdomain = _get_subdomain(request, enforce_is_valid=True)
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": "Attend an event near you",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/events",
+            "redirect_to": f"{redirect_url}/events",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -256,6 +292,7 @@ def event(request, id, subdomain=None):
     if not event:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
@@ -264,8 +301,8 @@ def event(request, id, subdomain=None):
             "image_url":_get_file_url(event.image),
             "subdomain": subdomain,
             "description": _extract(event.description),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/events/{id}",
-            "url": f"{PORTAL_HOST}/{subdomain}/events/{id}",
+            "redirect_to": f"{redirect_url}/events/{id}",
+            "url": f"{redirect_url}/events/{id}",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -284,13 +321,13 @@ def vendors(request, subdomain=None):
     ).first()
     if not community:
         raise Http404
-
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": "Services & Vendors",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/services",
+            "redirect_to": f"{redirect_url}/services",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -312,6 +349,7 @@ def vendor(request, id, subdomain=None):
     if not vendor:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
@@ -320,8 +358,8 @@ def vendor(request, id, subdomain=None):
             "image_url":_get_file_url(vendor.logo),
             "subdomain": subdomain,
             "description": _extract(vendor.description),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/services/{id}",
-            "url": f"{PORTAL_HOST}/{subdomain}/services/{id}",
+            "redirect_to": f"{redirect_url}/services/{id}",
+            "url": f"{redirect_url}/services/{id}",
             "created_at": vendor.created_at,
             "updated_at": vendor.updated_at,
             "stay_put": request.GET.get('stay_put', None),
@@ -350,12 +388,13 @@ def teams(request, subdomain=None):
     ).values(
         "id", "name", "tagline"
     )
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": "Teams",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/teams",
+            "redirect_to": f"{redirect_url}/teams",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -381,6 +420,7 @@ def team(request, id, subdomain=None):
     if not team:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
@@ -389,8 +429,8 @@ def team(request, id, subdomain=None):
             "image_url": _get_file_url(team.logo),
             "subdomain": subdomain,
             "description": _extract(team.description),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/teams/{id}",
-            "url": f"{PORTAL_HOST}/{subdomain}/teams/{id}",
+            "redirect_to": f"{redirect_url}/teams/{id}",
+            "url": f"{redirect_url}/teams/{id}",
             "created_at": team.created_at,
             "updated_at": team.updated_at,
             "stay_put": request.GET.get('stay_put', None),
@@ -407,12 +447,13 @@ def team(request, id, subdomain=None):
 def testimonials(request, subdomain=None):
     if not subdomain:
         subdomain = _get_subdomain(request, enforce_is_valid=True)
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": "Teams",
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/testimonials",
+            "redirect_to": f"{redirect_url}/testimonials",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -440,6 +481,7 @@ def testimonial(request, id, subdomain=None):
     if not testimonial:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
@@ -448,8 +490,8 @@ def testimonial(request, id, subdomain=None):
             "image_url": _get_file_url(testimonial.image),
             "subdomain": subdomain,
             "description": _extract(testimonial.body),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/testimonials/{id}",
-            "url": f"{PORTAL_HOST}/{subdomain}/testimonials/{id}",
+            "redirect_to": f"{redirect_url}/testimonials/{id}",
+            "url": f"{redirect_url}/testimonials/{id}",
             "created_at": testimonial.created_at,
             "updated_at": testimonial.updated_at,
             "stay_put": request.GET.get('stay_put', None),
@@ -473,12 +515,13 @@ def about_us(request, subdomain=None):
     if not page:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": str(page),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/aboutus",
+            "redirect_to": f"{redirect_url}/aboutus",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -501,12 +544,13 @@ def donate(request, subdomain=None):
     if not page:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": str(page),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/donate",
+            "redirect_to": f"{redirect_url}/donate",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -529,12 +573,13 @@ def impact(request, subdomain=None):
     if not page:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": str(page),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/impact",
+            "redirect_to": f"{redirect_url}/impact",
             "stay_put": request.GET.get('stay_put', None),
         }
     )
@@ -557,12 +602,13 @@ def contact_us(request, subdomain=None):
     if not page:
         raise Http404
 
+    redirect_url = _get_redirect_url(subdomain, None)
     meta = META
     meta.update(
         {
             "subdomain": subdomain,
             "title": str(page),
-            "redirect_to": f"{PORTAL_HOST}/{subdomain}/impact",
+            "redirect_to": f"{redirect_url}/impact",
             "stay_put": request.GET.get('stay_put', None),
         }
     )

@@ -34,28 +34,62 @@ def _parse_import_file(csvfile):
   return filecontents, None
 
 def _send_invitation_email(user_info, mess):
-  # TODO: include community logo
 
   # send email inviting user to complete their profile
   cadmin_name = user_info.get("cadmin", "The Community Administrator")
+  cadmin_firstname = cadmin_name.split(" ")[0]
   community_name = user_info.get("community", None)
-  team_name = user_info.get("team", None)
+  community_logo = user_info.get("community_logo", None)
+  community_info = user_info.get("community_info", None)
+  team_name = user_info.get("team_name", None)
+  location = user_info.get("location", None)
   subdomain = user_info.get("subdomain", "global")
   email = user_info.get("email", None)
-
-  message = cadmin_name + " invited you to join the following MassEnergize Community: " + community_name + "\n"
+  first_name = user_info.get("first_name", None)
+  team_leader = user_info.get('team_leader', None)
+  team_leader_firstname = user_info.get('team_leader_firstname', None)
+  team_leader_email = user_info.get('team_leader_email', None)
 
   if mess and mess != "":
-      message += "They have included a message for you here:\n"
-      message += "\n" + mess + "\n"
+    custom_intro = "Here is a welcome message from " + cadmin_firstname
+    custom_message = mess
+  else:
+    custom_intro = "Here is how " + cadmin_firstname + " describes " + community_name
+    custom_message = community_info
 
+  subject = cadmin_name + " invited you to join the " + community_name + " Community"
+  #send_massenergize_email(subject=subject , msg=message, to=email)
+  email_template = 'community_invitation_email.html'
+  if team_name == 'none' or team_name == "None":
+    team_name = None
   if team_name:
-    message += "You have also been assigned to the following team: " + team_name + "\n"
+    email_template = 'team_invitation_email.html'
 
-  link = f'{COMMUNITY_URL_ROOT}/{subdomain}' + "/signup"
-  message += "Use the following link to join " + community_name + ": " + link
-  subject = cadmin_name + " invited you to join a MassEnergize Community"
-  send_massenergize_email(subject=subject , msg=message, to=email)
+  #community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+  #subdomain =   community.subdomain if community else "global"
+  #subject = f'Welcome to {community_name}, a MassEnergize community'
+  homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
+  
+  content_variables = {
+    'name': first_name,
+    'community': community_name,
+    'community_admin': cadmin_name,
+    'community_admin_firstname': cadmin_firstname,
+    'homelink': homelink,
+    'logo': community_logo,
+    'location': location,
+    'team': team_name,
+    'team_leader': team_leader,
+    'team_leader_firstname': team_leader_firstname,
+    'team_leader_email': team_leader_email,
+    'custom_intro': custom_intro,
+    'custom_message': custom_message,
+    'contactlink':f'{homelink}/contactus',
+    'signuplink': f'{homelink}/signup',
+    'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
+    }
+  
+  send_massenergize_rich_email(subject, email, email_template, content_variables)
 
 class UserService:
   """
@@ -225,16 +259,18 @@ class UserService:
       ###values_list= list(csv_row.values())
       try:
         # prevents the first row (headers) from being read in as a user
-        #print(csv_row[first_name_field])
+
         if csv_row[first_name_field] == column_list[0]:
           continue
+
         # verify correctness of email address
         line += 1
         first_name = csv_row[first_name_field]
         last_name = csv_row[last_name_field]
         email = csv_row[email_field]
+
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-        if(re.search(regex,email)):   
+        if(re.search(regex,email)):  
           info, err = self.store.import_from_csv(context, args, first_name, last_name, email)
 
           # send invitation e-mail to each new user
