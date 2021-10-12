@@ -89,6 +89,13 @@ def _get_file_url(image):
         return None
     return image.file.url if image.file else None
 
+def _set_cookie(http_response, key, value):
+    # set cookie on response before sending
+    # cookie expiration set to 1yr
+    MAX_AGE = 31536000
+
+    http_response.set_cookie(key, value, MAX_AGE, samesite='Strict')
+
 def home(request):
     subdomain = _get_subdomain(request, False)
     if not subdomain or subdomain == "communities" or subdomain == "search":
@@ -152,7 +159,12 @@ def community(request, subdomain):
     )
 
     args = {"meta": meta, "community": community, "about": about}
-    return render(request, "community.html", args)
+
+    http_response = render(request, "community.html", args)
+
+    # _set_cookie(http_response, "device", "") # TODO: get the device id set it to value
+
+    return http_response
 
 
 def actions(request, subdomain=None):
