@@ -46,6 +46,7 @@ class DeviceHandler(RouteHandler):
     self.validator.expect('device_type', int)
     self.validator.expect('operating_system', int)
     self.validator.expect("browser", list)
+    self.validator.expect("visit_log", list)
     args, err = self.validator.verify(args)
 
     if err:

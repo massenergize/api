@@ -7,7 +7,7 @@ from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
-from api.handlers.deviceprofile import DeviceHandler
+from api.store.deviceprofile import DeviceStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
 from database.models import (
     Deployment,
@@ -115,8 +115,12 @@ def _get_file_url(image):
         return None
     return image.file.url if image.file else None
 
-def _get_cookie():
-    pass
+def _get_cookie(request, key):
+    cookie = request.COOKIES.get(key)
+    if len(cookie) > 0:
+        return cookie
+    else:
+        return None 
 
 def _set_cookie(response, key, value):
     # set cookie on response before sending
@@ -125,10 +129,13 @@ def _set_cookie(response, key, value):
 
     response.set_cookie(key, value, MAX_AGE, samesite='Strict')
 
-def _get_device():
+def _get_device(device_id):
     pass
 
-def _log_device():
+def _log_device(device_id):
+    pass
+
+def _log_user(device_id):
     pass
 
 def home(request):
@@ -203,8 +210,16 @@ def community(request, subdomain):
     response = render(request, "community.html", args)
 
     # Cookies
-    # print(request.COOKIES.get("device"))
-    _set_cookie(response, "device", "test_device_3") # TODO: get the device id set it to value
+    # get cookie
+    cookie = _get_cookie(request, "device")
+    device_store = DeviceStore()
+
+    # have we seen this device before?
+    if cookie: # yes
+        device_store.update_device() # update device log
+    else: # no
+        device = device_store.create_device() # create device profile
+        _set_cookie(response, "device", device.id) # 
 
     return response
 

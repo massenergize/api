@@ -8,6 +8,7 @@ from api.handlers.page_settings__vendors import VendorsPageSettingsHandler
 from api.handlers.page_settings__testimonials import TestimonialsPageSettingsHandler
 from api.handlers.community import CommunityHandler
 from api.handlers.page_settings__contactus import ContactUsPageSettingsHandler
+from api.handlers.deviceprofile import DeviceHandler
 from api.handlers.page_settings__donate import DonatePageSettingsHandler
 from api.handlers.page_settings__impact import ImpactPageSettingsHandler
 from api.handlers.download import DownloadHandler
@@ -37,6 +38,7 @@ ROUTE_HANDLERS = [
   AuthHandler(),
   CommunityHandler(),
   ContactUsPageSettingsHandler(),
+  DeviceHandler(),
   DonatePageSettingsHandler(),
   DownloadHandler(),
   EventHandler(),
