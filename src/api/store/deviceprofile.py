@@ -1,4 +1,4 @@
-from api.src.database.models import DeviceProfile
+from database.models import DeviceProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse

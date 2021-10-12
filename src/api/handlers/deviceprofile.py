@@ -4,7 +4,7 @@ from _main_.utils.route_handler import RouteHandler
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
-from api.src.api.services.deviceprofile import DeviceService
+from api.services.deviceprofile import DeviceService
 
 class DeviceHandler(RouteHandler):
 

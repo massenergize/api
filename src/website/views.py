@@ -7,6 +7,7 @@ from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
+from api.handlers.deviceprofile import DeviceHandler
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
 from database.models import (
     Deployment,
@@ -114,12 +115,21 @@ def _get_file_url(image):
         return None
     return image.file.url if image.file else None
 
-def _set_cookie(http_response, key, value):
+def _get_cookie():
+    pass
+
+def _set_cookie(response, key, value):
     # set cookie on response before sending
     # cookie expiration set to 1yr
     MAX_AGE = 31536000
 
-    http_response.set_cookie(key, value, MAX_AGE, samesite='Strict')
+    response.set_cookie(key, value, MAX_AGE, samesite='Strict')
+
+def _get_device():
+    pass
+
+def _log_device():
+    pass
 
 def home(request):
     subdomain = _get_subdomain(request, False)
@@ -190,11 +200,13 @@ def community(request, subdomain):
 
     args = {"meta": meta, "community": community, "about": about}
 
-    http_response = render(request, "community.html", args)
+    response = render(request, "community.html", args)
 
-    # _set_cookie(http_response, "device", "") # TODO: get the device id set it to value
+    # Cookies
+    # print(request.COOKIES.get("device"))
+    _set_cookie(response, "device", "test_device_3") # TODO: get the device id set it to value
 
-    return http_response
+    return response
 
 
 def actions(request, subdomain=None):
