@@ -225,8 +225,10 @@ def community(request, subdomain):
     args = {"meta": meta, "community": community, "about": about}
 
     response = render(request, "community.html", args)
+    
+    _set_cookie(response, "device", "Community1")
 
-    _log_device(request, response)
+    # _log_device(request, response)
 
     return response
 
@@ -253,7 +255,11 @@ def actions(request, subdomain=None):
         ).values("id", "title", "featured_summary"),
     }
 
-    return render(request, "actions.html", args)
+    response = render(request, "actions.html", args)
+
+    _set_cookie(response, "device", "Actions1")
+
+    return response
 
 
 def action(request, id, subdomain=None):
@@ -286,7 +292,12 @@ def action(request, id, subdomain=None):
         }
     )
     args = {"meta": meta, "action": action}
-    return render(request, "action.html", args)
+    
+    response = render(request, "action.html", args)
+
+    _set_cookie(response, "device", "Action1")
+
+    return response
 
 
 def events(request, subdomain=None):
@@ -310,7 +321,12 @@ def events(request, subdomain=None):
             "id", "name", "start_date_and_time", "end_date_and_time", "featured_summary"
         ),
     }
-    return render(request, "events.html", args)
+
+    response = render(request, "events.html", args)
+
+    _set_cookie(response, "device", "Events1")
+
+    return response
 
 
 def event(request, id, subdomain=None):
@@ -344,7 +360,12 @@ def event(request, id, subdomain=None):
         "meta": meta,
         "event": event,
     }
-    return render(request, "event.html", args)
+
+    response = render(request, "event.html", args)
+
+    _set_cookie(response, "device", "Event1")
+
+    return response
 
 
 def vendors(request, subdomain=None):
@@ -372,7 +393,11 @@ def vendors(request, subdomain=None):
             "id", "name", "description", "service_area"
         ),
     }
-    return render(request, "services.html", args)
+    response = render(request, "services.html", args)
+
+    _set_cookie(response, "device", "vendors1")
+
+    return response
 
 
 def vendor(request, id, subdomain=None):
@@ -405,7 +430,11 @@ def vendor(request, id, subdomain=None):
         "vendor": vendor,
     }
 
-    return render(request, "service.html", args)
+    response = render(request, "service.html", args)
+
+    _set_cookie(response, "device", "vendor1")
+
+    return response
 
 
 def teams(request, subdomain=None):
@@ -437,7 +466,12 @@ def teams(request, subdomain=None):
         "meta": meta,
         "teams": teams,
     }
-    return render(request, "teams.html", args)
+
+    response = render(request, "teams.html", args)
+
+    _set_cookie(response, "device", "Teams1")
+
+    return response
 
 
 def team(request, id, subdomain=None):
@@ -475,7 +509,12 @@ def team(request, id, subdomain=None):
         "meta": meta,
         "team": team,
     }
-    return render(request, "team.html", args)
+
+    response = render(request, "team.html", args)
+
+    _set_cookie(response, "device", "Team1")
+
+    return response
 
 
 def testimonials(request, subdomain=None):
@@ -499,7 +538,12 @@ def testimonials(request, subdomain=None):
             is_deleted=False, is_published=True, community__subdomain__iexact=subdomain
         ).values("id", "title", "body"),
     }
-    return render(request, "testimonials.html", args)
+
+    response = render(request, "testimonials.html", args)
+
+    _set_cookie(response, "device", "Testimonials1")
+
+    return response
 
 
 def testimonial(request, id, subdomain=None):
@@ -536,7 +580,12 @@ def testimonial(request, id, subdomain=None):
         "meta": meta,
         "testimonial": testimonial,
     }
-    return render(request, "testimonial.html", args)
+
+    response = render(request, "testimonial.html", args)
+
+    _set_cookie(response, "device", "Testimonial1")
+
+    return response
 
 
 def about_us(request, subdomain=None):
@@ -565,7 +614,11 @@ def about_us(request, subdomain=None):
         "page": page,
     }
 
-    return render(request, "page__about_us.html", args)
+    response = render(request, "page__about_us.html", args)
+
+    _set_cookie(response, "device", "About1")
+
+    return response
 
 
 def donate(request, subdomain=None):
@@ -594,7 +647,11 @@ def donate(request, subdomain=None):
         "page": page,
     }
 
-    return render(request, "page__donate.html", args)
+    response = render(request, "page__donate.html", args)
+
+    _set_cookie(response, "device", "donate1")
+
+    return response
 
 
 def impact(request, subdomain=None):
@@ -623,7 +680,11 @@ def impact(request, subdomain=None):
         "page": page,
     }
 
-    return render(request, "page__impact.html", args)
+    response = render(request, "page__impact.html", args)
+
+    _set_cookie(response, "device", "Impact1")
+
+    return response
 
 
 def contact_us(request, subdomain=None):
@@ -652,7 +713,11 @@ def contact_us(request, subdomain=None):
         "page": page,
     }
 
-    return render(request, "page__contact_us.html", args)
+    response = render(request, "page__contact_us.html", args)
+
+    _set_cookie(response, "device", "contact1")
+
+    return response
 
 
 def generate_sitemap(request):
