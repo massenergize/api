@@ -31,7 +31,8 @@ HOME_SUBDOMAIN_SET = set(["communities", "search", "community"])
 
 if IS_LOCAL:
     #TODO: update this with localhost if you are running the frontend locally
-    PORTAL_HOST = "https://community.massenergize.dev"
+    # PORTAL_HOST = "https://community.massenergize.dev"
+    PORTAL_HOST = "http://localhost:3000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
@@ -42,8 +43,12 @@ else:
 
 
 if IS_LOCAL:
-    HOST_DOMAIN = "massenergize.dev"
+    # HOST_DOMAIN = "massenergize.dev"
+    # HOST = f"http://{HOST_DOMAIN}"
+    HOST_DOMAIN = "localhost:8000"
     HOST = f"http://communities.{HOST_DOMAIN}"
+    
+    
 elif IS_PROD or IS_CANARY:
     #TODO treat canary as a separate thing
     HOST_DOMAIN = "massenergize.org"
@@ -117,7 +122,7 @@ def _get_file_url(image):
 
 def _get_cookie(request, key): # TODO 
     cookie = request.COOKIES.get(key)
-    if len(cookie) > 0:
+    if cookie and len(cookie) > 0:
         return cookie
     else:
         return None 
