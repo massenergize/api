@@ -180,7 +180,17 @@ def communities(request):
             is_deleted=False, is_published=True
         ).values("id", "name", "subdomain", "about_community"),
     }
-    return render(request, "communities.html", args)
+
+    response = render(request, "communities.html", args)
+
+    cookie = _get_cookie(request, "Communities")
+
+    if cookie:
+        print(cookie)
+    
+    _set_cookie(response, "Communities", "Communities2")
+
+    return response
 
 
 def community(request, subdomain):
@@ -257,7 +267,7 @@ def actions(request, subdomain=None):
 
     response = render(request, "actions.html", args)
 
-    _set_cookie(response, "device", "Actions1")
+    _set_cookie(response, "Actions", "Actions1")
 
     return response
 
@@ -295,7 +305,7 @@ def action(request, id, subdomain=None):
     
     response = render(request, "action.html", args)
 
-    _set_cookie(response, "device", "Action1")
+    _set_cookie(response, "Action", "Action1")
 
     return response
 
@@ -324,7 +334,7 @@ def events(request, subdomain=None):
 
     response = render(request, "events.html", args)
 
-    _set_cookie(response, "device", "Events1")
+    _set_cookie(response, "Events", "Events1")
 
     return response
 
@@ -363,7 +373,7 @@ def event(request, id, subdomain=None):
 
     response = render(request, "event.html", args)
 
-    _set_cookie(response, "device", "Event1")
+    _set_cookie(response, "Event", "Event1")
 
     return response
 
@@ -395,7 +405,7 @@ def vendors(request, subdomain=None):
     }
     response = render(request, "services.html", args)
 
-    _set_cookie(response, "device", "vendors1")
+    _set_cookie(response, "Vendors", "Vendors1")
 
     return response
 
@@ -432,7 +442,7 @@ def vendor(request, id, subdomain=None):
 
     response = render(request, "service.html", args)
 
-    _set_cookie(response, "device", "vendor1")
+    _set_cookie(response, "Vendor", "Vendor1")
 
     return response
 
@@ -469,7 +479,7 @@ def teams(request, subdomain=None):
 
     response = render(request, "teams.html", args)
 
-    _set_cookie(response, "device", "Teams1")
+    _set_cookie(response, "Teams", "Teams1")
 
     return response
 
@@ -512,7 +522,7 @@ def team(request, id, subdomain=None):
 
     response = render(request, "team.html", args)
 
-    _set_cookie(response, "device", "Team1")
+    _set_cookie(response, "Team", "Team1")
 
     return response
 
@@ -541,7 +551,7 @@ def testimonials(request, subdomain=None):
 
     response = render(request, "testimonials.html", args)
 
-    _set_cookie(response, "device", "Testimonials1")
+    _set_cookie(response, "Testimonials", "Testimonials1")
 
     return response
 
@@ -583,7 +593,7 @@ def testimonial(request, id, subdomain=None):
 
     response = render(request, "testimonial.html", args)
 
-    _set_cookie(response, "device", "Testimonial1")
+    _set_cookie(response, "Testimonial", "Testimonial1")
 
     return response
 
@@ -616,7 +626,7 @@ def about_us(request, subdomain=None):
 
     response = render(request, "page__about_us.html", args)
 
-    _set_cookie(response, "device", "About1")
+    _set_cookie(response, "About", "About1")
 
     return response
 
@@ -649,7 +659,7 @@ def donate(request, subdomain=None):
 
     response = render(request, "page__donate.html", args)
 
-    _set_cookie(response, "device", "donate1")
+    _set_cookie(response, "Donate", "Donate1")
 
     return response
 
@@ -682,7 +692,7 @@ def impact(request, subdomain=None):
 
     response = render(request, "page__impact.html", args)
 
-    _set_cookie(response, "device", "Impact1")
+    _set_cookie(response, "Impact", "Impact1")
 
     return response
 
@@ -715,7 +725,7 @@ def contact_us(request, subdomain=None):
 
     response = render(request, "page__contact_us.html", args)
 
-    _set_cookie(response, "device", "contact1")
+    _set_cookie(response, "Contact", "Contact1")
 
     return response
 
