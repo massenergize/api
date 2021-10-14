@@ -135,13 +135,10 @@ def _set_cookie(response, key, value): # TODO
 
     response.set_cookie(key, value, MAX_AGE, samesite='Strict')
 
-def _get_device(device_id): # TODO 
-    pass
-
 def _log_device(device_id): # TODO 
     pass
 
-def _log_user(device_id): # TODO 
+def _log_user(user_id): # TODO 
     pass
 
 def _device_checkin(request, response):
@@ -184,7 +181,10 @@ def _device_checkin(request, response):
 
     if device:
         _set_cookie(response, "device", device.id)
-        _log_device(device)
+        if device: # TODO if logged in
+            _log_user(device)
+        else:
+            _log_device(device)
 
 def home(request):
     subdomain = _get_subdomain(request, False)
