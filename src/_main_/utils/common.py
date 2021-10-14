@@ -6,6 +6,10 @@ from django.utils import timezone
 from datetime import datetime
 import cv2
 from sentry_sdk import capture_message
+from database.models import (
+  UserProfile,
+  DeviceProfile
+)
 
 def get_request_contents(request):
   try:
@@ -163,7 +167,6 @@ def resize_image(img, options={}):
     new_img = cv2.resize(img, dsize=size, interpolation = cv2.INTER_AREA)
     return new_img
 
-
 def _common_name(s):
   return (' '.join(s.split('_'))).title()
 
@@ -172,3 +175,75 @@ def validate_fields(args, checklist):
     if field not in args:
       return False, CustomMassenergizeError(f"You are missing: {_common_name(field)}")
   return True, None
+
+def get_cookie(request, key):
+  cookie = request.COOKIES.get(key)
+  if cookie and len(cookie) > 0:
+      return cookie
+  else:
+      return None 
+
+def set_cookie(response, key, value): # TODO
+  print(f"----- set_cookie: {response}")
+  # set cookie on response before sending
+  # cookie expiration set to 1yr
+  MAX_AGE = 31536000
+
+  response.set_cookie(key, value, MAX_AGE, samesite='Strict')
+
+def log_device(device): # TODO 
+  print(f"----- log_device: {device}")
+
+def log_user(device, user_id): # TODO 
+  print(f"----- log_user: {device} {user_id}")
+  if device:
+    pass
+
+def device_checkin(request, response):
+  print(f"----- device_checkin: {response}")
+  # Cookies
+  # get cookie
+  cookie = get_cookie(request, "device")
+  print(f"----- got cookie: {cookie}")
+
+  # have we seen this device before?
+  if cookie: # yes
+      print(f"----- Device cookie found: {cookie}")
+      try:
+          device = DeviceProfile.objects.filter(id=cookie).first()
+      except Exception as e:
+          print(e)
+          device = None
+  else: # no
+      print(f"----- Device cookie not found: {cookie}")
+      device_info = {
+          "ip_address": "0.0.0.1", # TODO get IP address
+          "device_type": "macbook", # TODO get device type
+          "operating_system": "MacOS", # TODO get operating system
+          "browser": "Chrome", # TODO get browser
+      }
+      device: DeviceProfile = DeviceProfile.objects.create() # TODO create device profile
+      
+      print("----- Device created")
+      if device_info["ip_address"]:
+          device.ip_address = device_info["ip_address"]
+          print("---------- Device ip")
+      if device_info["device_type"]:
+          device.device_type = device_info["device_type"]
+          print("---------- Device type")
+      if device_info["operating_system"]:
+          device.operating_system = device_info["operating_system"]
+          print("---------- Device OS")
+      if device_info["browser"]:
+          device.browser = device_info["browser"]
+          print("---------- Device browser")
+      device.save()
+
+  if device:
+    print(f"----- device found: {device}")
+    set_cookie(response, "device", device.id)
+    if False: # TODO if logged in
+        user = UserProfile.objects.filter(id=id).first()
+        log_user(device, user)
+    else:
+        log_device(device)

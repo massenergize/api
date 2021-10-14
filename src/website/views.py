@@ -5,11 +5,12 @@ from django.http import Http404
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, IS_LOCAL
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
-from api.store.deviceprofile import DeviceStore
+from _main_.utils.common import device_checkin
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
 from database.models import (
+    UserProfile,
     Deployment,
     Community,
     Event,
@@ -121,71 +122,6 @@ def _get_file_url(image):
         return None
     return image.file.url if image.file else None
 
-def _get_cookie(request, key):
-    cookie = request.COOKIES.get(key)
-    if cookie and len(cookie) > 0:
-        return cookie
-    else:
-        return None 
-
-def _set_cookie(response, key, value): # TODO 
-    # set cookie on response before sending
-    # cookie expiration set to 1yr
-    MAX_AGE = 31536000
-
-    response.set_cookie(key, value, MAX_AGE, samesite='Strict')
-
-def _log_device(device_id): # TODO 
-    pass
-
-def _log_user(user_id): # TODO 
-    pass
-
-def _device_checkin(request, response):
-
-    # Cookies
-    # get cookie
-    cookie = _get_cookie(request, "device")
-
-    # have we seen this device before?
-    if cookie: # yes
-        print(f"----- Device cookie found: {cookie}")
-        try:
-            device = DeviceProfile.objects.filter(id=cookie).first()
-        except Exception as e:
-            print(e)
-            device = None
-    else: # no
-        print(f"----- Device cookie not found: {cookie}")
-        device_info = {
-            "ip_address": "0.0.0.1", # TODO get IP address
-            "device_type": "macbook", # TODO get device type
-            "operating_system": "MacOS", # TODO get operating system
-            "browser": "Chrome", # TODO get browser
-        }
-        device: DeviceProfile = DeviceProfile.objects.create() # TODO create device profile
-        print("----- Device created")
-        if device_info["ip_address"]:
-            device.ip_address = device_info["ip_address"]
-            print("---------- Device ip")
-        if device_info["device_type"]:
-            device.device_type = device_info["device_type"]
-            print("---------- Device type")
-        if device_info["operating_system"]:
-            device.operating_system = device_info["operating_system"]
-            print("---------- Device OS")
-        if device_info["browser"]:
-            device.browser = device_info["browser"]
-            print("---------- Device browser")
-        device.save()
-
-    if device:
-        _set_cookie(response, "device", device.id)
-        if device: # TODO if logged in
-            _log_user(device)
-        else:
-            _log_device(device)
-
 def home(request):
     subdomain = _get_subdomain(request, False)
     if not subdomain or subdomain in HOME_SUBDOMAIN_SET :
@@ -214,7 +150,7 @@ def communities(request):
 
     response = render(request, "communities.html", args)
 
-    _device_checkin(request, response)
+    device_checkin(request, response)
     
     return response
 
@@ -262,8 +198,6 @@ def community(request, subdomain):
 
     response = render(request, "community.html", args)
     
-    _set_cookie(response, "device", "Community1")
-
     return response
 
 
@@ -291,7 +225,7 @@ def actions(request, subdomain=None):
 
     response = render(request, "actions.html", args)
 
-    _set_cookie(response, "Actions", "Actions1")
+    
 
     return response
 
@@ -329,8 +263,6 @@ def action(request, id, subdomain=None):
     
     response = render(request, "action.html", args)
 
-    _set_cookie(response, "Action", "Action1")
-
     return response
 
 
@@ -357,8 +289,6 @@ def events(request, subdomain=None):
     }
 
     response = render(request, "events.html", args)
-
-    _set_cookie(response, "Events", "Events1")
 
     return response
 
@@ -397,8 +327,6 @@ def event(request, id, subdomain=None):
 
     response = render(request, "event.html", args)
 
-    _set_cookie(response, "Event", "Event1")
-
     return response
 
 
@@ -428,8 +356,6 @@ def vendors(request, subdomain=None):
         ),
     }
     response = render(request, "services.html", args)
-
-    _set_cookie(response, "Vendors", "Vendors1")
 
     return response
 
@@ -466,8 +392,6 @@ def vendor(request, id, subdomain=None):
 
     response = render(request, "service.html", args)
 
-    _set_cookie(response, "Vendor", "Vendor1")
-
     return response
 
 
@@ -502,8 +426,6 @@ def teams(request, subdomain=None):
     }
 
     response = render(request, "teams.html", args)
-
-    _set_cookie(response, "Teams", "Teams1")
 
     return response
 
@@ -546,8 +468,6 @@ def team(request, id, subdomain=None):
 
     response = render(request, "team.html", args)
 
-    _set_cookie(response, "Team", "Team1")
-
     return response
 
 
@@ -574,8 +494,6 @@ def testimonials(request, subdomain=None):
     }
 
     response = render(request, "testimonials.html", args)
-
-    _set_cookie(response, "Testimonials", "Testimonials1")
 
     return response
 
@@ -617,8 +535,6 @@ def testimonial(request, id, subdomain=None):
 
     response = render(request, "testimonial.html", args)
 
-    _set_cookie(response, "Testimonial", "Testimonial1")
-
     return response
 
 
@@ -649,8 +565,6 @@ def about_us(request, subdomain=None):
     }
 
     response = render(request, "page__about_us.html", args)
-
-    _set_cookie(response, "About", "About1")
 
     return response
 
@@ -683,8 +597,6 @@ def donate(request, subdomain=None):
 
     response = render(request, "page__donate.html", args)
 
-    _set_cookie(response, "Donate", "Donate1")
-
     return response
 
 
@@ -716,8 +628,6 @@ def impact(request, subdomain=None):
 
     response = render(request, "page__impact.html", args)
 
-    _set_cookie(response, "Impact", "Impact1")
-
     return response
 
 
@@ -748,8 +658,6 @@ def contact_us(request, subdomain=None):
     }
 
     response = render(request, "page__contact_us.html", args)
-
-    _set_cookie(response, "Contact", "Contact1")
 
     return response
 
