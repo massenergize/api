@@ -144,7 +144,7 @@ def _log_device(device_id): # TODO
 def _log_user(device_id): # TODO 
     pass
 
-def _log_device(request, response):
+def _device_checkin(request, response):
 
     # Cookies
     # get cookie
@@ -152,16 +152,16 @@ def _log_device(request, response):
 
     # have we seen this device before?
     if cookie: # yes
-        print("----- Device in cookie found")
+        print(f"----- Device cookie found: {cookie}")
         try:
             device = DeviceProfile.objects.filter(id=cookie).first()
         except Exception as e:
-            pass # TODO do something if device is not in database
-         # TODO update device log
+            print(e)
+            device = None
     else: # no
-        print("----- Device in cookie not found")
+        print(f"----- Device cookie not found: {cookie}")
         device_info = {
-            "ip_address": "0.0.0.0", # TODO get IP address
+            "ip_address": "0.0.0.1", # TODO get IP address
             "device_type": "macbook", # TODO get device type
             "operating_system": "MacOS", # TODO get operating system
             "browser": "Chrome", # TODO get browser
@@ -182,7 +182,9 @@ def _log_device(request, response):
             print("---------- Device browser")
         device.save()
 
-    _set_cookie(response, "device", device.id) # TODO save cookie
+    if device:
+        _set_cookie(response, "device", device.id)
+        _log_device(device)
 
 def home(request):
     subdomain = _get_subdomain(request, False)
@@ -212,7 +214,7 @@ def communities(request):
 
     response = render(request, "communities.html", args)
 
-    _log_device(request, response)
+    _device_checkin(request, response)
     
     return response
 
@@ -261,8 +263,6 @@ def community(request, subdomain):
     response = render(request, "community.html", args)
     
     _set_cookie(response, "device", "Community1")
-
-    # _log_device(request, response)
 
     return response
 
