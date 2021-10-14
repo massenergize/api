@@ -5,6 +5,7 @@ from django.http import Http404
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, IS_LOCAL
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
+from api.store.deviceprofile import DeviceStore
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
@@ -120,7 +121,7 @@ def _get_file_url(image):
         return None
     return image.file.url if image.file else None
 
-def _get_cookie(request, key): # TODO 
+def _get_cookie(request, key):
     cookie = request.COOKIES.get(key)
     if cookie and len(cookie) > 0:
         return cookie
@@ -151,14 +152,37 @@ def _log_device(request, response):
 
     # have we seen this device before?
     if cookie: # yes
+        print("----- Device in cookie found")
         try:
             device = DeviceProfile.objects.filter(id=cookie).first()
         except Exception as e:
             pass # TODO do something if device is not in database
-        DeviceProfile.objects.create() # TODO update device log
+         # TODO update device log
     else: # no
-        device = device_store.create_device() # TODO create device profile
-        _set_cookie(response, "device", device.id) # TODO save cookie
+        print("----- Device in cookie not found")
+        device_info = {
+            "ip_address": "0.0.0.0", # TODO get IP address
+            "device_type": "macbook", # TODO get device type
+            "operating_system": "MacOS", # TODO get operating system
+            "browser": "Chrome", # TODO get browser
+        }
+        device: DeviceProfile = DeviceProfile.objects.create() # TODO create device profile
+        print("----- Device created")
+        if device_info["ip_address"]:
+            device.ip_address = device_info["ip_address"]
+            print("---------- Device ip")
+        if device_info["device_type"]:
+            device.device_type = device_info["device_type"]
+            print("---------- Device type")
+        if device_info["operating_system"]:
+            device.operating_system = device_info["operating_system"]
+            print("---------- Device OS")
+        if device_info["browser"]:
+            device.browser = device_info["browser"]
+            print("---------- Device browser")
+        device.save()
+
+    _set_cookie(response, "device", device.id) # TODO save cookie
 
 def home(request):
     subdomain = _get_subdomain(request, False)
@@ -188,13 +212,8 @@ def communities(request):
 
     response = render(request, "communities.html", args)
 
-    cookie = _get_cookie(request, "Communities")
-
-    if cookie:
-        print(cookie)
+    _log_device(request, response)
     
-    _set_cookie(response, "Communities", "Communities2")
-
     return response
 
 
