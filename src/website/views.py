@@ -29,7 +29,7 @@ extract_text_from_html.ignore_links = True
 HOME_SUBDOMAIN_SET = set(["communities", "search", "community"])
 
 if IS_LOCAL:
-    PORTAL_HOST = "https://localhost:8000"
+    PORTAL_HOST = "http://massenergize.test:3000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
@@ -42,7 +42,7 @@ else:
 if IS_LOCAL:
     #HOST_DOMAIN = "massenergize.dev"
     #HOST = f"http://communities.{HOST_DOMAIN}"
-    HOST_DOMAIN = "localhost:8000"
+    HOST_DOMAIN = "http://communities.massenergize.test:8000"
     HOST = f"{HOST_DOMAIN}"
 elif IS_PROD or IS_CANARY:
     #TODO treat canary as a separate thing
@@ -94,7 +94,7 @@ def _extract(html):
 
 def _get_redirect_url(subdomain, community=None):
 
-    if not community:
+    if not community and subdomain:
         community = Community.objects.filter(
             is_deleted=False,
             is_published=True,
@@ -104,12 +104,11 @@ def _get_redirect_url(subdomain, community=None):
     if not community:
         raise Http404
 
-    #redirect_url = f"{subdomain}.{HOST_DOMAIN}"
-    redirect_url = f"{HOST_DOMAIN}/{subdomain}"
+    redirect_url = f"{PORTAL_HOST}/{subdomain}"
     community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
     if community_website_search:
         redirect_url = f"https://{community_website_search.website}" 
-    print(redirect_url)
+
     return redirect_url
 
 def _get_file_url(image):
@@ -136,8 +135,9 @@ def communities(request):
             "stay_put": True,
         }
     )
+    print(meta)
     args = {
-        "meta": META,
+        "meta": meta,
         "communities": Community.objects.filter(
             is_deleted=False, is_published=True
         ).values("id", "name", "subdomain", "about_community"),
@@ -166,7 +166,9 @@ def community(request, subdomain):
     )
 
     redirect_url = _get_redirect_url(subdomain, community)
-    
+
+    print(redirect_url)
+
     meta = META
     meta.update(
         {
@@ -176,7 +178,7 @@ def community(request, subdomain):
             "redirect_to": redirect_url,
             "title": str(community),
             "description": _extract(about.description),
-            "url": f"{PORTAL_HOST}/{subdomain}",
+            "url": redirect_url,
             "created_at": community.created_at,
             "updated_at": community.updated_at,
             "tags": ["#ClimateChange", community.subdomain],
