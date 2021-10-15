@@ -29,8 +29,7 @@ extract_text_from_html.ignore_links = True
 HOME_SUBDOMAIN_SET = set(["communities", "search", "community"])
 
 if IS_LOCAL:
-    #TODO: update this with localhost if you are running the frontend locally
-    PORTAL_HOST = "https://community.massenergize.dev"
+    PORTAL_HOST = "https://localhost:8000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
@@ -41,8 +40,10 @@ else:
 
 
 if IS_LOCAL:
-    HOST_DOMAIN = "massenergize.dev"
-    HOST = f"http://communities.{HOST_DOMAIN}"
+    #HOST_DOMAIN = "massenergize.dev"
+    #HOST = f"http://communities.{HOST_DOMAIN}"
+    HOST_DOMAIN = "localhost:8000"
+    HOST = f"{HOST_DOMAIN}"
 elif IS_PROD or IS_CANARY:
     #TODO treat canary as a separate thing
     HOST_DOMAIN = "massenergize.org"
@@ -103,10 +104,12 @@ def _get_redirect_url(subdomain, community=None):
     if not community:
         raise Http404
 
-    redirect_url = f"{subdomain}.{HOST_DOMAIN}"
+    #redirect_url = f"{subdomain}.{HOST_DOMAIN}"
+    redirect_url = f"{HOST_DOMAIN}/{subdomain}"
     community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
     if community_website_search:
         redirect_url = f"https://{community_website_search.website}" 
+    print(redirect_url)
     return redirect_url
 
 def _get_file_url(image):
