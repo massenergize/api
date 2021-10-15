@@ -284,7 +284,11 @@ class TeamStore:
           parent = Team.objects.filter(pk=parent_id).first()
           if parent and can_set_parent(parent, this_team=team):
             team.parent = parent
-        
+
+      else:     
+          if parent_id == 0:
+            team.parent = None
+
       if logo:
           # if existing logo, the string length is around 300 characters
           # If a new logo updated, this will be the length of the file, much larger than that       
