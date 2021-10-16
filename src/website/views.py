@@ -26,7 +26,17 @@ from database.models import (
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
 
-HOME_SUBDOMAIN_SET = set(["communities", "search", "community", "share"])
+HOME_SUBDOMAIN_SET = set([
+    "communities",
+    "communities-dev",
+    "communities-canary",
+    "search",
+    "search-dev",
+    "search-canary",
+    "share",
+    "share-dev",
+    "share-canary",
+])
 
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
@@ -49,8 +59,8 @@ elif IS_PROD:
     HOST_DOMAIN = "massenergize.org"
     HOST = f"https://communities.{HOST_DOMAIN}"
 elif IS_CANARY:
-    HOST_DOMAIN = "canary.massenergize.dev"
-    HOST = f"https://communities.{HOST_DOMAIN}"
+    HOST_DOMAIN = "massenergize.org"
+    HOST = f"https://communities-canary.{HOST_DOMAIN}"
 else:
     HOST_DOMAIN = "massenergize.dev"
     HOST = f"https://communities.{HOST_DOMAIN}"
