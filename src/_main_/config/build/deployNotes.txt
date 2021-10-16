@@ -1,6 +1,7 @@
-Oct 5th Deployment to De/Canary
-- Improve recurring events
+Oct 16th Deployment to Dev/Canary
+- final testing ready
 - SEO Phase II
+- Improve recurring events
 - Message dates passed back on messages.info
 - Separate initial vs attained values
 - URLs and search-engine fixes
