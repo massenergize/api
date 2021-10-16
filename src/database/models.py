@@ -1237,16 +1237,6 @@ class Event(models.Model):
     db_table = 'events'
 
 
-# leaner class that stores information about events that have already passed
-# in the future, can use this class to revive events that may have been archived
-class PastEvent(models.Model):
-  id = models.AutoField(primary_key=True)
-  name = models.CharField(max_length=SHORT_STR_LEN)
-  description = models.TextField(max_length=LONG_STR_LEN)
-  start_date_and_time = models.DateTimeField()
-  community = models.ForeignKey(Community, on_delete=models.CASCADE)
-
-
 class RecurringEventException(models.Model):
   '''
   A class used to represent a RESCHEDULING of a recurring event. 
