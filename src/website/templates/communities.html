@@ -3,8 +3,7 @@
 <script>
         function onCommunitySelected(selectElement){
             const subdomain = selectElement.value;
-            const hostDomain = selectElement.getAttribute("data-host-domain")
-            window.location = `http://${subdomain}.${hostDomain}`;
+            window.location = `{{meta.host}}/${subdomain}`;
         }
 
 
