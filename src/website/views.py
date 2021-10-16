@@ -26,7 +26,7 @@ from database.models import (
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
 
-HOME_SUBDOMAIN_SET = set(["communities", "search", "community"])
+HOME_SUBDOMAIN_SET = set(["communities", "search", "community", "share"])
 
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
@@ -44,14 +44,16 @@ if IS_LOCAL:
     #HOST = f"http://communities.{HOST_DOMAIN}"
     HOST_DOMAIN = "http://communities.massenergize.test:8000"
     HOST = f"{HOST_DOMAIN}"
-elif IS_PROD or IS_CANARY:
+elif IS_PROD:
     #TODO treat canary as a separate thing
     HOST_DOMAIN = "massenergize.org"
+    HOST = f"https://communities.{HOST_DOMAIN}"
+elif IS_CANARY:
+    HOST_DOMAIN = "canary.massenergize.dev"
     HOST = f"https://communities.{HOST_DOMAIN}"
 else:
     HOST_DOMAIN = "massenergize.dev"
     HOST = f"https://communities.{HOST_DOMAIN}"
-
 
 META = {
     "site_name": "Massenergize",
@@ -107,7 +109,7 @@ def _get_redirect_url(subdomain, community=None):
     redirect_url = f"{PORTAL_HOST}/{subdomain}"
     community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
     if community_website_search:
-        redirect_url = f"https://{community_website_search.website}" 
+        redirect_url = f"https://{'' if community_website_search.website.startswith('www') else 'www.'}{community_website_search.website}" 
 
     return redirect_url
 
@@ -135,7 +137,7 @@ def communities(request):
             "stay_put": True,
         }
     )
-    print(meta)
+
     args = {
         "meta": meta,
         "communities": Community.objects.filter(
