@@ -119,7 +119,7 @@ def _get_redirect_url(subdomain, community=None):
     redirect_url = f"{PORTAL_HOST}/{subdomain}"
     community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
     if community_website_search:
-        redirect_url = f"https://{'' if community_website_search.website.startswith('www') else 'www.'}{community_website_search.website}" 
+        redirect_url = f"https://{community_website_search.website}" 
 
     return redirect_url
 
