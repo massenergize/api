@@ -1,8 +1,7 @@
-Oct 16th Deployment to Dev/Canary
-- final testing ready
+Oct 17th Deployment - Version 4.0
 - SEO Phase II
 - Improve recurring events
-- Message dates passed back on messages.info
+- Messages dated
 - Separate initial vs attained values
 - URLs and search-engine fixes
 - Fixes to Profile Picture

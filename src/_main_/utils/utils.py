@@ -70,6 +70,5 @@ def strip_website(url: str)-> str:
     return None 
   url = url.replace("http://","")
   url = url.replace("https://","")
-  url = url.replace("www.","")
   url = url.split("/")[0] # deal with trailing spaces
   return url.strip()
