@@ -5,6 +5,7 @@ from api.store.message import MessageStore
 from api.store.team import TeamStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email
+from typing import Tuple
 
 class MessageService:
   """
@@ -15,13 +16,13 @@ class MessageService:
     self.store =  MessageStore()
     self.team_store = TeamStore()
 
-  def get_message_info(self, context, message_id) -> (dict, MassEnergizeAPIError):
+  def get_message_info(self, context, message_id) -> Tuple[dict, MassEnergizeAPIError]:
     message, err = self.store.get_message_info(context, message_id)
     if err:
       return None, err
     return serialize(message, full=True), None
 
-  def reply_from_community_admin(self, context, args) -> (list, MassEnergizeAPIError):
+  def reply_from_community_admin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     message, err = self.store.get_message_info(context, args)
     if err:
       return None, err
@@ -35,7 +36,7 @@ class MessageService:
     # attached_file = args.pop('attached_file', None)    
     return success, None
 
-  def forward_to_team_admins(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def forward_to_team_admins(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     message, err = self.store.get_message_info(context, args)
     if err:
       return None, err
@@ -77,21 +78,21 @@ class MessageService:
     return True, None
 
 
-  def delete_message(self, message_id) -> (dict, MassEnergizeAPIError):
+  def delete_message(self, message_id) -> Tuple[dict, MassEnergizeAPIError]:
     message, err = self.store.delete_message(message_id)
     if err:
       return None, err
     return serialize(message), None
 
 
-  def list_community_admin_messages_for_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_community_admin_messages_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     messages, err = self.store.list_community_admin_messages(context, args)
     if err:
       return None, err
     return serialize_all(messages), None
 
 
-  def list_team_admin_messages_for_community_admin(self, context: Context) -> (list, MassEnergizeAPIError):
+  def list_team_admin_messages_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     messages, err = self.store.list_team_admin_messages(context)
     if err:
       return None, err

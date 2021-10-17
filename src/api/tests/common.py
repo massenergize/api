@@ -4,7 +4,9 @@ from datetime import datetime
 from _main_.settings import SECRET_KEY
 from database.models import UserProfile
 from carbon_calculator.models import CalcDefault
-
+import requests
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 def setupCC(client):
     cq = CalcDefault.objects.all()
@@ -51,10 +53,44 @@ def signinAs(client, user):
 
 def createUsers():
 
-    user, _ = UserProfile.objects.get_or_create(full_name="Regular User",email="user@test.com")
+    user, created = UserProfile.objects.get_or_create(full_name="Regular User",email="user@test.com")
+    if created:
+        user.save()
 
-    cadmin, _ = UserProfile.objects.get_or_create(full_name="Community Admin",email="cadmin@test.com",is_community_admin=True)
+    cadmin, created = UserProfile.objects.get_or_create(full_name="Community Admin",email="cadmin@test.com",is_community_admin=True)
+    if created:
+        cadmin.save()
 
-    sadmin, _ = UserProfile.objects.get_or_create(full_name="Super Admin",email="sadmin@test.com", is_super_admin=True)
-
+    sadmin, created = UserProfile.objects.get_or_create(full_name="Super Admin",email="sadmin@test.com", is_super_admin=True)
+    if created:
+        sadmin.save()
+        
     return user, cadmin, sadmin
+
+def createImage(picURL=None):
+
+    # this may break if that picture goes away.  Ha ha - keep you on your toes!
+    if not picURL:
+        picURL = "https://www.whitehouse.gov/wp-content/uploads/2021/04/P20210303AS-1901-cropped.jpg"
+
+    resp = requests.get(picURL)
+    if resp.status_code != requests.codes.ok:
+        # Error handling here3
+        print("ERROR: Unable to import action photo from "+picURL)
+        image_file = None
+    else:
+        image = resp.content
+        file_name =  picURL.split("/")[-1]
+        file_type_ext = file_name.split(".")[-1]
+
+        content_type = 'image/jpeg'
+        if len(file_type_ext)>0 and file_type_ext.lower() == 'png':
+            content_type = 'image/png'
+
+        # Create a new Django file-like object to be used in models as ImageField using
+        # InMemoryUploadedFile.  If you look at the source in Django, a
+        # SimpleUploadedFile is essentially instantiated similarly to what is shown here
+        img_io = BytesIO(image)
+        image_file = InMemoryUploadedFile(img_io, None, file_name, content_type, None, None)
+
+    return image_file

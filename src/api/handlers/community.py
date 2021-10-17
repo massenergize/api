@@ -28,6 +28,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.data", self.info)
     self.add("/communities.join", self.join)
     self.add("/communities.leave", self.leave)
+    self.add("/communities.custom.website.add", self.add_custom_website)
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list)
@@ -38,11 +39,10 @@ class CommunityHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect('id', int)
+    self.validator.expect('community_id', int)
     self.validator.expect('subdomain', str)
-    self.validator.rename('community_id', 'id')
+    self.validator.rename('id', 'community_id')   
     args, err = self.validator.verify(args, strict=True)
-
     if err:
       return err
 
@@ -59,7 +59,7 @@ class CommunityHandler(RouteHandler):
 
     # verify the body of the incoming request
     self.validator.expect("user_id", str, is_required=True)
-    self.validator.expect("community_id", str, is_required=True)
+    self.validator.expect("community_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
@@ -83,7 +83,7 @@ class CommunityHandler(RouteHandler):
 
     # verify the body of the incoming request
     self.validator.expect("user_id", str, is_required=True)
-    self.validator.expect("community_id", str, is_required=True)
+    self.validator.expect("community_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
@@ -147,8 +147,9 @@ class CommunityHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'community_id', 'id')
-    community_id = args.pop('id', None)
+
+    args = rename_field(args, 'id', 'community_id')
+    community_id = args.get('community_id', None)
     if not community_id:
       return MassenergizeResponse(error='Please provide an ID')
 
@@ -179,7 +180,7 @@ class CommunityHandler(RouteHandler):
     args = rename_field(args, 'image', 'logo')
     args = parse_location(args)
 
-    community_info, err = self.service.update_community(community_id ,args)
+    community_info, err = self.service.update_community(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
@@ -190,7 +191,7 @@ class CommunityHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    self.validator.expect("id", str, is_required=True)
+    self.validator.expect("id", int, is_required=True)
     self.validator.rename("community_id", "id")
 
     args, err = self.validator.verify(args)
@@ -218,6 +219,24 @@ class CommunityHandler(RouteHandler):
     context: Context  = request.context
     #args = context.get_request_body()
     communities, err = self.service.list_communities_for_super_admin(context)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=communities)
+
+
+  @admins_only
+  def add_custom_website(self, request):
+    context: Context  = request.context
+    args: dict = context.args
+    # verify the body of the incoming request
+    self.validator.expect("website", str, is_required=True)
+    self.validator.expect("subdomain", str)
+    self.validator.expect("community_id", int)
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    communities, err = self.service.add_custom_website(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=communities)

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{testimonial.title}}</h2>
+{% if meta.image_url %}
+<img src={{meta.image_url}} alt="{{community.name}}" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
+{% endif %}
+<h6>User: {{testimonial.user}}</h6>
+<h6>Vendor: {{testimonial.vendor}}</h6>
+<h6>Action: {{testimonial.action}}</h6>
+<p>{{testimonial.body|safe}}</p>
+<a href="/testimonials"> - All Testimonials</a>
+{% endblock %}

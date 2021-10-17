@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{community.name}}</h1>
+{% if meta.image_url %}
+<img src={{meta.image_url}} alt="{{community.name}}" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
+{% endif %}
+<h6>Community Organizer: {{community.owner_name}}</h6>
+<p>{{about.description|safe}}</p>
+<p>{{community.about_community}}</p>
+
+<ul>
+  <li><a href="/events" >Events</a></li>
+  <li><a href="/actions" >Actions</a></li>
+  <li><a href="/teams" >Teams</a></li>
+  <li><a href="/services" >Services/Vendors</a></li>
+  <li><a href="/testimonials" >Testimonials</a></li>
+  <li><a href="/aboutus" >About Us</a></li>
+  <li><a href="/contactus" >Contact Us</a></li>
+  <li><a href="/donate" >Donate</a></li>
+  <li><a href="/impact" >Impact</a></li>
+</ul>
+{% endblock %}

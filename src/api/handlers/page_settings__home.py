@@ -33,10 +33,8 @@ class HomePageSettingsHandler(RouteHandler):
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'community_id', 'community__id')
-    args = rename_field(args, 'subdomain', 'community__subdomain')
     args = rename_field(args, 'home_page_id', 'id')
-    home_page_setting_info, err = self.service.get_home_page_setting_info(args)
+    home_page_setting_info, err = self.service.get_home_page_setting_info(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=home_page_setting_info)
@@ -103,18 +101,8 @@ class HomePageSettingsHandler(RouteHandler):
 
     #statistics
     args['show_featured_stats'] = parse_bool(args.pop('show_featured_stats'))
-    args['goal'] = {
-      'attained_number_of_actions': parse_int(args.pop('attained_number_of_actions', 0)),
-      'target_number_of_actions': parse_int(args.pop('target_number_of_actions', 0)),
-      'attained_number_of_households': parse_int(args.pop('attained_number_of_households', 0)),
-      'target_number_of_households': parse_int(args.pop('target_number_of_households', 0)),
-      'attained_carbon_footprint_reduction': parse_int(args.pop('attained_carbon_footprint_reduction', 0)),
-      'target_carbon_footprint_reduction': parse_int(args.pop('target_carbon_footprint_reduction', 0))
-    }
 
-    args.pop('organic_attained_number_of_households', None)
-    args.pop('organic_attained_number_of_actions', None)
-    args.pop('organic_attained_carbon_footprint_reduction', None)
+    # 9/29/21 goals setting moved to graphs.update, to consolidate input from admin portal
 
     home_page_setting_info, err = self.service.update_home_page_setting(args)
 

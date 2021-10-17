@@ -22,8 +22,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-IS_PROD = True
-IS_CANARY = False
+IS_PROD = False
+IS_CANARY = True
 IS_LOCAL = False
 
 try:
@@ -52,16 +52,24 @@ DEBUG = False
 ALLOWED_HOSTS = [
     '0.0.0.0',
     '127.0.0.1',
+    'localhost:3000',
     'localhost',
     '.massenergize.org',
     '.massenergize.com',
+    '.massenergize.dev',
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
-    'massenergize-canary-api.us-east-2.elasticbeanstalk.com'
+    'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
+    '.massenergize.test'
 ]
 
+if IS_LOCAL:
+    ALLOWED_HOSTS = ['*']
+    
+
 INSTALLED_APPS = [
+    'django_hosts',
     'authentication',
     'carbon_calculator',
     'database',
@@ -77,6 +85,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_hosts.middleware.HostsRequestMiddleware',
     'authentication.middleware.RemoveHeaders',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -88,7 +97,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     #custom middlewares
-    'authentication.middleware.MassenergizeJWTAuthMiddleware'
+    'authentication.middleware.MassenergizeJWTAuthMiddleware',
+
+    'django_hosts.middleware.HostsResponseMiddleware'
 ]
 
 
@@ -105,6 +116,7 @@ AWS_STORAGE_BUCKET_NAME  = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL  = None
+AWS_QUERYSTRING_AUTH = False
 
 #-------- OTHER CONFIGURATION ---------------------#
 SECURE_SSL_REDIRECT = False
@@ -125,7 +137,7 @@ APPEND_SLASH = True
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
-ROOT_URLCONF = '_main_.urls'
+
 # SESSION_COOKIE_SAMESITE = 'Strict'
 # SESSION_SAVE_EVERY_REQUEST = True
 
@@ -169,8 +181,13 @@ DATABASES = {
 #     }
 # }
 
+# url and hosts config
+ROOT_URLCONF = '_main_.urls'
+ROOT_HOSTCONF = '_main_.hosts'
+DEFAULT_HOST = 'main'
 
 
+# firebase setup
 FIREBASE_CREDENTIALS = credentials.Certificate({
   "type": "service_account",
   "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
@@ -236,8 +253,11 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
+

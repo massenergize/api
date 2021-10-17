@@ -1,4 +1,5 @@
-from database.models import Community, UserProfile, RealEstateUnit, Location
+from _main_.utils.utils import strip_website
+from database.models import Community, UserProfile, RealEstateUnit, Location, CustomCommunityWebsiteDomain
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
 from _main_.utils.context import Context
 from django.db.models import Q
@@ -32,19 +33,35 @@ def get_user(user_id, email=None):
     return None, CustomMassenergizeError(e)
 
 
-def get_community_or_die(context, args):
+def get_community_or_die(context: Context, args) -> Community:
   subdomain = args.pop('subdomain', None)
   community_id = args.pop('community_id', None)
+  referrer_website = context.request.META.get('HTTP_REFERER')
 
-  if not community_id and not subdomain:
-    raise Exception("Missing community_id or subdomain field")
-  elif community_id:
-    return Community.objects.get(pk=community_id)
-  elif subdomain:
-    return Community.objects.get(subdomain=subdomain)
-  else:
+  community = None
+  if community_id:
+    community = Community.objects.select_related("logo", "favicon", "goal").filter(pk=community_id).first()
+  elif subdomain and subdomain != 'home':
+    community = Community.objects.select_related("logo", "favicon", "goal").filter(subdomain__iexact=subdomain).first()
+
+  elif referrer_website:
+    # since we dont have a subdomain or community_id, we will fall back to the referrer site
+    website = strip_website(referrer_website)
+    community_website = CustomCommunityWebsiteDomain.objects.select_related("community").filter(website__iexact=website).first()
+    if community_website:
+      community = community_website.community
+    elif website.endswith("massenergize.org") or website.endswith("massenergize.dev"):
+      domain_components = website.split(".")
+      if len(domain_components) >= 3:
+        # if there is a subdomain there will be at least three parts
+        subdomain = domain_components[0]
+        community = Community.objects.select_related("logo", "favicon", "goal").filter(subdomain__iexact=subdomain).first()
+
+  if not community:
+    # we explored all our options and could not get a community
     raise Exception("Please provide a valid community_id or subdomain")
-  
+
+  return community
 
 def get_user_or_die(context, args):
   user_email = args.pop('user_email', None) or args.pop('email', None) 

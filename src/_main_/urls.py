@@ -15,17 +15,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/cc/',include('carbon_calculator.urls')),
     path('cc/',include('carbon_calculator.urls')),
-    path('v3/cc/',include('carbon_calculator.urls')),
-    path('v3/', include('api.urls')), #latest
-    # SAM : are these two needed?  I don't think so
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
+    path('api/', include('api.urls')),
     path('', include('website.urls')),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 #set error handling views
 handler400 = 'website.views.handler400'

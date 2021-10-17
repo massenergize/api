@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{vendor.name}}</h2>
+{% if meta.image_url %}
+<img src={{meta.image_url}} alt="{{community.name}}" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
+{% endif %}
+<h6>Service Area: {{vendor.service_area}}</h6>
+<p>{{vendor.description|safe}}</p>
+<h4>Service Area</h4>
+<a href="/services"> - All Vendor/Services</a>
+{% endblock %}

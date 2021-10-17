@@ -1,10 +1,13 @@
-June 11th Deployment to Dev/Canary/Prod
-- Copied actions and events are not marked as templates
-- include service provider logo in info (for testimonials)
-- Fix vendor creation/editing
-- Fix most canary bugs (events, teams, edit households)
-- Fix team member and editing bugs from portal
-- Fixing several issues which arose during testing (265 266, 267)
-- Introducing routes .rank for testimonials, actions, events, vendors
-- Fix images getting lost from testimonials, don't delete in update routes
-- Owen's testing and bug fixes relating to communities, events, testimonials, actions
+Oct 17th Deployment - Version 4.0
+- SEO Phase II
+- Improve recurring events
+- Messages dated
+- Separate initial vs attained values
+- URLs and search-engine fixes
+- Fixes to Profile Picture
+- Backend support for CarbonEquivalencies
+- Event RSVPs support
+- Allow teams to span communities
+- Fix data issue: Donut attained values summed from State/Reported categories + initial pushed
+- Community Users download includes non-members with households in community
+- Import user import functionality

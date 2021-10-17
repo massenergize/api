@@ -3,26 +3,27 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class TeamStore:
   def __init__(self):
     self.name = "Team Store/DB"
 
-  def get_team_info(self, team_id) -> (dict, MassEnergizeAPIError):
+  def get_team_info(self, team_id) -> Tuple[dict, MassEnergizeAPIError]:
     team = Team.objects.filter(id=team_id)
     if not team:
       return None, InvalidResourceError()
     return team, None
 
 
-  def list_teams(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id=community_id)
+  def list_teams(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    teams = Team.objects.filter(communities__id=community_id)
     if not teams:
       return [], None
     return teams, None
 
 
-  def create_team(self, args) -> (dict, MassEnergizeAPIError):
+  def create_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       new_team = Team.create(**args)
       new_team.save()
@@ -31,7 +32,7 @@ class TeamStore:
       return None, ServerError()
 
 
-  def update_team(self, team_id, args) -> (dict, MassEnergizeAPIError):
+  def update_team(self, team_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     team = Team.objects.filter(id=team_id)
     if not team:
       return None, InvalidResourceError()
@@ -39,14 +40,14 @@ class TeamStore:
     return team, None
 
 
-  def delete_team(self, team_id) -> (dict, MassEnergizeAPIError):
+  def delete_team(self, team_id) -> Tuple[dict, MassEnergizeAPIError]:
     teams = Team.objects.filter(id=team_id)
     if not teams:
       return None, InvalidResourceError()
 
 
-  def list_teams_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
-    teams = Team.objects.filter(community__id = community_id)
+  def list_teams_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    teams = Team.objects.filter(communities__id = community_id)
     return teams, None
 
 

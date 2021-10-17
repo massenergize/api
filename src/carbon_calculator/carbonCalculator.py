@@ -9,15 +9,11 @@ from django.utils import timezone
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.text import slugify
-from database.utils.create_factory import CreateFactory
-from database.utils.database_reader import DatabaseReader
-import json
 import csv
-from django.core import files
 import requests
 from .CCConstants import YES,NO, VALID_QUERY, INVALID_QUERY
 from .CCDefaults import getDefault, getLocality, CCD
-from .queries import QuerySingleAction, QueryAllActions
+from .queries import QuerySingleAction
 from .homeHeating import EvalEnergyAudit, EvalWeatherization, EvalProgrammableThermostats, EvalAirSourceHeatPump, \
                         EvalGroundSourceHeatPump, EvalHeatingSystemAssessment, EvalEfficientBoilerFurnace
 from .electricity import EvalCommunitySolar, EvalRenewableElectricity, EvalLEDLighting, EvalEnergystarRefrigerator, \
@@ -183,6 +179,7 @@ class CarbonCalculator:
         return queryFailed
 
     def RecordActionPoints(self,action, inputs,results):
+        queryFailed = {'status':INVALID_QUERY}
         user_id = inputs.pop("user_id",None)
         points = results.get("carbon_points",0.)
         cost = results.get("cost",0.)

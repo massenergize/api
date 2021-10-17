@@ -3,12 +3,13 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class TagCollectionStore:
   def __init__(self):
     self.name = "TagCollection Store/DB"
 
-  def get_tag_collection_info(self, args) -> (dict, MassEnergizeAPIError):
+  def get_tag_collection_info(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       tag_collection_id = args.pop('tag_collection_id', None)
       if not tag_collection_id:
@@ -22,7 +23,7 @@ class TagCollectionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_tag_collections(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_tag_collections(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       tag_collections = TagCollection.objects.filter(is_deleted=False)
       return tag_collections, None
@@ -31,7 +32,7 @@ class TagCollectionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_tag_collection(self, args) -> (dict, MassEnergizeAPIError):
+  def create_tag_collection(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       name = args.pop('name', None)
       tmp_tags = args.pop('tags', '').split(',')
@@ -50,7 +51,7 @@ class TagCollectionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_tag_collection(self, tag_collection_id, args) -> (dict, MassEnergizeAPIError):
+  def update_tag_collection(self, tag_collection_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       tag_collection = TagCollection.objects.filter(id=tag_collection_id).first()
       if not tag_collection:
@@ -109,7 +110,7 @@ class TagCollectionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_tag_collection(self, tag_collection_id) -> (dict, MassEnergizeAPIError):
+  def delete_tag_collection(self, tag_collection_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       tag_collections = TagCollection.objects.filter(id=tag_collection_id)
       if not tag_collections:
@@ -120,7 +121,7 @@ class TagCollectionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_tag_collections_for_community_admin(self, community_id) -> (list, MassEnergizeAPIError):
+  def list_tag_collections_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     return self.list_tag_collections_for_super_admin()
 
 

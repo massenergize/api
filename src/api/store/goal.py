@@ -4,12 +4,13 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from django.db.models import F
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class GoalStore:
   def __init__(self):
     self.name = "Goal Store/DB"
 
-  def get_goal_info(self, goal_id) -> (Goal, MassEnergizeAPIError):
+  def get_goal_info(self, goal_id) -> Tuple[Goal, MassEnergizeAPIError]:
     try:
       goal = Goal.objects.get(id=goal_id)
       return goal, None
@@ -18,7 +19,7 @@ class GoalStore:
       return None, InvalidResourceError()
 
 
-  def list_goals(self, community_id, subdomain, team_id, user_id) -> (list, MassEnergizeAPIError):
+  def list_goals(self, community_id, subdomain, team_id, user_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       goals = []
       if community_id:
@@ -48,7 +49,7 @@ class GoalStore:
         user = UserProfile.objects.filter(id=user_id).first()
         if not user:
           return None, CustomMassenergizeError(f"There is no community with id {community_id}")
-        if user.goal and not team.goal.is_deleted:
+        if user.goal and not user.goal.is_deleted:
           goals.append(user.goal)
 
       else:
@@ -60,7 +61,7 @@ class GoalStore:
       return None, CustomMassenergizeError(str(e))
 
 
-  def create_goal(self, community_id, team_id, user_id, args) -> (Goal, MassEnergizeAPIError):
+  def create_goal(self, community_id, team_id, user_id, args) -> Tuple[Goal, MassEnergizeAPIError]:
     try:
       #create the goal
       new_goal = Goal.objects.create(**args)
@@ -99,7 +100,7 @@ class GoalStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def update_goal(self, goal_id, args) -> (Goal, MassEnergizeAPIError):
+  def update_goal(self, goal_id, args) -> Tuple[Goal, MassEnergizeAPIError]:
     try:
       #find the goal
       goal = Goal.objects.filter(id=goal_id)
@@ -117,7 +118,7 @@ class GoalStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def delete_goal(self, goal_id) -> (Goal, MassEnergizeAPIError):
+  def delete_goal(self, goal_id) -> Tuple[Goal, MassEnergizeAPIError]:
     try:
       #find the goal
       goals_to_delete = Goal.objects.filter(id=goal_id)
@@ -130,7 +131,7 @@ class GoalStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def copy_goal(self, goal_id) -> (Goal, MassEnergizeAPIError):
+  def copy_goal(self, goal_id) -> Tuple[Goal, MassEnergizeAPIError]:
     try:
       #find the goal
       goal_to_copy = Goal.objects.filter(id=goal_id).first()
@@ -162,7 +163,7 @@ class GoalStore:
     return goals
 
 
-  def list_goals_for_community_admin(self, context, community_id) -> (list, MassEnergizeAPIError):
+  def list_goals_for_community_admin(self, context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_goals_for_super_admin()

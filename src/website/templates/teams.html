@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<ul>
+  {% for t in teams %}
+  <div>
+    <a href="/team/{{t.id}}"><h2>{{t.name}}</h2></a> 
+    <p>{{t.tagline}}</p>  
+  </div>
+  {% endfor %}
+{% endblock %}

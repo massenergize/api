@@ -64,7 +64,10 @@ def parse_bool(b):
 
 def parse_string(s):
   try:
-    return str(s)
+    s = str(s)
+    if s == 'undefined' or s == 'null':
+      return None
+    return s
   except Exception as e:
     capture_message(str(e), level="error")
     return None

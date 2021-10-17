@@ -3,11 +3,12 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from database.models import UserProfile, CommunityMember, Action, Team, \
   UserActionRel, Testimonial, TeamMember, Community, Subscriber, Event, RealEstateUnit, \
-  Data, TagCollection
+  Data, TagCollection, Location
 from api.store.team import get_team_users
 from api.store.tag_collection import TagCollectionStore
 from django.db.models import Q
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class DownloadStore:
 
@@ -27,7 +28,7 @@ class DownloadStore:
     self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon',
     'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
 
-    self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'created', 'testimonials_count']
+    self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'created', 'households_count', 'testimonials_count']
     
     self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
@@ -35,6 +36,7 @@ class DownloadStore:
     'events_count', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_impact_action'] \
     + [category.name + " (reported)" for category in self.action_categories]        #  + ['actions_done_with_reported', 'households_count_with_reported']
 
+    self.community_id = None
 
   def _get_cells_from_dict(self, columns, data):
     cells = ['' for _ in range(len(columns))]
@@ -53,7 +55,33 @@ class DownloadStore:
   
     if (isinstance(user, Subscriber)):
         user_cells = {'name': user.name, 'email': user.email, 'role': 'subscriber'}
+    elif (isinstance(user, RealEstateUnit)):
+        # for geographic communities, list non-members who have households in the community
+        the_user = user.user_real_estate_units.first()
+        if not the_user:
+          return None
+  
+        if user.address and user.address.city:
+          city = user.address.city
+        else:
+          return None
+
+        this_community = Community.objects.filter(id=self.community_id)
+ 
+        # community list which user has associated with
+        communities = [cm.community.name for cm in CommunityMember.objects.filter(user=the_user).select_related('community')]
+        if this_community in communities:
+          return None
+        else:
+          community = communities[0]
+
+        user_cells = {'name': the_user.full_name, 
+                      'preferred_name': the_user.preferred_name, 
+                      'role': community + ' member, household in ' + city, 
+                      'email': the_user.email, 
+                      'created': the_user.created_at.strftime("%Y-%m-%d")}
     else:
+        user_households = user.real_estate_units.count()
         user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
         testimonials_count = user_testimonials.count() if user_testimonials else '0'
 
@@ -65,6 +93,7 @@ class DownloadStore:
                           'vendor' if user.is_vendor else
                           'community member',
                       'created': user.created_at.strftime("%Y-%m-%d"),
+                      'households_count': user_households,
                       'testimonials_count': testimonials_count}
 
     return self._get_cells_from_dict(self.user_info_columns, user_cells)
@@ -148,7 +177,7 @@ class DownloadStore:
       if not data:
         continue
       rows.append(self._get_cells_from_dict(self.action_info_columns, 
-                    {'title': 'STATE-REPORTED', 'category' : action_category.name, 'done_count': str(data.value)}))
+                    {'title': 'STATE-REPORTED', 'category' : action_category.name, 'done_count': str(data.reported_value)}))
     return rows
 
 
@@ -335,9 +364,14 @@ class DownloadStore:
     users = [cm.user for cm in CommunityMember.objects.filter(community__id=community_id, \
             is_deleted=False, user__is_deleted=False).select_related('user')] \
               + list(Subscriber.objects.filter(community__id=community_id, is_deleted=False))
+
+    community_households = list(RealEstateUnit.objects.filter(community__id=community_id, is_deleted=False))
+
+
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
-    teams = Team.objects.filter(community__id=community_id, is_deleted=False)
+
+    teams = Team.objects.filter(communities__id=community_id, is_deleted=False)
 
     columns = self.user_info_columns \
                 + ['TEAM'] \
@@ -349,13 +383,17 @@ class DownloadStore:
     data = [columns, sub_columns]
 
     for user in users:
-
       #BHN 20.1.10 Put teams list in one cell, ahead of actions 
       row = self._get_user_info_cells(user) \
           + self._get_user_teams_cells(user, teams) \
           + self._get_user_actions_cells(user, actions)
 
       data.append(row)
+
+    for household in community_households:
+      row = self._get_user_info_cells(household)
+      if row:
+        data.append(row)
 
     return data
 
@@ -444,7 +482,7 @@ class DownloadStore:
 
 
   def _community_teams_download(self, community_id):
-    teams = Team.objects.filter(community__id=community_id, is_deleted=False)
+    teams = Team.objects.filter(communities__id=community_id, is_deleted=False)
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)).filter(is_deleted=False)
 
     columns = self.team_info_columns + [action.title for action in actions]
@@ -459,8 +497,9 @@ class DownloadStore:
     return data
 
 
-  def users_download(self, context: Context, community_id, team_id) -> (list, MassEnergizeAPIError):
+  def users_download(self, context: Context, community_id, team_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
+      self.community_id = community_id
       if team_id:
         community_name = Team.objects.get(id=team_id).name
       elif community_id:
@@ -472,7 +511,6 @@ class DownloadStore:
         elif community_id:
           return (self._community_users_download(community_id), community_name), None
         else:
-
           return (self._all_users_download(), None), None
       elif context.user_is_community_admin:
         if team_id:
@@ -484,12 +522,14 @@ class DownloadStore:
       else:
         return None, NotAuthorizedError()
     except Exception as e:
+      print(str(e))
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def actions_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
+      self.community_id = community_id
       if community_id:
         community_name = Community.objects.get(id=community_id).name
       if context.user_is_super_admin:
@@ -506,7 +546,7 @@ class DownloadStore:
       return None, CustomMassenergizeError(e)
 
 
-  def communities_download(self, context: Context) -> (list, MassEnergizeAPIError):
+  def communities_download(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
@@ -516,7 +556,8 @@ class DownloadStore:
       return None, CustomMassenergizeError(e)
 
 
-  def teams_download(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def teams_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    self.community_id = community_id
     try:
       if context.user_is_community_admin or context.user_is_super_admin:
           community = Community.objects.get(id=community_id)

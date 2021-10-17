@@ -1,0 +1,78 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  {% for c in communities %}
+   <url>
+      <loc>https://community.massenergize.org/{{c.subdomain}}</loc>
+      <lastmod>{{c.updated_at|date:"Y-m-d" }}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+   </url>
+   {% endfor %}
+  {% for c in communities %}
+   <url>
+      <loc>https://community.massenergize.org/{{c.subdomain}}/aboutus</loc>
+      <lastmod>{{c.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   {% endfor %}
+  {% for c in communities %}
+   <url>
+      <loc>https://community.massenergize.org/{{c.subdomain}}/donate</loc>
+      <lastmod>{{c.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   {% endfor %}
+  {% for c in communities %}
+   <url>
+      <loc>https://community.massenergize.org/{{c.subdomain}}/contactus</loc>
+      <lastmod>{{c.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   {% endfor %}
+  {% for c in communities %}
+   <url>
+      <loc>https://community.massenergize.org/{{c.subdomain}}/impact</loc>
+      <lastmod>{{c.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   {% endfor %}
+  {% for a in actions %}
+   <url>
+      <loc>https://community.massenergize.org/{{a.community__subdomain}}/actions/{{a.id}}</loc>
+      <lastmod>{{a.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+   </url>
+   {% endfor %}
+  {% for v in services %}
+   <url>
+      <loc>https://community.massenergize.org/{{v.communities__subdomain}}/services/{{v.id}}</loc>
+      <lastmod>{{v.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   {% endfor %}
+  {% for e in events %}
+   <url>
+      <loc>https://community.massenergize.org/{{e.community__subdomain}}/events/{{e.id}}</loc>
+      <lastmod>{% now "Y-m-d"  %}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   {% endfor %}
+  {% for t in testimonials %}
+   <url>
+      <loc>https://community.massenergize.org/{{t.community__subdomain}}/testimonials/{{t.id}}</loc>
+      <lastmod>{{t.updated_at|date:"Y-m-d"}}</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
+   </url>
+   {% endfor %}
+</urlset> 

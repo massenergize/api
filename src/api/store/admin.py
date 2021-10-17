@@ -3,15 +3,16 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassene
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from .utils import get_community, get_user, get_community_or_die, send_slack_message
-import json
+from api.store.community import CommunityStore
 from _main_.utils.constants import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class AdminStore:
   def __init__(self):
     self.name = "Admin Store/DB"
 
-  def add_super_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
+  def add_super_admin(self, context: Context, args) -> Tuple[UserProfile, MassEnergizeAPIError]:
     try:
       if not context.user_is_super_admin:
         return None, CustomMassenergizeError("You must be a super Admin to add another Super Admin")
@@ -38,7 +39,7 @@ class AdminStore:
       return None, CustomMassenergizeError(e)
 
 
-  def remove_super_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
+  def remove_super_admin(self, context: Context, args) -> Tuple[UserProfile, MassEnergizeAPIError]:
     try:
       if not context.user_is_super_admin:
         return None, CustomMassenergizeError("You must be a super Admin to add another Super Admin")
@@ -65,7 +66,7 @@ class AdminStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_super_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_super_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       admins = UserProfile.objects.filter(is_super_admin=True)
       return admins, None
@@ -74,10 +75,10 @@ class AdminStore:
       return None, CustomMassenergizeError(e)
 
 
-  def add_community_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
+  def add_community_admin(self, context: Context, args) -> Tuple[UserProfile, MassEnergizeAPIError]:
     try:
       if not context.user_is_super_admin and  not context.user_is_community_admin:
-        return None, CustomMassenergizeError("You must be a community/super Admin to add another Super Admin")
+        return None, CustomMassenergizeError("You must be a community or super Admin to add another community Admin")
       
       name = args.pop("name", None)
       email = args.pop("email", None)
@@ -108,6 +109,9 @@ class AdminStore:
 
       admin_group.save()
 
+      # make sure admin is a member of the community, if not add them
+      CommunityStore.join_community(context, {"community_id": community.id, "user_id":user.id})
+
       res = {
         "name": user.preferred_name,
         "email": user.email,
@@ -122,10 +126,10 @@ class AdminStore:
       return None, CustomMassenergizeError(e)
 
 
-  def remove_community_admin(self, context: Context, args) -> (UserProfile, MassEnergizeAPIError):
+  def remove_community_admin(self, context: Context, args) -> Tuple[UserProfile, MassEnergizeAPIError]:
     try:
       if not context.user_is_super_admin and not context.user_is_community_admin:
-        return None, CustomMassenergizeError("You must be a super Admin to add another Super Admin")
+        return None, CustomMassenergizeError("You must be a super or community Admin to remove a community Admin")
       
       email = args.pop("email", None)
       user_id = args.pop("user_id", None)
@@ -175,7 +179,7 @@ class AdminStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_community_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       # if not context.user_is_community_admin and not context.user_is_super_admin:
       #   return None, CustomMassenergizeError("You must be a community admin or super admin")
@@ -211,7 +215,7 @@ class AdminStore:
       return None, CustomMassenergizeError(e)
 
 
-  def message_admin(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def message_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
 
       community_id = args.pop("community_id", None)
@@ -261,7 +265,7 @@ class AdminStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_admin_messages(self, context: Context, args) -> (list, MassEnergizeAPIError):
+  def list_admin_messages(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       
       if context.user_is_super_admin:

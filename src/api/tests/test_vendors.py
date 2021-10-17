@@ -53,82 +53,82 @@ class VendorsTestCase(TestCase):
     def test_info(self):
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.info', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.info', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.info', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.info', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.info', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.info', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_create(self):
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.create', urlencode({"name": "test_vendor_1"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.create', urlencode({"name": "test_vendor_1"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.create', urlencode({"name": "test_vendor_2"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.create', urlencode({"name": "test_vendor_2"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.create', urlencode({"name": "test_vendor_3"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.create', urlencode({"name": "test_vendor_3"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list(self):
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_update(self):
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "updated_name")
 
     def test_copy(self):
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.copy', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.copy', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.copy', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.copy', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.copy', urlencode({"vendor_id": self.VENDOR2.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.copy', urlencode({"vendor_id": self.VENDOR2.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     # TODO when rank is added to vendors
@@ -136,17 +136,17 @@ class VendorsTestCase(TestCase):
         return
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.rank', urlencode({"vendor_id": self.VENDOR1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.rank', urlencode({"vendor_id": self.VENDOR1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.rank', urlencode({"vendor_id": self.VENDOR1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.rank', urlencode({"vendor_id": self.VENDOR1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.rank', urlencode({"vendor_id": self.VENDOR1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.rank', urlencode({"vendor_id": self.VENDOR1.id, "rank": 1}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_delete(self):
@@ -154,57 +154,57 @@ class VendorsTestCase(TestCase):
         vendor = Vendor.objects.create()
 
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.delete', urlencode({"vendor_id": vendor.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.delete', urlencode({"vendor_id": vendor.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.delete', urlencode({"vendor_id": vendor.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.delete', urlencode({"vendor_id": vendor.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.delete', urlencode({"vendor_id": vendor.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.delete', urlencode({"vendor_id": vendor.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list_cadmin(self):
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        response = self.client.post('/v3/vendors.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForCommunityAdmin', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
     def test_list_sadmin(self):
         # test not logged in
         signinAs(self.client, None)
-        response = self.client.post('/v3/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/v3/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
-        response = self.client.post('/v3/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/v3/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])

@@ -4,6 +4,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models.query import QuerySet
 from sentry_sdk import capture_message
+from typing import Tuple
 
 class SummaryStore:
   def __init__(self):
@@ -18,7 +19,7 @@ class SummaryStore:
     }
   
 
-  def summary_for_community_admin(self, context: Context, community_id) -> (list, MassEnergizeAPIError):
+  def summary_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.summary_for_super_admin(context)
@@ -31,7 +32,7 @@ class SummaryStore:
       action_count = Action.objects.filter(community__id__in=comm_ids).count()
       communities_count = len(comm_ids)
       upcoming_events = Event.objects.filter(community__id__in=comm_ids).count()
-      teams_count = Team.objects.filter(community__id__in=comm_ids).count()
+      teams_count = Team.objects.filter(communities_id__in=comm_ids).count()
       testimonials_count = Testimonial.objects.filter(community__id__in=comm_ids).count()
       users_count = CommunityMember.objects.filter(community__id__in=comm_ids).values('user').distinct().count()
 
