@@ -1,6 +1,6 @@
-Oct 5th Deployment to De/Canary
-- Improve recurring events
+Oct 17th Deployment - Version 4.0
 - SEO Phase II
+- Improve recurring events
 - Messages dated
 - Separate initial vs attained values
 - URLs and search-engine fixes
