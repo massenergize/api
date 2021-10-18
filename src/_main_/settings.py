@@ -22,8 +22,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
-IS_PROD = False
-IS_CANARY = True
+IS_PROD = True
+IS_CANARY = False
 IS_LOCAL = False
 
 try:
