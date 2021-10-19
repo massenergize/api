@@ -28,6 +28,7 @@ from api.handlers.page_settings__teams import TeamsPageSettingsHandler
 from api.handlers.testimonial import TestimonialHandler
 from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
+from django.urls import path, include
 
 
 ROUTE_HANDLERS = [
@@ -63,7 +64,9 @@ ROUTE_HANDLERS = [
   VendorsPageSettingsHandler()
 ]
 
-urlpatterns = []
+urlpatterns = [
+  path('cc/', include('carbon_calculator.urls')),
+]
 for handler in ROUTE_HANDLERS:
   urlpatterns.extend(handler.get_routes_to_views())
 

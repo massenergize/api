@@ -3,7 +3,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.admin import AdminStore
 from _main_.utils.context import Context
-from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_SANDBOX_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from typing import Tuple
 
@@ -52,7 +52,7 @@ class AdminService:
             'name': res["name"],
             'admin_link': ADMIN_URL_ROOT,
             "community_name": res["community_name"],
-            'sandbox_link': f"{COMMUNITY_SANDBOX_URL_ROOT}/{res['subdomain']}",
+            'sandbox_link': f"{COMMUNITY_URL_ROOT}/{res['subdomain']}?sandbox=true",
             'portal_link':  f"{COMMUNITY_URL_ROOT}/{res['subdomain']}",
             'admin_type': 'Community'
         }

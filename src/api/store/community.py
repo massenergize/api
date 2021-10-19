@@ -868,10 +868,16 @@ class CommunityStore:
             website = args.get('website')
             website = strip_website(website)
 
-            community_website = CustomCommunityWebsiteDomain.objects.filter(website=website, community=community).first()
+            # There can be only one custom website domain for a community site
+            # if a different community website domain exists, modify it.
+            community_website = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
             if not community_website:
                 community_website = CustomCommunityWebsiteDomain(website=website, community=community)
                 community_website.save()
+            elif community_website.website != website:
+                community_website.website = website
+                community_website.save()
+                
             return community_website, None
         except Exception as e:
             capture_exception(e)

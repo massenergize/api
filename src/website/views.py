@@ -29,12 +29,23 @@ from database.models import (
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
 
-HOME_SUBDOMAIN_SET = set(["communities", "search", "community"])
+HOME_SUBDOMAIN_SET = set([
+    "communities",
+    "communities-dev",
+    "communities-canary",
+    "search",
+    "search-dev",
+    "search-canary",
+    "share",
+    "share-dev",
+    "share-canary",
+])
 
 if IS_LOCAL:
-    #TODO: update this with localhost if you are running the frontend locally
+    PORTAL_HOST = "http://massenergize.test:3000"
+    # PORTAL_HOST = "http://localhost:3000"
     # PORTAL_HOST = "https://community.massenergize.dev"
-    PORTAL_HOST = "http://localhost:3000"
+    #TODO: update this with localhost if you are running the frontend locally
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
@@ -45,20 +56,20 @@ else:
 
 
 if IS_LOCAL:
-    # HOST_DOMAIN = "massenergize.dev"
-    # HOST = f"http://{HOST_DOMAIN}"
-    HOST_DOMAIN = "localhost:8000"
-    HOST = f"http://communities.{HOST_DOMAIN}"
-    
-    
-elif IS_PROD or IS_CANARY:
+    #HOST_DOMAIN = "massenergize.dev"
+    #HOST = f"http://communities.{HOST_DOMAIN}"
+    HOST_DOMAIN = "http://communities.massenergize.test:8000"
+    HOST = f"{HOST_DOMAIN}"
+elif IS_PROD:
     #TODO treat canary as a separate thing
     HOST_DOMAIN = "massenergize.org"
     HOST = f"https://communities.{HOST_DOMAIN}"
+elif IS_CANARY:
+    HOST_DOMAIN = "massenergize.org"
+    HOST = f"https://communities-canary.{HOST_DOMAIN}"
 else:
     HOST_DOMAIN = "massenergize.dev"
     HOST = f"https://communities.{HOST_DOMAIN}"
-
 
 META = {
     "site_name": "Massenergize",
@@ -101,7 +112,7 @@ def _extract(html):
 
 def _get_redirect_url(subdomain, community=None):
 
-    if not community:
+    if not community and subdomain:
         community = Community.objects.filter(
             is_deleted=False,
             is_published=True,
@@ -111,10 +122,11 @@ def _get_redirect_url(subdomain, community=None):
     if not community:
         raise Http404
 
-    redirect_url = f"{subdomain}.{HOST_DOMAIN}"
+    redirect_url = f"{PORTAL_HOST}/{subdomain}"
     community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
     if community_website_search:
         redirect_url = f"https://{community_website_search.website}" 
+
     return redirect_url
 
 def _get_file_url(image):
@@ -141,8 +153,9 @@ def communities(request):
             "stay_put": True,
         }
     )
+
     args = {
-        "meta": META,
+        "meta": meta,
         "communities": Community.objects.filter(
             is_deleted=False, is_published=True
         ).values("id", "name", "subdomain", "about_community"),
@@ -176,7 +189,9 @@ def community(request, subdomain):
     )
 
     redirect_url = _get_redirect_url(subdomain, community)
-    
+
+    print(redirect_url)
+
     meta = META
     meta.update(
         {
@@ -186,7 +201,7 @@ def community(request, subdomain):
             "redirect_to": redirect_url,
             "title": str(community),
             "description": _extract(about.description),
-            "url": f"{PORTAL_HOST}/{subdomain}",
+            "url": redirect_url,
             "created_at": community.created_at,
             "updated_at": community.updated_at,
             "tags": ["#ClimateChange", community.subdomain],
