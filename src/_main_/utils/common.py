@@ -240,10 +240,12 @@ def device_checkin(request, response):
       device.save()
 
   if device:
+    context: Context = request.context
     print(f"----- device found: {device}")
     set_cookie(response, "device", device.id)
-    if False: # TODO if logged in
-        user = UserProfile.objects.filter(id=id).first()
+    if context.user_is_logged_in:
+        user_id = None # TODO: Get user id
+        user = UserProfile.objects.filter(id=user_id).first()
         log_user(device, user)
     else:
         log_device(device)

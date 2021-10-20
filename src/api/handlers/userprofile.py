@@ -112,11 +112,12 @@ class UserHandler(RouteHandler):
     return MassenergizeResponse(data=user_info)
 
   @login_required
-  def update(self, request):
+  def update(self, request): # TODO: add device log update
     context: Context = request.context
     args: dict = context.args
     args, err = (self.validator
       .rename("user_id","id").expect("id", str, is_required=True)
+      .rename("device_profile_id", "device_id")
       .verify(context.args))
     if err:
       return err

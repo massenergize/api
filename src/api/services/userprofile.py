@@ -195,7 +195,7 @@ class UserService:
     return serialize(user, full=True), None
 
 
-  def update_user(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_user(self,context, args) -> Tuple[dict, MassEnergizeAPIError]: # TODO: add device log update
     user, err = self.store.update_user(context, args)
     if err:
       return None, err

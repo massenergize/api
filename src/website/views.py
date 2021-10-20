@@ -56,8 +56,8 @@ else:
 
 
 if IS_LOCAL:
-    #HOST_DOMAIN = "massenergize.dev"
-    #HOST = f"http://communities.{HOST_DOMAIN}"
+    # HOST_DOMAIN = "localhost:8000"
+    # HOST = f"http://communities.{HOST_DOMAIN}"
     HOST_DOMAIN = "http://communities.massenergize.test:8000"
     HOST = f"{HOST_DOMAIN}"
 elif IS_PROD:
@@ -212,6 +212,8 @@ def community(request, subdomain):
     args = {"meta": meta, "community": community, "about": about}
 
     response = render(request, "community.html", args)
+
+    device_checkin(request, response)
     
     return response
 

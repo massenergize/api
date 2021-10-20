@@ -1,5 +1,5 @@
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
-  Vendor, Action, Data, Community, Media, TeamMember, Team
+  Vendor, Action, Data, Community, Media, TeamMember, Team, DeviceProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -286,10 +286,12 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]: # TODO: add device log update
     try:
       user_id = args.get('id', None)
       email = args.get('email', None)
+      device_id = args.get('device_id', None)
+      profile_picture = args.pop("profile_picture", None)
       
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -299,9 +301,13 @@ class UserStore:
         if not users:
           return None, InvalidResourceError()
         
-        profile_picture = args.pop("profile_picture", None)
+        device = DeviceProfile.objects.filter(id=device_id)
+        
         users.update(**args)
         user = users.first()
+
+        if device:
+          pass # TODO: Determine JSON format for storing device forign keys
         
         if profile_picture:
           if profile_picture == "reset":

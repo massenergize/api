@@ -56,7 +56,47 @@ class DeviceHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=device_info)
+  
+  def log_device(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    self.validator.rename("device_id", "id")
+    self.validator.rename("device_profile_id", "id")
+    self.validator.expect("id", int, is_required=True)
+    self.validator.expect('ip_address', int)
+    self.validator.expect('operating_system', int)
+    self.validator.expect("visit_log", list)
+    args, err = self.validator.verify(args)
 
+    if err:
+      return err
+      
+    device_info, err = self.service.log_device(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=device_info)
+  
+  def log_user(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    self.validator.rename("device_profile_id", "device_id")
+    self.validator.expect("device_id", int, is_required=True)
+    self.validator.expect("user_id", int, is_required=True)
+    self.validator.expect('ip_address', int)
+    self.validator.expect('operating_system', int)
+    self.validator.expect("visit_log", list)
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+      
+    device_info, err = self.service.log_user(request, context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=device_info)
+  
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
