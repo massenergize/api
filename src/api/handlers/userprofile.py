@@ -1,4 +1,5 @@
 """Handler file for all routes pertaining to users"""
+from datetime import datetime
 from functools import wraps
 from _main_.utils.route_handler import RouteHandler
 from api.services.userprofile import UserService
@@ -117,7 +118,7 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     args, err = (self.validator
       .rename("user_id","id").expect("id", str, is_required=True)
-      .rename("device_profile_id", "device_id")
+      .expect("date_time", datetime.datetime)
       .verify(context.args))
     if err:
       return err

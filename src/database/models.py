@@ -506,8 +506,6 @@ class UserProfile(models.Model):
   created_at: DateTime
     The date and time of the last time any updates were made to the information
     about this goal
-  devices:
-    A JSON object containing all the associated devices with this profile.
   visit_log:
     A JSON object containing a history of dates. Activity is logged here when a 
     user is signed in.
@@ -536,21 +534,13 @@ class UserProfile(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   preferences = models.JSONField(default=dict, null=True, blank=True)
-  devices = models.JSONField(default=dict, null=True, blank=True)
   visit_log = models.JSONField(default=dict, null=True, blank=True)
   
   def __str__(self):
     return self.email
 
-  def update_devices(self, device_id):
-    devices = json.load(self.devices)
-    devices[device_id] = {}
-    self.devices = json.dumps(devices)
-
   def update_visit_log(self, date_time):
-    visit_log = json.load(self.visit_log)
-    visit_log[date_time] = {}
-    self.visit_log = json.dumps(visit_log)
+    self.visit_log[date_time] = {}
   
   def info(self):
     return model_to_dict(self, ['id', 'email', 'full_name'])
@@ -611,7 +601,7 @@ class DeviceProfile(models.Model):
   #TODO: 
   """
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-  user_profiles = models.JSONField(null=True, blank=True)
+  user_profiles = models.ManyToManyField(UserProfile, null=True, blank=True)
   ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
   device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
   operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
@@ -625,15 +615,11 @@ class DeviceProfile(models.Model):
   def get_visit_log(self):
     return json.load(self.visit_log)
 
-  def update_user_profiles(self, user_id):
-    user_profiles = json.load(self.user_profiles)
-    user_profiles[user_id] = {}
-    self.user_profiles = json.dumps(user_profiles)
+  def update_user_profiles(self, user):
+    self.user_profiles.add(user)
 
   def update_visit_log(self, date_time):
-    visit_log = json.load(self.visit_log)
-    visit_log[date_time] = {}
-    self.visit_log = json.dumps(visit_log)
+    self.visit_log[date_time] = {}
 
   def simple_json(self):
     return model_to_dict(self)

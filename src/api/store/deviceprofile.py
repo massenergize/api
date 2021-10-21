@@ -87,15 +87,17 @@ class DeviceStore:
     try:
       device_id = args.pop("device_id", None)
       user_id = args.pop("user_id", None)
-      device = DeviceProfile.objects.filter(id=device_id)
-      user = UserProfile.objects.filter(id=user_id)
+
+      if device_id:
+        devices = DeviceProfile.objects.filter(id=device_id)
+      
       # TODO: Timestamp here for now. We might pass it here from somewhere else later.
       date_time = datetime.datetime.now()
-      if not device:
+      if not devices:
         return None, InvalidResourceError()
       
-      device.update(**args)
-      new_device: DeviceProfile = device.first()
+      devices.update(**args)
+      device: DeviceProfile = devices.first()
 
       ip_address = args.pop('ip_address', context.ip_address)
       operating_system = args.pop('operating_system', context.operating_system)
@@ -104,24 +106,28 @@ class DeviceStore:
       new_visit_log = args.pop('visit_log', context.browser_version)
 
       if user_id:
-        new_device.update_user_profiles(user_id)
+        users = UserProfile.objects.filter(id=user_id)
+        if not users:
+          return None, InvalidResourceError()
+        user = users.first()
+        device.update_user_profiles(user)
 
       if ip_address:
           # Anything we want to do with a device's IP address can happen here
           # TODO: Maybe we want to store a list of IP addresses in JSON
-          new_device.ip_address = ip_address
+          device.ip_address = ip_address
 
       if operating_system:
-          new_device.operating_system = operating_system
+          device.operating_system = operating_system
 
       if browser:
-          new_device.browser = browser
+          device.browser = browser
 
       if browser_version:
-          new_device.browser_version = browser_version
+          device.browser_version = browser_version
       
       if new_visit_log:
-        new_device.update_visit_log(date_time)
+        device.update_visit_log(date_time)
       
       # Let user update handler handle the user side of device logging
       userhandler = UserHandler()
@@ -129,8 +135,8 @@ class DeviceStore:
       request.context.args["date_time"] = date_time # TODO: this needs testing
       userhandler.update(request)
       
-      new_device.save()
-      return new_device, None
+      device.save()
+      return device, None
 
     except Exception as e:
       capture_message(str(e), level="error")

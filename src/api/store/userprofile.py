@@ -290,7 +290,6 @@ class UserStore:
     try:
       user_id = args.get('id', None)
       email = args.get('email', None)
-      device_id = args.get('device_id', None)
       date_time = args.get('date_time', None)
       profile_picture = args.pop("profile_picture", None)
       
@@ -304,9 +303,6 @@ class UserStore:
         
         users.update(**args)
         user: UserProfile = users.first()
-
-        if device_id:
-          user.update_devices(device_id)
 
         if date_time:
           user.update_visit_log(date_time)
