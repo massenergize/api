@@ -1,4 +1,6 @@
+import json
 from django.db import models
+from django.db.models.query_utils import select_related_descend
 from database.utils.constants import *
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
@@ -539,6 +541,16 @@ class UserProfile(models.Model):
   
   def __str__(self):
     return self.email
+
+  def update_devices(self, device_id):
+    devices = json.load(self.devices)
+    devices[device_id] = {}
+    self.devices = json.dumps(devices)
+
+  def update_visit_log(self, date_time):
+    visit_log = json.load(self.visit_log)
+    visit_log[date_time] = {}
+    self.visit_log = json.dumps(visit_log)
   
   def info(self):
     return model_to_dict(self, ['id', 'email', 'full_name'])
@@ -606,6 +618,28 @@ class DeviceProfile(models.Model):
   browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
   visit_log = models.JSONField(default=dict, null=True, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
+
+  def get_user_profiles(self):
+    return json.load(self.user_profiles)
+
+  def get_visit_log(self):
+    return json.load(self.visit_log)
+
+  def update_user_profiles(self, user_id):
+    user_profiles = json.load(self.user_profiles)
+    user_profiles[user_id] = {}
+    self.user_profiles = json.dumps(user_profiles)
+
+  def update_visit_log(self, date_time):
+    visit_log = json.load(self.visit_log)
+    visit_log[date_time] = {}
+    self.visit_log = json.dumps(visit_log)
+
+  def simple_json(self):
+    return model_to_dict(self)
+  
+  def full_json(self):
+    return self.simple_json()
 
 
 class CommunityMember(models.Model):
