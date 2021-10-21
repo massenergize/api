@@ -43,7 +43,11 @@ class AuthHandler(RouteHandler):
     if(context.is_admin_site):
       MAX_AGE = 24*60*60
 
-    response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')    
+      response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
+    else:
+      # 10/21/21 - for community sites samesite='Lax'    
+      # response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Lax')    
+      response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='None')    
     return response
   
   @login_required
