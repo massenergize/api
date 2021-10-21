@@ -60,7 +60,7 @@ class MassenergizeJWTAuthMiddleware:
 
       #extract JWT auth token
       token = request.COOKIES.get('token', None) 
-
+      
       if token:
         decoded_token, err = self._get_decoded_token(token)
         if err:
@@ -79,7 +79,7 @@ class MassenergizeJWTAuthMiddleware:
           # BHN: I'm not sure why the cookie needs to be deleted first
           # but set_cookie doesn't keep it from expiring as I expected
           response.delete_cookie("token")
-          response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')    
+          response.set_cookie("token", value=token, max_age=MAX_AGE, secure=True)    
 
       request.context = ctx
 
