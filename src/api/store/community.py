@@ -865,7 +865,13 @@ class CommunityStore:
     def add_custom_website(self, context, args):
         try:
             community = get_community_or_die(context, args)
-            website = args.get('website')
+            website = args.get('website', None)
+
+            # give a way to delete the website
+            if website=='' or website=='None':
+                CustomCommunityWebsiteDomain.objects.filter(community=community).delete()
+                return None, None
+
             website = strip_website(website)
 
             # There can be only one custom website domain for a community site
