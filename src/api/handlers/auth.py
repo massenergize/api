@@ -46,7 +46,8 @@ class AuthHandler(RouteHandler):
       response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
     else:
       # 10/21/21 - for community sites samesite='Lax'    
-      response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Lax')    
+      # response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Lax')    
+      response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='None')    
     return response
   
   @login_required
