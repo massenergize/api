@@ -41,3 +41,5 @@ SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = "https://hooks.slack.com/workflows/T724MGV4
 RESERVED_SUBDOMAIN_LIST = load_json(
     BASE_DIR + "/_main_/utils/json_files/reserved_subdomains.json"
 )
+
+STATES = load_json(BASE_DIR + "/database/raw_data/other/states.json")
