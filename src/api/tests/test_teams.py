@@ -42,24 +42,29 @@ class TeamsTestCase(TestCase):
 
     self.USER1 = UserProfile.objects.create(**{
       'full_name': "Josh Katofksy",
-      'email': 'foo@test.com'
+      'email': 'foo@test.com',
+      'accepts_terms_and_conditions': True
     })
     self.USER2 = UserProfile.objects.create(**{
       'full_name': "Kosh Jatofsky",
-      'email': 'bar@test.com'
+      'email': 'bar@test.com',
+      'accepts_terms_and_conditions': True
     })
     self.USER3 = UserProfile.objects.create(**{
       'full_name': "owen plesko",
-      'email': 'owen@plesko.com'
+      'email': 'owen@plesko.com',
+      'accepts_terms_and_conditions': True
     })
     self.USER4 = UserProfile.objects.create(**{
       'full_name': "plesko owen",
-      'email': 'plesko@owen.com'
+      'email': 'plesko@owen.com',
+      'accepts_terms_and_conditions': True
     })
     self.USER5 = UserProfile.objects.create(**{
       'full_name': "oweeen",
       'preferred_name': "owen plesko",
-      'email': 'plesko@oweeeen.com'
+      'email': 'plesko@oweeeen.com',
+      'accepts_terms_and_conditions': False
     })
 
     self.TEAM1 = Team.objects.create(primary_community=self.COMMUNITY, name="Les Montréalais", is_published=True)
@@ -85,7 +90,10 @@ class TeamsTestCase(TestCase):
     self.ADMIN2.is_admin = True
     self.ADMIN2.save()
 
-    TeamMember(team=self.TEAM5, user=self.USER5).save()
+    self.ADMIN5 = TeamMember(team=self.TEAM5, user=self.USER2)
+    self.ADMIN5.is_admin = True
+    self.ADMIN5.save()
+    TeamMember(team=self.TEAM5, user=self.USER5).save()  # add a user who didn't accept TOC
 
     self.TEAM1.save()
     self.TEAM2.save()
@@ -459,51 +467,55 @@ class TeamsTestCase(TestCase):
     self.assertFalse(message_response["success"])
 
   def test_members(self): # implement validator
-
+    # two members were added to TEAM5: USER2 (admin) and USER5 (didn't accept TOC)
     # test members not logged in
     signinAs(self.client, None)
-    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(members_response["success"])
+    response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(response["success"])
 
     # test members logged as user
     signinAs(self.client, self.USER)
-    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(members_response["success"])
+    response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(response["success"])
 
     # test members logged as admin
     signinAs(self.client, self.SADMIN)
-    members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertTrue(members_response["success"])
-    self.assertEqual(members_response["data"][0]["user"]["id"], str(self.USER5.id))
+    response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(response["success"])
+    self.assertEqual(len(response["data"]),2)   # both members listed, including the one who didn't yet accept
+    self.assertEqual(response["data"][0]["user"]["id"], str(self.USER2.id))
 
     # test members no given team
-    members_response = self.client.post('/api/teams.members', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(members_response["success"])
+    response = self.client.post('/api/teams.members', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(response["success"])
 
 
   def test_members_preferred_names(self): # implement validator
-    
+    # two members were added to TEAM5: USER2 (admin) and USER5 (didn't accept TOC)
     # test members preffered name not logged in
     signinAs(self.client, None)
-    members_name_response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertTrue(members_name_response["success"])
-    self.assertEqual(members_name_response["data"][0]["preferred_name"], self.USER5.preferred_name)
+    response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(response["success"])
+    self.assertEqual(len(response["data"]), 1)
+    self.assertEqual(response["data"][0]["preferred_name"], self.USER2.preferred_name)
 
     # test members preffered name logged as user
     signinAs(self.client, self.USER)
-    members_name_response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertTrue(members_name_response["success"])
-    self.assertEqual(members_name_response["data"][0]["preferred_name"], self.USER5.preferred_name)
+    response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(response["success"])
+    self.assertEqual(len(response["data"]), 1)
+    self.assertEqual(response["data"][0]["preferred_name"], self.USER2.preferred_name)
 
     # test members preffered name logged as admin
     signinAs(self.client, self.SADMIN)
-    members_name_response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertTrue(members_name_response["success"])
-    self.assertEqual(members_name_response["data"][0]["preferred_name"], self.USER5.preferred_name)
+    response = self.client.post('/api/teams.members.preferredNames', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertTrue(response["success"])
+    self.assertEqual(len(response["data"]), 1)
+    self.assertEqual(response["data"][0]["preferred_name"], self.USER2.preferred_name)
 
     # test members preffered name no given team
-    members_name_response = self.client.post('/api/teams.members.preferredNames', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(members_name_response["success"])
+    response = self.client.post('/api/teams.members.preferredNames', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+    self.assertFalse(response["success"])
 
   def test_list_CAdmin(self):
 

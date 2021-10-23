@@ -151,6 +151,7 @@ def communities(request):
             is_deleted=False, is_published=True
         ).values("id", "name", "subdomain", "about_community", "location"))
 
+    # for each community make a display name which is "Location - Community name"
     for community in communityList:
         location = community.get("location", None)
         prefix = ""        
@@ -167,9 +168,9 @@ def communities(request):
         index = communityList.index(community)
         communityList[index]["displayName"] = displayName
 
+    # sort the list by the display name
     def sortFunc(e):
         return e['displayName']
-
     communityList.sort(key=sortFunc)
 
     args = {
