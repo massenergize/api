@@ -158,7 +158,6 @@ def communities(request):
             city = location["city"]
             state = location["state"]
             if state:
-                #state = list(STATES.keys())[list(STATES.values()).index(location.state)])
                 for abbrev, name in STATES.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
                     if state.lower() == name.lower():
                         prefix = abbrev + ' - '
