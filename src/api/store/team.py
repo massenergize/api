@@ -285,7 +285,7 @@ class TeamStore:
           if parent and can_set_parent(parent, this_team=team):
             team.parent = parent
 
-      else:     
+      else:  
           if parent_id == 0:
             team.parent = None
 
