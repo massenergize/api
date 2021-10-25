@@ -19,13 +19,7 @@ COMMUNITY_URL_ROOT = (
     if IS_CANARY
     else "https://community.massenergize.dev"
 )
-#COMMUNITY_SANDBOX_URL_ROOT = (
-#    "https://sandbox.community.massenergize.org"
-#    if IS_PROD
-#    else "https://sandbox.community-canary.massenergize.org"
-#    if IS_CANARY
-#    else "https://sandbox.community-dev.massenergize.org"
-#)
+
 ADMIN_URL_ROOT = (
     "https://admin.massenergize.org"
     if IS_PROD
