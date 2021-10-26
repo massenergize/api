@@ -573,12 +573,13 @@ class UserStore:
       #find the community that the user is the admin of. In the next section, populate user profiles with that information
       community_id = args.get("community_id", None)
       community = Community.objects.filter(id=community_id).first()
+
       location = community.location.get("city", "")
       if location != "":
         location += ", "
       location += community.location.get("state", "MA")
       location = "in " + location
-
+      
       team_name = args.get('team_name', None)
       team = None
       if team_name and team_name != "none":
@@ -612,6 +613,7 @@ class UserStore:
         new_member, _ = TeamMember.objects.get_or_create(user=new_user, team=team)
         new_member.save()
         team.save()
+        
       new_user.save()
       ret = {'cadmin': cadmin.full_name,
               'community': community.name,
@@ -619,15 +621,16 @@ class UserStore:
               'community_info': community.about_community,
               'location': location,
               'subdomain': community.subdomain,
-              'team_name': team_name,
-              'team_leader': team_leader.full_name,
-              'team_leader_firstname': team_leader.full_name.split(" ")[0],
-              'team_leader_email': team_leader.email,
               'first_name': first_name, 
               'full_name': new_user.full_name,
               'email': email,
               'preferred_name': new_user.preferred_name}
-
+      if team and team_leader:
+        ret['team_name'] = team_name,
+        ret['team_leader'] = team_leader.full_name,
+        ret['team_leader_firstname'] = team_leader.full_name.split(" ")[0],
+        ret['team_leader_email'] = team_leader.email,
+ 
       return ret, None
     except Exception as e:
       capture_message(str(e), level="error")

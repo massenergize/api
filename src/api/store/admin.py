@@ -1,10 +1,8 @@
 from database.models import UserProfile, CommunityAdminGroup, Community, Media, UserProfile, Message
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError, NotAuthorizedError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.context import Context
-from .utils import get_community, get_user, get_community_or_die, send_slack_message
+from .utils import get_community, get_user, get_community_or_die
 from api.store.community import CommunityStore
-from _main_.utils.constants import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
 from sentry_sdk import capture_message
 from typing import Tuple
 
@@ -181,26 +179,13 @@ class AdminStore:
 
   def list_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      # if not context.user_is_community_admin and not context.user_is_super_admin:
-      #   return None, CustomMassenergizeError("You must be a community admin or super admin")
 
-      community_id = args.pop("community_id", None)
-      subdomain = args.pop("subdomain", None)
-      
-      if community_id:
-        community_admin_group = CommunityAdminGroup.objects.filter(community__id=community_id).first()
-      elif subdomain:
-        community_admin_group = CommunityAdminGroup.objects.filter(community__subdomain=subdomain).first()
-      else:
+      community = get_community_or_die(context, args)
+      if not community:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
-      
+
+      community_admin_group = CommunityAdminGroup.objects.filter(community=community).first()
       if not community_admin_group:
-        if community_id:
-          community = Community.objects.filter(pk=community_id).first()
-        else:
-          community = Community.objects.filter(subdomain=subdomain).first()
-
-
         if community:
           comm_admin = CommunityAdminGroup.objects.create(name=f"{community.name}-Admin-Group", community=community)
           comm_admin.save()          
@@ -218,18 +203,16 @@ class AdminStore:
   def message_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
 
-      community_id = args.pop("community_id", None)
-      subdomain = args.pop("subdomain", None)
-      user_name = args.pop("user_name", None)
+      community = get_community_or_die(context, args)
+      if not community:
+        return None, CustomMassenergizeError("Please provide a community_id or subdomain")
+
+      user_name = args.pop("name", None) or args.pop("user_name", None) or "Unknown user"
+      print("user_name is: " + user_name)
       title = args.pop("title", None)
       email = args.pop("email", None) or context.user_email
       body = args.pop("body", None)
       uploaded_file = args.pop("uploaded_file", None)
-
-
-      community, err = get_community(community_id, subdomain)
-      if err:
-        return None, err
       
       new_message = Message.objects.create(user_name=user_name, email=email, title=title, body=body, community=community)
       new_message.save()
@@ -247,18 +230,6 @@ class AdminStore:
         new_message.uploaded_file = media
 
       new_message.save()
-
-      send_slack_message(
-        SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
-          "name": user_name,
-          "email":email,
-          "subject": title,
-          "message": body,
-          "url": f"https://admin{ '-dev' if context.is_sandbox else '' }.massenergize.org/admin/edit/{new_message.id}/message",
-          "community": community.name
-      }) 
-
-
       return new_message, None 
 
     except Exception as e:
@@ -271,8 +242,6 @@ class AdminStore:
       if context.user_is_super_admin:
         return Message.objects.all(is_deleted=False), None
 
-      # elif not context.user_is_community_admin:
-      #   return None, NotAuthorizedError()
       community_id = args.pop('community_id', None)
       subdomain = args.pop('subdomain', None)
       community, err = get_community(community_id, subdomain)

@@ -285,7 +285,7 @@ class TeamStore:
           if parent and can_set_parent(parent, this_team=team):
             team.parent = parent
 
-      else:     
+      else:  
           if parent_id == 0:
             team.parent = None
 
@@ -415,12 +415,14 @@ class TeamStore:
       users = get_team_users(team)
       res = []
       for user in users:
-        member = TeamMember.objects.filter(user=user, team=team).first()
-        member_obj = {"id": None, "user_id": str(user.id), "preferred_name": user.preferred_name, "is_admin": False}
-        if member:
-          member_obj['id'] = member.id
-          member_obj['is_admin'] = member.is_admin
-        res.append(member_obj)
+        # only list users that have joined the platform
+        if user.accepts_terms_and_conditions:
+          member = TeamMember.objects.filter(user=user, team=team).first()
+          member_obj = {"id": None, "user_id": str(user.id), "preferred_name": user.preferred_name, "is_admin": False}
+          if member:
+            member_obj['id'] = member.id
+            member_obj['is_admin'] = member.is_admin
+          res.append(member_obj)
 
       return res, None
     except Exception as e:

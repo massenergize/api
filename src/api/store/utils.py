@@ -4,8 +4,6 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidRes
 from _main_.utils.context import Context
 from django.db.models import Q
 from database.utils.constants import SHORT_STR_LEN
-import requests 
-import json
 import zipcodes
 from sentry_sdk import capture_message
 
@@ -86,10 +84,6 @@ def get_admin_communities(context: Context):
   communities = [ag.community for ag in admin_groups]
   return communities, None
 
-
-def send_slack_message(webhook, body):
-  r = requests.post(url = webhook, data = json.dumps(body)) 
-  return r
 
 def remove_dups(lst):
   final_lst = []
