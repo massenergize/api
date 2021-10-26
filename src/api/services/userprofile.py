@@ -267,7 +267,7 @@ class UserService:
         line += 1
         first_name = csv_row[first_name_field]
         last_name = csv_row[last_name_field]
-        email = csv_row[email_field]
+        email = csv_row[email_field].lower()
 
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         if(re.search(regex,email)):  
