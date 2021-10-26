@@ -26,9 +26,9 @@ class DeviceHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect("id", int, is_required=True)
     self.validator.rename("device_id", "id")
     self.validator.rename("device_profile_id", "id")
+    self.validator.expect("id", int, is_required=True)
     args, err = self.validator.verify(args)
 
     if err:
@@ -43,11 +43,11 @@ class DeviceHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    self.validator.expect('ip_address', int)
-    self.validator.expect('device_type', int)
-    self.validator.expect('operating_system', int)
-    self.validator.expect("browser", list)
-    self.validator.expect("visit_log", list)
+    self.validator.expect('ip_address', str)
+    self.validator.expect('device_type', str)
+    self.validator.expect('operating_system', str)
+    self.validator.expect("browser", str)
+    self.validator.expect("browser_version", str)
     args, err = self.validator.verify(args)
 
     if err:
@@ -65,9 +65,8 @@ class DeviceHandler(RouteHandler):
     self.validator.rename("device_id", "id")
     self.validator.rename("device_profile_id", "id")
     self.validator.expect("id", int, is_required=True)
-    self.validator.expect('ip_address', int)
-    self.validator.expect('operating_system', int)
-    self.validator.expect("visit_log", list)
+    self.validator.expect('ip_address', str)
+    self.validator.expect('browser_version', str)
     args, err = self.validator.verify(args)
 
     if err:
@@ -85,12 +84,11 @@ class DeviceHandler(RouteHandler):
     self.validator.rename("device_id", "id")
     self.validator.rename("device_profile_id", "id")
     self.validator.expect("id", int, is_required=True)
-    self.validator.expect('user_profiles', int)
-    self.validator.expect('ip_address', int)
-    self.validator.expect('device_type', int)
-    self.validator.expect('operating_system', int)
-    self.validator.expect("browser", list)
-    self.validator.expect("visit_log", list)
+    self.validator.expect('ip_address', str)
+    self.validator.expect('device_type', str)
+    self.validator.expect('operating_system', str)
+    self.validator.expect("browser", str)
+    self.validator.expect("browser_version", str)
     args, err = self.validator.verify(args)
 
     if err:
