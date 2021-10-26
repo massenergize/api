@@ -868,7 +868,7 @@ class CommunityStore:
             website = args.get('website', None)
 
             # give a way to delete the website
-            if website=='' or website=='None':
+            if website == None or website == '' or website == 'None':
                 CustomCommunityWebsiteDomain.objects.filter(community=community).delete()
                 return None, None
 
