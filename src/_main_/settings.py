@@ -61,8 +61,8 @@ ALLOWED_HOSTS = [
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
-    '.massenergize.test',
-    'energizeus.org'
+    'massenergize.test',
+    'massenergize.test:3000',
 ]
 
 if IS_LOCAL:
@@ -139,8 +139,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
 
-SESSION_COOKIE_SAMESITE = 'None'
-# SESSION_SAVE_EVERY_REQUEST = True
 
 TEMPLATES = [
     {
