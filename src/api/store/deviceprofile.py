@@ -29,11 +29,14 @@ class DeviceStore:
       return None, CustomMassenergizeError(e)
   
   def __device_attr_handler(new_device, args, context):
+    # TODO: Timestamp here for now. We might pass it here from somewhere else later.
+    date_time = datetime.datetime.now()
     ip_address = args.pop('ip_address', context.ip_address)
     device_type = args.pop('device_type', context.device_type)
     operating_system = args.pop('operating_system', context.operating_system)
     browser = args.pop('browser', context.browser)
     browser_version = args.pop('browser_version', context.browser_version)
+    # new_visit_log = args.pop('visit_log', context.visit_log)
 
     if ip_address:
         # TODO: Anything we want to do with a device's IP address can happen here
@@ -50,6 +53,9 @@ class DeviceStore:
 
     if browser_version:
       new_device.browser_version = browser_version
+
+    # if new_visit_log:
+    new_device.update_visit_log(date_time)
     
   def create_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:     
@@ -65,76 +71,39 @@ class DeviceStore:
       return None, CustomMassenergizeError(e)
   
   def log_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    date_time = datetime.datetime.now()
     try:
       id = args.pop("id", None)
-      device = DeviceProfile.objects.filter(id=id)
-      if not device:
-        return None, InvalidResourceError()
-      
-      device.update(**args)
-      new_device = device.first()
-
-      self.__device_attr_handler(new_device, args, context)
-
-      new_device.save()
-      return new_device, None
-
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
-    
-  def log_user(self, request: HttpRequest, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    try:
-      device_id = args.pop("device_id", None)
-      user_id = args.pop("user_id", None)
-
-      if device_id:
-        devices = DeviceProfile.objects.filter(id=device_id)
-      
-      # TODO: Timestamp here for now. We might pass it here from somewhere else later.
-      date_time = datetime.datetime.now()
+      devices = DeviceProfile.objects.filter(id=id)
       if not devices:
         return None, InvalidResourceError()
       
       devices.update(**args)
-      device: DeviceProfile = devices.first()
+      device = devices.first()
 
-      ip_address = args.pop('ip_address', context.ip_address)
-      operating_system = args.pop('operating_system', context.operating_system)
-      browser = args.pop('browser', context.browser)
-      browser_version = args.pop('browser_version', context.browser_version)
-      new_visit_log = args.pop('visit_log', context.browser_version)
-
-      if user_id:
+      if context.user_is_logged_in:
+        user_id = context.user_id
         users = UserProfile.objects.filter(id=user_id)
         if not users:
           return None, InvalidResourceError()
         user = users.first()
         device.update_user_profiles(user)
 
+      ip_address = args.pop('ip_address', context.ip_address)
+      browser_version = args.pop('browser_version', context.browser_version)
+      # new_visit_log = args.pop('visit_log', context.visit_log)
+
       if ip_address:
-          # Anything we want to do with a device's IP address can happen here
-          # TODO: Maybe we want to store a list of IP addresses in JSON
-          device.ip_address = ip_address
-
-      if operating_system:
-          device.operating_system = operating_system
-
-      if browser:
-          device.browser = browser
+        # Anything we want to do with a device's IP address can happen here
+        # TODO: Maybe we want to store a list of IP addresses in JSON
+        device.ip_address = ip_address
 
       if browser_version:
-          device.browser_version = browser_version
-      
-      if new_visit_log:
-        device.update_visit_log(date_time)
-      
-      # Let user update handler handle the user side of device logging
-      userhandler = UserHandler()
-      # Pass timestamp to user
-      request.context.args["date_time"] = date_time # TODO: this needs testing
-      userhandler.update(request)
-      
+        device.browser_version = browser_version
+
+      # if new_visit_log:
+      device.update_visit_log(date_time)
+
       device.save()
       return device, None
 

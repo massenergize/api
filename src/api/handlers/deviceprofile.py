@@ -17,6 +17,7 @@ class DeviceHandler(RouteHandler):
     self.add("/device.info", self.info) 
     self.add("/device.create", self.create)
     self.add("/device.add", self.create)
+    self.add("/device.log", self.log_device)
     self.add("/device.update", self.update)
     self.add("/device.delete", self.delete)
     self.add("/device.remove", self.delete)
@@ -73,26 +74,6 @@ class DeviceHandler(RouteHandler):
       return err
       
     device_info, err = self.service.log_device(context, args)
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=device_info)
-  
-  def log_user(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    
-    self.validator.rename("device_profile_id", "device_id")
-    self.validator.expect("device_id", int, is_required=True)
-    self.validator.expect("user_id", int, is_required=True)
-    self.validator.expect('ip_address', int)
-    self.validator.expect('operating_system', int)
-    self.validator.expect("visit_log", list)
-    args, err = self.validator.verify(args)
-
-    if err:
-      return err
-      
-    device_info, err = self.service.log_user(request, context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=device_info)

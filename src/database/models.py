@@ -601,7 +601,7 @@ class DeviceProfile(models.Model):
   #TODO: 
   """
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
-  user_profiles = models.ManyToManyField(UserProfile, null=True, blank=True)
+  user_profiles = models.ManyToManyField(UserProfile, blank=True)
   ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
   device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
   operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
