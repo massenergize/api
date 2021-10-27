@@ -619,7 +619,18 @@ class DeviceProfile(models.Model):
     self.user_profiles.add(user)
 
   def update_visit_log(self, date_time):
-    self.visit_log[repr(date_time)] = {}
+    try:
+      day = date_time.strftime('%d/%m/%y')
+      time = date_time.strftime('%H:%M')
+      print(self.visit_log)
+      if day in self.visit_log:
+        self.visit_log[day][time] = repr(date_time)
+      else:
+        self.visit_log[day] = { time: repr(date_time) }
+      print(self.visit_log)
+    except Exception as e:
+      print(e)
+      return None, None
 
   def simple_json(self):
     return model_to_dict(self)
