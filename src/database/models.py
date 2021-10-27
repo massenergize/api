@@ -540,7 +540,18 @@ class UserProfile(models.Model):
     return self.email
 
   def update_visit_log(self, date_time):
-    self.visit_log[date_time] = {}
+    # TODO: Still requires testing
+    try:
+      day = date_time.strftime('%d/%m/%y')
+      time = date_time.strftime('%H:%M')
+      data = { "timestamp": repr(date_time) }
+      if day in self.visit_log:
+        self.visit_log[day][time] = data
+      else:
+        self.visit_log[day] = { time: data }
+    except Exception as e:
+      print(e)
+      return None, e
   
   def info(self):
     return model_to_dict(self, ['id', 'email', 'full_name'])
@@ -629,7 +640,7 @@ class DeviceProfile(models.Model):
         self.visit_log[day] = { time: data }
     except Exception as e:
       print(e)
-      return None, None
+      return None, e
 
   def simple_json(self):
     return model_to_dict(self)
