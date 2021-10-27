@@ -622,12 +622,11 @@ class DeviceProfile(models.Model):
     try:
       day = date_time.strftime('%d/%m/%y')
       time = date_time.strftime('%H:%M')
-      print(self.visit_log)
+      data = { "timestamp": repr(date_time) }
       if day in self.visit_log:
-        self.visit_log[day][time] = repr(date_time)
+        self.visit_log[day][time] = data
       else:
-        self.visit_log[day] = { time: repr(date_time) }
-      print(self.visit_log)
+        self.visit_log[day] = { time: data }
     except Exception as e:
       print(e)
       return None, None
