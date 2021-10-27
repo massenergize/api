@@ -84,6 +84,9 @@ class DeviceStore:
           return None, InvalidResourceError()
         user = users.first()
         device.update_user_profiles(user)
+        user.update_visit_log(date_time)
+      else:
+        device.update_visit_log(date_time)
             
       ip_address = args.pop('ip_address', None)
       # new_visit_log = args.pop('visit_log', None)
@@ -92,9 +95,6 @@ class DeviceStore:
         # Anything we want to do with a device's IP address can happen here
         # TODO: Maybe we want to store a list of IP addresses in JSON
         device.ip_address = ip_address
-
-      # if new_visit_log:
-      device.update_visit_log(date_time)
 
       device.save()
       return device, None
