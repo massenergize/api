@@ -28,14 +28,13 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def __device_attr_handler(new_device, args, context):
+  def __device_attr_handler(self, new_device, args):
     # TODO: Timestamp here for now. We might pass it here from somewhere else later.
     date_time = datetime.datetime.now()
-    ip_address = args.pop('ip_address', context.ip_address)
-    device_type = args.pop('device_type', context.device_type)
-    operating_system = args.pop('operating_system', context.operating_system)
-    browser = args.pop('browser', context.browser)
-    browser_version = args.pop('browser_version', context.browser_version)
+    ip_address = args.pop('ip_address')
+    device_type = args.pop('device_type')
+    operating_system = args.pop('operating_system')
+    browser = args.pop('browser')
     # new_visit_log = args.pop('visit_log', context.visit_log)
 
     if ip_address:
@@ -51,9 +50,6 @@ class DeviceStore:
     if browser:
       new_device.browser = browser
 
-    if browser_version:
-      new_device.browser_version = browser_version
-
     # if new_visit_log:
     new_device.update_visit_log(date_time)
     
@@ -61,7 +57,7 @@ class DeviceStore:
     try:     
       new_device: DeviceProfile = DeviceProfile.objects.create(**args)
 
-      self.__device_attr_handler(new_device, args, context)
+      self.__device_attr_handler(new_device, args)
 
       new_device.save()    
       return new_device, None
@@ -88,18 +84,14 @@ class DeviceStore:
           return None, InvalidResourceError()
         user = users.first()
         device.update_user_profiles(user)
-
-      ip_address = args.pop('ip_address', context.ip_address)
-      browser_version = args.pop('browser_version', context.browser_version)
-      # new_visit_log = args.pop('visit_log', context.visit_log)
+            
+      ip_address = args.pop('ip_address', None)
+      # new_visit_log = args.pop('visit_log', None)
 
       if ip_address:
         # Anything we want to do with a device's IP address can happen here
         # TODO: Maybe we want to store a list of IP addresses in JSON
         device.ip_address = ip_address
-
-      if browser_version:
-        device.browser_version = browser_version
 
       # if new_visit_log:
       device.update_visit_log(date_time)
@@ -121,7 +113,7 @@ class DeviceStore:
       device.update(**args)
       new_device = device.first()
 
-      self.__device_attr_handler(new_device, args, context)
+      self.__device_attr_handler(new_device, args)
 
       new_device.save()
       return new_device, None

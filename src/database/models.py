@@ -619,7 +619,7 @@ class DeviceProfile(models.Model):
     self.user_profiles.add(user)
 
   def update_visit_log(self, date_time):
-    self.visit_log[date_time] = {}
+    self.visit_log[repr(date_time)] = {}
 
   def simple_json(self):
     return model_to_dict(self)
