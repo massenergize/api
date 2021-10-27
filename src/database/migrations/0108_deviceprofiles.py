@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name='DeviceProfile',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
-                ('user_profiles', models.JSONField(blank=True, null=True)),
+                ('user_profiles', models.ManyToManyField(blank=True, null=True, to='database.UserProfile')),
                 ('ip_address', models.CharField(max_length=100, null=True)),
                 ('device_type', models.CharField(max_length=100, null=True)),
                 ('operating_system', models.CharField(max_length=100, null=True)),
@@ -23,11 +23,6 @@ class Migration(migrations.Migration):
                 ('visit_log', models.JSONField(blank=True, default=dict, null=True)),
                 ('is_deleted', models.BooleanField(blank=True, default=False)),
             ],
-        ),
-        migrations.AddField(
-            model_name='userprofile',
-            name='devices',
-            field=models.JSONField(blank=True, default=dict, null=True),
         ),
         migrations.AddField(
             model_name='userprofile',
