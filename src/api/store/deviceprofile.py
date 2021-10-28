@@ -31,10 +31,10 @@ class DeviceStore:
   def __device_attr_handler(self, new_device, args):
     # TODO: Timestamp here for now. We might pass it here from somewhere else later.
     date_time = datetime.datetime.now()
-    ip_address = args.pop('ip_address')
-    device_type = args.pop('device_type')
-    operating_system = args.pop('operating_system')
-    browser = args.pop('browser')
+    ip_address = args.pop('ip_address', None)
+    device_type = args.pop('device_type', None)
+    operating_system = args.pop('operating_system', None)
+    browser = args.pop('browser', None)
     # new_visit_log = args.pop('visit_log', context.visit_log)
 
     if ip_address:
@@ -73,7 +73,6 @@ class DeviceStore:
       devices = DeviceProfile.objects.filter(id=id)
       if not devices:
         return None, InvalidResourceError()
-      
       devices.update(**args)
       device = devices.first()
 
