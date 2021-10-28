@@ -5,7 +5,6 @@ from django.http import Http404
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, IS_LOCAL
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
-from _main_.utils.common import device_checkin
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
@@ -185,8 +184,6 @@ def communities(request):
     }
 
     response = render(request, "communities.html", args)
-
-    device_checkin(request, response)
     
     return response
 
@@ -233,8 +230,6 @@ def community(request, subdomain):
     args = {"meta": meta, "community": community, "about": about}
 
     response = render(request, "community.html", args)
-
-    device_checkin(request, response)
     
     return response
 
