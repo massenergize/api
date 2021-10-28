@@ -59,7 +59,7 @@ class DeviceStore:
 
       self.__device_attr_handler(new_device, args)
 
-      new_device.save()    
+      new_device.save()
       return new_device, None
 
     except Exception as e:
@@ -94,11 +94,12 @@ class DeviceStore:
         # Anything we want to do with a device's IP address can happen here
         # TODO: Maybe we want to store a list of IP addresses in JSON
         device.ip_address = ip_address
-
+      
       device.save()
       return device, None
 
     except Exception as e:
+      # print(e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
       
