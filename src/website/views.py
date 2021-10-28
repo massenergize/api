@@ -9,7 +9,6 @@ from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
 from database.models import (
-    UserProfile,
     Deployment,
     Community,
     Event,
@@ -17,7 +16,6 @@ from database.models import (
     Vendor,
     Action,
     Testimonial,
-    DeviceProfile,
     AboutUsPageSettings,
     ContactUsPageSettings,
     DonatePageSettings,
@@ -42,9 +40,6 @@ HOME_SUBDOMAIN_SET = set([
 
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
-    # PORTAL_HOST = "http://localhost:3000"
-    # PORTAL_HOST = "https://community.massenergize.dev"
-    #TODO: update this with localhost if you are running the frontend locally
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
@@ -55,8 +50,8 @@ else:
 
 
 if IS_LOCAL:
-    # HOST_DOMAIN = "localhost:8000"
-    # HOST = f"http://communities.{HOST_DOMAIN}"
+    #HOST_DOMAIN = "massenergize.dev"
+    #HOST = f"http://communities.{HOST_DOMAIN}"
     HOST_DOMAIN = "http://communities.massenergize.test:8000"
     HOST = f"{HOST_DOMAIN}"
 elif IS_PROD:
@@ -182,10 +177,7 @@ def communities(request):
         "meta": meta,
         "communities": communityList,
     }
-
-    response = render(request, "communities.html", args)
-    
-    return response
+    return render(request, "communities.html", args)
 
 
 def community(request, subdomain):
@@ -228,10 +220,7 @@ def community(request, subdomain):
     )
 
     args = {"meta": meta, "community": community, "about": about}
-
-    response = render(request, "community.html", args)
-    
-    return response
+    return render(request, "community.html", args)
 
 
 def actions(request, subdomain=None):
@@ -256,11 +245,7 @@ def actions(request, subdomain=None):
         ).values("id", "title", "featured_summary"),
     }
 
-    response = render(request, "actions.html", args)
-
-    
-
-    return response
+    return render(request, "actions.html", args)
 
 
 def action(request, id, subdomain=None):
@@ -293,10 +278,7 @@ def action(request, id, subdomain=None):
         }
     )
     args = {"meta": meta, "action": action}
-    
-    response = render(request, "action.html", args)
-
-    return response
+    return render(request, "action.html", args)
 
 
 def events(request, subdomain=None):
@@ -320,10 +302,7 @@ def events(request, subdomain=None):
             "id", "name", "start_date_and_time", "end_date_and_time", "featured_summary"
         ),
     }
-
-    response = render(request, "events.html", args)
-
-    return response
+    return render(request, "events.html", args)
 
 
 def event(request, id, subdomain=None):
@@ -357,10 +336,7 @@ def event(request, id, subdomain=None):
         "meta": meta,
         "event": event,
     }
-
-    response = render(request, "event.html", args)
-
-    return response
+    return render(request, "event.html", args)
 
 
 def vendors(request, subdomain=None):
@@ -388,9 +364,7 @@ def vendors(request, subdomain=None):
             "id", "name", "description", "service_area"
         ),
     }
-    response = render(request, "services.html", args)
-
-    return response
+    return render(request, "services.html", args)
 
 
 def vendor(request, id, subdomain=None):
@@ -423,9 +397,7 @@ def vendor(request, id, subdomain=None):
         "vendor": vendor,
     }
 
-    response = render(request, "service.html", args)
-
-    return response
+    return render(request, "service.html", args)
 
 
 def teams(request, subdomain=None):
@@ -457,10 +429,7 @@ def teams(request, subdomain=None):
         "meta": meta,
         "teams": teams,
     }
-
-    response = render(request, "teams.html", args)
-
-    return response
+    return render(request, "teams.html", args)
 
 
 def team(request, id, subdomain=None):
@@ -498,10 +467,7 @@ def team(request, id, subdomain=None):
         "meta": meta,
         "team": team,
     }
-
-    response = render(request, "team.html", args)
-
-    return response
+    return render(request, "team.html", args)
 
 
 def testimonials(request, subdomain=None):
@@ -525,10 +491,7 @@ def testimonials(request, subdomain=None):
             is_deleted=False, is_published=True, community__subdomain__iexact=subdomain
         ).values("id", "title", "body"),
     }
-
-    response = render(request, "testimonials.html", args)
-
-    return response
+    return render(request, "testimonials.html", args)
 
 
 def testimonial(request, id, subdomain=None):
@@ -565,10 +528,7 @@ def testimonial(request, id, subdomain=None):
         "meta": meta,
         "testimonial": testimonial,
     }
-
-    response = render(request, "testimonial.html", args)
-
-    return response
+    return render(request, "testimonial.html", args)
 
 
 def about_us(request, subdomain=None):
@@ -597,9 +557,7 @@ def about_us(request, subdomain=None):
         "page": page,
     }
 
-    response = render(request, "page__about_us.html", args)
-
-    return response
+    return render(request, "page__about_us.html", args)
 
 
 def donate(request, subdomain=None):
@@ -628,9 +586,7 @@ def donate(request, subdomain=None):
         "page": page,
     }
 
-    response = render(request, "page__donate.html", args)
-
-    return response
+    return render(request, "page__donate.html", args)
 
 
 def impact(request, subdomain=None):
@@ -659,9 +615,7 @@ def impact(request, subdomain=None):
         "page": page,
     }
 
-    response = render(request, "page__impact.html", args)
-
-    return response
+    return render(request, "page__impact.html", args)
 
 
 def contact_us(request, subdomain=None):
@@ -689,10 +643,8 @@ def contact_us(request, subdomain=None):
         "meta": meta,
         "page": page,
     }
-
-    response = render(request, "page__contact_us.html", args)
-
-    return response
+    
+    return render(request, "page__contact_us.html", args)
 
 
 def generate_sitemap(request):

@@ -1,5 +1,5 @@
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
-  Vendor, Action, Data, Community, Media, TeamMember, Team, DeviceProfile
+  Vendor, Action, Data, Community, Media, TeamMember, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -286,11 +286,10 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]: # TODO: add device log update
+  def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user_id = args.get('id', None)
       email = args.get('email', None)
-      date_time = args.get('date_time', None)
       profile_picture = args.pop("profile_picture", None)
       
       if not self._has_access(context, user_id, email):
@@ -302,10 +301,7 @@ class UserStore:
           return None, InvalidResourceError()
         
         users.update(**args)
-        user: UserProfile = users.first()
-
-        if date_time:
-          user.update_visit_log(date_time)
+        user = users.first()
         
         if profile_picture:
           if profile_picture == "reset":
