@@ -234,7 +234,7 @@ class UserService:
       return None, err
     return serialize(user, full=True), None
   
-  def handle_csv(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def import_from_csv(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
 
     first_name_field = args.get('first_name_field', None)
     last_name_field = args.get('last_name_field', None)
@@ -255,23 +255,22 @@ class UserService:
     invalid_emails = []
     line = 0
     for csv_row in filecontents:
+      line += 1
       column_list = list(csv_row.keys())
-      ###values_list= list(csv_row.values())
       try:
         # prevents the first row (headers) from being read in as a user
-
-        if csv_row[first_name_field] == column_list[0]:
+        first_name = csv_row[first_name_field].strip()
+        last_name = csv_row[last_name_field]
+        email = csv_row[email_field].lower()
+        
+        if first_name == column_list[0]:
           continue
 
         # verify correctness of email address
-        line += 1
-        first_name = csv_row[first_name_field]
-        last_name = csv_row[last_name_field]
-        email = csv_row[email_field].lower()
-
+        print("first,last,email:" + first_name + "," + last_name + "," + email)
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         if(re.search(regex,email)):  
-          info, err = self.store.import_from_csv(context, args, first_name, last_name, email)
+          info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
 
           # send invitation e-mail to each new user
           _send_invitation_email(info, custom_message)
@@ -279,6 +278,36 @@ class UserService:
         else:
           if filecontents.index(csv_row) != 0:
             invalid_emails.append({"line":line, "email":email}) 
+
+      except Exception as e:
+        print("Error string: " + str(e))
+        return None, CustomMassenergizeError(str(e))
+    if err:
+      return None, err
+    return {'invalidEmails': invalid_emails}, None
+
+  def import_from_list(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+
+    names = args.get('names', None)
+    emails = args.get('emails', None)
+
+    custom_message = args.get('message', "")
+
+    invalid_emails = []
+    for ix in range(len(names)):
+      try:
+        name = names[ix]
+        spc = name.find(' ')
+        first_name = name[0:spc-1]
+        last_name = name[spc+1]
+        email = emails[ix].lower()
+
+        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        if(re.search(regex,email)):  
+          info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
+
+          # send invitation e-mail to each new user
+          _send_invitation_email(info, custom_message)
 
       except Exception as e:
         print(str(e))

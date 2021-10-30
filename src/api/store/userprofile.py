@@ -543,7 +543,7 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
   
-  def import_from_csv(self, context: Context, args, first_name, last_name, email) -> Tuple[dict, MassEnergizeAPIError]:
+  def add_invited_user(self, context: Context, args, first_name, last_name, email) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       # query users by user id, find the user that is sending the request
       cadmin = UserProfile.objects.filter(id=context.user_id).first()
@@ -567,7 +567,7 @@ class UserStore:
       if not user:
         if not email or email == "":
           return None, CustomMassenergizeError(
-            "One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
+            "The user (" + first_name + " " + last_name + ") lacks a valid email address. Please make sure all your users have valid email addresses listed.")
         new_user: UserProfile = UserProfile.objects.create(
           full_name=first_name + ' ' + last_name,
           preferred_name=first_name + last_name[0].upper(),
