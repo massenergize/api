@@ -2000,6 +2000,7 @@ class Subscriber(models.Model):
   email = models.EmailField(blank=False, db_index=True)
   community = models.ForeignKey(Community, on_delete=models.SET_NULL,
                                 null=True, db_index=True)
+  created_at = models.DateTimeField(auto_now_add=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   
   def __str__(self):

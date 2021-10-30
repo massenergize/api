@@ -28,7 +28,7 @@ class DownloadStore:
     self.action_info_columns = ['title', 'category', 'carbon_calculator_action', 'done_count', 'yearly_lbs_carbon',
     'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
 
-    self.user_info_columns = ['name', 'preferred_name', 'role', 'email', 'created', 'households_count', 'testimonials_count']
+    self.user_info_columns = ['First Name', 'Last Name', 'Preferred Name', 'Role', 'Email', 'Created', 'households_count', 'testimonials_count']
     
     self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
@@ -54,7 +54,16 @@ class DownloadStore:
     user_cells = {}
   
     if (isinstance(user, Subscriber)):
-        user_cells = {'name': user.name, 'email': user.email, 'role': 'subscriber'}
+        full_name = user.name
+        space = full_name.find(' ')
+        first_name = full_name[:space-1]
+        last_name = full_name[space+1:]
+        user_cells = {
+          'First Name': first_name, 
+          'Last Name': last_name, 
+          'Email': user.email, 
+          'Role': 'Subscriber', 
+          'Created': user.created_at.strftime("%Y-%m-%d")}
     elif (isinstance(user, RealEstateUnit)):
         # for geographic communities, list non-members who have households in the community
         the_user = user.user_real_estate_units.first()
@@ -66,6 +75,11 @@ class DownloadStore:
         else:
           return None
 
+        full_name = the_user.full_name
+        space = full_name.find(' ')
+        first_name = full_name[:space-1]
+        last_name = full_name[space+1:]
+
         this_community = Community.objects.filter(id=self.community_id)
  
         # community list which user has associated with
@@ -75,24 +89,31 @@ class DownloadStore:
         else:
           community = communities[0]
 
-        user_cells = {'name': the_user.full_name, 
-                      'preferred_name': the_user.preferred_name, 
-                      'role': community + ' member, household in ' + city, 
-                      'email': the_user.email, 
-                      'created': the_user.created_at.strftime("%Y-%m-%d")}
+        user_cells = {'First Name': first_name,
+                      'Last Name' : last_name,
+                      'Preferred Name': the_user.preferred_name, 
+                      'Role': community + ' member, household in ' + city, 
+                      'Email': the_user.email, 
+                      'Created': the_user.created_at.strftime("%Y-%m-%d")}
     else:
+        full_name = user.full_name
+        space = full_name.find(' ')
+        first_name = full_name[:space-1]
+        last_name = full_name[space+1:]
+
         user_households = user.real_estate_units.count()
         user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
         testimonials_count = user_testimonials.count() if user_testimonials else '0'
 
-        user_cells = {'name': user.full_name,
-                      'preferred_name': user.preferred_name,
-                      'email': user.email,
-                      'role' : 'super admin' if user.is_super_admin else
+        user_cells = {'First Name': first_name,
+                      'Last Name' : last_name,
+                      'Preferred Name': user.preferred_name,
+                      'Email': user.email,
+                      'Role' : 'super admin' if user.is_super_admin else
                           'community admin' if user.is_community_admin else
                           'vendor' if user.is_vendor else
                           'community member',
-                      'created': user.created_at.strftime("%Y-%m-%d"),
+                      'Created': user.created_at.strftime("%Y-%m-%d"),
                       'households_count': user_households,
                       'testimonials_count': testimonials_count}
 
