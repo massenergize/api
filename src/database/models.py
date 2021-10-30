@@ -1105,6 +1105,7 @@ class Action(models.Model):
   deep_dive = models.TextField(max_length=LONG_STR_LEN, blank=True)
   about = models.TextField(max_length=LONG_STR_LEN,
                            blank=True)
+  # TODO: this wasn't fully implemented - may remove primary_category
   # this is the singal category which points will be recorded in, though
   primary_category = models.ForeignKey(Tag, related_name='action_category', on_delete=models.SET_NULL, null=True)
   # then - an action could have multiple secondary categories
