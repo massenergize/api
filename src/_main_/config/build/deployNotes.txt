@@ -1,13 +1,7 @@
+October 31st deployment
+- Bug fixes to go to prod:
+    Email messages to Cadmins
+    Sort Communities by location/name
+    User import fixes
 Oct 17th Deployment - Version 4.0
-- SEO Phase II
-- Improve recurring events
-- Messages dated
-- Separate initial vs attained values
-- URLs and search-engine fixes
-- Fixes to Profile Picture
-- Backend support for CarbonEquivalencies
-- Event RSVPs support
-- Allow teams to span communities
-- Fix data issue: Donut attained values summed from State/Reported categories + initial pushed
-- Community Users download includes non-members with households in community
-- Import user import functionality
+- Make cookie secure

@@ -20,7 +20,7 @@ class MiscellaneousStore:
             return None, CustomMassenergizeError(e)
 
     def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        return self.backfill_subdomans(), None
+        return self.backfill_graph_default_data(context, args), None
     
     def backfill_subdomans(self):
         for c in Community.objects.all():
@@ -102,16 +102,22 @@ class MiscellaneousStore:
                     d = Data.objects.filter(
                         community=community, name=tag.name).first()
                     if d:
+                        oldval = d.value
                         val = 0
-#            user_actions = UserActionRel.objects.filter(action__community=community, status="DONE")
-                        user_actions = UserActionRel.objects.filter(
-                            real_estate_unit__community=community, status="DONE")
+
+                        if community.is_geographically_focused:
+                            user_actions = UserActionRel.objects.filter(
+                                real_estate_unit__community=community, status="DONE")
+                        else:
+                            user_actions = UserActionRel.objects.filter(
+                                action__community=community, status="DONE")
                         for user_action in user_actions:
                             if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
                                 val += 1
 
                         d.value = val
                         d.save()
+                        print("Backfill: Community: " + community.name + ", Category: " + tag.name + ", Old: " + str(oldval) + ", New: " + str(val) )
             return {'graph_default_data': 'done'}, None
 
         except Exception as e:

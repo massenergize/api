@@ -27,7 +27,7 @@
                         data-host-domain="{{meta.host_domain}}">
                     <option value="{{c.subdomain}}">Choose your community...</option>
                     {% for c in communities %}
-                    <option value="{{c.subdomain}}">{{c.name}}</option>
+                    <option value="{{c.subdomain}}">{{c.displayName}}</option>
                     {% endfor %}
 
                 </select>

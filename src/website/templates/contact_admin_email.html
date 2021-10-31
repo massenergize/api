@@ -12,7 +12,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="width=device-width" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-	<title>Welcome to MassEnergize</title>
+	<title>Welcome Admin</title>
 
 	<!-- Google Fonts Link -->
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
@@ -46,7 +46,7 @@
 		.wrapperWebview, .wrapperBody, .wrapperFooter{width:100%; max-width:600px; Margin:0 auto;}
 
 		/*------ Column Layout Style ------ */
-		.tableCard {text-align:center; font-size:0;}
+		.tableCard {text-align:left; font-size:0;}
 
 		/*------ Images Style ------ */
 		.imgHero img{ width:600px; height:auto; }
@@ -87,40 +87,18 @@
 							<td height="3" style="background-color:#8dc63f;font-size:1px;line-height:3px;" class="topBorder" >&nbsp;</td>
 						</tr>
 
-						<!--<tr>
-							<td align="center" valign="top" style="padding-bottom:40px" class="imgHero">
-								<a href="#" target="_blank" style="text-decoration:none;">
-									<img src="img/user-welcome.png" width="600" alt="" border="0" style="width:100%; max-width:600px; height:auto; display:block;" />
-								</a>
+						<tr>
+							<td align="center" valign="middle" style="padding-top:40px;padding-bottom:40px" class="emailLogo">
+								<!-- Logo and Link // -->
+								<img src="https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png" alt="" width="150" border="0" style="width:100%; max-width:300px;height:auto; display:block;"/>
 							</td>
-						</tr> -->
+						</tr>
 
 						<tr>
-							<td align="center" valign="top" style="padding-top:10px;padding-bottom:5px;padding-left:20px;padding-right:20px;" class="mainTitle">
+							<td align="center" valign="top" style="padding-bottom:5px;padding-left:20px;padding-right:20px;" class="mainTitle">
 								<!-- Main Title Text // -->
-								<h3 class="text" style="color:#666666; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:24px; font-weight:600; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:left; padding:0; margin:0">
-									Hi {{name}},
-								</h3>
-							</td>
-						</tr>
-
-						<tr>
-							<td align="center" valign="top" style="padding-bottom:30px;padding-left:20px;padding-right:20px;" class="subTitle">
-								<!-- Sub Title Text // -->
-								<h4 class="text" style="color:#999999; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:left; padding:0; margin:0">
-									{{community_admin}} invites you to join {{community}}! {{community}} is a group {{location}} that helps our neighbors
-									join the growing number of folks who are taking action on climate change. 
-									Our <a href={{homelink}} target="_blank" style="text-decoration:none;">{{community}}</a> website is a great community 
-									resource for taking sustainable action and making it count.
-									We'd love your feedback so please check it out and let us know what you think.
-								</h4>
-							</td>
-						</tr>
-						<tr>
-							<td align="center" valign="top" style="padding-bottom:20px;padding-left:20px;padding-right:20px;" class="description">
-								<!-- Description Text// -->
-								<h4 class="text" style="color:#999999; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:left; padding:0; margin:0">
-									{{custom_intro}}:<br/><em>{{custom_message}}</em>
+								<h4 class="text" style="color:#000000; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:28px; font-weight:600; font-style:normal; letter-spacing:normal; line-height:36px; text-transform:none; text-align:left; padding:0; margin:0">
+									Hello, {{name}}!
 								</h4>
 							</td>
 						</tr>
@@ -129,29 +107,32 @@
 							<td align="center" valign="top" style="padding-bottom:30px;padding-left:20px;padding-right:20px;" class="subTitle">
 								<!-- Sub Title Text // -->
 								<h4 class="text" style="color:#999999; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:left; padding:0; margin:0">
-									Interested? It’s easy to join: click the sign in button on our <a href={{homelink}} target="_blank" style="text-decoration:none;">home page</a> to create a profile. Then browse the actions, add some to your to do list, and tell us which you’ve done. The score for each completed action automatically gets added toward {{community}}’s goal! Way to boost your community!
+									A message has been sent from a community portal user to the Community Admin for {{community_name}} through the "Contact Us" page.
+                                    This message is being sent to all Community Admins listed for {{community_name}}, and if possible should be responded to within 2-3 days, using the following link:
+                                    <a href="{{message_url}}">View and respond to message</a>.
 								</h4>
 							</td>
 						</tr>
-											
 
-
-						<tr>
+                        <tr>
 							<td align="center" valign="top" style="padding-bottom:20px;padding-left:20px;padding-right:20px;" class="description">
 								<!-- Description Text// -->
-								<p class="text" style="color:#999999; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:22px; text-transform:none; text-align:left; padding:0; margin:0">
-									If you have any questions for {{community_admin_firstname}}, you can contact them through <a href={{contactlink}} target="_blank" style="text-decoration:none;">this form</a>.
-								</p>
+								<h4 class="text" style="color:#999999; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:left; padding:0; margin:0">
+									Here is a copy of the message:<br/>
+                                    From: {{from_name}} ({{email}})<br/>
+                                    Subject: {{subject}}<br/>
+                                    <em>{{message_body}}</em>
+								</h4>
 							</td>
 						</tr>
 
 						<tr>
-							<td align="center" valign="top" style="padding-bottom:20px;padding-left:20px;padding-right:20px;" class="description">
-								<!-- Description Text// -->
-								<p class="text" style="color:#666666; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:22px; text-transform:none; text-align:left; padding:0; margin:0">
-									Rock on!<br/><br/>
-									<em>{{community}}</em>
-								</p>
+							<td align="center" valign="top" style="padding-bottom:30px;padding-left:20px;padding-right:20px;" class="subTitle">
+								<!-- Sub Title Text // -->
+								<h4 class="text" style="color:#999999; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:18px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:26px; text-transform:none; text-align:left; padding:0; margin:0">
+									If possible, please reply through the admin portal rather than via e-mail, so that the response is recorded.
+									Also, if you think the message is spam, please forward this message to support@massenergize.org.
+								</h4>
 							</td>
 						</tr>
 
@@ -161,16 +142,7 @@
 					</table>
 					<!-- Table Card Close// -->
 
-					<tr>
-						<td align="center" valign="middle" style="padding-top:30px;padding-bottom:30px" class="emailLogo">
-							<!-- Logo and Link // -->
-							<a href={{homelink}} target="_blank" style="text-decoration:none;">
-								<img src={{logo}} alt="" width="150" border="0" style="width:100%; max-width:150px;height:auto; display:block;"/>
-							</a>
-						</td>
-					</tr>
-					
-				<!-- Space -->
+					<!-- Space -->
 					<table border="0" cellpadding="0" cellspacing="0" width="100%" class="space">
 						<tr>
 							<td height="30" style="font-size:1px;line-height:1px;">&nbsp;</td>
@@ -198,20 +170,11 @@
 						</tr>
 
 						<tr>
-							<td align="center" valign="top" style="padding-top:0px;padding-bottom:20px;padding-left:10px;padding-right:10px;" class="footerLinks">
-								<!-- Use Full Links (Privacy Policy)// -->
-								<p class="text" style="color:#777777; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:12px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:20px; text-transform:none; text-align:center; padding:0; margin:0;" >
-									<a href={{privacylink}} style="color:#777777;text-decoration:underline;" target="_blank"> Privacy Policy </a>
-								</p>
-							</td>
-						</tr>
-
-						<tr>
 							<td align="center" valign="top" style="padding-top:0px;padding-bottom:10px;padding-left:10px;padding-right:10px;" class="footerEmailInfo">
 								<!-- Information of NewsLetter (Subscribe Info)// -->
 								<p class="text" style="color:#777777; font-family:'Open Sans', Helvetica, Arial, sans-serif; font-size:12px; font-weight:400; font-style:normal; letter-spacing:normal; line-height:20px; text-transform:none; text-align:center; padding:0; margin:0;" >
-									If you have any questions or wish to unsubscribe, please contact us at info@massenergize.org.<br>
-							 		<!-- <a href="#" style="color:#777777;text-decoration:underline;" target="_blank">Unsubscribe</a> from our mailing lists -->
+									If you have any questions please contact us at support@massenergize.org.<br>
+							 		<!-- As admin you cannot unsubscribe from our emails -->
 								</p>
 							</td>
 						</tr>
