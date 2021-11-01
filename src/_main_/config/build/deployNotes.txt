@@ -1,4 +1,4 @@
-Oct 26th Deployment
+October 31st deployment
 - Bug fixes to go to prod:
     Email messages to Cadmins
     Sort Communities by location/name

@@ -38,7 +38,7 @@ class UserHandler(RouteHandler):
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
-    self.add("/users.import", self.handle_contacts_csv)
+    self.add("/users.import", self.import_users)
 
   @login_required
   def info(self, request):
@@ -255,9 +255,17 @@ class UserHandler(RouteHandler):
 
   @admins_only
   # Community or Super Admins can do this
-  def handle_contacts_csv(self, request):
+  def import_users(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    if args.get("csv", None):
+      return self.import_from_csv(context, args)
+    else:
+      return self.import_from_list()
+
+  # Community or Super Admins can do this
+  def import_from_csv(self, context, args):
 
     args, err = (self.validator
       .expect("community_id", int, is_required=True)
@@ -270,7 +278,24 @@ class UserHandler(RouteHandler):
     )
     if err:
       return err
-    info, err = self.service.handle_csv(context, args)    
+    info, err = self.service.import_from_csv(context, args)    
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=info)
+    
+  # Community or Super Admins can do this
+  def import_from_list(self, context, args):
+
+    args, err = (self.validator
+      .expect("community_id", int, is_required=True)
+      .expect("names", "str_list", is_required=True)
+       .expect("emails", "str_list", is_required=True)
+      .expect("team_id", int, is_required=False)      
+      .verify(context.args)
+    )
+    if err:
+      return err
+    info, err = self.service.import_from_list(context, args)    
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=info)
