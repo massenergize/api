@@ -2,9 +2,10 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.admin import AdminStore
-from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.constants import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from .utils import send_slack_message
 from typing import Tuple
 
 class AdminService:
@@ -73,12 +74,47 @@ class AdminService:
         return serialize(admins), None
 
     def message_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-        admins, err = self.store.message_admin(context, args)
+
+        message, err = self.store.message_admin(context, args)
         if err:
             return None, err
-        # dont want to send emails all the time, just show up in the admin site and if they want they can send emails
-        # need to define a send email function
-        return serialize(admins), None
+
+        # Original comment: dont want to send emails all the time, just show up in the admin site and if they want they can send emails
+        # Now community admins are requesting e-mail messages.  We don't have contact preferences defined yet but will do that.
+        # For now, send e-mail to all community admins on a site
+        admin_group, err = self.store.list_community_admin(context, {"community_id": message.community.id})
+        if not err:
+            subject = 'A message was sent to the Community Admin(s) for ' + message.community.name
+
+            for admin in admin_group.members.all():
+
+                first_name = admin.full_name.split(" ")[0]
+                if not first_name or first_name == "":
+                    first_name = admin.full_name
+
+                content_variables = {
+                    'name': first_name,
+                    'message_url': f"{ADMIN_URL_ROOT}/admin/edit/{message.id}/message",
+                    "community_name": message.community.name,
+                    "from_name": message.user_name,
+                    "email": message.email,
+                    "subject": message.title,
+                    "message_body": message.body,
+                }
+                send_massenergize_rich_email(
+                  subject, admin.email, 'contact_admin_email.html', content_variables)
+
+        send_slack_message(
+            SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            "from_name": message.user_name,
+            "email": message.email,
+            "subject": message.title,
+            "message": message.body,
+            "url": f"{ADMIN_URL_ROOT}/admin/edit/{message.id}/message",
+            "community": message.community.name
+        }) 
+
+        return serialize(message), None
 
     def list_admin_messages(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admins, err = self.store.list_admin_messages(context, args)

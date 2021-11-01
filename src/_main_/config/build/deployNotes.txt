@@ -1,2 +1,7 @@
+October 31st deployment
+- Bug fixes to go to prod:
+    Email messages to Cadmins
+    Sort Communities by location/name
+    User import fixes
 Oct 17th Deployment - Version 4.0
 - Make cookie secure

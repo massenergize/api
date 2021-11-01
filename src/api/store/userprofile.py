@@ -65,6 +65,24 @@ def _get_or_create_reu_location(args, user=None):
     print("Location with zipcode " + zipcode + " found for user " + user.preferred_name)
   return reuloc
 
+def _update_action_data_totals(action, household, value):        
+  # update community totals for this action
+  for t in action.tags.all():
+
+    # for geographic communities, we update the community where the household is
+    community = action.community
+    if action.community.is_geographically_focused:
+      community = household.community
+
+    data = Data.objects.filter(community=community, tag=t)
+    if data:
+      data.update(value=F("value") + value)
+
+    elif value>0:
+      # data for this community, action does not exist so create one
+      d = Data(tag=t, community=community, value=value, name=f"{t.name}")
+      d.save()
+
 
 class UserStore:
   def __init__(self):
@@ -93,7 +111,82 @@ class UserStore:
       return True
     
     return False
+
+
+  def _add_action_rel(self, context: Context, args, status):
+    """
+    Creates a UserActionRel to record the action as completed or to do
+    """
+    try:
+      user = get_user_or_die(context, args)
+      if not user:
+        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
+
+      action_id = args.get("action_id", None)
+      household_id = args.get("household_id", None)
+      vendor_id = args.get("vendor_id", None) 
+
+      date_completed = args.get("date_completed", None)
+      carbon_impact = args.get("carbon_impact", 0)
+      
+      action: Action = Action.objects.get(id=action_id)
+      if not action:
+        return None, CustomMassenergizeError("Please provide a valid action_id")
+      
+      if household_id:
+        household: RealEstateUnit = RealEstateUnit.objects.get(id=household_id)
+      else:
+        household = user.real_estate_units.all().first()
+      
+      if not household:
+        household = RealEstateUnit(name=f"{user.preferred_name}'s Home'")
+        household.save()
+        user.real_estate_units.add(household)
+      
+      vendor = None
+      if vendor_id:
+        vendor = Vendor.objects.get(id=vendor_id)  # not required
+      
+      # if this already exists as a todo just move it over
+      action_rels = UserActionRel.objects.filter(user=user, real_estate_unit=household, action=action)
+      if action_rels:
+
+        oldstatus = action_rels.first().status
+        action_rels.update(status=status,
+                  date_completed=date_completed,
+                  carbon_impact=carbon_impact
+                  )
+        action_rel = action_rels.first()
+      
+      else:
+        # create a new one since we didn't find it existed before
+        action_rel = UserActionRel(
+          user=user,
+          action=action,
+          real_estate_unit=household,
+          status=status,
+          date_completed=date_completed,
+          carbon_impact=carbon_impact
+        )
+        oldstatus = None
+      
+      if vendor_id:
+        action_rel.vendor = vendor
+      action_rel.save()
+
+      if status == "DONE" and oldstatus != "DONE":
+        _update_action_data_totals(action, household, +1)  # add one to action totals
+      elif status == "TODO" and oldstatus == "DONE":
+        _update_action_data_totals(action, household, -1)  # subtract one from action totals
+
+      return action_rel, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      import traceback
+      traceback.print_exc()
+      return None, CustomMassenergizeError(str(e))
   
+
   def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       # email = args.get('email', None)
@@ -386,130 +479,11 @@ class UserStore:
       return None, CustomMassenergizeError(str(e))
   
   def add_action_todo(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    try:
-      user = get_user_or_die(context, args)
-      action_id = args.get("action_id", None)
-      household_id = args.get("household_id", None)
-      vendor_id = args.get("vendor_id", None)
-      
-      if not user:
-        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
-      
-      action: Action = Action.objects.get(id=action_id)
-      if not action:
-        return None, CustomMassenergizeError("Please provide a valid action_id")
-      
-      if household_id:
-        household: RealEstateUnit = RealEstateUnit.objects.get(id=household_id)
-      else:
-        household = user.real_estate_units.all().first()
-      
-      if not household:
-        household = RealEstateUnit(name=f"{user.preferred_name}'s Home'")
-        household.save()
-        user.real_estate_units.add(household)
-      
-      if vendor_id:
-        vendor = Vendor.objects.get(id=vendor_id)  # not required
-      
-      # if this already exists as a todo just move it over
-      completed = UserActionRel.objects.filter(user=user, real_estate_unit=household, action=action)
-      if completed:
-        # TODO: update action stats
-        completed.update(status="TODO")
-        return completed.first(), None
-      
-      # create a new one since we didn't find it existed before
-      new_user_action_rel = UserActionRel(user=user, action=action, real_estate_unit=household, status="TODO")
-      
-      if vendor_id:
-        new_user_action_rel.vendor = vendor
-      
-      new_user_action_rel.save()
-      
-      return new_user_action_rel, None
-    except Exception as e:
-      capture_message(str(e), level="error")
-      import traceback
-      traceback.print_exc()
-      return None, CustomMassenergizeError(str(e))
-  
+    return self._add_action_rel(context, args, "TODO")
+
   def add_action_completed(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    try:
-      user_id = args.get('user_id') or context.user_id
-      user_email = args.get('user_email') or context.user_email
-      action_id = args.get("action_id", None)
-      household_id = args.get("household_id", None)
-      vendor_id = args.get("vendor_id", None)
-      date_completed = args.get("date_completed", None)
-      # future use
-      carbon_impact = args.get("carbon_impact", 0)
-      
-      user = None
-      if user_id:
-        user = UserProfile.objects.get(id=user_id)
-      elif user_email:
-        user = UserProfile.objects.get(email=user_email)
-      
-      if not user:
-        return None, CustomMassenergizeError("sign_in_required / Provide user_id")
-      
-      action = Action.objects.get(id=action_id)
-      if not action:
-        return None, CustomMassenergizeError("Please provide an action_id")
-      
-      household = RealEstateUnit.objects.get(id=household_id)
-      if not household:
-        return None, CustomMassenergizeError("Please provide a household_id")
-      
-      # update all data points
-      for t in action.tags.all():
-        data = Data.objects.filter(community=action.community, tag=t)
-        if data:
-          data.update(value=F("value") + 1)
-        
-        else:
-          # data for this community, action does not exist so create one
-          d = Data(tag=t, community=action.community, value=1, name=f"{t.name}")
-          d.save()
-      
-      # if this already exists as a todo just move it over
-      completed = UserActionRel.objects.filter(user=user, real_estate_unit=household, action=action)
-      if completed:
-        completed.update(
-          status="DONE",
-          date_completed=date_completed,
-          carbon_impact=carbon_impact
-        )
-        completed = completed.first()
-        
-        if vendor_id:
-          vendor = Vendor.objects.get(id=vendor_id)  # not required
-          completed.vendor = vendor
-        
-        return completed, None
-      
-      # create a new one since we didn't find it existed before
-      new_user_action_rel = UserActionRel(
-        user=user,
-        action=action,
-        real_estate_unit=household,
-        status="DONE",
-        date_completed=date_completed,
-        carbon_impact=carbon_impact
-      )
-      
-      if vendor_id:
-        vendor = Vendor.objects.get(id=vendor_id)  # not required
-        new_user_action_rel.vendor = vendor
-      
-      new_user_action_rel.save()
-      
-      return new_user_action_rel, None
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
-  
+    return self._add_action_rel(context, args, "DONE")
+
   def list_todo_actions(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       
@@ -554,14 +528,22 @@ class UserStore:
         return [], CustomMassenergizeError("sign_in_required")
       
       user_action = UserActionRel.objects.get(pk=user_action_id)
+      oldstatus = user_action.status
+      action = user_action.action
+      household = user_action.household
+
       result = user_action.delete()
-      
+
+      # if action had been marked as DONE, decrement community total for the action
+      if oldstatus == "DONE":
+        _update_action_data_totals(action, household, -1)
+
       return result, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
   
-  def import_from_csv(self, context: Context, args, first_name, last_name, email) -> Tuple[dict, MassEnergizeAPIError]:
+  def add_invited_user(self, context: Context, args, first_name, last_name, email) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       # query users by user id, find the user that is sending the request
       cadmin = UserProfile.objects.filter(id=context.user_id).first()
@@ -569,12 +551,13 @@ class UserStore:
       #find the community that the user is the admin of. In the next section, populate user profiles with that information
       community_id = args.get("community_id", None)
       community = Community.objects.filter(id=community_id).first()
+
       location = community.location.get("city", "")
       if location != "":
         location += ", "
       location += community.location.get("state", "MA")
       location = "in " + location
-
+      
       team_name = args.get('team_name', None)
       team = None
       if team_name and team_name != "none":
@@ -584,7 +567,7 @@ class UserStore:
       if not user:
         if not email or email == "":
           return None, CustomMassenergizeError(
-            "One of more of your user(s) lacks a valid email address. Please make sure all your users have valid email addresses listed.")
+            "The user (" + first_name + " " + last_name + ") lacks a valid email address. Please make sure all your users have valid email addresses listed.")
         new_user: UserProfile = UserProfile.objects.create(
           full_name=first_name + ' ' + last_name,
           preferred_name=first_name + last_name[0].upper(),
@@ -608,6 +591,7 @@ class UserStore:
         new_member, _ = TeamMember.objects.get_or_create(user=new_user, team=team)
         new_member.save()
         team.save()
+        
       new_user.save()
       ret = {'cadmin': cadmin.full_name,
               'community': community.name,
@@ -615,16 +599,18 @@ class UserStore:
               'community_info': community.about_community,
               'location': location,
               'subdomain': community.subdomain,
-              'team_name': team_name,
-              'team_leader': team_leader.full_name,
-              'team_leader_firstname': team_leader.full_name.split(" ")[0],
-              'team_leader_email': team_leader.email,
               'first_name': first_name, 
               'full_name': new_user.full_name,
               'email': email,
               'preferred_name': new_user.preferred_name}
-
+      if team and team_leader:
+        ret['team_name'] = team_name,
+        ret['team_leader'] = team_leader.full_name,
+        ret['team_leader_firstname'] = team_leader.full_name.split(" ")[0],
+        ret['team_leader_email'] = team_leader.email,
+ 
       return ret, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
+

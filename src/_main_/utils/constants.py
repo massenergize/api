@@ -19,13 +19,7 @@ COMMUNITY_URL_ROOT = (
     if IS_CANARY
     else "https://community.massenergize.dev"
 )
-#COMMUNITY_SANDBOX_URL_ROOT = (
-#    "https://sandbox.community.massenergize.org"
-#    if IS_PROD
-#    else "https://sandbox.community-canary.massenergize.org"
-#    if IS_CANARY
-#    else "https://sandbox.community-dev.massenergize.org"
-#)
+
 ADMIN_URL_ROOT = (
     "https://admin.massenergize.org"
     if IS_PROD
@@ -41,3 +35,5 @@ SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = "https://hooks.slack.com/workflows/T724MGV4
 RESERVED_SUBDOMAIN_LIST = load_json(
     BASE_DIR + "/_main_/utils/json_files/reserved_subdomains.json"
 )
+
+STATES = load_json(BASE_DIR + "/database/raw_data/other/states.json")

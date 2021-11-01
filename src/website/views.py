@@ -7,7 +7,7 @@ from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
 from api.services.misc import MiscellaneousService
-from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
+from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
 from database.models import (
     Deployment,
     Community,
@@ -75,7 +75,6 @@ META = {
     "tags": ["#ClimateChange"],
     "is_local": IS_LOCAL
 }
-
 
 def _get_subdomain(request, enforce_is_valid=False):
     domain_components = request.META["HTTP_HOST"].split(".")
@@ -148,11 +147,35 @@ def communities(request):
         }
     )
 
+    communityList = list(Community.objects.filter(
+            is_deleted=False, is_published=True
+        ).values("id", "name", "subdomain", "about_community", "location"))
+
+    # for each community make a display name which is "Location - Community name"
+    for community in communityList:
+        location = community.get("location", None)
+        prefix = ""        
+        if location:
+            city = location["city"]
+            state = location["state"]
+            if state:
+                for abbrev, name in STATES.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
+                    if state.lower() == name.lower():
+                        prefix = abbrev + ' - '
+            if city:
+                prefix = city + ", " + prefix
+        displayName = prefix + community["name"]
+        index = communityList.index(community)
+        communityList[index]["displayName"] = displayName
+
+    # sort the list by the display name
+    def sortFunc(e):
+        return e['displayName']
+    communityList.sort(key=sortFunc)
+
     args = {
         "meta": meta,
-        "communities": Community.objects.filter(
-            is_deleted=False, is_published=True
-        ).values("id", "name", "subdomain", "about_community"),
+        "communities": communityList,
     }
     return render(request, "communities.html", args)
 
@@ -178,8 +201,6 @@ def community(request, subdomain):
     )
 
     redirect_url = _get_redirect_url(subdomain, community)
-
-    print(redirect_url)
 
     meta = META
     meta.update(
