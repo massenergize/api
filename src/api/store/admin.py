@@ -9,6 +9,7 @@ from typing import Tuple
 class AdminStore:
   def __init__(self):
     self.name = "Admin Store/DB"
+    self.communityStore =  CommunityStore()
 
   def add_super_admin(self, context: Context, args) -> Tuple[UserProfile, MassEnergizeAPIError]:
     try:
@@ -108,7 +109,7 @@ class AdminStore:
       admin_group.save()
 
       # make sure admin is a member of the community, if not add them
-      CommunityStore.join_community(context, {"community_id": community.id, "user_id":user.id})
+      self.communityStore.join_community(context, {"community_id": community.id, "user_id":user.id})
 
       res = {
         "name": user.preferred_name,
