@@ -7,7 +7,7 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0107_customcommunitywebsitedomain'),
+        ('database', '0108_subscriber_created_at'),
     ]
 
     operations = [
