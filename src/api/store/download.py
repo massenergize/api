@@ -66,35 +66,42 @@ class DownloadStore:
           'Created': user.created_at.strftime("%Y-%m-%d")}
     elif (isinstance(user, RealEstateUnit)):
         # for geographic communities, list non-members who have households in the community
-        the_user = user.user_real_estate_units.first()
-        if not the_user:
+        reu = user
+        user = reu.user_real_estate_units.first()
+        if not user:
           return None
   
-        if user.address and user.address.city:
-          city = user.address.city
+        if reu.address and reu.address.city:
+          city = reu.address.city
         else:
-          return None
+          city = "somewhere"
+          #return None
 
-        full_name = the_user.full_name
+        full_name = user.full_name
         space = full_name.find(' ')
         first_name = full_name[:space-1]
         last_name = full_name[space+1:]
 
-        this_community = Community.objects.filter(id=self.community_id)
- 
+        this_community = Community.objects.filter(id=self.community_id).first()
+
         # community list which user has associated with
-        communities = [cm.community.name for cm in CommunityMember.objects.filter(user=the_user).select_related('community')]
-        if this_community in communities:
+        communities = [cm.community.name for cm in CommunityMember.objects.filter(user=user).select_related('community')]
+        if this_community.name in communities:
           return None
-        else:
+        elif len(communities)<1:
+          community = "NO COMMUNITY"
+        elif len(communities)==1:
           community = communities[0]
+        else:
+          community = str(communities)
 
         user_cells = {'First Name': first_name,
                       'Last Name' : last_name,
-                      'Preferred Name': the_user.preferred_name, 
+                      'Preferred Name': user.preferred_name, 
                       'Role': community + ' member, household in ' + city, 
-                      'Email': the_user.email, 
-                      'Created': the_user.created_at.strftime("%Y-%m-%d")}
+                      'Email': user.email, 
+                      'Created': user.created_at.strftime("%Y-%m-%d")}
+
     else:
         full_name = user.full_name
         space = full_name.find(' ')
@@ -387,7 +394,6 @@ class DownloadStore:
               + list(Subscriber.objects.filter(community__id=community_id, is_deleted=False))
 
     community_households = list(RealEstateUnit.objects.filter(community__id=community_id, is_deleted=False))
-
 
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
