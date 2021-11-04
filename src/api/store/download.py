@@ -56,7 +56,7 @@ class DownloadStore:
     if (isinstance(user, Subscriber)):
         full_name = user.name
         space = full_name.find(' ')
-        first_name = full_name[:space-1]
+        first_name = full_name[:space]
         last_name = full_name[space+1:]
         user_cells = {
           'First Name': first_name, 
@@ -79,7 +79,7 @@ class DownloadStore:
 
         full_name = user.full_name
         space = full_name.find(' ')
-        first_name = full_name[:space-1]
+        first_name = full_name[:space]
         last_name = full_name[space+1:]
 
         this_community = Community.objects.filter(id=self.community_id).first()
@@ -105,7 +105,7 @@ class DownloadStore:
     else:
         full_name = user.full_name
         space = full_name.find(' ')
-        first_name = full_name[:space-1]
+        first_name = full_name[:space]
         last_name = full_name[space+1:]
 
         user_households = user.real_estate_units.count()
@@ -338,7 +338,7 @@ class DownloadStore:
     sub_columns = ['', ''] + ['' for _ in range(len(self.user_info_columns))] + [''] \
             + ["ACTION" for _ in range(len(actions))] #+ ["TEAM" for _ in range(len(teams))]
     data = []
-
+    print("downloading " + str(len(users))+ " users")
     for user in users:
       if (isinstance(user, Subscriber)):
         if user.community:
@@ -346,6 +346,7 @@ class DownloadStore:
         else:
           primary_community, secondary_community = '', ''
       else:
+
         # community list which user has associated with
         communities = [cm.community.name for cm in CommunityMember.objects.filter(user=user).select_related('community')]
         # communities of primary real estate unit associated with the user
@@ -354,7 +355,6 @@ class DownloadStore:
           if reu.community:
             reu_community = reu.community.name
             break
-
         primary_community = secondary_community = ''
         # Primary community comes from a RealEstateUnit
         if reu_community:
@@ -371,6 +371,7 @@ class DownloadStore:
         #  primary_community, secondary_community = communities[0], ''
         #else:
         #  primary_community, secondary_community = '', ''
+        print(str(user) + ", " + str(len(communities)) + " communities, primary is " + str(community))
 
       row = [primary_community, secondary_community] \
       + self._get_user_info_cells(user) \
