@@ -259,7 +259,6 @@ class DownloadStore:
 
 
   def _get_community_info_cells(self, community):
-
     location_string = ''
     if community.is_geographically_focused:
       location_string += '['
@@ -273,8 +272,9 @@ class DownloadStore:
                                           .select_related('user')
     users = [cm.user for cm in community_members]
     members_count = community_members.count()
-    teams_count = str(Team.objects.filter(is_deleted=False, community=community).count())
+    teams_count = str(Team.objects.filter(is_deleted=False, primary_community=community).count())
     events_count = str(Event.objects.filter(is_deleted=False, community=community).count())
+
     testimonials_count = str(Testimonial.objects.filter(is_deleted=False, community=community).count())
 
     actions = Action.objects.filter(Q(community=community) | Q(is_global=True)).filter(is_deleted=False).select_related('calculator_action')
@@ -430,8 +430,10 @@ class DownloadStore:
             is_deleted=False, user__is_deleted=False).select_related('user')]
 
     # Soon teams could span communities, in which case actions list would be larger.  
-    # For now, take the first community that a team is associated with
-    community_id = Team.objects.get(id=team_id).community.id     
+    # For now, take the primary community that a team is associated with; this may not be correct
+    # TODO: loop over communities team is associated with and sort this all out
+    team = Team.objects.get(id=team_id)
+    community_id = team.primary_community.id     
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
 
