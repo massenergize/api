@@ -581,6 +581,7 @@ class UserProfile(models.Model):
     data['admin_at'] = admin_at
     data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    data['visit_log'] = self.visit_log
     return data
   
   class Meta:
@@ -643,7 +644,9 @@ class DeviceProfile(models.Model):
       return None, e
 
   def simple_json(self):
-    return model_to_dict(self)
+    res = model_to_dict(self, ['id', 'ip_address', 'device_type', 'operating_system', 'browser', 'visit_log', 'is_deleted'])
+    res['user_profiles'] = [u.simple_json() for u in self.user_profiles.all()]
+    return res
   
   def full_json(self):
     return self.simple_json()
