@@ -530,13 +530,13 @@ class UserStore:
       user_action = UserActionRel.objects.get(pk=user_action_id)
       oldstatus = user_action.status
       action = user_action.action
-      household = user_action.household
+      reu = user_action.real_estate_unit
 
       result = user_action.delete()
 
       # if action had been marked as DONE, decrement community total for the action
       if oldstatus == "DONE":
-        _update_action_data_totals(action, household, -1)
+        _update_action_data_totals(action, reu, -1)
 
       return result, None
     except Exception as e:
