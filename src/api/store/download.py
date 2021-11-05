@@ -324,12 +324,12 @@ class DownloadStore:
     return self._get_cells_from_dict(self.community_info_columns, community_cells)
 
   def _all_users_download(self):
-    users = list(UserProfile.objects.filter(is_deleted=False)) \
+    users = list(UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)) \
         + list(Subscriber.objects.filter(is_deleted=False))
     actions = Action.objects.filter(is_deleted=False)
     teams = Team.objects.filter(is_deleted=False)
 
-    columns = ['primary community',
+    columns = ['home community',
                 'secondary community' ] \
                 + self.user_info_columns \
                 + ['TEAM'] \
@@ -364,14 +364,7 @@ class DownloadStore:
           if community != primary_community:
             if secondary_community != '': secondary_community += ", "
             secondary_community += community
-
-        #if len(communities) > 1:
-        #  primary_community, secondary_community = communities[0], communities[1]
-        #elif len(communities) == 1:
-        #  primary_community, secondary_community = communities[0], ''
-        #else:
-        #  primary_community, secondary_community = '', ''
-        print(str(user) + ", " + str(len(communities)) + " communities, primary is " + str(community))
+        #print(str(user) + ", " + str(len(communities)) + " communities, home is " + str(reu_community))
 
       row = [primary_community, secondary_community] \
       + self._get_user_info_cells(user) \
