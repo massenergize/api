@@ -56,7 +56,7 @@ class DownloadStore:
     if (isinstance(user, Subscriber)):
         full_name = user.name
         space = full_name.find(' ')
-        first_name = full_name[:space]
+        first_name = full_name[:space-1]
         last_name = full_name[space+1:]
         user_cells = {
           'First Name': first_name, 
@@ -79,7 +79,7 @@ class DownloadStore:
 
         full_name = user.full_name
         space = full_name.find(' ')
-        first_name = full_name[:space]
+        first_name = full_name[:space-1]
         last_name = full_name[space+1:]
 
         this_community = Community.objects.filter(id=self.community_id).first()
@@ -105,7 +105,7 @@ class DownloadStore:
     else:
         full_name = user.full_name
         space = full_name.find(' ')
-        first_name = full_name[:space]
+        first_name = full_name[:space-1]
         last_name = full_name[space+1:]
 
         user_households = user.real_estate_units.count()
@@ -259,6 +259,7 @@ class DownloadStore:
 
 
   def _get_community_info_cells(self, community):
+
     location_string = ''
     if community.is_geographically_focused:
       location_string += '['
@@ -272,9 +273,8 @@ class DownloadStore:
                                           .select_related('user')
     users = [cm.user for cm in community_members]
     members_count = community_members.count()
-    teams_count = str(Team.objects.filter(is_deleted=False, primary_community=community).count())
+    teams_count = str(Team.objects.filter(is_deleted=False, community=community).count())
     events_count = str(Event.objects.filter(is_deleted=False, community=community).count())
-
     testimonials_count = str(Testimonial.objects.filter(is_deleted=False, community=community).count())
 
     actions = Action.objects.filter(Q(community=community) | Q(is_global=True)).filter(is_deleted=False).select_related('calculator_action')
@@ -338,7 +338,7 @@ class DownloadStore:
     sub_columns = ['', ''] + ['' for _ in range(len(self.user_info_columns))] + [''] \
             + ["ACTION" for _ in range(len(actions))] #+ ["TEAM" for _ in range(len(teams))]
     data = []
-    print("downloading " + str(len(users))+ " users")
+
     for user in users:
       if (isinstance(user, Subscriber)):
         if user.community:
@@ -346,7 +346,6 @@ class DownloadStore:
         else:
           primary_community, secondary_community = '', ''
       else:
-
         # community list which user has associated with
         communities = [cm.community.name for cm in CommunityMember.objects.filter(user=user).select_related('community')]
         # communities of primary real estate unit associated with the user
@@ -355,6 +354,7 @@ class DownloadStore:
           if reu.community:
             reu_community = reu.community.name
             break
+
         primary_community = secondary_community = ''
         # Primary community comes from a RealEstateUnit
         if reu_community:
@@ -371,7 +371,6 @@ class DownloadStore:
         #  primary_community, secondary_community = communities[0], ''
         #else:
         #  primary_community, secondary_community = '', ''
-        print(str(user) + ", " + str(len(communities)) + " communities, primary is " + str(community))
 
       row = [primary_community, secondary_community] \
       + self._get_user_info_cells(user) \
@@ -431,10 +430,8 @@ class DownloadStore:
             is_deleted=False, user__is_deleted=False).select_related('user')]
 
     # Soon teams could span communities, in which case actions list would be larger.  
-    # For now, take the primary community that a team is associated with; this may not be correct
-    # TODO: loop over communities team is associated with and sort this all out
-    team = Team.objects.get(id=team_id)
-    community_id = team.primary_community.id     
+    # For now, take the first community that a team is associated with
+    community_id = Team.objects.get(id=team_id).community.id     
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
 
