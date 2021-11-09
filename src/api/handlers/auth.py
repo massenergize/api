@@ -7,6 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from _main_.utils.GeoIP import GeoIP
 from api.decorators import admins_only, super_admins_only, login_required
 
 
@@ -16,6 +17,8 @@ class AuthHandler(RouteHandler):
     super().__init__()
     self.service = AuthService()
     self.registerRoutes()
+
+    self.ipLocator = GeoIP()
 
   def registerRoutes(self):
     self.add("/auth.login", self.login) 
@@ -57,7 +60,21 @@ class AuthHandler(RouteHandler):
 
   def whoami(self, request): 
     context: Context = request.context
-    user_info, err = self.service.whoami(context)
+
+    if not context.is_admin_site:
+      ip = self.ipLocator.getIP(request)
+
+      #ip = "38.242.8.93"
+      loc = self.ipLocator.getGeo(ip)
+
+      browser = self.ipLocator.getBrowser(request)
+
+      ip_user, err = self.service.userByIP(context, ip, loc, browser)
+      if err:
+        # this isn't critical - need 
+        print(err)
+
+    user_info, err = self.service.whoami(context, ip_user)
     if err:
       return err
     return MassenergizeResponse(data=user_info)

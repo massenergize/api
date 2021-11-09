@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -47,7 +47,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
@@ -138,6 +138,9 @@ APPEND_SLASH = True
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
+ROOT_URLCONF = '_main_.urls'
+# SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_SAVE_EVERY_REQUEST = True
 
 
 TEMPLATES = [

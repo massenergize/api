@@ -94,10 +94,14 @@ class Media(models.Model):
   media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   order = models.PositiveIntegerField(default=0, blank=True, null=True)
-  
-  def __str__(self):
-    return self.name
-  
+  uploaded_by = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+  uploaded_at = models.DateTimeField(auto_now_add=True, null=True)
+  parent = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)
+
+  def __str__(self):      
+    return str(self.id) + '-' +self.name + "(" + self.file.name + ")"
+
+
   def simple_json(self):
     return {
       "id": self.id,
@@ -109,7 +113,9 @@ class Media(models.Model):
       "id": self.id,
       "name": self.name,
       "url": self.file.url,
-      "media_type": self.media_type
+      "media_type": self.media_type,
+      "uploaded_by": self.uploaded_by,
+      
     }
   
   class Meta:
@@ -151,6 +157,7 @@ class Policy(models.Model):
     return model_to_dict(self)
   
   def full_json(self):
+    # this will certinly blow up because no community_set:
     res = model_to_dict(self)
     community = self.community_set.all().first()
     if community:
@@ -479,6 +486,62 @@ class Role(models.Model):
     db_table = 'roles'
 
 
+class IpProfile(models.Model):
+  """
+  A class used to represent an anonymous User
+
+
+  Attributes
+  ----------
+  ip_ddress : GenericIPAddressField
+    email of the user.  Should be unique.
+  location: Location
+    link to Location (which may be the community location)
+  client: JSON
+    browser and device information for client 
+  created_at: DateTime
+    The date and time that this goal was added 
+  updated_at: DateTime
+    The date and time of the last time any updates were made to the information
+    about this goal
+
+  """
+  ip_address = models.GenericIPAddressField(primary_key=True)
+  location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True)
+  client = JSONField(blank=True, null=True)
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+
+  # is_profile = models.BooleanField(default=False, blank=True)
+  # linked_users = models.
+
+  # most recent community interacted with
+  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, blank=True)
+  last_visited = models.DateTimeField(null=True, blank = True)
+  num_visits = models.PositiveIntegerField(default=0)
+  visit_history = JSONField(blank=True, null=True)
+
+
+  def __str__(self):
+    return self.ip_address
+
+  def info(self):
+    return model_to_dict(self, ['ip_address'])
+
+  def simple_json(self):
+    res =  model_to_dict(self, ['ip_address'])
+    return res
+
+
+  def full_json(self):
+    return self.simple_json()
+
+  class Meta:
+    db_table = 'ip_profiles' 
+    #ordering = ('-created_at',)
+
+
 class UserProfile(models.Model):
   """
   A class used to represent a MassEnergize User
@@ -536,6 +599,12 @@ class UserProfile(models.Model):
   preferences = models.JSONField(default=dict, null=True, blank=True)
   visit_log = models.JSONField(default=dict, null=True, blank=True)
   
+
+  last_visited = models.DateTimeField(null=True, blank = True)
+  num_visits = models.PositiveIntegerField(default=0)
+  unique_ip_addresses = models.ManyToManyField(IpProfile,null=True)
+  visit_history = JSONField(blank=True, null=True)
+
   def __str__(self):
     return self.email
 
@@ -570,8 +639,8 @@ class UserProfile(models.Model):
     communities = [cm.community.info() for cm in community_members]
     admin_at = [cm.community.info() for cm in CommunityMember.objects.filter(user=self, is_admin=True)]
     
-    data = model_to_dict(self, exclude=['real_estate_units',
-                                        'communities', 'roles'])
+    data = model_to_dict(self, exclude=['real_estate_units', 
+      'communities', 'roles', 'last_visited'])
     data['joined'] = self.created_at.date()
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
@@ -581,6 +650,7 @@ class UserProfile(models.Model):
     data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
     data['visit_log'] = self.visit_log
+    data['last_visited'] = str(self.last_visited)
     return data
   
   class Meta:
