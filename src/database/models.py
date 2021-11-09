@@ -508,7 +508,7 @@ class IpProfile(models.Model):
   """
   ip_address = models.GenericIPAddressField(primary_key=True)
   location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True)
-  client = JSONField(blank=True, null=True)
+  client = models.JSONField(blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
@@ -520,7 +520,7 @@ class IpProfile(models.Model):
   community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, blank=True)
   last_visited = models.DateTimeField(null=True, blank = True)
   num_visits = models.PositiveIntegerField(default=0)
-  visit_history = JSONField(blank=True, null=True)
+  visit_history = models.JSONField(blank=True, null=True)
 
 
   def __str__(self):
@@ -603,7 +603,7 @@ class UserProfile(models.Model):
   last_visited = models.DateTimeField(null=True, blank = True)
   num_visits = models.PositiveIntegerField(default=0)
   unique_ip_addresses = models.ManyToManyField(IpProfile,null=True)
-  visit_history = JSONField(blank=True, null=True)
+  visit_history = models.JSONField(blank=True, null=True)
 
   def __str__(self):
     return self.email
