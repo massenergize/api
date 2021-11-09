@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.fields import related
 from database.utils.constants import *
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
@@ -670,15 +671,19 @@ class UserMediaUpload(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(
         UserProfile,
-        blank=True,
-        null=False,
+        null = True,
         related_name="uploads",
+        on_delete=models.DO_NOTHING,
+    )
+    community = models.ForeignKey(
+        Community,
+        null = True,
+        related_name="community_uploads",
         on_delete=models.DO_NOTHING,
     )
     media = models.OneToOneField(
         Media,
-        null=False,
-        blank=True,
+        null = True,
         related_name="user_upload",
         on_delete=models.CASCADE,
     )
@@ -691,6 +696,7 @@ class UserMediaUpload(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, ["settings", "media", "created_at", "id"])
+        res["user"] = self.community.simple_json()
         res["community"] = get_summary_info(self.community)
         return res
 
@@ -1320,7 +1326,7 @@ class Action(models.Model):
     tags = models.ManyToManyField(Tag, related_name="action_tags", blank=True)
     geographic_area = models.JSONField(blank=True, null=True)
     icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True)
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="action_images")
     properties = models.ManyToManyField(ActionProperty, blank=True)
     vendors = models.ManyToManyField(Vendor, blank=True)
     calculator_action = models.ForeignKey(
@@ -1427,7 +1433,7 @@ class Event(models.Model):
     end_date_and_time = models.DateTimeField(db_index=True)
     location = models.JSONField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True)
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="event_images")
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
