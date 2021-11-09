@@ -543,12 +543,11 @@ class UserProfile(models.Model):
     # TODO: Still requires testing
     try:
       day = date_time.strftime('%d/%m/%y')
-      time = date_time.strftime('%H:%M')
+      # time = date_time.strftime('%H:%M')
       data = { "timestamp": repr(date_time) }
-      if day in self.visit_log:
-        self.visit_log[day][time] = data
-      else:
-        self.visit_log[day] = { time: data }
+      if day not in self.visit_log:
+        self.visit_log[day] = data
+
     except Exception as e:
       print(e)
       return None, e
@@ -633,12 +632,10 @@ class DeviceProfile(models.Model):
   def update_visit_log(self, date_time):
     try:
       day = date_time.strftime('%d/%m/%y')
-      time = date_time.strftime('%H:%M')
+      # time = date_time.strftime('%H:%M') # This can be added back if we ever want more detailed logging
       data = { "timestamp": repr(date_time) }
-      if day in self.visit_log:
-        self.visit_log[day][time] = data
-      else:
-        self.visit_log[day] = { time: data }
+      if day not in self.visit_log:
+        self.visit_log[day] = data
     except Exception as e:
       print(e)
       return None, e
