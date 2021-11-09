@@ -485,63 +485,6 @@ class Role(models.Model):
     ordering = ('name',)
     db_table = 'roles'
 
-
-class IpProfile(models.Model):
-  """
-  A class used to represent an anonymous User
-
-
-  Attributes
-  ----------
-  ip_ddress : GenericIPAddressField
-    email of the user.  Should be unique.
-  location: Location
-    link to Location (which may be the community location)
-  client: JSON
-    browser and device information for client 
-  created_at: DateTime
-    The date and time that this goal was added 
-  updated_at: DateTime
-    The date and time of the last time any updates were made to the information
-    about this goal
-
-  """
-  ip_address = models.GenericIPAddressField(primary_key=True)
-  location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True)
-  client = models.JSONField(blank=True, null=True)
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
-  is_deleted = models.BooleanField(default=False, blank=True)
-
-  # is_profile = models.BooleanField(default=False, blank=True)
-  # linked_users = models.
-
-  # most recent community interacted with
-  community = models.ForeignKey(Community, on_delete=models.SET_NULL, null=True, blank=True)
-  last_visited = models.DateTimeField(null=True, blank = True)
-  num_visits = models.PositiveIntegerField(default=0)
-  visit_history = models.JSONField(blank=True, null=True)
-
-
-  def __str__(self):
-    return self.ip_address
-
-  def info(self):
-    return model_to_dict(self, ['ip_address'])
-
-  def simple_json(self):
-    res =  model_to_dict(self, ['ip_address'])
-    return res
-
-
-  def full_json(self):
-    return self.simple_json()
-
-  class Meta:
-    db_table = 'ip_profiles' 
-    #ordering = ('-created_at',)
-
-
 class UserProfile(models.Model):
   """
   A class used to represent a MassEnergize User
@@ -599,12 +542,6 @@ class UserProfile(models.Model):
   preferences = models.JSONField(default=dict, null=True, blank=True)
   visit_log = models.JSONField(default=dict, null=True, blank=True)
   
-
-  last_visited = models.DateTimeField(null=True, blank = True)
-  num_visits = models.PositiveIntegerField(default=0)
-  unique_ip_addresses = models.ManyToManyField(IpProfile,null=True)
-  visit_history = models.JSONField(blank=True, null=True)
-
   def __str__(self):
     return self.email
 

@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import get_request_contents
-from database.models import UserProfile, IpProfile, Location
+from database.models import UserProfile, DeviceProfile, Location
 from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
@@ -75,7 +75,7 @@ class AuthService:
 
 
   
-  def whoami(self, context: Context, ip_user: IpProfile = None):
+  def whoami(self, context: Context, device: DeviceProfile = None):
     try:
       user_id = context.user_id
       user_email = context.user_email
@@ -147,7 +147,7 @@ class AuthService:
       date = now.date()
 
       # see if this IP user is in DB, if not create it
-      ip_profile, created = IpProfile.objects.get_or_create(pk=ip)
+      ip_profile, created = DeviceProfile.objects.get_or_create(pk=ip)
       if created:
         print("Created IpProfile for: "+ip)
         ip_profile.client = browser
