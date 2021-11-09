@@ -337,7 +337,7 @@ class Community(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
-        return self.name
+        return str(self.id) + " - " + self.name
 
     def info(self):
         return model_to_dict(self, ["id", "name", "subdomain"])
@@ -834,7 +834,7 @@ class Team(models.Model):
         Community, related_name="primary_community_teams", on_delete=models.CASCADE
     )
     images = models.ManyToManyField(
-        Media, related_name="team_images"
+        Media, related_name="teams"
     )  # 0 or more photos - could be a slide show
     video_link = models.CharField(
         max_length=LONG_STR_LEN, blank=True
@@ -1326,7 +1326,7 @@ class Action(models.Model):
     tags = models.ManyToManyField(Tag, related_name="action_tags", blank=True)
     geographic_area = models.JSONField(blank=True, null=True)
     icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="action_images")
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="actions")
     properties = models.ManyToManyField(ActionProperty, blank=True)
     vendors = models.ManyToManyField(Vendor, blank=True)
     calculator_action = models.ForeignKey(
@@ -1433,7 +1433,7 @@ class Event(models.Model):
     end_date_and_time = models.DateTimeField(db_index=True)
     location = models.JSONField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="event_images")
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events")
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -1658,7 +1658,7 @@ class Testimonial(models.Model):
     body = models.TextField(max_length=LONG_STR_LEN)
     is_approved = models.BooleanField(default=False, blank=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True)
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="testimonials")
     user = models.ForeignKey(
         UserProfile, on_delete=models.CASCADE, db_index=True, null=True
     )

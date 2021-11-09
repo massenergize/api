@@ -1,6 +1,7 @@
 from api.handlers.action import ActionHandler
 from api.handlers.admin import AdminHandler
 from api.handlers.auth import AuthHandler
+from api.handlers.media_library import MediaLibraryHandler
 from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
 from api.handlers.page_settings__actions import ActionsPageSettingsHandler
 from api.handlers.page_settings__events import EventsPageSettingsHandler
@@ -59,7 +60,8 @@ ROUTE_HANDLERS = [
   TestimonialsPageSettingsHandler(),
   UserHandler(),
   VendorHandler(),
-  VendorsPageSettingsHandler()
+  VendorsPageSettingsHandler(), 
+  MediaLibraryHandler(),
 ]
 
 urlpatterns = [

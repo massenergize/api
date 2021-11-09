@@ -28,6 +28,9 @@ class MediaLibraryHandler(RouteHandler):
 
     
     def back_fill_user_media_uploads(self, request):
-        """ Goes over actions, testimonials, events, and teams and collects information about uploaders and the community they belong to, to create new instances of UserMediaUploads"""
+        """ Goes over actions, testimonials, events, and teams and collects information about
+         uploaders and the community they belong to, to create new instances of UserMediaUploads
+         
+         """
         context: Context = request.context
         return self.service.back_fill_user_media_uploads(context, request)
