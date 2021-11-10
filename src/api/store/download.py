@@ -324,12 +324,12 @@ class DownloadStore:
     return self._get_cells_from_dict(self.community_info_columns, community_cells)
 
   def _all_users_download(self):
-    users = list(UserProfile.objects.filter(is_deleted=False)) \
+    users = list(UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)) \
         + list(Subscriber.objects.filter(is_deleted=False))
     actions = Action.objects.filter(is_deleted=False)
     teams = Team.objects.filter(is_deleted=False)
 
-    columns = ['primary community',
+    columns = ['home community',
                 'secondary community' ] \
                 + self.user_info_columns \
                 + ['TEAM'] \
@@ -364,14 +364,7 @@ class DownloadStore:
           if community != primary_community:
             if secondary_community != '': secondary_community += ", "
             secondary_community += community
-
-        #if len(communities) > 1:
-        #  primary_community, secondary_community = communities[0], communities[1]
-        #elif len(communities) == 1:
-        #  primary_community, secondary_community = communities[0], ''
-        #else:
-        #  primary_community, secondary_community = '', ''
-        print(str(user) + ", " + str(len(communities)) + " communities, primary is " + str(community))
+        #print(str(user) + ", " + str(len(communities)) + " communities, home is " + str(reu_community))
 
       row = [primary_community, secondary_community] \
       + self._get_user_info_cells(user) \
@@ -428,7 +421,7 @@ class DownloadStore:
   # new 1/11/20 BHN - untested
   def _team_users_download(self, team_id):
     users = [cm.user for cm in TeamMember.objects.filter(team__id=team_id, \
-            is_deleted=False, user__is_deleted=False).select_related('user')]
+            is_deleted=False, user__accepted_terms_and_conditions=True, user__is_deleted=False).select_related('user')]
 
     # Soon teams could span communities, in which case actions list would be larger.  
     # For now, take the primary community that a team is associated with; this may not be correct
