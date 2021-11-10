@@ -58,7 +58,7 @@ class SummaryStore:
       upcoming_events = Event.objects.filter(is_deleted=False).count()
       teams_count = Team.objects.filter(is_deleted=False).count()
       testimonials_count = Testimonial.objects.filter(is_deleted=False).count()
-      users_count = UserProfile.objects.filter(is_deleted=False).count()
+      users_count = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True).count()
       summary = [
         self._summarize("Actions", action_count),
         self._summarize("Communities", communities_count),
