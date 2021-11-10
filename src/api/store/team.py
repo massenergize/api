@@ -96,17 +96,21 @@ class TeamStore:
         res["team"] = team.simple_json()
    
         users = get_team_users(team)
-        res["members"] = len(users)
+        res["members"] = 0
+
         for user in users:
-          res["households"] += user.real_estate_units.count()
-          actions = user.useractionrel_set.all()
-          res["actions"] += len(actions)
-          done_actions = actions.filter(status="DONE").prefetch_related('action__calculator_action')
-          res["actions_completed"] += done_actions.count()
-          res["actions_todo"] += actions.filter(status="TODO").count()
-          for done_action in done_actions:
-            if done_action.action and done_action.action.calculator_action:
-              res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
+          # only include users that have joined the platform
+          if user.accepts_terms_and_conditions:
+            res["members"] += 1
+            res["households"] += user.real_estate_units.count()
+            actions = user.useractionrel_set.all()
+            res["actions"] += len(actions)
+            done_actions = actions.filter(status="DONE").prefetch_related('action__calculator_action')
+            res["actions_completed"] += done_actions.count()
+            res["actions_todo"] += actions.filter(status="TODO").count()
+            for done_action in done_actions:
+              if done_action.action and done_action.action.calculator_action:
+                res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
 
         ans.append(res)
 
@@ -380,8 +384,13 @@ class TeamStore:
     try:
       team_id = args.get('id', None)
       user_id = args.get('user_id', None)
+      email = args.get('email', None)
       team = Team.objects.get(id=team_id)
-      user = UserProfile.objects.get(id=user_id)
+      if user_id:
+        user = UserProfile.objects.get(id=user_id)
+      elif email:
+        user = UserProfile.objects.get(email=email)
+
       team_member = TeamMember.objects.filter(team__id=team_id, user=user)
       if team_member.count() > 0:
         team_member.delete()
@@ -399,7 +408,7 @@ class TeamStore:
       if not team_id:
         return [], CustomMassenergizeError('Please provide a valid team_id')
 
-      members = TeamMember.objects.filter(is_deleted=False, team__id=team_id)
+      members = TeamMember.objects.filter(is_deleted=False, team__id=team_id, user__accepts_terms_and_conditions=True, user__is_deleted=False)
       return members, None
     except Exception:
       return None, InvalidResourceError()
