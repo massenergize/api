@@ -1,5 +1,6 @@
 """Handler file for all routes pertaining to auths"""
 
+from _main_.settings import IS_LOCAL
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import parse_list, parse_bool, check_length, rename_field
 from api.services.auth import AuthService
@@ -42,8 +43,10 @@ class AuthHandler(RouteHandler):
     # if the signin is from an admin site then set it to 24 hrs
     if(context.is_admin_site):
       MAX_AGE = 24*60*60
-
-    response.set_cookie("token", secure=True, value=token, max_age=MAX_AGE, samesite='None')
+    if IS_LOCAL: 
+      response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
+    else: 
+      response.set_cookie("token", secure = True, value=token, max_age=MAX_AGE, samesite='None')
     return response
   
   def logout(self, request): 
