@@ -87,10 +87,10 @@ class AuthService:
 
       if user and context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
         raise PermissionError
-      #print(user)
-      s = serialize(user, full=True)
       
-      return s, None
+      # s = serialize(user, full=True)
+      
+      # return s, None
 
       # keep statistics on community portal
       if user and not context.admin_site:
@@ -107,8 +107,8 @@ class AuthService:
           user.visit_history = visit_history
 
           # if the IpProfile exists, connect it to the user profile
-          if ip_user and ip_user not in user.unique_ip_addresses:
-            user.unique_ip_addresses.add(ip_user)
+          if device and device not in user.unique_ip_addresses:
+            user.unique_ip_addresses.add(device)
 
       return serialize(user, full=True), None
 
