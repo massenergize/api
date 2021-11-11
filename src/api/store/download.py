@@ -420,8 +420,9 @@ class DownloadStore:
 
   # new 1/11/20 BHN - untested
   def _team_users_download(self, team_id):
+
     users = [cm.user for cm in TeamMember.objects.filter(team__id=team_id, \
-            is_deleted=False, user__accepted_terms_and_conditions=True, user__is_deleted=False).select_related('user')]
+            is_deleted=False, user__accepts_terms_and_conditions=True, user__is_deleted=False).select_related('user')]
 
     # Soon teams could span communities, in which case actions list would be larger.  
     # For now, take the primary community that a team is associated with; this may not be correct
