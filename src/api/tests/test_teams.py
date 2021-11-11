@@ -482,7 +482,7 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, self.SADMIN)
     response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(response["success"])
-    self.assertEqual(len(response["data"]),2)   # both members listed, including the one who didn't yet accept
+    self.assertEqual(len(response["data"]),1)   # Team has one member who accepted TNC.  Don't include the one who didn't yet accept
     self.assertEqual(response["data"][0]["user"]["id"], str(self.USER2.id))
 
     # test members no given team
