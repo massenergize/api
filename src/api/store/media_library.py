@@ -8,10 +8,18 @@ from django.db.models import Q
 class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
-    
-    def back_fill_user_media_uploads(self, args) -> Tuple[list, MassEnergizeAPIError]: 
-        content = Media.objects.filter(Q(events__community__id=3) | Q(actions__community__id =3))
+
+    def back_fill_user_media_uploads(self, args) -> Tuple[list, MassEnergizeAPIError]:
+
+        # content = Media.objects.filter(actions__community__id=3)[:15]
+        content = Media.objects.filter(
+            Q(events__community__id=3) | Q(actions__community__id=3)
+        )
         if not content:
-            return [], None 
+            return [], None
+        # print("---------------")
+        # print(content)
         return content, None
 
+
+# content = Media.objects.filter(Q(events__community__id=3) | Q(actions__community__id =3))

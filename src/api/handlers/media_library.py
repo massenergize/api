@@ -33,4 +33,6 @@ class MediaLibraryHandler(RouteHandler):
          
          """
         context: Context = request.context
-        return self.service.back_fill_user_media_uploads(context, request)
+        response, error = self.service.back_fill_user_media_uploads(request)
+        print(f"This is the count ------------------ {len(response)}----------------")
+        return MassenergizeResponse(data = response)
