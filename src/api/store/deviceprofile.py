@@ -71,10 +71,11 @@ class DeviceStore:
     try:
       id = args.pop("id", None)
       devices = DeviceProfile.objects.filter(id=id)
-      if not devices:
-        return None, InvalidResourceError()
-      devices.update(**args)
-      device = devices.first()
+      if devices:
+        devices.update(**args)
+        device = devices.first()
+      else:
+        device, err = self.create_device(context, args)
 
       if context.user_is_logged_in:
         user_id = context.user_id
