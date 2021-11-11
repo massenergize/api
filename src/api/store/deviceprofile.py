@@ -75,9 +75,11 @@ class DeviceStore:
         devices.update(**args)
         device = devices.first()
       else:
+        print("------------------------------ InvalidResourceError")
         device, err = self.create_device(context, args)
-
+        
       if context.user_is_logged_in:
+        print("--------------- User logged in ---------------")
         user_id = context.user_id
         users = UserProfile.objects.filter(id=user_id)
         if not users:
@@ -86,6 +88,7 @@ class DeviceStore:
         device.update_user_profiles(user)
         user.update_visit_log(date_time)
       else:
+        print("--------------- User NOT logged in ---------------")
         device.update_visit_log(date_time)
             
       ip_address = args.pop('ip_address', None)
@@ -101,6 +104,7 @@ class DeviceStore:
 
     except Exception as e:
       # print(e)
+      print("------------------------------------------------------------------------------------------------------------------------")
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
       

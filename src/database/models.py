@@ -541,6 +541,7 @@ class UserProfile(models.Model):
 
   def update_visit_log(self, date_time):
     # TODO: Still requires testing
+    print("--------------- update user visit log ---------------")
     try:
       day = date_time.strftime('%d/%m/%y')
       # time = date_time.strftime('%H:%M')
@@ -630,6 +631,7 @@ class DeviceProfile(models.Model):
     self.user_profiles.add(user)
 
   def update_visit_log(self, date_time):
+    print("--------------- update device visit log ---------------")
     try:
       day = date_time.strftime('%d/%m/%y')
       # time = date_time.strftime('%H:%M') # This can be added back if we ever want more detailed logging
