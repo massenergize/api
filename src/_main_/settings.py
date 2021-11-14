@@ -70,6 +70,7 @@ ALLOWED_HOSTS = [
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
     'massenergize.test',
     'massenergize.test:3000',
+    'communities.massenergize.test'
 ]
 
 if IS_LOCAL:

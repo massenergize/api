@@ -2,11 +2,9 @@ import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404
-from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, IS_LOCAL
+from _main_.settings import IS_PROD, IS_CANARY, DEV_SERVER
 from sentry_sdk import capture_message
-from _main_.utils.utils import load_json, load_text_contents
 from api.store.misc import MiscellaneousStore
-from api.services.misc import MiscellaneousService
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
 from database.models import (
     Deployment,
@@ -38,6 +36,7 @@ HOME_SUBDOMAIN_SET = set([
     "share-canary",
 ])
 
+IS_LOCAL = DEV_SERVER       # API and community portal running locally
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
 elif IS_CANARY:
@@ -50,8 +49,6 @@ else:
 
 
 if IS_LOCAL:
-    #HOST_DOMAIN = "massenergize.dev"
-    #HOST = f"http://communities.{HOST_DOMAIN}"
     HOST_DOMAIN = "http://communities.massenergize.test:8000"
     HOST = f"{HOST_DOMAIN}"
 elif IS_PROD:
@@ -91,7 +88,6 @@ def _get_subdomain(request, enforce_is_valid=False):
 
     return subdomain
 
-
 def _subdomain_is_valid(subdomain):
     if subdomain in RESERVED_SUBDOMAIN_LIST:
         return False
@@ -103,9 +99,29 @@ def _extract(html):
     res = extract_text_from_html.handle(html) 
     return f"{res.strip()[:250]}..."
 
-def _get_redirect_url(subdomain, community=None):
+def _get_is_sandbox(request):
+    query = request.META["QUERY_STRING"]
+    if len(query)>1:
+        pars = query.split(",")
+        for par in pars:
+            ps = par.split("=")
+            if ps[0].lower() == "sandbox":
+                if len(ps)<2 or ps[1].lower()=="true":
+                    print("it is the sandbox")
+                    return True                
+                return False    # sandbox=false
+        return False            # sandbox not specified
+    return False                # no query string
+
+def _get_redirect_url(subdomain, community=None, is_sandbox=False):
 
     if not community and subdomain:
+      if is_sandbox:
+        community = Community.objects.filter(
+            is_deleted=False,
+            subdomain__iexact=subdomain,
+        ).first()
+      else:
         community = Community.objects.filter(
             is_deleted=False,
             is_published=True,
@@ -115,11 +131,13 @@ def _get_redirect_url(subdomain, community=None):
     if not community:
         raise Http404
 
-    redirect_url = f"{PORTAL_HOST}/{subdomain}"
+    suffix = ""
+    if is_sandbox:
+        suffix = "?sandbox=true"
+    redirect_url = f"{PORTAL_HOST}/{subdomain}{suffix}"
     community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
     if community_website_search:
         redirect_url = f"https://{community_website_search.website}" 
-
     return redirect_url
 
 def _get_file_url(image):
@@ -147,9 +165,17 @@ def communities(request):
         }
     )
 
-    communityList = list(Community.objects.filter(
+    is_sandbox = _get_is_sandbox(request)
+    if is_sandbox:
+        communityList = list(Community.objects.filter(
+            is_deleted=False
+            ).values("id", "name", "subdomain", "about_community", "location"))
+        suffix = "?sandbox=true"
+    else:
+        communityList = list(Community.objects.filter(
             is_deleted=False, is_published=True
-        ).values("id", "name", "subdomain", "about_community", "location"))
+            ).values("id", "name", "subdomain", "about_community", "location"))
+        suffix = ""
 
     # for each community make a display name which is "Location - Community name"
     for community in communityList:
@@ -176,6 +202,8 @@ def communities(request):
     args = {
         "meta": meta,
         "communities": communityList,
+        "sandbox": is_sandbox,
+        "suffix": suffix,
     }
     return render(request, "communities.html", args)
 
@@ -184,11 +212,18 @@ def community(request, subdomain):
     if not subdomain:
         return communities(request)
 
-    community = Community.objects.filter(
+    is_sandbox = _get_is_sandbox(request)
+    if is_sandbox:
+      community = Community.objects.filter(
+        is_deleted=False,
+        subdomain__iexact=subdomain,
+      ).first()
+    else:
+      community = Community.objects.filter(
         is_deleted=False,
         is_published=True,
         subdomain__iexact=subdomain,
-    ).first()
+      ).first()
 
     if not community:
         raise Http404
@@ -200,7 +235,7 @@ def community(request, subdomain):
         or {}
     )
 
-    redirect_url = _get_redirect_url(subdomain, community)
+    redirect_url = _get_redirect_url(subdomain, community, is_sandbox)
 
     meta = META
     meta.update(
