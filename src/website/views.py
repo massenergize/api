@@ -2,7 +2,7 @@ import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404
-from _main_.settings import IS_PROD, IS_CANARY, DEV_SERVER
+from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY
 from sentry_sdk import capture_message
 from api.store.misc import MiscellaneousStore
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST, STATES
@@ -36,7 +36,7 @@ HOME_SUBDOMAIN_SET = set([
     "share-canary",
 ])
 
-IS_LOCAL = DEV_SERVER       # API and community portal running locally
+IS_LOCAL = RUN_SERVER_LOCALLY       # API and community portal running locally
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
 elif IS_CANARY:
