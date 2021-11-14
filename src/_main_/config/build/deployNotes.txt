@@ -1,10 +1,9 @@
-Nov 2:
-- fix add admin error message
-- fix users download
-October 31st deployment
-- Bug fixes to go to prod:
-    Email messages to Cadmins
-    Sort Communities by location/name
-    User import fixes
+Nov 14:
+- Fix numerous bugs since 4.0 deployment:
+- Make sandbox sites work more completely
+- fix csv downloads
+- Admin contact emails go to primary contact
+- Sort Communities by location/name
+- User import fixes
 Oct 17th Deployment - Version 4.0
 - Make cookie secure
