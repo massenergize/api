@@ -26,6 +26,7 @@ class DownloadHandler(RouteHandler):
 
 
   def _get_csv_response(self, data, download_type, community_name=None):
+    #response = HttpResponse(content_type="text/csv")
     response = HttpResponse(content_type="text/csv")
     if not community_name:
       filename = "all-%s-data.csv" % download_type

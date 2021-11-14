@@ -3,7 +3,7 @@ Middle ware for authorization for users before they access specific resources
 """
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError, MassEnergizeAPIError, MassenergizeResponse
 from _main_.utils.context import Context
-from _main_.settings import SECRET_KEY
+from _main_.settings import SECRET_KEY, RUN_SERVER_LOCALLY
 from firebase_admin import auth
 import jwt
 from sentry_sdk import capture_message
@@ -56,11 +56,10 @@ class MassenergizeJWTAuthMiddleware:
       #set request body
       ctx.set_request_body(request)
 
-      path = self._get_clean_path(request)
+      # path = self._get_clean_path(request)
 
       #extract JWT auth token
       token = request.COOKIES.get('token', None) 
-      
       if token:
         decoded_token, err = self._get_decoded_token(token)
         if err:
@@ -79,9 +78,12 @@ class MassenergizeJWTAuthMiddleware:
           # BHN: I'm not sure why the cookie needs to be deleted first
           # but set_cookie doesn't keep it from expiring as I expected
           response.delete_cookie("token")
-          response.set_cookie("token", value=token, max_age=MAX_AGE, secure=True)    
+          if RUN_SERVER_LOCALLY:
+             response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
+          else:
+             response.set_cookie("token", secure=True, value=token, max_age=MAX_AGE, samesite='None')
 
-      request.context = ctx
+        request.context = ctx
 
     except Exception as e:
       capture_message(str(e), level="error")

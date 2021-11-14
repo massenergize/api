@@ -3,6 +3,7 @@
 <script>
         function onCommunitySelected(selectElement){
             const subdomain = selectElement.value;
+            const suffix = selectElement.sandbox ? "?sandbox=true" : "";
             window.location = `{{meta.host}}/${subdomain}`;
         }
 
@@ -21,13 +22,16 @@
         <img src="https://community.massenergize.org/static/media/logo.ee45265d.png" class="me-logo"/>
         <h1><span style="color:rgb(237, 92, 23)">Welcome to</span> our <span
                 style="color:#8dc443">Community Portal</span></h1>
+        {% if sandbox %}
+        <h2>This is the sandbox</h2>
+        {% endif %}
         <div class="custom-select-wrapper">
             <div class="select-envelope">
                 <select class="custom-select" onChange="onCommunitySelected(this)"
                         data-host-domain="{{meta.host_domain}}">
                     <option value="{{c.subdomain}}">Choose your community...</option>
                     {% for c in communities %}
-                    <option value="{{c.subdomain}}">{{c.displayName}}</option>
+                    <option value="{{c.subdomain}}{{suffix}}">{{c.displayName}}</option>
                     {% endfor %}
 
                 </select>

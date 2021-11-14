@@ -18,10 +18,18 @@ from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
+# DJANGO_ENV can be passed in through the makefile, with "make start env=local"
+DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
+RUN_SERVER_LOCALLY = False
+if DJANGO_ENV == "local":
+    RUN_SERVER_LOCALLY = True
+
+# Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
 IS_LOCAL = False
@@ -47,7 +55,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = RUN_SERVER_LOCALLY
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
@@ -57,12 +65,13 @@ ALLOWED_HOSTS = [
     '.massenergize.org',
     '.massenergize.com',
     '.massenergize.dev',
+    '.massenergize.test',
     'MassenergizeApi-env.eba-zfppgz2y.us-east-2.elasticbeanstalk.com',
     'ApiDev-env.eba-5fq2r9ph.us-east-2.elasticbeanstalk.com',
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
     'massenergize.test',
-    'massenergize.test:3000',
+    'massenergize.test:3000'
 ]
 
 if IS_LOCAL:
