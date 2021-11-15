@@ -13,3 +13,21 @@ class MediaLibraryService:
         if error:
             return None, error
         return serialize_all(images), None
+
+    def search(self, args) -> Tuple[list, MassEnergizeAPIError]:
+        images, error = self.store.search(args)
+        if error:
+            return None, error
+        return serialize_all(images), None
+
+    def remove(self, args) -> Tuple[list, MassEnergizeAPIError]:
+        response, error = self.store.remove(args)
+        if error:
+            return None, error
+        return response, None
+    
+    def addToGallery(self, args): 
+        image, error = self.store.addToGallery(args)
+        if error:
+            return None, error
+        return image.simple_json(), None

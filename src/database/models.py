@@ -671,19 +671,19 @@ class UserMediaUpload(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(
         UserProfile,
-        null = True,
+        null=True,
         related_name="uploads",
         on_delete=models.DO_NOTHING,
     )
     community = models.ForeignKey(
         Community,
-        null = True,
+        null=True,
         related_name="community_uploads",
         on_delete=models.DO_NOTHING,
     )
     media = models.OneToOneField(
         Media,
-        null = True,
+        null=True,
         related_name="user_upload",
         on_delete=models.CASCADE,
     )
@@ -696,7 +696,8 @@ class UserMediaUpload(models.Model):
 
     def simple_json(self):
         res = model_to_dict(self, ["settings", "media", "created_at", "id"])
-        res["user"] = self.community.simple_json()
+        res["user"] = get_json_if_not_none(self.user)
+        res["image"] = get_json_if_not_none(self.media)
         res["community"] = get_summary_info(self.community)
         return res
 
@@ -1326,7 +1327,9 @@ class Action(models.Model):
     tags = models.ManyToManyField(Tag, related_name="action_tags", blank=True)
     geographic_area = models.JSONField(blank=True, null=True)
     icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="actions")
+    image = models.ForeignKey(
+        Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="actions"
+    )
     properties = models.ManyToManyField(ActionProperty, blank=True)
     vendors = models.ManyToManyField(Vendor, blank=True)
     calculator_action = models.ForeignKey(
@@ -1433,7 +1436,9 @@ class Event(models.Model):
     end_date_and_time = models.DateTimeField(db_index=True)
     location = models.JSONField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events")
+    image = models.ForeignKey(
+        Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="events"
+    )
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
@@ -1658,7 +1663,13 @@ class Testimonial(models.Model):
     body = models.TextField(max_length=LONG_STR_LEN)
     is_approved = models.BooleanField(default=False, blank=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL, null=True, blank=True, related_name="testimonials")
+    image = models.ForeignKey(
+        Media,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="testimonials",
+    )
     user = models.ForeignKey(
         UserProfile, on_delete=models.CASCADE, db_index=True, null=True
     )

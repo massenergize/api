@@ -1,8 +1,11 @@
 from typing import Tuple
+
+from django.core.exceptions import ValidationError
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from carbon_calculator.models import Action
-from database.models import Media
+from database.models import Community, Media, UserMediaUpload, UserProfile
 from django.db.models import Q
+import time
 
 limit = 30
 
@@ -24,13 +27,85 @@ class MediaLibraryStore:
                 Q(events__community__id=com_id)
                 | Q(actions__community__id=com_id)
                 | Q(testimonials__community__id=com_id)
+                | Q(user_upload__community__id=com_id)
             ).order_by("-id")[:limit]
         else:
-            images = Media.objects.filter(
-                Q(events__community__id=3)
-                | Q(actions__community__id=3)
-                | Q(testimonials__community__id=3),
-                id__gt=upper_limit,
-                id__lt=lower_limit,
-            ).order_by("-id")[:limit]
+            images = (
+                Media.objects.filter(
+                    Q(events__community__id=com_id)
+                    | Q(actions__community__id=com_id)
+                    | Q(testimonials__community__id=com_id)
+                    | Q(user_upload__community__id=com_id)
+                )
+                .exclude(
+                    id__gte=lower_limit, id__lte=upper_limit
+                )  # exclude content that have already been retrieved
+                .order_by("-id")[:limit]
+            )
         return images, None
+
+    def generateQueryWithScope(self, scope, com_id):
+        queries = {
+            "actions": Media.objects.filter(actions__community__id=com_id),
+            "events": Media.objects.filter(events__community__id=com_id),
+            "testimonials": Media.objects.filter(testimonials__community__id=com_id),
+            "uploads": Media.objects.filter(user_upload__community__id=com_id),
+            "default": Media.objects.filter(
+                Q(events__community__id=com_id)
+                | Q(actions__community__id=com_id)
+                | Q(testimonials__community__id=com_id)
+                | Q(user_upload__community__id=com_id)
+            ),
+        }
+        query = queries.get(scope)
+        if not query:
+            query = queries.get("default")
+        return query
+
+    def search(self, args):
+        com_id = args["community_id"]
+        scope = args["scope"]
+        upper_limit = lower_limit = images = None
+        try:
+            upper_limit = args["upper_limit"]
+            lower_limit = args["lower_limit"]
+        except KeyError:
+            pass
+        images = None
+        if upper_limit and lower_limit:
+            images = (
+                self.generateQueryWithScope(scope, com_id)
+                .order_by("-id")
+                .exclude(id__gte=lower_limit, id__lte=upper_limit)[:limit]
+            )
+        else:
+            images = self.generateQueryWithScope(scope, com_id).order_by("-id")[:limit]
+        return images, None
+
+    def remove(self, args):
+        media_id = args.get("media_id")
+        Media.objects.get(pk=media_id).delete()
+        return True, None
+
+    def addToGallery(self, args):
+        community_id = args.get("community_id")
+        user_id = args.get("user_id")
+        title = args.get("title") or "Gallery Upload"
+        _file = args.get("file")
+        community = user = None
+        try:
+            community = Community.objects.get(pk=community_id)
+            user = UserProfile.objects.get(id=user_id)
+        except Community.DoesNotExist:
+            return None, "Please provide a valid 'community_id'"
+        except UserProfile.DoesNotExist:
+            return None, "Please provide a valid 'user_id'"
+        except ValidationError:
+            return None, "Please provide a valid 'user_id'"
+        media = Media.objects.create(
+            name=f" {title} - ({round(time.time() * 1000)})",
+            file=_file,
+        )
+        user_media = UserMediaUpload(user=user, media=media, community=community)
+        user_media.save()
+        return user_media, None
