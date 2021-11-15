@@ -83,7 +83,7 @@ class MassenergizeJWTAuthMiddleware:
           else:
              response.set_cookie("token", secure=True, value=token, max_age=MAX_AGE, samesite='None')
 
-        request.context = ctx
+      request.context = ctx
 
     except Exception as e:
       capture_message(str(e), level="error")
