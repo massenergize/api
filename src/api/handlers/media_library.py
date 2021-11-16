@@ -20,7 +20,6 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.add", self.addToGallery)
         self.add("/gallery.remove", self.remove)
         self.add("/gallery.image.info", self.getImageInfo)
-
     @admins_only
     def fetch_content(self, request):
         """Fetches image content related communities that admins can browse through"""
@@ -36,7 +35,6 @@ class MediaLibraryHandler(RouteHandler):
         if error:
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=images)
-
     @admins_only
     def search(self, request):
         """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""

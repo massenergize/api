@@ -13,13 +13,9 @@ class MediaLibraryStore:
         self.name = "MediaLibrary Store/DB"
 
     def fetch_content(self, args):
-        com_id = args["community_id"]
-        upper_limit = lower_limit = images = None
-        try:
-            upper_limit = args["upper_limit"]
-            lower_limit = args["lower_limit"]
-        except KeyError:
-            pass
+        com_id = args.get("community_id")
+        upper_limit = args.get("upper_limit")
+        lower_limit = args.get("lower_limit")
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(
                 Q(events__community__id=com_id)
@@ -61,14 +57,10 @@ class MediaLibraryStore:
         return query
 
     def search(self, args):
-        com_id = args["community_id"]
-        scope = args["scope"]
-        upper_limit = lower_limit = images = None
-        try:
-            upper_limit = args["upper_limit"]
-            lower_limit = args["lower_limit"]
-        except KeyError:
-            pass
+        com_id = args.get("community_id")
+        scope = args.get("scope")
+        upper_limit = args.get("upper_limit")
+        lower_limit = args.get("lower_limit")
         images = None
         if upper_limit and lower_limit:
             images = (
