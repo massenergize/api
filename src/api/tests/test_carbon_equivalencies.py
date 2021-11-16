@@ -101,9 +101,7 @@ class CarbonEquivalenciesTestCase(TestCase):
 
         # test get one
         signinAs(self.client, self.USER)
-        print(self.CARBON_EQUIVALENCY.id)
         response = self.client.post('/api/data.carbonEquivalency.get', urlencode({"id": self.CARBON_EQUIVALENCY.id}), content_type="application/x-www-form-urlencoded")
-        print(response)
         response = response.toDict()
         self.assertTrue(response["success"])
 
