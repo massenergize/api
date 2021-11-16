@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='deviceprofile',
             name='location',
-            field=models.JSONField(blank=True, default=dict, null=True),
+            field=models.ManyToManyField(blank=True, to='database.Location'),
         ),
     ]

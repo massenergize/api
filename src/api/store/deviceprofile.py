@@ -1,6 +1,7 @@
 from django.http import HttpRequest
+from datetime import datetime
 from api.handlers.userprofile import UserHandler
-from database.models import UserProfile, DeviceProfile
+from database.models import UserProfile, DeviceProfile, Location
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -8,7 +9,6 @@ from _main_.utils.context import Context
 from _main_.settings import DEBUG
 from sentry_sdk import capture_message
 import json
-import datetime
 from typing import Tuple
 
 
@@ -67,7 +67,7 @@ class DeviceStore:
       return None, CustomMassenergizeError(e)
   
   def log_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    date_time = datetime.datetime.now()
+    date_time = datetime.now()
     try:
       id = args.pop("id", None)
       devices = DeviceProfile.objects.filter(id=id)
@@ -88,14 +88,30 @@ class DeviceStore:
         user.save()
       else:
         device.update_visit_log(date_time)
-            
+
       ip_address = args.pop('ip_address', None)
-      # new_visit_log = args.pop('visit_log', None)
+      location = args.pop('location', None)
+      browser = args.pop('browser', None)
 
       if ip_address:
         # Anything we want to do with a device's IP address can happen here
         # TODO: Maybe we want to store a list of IP addresses in JSON
         device.ip_address = ip_address
+
+      if location:
+        location, created = Location.objects.get_or_create(
+          location_type="ZIP_CODE_ONLY",
+          zipcode=location.zipcode
+        )
+        if created:
+          location.state = location.state
+          location.city = location.city
+          location.save()
+
+        device.update_device_location(location)
+
+      if browser:
+        device.browser = browser
       
       device.save()
       return device, None

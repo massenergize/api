@@ -5,6 +5,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 from api.services.deviceprofile import DeviceService
+from _main_.utils.GeoIP import GeoIP
 
 class DeviceHandler(RouteHandler):
 
@@ -12,6 +13,8 @@ class DeviceHandler(RouteHandler):
     super().__init__()
     self.service = DeviceService()
     self.registerRoutes()
+
+    self.ipLocator = GeoIP()
   
   def __get_client_meta(self, request, args):
     meta_data = request.META
@@ -34,8 +37,8 @@ class DeviceHandler(RouteHandler):
 
   def registerRoutes(self):
     self.add("/device.info", self.info) 
-    self.add("/device.create", self.create)
-    self.add("/device.add", self.create)
+    self.add("/device.create", self.log_device)
+    self.add("/device.add", self.log_device)
     self.add("/device.log", self.log_device)
     self.add("/device.update", self.update)
     self.add("/device.delete", self.delete)
@@ -58,25 +61,25 @@ class DeviceHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=device_info)
 
-  def create(self, request):
-    context: Context = request.context
-    args: dict = context.args
+  # def create(self, request):
+  #   context: Context = request.context
+  #   args: dict = context.args
 
-    # self.validator.expect('ip_address', str)
-    # self.validator.expect('device_type', str)
-    # self.validator.expect('operating_system', str)
-    # self.validator.expect("browser", str)
-    args, err = self.validator.verify(args)
+  #   # self.validator.expect('ip_address', str)
+  #   # self.validator.expect('device_type', str)
+  #   # self.validator.expect('operating_system', str)
+  #   # self.validator.expect("browser", str)
+  #   args, err = self.validator.verify(args)
 
-    if err:
-      return err
+  #   if err:
+  #     return err
     
-    self.__get_client_meta(request, args)
+  #   self.__get_client_meta(request, args)
  
-    device_info, err = self.service.create_device(context, args)
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=device_info)
+  #   device_info, err = self.service.create_device(context, args)
+  #   if err:
+  #     return MassenergizeResponse(error=str(err), status=err.status)
+  #   return MassenergizeResponse(data=device_info)
   
   def log_device(self, request):
     context: Context = request.context
@@ -84,7 +87,7 @@ class DeviceHandler(RouteHandler):
     
     self.validator.rename("device_id", "id")
     self.validator.rename("device_profile_id", "id")
-    self.validator.expect("id", str, is_required=True)
+    self.validator.expect("id", str)
     # self.validator.expect('ip_address', str)
     args, err = self.validator.verify(args)
 
@@ -92,11 +95,19 @@ class DeviceHandler(RouteHandler):
       return err
 
     self.__get_client_meta(request, args)
+
+    if not context.is_admin_site:
+      args["ip_address"] = self.ipLocator.getIP(request)
+
+      #ip = "38.242.8.93"
+      args["location"] = self.ipLocator.getGeo(args["ip_address"])
+
+      args["browser"] = self.ipLocator.getBrowser(request)
       
-    device_info, err = self.service.log_device(context, args)
+    device, err = self.service.log_device(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=device_info)
+    return MassenergizeResponse(data=device)
   
   def update(self, request):
     context: Context = request.context

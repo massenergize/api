@@ -620,7 +620,7 @@ class DeviceProfile(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
   user_profiles = models.ManyToManyField(UserProfile, blank=True)
   ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
-  location = models.JSONField(default=dict, null=True, blank=True)
+  location = models.ManyToManyField(Location, blank=True)
   device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
   operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
   browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
@@ -632,6 +632,9 @@ class DeviceProfile(models.Model):
 
   def get_visit_log(self):
     return json.load(self.visit_log)
+  
+  def update_device_location(self, location):
+    self.location.add(location)
 
   def update_user_profiles(self, user):
     self.user_profiles.add(user)

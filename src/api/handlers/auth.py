@@ -65,20 +65,7 @@ class AuthHandler(RouteHandler):
   def whoami(self, request): 
     context: Context = request.context
 
-    if not context.is_admin_site:
-      ip = self.ipLocator.getIP(request)
-
-      #ip = "38.242.8.93"
-      loc = self.ipLocator.getGeo(ip)
-
-      browser = self.ipLocator.getBrowser(request)
-
-      ip_user, err = self.service.userByIP(context, ip, loc, browser)
-      if err:
-        # this isn't critical - need 
-        print(err)
-
-    user_info, err = self.service.whoami(context, ip_user)
+    user_info, err = self.service.whoami(context)
     if err:
       return err
     return MassenergizeResponse(data=user_info)
