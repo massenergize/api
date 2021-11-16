@@ -102,7 +102,7 @@ class Media(models.Model):
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return str(self.id) + " - " + self.name
 
     def simple_json(self):
         return {

@@ -1,8 +1,6 @@
 from typing import Tuple
 
 from django.core.exceptions import ValidationError
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from carbon_calculator.models import Action
 from database.models import Community, Media, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
@@ -109,3 +107,17 @@ class MediaLibraryStore:
         user_media = UserMediaUpload(user=user, media=media, community=community)
         user_media.save()
         return user_media, None
+
+    def getImageInfo(self, args):
+        media_id = args.get("media_id")
+        media = None
+        try:
+            media = Media.objects.get(pk=media_id)
+        except Media.DoesNotExist:
+            return None, "Media could not be found, provide a valid 'media_id'"
+        except:
+            return (
+                None,
+                "Sorry, something happened we could not find the media you are looking for",
+            )
+        return media, None

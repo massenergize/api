@@ -1,5 +1,6 @@
 from _main_.utils.context import Context
 from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only
 from api.services.media_library import MediaLibraryService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import CustomMassenergizeError
@@ -19,9 +20,10 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.add", self.addToGallery)
         self.add("/gallery.remove", self.remove)
         self.add("/gallery.image.info", self.getImageInfo)
-        # self.add("/gallery.backfill", self.back_fill_user_media_uploads)
 
+    @admins_only
     def fetch_content(self, request):
+        """Fetches image content related communities that admins can browse through"""
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("community_id", int, is_required=True)
@@ -35,7 +37,9 @@ class MediaLibraryHandler(RouteHandler):
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=images)
 
+    @admins_only
     def search(self, request):
+        """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("community_id", int, is_required=True)
@@ -51,7 +55,9 @@ class MediaLibraryHandler(RouteHandler):
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=images)
 
+    @admins_only
     def remove(self, request):
+        """Deletes a media file from the system"""
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("media_id", int, is_required=True)
@@ -65,6 +71,7 @@ class MediaLibraryHandler(RouteHandler):
         return MassenergizeResponse(data=response)
 
     def addToGallery(self, request):
+        """Enables admins to upload images that they can use later... """
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("user_id", str, is_required=True).expect(
@@ -80,5 +87,17 @@ class MediaLibraryHandler(RouteHandler):
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=image)
 
-    def getImageInfo(self):
-        pass
+    @admins_only
+    def getImageInfo(self, request):
+        """Retrieves information about an image file when given media_id"""
+        context: Context = request.context
+        args: dict = context.args
+        self.validator.expect("media_id", int, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return MassenergizeResponse(error=str(err))
+
+        response, error = self.service.getImageInfo(args)
+        if error:
+            return MassenergizeResponse(error=str(error))
+        return MassenergizeResponse(data=response)
