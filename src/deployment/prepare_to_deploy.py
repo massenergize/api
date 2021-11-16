@@ -3,6 +3,8 @@ import sys, os
 THIS_DIR = dirname(__file__)
 CODE_DIR = abspath(join(THIS_DIR, '..'))
 sys.path.append(CODE_DIR)
+
+
 from _main_ import settings
 
 from termcolor import colored
@@ -24,6 +26,7 @@ def run():
   target = 'dev'
 
   if len(args) > 1:
+    run_locally = "local" in args[1].lower()
     deploy_to_prod = "prod" in args[1].lower()
     deploy_to_canary = "canary" in args[1].lower()
     deploy_to_dev = (not deploy_to_prod) and (not deploy_to_canary)
@@ -34,7 +37,7 @@ def run():
     else:
       target = "dev"
 
-  if len(args) > 2:
+  if run_locally or len(args) > 2:
     is_local = args[2] in ['1', 'true', 'True']
   else:
     is_local = False
@@ -63,6 +66,9 @@ def run():
   
   elif deploy_to_canary and not settings.IS_CANARY:
     return "!!! Please set IS_CANARY=True in _main_/settings.py if you want to deploy to CANARY", False
+
+  if not is_deploy:
+    return f"Ready for running API locally", True
 
   build_version = generate_config(target, is_local, is_deploy)
   update_aws_docker_config(target, build_version)

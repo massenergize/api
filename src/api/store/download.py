@@ -10,6 +10,8 @@ from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 
+EMPTY_DOWNLOAD = (None, None)
+
 class DownloadStore:
 
   def __init__(self):
@@ -324,14 +326,13 @@ class DownloadStore:
     return self._get_cells_from_dict(self.community_info_columns, community_cells)
 
   def _all_users_download(self):
-    users = list(UserProfile.objects.filter(is_deleted=False)) \
+    users = list(UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)) \
         + list(Subscriber.objects.filter(is_deleted=False))
     actions = Action.objects.filter(is_deleted=False)
     teams = Team.objects.filter(is_deleted=False)
 
-    columns = ['primary community',
-                'secondary community' ] \
-                + self.user_info_columns \
+    columns = self.user_info_columns \
+                + ['home community', 'secondary community' ] \
                 + ['TEAM'] \
                 + [action.title for action in actions]
 
@@ -364,17 +365,10 @@ class DownloadStore:
           if community != primary_community:
             if secondary_community != '': secondary_community += ", "
             secondary_community += community
+        #print(str(user) + ", " + str(len(communities)) + " communities, home is " + str(reu_community))
 
-        #if len(communities) > 1:
-        #  primary_community, secondary_community = communities[0], communities[1]
-        #elif len(communities) == 1:
-        #  primary_community, secondary_community = communities[0], ''
-        #else:
-        #  primary_community, secondary_community = '', ''
-        print(str(user) + ", " + str(len(communities)) + " communities, primary is " + str(community))
-
-      row = [primary_community, secondary_community] \
-      + self._get_user_info_cells(user) \
+      row = self._get_user_info_cells(user) \
+      + [primary_community, secondary_community] \
       + self._get_user_teams_cells(user, teams) \
       + self._get_user_actions_cells(user, actions)
 
@@ -391,7 +385,7 @@ class DownloadStore:
 
   def _community_users_download(self, community_id):
     users = [cm.user for cm in CommunityMember.objects.filter(community__id=community_id, \
-            is_deleted=False, user__is_deleted=False).select_related('user')] \
+            is_deleted=False, user__is_deleted=False, user__accepts_terms_and_conditions=True).select_related('user')] \
               + list(Subscriber.objects.filter(community__id=community_id, is_deleted=False))
 
     community_households = list(RealEstateUnit.objects.filter(community__id=community_id, is_deleted=False))
@@ -427,8 +421,9 @@ class DownloadStore:
 
   # new 1/11/20 BHN - untested
   def _team_users_download(self, team_id):
+
     users = [cm.user for cm in TeamMember.objects.filter(team__id=team_id, \
-            is_deleted=False, user__is_deleted=False).select_related('user')]
+            is_deleted=False, user__accepts_terms_and_conditions=True, user__is_deleted=False).select_related('user')]
 
     # Soon teams could span communities, in which case actions list would be larger.  
     # For now, take the primary community that a team is associated with; this may not be correct
@@ -443,12 +438,10 @@ class DownloadStore:
     sub_columns = ['' for _ in range(len(self.user_info_columns))]  \
                 + ["ACTION" for _ in range(len(actions))]
     data = [columns, sub_columns]
-
     for user in users:
 
       row = self._get_user_info_cells(user) \
           + self._get_user_actions_cells(user, actions)
-
       data.append(row)
 
     return data
@@ -548,13 +541,13 @@ class DownloadStore:
         elif community_id:
           return (self._community_users_download(community_id), community_name), None
         else:
-          return None, NotAuthorizedError()
+          return EMPTY_DOWNLOAD, NotAuthorizedError()
       else:
-        return None, NotAuthorizedError()
+        return EMPTY_DOWNLOAD, NotAuthorizedError()
     except Exception as e:
       print(str(e))
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
+      return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
 
   def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -570,20 +563,20 @@ class DownloadStore:
       elif context.user_is_community_admin and community_id:
           return (self._community_actions_download(community_id), community_name), None
       else:
-          return None, NotAuthorizedError()
+          return EMPTY_DOWNLOAD, NotAuthorizedError()
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
+      return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
 
   def communities_download(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if not context.user_is_super_admin:
-        return None, NotAuthorizedError()
+        return EMPTY_DOWNLOAD, NotAuthorizedError()
       return (self._all_communities_download(), None), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
+      return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
 
   def teams_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -594,9 +587,9 @@ class DownloadStore:
           if community:
             return (self._community_teams_download(community.id), community.name), None
           else:
-            return None, InvalidResourceError()
+            return EMPTY_DOWNLOAD, InvalidResourceError()
       else:
-          return None, NotAuthorizedError()
+          return EMPTY_DOWNLOAD, NotAuthorizedError()
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
+      return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
