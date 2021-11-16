@@ -5,8 +5,11 @@ init:
 	touch local.env
 .PHONY: init
 
+# run this with 'make start env=local'
+env=remote
+export DJANGO_ENV=$(env)
 start:
-	python deployment/prepare_to_deploy.py prod 1
+	python deployment/prepare_to_deploy.py local 1
 	python manage.py runserver
 .PHONY: start
 

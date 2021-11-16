@@ -9,6 +9,7 @@ from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from _main_.utils.GeoIP import GeoIP
 from api.decorators import admins_only, super_admins_only, login_required
+from _main_.settings import RUN_SERVER_LOCALLY
 
 
 class AuthHandler(RouteHandler):
@@ -46,7 +47,10 @@ class AuthHandler(RouteHandler):
     if(context.is_admin_site):
       MAX_AGE = 24*60*60
 
-    response.set_cookie("token", secure=True, value=token, max_age=MAX_AGE, samesite='None')
+    if RUN_SERVER_LOCALLY:
+      response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
+    else:
+      response.set_cookie("token", secure=True, value=token, max_age=MAX_AGE, samesite='None')
     return response
   
   def logout(self, request): 
