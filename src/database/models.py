@@ -111,8 +111,6 @@ class Media(models.Model):
       "name": self.name,
       "url": self.file.url,
       "media_type": self.media_type,
-      "uploaded_by": self.uploaded_by,
-      
     }
   
   class Meta:
