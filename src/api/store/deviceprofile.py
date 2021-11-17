@@ -140,7 +140,7 @@ class DeviceStore:
 
   def metric_user_accounts(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      metric = DeviceProfile.objects.filter(**args).first()
+      metric = UserProfile.objects.all().count()
       if not metric:
         return None, InvalidResourceError()
       return metric, None
