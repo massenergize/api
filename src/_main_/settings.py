@@ -32,7 +32,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = True
+IS_LOCAL = False
 
 try:
     if IS_PROD:
@@ -150,6 +150,8 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
 ROOT_URLCONF = '_main_.urls'
 # SESSION_COOKIE_SAMESITE = 'Strict'
 SESSION_SAVE_EVERY_REQUEST = True
+GEOIP2_ACCOUNT_ID =  os.environ.get("GEOIP2_ACCOUNT_ID")
+GEOIP2_LICENSE_KEY =  os.environ.get("GEOIP2_LICENSE_KEY")
 
 
 TEMPLATES = [
