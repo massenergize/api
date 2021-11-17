@@ -72,6 +72,7 @@ class AuthService:
       return None, None, CustomMassenergizeError(e)
 
 
+  
   def whoami(self, context: Context):
     try:
       user_id = context.user_id
@@ -84,10 +85,8 @@ class AuthService:
 
       if user and context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
         raise PermissionError
-      #print(user)
-      s = serialize(user, full=True)
-      
-      return s, None
+
+      return serialize(user, full=True), None
 
     except Exception as e:
       capture_message(str(e), level="error")

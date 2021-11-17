@@ -94,10 +94,14 @@ class Media(models.Model):
   media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   order = models.PositiveIntegerField(default=0, blank=True, null=True)
-  
-  def __str__(self):
-    return self.name
-  
+  uploaded_by = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+  uploaded_at = models.DateTimeField(auto_now_add=True, null=True)
+  parent = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)
+
+  def __str__(self):      
+    return str(self.id) + '-' +self.name + "(" + self.file.name + ")"
+
+
   def simple_json(self):
     return {
       "id": self.id,
@@ -109,7 +113,9 @@ class Media(models.Model):
       "id": self.id,
       "name": self.name,
       "url": self.file.url,
-      "media_type": self.media_type
+      "media_type": self.media_type,
+      "uploaded_by": self.uploaded_by,
+      
     }
   
   class Meta:
@@ -151,6 +157,7 @@ class Policy(models.Model):
     return model_to_dict(self)
   
   def full_json(self):
+    # this will certinly blow up because no community_set:
     res = model_to_dict(self)
     community = self.community_set.all().first()
     if community:
@@ -478,7 +485,6 @@ class Role(models.Model):
     ordering = ('name',)
     db_table = 'roles'
 
-
 class UserProfile(models.Model):
   """
   A class used to represent a MassEnergize User
@@ -569,8 +575,8 @@ class UserProfile(models.Model):
     communities = [cm.community.info() for cm in community_members]
     admin_at = [cm.community.info() for cm in CommunityMember.objects.filter(user=self, is_admin=True)]
     
-    data = model_to_dict(self, exclude=['real_estate_units',
-                                        'communities', 'roles'])
+    data = model_to_dict(self, exclude=['real_estate_units', 
+      'communities', 'roles', 'last_visited'])
     data['joined'] = self.created_at.date()
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
@@ -580,6 +586,7 @@ class UserProfile(models.Model):
     data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
     data['visit_log'] = self.visit_log
+    data['last_visited'] = str(self.last_visited)
     return data
   
   class Meta:
@@ -613,6 +620,7 @@ class DeviceProfile(models.Model):
   id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
   user_profiles = models.ManyToManyField(UserProfile, blank=True)
   ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  location = models.ManyToManyField(Location, blank=True)
   device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
   operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
   browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
@@ -624,6 +632,9 @@ class DeviceProfile(models.Model):
 
   def get_visit_log(self):
     return json.load(self.visit_log)
+  
+  def update_device_location(self, location):
+    self.location.add(location)
 
   def update_user_profiles(self, user):
     self.user_profiles.add(user)

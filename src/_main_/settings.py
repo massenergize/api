@@ -32,7 +32,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -137,9 +137,9 @@ USE_X_FORWARDED_HOST = True
 WSGI_APPLICATION = '_main_.wsgi.application'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-CSRF_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_HTTPONLY = not DEBUG
+CSRF_COOKIE_SECURE = True #not DEBUG
+SESSION_COOKIE_SECURE = True #not DEBUG
+SESSION_COOKIE_HTTPONLY = True #not DEBUG
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL = None
@@ -147,6 +147,9 @@ APPEND_SLASH = True
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
+ROOT_URLCONF = '_main_.urls'
+# SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_SAVE_EVERY_REQUEST = True
 
 
 TEMPLATES = [
