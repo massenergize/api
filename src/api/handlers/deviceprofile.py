@@ -98,13 +98,18 @@ class DeviceHandler(RouteHandler):
 
     if not context.is_admin_site:
       args["ip_address"] = self.ipLocator.getIP(request)
+      # args["ip_address"] = "38.242.8.93" # For testing
 
-      #ip = "38.242.8.93"
-      args["location"] = self.ipLocator.getGeo(args["ip_address"])
+      location = self.ipLocator.getGeo(args["ip_address"])
 
-      args["browser"] = self.ipLocator.getBrowser(request)
+      client_info = self.ipLocator.getBrowser(request)
+      device_type = client_info["device"]
+      model = client_info["model"]
+      args["device_type"] = f"{device_type}-{model}"
+      args["operating_system"] = client_info["os"]
+      args["browser"] = client_info["browser"]
       
-    device, err = self.service.log_device(context, args)
+    device, err = self.service.log_device(context, args, location)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=device)
