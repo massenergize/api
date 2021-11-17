@@ -3,6 +3,8 @@ import geoip2.webservice
 import socket
 from user_agents import parse
 
+from _main_.settings import GEOIP2_ACCOUNT_ID, GEOIP2_LICENSE_KEY
+
 def ip_valid(ip):
 
     try:
@@ -69,7 +71,7 @@ class GeoIP:
 
     try:
       # response = self.reader.city(ip)
-      with geoip2.webservice.Client(42, 'license_key') as client:
+      with geoip2.webservice.Client(GEOIP2_ACCOUNT_ID, GEOIP2_LICENSE_KEY) as client:
         response = client.city(ip)
 
       geo = {}
@@ -86,5 +88,6 @@ class GeoIP:
       return geo
 
     #self.reader.close()
-    except:
-      return None
+    except Exception as e:
+      print(e)
+      return e
