@@ -94,9 +94,6 @@ class Media(models.Model):
   media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   order = models.PositiveIntegerField(default=0, blank=True, null=True)
-  uploaded_by = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-  uploaded_at = models.DateTimeField(auto_now_add=True, null=True)
-  parent = models.ForeignKey('self', null=True, on_delete=models.SET_NULL)
 
   def __str__(self):      
     return str(self.id) + '-' +self.name + "(" + self.file.name + ")"
