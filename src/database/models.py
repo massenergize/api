@@ -586,7 +586,6 @@ class UserProfile(models.Model):
     data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
     data['visit_log'] = self.visit_log
-    data['last_visited'] = str(self.last_visited)
     return data
   
   class Meta:
