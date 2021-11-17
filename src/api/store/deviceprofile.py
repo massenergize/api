@@ -49,13 +49,15 @@ class DeviceStore:
     if browser:
       new_device.browser = browser
     
-  def create_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_device(self, context: Context, args, save=True) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       new_device: DeviceProfile = DeviceProfile.objects.create(**args)
       
       self.__device_attr_handler(new_device, args)
 
-      new_device.save()
+      if save:
+        new_device.save()
+
       return new_device, None
 
     except Exception as e:
@@ -72,10 +74,27 @@ class DeviceStore:
           devices.update(**args)
           device = devices.first()
       else: # If device does not exist we'll create one
-        device, err = self.create_device(context, args)
+        device, err = self.create_device(context, args, save=False)
         if err:
           return device, err
-        
+
+      ip_address = args.pop("ip_address", None)
+      device_type = args.pop("device_type", None)
+      operating_system = args.pop("operating_system", None)
+      browser = args.pop("browser", None)
+
+      if ip_address:
+        device.ip_address = ip_address
+
+      if device_type:
+        device.device_type = device_type
+      
+      if operating_system:
+        device.operating_system = operating_system
+      
+      if browser:
+        device.browser = browser
+
       # If user is logged in we log to the user account
       # otherwise to the device
       if context.user_is_logged_in:
@@ -90,39 +109,26 @@ class DeviceStore:
       else:
         device.update_visit_log(date_time)
 
-      ip_address = args.pop("ip_address", None)
-      device_type = args.pop("device_type", None)
-      operating_system = args.pop("operating_system", None)
-      browser = args.pop("browser", None)
+      # if location: # TODO: Bring back when GeoIP licensing is sorted out
+      #   new_location, created = Location.objects.get_or_create(
+      #     location_type="ZIP_CODE_ONLY",
+      #     zipcode=location["zipcode"]
+      #   )
+      #   print(f"10 -------------------------------------------------- {new_location}")
+      #   if created:
+      #     new_location.state = location["state"]
+      #     new_location.city = location["city"]
+      #     new_location.save()
+      #     print(f"11 -------------------------------------------------- {new_location}")
+      # 
+      #   device.update_device_location(new_location)
 
-      if ip_address:
-        device.ip_address = ip_address
-      
-      if location:
-        new_location, created = Location.objects.get_or_create(
-          location_type="ZIP_CODE_ONLY",
-          zipcode=location["zipcode"]
-        )
-        if created:
-          new_location.state = location["state"]
-          new_location.city = location["city"]
-          new_location.save()
-
-        device.update_device_location(new_location)
-
-      if device_type:
-        device.device_type = device_type
-      
-      if operating_system:
-        device.operating_system = operating_system
-      
-      if browser:
-        device.browser = browser
-      
       device.save()
       return device, None
 
     except Exception as e:
+      if device:
+        device.delete()
       # print(e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
