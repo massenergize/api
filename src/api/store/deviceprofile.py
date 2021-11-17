@@ -127,6 +127,28 @@ class DeviceStore:
       print(e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+  def metric_anonymous_users(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      metric = DeviceProfile.objects.filter(**args).first()
+      if not metric:
+        return None, InvalidResourceError()
+      return metric, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def metric_user_accounts(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      metric = DeviceProfile.objects.filter(**args).first()
+      if not metric:
+        return None, InvalidResourceError()
+      return metric, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
       
   def update_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:

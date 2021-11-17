@@ -30,6 +30,18 @@ class DeviceService:
     if err:
       return None, err
     return serialize(device), None
+
+  def metric_anonymous_users(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_anonymous_users(context, args)
+    if err:
+      return None, err
+    return serialize(metric, full=True), None
+  
+  def metric_user_accounts(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_user_accounts(context, args)
+    if err:
+      return None, err
+    return serialize(metric, full=True), None
   
   def update_device(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     device, err = self.store.update_device(context, args)
