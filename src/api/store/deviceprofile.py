@@ -74,7 +74,7 @@ class DeviceStore:
       else:
         device, err = self.create_device(context, args)
         if err:
-          print(err)
+          return device, err
         
       if context.user_is_logged_in:
         user_id = context.user_id
@@ -124,7 +124,7 @@ class DeviceStore:
       return device, None
 
     except Exception as e:
-      print(e)
+      # print(e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
       
