@@ -66,16 +66,18 @@ class DeviceStore:
     date_time = datetime.now()
     try:
       id = args.pop("id", None)
-      if id:
+      if id: # If device exists we'll modify it
         devices = DeviceProfile.objects.filter(id=id)
         if devices:
           devices.update(**args)
           device = devices.first()
-      else:
+      else: # If device does not exist we'll create one
         device, err = self.create_device(context, args)
         if err:
-          print(err)
+          return device, err
         
+      # If user is logged in we log to the user account
+      # otherwise to the device
       if context.user_is_logged_in:
         user_id = context.user_id
         users = UserProfile.objects.filter(id=user_id)
@@ -89,14 +91,11 @@ class DeviceStore:
         device.update_visit_log(date_time)
 
       ip_address = args.pop("ip_address", None)
-      # location = args.pop("location", None)
       device_type = args.pop("device_type", None)
       operating_system = args.pop("operating_system", None)
       browser = args.pop("browser", None)
 
       if ip_address:
-        # Anything we want to do with a device's IP address can happen here
-        # TODO: Maybe we want to store a list of IP addresses in JSON
         device.ip_address = ip_address
       
       if location:
@@ -124,7 +123,7 @@ class DeviceStore:
       return device, None
 
     except Exception as e:
-      print(e)
+      # print(e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
