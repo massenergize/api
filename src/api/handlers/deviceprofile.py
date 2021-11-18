@@ -95,7 +95,7 @@ class DeviceHandler(RouteHandler):
     if err:
       return err
 
-    self.__get_client_meta(request, args)
+    # self.__get_client_meta(request, args)
 
     if not context.is_admin_site:
       args["ip_address"] = self.ipLocator.getIP(request)
@@ -120,6 +120,7 @@ class DeviceHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("metric", str, is_required=True)
+    self.validator.expect("community", str)
     args, err = self.validator.verify(args)
 
     if err:

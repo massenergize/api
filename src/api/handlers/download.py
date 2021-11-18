@@ -83,3 +83,13 @@ class DownloadHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return self._get_csv_response(data=teams_data, download_type='teams', community_name=community_name)
+  
+  @admins_only
+  def metrics_download(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    (metrics_data, community_name), err = self.service.teams_download(context, community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return self._get_csv_response(data=metrics_data, download_type='teams', community_name=community_name)
