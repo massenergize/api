@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 from datetime import datetime
 from api.handlers.userprofile import UserHandler
-from database.models import UserProfile, DeviceProfile, Location
+from database.models import UserProfile, DeviceProfile, Location, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -144,7 +144,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def metric_anonymous_community_users(self,  context: Context, args, community) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_anonymous_community_users(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = DeviceProfile.objects.filter(user_profiles=None).count() # TODO: add community filter
       if not metric:
@@ -166,9 +166,9 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
-  def metric_community_profiles(self,  context: Context, args, community) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_community_profiles(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      metric = UserProfile.objects.filter(community=community).count()
+      metric = UserProfile.objects.filter(communities__id=community_id).count()
       if not metric:
         return None, InvalidResourceError()
       return metric, None
