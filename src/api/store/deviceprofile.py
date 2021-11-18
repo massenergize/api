@@ -176,6 +176,27 @@ class DeviceStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+  def metric_community_profiles_over_time(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      start = args.pop("start", None) # Start date
+      end = args.pop("end", None) # End date
+      period = args.pop("period", None) # monthly, yearly, etc.
+
+      start_date = datetime.strptime(start, '%d/%m/%Y')
+      end_date = datetime.strptime(end, '%d/%m/%Y')
+
+      users = UserProfile.objects.filter(communities__id=community_id).order_by("created_at")
+
+      # TODO: WIP aggregate user profile creation counts based on chosen range and period
+
+      if not users:
+        return None, InvalidResourceError()
+      return users, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
       
   def update_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:

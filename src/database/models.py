@@ -542,7 +542,7 @@ class UserProfile(models.Model):
 
   def update_visit_log(self, date_time):
     try:
-      day = date_time.strftime('%d/%m/%y')
+      day = date_time.strftime('%d/%m/%Y')
       # time = date_time.strftime('%H:%M')
       data = { "timestamp": repr(date_time) }
       if day not in self.visit_log:
@@ -635,7 +635,7 @@ class DeviceProfile(models.Model):
 
   def update_visit_log(self, date_time):
     try:
-      day = date_time.strftime('%d/%m/%y')
+      day = date_time.strftime('%d/%m/%Y')
       # time = date_time.strftime('%H:%M') # This can be added back if we ever want more detailed logging
       data = { "timestamp": repr(date_time) }
       if day not in self.visit_log:
