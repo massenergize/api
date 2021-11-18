@@ -143,10 +143,32 @@ class DeviceStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+  
+  def metric_anonymous_community_users(self,  context: Context, args, community) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      metric = DeviceProfile.objects.filter(user_profiles=None).count() # TODO: add community filter
+      if not metric:
+        return None, InvalidResourceError()
+      return metric, None
 
-  def metric_user_accounts(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def metric_user_profiles(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = UserProfile.objects.all().count()
+      if not metric:
+        return None, InvalidResourceError()
+      return metric, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def metric_community_profiles(self,  context: Context, args, community) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      metric = UserProfile.objects.filter(community=community).count()
       if not metric:
         return None, InvalidResourceError()
       return metric, None
