@@ -519,6 +519,13 @@ class DownloadStore:
 
     return data
 
+  def _community_metrics_download(self, community_id):
+    community = Community.objects.filter(id=community_id)
+
+    # TODO: Placeholder
+    data = None
+
+    return data
 
   def users_download(self, context: Context, community_id, team_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
@@ -590,6 +597,15 @@ class DownloadStore:
             return EMPTY_DOWNLOAD, InvalidResourceError()
       else:
           return EMPTY_DOWNLOAD, NotAuthorizedError()
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+
+  def metrics_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+      if not context.user_is_admin():
+        return EMPTY_DOWNLOAD, NotAuthorizedError()
+      return (self._community_metrics_download(community_id), None), None
     except Exception as e:
       capture_message(str(e), level="error")
       return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
