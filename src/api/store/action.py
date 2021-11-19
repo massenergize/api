@@ -115,6 +115,7 @@ class ActionStore:
       new_action.is_published = False
       new_action.title = action_to_copy.title + "-Copy"
       new_action.is_global = False
+      new_action.community = None
       new_action.save()
       new_action.tags.set(old_tags)
       new_action.vendors.set(old_vendors)
@@ -142,7 +143,6 @@ class ActionStore:
 
       calculator_action = args.pop('calculator_action', None)
       action.update(**args)
-
       action = action.first()
 
       # If no image passed, don't delete the existing

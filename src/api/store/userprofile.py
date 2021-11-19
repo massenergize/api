@@ -383,6 +383,7 @@ class UserStore:
     try:
       user_id = args.get('id', None)
       email = args.get('email', None)
+      profile_picture = args.pop("profile_picture", None)
       
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -392,7 +393,6 @@ class UserStore:
         if not users:
           return None, InvalidResourceError()
         
-        profile_picture = args.pop("profile_picture", None)
         users.update(**args)
         user = users.first()
         

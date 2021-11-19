@@ -1,4 +1,6 @@
+import json
 from django.db import models
+from django.db.models.query_utils import select_related_descend
 from database.utils.constants import *
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
@@ -92,10 +94,11 @@ class Media(models.Model):
   media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   order = models.PositiveIntegerField(default=0, blank=True, null=True)
-  
-  def __str__(self):
-    return self.name
-  
+
+  def __str__(self):      
+    return str(self.id) + '-' +self.name + "(" + self.file.name + ")"
+
+
   def simple_json(self):
     return {
       "id": self.id,
@@ -107,7 +110,7 @@ class Media(models.Model):
       "id": self.id,
       "name": self.name,
       "url": self.file.url,
-      "media_type": self.media_type
+      "media_type": self.media_type,
     }
   
   class Meta:
@@ -149,6 +152,7 @@ class Policy(models.Model):
     return model_to_dict(self)
   
   def full_json(self):
+    # would this blow up because no community_set?
     res = model_to_dict(self)
     community = self.community_set.all().first()
     if community:
@@ -476,7 +480,6 @@ class Role(models.Model):
     ordering = ('name',)
     db_table = 'roles'
 
-
 class UserProfile(models.Model):
   """
   A class used to represent a MassEnergize User
@@ -504,6 +507,9 @@ class UserProfile(models.Model):
   created_at: DateTime
     The date and time of the last time any updates were made to the information
     about this goal
+  visit_log:
+    A JSON object containing a history of dates. Activity is logged here when a 
+    user is signed in.
 
   #TODO: roles field: if we have this do we need is_superadmin etc? also why
   #  not just one?  why many to many
@@ -529,9 +535,22 @@ class UserProfile(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   preferences = models.JSONField(default=dict, null=True, blank=True)
+  visit_log = models.JSONField(default=dict, null=True, blank=True)
   
   def __str__(self):
     return self.email
+
+  def update_visit_log(self, date_time):
+    try:
+      day = date_time.strftime('%d/%m/%y')
+      # time = date_time.strftime('%H:%M')
+      data = { "timestamp": repr(date_time) }
+      if day not in self.visit_log:
+        self.visit_log[day] = data
+
+    except Exception as e:
+      print(e)
+      return None, e
   
   def info(self):
     return model_to_dict(self, ['id', 'email', 'full_name'])
@@ -551,8 +570,8 @@ class UserProfile(models.Model):
     communities = [cm.community.info() for cm in community_members]
     admin_at = [cm.community.info() for cm in CommunityMember.objects.filter(user=self, is_admin=True)]
     
-    data = model_to_dict(self, exclude=['real_estate_units',
-                                        'communities', 'roles'])
+    data = model_to_dict(self, exclude=['real_estate_units', 
+      'communities', 'roles'])
     data['joined'] = self.created_at.date()
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]
@@ -561,11 +580,77 @@ class UserProfile(models.Model):
     data['admin_at'] = admin_at
     data['teams'] = team_members
     data['profile_picture'] = get_json_if_not_none(self.profile_picture)
+    data['visit_log'] = self.visit_log
     return data
   
   class Meta:
     db_table = 'user_profiles'
     ordering = ('-created_at',)
+
+class DeviceProfile(models.Model):
+  """
+  A class used to represent a MassEnergize User's Device
+
+  Attributes
+  ----------
+  user_profiles : JSON 
+    A JSON object containing all user ids (as foreign keys) for any users 
+    asociated with this device.
+  IP_address: Char
+    The asociated IP address with this device.
+  device_type: Char
+    The type of device we see from the HTTP request.
+  operating_system:
+    The operating system we see from the HTTP request.
+  browser:
+    The browser we see from the HTTP request.
+  visit_log:
+    A JSON object containing a history of dates. Activity will only be 
+    logged here if there is a user attached to the device and they are 
+    logged in.
+
+  #TODO: 
+  """
+  id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+  user_profiles = models.ManyToManyField(UserProfile, blank=True)
+  ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  location = models.ManyToManyField(Location, blank=True)
+  device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
+  visit_log = models.JSONField(default=dict, null=True, blank=True)
+  is_deleted = models.BooleanField(default=False, blank=True)
+
+  def get_user_profiles(self):
+    return json.load(self.user_profiles)
+
+  def get_visit_log(self):
+    return json.load(self.visit_log)
+  
+  def update_device_location(self, location):
+    self.location.add(location)
+
+  def update_user_profiles(self, user):
+    self.user_profiles.add(user)
+
+  def update_visit_log(self, date_time):
+    try:
+      day = date_time.strftime('%d/%m/%y')
+      # time = date_time.strftime('%H:%M') # This can be added back if we ever want more detailed logging
+      data = { "timestamp": repr(date_time) }
+      if day not in self.visit_log:
+        self.visit_log[day] = data
+    except Exception as e:
+      print(e)
+      return None, e
+
+  def simple_json(self):
+    res = model_to_dict(self, ['id', 'ip_address', 'device_type', 'operating_system', 'browser', 'visit_log', 'is_deleted'])
+    res['user_profiles'] = [u.simple_json() for u in self.user_profiles.all()]
+    return res
+  
+  def full_json(self):
+    return self.simple_json()
 
 
 class CommunityMember(models.Model):
