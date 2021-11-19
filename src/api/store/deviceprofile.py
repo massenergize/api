@@ -1,3 +1,4 @@
+from calendar import month
 from django.http import HttpRequest
 from datetime import datetime
 from api.handlers.userprofile import UserHandler
@@ -177,22 +178,47 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  # def monthly_profiles(self, community_id, start_date, end_date, delta):
+  #   for n in range(int((end_date - start_date).days)):
+  #       yield start_date + timedelta(n)
+  # # TODO: Work in progress
+  #   for year in range(start_year, end_year + 1):
+  #     if year is start_year:
+  #       start_year_month = start_month
+  #     else:
+  #       start_year_month = 1
+
+  #     if year is end_year:
+  #       end_year_month = end_month
+  #     else:
+  #       end_year_month = 12
+  #     for month in range(start_year_month, end_year_month + 1):
+  #       user_profiles = UserProfile.objects.filter(
+  #         communities__id=community_id, 
+  #         created_at__month=month,
+  #         created_at__year=year
+  #       ).count()
+    
+  #   return data
+
   def metric_community_profiles_over_time(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       start = args.pop("start", None) # Start date
       end = args.pop("end", None) # End date
       period = args.pop("period", None) # monthly, yearly, etc.
 
-      start_date = datetime.strptime(start, '%d/%m/%Y')
-      end_date = datetime.strptime(end, '%d/%m/%Y')
+      start_date = datetime.strptime(start, '%Y-%m-%d')
+      end_date = datetime.strptime(end, '%Y-%m-%d')
+      delta = datetime.timedelta(months=1)
+      
+      # data = self.monthly_profiles(community_id, start_date, end_date, delta)
+      data = None
 
-      users = UserProfile.objects.filter(communities__id=community_id).order_by("created_at")
+      # TODO WIP: aggregate user profile creation counts based on chosen range and period
 
-      # TODO: WIP aggregate user profile creation counts based on chosen range and period
-
-      if not users:
+      if not data:
         return None, InvalidResourceError()
-      return users, None
+      return data, None
 
     except Exception as e:
       capture_message(str(e), level="error")
