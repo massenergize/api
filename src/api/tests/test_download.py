@@ -150,11 +150,11 @@ class DownloadTestCase(TestCase):
     response = self.client.post('/api/downloads.users', urlencode({}), content_type="application/x-www-form-urlencoded")
     self.assertEquals(type(response), HttpResponse)
     rows = response.content.decode("utf-8").split('\r\n')
-    self.assertEqual(len(rows),5)    # two header rows, one data row, and final empty row
+    self.assertEqual(len(rows),8)    # two header rows, five data rows, and final empty row
     headerdata = rows[0].split(',')
     self.assertEqual(headerdata[4],'Email')
     userdata = rows[2].split(',')      # data starts in third row
-    self.assertIn(userdata[4],[self.USER1.email, self.USER2.email])
+    self.assertIn(userdata[4],[self.USER1.email, self.USER2.email, self.CADMIN.email, self.USER.email, self.SADMIN.email])
 
 
   def test_download_actions(self):
