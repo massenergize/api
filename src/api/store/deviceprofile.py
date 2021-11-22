@@ -67,6 +67,7 @@ class DeviceStore:
   
   def log_device(self, context: Context, args, location) -> Tuple[dict, MassEnergizeAPIError]:
     date_time = datetime.now()
+    device = None
     try:
       id = args.pop("id", None)
       if id: # If device exists we'll modify it
