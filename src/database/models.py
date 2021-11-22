@@ -152,7 +152,7 @@ class Policy(models.Model):
     return model_to_dict(self)
   
   def full_json(self):
-    # this will certinly blow up because no community_set:
+    # would this blow up because no community_set?
     res = model_to_dict(self)
     community = self.community_set.all().first()
     if community:
@@ -571,7 +571,7 @@ class UserProfile(models.Model):
     admin_at = [cm.community.info() for cm in CommunityMember.objects.filter(user=self, is_admin=True)]
     
     data = model_to_dict(self, exclude=['real_estate_units', 
-      'communities', 'roles', 'last_visited'])
+      'communities', 'roles'])
     data['joined'] = self.created_at.date()
     admin_at = [get_json_if_not_none(c.community) for c in self.communityadmingroup_set.all()]
     data['households'] = [h.simple_json() for h in self.real_estate_units.all()]

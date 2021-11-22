@@ -53,15 +53,29 @@ def signinAs(client, user):
 
 def createUsers():
 
-    user, created = UserProfile.objects.get_or_create(full_name="Regular User",email="user@test.com")
+    user, created = UserProfile.objects.get_or_create(
+        full_name="Regular User",
+        email="user@test.com", 
+        accepts_terms_and_conditions=True
+    )
     if created:
         user.save()
 
-    cadmin, created = UserProfile.objects.get_or_create(full_name="Community Admin",email="cadmin@test.com",is_community_admin=True)
+    cadmin, created = UserProfile.objects.get_or_create(
+        full_name="Community Admin",
+        email="cadmin@test.com", 
+        accepts_terms_and_conditions=True,
+        is_community_admin=True
+    )
     if created:
         cadmin.save()
 
-    sadmin, created = UserProfile.objects.get_or_create(full_name="Super Admin",email="sadmin@test.com", is_super_admin=True)
+    sadmin, created = UserProfile.objects.get_or_create(
+        full_name="Super Admin",
+        email="sadmin@test.com", 
+        accepts_terms_and_conditions=True, 
+        is_super_admin=True
+    )
     if created:
         sadmin.save()
         

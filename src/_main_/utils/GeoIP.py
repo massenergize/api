@@ -16,9 +16,7 @@ def ip_valid(ip):
 
 class GeoIP:
   def __init__(self):
-
-    # self.reader = geoip2.database.Reader('../../GeoLite2-City_20211116/GeoLite2-City.mmdb')
-    return
+    self.reader = geoip2.database.Reader('../../GeoLite2-City_20211116/GeoLite2-City.mmdb')
 
   def getBrowser(self, request):
     ua_string = request.META.get('HTTP_USER_AGENT')
@@ -70,9 +68,7 @@ class GeoIP:
   def getGeo(self, ip):
 
     try:
-      # response = self.reader.city(ip)
-      with geoip2.webservice.Client(GEOIP2_ACCOUNT_ID, GEOIP2_LICENSE_KEY) as client:
-        response = client.city(ip)
+      response = self.reader.city(ip)
 
       geo = {}
       # for the full name, otherwise country.iso_code

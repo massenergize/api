@@ -296,10 +296,11 @@ class UserStore:
     try:
       email_address = args.get('email', None)
       profile = UserProfile.objects.filter(email=email_address).first()
-      if profile.accepts_terms_and_conditions:
+      # if user hasn't accepted T&C, need to finish that
+      if not profile.accepts_terms_and_conditions:
         name = profile.full_name.split()
         first_name = name[0]
-        last_name = name[1]
+        last_name = name[-1]  # if no delimiter, first_name may be same as last_name
         return {"imported": True, "firstName": first_name, "lastName": last_name, "preferredName": first_name}, None
       return {"imported": False}, None
     except Exception as e:

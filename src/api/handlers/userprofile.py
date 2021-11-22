@@ -33,7 +33,7 @@ class UserHandler(RouteHandler):
     self.add("/users.households.list", self.list_households)
     self.add("/users.events.list", self.list_events)
     self.add("/users.checkImported", self.check_user_imported)
-    self.add("/users.completeImported", self.complete_imported_user)
+    #self.add("/users.completeImported", self.complete_imported_user)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
@@ -239,19 +239,27 @@ class UserHandler(RouteHandler):
   def check_user_imported(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    args, err = (self.validator
+      .expect("email", str, is_required=True)
+      .verify(context.args)
+    )
+    if err:
+      return err
+
     imported_info, err = self.service.check_user_imported(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=imported_info)
 
-  @login_required
-  def complete_imported_user(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    imported_info, err = self.service.complete_imported_user(context, args)
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=imported_info)
+  #@login_required
+  #def complete_imported_user(self, request):
+  #  context: Context = request.context
+  #  args: dict = context.args
+  #  imported_info, err = self.service.complete_imported_user(context, args)
+  #  if err:
+  #    return MassenergizeResponse(error=str(err), status=err.status)
+  #  return MassenergizeResponse(data=imported_info)
 
   @admins_only
   # Community or Super Admins can do this
