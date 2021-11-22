@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.0.15",
-  "BUILD_VERSION_NOTES": "Nov 14:\n- Fix numerous bugs since 4.0 deployment:\n- Make sandbox sites work more completely\n- fix csv downloads\n- Admin contact emails go to primary contact\n- Sort Communities by location/name\n- User import fixes\nOct 17th Deployment - Version 4.0\n- Make cookie secure\n"
+  "BUILD_VERSION": "4.0.16",
+  "BUILD_VERSION_NOTES": "Nov 21: minor fix for imported e-mail addresses\nNov 14:\n- Fix numerous bugs since 4.0 deployment:\n- Make sandbox sites work more completely\n- fix csv downloads\n- Admin contact emails go to primary contact\n- Sort Communities by location/name\n- User import fixes\nOct 17th Deployment - Version 4.0\n- Make cookie secure\n"
 }
