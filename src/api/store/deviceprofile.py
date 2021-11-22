@@ -70,12 +70,16 @@ class DeviceStore:
     device = None
     try:
       id = args.pop("id", None)
-      if id: # If device exists we'll modify it
+      if id: # If the cookie exists check for a device
         devices = DeviceProfile.objects.filter(id=id)
-        if devices:
+        if devices: # If the device is in the database
           devices.update(**args)
           device = devices.first()
-      else: # If device does not exist we'll create one
+        else: # If the device can't be found
+          device = device, err = self.create_device(context, args, save=False)
+          if err:
+            return device, err
+      else: # If the cookie does not exist we'll create one
         device, err = self.create_device(context, args, save=False)
         if err:
           return device, err
