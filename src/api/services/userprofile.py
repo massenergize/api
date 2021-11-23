@@ -37,6 +37,7 @@ def _send_invitation_email(user_info, mess):
 
   # send email inviting user to complete their profile
   cadmin_name = user_info.get("cadmin", "The Community Administrator")
+  cadmin_email = user_info.get("cadmin_email", "no-reply@massenergize.org")
   cadmin_firstname = cadmin_name.split(" ")[0]
   community_name = user_info.get("community", None)
   community_logo = user_info.get("community_logo", None)
@@ -57,7 +58,7 @@ def _send_invitation_email(user_info, mess):
     custom_intro = "Here is how " + cadmin_firstname + " describes " + community_name
     custom_message = community_info
 
-  subject = cadmin_name + " invited you to join the " + community_name + " Community"
+  subject = cadmin_name + " invites you to join the " + community_name + " Community"
   #send_massenergize_email(subject=subject , msg=message, to=email)
   email_template = 'community_invitation_email.html'
   if team_name == 'none' or team_name == "None":
@@ -89,7 +90,7 @@ def _send_invitation_email(user_info, mess):
     'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
     }
   
-  send_massenergize_rich_email(subject, email, email_template, content_variables)
+  send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
 
 class UserService:
   """
