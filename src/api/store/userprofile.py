@@ -594,7 +594,8 @@ class UserStore:
         team.save()
         
       new_user.save()
-      ret = {'cadmin': cadmin.full_name,
+      ret = { 'cadmin': cadmin.full_name,
+              'cadmin_email': cadmin.email,
               'community': community.name,
               'community_logo': community.logo.file.url,
               'community_info': community.about_community,
@@ -605,11 +606,11 @@ class UserStore:
               'email': email,
               'preferred_name': new_user.preferred_name}
       if team and team_leader:
-        ret['team_name'] = team_name,
-        ret['team_leader'] = team_leader.full_name,
-        ret['team_leader_firstname'] = team_leader.full_name.split(" ")[0],
-        ret['team_leader_email'] = team_leader.email,
- 
+        ret['team_name'] = team_name
+        ret['team_leader'] = team_leader.full_name
+        ret['team_leader_firstname'] = team_leader.full_name.split(" ")[0]
+        ret['team_leader_email'] = team_leader.email
+
       return ret, None
     except Exception as e:
       capture_message(str(e), level="error")
