@@ -268,7 +268,6 @@ class UserService:
           continue
 
         # verify correctness of email address
-        print("first,last,email:" + first_name + "," + last_name + "," + email)
         # improved regex for validating e-mails
         regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
         if(re.search(regex,email)):  
@@ -291,17 +290,23 @@ class UserService:
   def import_from_list(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
 
     names = args.get('names', None)
-    emails = args.get('emails', None)
+    first_names = args.get('first_names', None)
+    last_names = args.get('last_names', None)
+    emails = args.get('emails', None)      
 
     custom_message = args.get('message', "")
 
     invalid_emails = []
-    for ix in range(len(names)):
+    for ix in range(len(emails)):
       try:
-        name = names[ix]
-        spc = name.find(' ')
-        first_name = name[0:spc-1]
-        last_name = name[spc+1]
+        if first_names:
+          first_name = first_names[ix]
+          last_name = last_names[ix]
+        else:
+          name = names[ix]
+          spc = name.find(' ')
+          first_name = name[0:spc-1]
+          last_name = name[spc+1]
         email = emails[ix].lower()
 
         # improved regex for validating e-mails
@@ -311,6 +316,9 @@ class UserService:
 
           # send invitation e-mail to each new user
           _send_invitation_email(info, custom_message)
+
+        else:
+          invalid_emails.append({"line":ix, "first_name":first_name, "last_name": last_name, "email":email}) 
 
       except Exception as e:
         print(str(e))

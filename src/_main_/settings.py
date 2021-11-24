@@ -74,7 +74,7 @@ ALLOWED_HOSTS = [
     'massenergize.test:3000'
 ]
 
-if IS_LOCAL:
+if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
     
 
