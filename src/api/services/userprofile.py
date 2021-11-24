@@ -268,7 +268,8 @@ class UserService:
 
         # verify correctness of email address
         print("first,last,email:" + first_name + "," + last_name + "," + email)
-        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        # improved regex for validating e-mails
+        regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
         if(re.search(regex,email)):  
           info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
 
@@ -302,7 +303,8 @@ class UserService:
         last_name = name[spc+1]
         email = emails[ix].lower()
 
-        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        # improved regex for validating e-mails
+        regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
         if(re.search(regex,email)):  
           info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
 

@@ -6,6 +6,7 @@ from database.models import UserProfile, CommunityMember, Action, Team, \
   Data, TagCollection, Location
 from api.store.team import get_team_users
 from api.store.tag_collection import TagCollectionStore
+from api.store.deviceprofile import DeviceStore
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -519,6 +520,16 @@ class DownloadStore:
 
     return data
 
+  def _community_metrics_download(self, community_id):
+    community = Community.objects.filter(id=community_id)
+
+    anonymous_users, err = DeviceStore.metric_anonymous_community_users()
+    user_profiles, err = DeviceStore.metric_community_profiles()
+    profiles_over_time, err = DeviceStore.metric_community_profiles_over_time()
+
+    data = None
+
+    return data
 
   def users_download(self, context: Context, community_id, team_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
@@ -590,6 +601,15 @@ class DownloadStore:
             return EMPTY_DOWNLOAD, InvalidResourceError()
       else:
           return EMPTY_DOWNLOAD, NotAuthorizedError()
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+
+  def metrics_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+      if not context.user_is_admin():
+        return EMPTY_DOWNLOAD, NotAuthorizedError()
+      return (self._community_metrics_download(community_id), None), None
     except Exception as e:
       capture_message(str(e), level="error")
       return EMPTY_DOWNLOAD, CustomMassenergizeError(e)

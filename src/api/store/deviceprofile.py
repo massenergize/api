@@ -1,7 +1,8 @@
+from calendar import month
 from django.http import HttpRequest
 from datetime import datetime
 from api.handlers.userprofile import UserHandler
-from database.models import UserProfile, DeviceProfile, Location
+from database.models import UserProfile, DeviceProfile, Location, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -49,13 +50,15 @@ class DeviceStore:
     if browser:
       new_device.browser = browser
     
-  def create_device(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_device(self, context: Context, args, save=True) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       new_device: DeviceProfile = DeviceProfile.objects.create(**args)
       
       self.__device_attr_handler(new_device, args)
 
-      new_device.save()
+      if save:
+        new_device.save()
+
       return new_device, None
 
     except Exception as e:
@@ -64,18 +67,40 @@ class DeviceStore:
   
   def log_device(self, context: Context, args, location) -> Tuple[dict, MassEnergizeAPIError]:
     date_time = datetime.now()
+    device = None
     try:
       id = args.pop("id", None)
-      if id: # If device exists we'll modify it
+      if id: # If the cookie exists check for a device
         devices = DeviceProfile.objects.filter(id=id)
-        if devices:
+        if devices: # If the device is in the database
           devices.update(**args)
           device = devices.first()
-      else: # If device does not exist we'll create one
-        device, err = self.create_device(context, args)
+        else: # If the device can't be found
+          device = device, err = self.create_device(context, args, save=False)
+          if err:
+            return device, err
+      else: # If the cookie does not exist we'll create one
+        device, err = self.create_device(context, args, save=False)
         if err:
           return device, err
-        
+
+      ip_address = args.pop("ip_address", None)
+      device_type = args.pop("device_type", None)
+      operating_system = args.pop("operating_system", None)
+      browser = args.pop("browser", None)
+
+      if ip_address:
+        device.ip_address = ip_address
+
+      if device_type:
+        device.device_type = device_type
+      
+      if operating_system:
+        device.operating_system = operating_system
+      
+      if browser:
+        device.browser = browser
+
       # If user is logged in we log to the user account
       # otherwise to the device
       if context.user_is_logged_in:
@@ -90,40 +115,117 @@ class DeviceStore:
       else:
         device.update_visit_log(date_time)
 
-      ip_address = args.pop("ip_address", None)
-      device_type = args.pop("device_type", None)
-      operating_system = args.pop("operating_system", None)
-      browser = args.pop("browser", None)
+      # if location: # TODO: Bring back when GeoIP licensing is sorted out
+      #   new_location, created = Location.objects.get_or_create(
+      #     location_type="ZIP_CODE_ONLY",
+      #     zipcode=location["zipcode"]
+      #   )
+      #   print(f"10 -------------------------------------------------- {new_location}")
+      #   if created:
+      #     new_location.state = location["state"]
+      #     new_location.city = location["city"]
+      #     new_location.save()
+      #     print(f"11 -------------------------------------------------- {new_location}")
+      # 
+      #   device.update_device_location(new_location)
 
-      if ip_address:
-        device.ip_address = ip_address
-      
-      if location:
-        new_location, created = Location.objects.get_or_create(
-          location_type="ZIP_CODE_ONLY",
-          zipcode=location["zipcode"]
-        )
-        if created:
-          new_location.state = location["state"]
-          new_location.city = location["city"]
-          new_location.save()
-
-        device.update_device_location(new_location)
-
-      if device_type:
-        device.device_type = device_type
-      
-      if operating_system:
-        device.operating_system = operating_system
-      
-      if browser:
-        device.browser = browser
-      
       device.save()
       return device, None
 
     except Exception as e:
+      if device:
+        device.delete()
       # print(e)
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def metric_anonymous_users(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      metric = DeviceProfile.objects.filter(user_profiles=None).count()
+      if not metric:
+        return None, InvalidResourceError()
+      return metric, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+  
+  def metric_anonymous_community_users(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      metric = DeviceProfile.objects.filter(user_profiles=None).count() # TODO: add community filter
+      if not metric:
+        return None, InvalidResourceError()
+      return metric, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def metric_user_profiles(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      metric = UserProfile.objects.all().count()
+      if not metric:
+        return None, InvalidResourceError()
+      return metric, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def metric_community_profiles(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      metric = UserProfile.objects.filter(communities__id=community_id).count()
+      if not metric:
+        return None, InvalidResourceError()
+      return metric, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  # def monthly_profiles(self, community_id, start_date, end_date, delta):
+  #   for n in range(int((end_date - start_date).days)):
+  #       yield start_date + timedelta(n)
+  # # TODO: Work in progress
+  #   for year in range(start_year, end_year + 1):
+  #     if year is start_year:
+  #       start_year_month = start_month
+  #     else:
+  #       start_year_month = 1
+
+  #     if year is end_year:
+  #       end_year_month = end_month
+  #     else:
+  #       end_year_month = 12
+  #     for month in range(start_year_month, end_year_month + 1):
+  #       user_profiles = UserProfile.objects.filter(
+  #         communities__id=community_id, 
+  #         created_at__month=month,
+  #         created_at__year=year
+  #       ).count()
+    
+  #   return data
+
+  def metric_community_profiles_over_time(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      start = args.pop("start", None) # Start date
+      end = args.pop("end", None) # End date
+      period = args.pop("period", None) # monthly, yearly, etc.
+
+      start_date = datetime.strptime(start, '%Y-%m-%d')
+      end_date = datetime.strptime(end, '%Y-%m-%d')
+      delta = datetime.timedelta(months=1)
+      
+      # data = self.monthly_profiles(community_id, start_date, end_date, delta)
+      data = None
+
+      # TODO WIP: aggregate user profile creation counts based on chosen range and period
+
+      if not data:
+        return None, InvalidResourceError()
+      return data, None
+
+    except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
       
