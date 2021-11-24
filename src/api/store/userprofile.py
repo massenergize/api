@@ -594,7 +594,8 @@ class UserStore:
         team.save()
         
       new_user.save()
-      ret = {'cadmin': cadmin.full_name,
+      ret = { 'cadmin': cadmin.full_name,
+              'cadmin_email': cadmin.email,
               'community': community.name,
               'community_logo': community.logo.file.url,
               'community_info': community.about_community,

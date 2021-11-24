@@ -37,6 +37,7 @@ def _send_invitation_email(user_info, mess):
 
   # send email inviting user to complete their profile
   cadmin_name = user_info.get("cadmin", "The Community Administrator")
+  cadmin_email = user_info.get("cadmin_email", "no-reply@massenergize.org")
   cadmin_firstname = cadmin_name.split(" ")[0]
   community_name = user_info.get("community", None)
   community_logo = user_info.get("community_logo", None)
@@ -57,7 +58,7 @@ def _send_invitation_email(user_info, mess):
     custom_intro = "Here is how " + cadmin_firstname + " describes " + community_name
     custom_message = community_info
 
-  subject = cadmin_name + " invited you to join the " + community_name + " Community"
+  subject = cadmin_name + " invites you to join the " + community_name + " Community"
   #send_massenergize_email(subject=subject , msg=message, to=email)
   email_template = 'community_invitation_email.html'
   if team_name == 'none' or team_name == "None":
@@ -89,7 +90,7 @@ def _send_invitation_email(user_info, mess):
     'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
     }
   
-  send_massenergize_rich_email(subject, email, email_template, content_variables)
+  send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
 
 class UserService:
   """
@@ -267,7 +268,6 @@ class UserService:
           continue
 
         # verify correctness of email address
-        print("first,last,email:" + first_name + "," + last_name + "," + email)
         # improved regex for validating e-mails
         regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
         if(re.search(regex,email)):  
@@ -290,17 +290,23 @@ class UserService:
   def import_from_list(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
 
     names = args.get('names', None)
-    emails = args.get('emails', None)
+    first_names = args.get('first_names', None)
+    last_names = args.get('last_names', None)
+    emails = args.get('emails', None)      
 
     custom_message = args.get('message', "")
 
     invalid_emails = []
-    for ix in range(len(names)):
+    for ix in range(len(emails)):
       try:
-        name = names[ix]
-        spc = name.find(' ')
-        first_name = name[0:spc-1]
-        last_name = name[spc+1]
+        if first_names:
+          first_name = first_names[ix]
+          last_name = last_names[ix]
+        else:
+          name = names[ix]
+          spc = name.find(' ')
+          first_name = name[0:spc-1]
+          last_name = name[spc+1]
         email = emails[ix].lower()
 
         # improved regex for validating e-mails
@@ -310,6 +316,9 @@ class UserService:
 
           # send invitation e-mail to each new user
           _send_invitation_email(info, custom_message)
+
+        else:
+          invalid_emails.append({"line":ix, "first_name":first_name, "last_name": last_name, "email":email}) 
 
       except Exception as e:
         print(str(e))
