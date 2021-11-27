@@ -179,8 +179,8 @@ class DownloadStore:
 
 
   def _get_action_info_cells(self, action):
-    average_carbon_points = action.calculator_action.average_points \
-                          if action.calculator_action else action.average_carbon_score
+    average_carbon_points = action.calculator_action.average_points if action.calculator_action \
+      else int(action.average_carbon_score) if action.average_carbon_score.isdigit() else 0
     
     cc_action = action.calculator_action.name if action.calculator_action else ''
 
@@ -192,8 +192,8 @@ class DownloadStore:
     impact = impact_obj.name if impact_obj else None
 
     done_count = UserActionRel.objects.filter(is_deleted=False, action=action, status="DONE").count()
-    total_carbon_points = str(average_carbon_points * done_count)
-    done_count = str(done_count)
+    total_carbon_points = average_carbon_points * done_count
+    done_count = done_count
 
     testimonials_count = str(Testimonial.objects.filter(is_deleted=False, action=action).count())
     
@@ -497,10 +497,11 @@ class DownloadStore:
       data.append([community] \
         + self._get_action_info_cells(action))
 
-    for community in Community.objects.filter(is_deleted=False):
-      community_reported_rows = self._get_reported_data_rows(community)
-      for row in community_reported_rows:
-        data.append([community.name] + row)
+    # BHN - Removing state/partner reported from all actions download
+    # for community in Community.objects.filter(is_deleted=False):
+    #  community_reported_rows = self._get_reported_data_rows(community)
+    #  for row in community_reported_rows:
+    #    data.append([community.name] + row)
 
     data = sorted(data, key=lambda row : row[0]) # sort by community
     data.insert(0, columns) # insert the column names
@@ -588,15 +589,12 @@ class DownloadStore:
       self.community_id = community_id
       if community_id:
         community_name = Community.objects.get(id=community_id).name
-      if context.user_is_super_admin:
-          if community_id:
-            return (self._community_actions_download(community_id), community_name), None
-          else:
-            return (self._all_actions_download(), None), None
-      elif context.user_is_community_admin and community_id:
-          return (self._community_actions_download(community_id), community_name), None
+      
+      # Allow community admins to do all actions dowload, same as super admins
+      if community_id:
+        return (self._community_actions_download(community_id), community_name), None
       else:
-          return EMPTY_DOWNLOAD, NotAuthorizedError()
+        return (self._all_actions_download(), None), None
     except Exception as e:
       capture_message(str(e), level="error")
       return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
