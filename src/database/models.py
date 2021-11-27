@@ -2589,6 +2589,40 @@ class TestimonialsPageSettings(PageSettings):
     verbose_name_plural = "TestimonialsPageSettings"
 
 
+class RegisterPageSettings(PageSettings):
+  """
+  Represents the community's Registration page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  
+  def __str__(self):
+    return "RegisterPageSettings - %s" % (self.community)
+  
+  class Meta:
+    db_table = 'register_page_settings'
+    verbose_name_plural = "RegisterPageSettings"
+
+
+class SigninPageSettings(PageSettings):
+  """
+  Represents the community's Signin page settings.
+
+  Attributes
+  ----------
+  see description under PageSettings
+  """
+  
+  def __str__(self):
+    return "SigninPageSettings - %s" % (self.community)
+  
+  class Meta:
+    db_table = 'signin_page_settings'
+    verbose_name_plural = "SigninPageSettings"
+
+
 class Message(models.Model):
   """
   A class used to represent a Message sent on the MassEnergize Platform

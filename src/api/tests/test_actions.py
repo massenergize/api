@@ -2,8 +2,7 @@
 This is the test file for actions
 """
 from django.test import  TestCase, Client
-from database.models import Action, Community, CommunityAdminGroup, HomePageSettings, AboutUsPageSettings, ContactUsPageSettings, DonatePageSettings, ActionsPageSettings
-import json
+from database.models import Action, Community, CommunityAdminGroup
 from urllib.parse import urlencode
 from api.tests.common import signinAs, setupCC, createUsers
 
