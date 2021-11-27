@@ -17,7 +17,8 @@ class GeoIP:
 
   def getBrowser(self, request):
     ua_string = request.META.get('HTTP_USER_AGENT')
-
+    if not ua_string:   # as in unit testing
+      return None
 
     # iPhone's user agent string
     #ua_string = 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B179 Safari/7534.48.3'

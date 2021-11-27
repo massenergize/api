@@ -94,15 +94,23 @@ class DeviceHandler(RouteHandler):
     if err:
       return err
 
+    # this gets the IP address
     self.__get_client_meta(request, args)
-
+    ip_address = args.get("ip_address", None)
+    if not ip_address or ip_address in ['127.0.0.1']:
+      return MassenergizeResponse(data=None)
+      
     if not context.is_admin_site:
-      args["ip_address"] = self.ipLocator.getIP(request)
+      # IP address obtained above?
+      # args["ip_address"] = self.ipLocator.getIP(request)
       # args["ip_address"] = "38.242.8.93" # For testing
 
       location = self.ipLocator.getGeo(args["ip_address"])
 
       client_info = self.ipLocator.getBrowser(request)
+      if not client_info:
+        return MassenergizeResponse(data=None)
+
       device_type = client_info["device"]
       model = client_info["model"]
       args["device_type"] = f"{device_type}-{model}"
