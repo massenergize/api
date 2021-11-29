@@ -47,22 +47,25 @@ class Location(models.Model):
   more_info = models.JSONField(blank=True, null=True)
   
   def __str__(self):
-    if self.location_type == 'STATE_ONLY':
-      return self.state
-    elif self.location_type == 'ZIP_CODE_ONLY':
-      return self.zipcode
-    elif self.location_type == 'CITY_ONLY':
-      return '%s-%s' % (self.city, self.state)
-    elif self.location_type == 'COUNTY_ONLY':
-      return '%s-%s' % (self.county, self.state)
-    elif self.location_type == 'COUNTRY_ONLY':
-      return self.country
-    elif self.location_type == 'FULL_ADDRESS':
-      return '%s, %s, %s, %s, %s' % (
-        self.street, self.unit_number, self.city, self.county, self.state
-      )
-    
-    return self.location_type
+    # show full loc regardless of tye type its labelled as
+    loc = ""
+    d = lambda: ", " if loc != "" else ""
+    if self.street:
+      loc += self.street
+    if self.unit_number:
+      loc += d() + "#"+ self.unit_number
+    if self.city:
+      loc += d() + self.city
+    if self.zipcode:
+      loc += d() + self.zipcode
+    if self.county:
+      loc += d() + self.county
+    if self.state:
+      loc += d() + self.state
+    #if self.country:     skip the country
+    #  loc += d() + self.country
+    loc += "-"+self.location_type
+    return loc
   
   def simple_json(self):
     return model_to_dict(self)
