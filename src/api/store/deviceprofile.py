@@ -30,15 +30,12 @@ class DeviceStore:
       return None, CustomMassenergizeError(e)
   
   def __device_attr_handler(self, new_device, args):
-    # TODO: Timestamp here for now. We might pass it here from somewhere else later.
     ip_address = args["ip_address"]
     device_type = args["device_type"]
     operating_system = args["operating_system"]
     browser = args["browser"]
-    # new_visit_log = args.pop('visit_log', context.visit_log)
 
     if ip_address:
-        # TODO: Anything we want to do with a device's IP address can happen here
         new_device.ip_address = ip_address
 
     if device_type:
@@ -120,12 +117,10 @@ class DeviceStore:
       #     location_type="ZIP_CODE_ONLY",
       #     zipcode=location["zipcode"]
       #   )
-      #   print(f"10 -------------------------------------------------- {new_location}")
       #   if created:
       #     new_location.state = location["state"]
       #     new_location.city = location["city"]
       #     new_location.save()
-      #     print(f"11 -------------------------------------------------- {new_location}")
       # 
       #   device.update_device_location(new_location)
 
