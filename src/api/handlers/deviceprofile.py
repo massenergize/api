@@ -91,22 +91,17 @@ class DeviceHandler(RouteHandler):
     
     if metric is "anonymous_users":
       metric, err = self.service.metric_anonymous_users(context, args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
 
     if metric is "anonymous_community_users":
       metric, err = self.service.metric_anonymous_community_users(context, args, community_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
 
     if metric is "user_profiles":
       metric, err = self.service.metric_user_profiles(context, args)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
 
     if metric is "community_profiles":
       metric, err = self.service.metric_community_profiles(context, args, community_id)
-      if err:
+    
+    if err:
         return MassenergizeResponse(error=str(err), status=err.status)
         
     return MassenergizeResponse(data=metric)
@@ -117,7 +112,7 @@ class DeviceHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("metric", str, is_required=True)
-    self.validator.expect("community_id", str)
+    self.validator.expect("community_id", str, is_required=True)
     args, err = self.validator.verify(args)
 
     if err:
@@ -128,17 +123,14 @@ class DeviceHandler(RouteHandler):
     
     if metric is "anonymous_community_users" and community_id:
       metric, err = self.service.metric_anonymous_community_users(context, args, community_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
     
     if metric is "community_profiles" and community_id:
       metric, err = self.service.metric_community_profiles(context, args, community_id)
-      if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
 
     if metric is "community_profiles_over_time" and community_id:
       metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
-      if err:
+    
+    if err:
         return MassenergizeResponse(error=str(err), status=err.status)
     
     return MassenergizeResponse(data=metric)
