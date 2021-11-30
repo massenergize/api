@@ -520,12 +520,12 @@ class DownloadStore:
 
     return data
 
-  def _community_metrics_download(self, community_id):
+  def _community_metrics_download(self, context, args, community_id):
     community = Community.objects.filter(id=community_id)
 
-    anonymous_users, err = DeviceStore.metric_anonymous_community_users()
-    user_profiles, err = DeviceStore.metric_community_profiles()
-    profiles_over_time, err = DeviceStore.metric_community_profiles_over_time()
+    anonymous_users, err = DeviceStore.metric_anonymous_community_users(community_id)
+    user_profiles, err = DeviceStore.metric_community_profiles(community_id)
+    profiles_over_time, err = DeviceStore.metric_community_profiles_over_time(context, args, community_id)
 
     data = None
 
@@ -605,11 +605,11 @@ class DownloadStore:
       capture_message(str(e), level="error")
       return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
-  def metrics_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def metrics_download(self, context: Context, args, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if not context.user_is_admin():
         return EMPTY_DOWNLOAD, NotAuthorizedError()
-      return (self._community_metrics_download(community_id), None), None
+      return (self._community_metrics_download(context, args, community_id), None), None
     except Exception as e:
       capture_message(str(e), level="error")
       return EMPTY_DOWNLOAD, CustomMassenergizeError(e)

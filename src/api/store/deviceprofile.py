@@ -134,7 +134,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def metric_anonymous_users(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_anonymous_users(self) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = DeviceProfile.objects.filter(user_profiles=None).count()
       if not metric:
@@ -145,7 +145,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def metric_anonymous_community_users(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_anonymous_community_users(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = DeviceProfile.objects.filter(user_profiles=None).count() # TODO: add community filter
       if not metric:
@@ -156,7 +156,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def metric_user_profiles(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_user_profiles(self) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = UserProfile.objects.all().count()
       if not metric:
@@ -167,7 +167,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
-  def metric_community_profiles(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_community_profiles(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = UserProfile.objects.filter(communities__id=community_id).count()
       if not metric:
