@@ -1,4 +1,5 @@
 import geoip2.database
+# import geoip2.webservice
 import socket
 from user_agents import parse
 
@@ -13,7 +14,7 @@ def ip_valid(ip):
 
 class GeoIP:
   def __init__(self):
-    self.reader = None
+    self.reader = geoip2.database.Reader('_main_/utils/GeoLite2-City/GeoLite2-City.mmdb')
 
   def getBrowser(self, request):
     ua_string = request.META.get('HTTP_USER_AGENT')
@@ -65,10 +66,6 @@ class GeoIP:
   def getGeo(self, ip):
 
     try:
-      if not self.reader:
-        dbFile = './_main_/utils/GeoLite2-City.mmdb'
-        self.reader = geoip2.database.Reader(dbFile)
-
       response = self.reader.city(ip)
 
       geo = {}
@@ -85,5 +82,6 @@ class GeoIP:
       return geo
 
     #self.reader.close()
-    except:
-      return None
+    except Exception as e:
+      # print(e)
+      return e

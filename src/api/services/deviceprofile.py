@@ -30,6 +30,36 @@ class DeviceService:
     if err:
       return None, err
     return serialize(device), None
+
+  def metric_anonymous_users(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_anonymous_users(context, args)
+    if err:
+      return None, err
+    return serialize(metric, full=True), None
+  
+  def metric_anonymous_community_users(self, context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_anonymous_community_users(context, args, community_id)
+    if err:
+      return None, err
+    return serialize(metric, full=True), None
+  
+  def metric_user_profiles(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_user_profiles(context, args)
+    if err:
+      return None, err
+    return serialize(metric, full=True), None
+
+  def metric_community_profiles(self, context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_community_profiles(context, args, community_id)
+    if err:
+      return None, err
+    return serialize(metric, full=True), None
+
+  def metric_community_profiles_over_time(self, context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_community_profiles_over_time(context, args, community_id)
+    if err:
+      return None, err
+    return serialize(metric, full=True), None
   
   def update_device(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     device, err = self.store.update_device(context, args)
