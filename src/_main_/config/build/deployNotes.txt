@@ -1,4 +1,6 @@
-Nov 19:
+Dec 5:
+- Customizable registration and signin pages
+- Improved user importing
 - Add DeviceProfile for tracking anonymous users
 - Add GeoIP for determining IP address location
 Nov 14:
