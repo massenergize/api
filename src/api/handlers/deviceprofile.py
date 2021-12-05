@@ -89,16 +89,16 @@ class DeviceHandler(RouteHandler):
     metric = args.get("metric", None)
     community_id = args.get("community_id", None)
     
-    if metric is "anonymous_users":
+    if metric == "anonymous_users":
       metric, err = self.service.metric_anonymous_users(context, args)
 
-    if metric is "anonymous_community_users":
+    elif metric == "anonymous_community_users":
       metric, err = self.service.metric_anonymous_community_users(context, args, community_id)
 
-    if metric is "user_profiles":
+    elif metric == "user_profiles":
       metric, err = self.service.metric_user_profiles(context, args)
 
-    if metric is "community_profiles":
+    elif metric == "community_profiles":
       metric, err = self.service.metric_community_profiles(context, args, community_id)
     
     if err:
@@ -121,13 +121,13 @@ class DeviceHandler(RouteHandler):
     metric = args["metric"] if "metric" in args else None
     community_id = args["community_id"] if "community_id" in args else None
     
-    if metric is "anonymous_community_users" and community_id:
+    if metric == "anonymous_community_users" and community_id:
       metric, err = self.service.metric_anonymous_community_users(context, args, community_id)
     
-    if metric is "community_profiles" and community_id:
+    elif metric == "community_profiles" and community_id:
       metric, err = self.service.metric_community_profiles(context, args, community_id)
 
-    if metric is "community_profiles_over_time" and community_id:
+    elif metric == "community_profiles_over_time" and community_id:
       metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
     
     if err:
