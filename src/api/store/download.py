@@ -322,7 +322,7 @@ class DownloadStore:
     second_highest_impact_action = actions_by_impact[1] if actions_of_members > 0 and len(actions_by_impact) > 1 else ''
 
     if not community.goal:    
-      print("No goal for community:"+community.name)
+      # this may be the case for some bogus community like "Global", in which case make a temporary Goal
       community.goal = Goal()
       
     goal = community.goal
@@ -496,12 +496,6 @@ class DownloadStore:
 
       data.append([community] \
         + self._get_action_info_cells(action))
-
-    # BHN - Removing state/partner reported from all actions download
-    # for community in Community.objects.filter(is_deleted=False):
-    #  community_reported_rows = self._get_reported_data_rows(community)
-    #  for row in community_reported_rows:
-    #    data.append([community.name] + row)
 
     data = sorted(data, key=lambda row : row[0]) # sort by community
     data.insert(0, columns) # insert the column names
