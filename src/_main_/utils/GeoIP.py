@@ -14,11 +14,12 @@ def ip_valid(ip):
 
 class GeoIP:
   def __init__(self):
-    self.reader = geoip2.database.Reader('_main_/utils/GeoLite2-City/GeoLite2-City.mmdb')
+    self.reader = None  # open in first call to GetGeo to avoid crashing developers running locally: geoip2.database.Reader('_main_/utils/GeoLite2-City/GeoLite2-City.mmdb')
 
   def getBrowser(self, request):
     ua_string = request.META.get('HTTP_USER_AGENT')
-
+    if not ua_string:   # as in unit testing
+      return None
 
     # iPhone's user agent string
     #ua_string = 'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B179 Safari/7534.48.3'
@@ -66,6 +67,11 @@ class GeoIP:
   def getGeo(self, ip):
 
     try:
+
+      if not self.reader:
+        dbFile = './_main_/utils/GeoLite2-City/GeoLite2-City.mmdb'
+        self.reader = geoip2.database.Reader(dbFile)
+
       response = self.reader.city(ip)
 
       geo = {}

@@ -57,17 +57,23 @@ class DeviceHandler(RouteHandler):
       return err
 
     if not context.is_admin_site:
-      args["ip_address"] = self.ipLocator.getIP(request)
-      # args["ip_address"] = "38.242.8.93" # For testing
+      ip_address = self.ipLocator.getIP(request)
+      if not ip_address or ip_address in ['127.0.0.1']:
+        ip_address = "38.242.8.93" # For testing
+
+      args["ip_address"] = ip_address  
 
       location = self.ipLocator.getGeo(args["ip_address"])
 
       client_info = self.ipLocator.getBrowser(request)
-      device_type = client_info["device"]
-      model = client_info["model"]
+      if not client_info:
+        client_info = {}
+
+      device_type = client_info.get("device", "Unknown-device")
+      model = client_info.get("model", "Unknown-model")
       args["device_type"] = f"{device_type}-{model}"
-      args["operating_system"] = client_info["os"]
-      args["browser"] = client_info["browser"]
+      args["operating_system"] = client_info.get("os", "Unknown-os")
+      args["browser"] = client_info.get("browser", "Unknown-browser")
       
     device, err = self.service.log_device(context, args, location)
     if err:
