@@ -62,8 +62,8 @@ class Location(models.Model):
       loc += d() + self.county
     if self.state:
       loc += d() + self.state
-    #if self.country:     skip the country
-    #  loc += d() + self.country
+    if self.country and self.country != "US":
+      loc += d() + self.country
     loc += "-"+self.location_type
     return loc
   
