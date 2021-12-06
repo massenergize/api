@@ -19,6 +19,8 @@ from database.models import (
     EventsPageSettings,
     TestimonialsPageSettings,
     VendorsPageSettings,
+    RegisterPageSettings,
+    SigninPageSettings,
     Goal,
     CommunityAdminGroup,
     Subdomain,
@@ -683,6 +685,14 @@ class CommunityStore:
                 TestimonialsPageSettings, f"Testimonials", community
             ):
                 raise Exception("Failed to clone settings for Testimonials page")
+            if not _clone_page_settings(
+                RegisterPageSettings, f"Register", community
+            ):
+                raise Exception("Failed to clone settings for Register page")
+            if not _clone_page_settings(
+                SigninPageSettings, f"Signin", community
+            ):
+                raise Exception("Failed to clone settings for Signin page")
 
             admin_group_name = f"{community.name}-{community.subdomain}-Admin-Group"
             comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(

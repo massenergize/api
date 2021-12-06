@@ -11,24 +11,20 @@ class DownloadService:
 
     def users_download(self, context: Context, community_id=None, team_id=None) -> Tuple[list, MassEnergizeAPIError]:
       users_download, err = self.store.users_download(context, community_id, team_id)
-      if err:
-        return None, err
-      return users_download, None
+      return users_download, err
 
     def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
       actions_download, err = self.store.actions_download(context, community_id)
-      if err:
-        return None, err
-      return actions_download, None
+      return actions_download, err
 
     def communities_download(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
       communities_download, err = self.store.communities_download(context)
-      if err:
-        return None, err
-      return communities_download, None
+      return communities_download, err
 
     def teams_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
       teams_download, err = self.store.teams_download(context, community_id)
-      if err:
-        return None, err
-      return teams_download, None
+      return teams_download, err
+    
+    def metrics_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+      communities_download, err = self.store.metrics_download(context, community_id)
+      return communities_download, err

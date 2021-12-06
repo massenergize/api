@@ -8,6 +8,7 @@ from api.handlers.page_settings__vendors import VendorsPageSettingsHandler
 from api.handlers.page_settings__testimonials import TestimonialsPageSettingsHandler
 from api.handlers.community import CommunityHandler
 from api.handlers.page_settings__contactus import ContactUsPageSettingsHandler
+from api.handlers.deviceprofile import DeviceHandler
 from api.handlers.page_settings__donate import DonatePageSettingsHandler
 from api.handlers.page_settings__impact import ImpactPageSettingsHandler
 from api.handlers.download import DownloadHandler
@@ -27,6 +28,8 @@ from api.handlers.page_settings__teams import TeamsPageSettingsHandler
 from api.handlers.testimonial import TestimonialHandler
 from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
+from api.handlers.page_settings__register import RegisterPageSettingsHandler
+from api.handlers.page_settings__signin import SigninPageSettingsHandler
 from django.urls import path, include
 
 
@@ -38,6 +41,7 @@ ROUTE_HANDLERS = [
   AuthHandler(),
   CommunityHandler(),
   ContactUsPageSettingsHandler(),
+  DeviceHandler(),
   DonatePageSettingsHandler(),
   DownloadHandler(),
   EventHandler(),
@@ -59,7 +63,9 @@ ROUTE_HANDLERS = [
   TestimonialsPageSettingsHandler(),
   UserHandler(),
   VendorHandler(),
-  VendorsPageSettingsHandler()
+  VendorsPageSettingsHandler(),
+  RegisterPageSettingsHandler(),
+  SigninPageSettingsHandler()
 ]
 
 urlpatterns = [

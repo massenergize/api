@@ -5,8 +5,11 @@ init:
 	touch local.env
 .PHONY: init
 
+# run this with 'make start env=local'
+env=remote
+export DJANGO_ENV=$(env)
 start:
-	python deployment/prepare_to_deploy.py prod 1
+	python deployment/prepare_to_deploy.py local 1
 	python manage.py runserver
 .PHONY: start
 
@@ -59,7 +62,10 @@ deploy:
 	docker-compose push
 .PHONY: deploy
 
-package = carbon_calculator
+# Default: test api routes
+package=api
+#package = carbon_calculator
+# for carbon_calculator testing these default options:
 infile = $(package)/tests/allPossibleInputs.txt
 outfile = $(package)/tests/allPossibleOutputs.txt
 generate_inputs = 0
@@ -69,5 +75,4 @@ export GENERATE_INPUTS=$(generate_inputs)
 
 test:	
 	python -W ignore manage.py test $(package)
-	python -W ignore manage.py test api
 .PHONY: test

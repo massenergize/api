@@ -1,7 +1,14 @@
-October 31st deployment
-- Bug fixes to go to prod:
-    Email messages to Cadmins
-    Sort Communities by location/name
-    User import fixes
+Dec 5:
+- Customizable registration and signin pages
+- Improved user importing
+- Add DeviceProfile for tracking anonymous users
+- Add GeoIP for determining IP address location
+Nov 14:
+- Fix numerous bugs since 4.0 deployment:
+- Make sandbox sites work more completely
+- fix csv downloads
+- Admin contact emails go to primary contact
+- Sort Communities by location/name
+- User import fixes
 Oct 17th Deployment - Version 4.0
 - Make cookie secure
