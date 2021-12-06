@@ -2,6 +2,8 @@ import geoip2.database
 # import geoip2.webservice
 import socket
 from user_agents import parse
+from _main_.settings import RUN_SERVER_LOCALLY
+from sentry_sdk import capture_message
 
 def ip_valid(ip):
 
@@ -14,7 +16,16 @@ def ip_valid(ip):
 
 class GeoIP:
   def __init__(self):
-    self.reader = None  # open in first call to GetGeo to avoid crashing developers running locally: geoip2.database.Reader('_main_/utils/GeoLite2-City/GeoLite2-City.mmdb')
+    try:
+      dbFile = './_main_/utils/GeoLite2-City/GeoLite2-City.mmdb'
+      self.reader = geoip2.database.Reader(dbFile)
+
+    except Exception as e:
+      # presumably file not found, in the case of running locally
+      if not RUN_SERVER_LOCALLY:
+        capture_message(str(e), level="error")
+
+      self.reader = None  # open in first call to GetGeo to avoid crashing developers running locally: geoip2.database.Reader('_main_/utils/GeoLite2-City/GeoLite2-City.mmdb')
 
   def getBrowser(self, request):
     ua_string = request.META.get('HTTP_USER_AGENT')
@@ -69,8 +80,7 @@ class GeoIP:
     try:
 
       if not self.reader:
-        dbFile = './_main_/utils/GeoLite2-City/GeoLite2-City.mmdb'
-        self.reader = geoip2.database.Reader(dbFile)
+        return None
 
       response = self.reader.city(ip)
 
