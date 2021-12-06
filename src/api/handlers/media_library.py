@@ -80,10 +80,10 @@ class MediaLibraryHandler(RouteHandler):
         args, err = self.validator.verify(args, strict=True)
         if err:
             return MassenergizeResponse(error=str(err))
-        image, error = self.service.addToGallery(args)
+        images, error = self.service.addToGallery(args)
         if error:
             return MassenergizeResponse(error=str(error))
-        return MassenergizeResponse(data=image)
+        return MassenergizeResponse(data=images)
 
     @admins_only
     def getImageInfo(self, request):

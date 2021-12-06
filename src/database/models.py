@@ -639,10 +639,10 @@ class UserProfile(models.Model):
         team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
         community_members = CommunityMember.objects.filter(user=self)
         communities = [cm.community.info() for cm in community_members]
-        admin_at = [
-            cm.community.info()
-            for cm in CommunityMember.objects.filter(user=self, is_admin=True)
-        ]
+        # admin_at = [ // TODO: Remove -> because we stopped using this, and started using CommunityAdminGroupBelow
+        #     cm.community.info()
+        #     for cm in CommunityMember.objects.filter(user=self, is_admin=True)
+        # ]
 
         data = model_to_dict(
             self, exclude=["real_estate_units", "communities", "roles"]

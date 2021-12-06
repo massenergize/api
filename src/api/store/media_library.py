@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from django.core.exceptions import ValidationError
+from _main_.utils.utils import Console
 from database.models import Community, Media, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
@@ -92,13 +93,26 @@ class MediaLibraryStore:
             return None, "Please provide a valid 'user_id'"
         except ValidationError:
             return None, "Please provide a valid 'user_id'"
+        user_media = self.makeMediaAndSave(
+            user=user, community=community, file=_file, title=title
+        )
+        return (
+            user_media,
+            None,
+        )
+
+    def makeMediaAndSave(self, **kwargs):
+        title = kwargs.get("title")
+        file = kwargs.get("file")
+        user = kwargs.get("user")
+        community = kwargs.get("community")
         media = Media.objects.create(
             name=f" {title} - ({round(time.time() * 1000)})",
-            file=_file,
+            file=file,
         )
         user_media = UserMediaUpload(user=user, media=media, community=community)
         user_media.save()
-        return user_media, None
+        return user_media
 
     def getImageInfo(self, args):
         media_id = args.get("media_id")
