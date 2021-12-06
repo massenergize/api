@@ -57,17 +57,23 @@ class DeviceHandler(RouteHandler):
       return err
 
     if not context.is_admin_site:
-      args["ip_address"] = self.ipLocator.getIP(request)
-      # args["ip_address"] = "38.242.8.93" # For testing
+      ip_address = self.ipLocator.getIP(request)
+      if not ip_address or ip_address in ['127.0.0.1']:
+        ip_address = "38.242.8.93" # For testing
+
+      args["ip_address"] = ip_address  
 
       location = self.ipLocator.getGeo(args["ip_address"])
 
       client_info = self.ipLocator.getBrowser(request)
-      device_type = client_info["device"]
-      model = client_info["model"]
+      if not client_info:
+        client_info = {}
+
+      device_type = client_info.get("device", "Unknown-device")
+      model = client_info.get("model", "Unknown-model")
       args["device_type"] = f"{device_type}-{model}"
-      args["operating_system"] = client_info["os"]
-      args["browser"] = client_info["browser"]
+      args["operating_system"] = client_info.get("os", "Unknown-os")
+      args["browser"] = client_info.get("browser", "Unknown-browser")
       
     device, err = self.service.log_device(context, args, location)
     if err:
@@ -89,16 +95,16 @@ class DeviceHandler(RouteHandler):
     metric = args.get("metric", None)
     community_id = args.get("community_id", None)
     
-    if metric is "anonymous_users":
+    if metric == "anonymous_users":
       metric, err = self.service.metric_anonymous_users(context, args)
 
-    if metric is "anonymous_community_users":
+    elif metric == "anonymous_community_users":
       metric, err = self.service.metric_anonymous_community_users(context, args, community_id)
 
-    if metric is "user_profiles":
+    elif metric == "user_profiles":
       metric, err = self.service.metric_user_profiles(context, args)
 
-    if metric is "community_profiles":
+    elif metric == "community_profiles":
       metric, err = self.service.metric_community_profiles(context, args, community_id)
     
     if err:
@@ -121,13 +127,13 @@ class DeviceHandler(RouteHandler):
     metric = args["metric"] if "metric" in args else None
     community_id = args["community_id"] if "community_id" in args else None
     
-    if metric is "anonymous_community_users" and community_id:
+    if metric == "anonymous_community_users" and community_id:
       metric, err = self.service.metric_anonymous_community_users(context, args, community_id)
     
-    if metric is "community_profiles" and community_id:
+    elif metric == "community_profiles" and community_id:
       metric, err = self.service.metric_community_profiles(context, args, community_id)
 
-    if metric is "community_profiles_over_time" and community_id:
+    elif metric == "community_profiles_over_time" and community_id:
       metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
     
     if err:
