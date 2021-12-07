@@ -143,10 +143,10 @@ class MessageStore:
   def list_community_admin_messages(self, context: Context, args):
     try:
       admin_communities, err = get_admin_communities(context)
-      if context.user_is_super_admin:
-        messages = Message.objects.filter(is_deleted=False, is_team_admin_message=False,)
-      elif context.user_is_community_admin:
+      if context.user_is_community_admin:
         messages = Message.objects.filter(is_deleted=False, is_team_admin_message=False, community__id__in=[c.id for c in admin_communities])
+      elif context.user_is_super_admin:
+        messages = Message.objects.filter(is_deleted=False, is_team_admin_message=False,)
       else:
         messages = []
 

@@ -270,7 +270,7 @@ class UserHandler(RouteHandler):
     if args.get("csv", None):
       return self.import_from_csv(context, args)
     else:
-      return self.import_from_list(context, args)
+      return self.import_from_list()
 
   # Community or Super Admins can do this
   def import_from_csv(self, context, args):
@@ -296,10 +296,8 @@ class UserHandler(RouteHandler):
 
     args, err = (self.validator
       .expect("community_id", int, is_required=True)
-      .expect("names", "str_list")
-      .expect("first_names", "str_list")
-      .expect("last_names", "str_list")
-      .expect("emails", "str_list", is_required=True)
+      .expect("names", "str_list", is_required=True)
+       .expect("emails", "str_list", is_required=True)
       .expect("team_id", int, is_required=False)      
       .verify(context.args)
     )

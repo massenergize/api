@@ -24,15 +24,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ********  LOAD CONFIG DATA ***********#
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
-DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
-RUN_SERVER_LOCALLY = False
-if DJANGO_ENV == "local":
-    RUN_SERVER_LOCALLY = True
+#DJANGO_ENV = os.environ.get("DJANGO_ENV", "remote")
+#RUN_SERVER_LOCALLY = False
+# if DJANGO_ENV == "local":
+RUN_SERVER_LOCALLY = True
 
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -52,7 +52,7 @@ except Exception:
 
 # ********  END LOAD CONFIG DATA ***********#
 
-SECRET_KEY =  os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = RUN_SERVER_LOCALLY
@@ -74,9 +74,9 @@ ALLOWED_HOSTS = [
     'massenergize.test:3000'
 ]
 
-if RUN_SERVER_LOCALLY:
+if IS_LOCAL:
     ALLOWED_HOSTS = ['*']
-    
+
 
 INSTALLED_APPS = [
     'django_hosts',
@@ -106,7 +106,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    #custom middlewares
+    # custom middlewares
     'authentication.middleware.MassenergizeJWTAuthMiddleware',
 
     'django_hosts.middleware.HostsResponseMiddleware'
@@ -115,17 +115,17 @@ MIDDLEWARE = [
 
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATICFILES_STORAGE  = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 
 
 #-------- AWS CONFIGURATION ---------------------#
-AWS_ACCESS_KEY_ID        = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY    = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME  = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_SIGNATURE_VERSION = os.environ.get('AWS_S3_SIGNATURE_VERSION')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-AWS_DEFAULT_ACL  = None
+AWS_DEFAULT_ACL = None
 AWS_QUERYSTRING_AUTH = False
 
 #-------- OTHER CONFIGURATION ---------------------#
@@ -165,18 +165,16 @@ TEMPLATES = [
 ]
 
 
-
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE'   : os.environ.get('DATABASE_ENGINE'),
-        'NAME'     : os.environ.get('DATABASE_NAME'),
-        'USER'     : os.environ.get('DATABASE_USER'),
-        'PASSWORD' : os.environ.get('DATABASE_PASSWORD'),
-        'HOST'     : os.environ.get('DATABASE_HOST'),
-        'PORT'     : os.environ.get('DATABASE_PORT')
+        'ENGINE': os.environ.get('DATABASE_ENGINE'),
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT')
     },
 }
 
@@ -196,16 +194,16 @@ DEFAULT_HOST = 'main'
 
 # firebase setup
 FIREBASE_CREDENTIALS = credentials.Certificate({
-  "type": "service_account",
-  "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
-  "private_key_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY_ID'),
-  "private_key": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'),
-  "client_email": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL'),
-  "client_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_ID'),
-  "client_x509_cert_url": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL'),
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "type": "service_account",
+    "project_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PROJECT_ID'),
+    "private_key_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY_ID'),
+    "private_key": os.environ.get('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'),
+    "client_email": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL'),
+    "client_id": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_ID'),
+    "client_x509_cert_url": os.environ.get('FIREBASE_SERVICE_ACCOUNT_CLIENT_URL'),
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
 })
 firebase_admin.initialize_app(FIREBASE_CREDENTIALS)
 
@@ -249,10 +247,10 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
-EMAIL_USE_TLS = True 
-EMAIL_HOST = 'smtp.gmail.com' 
-EMAIL_PORT = 587 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
@@ -267,4 +265,3 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-

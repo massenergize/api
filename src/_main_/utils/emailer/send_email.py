@@ -20,12 +20,10 @@ def send_massenergize_email(subject, msg, to):
   return True
 
 
-def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
-  if not from_email:
-    from_email = FROM_EMAIL
+def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables):
   html_content = render_to_string(massenergize_email_type, content_variables)
   text_content = strip_tags(html_content)
-  msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+  msg = EmailMultiAlternatives(subject, text_content, FROM_EMAIL, [to])
   msg.attach_alternative(html_content, "text/html")
   ok = msg.send(fail_silently=True)
 

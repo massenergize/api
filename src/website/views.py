@@ -1,4 +1,5 @@
-import html2text, traceback
+import html2text
+import traceback
 from django.shortcuts import render, redirect
 from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import Http404
@@ -43,8 +44,10 @@ elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
+
+
 else:
-    # we know it is dev 
+    # we know it is dev
     PORTAL_HOST = "https://community.massenergize.dev"
 
 
@@ -52,7 +55,7 @@ if IS_LOCAL:
     HOST_DOMAIN = "http://communities.massenergize.test:8000"
     HOST = f"{HOST_DOMAIN}"
 elif IS_PROD:
-    #TODO treat canary as a separate thing
+    # TODO treat canary as a separate thing
     HOST_DOMAIN = "massenergize.org"
     HOST = f"https://communities.{HOST_DOMAIN}"
 elif IS_CANARY:
@@ -73,6 +76,7 @@ META = {
     "is_local": IS_LOCAL
 }
 
+
 def _get_subdomain(request, enforce_is_valid=False):
     domain_components = request.META["HTTP_HOST"].split(".")
     if len(domain_components) <= 2:
@@ -88,6 +92,7 @@ def _get_subdomain(request, enforce_is_valid=False):
 
     return subdomain
 
+
 def _subdomain_is_valid(subdomain):
     if subdomain in RESERVED_SUBDOMAIN_LIST:
         return False
@@ -95,38 +100,41 @@ def _subdomain_is_valid(subdomain):
     # TODO: switch to using the subdomain model to check this
     return Community.objects.filter(subdomain__iexact=subdomain).exists()
 
+
 def _extract(html):
-    res = extract_text_from_html.handle(html) 
+    res = extract_text_from_html.handle(html)
     return f"{res.strip()[:250]}..."
+
 
 def _get_is_sandbox(request):
     query = request.META["QUERY_STRING"]
-    if len(query)>1:
+    if len(query) > 1:
         pars = query.split(",")
         for par in pars:
             ps = par.split("=")
             if ps[0].lower() == "sandbox":
-                if len(ps)<2 or ps[1].lower()=="true":
+                if len(ps) < 2 or ps[1].lower() == "true":
                     print("it is the sandbox")
-                    return True                
+                    return True
                 return False    # sandbox=false
         return False            # sandbox not specified
     return False                # no query string
 
+
 def _get_redirect_url(subdomain, community=None, is_sandbox=False):
 
     if not community and subdomain:
-      if is_sandbox:
-        community = Community.objects.filter(
-            is_deleted=False,
-            subdomain__iexact=subdomain,
-        ).first()
-      else:
-        community = Community.objects.filter(
-            is_deleted=False,
-            is_published=True,
-            subdomain__iexact=subdomain,
-        ).first()
+        if is_sandbox:
+            community = Community.objects.filter(
+                is_deleted=False,
+                subdomain__iexact=subdomain,
+            ).first()
+        else:
+            community = Community.objects.filter(
+                is_deleted=False,
+                is_published=True,
+                subdomain__iexact=subdomain,
+            ).first()
 
     if not community:
         raise Http404
@@ -135,19 +143,22 @@ def _get_redirect_url(subdomain, community=None, is_sandbox=False):
     if is_sandbox:
         suffix = "?sandbox=true"
     redirect_url = f"{PORTAL_HOST}/{subdomain}{suffix}"
-    community_website_search = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
+    community_website_search = CustomCommunityWebsiteDomain.objects.filter(
+        community=community).first()
     if community_website_search:
-        redirect_url = f"https://{community_website_search.website}" 
+        redirect_url = f"https://{community_website_search.website}"
     return redirect_url
+
 
 def _get_file_url(image):
     if not image:
         return None
     return image.file.url if image.file else None
 
+
 def home(request):
     subdomain = _get_subdomain(request, False)
-    if not subdomain or subdomain in HOME_SUBDOMAIN_SET :
+    if not subdomain or subdomain in HOME_SUBDOMAIN_SET:
         return communities(request)
     elif _subdomain_is_valid(subdomain):
         return community(request, subdomain)
@@ -169,18 +180,18 @@ def communities(request):
     if is_sandbox:
         communityList = list(Community.objects.filter(
             is_deleted=False
-            ).values("id", "name", "subdomain", "about_community", "location"))
+        ).values("id", "name", "subdomain", "about_community", "location"))
         suffix = "?sandbox=true"
     else:
         communityList = list(Community.objects.filter(
             is_deleted=False, is_published=True
-            ).values("id", "name", "subdomain", "about_community", "location"))
+        ).values("id", "name", "subdomain", "about_community", "location"))
         suffix = ""
 
     # for each community make a display name which is "Location - Community name"
     for community in communityList:
         location = community.get("location", None)
-        prefix = ""        
+        prefix = ""
         if location:
             city = location["city"]
             state = location["state"]
@@ -214,16 +225,16 @@ def community(request, subdomain):
 
     is_sandbox = _get_is_sandbox(request)
     if is_sandbox:
-      community = Community.objects.filter(
-        is_deleted=False,
-        subdomain__iexact=subdomain,
-      ).first()
+        community = Community.objects.filter(
+            is_deleted=False,
+            subdomain__iexact=subdomain,
+        ).first()
     else:
-      community = Community.objects.filter(
-        is_deleted=False,
-        is_published=True,
-        subdomain__iexact=subdomain,
-      ).first()
+        community = Community.objects.filter(
+            is_deleted=False,
+            is_published=True,
+            subdomain__iexact=subdomain,
+        ).first()
 
     if not community:
         raise Http404
@@ -240,7 +251,7 @@ def community(request, subdomain):
     meta = META
     meta.update(
         {
-            "image_url": _get_file_url(community.logo),    
+            "image_url": _get_file_url(community.logo),
             "subdomain": subdomain,
             "section": f"#community#{subdomain}",
             "redirect_to": redirect_url,
@@ -261,7 +272,7 @@ def community(request, subdomain):
 def actions(request, subdomain=None):
     if not subdomain:
         subdomain = _get_subdomain(request, enforce_is_valid=True)
-        
+
     redirect_url = _get_redirect_url(subdomain, None)
 
     meta = META
@@ -301,7 +312,7 @@ def action(request, id, subdomain=None):
     meta = META
     meta.update(
         {
-            "image_url":_get_file_url(action.image),
+            "image_url": _get_file_url(action.image),
             "subdomain": subdomain,
             "title": action.title,
             "description": _extract(action.about),
@@ -359,7 +370,7 @@ def event(request, id, subdomain=None):
         {
             "subdomain": subdomain,
             "title": event.name,
-            "image_url":_get_file_url(event.image),
+            "image_url": _get_file_url(event.image),
             "subdomain": subdomain,
             "description": _extract(event.description),
             "redirect_to": f"{redirect_url}/events/{id}",
@@ -416,7 +427,7 @@ def vendor(request, id, subdomain=None):
         {
             "subdomain": subdomain,
             "title": vendor.name,
-            "image_url":_get_file_url(vendor.logo),
+            "image_url": _get_file_url(vendor.logo),
             "subdomain": subdomain,
             "description": _extract(vendor.description),
             "redirect_to": f"{redirect_url}/services/{id}",
@@ -685,6 +696,7 @@ def contact_us(request, subdomain=None):
 def generate_sitemap(request):
     d = MiscellaneousStore().generate_sitemap_for_portal()
     return render(request, "sitemap_template.xml", d, content_type="text/xml")
+
 
 def generate_sitemap_main(request):
     d = MiscellaneousStore().generate_sitemap_for_portal()
