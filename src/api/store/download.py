@@ -531,9 +531,8 @@ class DownloadStore:
     device_store = DeviceStore()
 
     anonymous_users, err = device_store.metric_anonymous_community_users(community_id)
-    data.append([anonymous_users])
     user_profiles, err = device_store.metric_community_profiles(community_id)
-    data.append([user_profiles])
+    data.append([anonymous_users, user_profiles])
     # profiles_over_time, err = DeviceStore.metric_community_profiles_over_time(context, args, community_id)
     # TODO: Coming back to this ^^^ after downloads is done
 

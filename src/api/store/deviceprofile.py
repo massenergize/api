@@ -112,17 +112,17 @@ class DeviceStore:
       else:
         device.update_visit_log(date_time)
 
-      # if location: # TODO: Bring back when GeoIP licensing is sorted out
-      #   new_location, created = Location.objects.get_or_create(
-      #     location_type="ZIP_CODE_ONLY",
-      #     zipcode=location["zipcode"]
-      #   )
-      #   if created:
-      #     new_location.state = location["state"]
-      #     new_location.city = location["city"]
-      #     new_location.save()
-      # 
-      #   device.update_device_location(new_location)
+      if location:
+        new_location, created = Location.objects.get_or_create(
+          location_type="ZIP_CODE_ONLY",
+          zipcode=location["zipcode"]
+        )
+        if created:
+          new_location.state = location["state"]
+          new_location.city = location["city"]
+          new_location.save()
+      
+        device.update_device_location(new_location)
 
       device.save()
       return device, None
