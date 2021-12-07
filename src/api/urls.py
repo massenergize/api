@@ -28,6 +28,8 @@ from api.handlers.page_settings__teams import TeamsPageSettingsHandler
 from api.handlers.testimonial import TestimonialHandler
 from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
+from api.handlers.page_settings__register import RegisterPageSettingsHandler
+from api.handlers.page_settings__signin import SigninPageSettingsHandler
 from django.urls import path, include
 
 
@@ -61,7 +63,9 @@ ROUTE_HANDLERS = [
   TestimonialsPageSettingsHandler(),
   UserHandler(),
   VendorHandler(),
-  VendorsPageSettingsHandler()
+  VendorsPageSettingsHandler(),
+  RegisterPageSettingsHandler(),
+  SigninPageSettingsHandler()
 ]
 
 urlpatterns = [
