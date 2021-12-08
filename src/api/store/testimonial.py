@@ -1,7 +1,7 @@
-from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, Tag
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
+from .utils import get_community, get_user
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -25,39 +25,40 @@ class TestimonialStore:
         try:
             subdomain = args.pop('subdomain', None)
             community_id = args.pop('community_id', None)
+            community, _ = get_community(community_id, subdomain)
+
             user_id = args.pop('user_id', None)
             user_email = args.pop('user_email', None)
+            user, _ = get_user(user_id, user_email)
 
             testimonials = []
 
-            if context.is_sandbox:
-                if subdomain:
-                    testimonials = Testimonial.objects.filter(
-                        community__subdomain=subdomain, is_deleted=False)
-                elif community_id:
-                    testimonials = Testimonial.objects.filter(
-                        community__id=community_id, is_deleted=False)
-                elif user_id:
-                    testimonials = Testimonial.objects.filter(
-                        user__id=user_id, is_deleted=False)
-                elif user_email:
-                    testimonials = Testimonial.objects.filter(
-                        user__email=user_email, is_deleted=False)
-
-            else:
-                if subdomain:
-                    # testimonials touch many things through foreign key relationships
-                    testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False).prefetch_related(
+            if community:
+                testimonials = Testimonial.objects.filter(
+                        community=community, is_deleted=False).prefetch_related(
                         'tags__tag_collection', 'action__tags', 'vendor', 'community')
-                elif community_id:
-                    testimonials = Testimonial.objects.filter(
-                        community__id=community_id, is_deleted=False)
-                elif user_id:
-                    testimonials = Testimonial.objects.filter(
-                        user__id=user_id, is_deleted=False)
-                elif user_email:
-                    testimonials = Testimonial.objects.filter(
-                        user__email=user_email, is_deleted=False)
+
+            elif user:
+                testimonials = Testimonial.objects.filter(
+                        user=user, is_deleted=False).prefetch_related(
+                        'tags__tag_collection', 'action__tags', 'vendor', 'community')
+            else:
+                # need to specify a community or a user
+                return None, InvalidResourceError()
+
+            # From the total list of testimonials, filter the ones that get sent back
+            # if this is not the sandbox or the user is not a community admin of the community or the user is not the author, 
+            # only show published testimonials
+            is_community_admin = False
+            if community and context.user_is_community_admin:
+                cadmins =  CommunityAdminGroup.objects.filter(community=community).first().members.all()
+                is_community_admin = user in cadmins
+
+            if not context.is_sandbox and not is_community_admin:
+                if context.user_is_logged_in:    
+                    testimonials = testimonials.filter(Q(user__id=context.user_id) | Q(is_published=True))
+                else:
+                    testimonials = testimonials.filter(is_published=True)
 
             return testimonials, None
         except Exception as e:
@@ -144,7 +145,7 @@ class TestimonialStore:
             if not testimonial:
                 return None, InvalidResourceError()
             # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-            if testimonial.first().user_id.hex != context.user_id.replace("-", "") and context.user_is_super_admin != True and context.user_is_community_admin != True:
+            if testimonial.first().user_id != context.user_id and not context.user_is_super_admin  and not context.user_is_community_admin:
                 return None, NotAuthorizedError()
             image = args.pop('image', None)
             tags = args.pop('tags', [])
