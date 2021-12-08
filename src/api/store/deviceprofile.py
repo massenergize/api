@@ -69,10 +69,10 @@ class DeviceStore:
       id = args.pop("id", None)
       if id: # If the cookie exists check for a device
         devices = DeviceProfile.objects.filter(id=id)
-        if devices: # If the device is in the database
+        if devices:
           devices.update(**args)
           device = devices.first()
-        else: # If the device can't be found
+        else:
           device = device, err = self.create_device(context, args, save=False)
           if err:
             return device, err
@@ -213,7 +213,6 @@ class DeviceStore:
       
       # data = self.monthly_profiles(community_id, start_date, end_date, delta)
       data = None
-
       # TODO WIP: aggregate user profile creation counts based on chosen range and period
 
       if not data:
