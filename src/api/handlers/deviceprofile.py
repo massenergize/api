@@ -47,7 +47,7 @@ class DeviceHandler(RouteHandler):
   def log_device(self, request):
     context: Context = request.context
     args: dict = context.args
-    
+
     self.validator.rename("device_id", "id")
     self.validator.rename("device_profile_id", "id")
     self.validator.expect("id", str)
@@ -77,6 +77,7 @@ class DeviceHandler(RouteHandler):
       
     device, err = self.service.log_device(context, args, location)
     if err:
+      # print(err)
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=device)
 

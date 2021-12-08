@@ -75,11 +75,13 @@ class DeviceStore:
         else:
           device = device, err = self.create_device(context, args, save=False)
           if err:
-            return device, err
+            # print(f"Device does not exist in the DB: {err}")
+            return None, err
       else: # If the cookie does not exist we'll create one
         device, err = self.create_device(context, args, save=False)
         if err:
-          return device, err
+          # print(f"Failed to create the device: {err}")
+          return None, err
 
       ip_address = args.pop("ip_address", None)
       device_type = args.pop("device_type", None)
