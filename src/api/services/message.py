@@ -37,7 +37,10 @@ class MessageService:
     return success, None
 
   def forward_to_team_admins(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    message, err = self.store.get_message_info(context, args)
+
+    # the message may have been modified, so don't just send the old one
+
+    message, err = self.store.update_message_to_team_admin(context, args)
     if err:
       return None, err
 
@@ -54,7 +57,7 @@ class MessageService:
 
     body = f"\n\
     Hi Team Leader,\n\
-    I am forwarding a message for you you from our MassEnergize community portal.\n\
+    I am forwarding a message for you from our MassEnergize community portal.\n\
     Your friendly Community Admin.\n\n\
     Sender: {sender_name}\n\
     Sender's email: {sender_email}\n\
