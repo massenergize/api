@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models.fields import related
+from django.db.models.fields import BooleanField, related
 from database.utils.constants import *
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
@@ -675,11 +675,10 @@ class UserMediaUpload(models.Model):
         related_name="uploads",
         on_delete=models.DO_NOTHING,
     )
-    community = models.ForeignKey(
+    communities = models.ManyToManyField(
         Community,
         null=True,
         related_name="community_uploads",
-        on_delete=models.DO_NOTHING,
     )
     media = models.OneToOneField(
         Media,
@@ -687,6 +686,9 @@ class UserMediaUpload(models.Model):
         related_name="user_upload",
         on_delete=models.CASCADE,
     )
+    is_universal = BooleanField(
+        default=False
+    )  # True value here means image is available to EVERYONE, and EVERY COMMUNITY
     settings = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -695,10 +697,12 @@ class UserMediaUpload(models.Model):
         return f"{str(self.id)} - {self.media.name} from {self.user.preferred_name or self.user.full_name} "
 
     def simple_json(self):
-        res = model_to_dict(self, ["settings", "media", "created_at", "id"])
-        res["user"] = get_json_if_not_none(self.user)
+        res = model_to_dict(
+            self, ["settings", "media", "created_at", "id", "is_universal"]
+        )
+        res["user"] = get_summary_info(self.user)
         res["image"] = get_json_if_not_none(self.media)
-        res["community"] = get_summary_info(self.community)
+        res["communities"] = [get_summary_info(com) for com in self.communities.all()]
         return res
 
     def full_json(self):

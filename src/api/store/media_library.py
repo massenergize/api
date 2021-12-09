@@ -14,29 +14,32 @@ class MediaLibraryStore:
         self.name = "MediaLibrary Store/DB"
 
     def fetch_content(self, args):
-        com_id = args.get("community_id")
+        com_ids = args.get("community_ids")
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(
-                Q(events__community__id=com_id)
-                | Q(actions__community__id=com_id)
-                | Q(testimonials__community__id=com_id)
-                | Q(user_upload__community__id=com_id)
+                Q(events__community__id__in=com_ids) # images that are used in events of provided communities
+                | Q(actions__community__id__in=com_ids) # images that are used in actions of provided communities
+                | Q(testimonials__community__id__in=com_ids) # images that are used in testimonials of provided communities
+                | Q(user_upload__communities__id__in=com_ids) # user uploads whose listed communities match the provided communities
+                | Q(user_upload__is_universal=True)
             ).order_by("-id")[:limit]
         else:
             images = (
                 Media.objects.filter(
-                    Q(events__community__id=com_id)
-                    | Q(actions__community__id=com_id)
-                    | Q(testimonials__community__id=com_id)
-                    | Q(user_upload__community__id=com_id)
+                    Q(events__community__id__in=com_ids)
+                    | Q(actions__community__id__in=com_ids)
+                    | Q(testimonials__community__id__in=com_ids)
+                    | Q(user_upload__communities__id__in=com_ids)
+                    | Q(user_upload__is_universal=True)
                 )
                 .exclude(
                     id__gte=lower_limit, id__lte=upper_limit
                 )  # exclude content that have already been retrieved
                 .order_by("-id")[:limit]
             )
+            
         return images, None
 
     def generateQueryWithScope(self, scope, com_id):
@@ -44,12 +47,13 @@ class MediaLibraryStore:
             "actions": Media.objects.filter(actions__community__id=com_id),
             "events": Media.objects.filter(events__community__id=com_id),
             "testimonials": Media.objects.filter(testimonials__community__id=com_id),
-            "uploads": Media.objects.filter(user_upload__community__id=com_id),
+            "uploads": Media.objects.filter(user_upload__communities__id=com_id),
             "default": Media.objects.filter(
                 Q(events__community__id=com_id)
                 | Q(actions__community__id=com_id)
                 | Q(testimonials__community__id=com_id)
-                | Q(user_upload__community__id=com_id)
+                | Q(user_upload__communities__id=com_id)
+                | Q(user_upload__is_universal=True)
             ),
         }
         query = queries.get(scope)
@@ -79,22 +83,28 @@ class MediaLibraryStore:
         return True, None
 
     def addToGallery(self, args):
-        community_id = args.get("community_id")
+        community_ids = args.get("community_ids")
         user_id = args.get("user_id")
         title = args.get("title") or "Gallery Upload"
         _file = args.get("file")
-        community = user = None
+        is_universal = args.get("is_universal", None)
+        communities = user = None
         try:
-            community = Community.objects.get(pk=community_id)
+            if community_ids:
+                communities = Community.objects.filter(id__in=community_ids)
             user = UserProfile.objects.get(id=user_id)
         except Community.DoesNotExist:
-            return None, "Please provide a valid 'community_id'"
+            return None, "Please provide valid 'community_ids'"
         except UserProfile.DoesNotExist:
             return None, "Please provide a valid 'user_id'"
         except ValidationError:
             return None, "Please provide a valid 'user_id'"
         user_media = self.makeMediaAndSave(
-            user=user, community=community, file=_file, title=title
+            user=user,
+            communities=communities,
+            file=_file,
+            title=title,
+            is_universal=is_universal,
         )
         return (
             user_media,
@@ -105,13 +115,17 @@ class MediaLibraryStore:
         title = kwargs.get("title")
         file = kwargs.get("file")
         user = kwargs.get("user")
-        community = kwargs.get("community")
+        communities = kwargs.get("communities")
+        is_universal = kwargs.get("is_universal")
+        is_universal = True if is_universal else False
         media = Media.objects.create(
             name=f" {title} - ({round(time.time() * 1000)})",
             file=file,
         )
-        user_media = UserMediaUpload(user=user, media=media, community=community)
+        user_media = UserMediaUpload(user=user, media=media, is_universal=is_universal)
         user_media.save()
+        if communities:
+            user_media.communities.set(communities)
         return user_media
 
     def getImageInfo(self, args):

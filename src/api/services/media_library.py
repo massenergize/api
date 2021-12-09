@@ -1,6 +1,7 @@
 from typing import Tuple
 from _main_.utils.common import serialize_all
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.utils import Console
 from api.store.media_library import MediaLibraryStore
 from carbon_calculator.models import Event
 from database.utils.common import get_json_if_not_none
@@ -10,11 +11,18 @@ class MediaLibraryService:
     def __init__(self):
         self.store = MediaLibraryStore()
 
-    def fetch_content(self, args) :
+    def fetch_content(self, args):
         images, error = self.store.fetch_content(args)
         if error:
             return None, error
-        return serialize_all(images), None
+        data = serialize_all(images)
+        first = data[0]
+        last = data[len(data) - 1]
+        return {
+            "upper_limit": first.get("id"),
+            "lower_limit": last.get("id"),
+            "data": data,
+        }, None
 
     def search(self, args):
         images, error = self.store.search(args)

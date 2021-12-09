@@ -84,11 +84,12 @@ def strip_website(url: str) -> str:
 
 class Console:
     @staticmethod
-    def log(key, content):
+    def log(key, *content):
         """
         A simple class that manages logging to terminal in a way that logs are
         easier to find
         """
         print(f"=================={key or'START LOG'}================")
-        print(content)
+        for c in content: 
+            print(c)
         print(f"==================END LOG================")

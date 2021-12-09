@@ -1,5 +1,6 @@
 from _main_.utils.context import Context
 from _main_.utils.route_handler import RouteHandler
+from _main_.utils.utils import Console
 from api.decorators import admins_only
 from api.services.media_library import MediaLibraryService
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -20,12 +21,13 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.add", self.addToGallery)
         self.add("/gallery.remove", self.remove)
         self.add("/gallery.image.info", self.getImageInfo)
-    @admins_only
+
+    # @admins_only
     def fetch_content(self, request):
         """Fetches image content related communities that admins can browse through"""
         context: Context = request.context
         args: dict = context.args
-        self.validator.expect("community_id", int, is_required=True)
+        self.validator.expect("community_ids", list, is_required=True)
         self.validator.expect("lower_limit", int, is_required=False)
         self.validator.expect("upper_limit", int, is_required=False)
         args, err = self.validator.verify(args, strict=True)
@@ -35,6 +37,7 @@ class MediaLibraryHandler(RouteHandler):
         if error:
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=images)
+
     @admins_only
     def search(self, request):
         """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""
@@ -69,21 +72,24 @@ class MediaLibraryHandler(RouteHandler):
         return MassenergizeResponse(data=response)
 
     def addToGallery(self, request):
-        """Enables admins to upload images that they can use later... """
+        """Enables admins to upload images that they can use later..."""
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("user_id", str, is_required=True).expect(
-            "community_id", int, is_required=True
+            "community_ids", list
         ).expect("title", str, is_required=False).expect(
             "file", "file", is_required=True
+        ).expect(
+            "is_universal", bool
         )
         args, err = self.validator.verify(args, strict=True)
         if err:
             return MassenergizeResponse(error=str(err))
-        images, error = self.service.addToGallery(args)
+        Console.log("ARGS", args)
+        image, error = self.service.addToGallery(args)
         if error:
             return MassenergizeResponse(error=str(error))
-        return MassenergizeResponse(data=images)
+        return MassenergizeResponse(data=image)
 
     @admins_only
     def getImageInfo(self, request):
