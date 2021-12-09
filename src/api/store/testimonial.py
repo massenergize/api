@@ -35,19 +35,19 @@ class TestimonialStore:
 
             if community:
                 testimonials = Testimonial.objects.filter(
-                        community=community, is_deleted=False).prefetch_related(
-                        'tags__tag_collection', 'action__tags', 'vendor', 'community')
+                    community=community, is_deleted=False).prefetch_related(
+                    'tags__tag_collection', 'action__tags', 'vendor', 'community')
 
             elif user:
                 testimonials = Testimonial.objects.filter(
-                        user=user, is_deleted=False).prefetch_related(
-                        'tags__tag_collection', 'action__tags', 'vendor', 'community')
+                    user=user, is_deleted=False).prefetch_related(
+                    'tags__tag_collection', 'action__tags', 'vendor', 'community')
             else:
                 # need to specify a community or a user
                 return None, InvalidResourceError()
 
             # From the total list of testimonials, filter the ones that get sent back
-            # if this is not the sandbox or the user is not a community admin of the community or the user is not the author, 
+            # if this is not the sandbox or the user is not a community admin of the community or the user is not the author,
             # only show published testimonials
             is_community_admin = False
             if community and context.user_is_community_admin:
@@ -145,7 +145,7 @@ class TestimonialStore:
             if not testimonial:
                 return None, InvalidResourceError()
             # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-            if testimonial.first().user_id != context.user_id and not context.user_is_super_admin  and not context.user_is_community_admin:
+            if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
                 return None, NotAuthorizedError()
             image = args.pop('image', None)
             tags = args.pop('tags', [])
