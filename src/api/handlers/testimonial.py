@@ -140,8 +140,7 @@ class TestimonialHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         testimonial_id = args.pop('testimonial_id', None)
-        testimonial_info, err = self.service.delete_testimonial(
-            context, testimonial_id)
+        testimonial_info, err = self.service.delete_testimonial(context, testimonial_id)
         if err:
             return MassenergizeResponse(error=str(err), status=err.status)
         return MassenergizeResponse(data=testimonial_info)
@@ -160,8 +159,7 @@ class TestimonialHandler(RouteHandler):
     @super_admins_only
     def super_admin_list(self, request):
         context: Context = request.context
-        testimonials, err = self.service.list_testimonials_for_super_admin(
-            context)
+        testimonials, err = self.service.list_testimonials_for_super_admin(context)
         if err:
             return MassenergizeResponse(error=str(err), status=err.status)
         return MassenergizeResponse(data=testimonials)
