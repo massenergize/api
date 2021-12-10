@@ -56,8 +56,7 @@ class TestimonialStore:
 
             if not context.is_sandbox and not is_community_admin:
                 if context.user_is_logged_in:
-                    testimonials = testimonials.filter(
-                        Q(user__id=context.user_id) | Q(is_published=True))
+                    testimonials = testimonials.filter(Q(user__id=context.user_id) | Q(is_published=True))
                 else:
                     testimonials = testimonials.filter(is_published=True)
 
@@ -93,8 +92,7 @@ class TestimonialStore:
                     new_testimonial.user = user
 
             if image:
-                media = Media.objects.create(
-                    file=image, name=f"ImageFor{args.get('name', '')}Event")
+                media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
                 new_testimonial.image = media
 
             if action:
@@ -118,8 +116,7 @@ class TestimonialStore:
                     if user.preferred_name:
                         preferred_name = user.preferred_name
                     else:
-                        preferred_name = user.full_name + ' from ' + \
-                            ('' if not testimonial_community else testimonial_community.name)
+                        preferred_name =  user.full_name + ' from ' + ('' if not testimonial_community else testimonial_community.name)
             new_testimonial.preferred_name = preferred_name
 
             new_testimonial.save()
@@ -159,8 +156,7 @@ class TestimonialStore:
 
             # If no image passed, then we don't delete the existing one
             if image:
-                media = Media.objects.create(
-                    file=image, name=f"ImageFor{args.get('name', '')}Event")
+                media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
                 new_testimonial.image = media
 
             if action:
@@ -176,8 +172,7 @@ class TestimonialStore:
                 new_testimonial.vendor = None
 
             if community:
-                testimonial_community = Community.objects.filter(
-                    id=community).first()
+                testimonial_community = Community.objects.filter(id=community).first()
                 new_testimonial.community = testimonial_community
             else:
                 new_testimonial.community = None
@@ -209,8 +204,7 @@ class TestimonialStore:
                 testimonials.update(rank=rank)
                 return testimonials.first(), None
             else:
-                raise Exception(
-                    "Testimonial Rank and ID not provided to testimonials.rank")
+                raise Exception("Testimonial Rank and ID not provided to testimonials.rank")
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
