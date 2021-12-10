@@ -35,19 +35,19 @@ class TestimonialStore:
 
             if community:
                 testimonials = Testimonial.objects.filter(
-                        community=community, is_deleted=False).prefetch_related(
-                        'tags__tag_collection', 'action__tags', 'vendor', 'community')
+                    community=community, is_deleted=False).prefetch_related(
+                    'tags__tag_collection', 'action__tags', 'vendor', 'community')
 
             elif user:
                 testimonials = Testimonial.objects.filter(
-                        user=user, is_deleted=False).prefetch_related(
-                        'tags__tag_collection', 'action__tags', 'vendor', 'community')
+                    user=user, is_deleted=False).prefetch_related(
+                    'tags__tag_collection', 'action__tags', 'vendor', 'community')
             else:
                 # need to specify a community or a user
                 return None, InvalidResourceError()
 
             # From the total list of testimonials, filter the ones that get sent back
-            # if this is not the sandbox or the user is not a community admin of the community or the user is not the author, 
+            # if this is not the sandbox or the user is not a community admin of the community or the user is not the author,
             # only show published testimonials
             is_community_admin = False
             if community and context.user_is_community_admin:
@@ -55,8 +55,9 @@ class TestimonialStore:
                 is_community_admin = user in cadmins
 
             if not context.is_sandbox and not is_community_admin:
-                if context.user_is_logged_in:    
-                    testimonials = testimonials.filter(Q(user__id=context.user_id) | Q(is_published=True))
+                if context.user_is_logged_in:
+                    testimonials = testimonials.filter(
+                        Q(user__id=context.user_id) | Q(is_published=True))
                 else:
                     testimonials = testimonials.filter(is_published=True)
 
@@ -145,7 +146,7 @@ class TestimonialStore:
             if not testimonial:
                 return None, InvalidResourceError()
             # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-            if testimonial.first().user_id != context.user_id and not context.user_is_super_admin  and not context.user_is_community_admin:
+            if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
                 return None, NotAuthorizedError()
             image = args.pop('image', None)
             tags = args.pop('tags', [])
@@ -236,12 +237,10 @@ class TestimonialStore:
                 admin_groups = user.communityadmingroup_set.all()
                 comm_ids = [ag.community.id for ag in admin_groups]
 
-                testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False).select_related(
-                    'image', 'community').prefetch_related('tags')
+                testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
                 return testimonials, None
 
-            testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False).select_related(
-                'image', 'community').prefetch_related('tags')
+            testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
             return testimonials, None
         except Exception as e:
             capture_message(str(e), level="error")
@@ -251,8 +250,7 @@ class TestimonialStore:
         try:
             if not context.user_is_super_admin:
                 return None, NotAuthorizedError()
-            events = Testimonial.objects.filter(is_deleted=False).select_related(
-                'image', 'community', 'vendor').prefetch_related('tags')
+            events = Testimonial.objects.filter(is_deleted=False).select_related('image', 'community', 'vendor').prefetch_related('tags')
             return events, None
         except Exception as e:
             capture_message(str(e), level="error")

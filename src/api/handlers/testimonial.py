@@ -28,8 +28,7 @@ class TestimonialHandler(RouteHandler):
         self.add("/testimonials.rank", self.rank)
 
         # admin routes
-        self.add("/testimonials.listForCommunityAdmin",
-                 self.community_admin_list)
+        self.add("/testimonials.listForCommunityAdmin", self.community_admin_list)
         self.add("/testimonials.listForSuperAdmin", self.super_admin_list)
 
     def info(self, request):
@@ -43,8 +42,7 @@ class TestimonialHandler(RouteHandler):
         if err:
             return err
 
-        testimonial_info, err = self.service.get_testimonial_info(
-            context, args)
+        testimonial_info, err = self.service.get_testimonial_info(context, args)
         if err:
             return MassenergizeResponse(error=str(err), status=err.status)
         return MassenergizeResponse(data=testimonial_info)
