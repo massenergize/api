@@ -28,7 +28,8 @@ class MediaLibraryService:
         images, error = self.store.search(args)
         if error:
             return None, error
-        return serialize_all(images), None
+        return serialize_all(images), None 
+        # return images, None
 
     def remove(self, args):
         response, error = self.store.remove(args)

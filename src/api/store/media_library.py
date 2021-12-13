@@ -19,10 +19,18 @@ class MediaLibraryStore:
         lower_limit = args.get("lower_limit")
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(
-                Q(events__community__id__in=com_ids) # images that are used in events of provided communities
-                | Q(actions__community__id__in=com_ids) # images that are used in actions of provided communities
-                | Q(testimonials__community__id__in=com_ids) # images that are used in testimonials of provided communities
-                | Q(user_upload__communities__id__in=com_ids) # user uploads whose listed communities match the provided communities
+                Q(
+                    events__community__id__in=com_ids
+                )  # images that are used in events of provided communities
+                | Q(
+                    actions__community__id__in=com_ids
+                )  # images that are used in actions of provided communities
+                | Q(
+                    testimonials__community__id__in=com_ids
+                )  # images that are used in testimonials of provided communities
+                | Q(
+                    user_upload__communities__id__in=com_ids
+                )  # user uploads whose listed communities match the provided communities
                 | Q(user_upload__is_universal=True)
             ).order_by("-id")[:limit]
         else:
@@ -39,42 +47,66 @@ class MediaLibraryStore:
                 )  # exclude content that have already been retrieved
                 .order_by("-id")[:limit]
             )
-            
+
         return images, None
 
-    def generateQueryWithScope(self, scope, com_id):
-        queries = {
-            "actions": Media.objects.filter(actions__community__id=com_id),
-            "events": Media.objects.filter(events__community__id=com_id),
-            "testimonials": Media.objects.filter(testimonials__community__id=com_id),
-            "uploads": Media.objects.filter(user_upload__communities__id=com_id),
-            "default": Media.objects.filter(
-                Q(events__community__id=com_id)
-                | Q(actions__community__id=com_id)
-                | Q(testimonials__community__id=com_id)
-                | Q(user_upload__communities__id=com_id)
-                | Q(user_upload__is_universal=True)
-            ),
+    def generateQueryWithScope(self, scope, com_ids=None):
+        no_comms_query = {
+            "actions": Q(actions__isnull=False),
+            "events": Q(events__isnull=False),
+            "testimonials": Q(testimonials__isnull=False),
+            "uploads": Q(user_upload__isnull=False),
         }
-        query = queries.get(scope)
-        if not query:
-            query = queries.get("default")
+        queries = {
+            "actions": Q(actions__community__id__in=com_ids),
+            "events": Q(events__community__id__in=com_ids),
+            "testimonials": Q(testimonials__community__id__in=com_ids),
+            "uploads": Q(user_upload__communities__id__in=com_ids),
+        }
+        query_object = None
+        if com_ids:
+            query_object = queries
+        else:
+            query_object = no_comms_query
+
+        query = query_object.get(scope)
         return query
 
     def search(self, args):
-        com_id = args.get("community_id")
-        scope = args.get("scope")
+        context = args.get("context")
+        com_ids = args.get("target_communities")
+        any_community = args.get("any_community")
+        filters = args.get("filters")
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         images = None
-        if upper_limit and lower_limit:
-            images = (
-                self.generateQueryWithScope(scope, com_id)
-                .order_by("-id")
-                .exclude(id__gte=lower_limit, id__lte=upper_limit)[:limit]
-            )
+        queries = None
+        """
+        Options
+        1. No target communities. 
+            - Check if user is community_admin, collect images from any community they manage with the provided filters 
+            - User is super admin, collect images from any community, with provided filters
+        2. User provides target communities, use filters to search for images in the provided target communities
+        """
+        if any_community:
+            if context.user_is_community_admin:
+                queries = [self.generateQueryWithScope(f, com_ids) for f in filters]
+            else:
+                queries = [self.generateQueryWithScope(f) for f in filters]
         else:
-            images = self.generateQueryWithScope(scope, com_id).order_by("-id")[:limit]
+            queries = [self.generateQueryWithScope(f, com_ids) for f in filters]
+        query = queries.pop()
+        for qObj in queries:
+            query |= qObj
+
+        if not upper_limit and not lower_limit:
+            images = Media.objects.filter(query).order_by("-id")[:limit]
+        else:
+            images = (
+                Media.objects.filter(query)
+                .exclude(id__gte=lower_limit, id__lte=upper_limit)
+                .order_by("-id")[:limit]
+            )
         return images, None
 
     def remove(self, args):

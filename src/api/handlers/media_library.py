@@ -38,19 +38,23 @@ class MediaLibraryHandler(RouteHandler):
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=images)
 
-    @admins_only
+    # @admins_only
     def search(self, request):
         """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""
         context: Context = request.context
         args: dict = context.args
-        self.validator.expect("community_id", int, is_required=True)
-        self.validator.expect("scope", str, is_required=True)
-        self.validator.expect("lower_limit", int, is_required=False)
-        self.validator.expect("upper_limit", int, is_required=False)
+        self.validator.expect("lower_limit", int).expect("upper_limit", int).expect("all_communities", bool).expect(
+            "filters", list, is_required=True
+        ).expect(
+            "target_communities", list, is_required=True
+        ).expect(
+            "any_community", bool
+        )
         args, err = self.validator.verify(args, strict=True)
         if err:
             return MassenergizeResponse(error=str(err))
 
+        args["context"] = context
         images, error = self.service.search(args)
         if error:
             return MassenergizeResponse(error=str(error))
