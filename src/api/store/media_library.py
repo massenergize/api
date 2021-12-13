@@ -81,6 +81,8 @@ class MediaLibraryStore:
         lower_limit = args.get("lower_limit")
         images = None
         queries = None
+        Console.log("ARGS", args)
+
         """
         Options
         1. No target communities. 
@@ -95,6 +97,13 @@ class MediaLibraryStore:
                 queries = [self.generateQueryWithScope(f) for f in filters]
         else:
             queries = [self.generateQueryWithScope(f, com_ids) for f in filters]
+
+        if len(queries) == 0:
+            return (
+                None,
+                "Could not build query with your provided filters, please try again",
+            )
+
         query = queries.pop()
         for qObj in queries:
             query |= qObj
@@ -107,6 +116,7 @@ class MediaLibraryStore:
                 .exclude(id__gte=lower_limit, id__lte=upper_limit)
                 .order_by("-id")[:limit]
             )
+
         return images, None
 
     def remove(self, args):

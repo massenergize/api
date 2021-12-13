@@ -43,9 +43,9 @@ class MediaLibraryHandler(RouteHandler):
         """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""
         context: Context = request.context
         args: dict = context.args
-        self.validator.expect("lower_limit", int).expect("upper_limit", int).expect("all_communities", bool).expect(
-            "filters", list, is_required=True
-        ).expect(
+        self.validator.expect("lower_limit", int).expect("upper_limit", int).expect(
+            "all_communities", bool
+        ).expect("filters", "str_list", is_required=True).expect(
             "target_communities", list, is_required=True
         ).expect(
             "any_community", bool

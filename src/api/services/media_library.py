@@ -15,21 +15,28 @@ class MediaLibraryService:
         images, error = self.store.fetch_content(args)
         if error:
             return None, error
-        data = serialize_all(images)
-        first = data[0]
-        last = data[len(data) - 1]
-        return {
-            "upper_limit": first.get("id"),
-            "lower_limit": last.get("id"),
-            "data": data,
-        }, None
+        return self.organiseData(data=serialize_all(images)), None
 
     def search(self, args):
         images, error = self.store.search(args)
         if error:
             return None, error
-        return serialize_all(images), None 
-        # return images, None
+        return self.organiseData(data=serialize_all(images)), None
+
+    def organiseData(self, **kwargs):
+        data = kwargs.get("data") or []
+        field = kwargs.get("field")
+        if not data or len(data) == 0:
+            return {"images": []}
+
+        first = data[0]
+        last = data[len(data) - 1]
+        return {
+            "count": len(data),
+            "upper_limit": first.get(field or "id"),
+            "lower_limit": last.get(field or "id"),
+            "images": data,
+        }
 
     def remove(self, args):
         response, error = self.store.remove(args)
