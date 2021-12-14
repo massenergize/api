@@ -38,16 +38,27 @@ class EventsTestCase(TestCase):
 
         self.startTime = datetime.now()
         self.endTime = datetime.now()
-        self.EVENT1 = Event.objects.create(community=self.COMMUNITY, name="event1", start_date_and_time=self.startTime, end_date_and_time=self.endTime)
-        self.EVENT2 = Event.objects.create(community=self.COMMUNITY, name="event2", start_date_and_time=self.startTime, end_date_and_time=self.endTime)
-        self.EVENT3 = Event.objects.create(community=self.COMMUNITY, name="event3", start_date_and_time=self.startTime, end_date_and_time=self.endTime)
-        self.EVENT4 = Event.objects.create(community=self.COMMUNITY, name="event4", start_date_and_time=self.startTime, end_date_and_time=self.endTime)
+        self.EVENT1 = Event.objects.create(community=self.COMMUNITY, name="event1", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT2 = Event.objects.create(community=self.COMMUNITY, name="event2", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT3 = Event.objects.create(community=self.COMMUNITY, name="event3", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT4 = Event.objects.create(community=self.COMMUNITY, name="event4", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
         self.EVENT1.save()
         self.EVENT2.save()
         self.EVENT3.save()
         self.EVENT4.save()
 
-      
+        # a recurring event, to test the date updating
+        self.EVENT5 = Event.objects.create(community=self.COMMUNITY, name="event5", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT5.is_recurring = True
+        self.EVENT5.recurring_details = {
+          "recurring_type": "week", 
+          "separation_count": 1, 
+          "day_of_week": "Sunday", 
+          #"week_of_month": week_of_month,
+          #"final_date": str(final_date)
+        } 
+        self.EVENT5.save()
+  
     @classmethod
     def tearDownClass(self):
         pass
@@ -301,3 +312,12 @@ class EventsTestCase(TestCase):
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Wednesday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-04T10:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
+
+    def test_events_date_update(self):
+
+        # test not logged
+        signinAs(self.client, None)
+        response = self.client.post('/api/events.date.update', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+        
