@@ -435,7 +435,6 @@ class EventStore:
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
     
-    
     if community_id:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
@@ -456,7 +455,7 @@ class EventStore:
     tod = datetime.datetime.utcnow() 
     today = pytz.utc.localize(tod)
 
-    for event in events.iterator():
+    for event in events:
       # protect against recurring event with no recurring details saved
       if not event.is_recurring or not event.recurring_details or not event.recurring_details['separation_count']:
         continue
