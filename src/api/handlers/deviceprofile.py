@@ -106,7 +106,7 @@ class DeviceHandler(RouteHandler):
       elif community_id and metric == "community_profiles":
         metric, err = self.service.metric_community_profiles(community_id)
 
-      if community_id and metric is "community_profiles_over_time":
+      if community_id and metric == "community_profiles_over_time":
         metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
     
     if err:
