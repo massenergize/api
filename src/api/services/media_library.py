@@ -66,7 +66,9 @@ class MediaLibraryService:
         return {
             **media_json,
             "user_info": user_info,
-            "events": events,
-            "actions": actions,
-            "testimonials": testimonials,
+            "info": {
+                "events": events,
+                "actions": actions,
+                "testimonials": testimonials,
+            },
         }, None

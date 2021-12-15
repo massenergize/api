@@ -95,7 +95,7 @@ class MediaLibraryHandler(RouteHandler):
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=image)
 
-    @admins_only
+    # @admins_only
     def getImageInfo(self, request):
         """Retrieves information about an image file when given media_id"""
         context: Context = request.context
