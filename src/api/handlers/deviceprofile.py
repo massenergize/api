@@ -6,6 +6,7 @@ from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 from api.services.deviceprofile import DeviceService
 from _main_.utils.GeoIP import GeoIP
+from _main_.utils.massenergize_errors import InvalidResourceError
 
 class DeviceHandler(RouteHandler):
 
@@ -106,8 +107,11 @@ class DeviceHandler(RouteHandler):
       elif community_id and metric == "community_profiles":
         metric, err = self.service.metric_community_profiles(community_id)
 
-      if community_id and metric == "community_profiles_over_time":
+      elif community_id and metric == "community_profiles_over_time":
         metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
+      
+      else:
+        return InvalidResourceError(f"{metric} is not a valid metric.")
     
     if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -138,6 +142,9 @@ class DeviceHandler(RouteHandler):
 
       elif community_id and metric == "community_profiles_over_time":
         metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
+      
+      else:
+        return InvalidResourceError(f"{metric} is not a valid metric.")
     
     if err:
         return MassenergizeResponse(error=str(err), status=err.status)
