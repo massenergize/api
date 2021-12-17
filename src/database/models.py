@@ -1307,6 +1307,10 @@ class Event(models.Model):
   def __str__(self):
     return self.name
   
+  def info(self):
+    data = model_to_dict(self, ['id', 'name'])
+    return data
+
   def simple_json(self):
     data = model_to_dict(self, exclude=['tags', 'image', 'community', 'invited_communities'])
     data['start_date_and_time'] = self.start_date_and_time
@@ -1401,8 +1405,8 @@ class EventAttendee(models.Model):
   
   def simple_json(self):
     data = model_to_dict(self, ['id', 'status'])
-    data['user'] = get_json_if_not_none(self.user)
-    data['event'] = get_json_if_not_none(self.event)
+    data['user'] = self.user.info()
+    data['event'] = self.event.info()
     return data
   
   def full_json(self):
