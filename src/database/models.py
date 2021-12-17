@@ -1,3 +1,4 @@
+import datetime
 import json
 from django.db import models
 from django.db.models.query_utils import select_related_descend
@@ -538,18 +539,33 @@ class UserProfile(models.Model):
   updated_at = models.DateTimeField(auto_now=True)
   is_deleted = models.BooleanField(default=False, blank=True)
   preferences = models.JSONField(default=dict, null=True, blank=True)
-  visit_log = models.JSONField(default=dict, null=True, blank=True)
+  visit_log = models.JSONField(default=list, null=True, blank=True)
   
   def __str__(self):
     return self.email
 
   def update_visit_log(self, date_time):
     try:
-      day = date_time.strftime('%d/%m/%Y')
-      # time = date_time.strftime('%H:%M')
-      data = { "timestamp": repr(date_time) }
-      if day not in self.visit_log:
-        self.visit_log[day] = data
+      new_format = '%Y/%m/%d'
+      date = date_time.strftime(new_format)
+
+      # We adapt the old fomat to the new one
+      if type(self.visit_log) == dict:
+        old = self.visit_log
+        new = []
+        for day in old.keys():
+          old_format = '%d/%m/%Y'
+          dt_object = datetime.datetime.strptime(day, old_format)
+          day = dt_object.strftime(new_format)
+          new.append(day)
+        self.visit_log = new
+
+      if type(self.visit_log) == list:
+        if len(self.visit_log) > 0:
+          if date != self.visit_log[-1]:
+            self.visit_log.append(date)
+        else:
+          self.visit_log.append(date)
 
     except Exception as e:
       print(e)
@@ -621,7 +637,7 @@ class DeviceProfile(models.Model):
   device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
   operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
   browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
-  visit_log = models.JSONField(default=dict, null=True, blank=True)
+  visit_log = models.JSONField(default=list, null=True, blank=True)
   is_deleted = models.BooleanField(default=False, blank=True)
 
   def get_user_profiles(self):
@@ -638,11 +654,27 @@ class DeviceProfile(models.Model):
 
   def update_visit_log(self, date_time):
     try:
-      day = date_time.strftime('%d/%m/%Y')
-      # time = date_time.strftime('%H:%M') # This can be added back if we ever want more detailed logging
-      data = { "timestamp": repr(date_time) }
-      if day not in self.visit_log:
-        self.visit_log[day] = data
+      new_format = '%Y/%m/%d'
+      date = date_time.strftime(new_format)
+
+      # We adapt the old fomat to the new one
+      if type(self.visit_log) == dict:
+        old = self.visit_log
+        new = []
+        for day in old.keys():
+          old_format = '%d/%m/%Y'
+          dt_object = datetime.datetime.strptime(day, old_format)
+          day = dt_object.strftime(new_format)
+          new.append(day)
+        self.visit_log = new
+
+      if type(self.visit_log) == list:
+        if len(self.visit_log) > 0:
+          if date != self.visit_log[-1]:
+            self.visit_log.append(date)
+        else:
+          self.visit_log.append(date)
+    
     except Exception as e:
       print(e)
       return None, e

@@ -50,6 +50,10 @@ class DownloadStore:
 
     self.community_id = None
 
+    self.metrics_columns = ['anonymous_users', 'user_profiles']
+    # self.metrics_columns = ['anonymous_users', 'user_profiles', 'profiles_over_time'] # TODO: Use after profiles over time is working
+
+
   def _get_cells_from_dict(self, columns, data):
     cells = ['' for _ in range(len(columns))]
 
@@ -548,14 +552,17 @@ class DownloadStore:
 
     return data
 
-  def _community_metrics_download(self, community_id):
+  def _community_metrics_download(self, context, args, community_id):
     community = Community.objects.filter(id=community_id)
+    columns = self.metrics_columns
+    data = [columns]
+    device_store = DeviceStore()
 
-    anonymous_users, err = DeviceStore.metric_anonymous_community_users()
-    user_profiles, err = DeviceStore.metric_community_profiles()
-    profiles_over_time, err = DeviceStore.metric_community_profiles_over_time()
-
-    data = None
+    anonymous_users, err = device_store.metric_anonymous_community_users(community_id)
+    user_profiles, err = device_store.metric_community_profiles(community_id)
+    data.append([anonymous_users, user_profiles])
+    # profiles_over_time, err = DeviceStore.metric_community_profiles_over_time(context, args, community_id)
+    # TODO: Coming back to this ^^^ after downloads is done
 
     return data
 
@@ -630,11 +637,11 @@ class DownloadStore:
       capture_message(str(e), level="error")
       return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
-  def metrics_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def metrics_download(self, context: Context, args, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if not context.user_is_admin():
         return EMPTY_DOWNLOAD, NotAuthorizedError()
-      return (self._community_metrics_download(community_id), None), None
+      return (self._community_metrics_download(context, args, community_id), None), None
     except Exception as e:
       capture_message(str(e), level="error")
       return EMPTY_DOWNLOAD, CustomMassenergizeError(e)

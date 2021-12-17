@@ -31,26 +31,26 @@ class DeviceService:
       return None, err
     return serialize(device), None
 
-  def metric_anonymous_users(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    metric, err = self.store.metric_anonymous_users(context, args)
+  def metric_anonymous_users(self) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_anonymous_users()
     if err:
       return None, err
     return serialize(metric, full=True), None
   
-  def metric_anonymous_community_users(self, context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
-    metric, err = self.store.metric_anonymous_community_users(context, args, community_id)
+  def metric_anonymous_community_users(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_anonymous_community_users(community_id)
     if err:
       return None, err
     return serialize(metric, full=True), None
   
-  def metric_user_profiles(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    metric, err = self.store.metric_user_profiles(context, args)
+  def metric_user_profiles(self) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_user_profiles()
     if err:
       return None, err
     return serialize(metric, full=True), None
 
-  def metric_community_profiles(self, context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
-    metric, err = self.store.metric_community_profiles(context, args, community_id)
+  def metric_community_profiles(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    metric, err = self.store.metric_community_profiles(community_id)
     if err:
       return None, err
     return serialize(metric, full=True), None
