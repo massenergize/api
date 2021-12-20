@@ -22,7 +22,7 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.remove", self.remove)
         self.add("/gallery.image.info", self.getImageInfo)
 
-    # @admins_only
+    @admins_only
     def fetch_content(self, request):
         """Fetches image content related communities that admins can browse through"""
         context: Context = request.context
@@ -38,7 +38,7 @@ class MediaLibraryHandler(RouteHandler):
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=images)
 
-    # @admins_only
+    @admins_only
     def search(self, request):
         """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""
         context: Context = request.context
@@ -81,21 +81,18 @@ class MediaLibraryHandler(RouteHandler):
         args: dict = context.args
         self.validator.expect("user_id", str, is_required=True).expect(
             "community_ids", list
-        ).expect("title", str, is_required=False).expect(
-            "file", "file", is_required=True
-        ).expect(
+        ).expect("title", str).expect("file", "file", is_required=True).expect(
             "is_universal", bool
         )
         args, err = self.validator.verify(args, strict=True)
         if err:
             return MassenergizeResponse(error=str(err))
-        Console.log("ARGS", args)
         image, error = self.service.addToGallery(args)
         if error:
             return MassenergizeResponse(error=str(error))
         return MassenergizeResponse(data=image)
 
-    # @admins_only
+    @admins_only
     def getImageInfo(self, request):
         """Retrieves information about an image file when given media_id"""
         context: Context = request.context

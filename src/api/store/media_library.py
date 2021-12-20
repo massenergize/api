@@ -17,7 +17,23 @@ class MediaLibraryStore:
         com_ids = args.get("community_ids")
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
-        if not upper_limit and not lower_limit:
+        images = None
+        if upper_limit and lower_limit:
+            images = (
+                Media.objects.filter(
+                    Q(events__community__id__in=com_ids)
+                    | Q(actions__community__id__in=com_ids)
+                    | Q(testimonials__community__id__in=com_ids)
+                    | Q(user_upload__communities__id__in=com_ids)
+                    | Q(user_upload__is_universal=True)
+                )
+                .exclude(
+                    id__gte=lower_limit, id__lte=upper_limit
+                )  # exclude content that have already been retrieved
+                .order_by("-id")[:limit]
+            )
+
+        else:
             images = Media.objects.filter(
                 Q(
                     events__community__id__in=com_ids
@@ -33,20 +49,6 @@ class MediaLibraryStore:
                 )  # user uploads whose listed communities match the provided communities
                 | Q(user_upload__is_universal=True)
             ).order_by("-id")[:limit]
-        else:
-            images = (
-                Media.objects.filter(
-                    Q(events__community__id__in=com_ids)
-                    | Q(actions__community__id__in=com_ids)
-                    | Q(testimonials__community__id__in=com_ids)
-                    | Q(user_upload__communities__id__in=com_ids)
-                    | Q(user_upload__is_universal=True)
-                )
-                .exclude(
-                    id__gte=lower_limit, id__lte=upper_limit
-                )  # exclude content that have already been retrieved
-                .order_by("-id")[:limit]
-            )
 
         return images, None
 

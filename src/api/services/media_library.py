@@ -15,19 +15,25 @@ class MediaLibraryService:
         images, error = self.store.fetch_content(args)
         if error:
             return None, error
-        return self.organiseData(data=serialize_all(images)), None
+        return self.organiseData(data=serialize_all(images), args=args), None
 
     def search(self, args):
         images, error = self.store.search(args)
         if error:
             return None, error
-        return self.organiseData(data=serialize_all(images)), None
+        return self.organiseData(data=serialize_all(images), args=args), None
 
     def organiseData(self, **kwargs):
         data = kwargs.get("data") or []
+        args = kwargs.get("args")
         field = kwargs.get("field")
         if not data or len(data) == 0:
-            return {"images": []}
+            return {
+                "images": [],
+                "upper_limit": args.get("upper_limit") or 0,
+                "lower_limit": args.get("lower_limit") or 0,
+                "description": "No images were found, so limits stay the same...",
+            }
 
         first = data[0]
         last = data[len(data) - 1]
