@@ -151,8 +151,15 @@ class TestimonialStore:
           testimonial.update(**args)
           new_testimonial = testimonial.first()
 
+          #checks if testimonial being submitted needs its image to be deleted 
+          #extracts image ID and deletes image
+          if bool(type(image) == str):
+            if image.find("ImgToDel") == 0:
+              ID = int(image.split("---")[1])
+              Media.objects.filter(id=ID).delete()
+              new_testimonial.image = None
           # If no image passed, then we don't delete the existing one
-          if image:
+          elif image:
               media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
               new_testimonial.image = media
 
