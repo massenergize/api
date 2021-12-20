@@ -8,7 +8,6 @@ from types import FunctionType as function
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 
-
 class CommunityHandler(RouteHandler):
 
   def __init__(self):
@@ -136,12 +135,12 @@ class CommunityHandler(RouteHandler):
 
   def list(self, request):
     context: Context  = request.context
+
     args = context.args
     community_info, err = self.service.list_communities(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=community_info)
-
 
   @admins_only
   def update(self, request):

@@ -296,10 +296,11 @@ class UserStore:
     try:
       email_address = args.get('email', None)
       profile = UserProfile.objects.filter(email=email_address).first()
-      if profile.accepts_terms_and_conditions:
+      # if user hasn't accepted T&C, need to finish that
+      if not profile.accepts_terms_and_conditions:
         name = profile.full_name.split()
         first_name = name[0]
-        last_name = name[1]
+        last_name = name[-1]  # if no delimiter, first_name may be same as last_name
         return {"imported": True, "firstName": first_name, "lastName": last_name, "preferredName": first_name}, None
       return {"imported": False}, None
     except Exception as e:
@@ -383,6 +384,7 @@ class UserStore:
     try:
       user_id = args.get('id', None)
       email = args.get('email', None)
+      profile_picture = args.pop("profile_picture", None)
       
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -392,7 +394,6 @@ class UserStore:
         if not users:
           return None, InvalidResourceError()
         
-        profile_picture = args.pop("profile_picture", None)
         users.update(**args)
         user = users.first()
         
@@ -593,7 +594,8 @@ class UserStore:
         team.save()
         
       new_user.save()
-      ret = {'cadmin': cadmin.full_name,
+      ret = { 'cadmin': cadmin.full_name,
+              'cadmin_email': cadmin.email,
               'community': community.name,
               'community_logo': community.logo.file.url,
               'community_info': community.about_community,
@@ -604,11 +606,11 @@ class UserStore:
               'email': email,
               'preferred_name': new_user.preferred_name}
       if team and team_leader:
-        ret['team_name'] = team_name,
-        ret['team_leader'] = team_leader.full_name,
-        ret['team_leader_firstname'] = team_leader.full_name.split(" ")[0],
-        ret['team_leader_email'] = team_leader.email,
- 
+        ret['team_name'] = team_name
+        ret['team_leader'] = team_leader.full_name
+        ret['team_leader_firstname'] = team_leader.full_name.split(" ")[0]
+        ret['team_leader_email'] = team_leader.email
+
       return ret, None
     except Exception as e:
       capture_message(str(e), level="error")

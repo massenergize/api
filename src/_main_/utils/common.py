@@ -163,7 +163,6 @@ def resize_image(img, options={}):
     new_img = cv2.resize(img, dsize=size, interpolation = cv2.INTER_AREA)
     return new_img
 
-
 def _common_name(s):
   return (' '.join(s.split('_'))).title()
 
@@ -172,3 +171,18 @@ def validate_fields(args, checklist):
     if field not in args:
       return False, CustomMassenergizeError(f"You are missing: {_common_name(field)}")
   return True, None
+
+def get_cookie(request, key):
+  cookie = request.COOKIES.get(key)
+  if cookie and len(cookie) > 0:
+      return cookie
+  else:
+      return None 
+
+def set_cookie(response, key, value): # TODO
+  print(f"----- set_cookie: {response}")
+  # set cookie on response before sending
+  # cookie expiration set to 1yr
+  MAX_AGE = 31536000
+
+  response.set_cookie(key, value, MAX_AGE, samesite='Strict')

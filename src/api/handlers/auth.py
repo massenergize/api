@@ -62,6 +62,7 @@ class AuthHandler(RouteHandler):
 
   def whoami(self, request): 
     context: Context = request.context
+
     user_info, err = self.service.whoami(context)
     if err:
       return err

@@ -17,6 +17,12 @@ class EventService:
       return None, err
     return serialize(event), None
 
+  def get_rsvp_list(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    rsvps, err = self.store.get_rsvp_list(context, args)
+    if err:
+      return None, err
+    return serialize_all(rsvps), None
+
   def get_rsvp_status(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     event, err = self.store.get_rsvp_status(context, args)
     if err:

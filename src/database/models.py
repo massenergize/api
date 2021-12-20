@@ -1,5 +1,8 @@
+import datetime
+import json
 from django.db import models
 from django.db.models.fields import BooleanField, related
+from django.db.models.query_utils import select_related_descend
 from database.utils.constants import *
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from django.forms.models import model_to_dict
@@ -48,26 +51,25 @@ class Location(models.Model):
     more_info = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        if self.location_type == "STATE_ONLY":
-            return self.state
-        elif self.location_type == "ZIP_CODE_ONLY":
-            return self.zipcode
-        elif self.location_type == "CITY_ONLY":
-            return "%s-%s" % (self.city, self.state)
-        elif self.location_type == "COUNTY_ONLY":
-            return "%s-%s" % (self.county, self.state)
-        elif self.location_type == "COUNTRY_ONLY":
-            return self.country
-        elif self.location_type == "FULL_ADDRESS":
-            return "%s, %s, %s, %s, %s" % (
-                self.street,
-                self.unit_number,
-                self.city,
-                self.county,
-                self.state,
-            )
-
-        return self.location_type
+        # show full loc regardless of tye type its labelled as
+        loc = ""
+        d = lambda: ", " if loc != "" else ""
+        if self.street:
+            loc += self.street
+        if self.unit_number:
+            loc += d() + "#" + self.unit_number
+        if self.city:
+            loc += d() + self.city
+        if self.zipcode:
+            loc += d() + self.zipcode
+        if self.county:
+            loc += d() + self.county
+        if self.state:
+            loc += d() + self.state
+        if self.country and self.country != "US":
+            loc += d() + self.country
+        loc += "-" + self.location_type
+        return loc
 
     def simple_json(self):
         return model_to_dict(self)
@@ -102,7 +104,7 @@ class Media(models.Model):
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
 
     def __str__(self):
-        return str(self.id) + " - " + self.name
+        return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
 
     def simple_json(self):
         return {
@@ -158,6 +160,7 @@ class Policy(models.Model):
         return model_to_dict(self)
 
     def full_json(self):
+        # would this blow up because no community_set?
         res = model_to_dict(self)
         community = self.community_set.all().first()
         if community:
@@ -607,6 +610,7 @@ class UserProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     preferences = models.JSONField(default=dict, null=True, blank=True)
+    visit_log = models.JSONField(default=list, null=True, blank=True)
 
     def __str__(self):
         return self.email
@@ -635,6 +639,32 @@ class UserProfile(models.Model):
         res["households"] = [h.simple_json() for h in self.real_estate_units.all()]
         return res
 
+    def update_visit_log(self, date_time):
+        try:
+            new_format = "%Y/%m/%d"
+            date = date_time.strftime(new_format)
+
+            # We adapt the old fomat to the new one
+            if type(self.visit_log) == dict:
+                old = self.visit_log
+                new = []
+                for day in old.keys():
+                    old_format = "%d/%m/%Y"
+                    dt_object = datetime.datetime.strptime(day, old_format)
+                    day = dt_object.strftime(new_format)
+                    new.append(day)
+                self.visit_log = new
+
+            if type(self.visit_log) == list:
+                if len(self.visit_log) > 0:
+                    if date != self.visit_log[-1]:
+                        self.visit_log.append(date)
+                else:
+                    self.visit_log.append(date)
+        except Exception as e:
+            print(e)
+            return None, e
+
     def full_json(self):
         team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
         community_members = CommunityMember.objects.filter(user=self)
@@ -658,6 +688,7 @@ class UserProfile(models.Model):
         data["admin_at"] = admin_at
         data["teams"] = team_members
         data["profile_picture"] = get_json_if_not_none(self.profile_picture)
+        data["visit_log"] = self.visit_log
         return data
 
     class Meta:
@@ -703,6 +734,100 @@ class UserMediaUpload(models.Model):
         res["user"] = get_summary_info(self.user)
         res["image"] = get_json_if_not_none(self.media)
         res["communities"] = [get_summary_info(com) for com in self.communities.all()]
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+
+class DeviceProfile(models.Model):
+    """
+    A class used to represent a MassEnergize User's Device
+
+    Attributes
+    ----------
+    user_profiles : JSON
+      A JSON object containing all user ids (as foreign keys) for any users
+      asociated with this device.
+    IP_address: Char
+      The asociated IP address with this device.
+    device_type: Char
+      The type of device we see from the HTTP request.
+    operating_system:
+      The operating system we see from the HTTP request.
+    browser:
+      The browser we see from the HTTP request.
+    visit_log:
+      A JSON object containing a history of dates. Activity will only be
+      logged here if there is a user attached to the device and they are
+      logged in.
+
+    #TODO:
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
+    user_profiles = models.ManyToManyField(UserProfile, blank=True)
+    ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    location = models.ManyToManyField(Location, blank=True)
+    device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    visit_log = models.JSONField(default=list, null=True, blank=True)
+    is_deleted = models.BooleanField(default=False, blank=True)
+
+    def get_user_profiles(self):
+        return json.load(self.user_profiles)
+
+    def get_visit_log(self):
+        return json.load(self.visit_log)
+
+    def update_device_location(self, location):
+        self.location.add(location)
+
+    def update_user_profiles(self, user):
+        self.user_profiles.add(user)
+
+    def update_visit_log(self, date_time):
+        try:
+            new_format = "%Y/%m/%d"
+            date = date_time.strftime(new_format)
+
+            # We adapt the old fomat to the new one
+            if type(self.visit_log) == dict:
+                old = self.visit_log
+                new = []
+                for day in old.keys():
+                    old_format = "%d/%m/%Y"
+                    dt_object = datetime.datetime.strptime(day, old_format)
+                    day = dt_object.strftime(new_format)
+                    new.append(day)
+                self.visit_log = new
+
+            if type(self.visit_log) == list:
+                if len(self.visit_log) > 0:
+                    if date != self.visit_log[-1]:
+                        self.visit_log.append(date)
+                else:
+                    self.visit_log.append(date)
+
+        except Exception as e:
+            print(e)
+            return None, e
+
+    def simple_json(self):
+        res = model_to_dict(
+            self,
+            [
+                "id",
+                "ip_address",
+                "device_type",
+                "operating_system",
+                "browser",
+                "visit_log",
+                "is_deleted",
+            ],
+        )
+        res["user_profiles"] = [u.simple_json() for u in self.user_profiles.all()]
         return res
 
     def full_json(self):
@@ -1563,8 +1688,8 @@ class EventAttendee(models.Model):
 
     def simple_json(self):
         data = model_to_dict(self, ["id", "status"])
-        data["user"] = get_json_if_not_none(self.user)
-        data["event"] = get_json_if_not_none(self.event)
+        data["user"] = self.user.info()
+        data["event"] = self.event.info()
         return data
 
     def full_json(self):
@@ -2799,6 +2924,40 @@ class TestimonialsPageSettings(PageSettings):
     class Meta:
         db_table = "testimonials_page_settings"
         verbose_name_plural = "TestimonialsPageSettings"
+
+
+class RegisterPageSettings(PageSettings):
+    """
+    Represents the community's Registration page settings.
+
+    Attributes
+    ----------
+    see description under PageSettings
+    """
+
+    def __str__(self):
+        return "RegisterPageSettings - %s" % (self.community)
+
+    class Meta:
+        db_table = "register_page_settings"
+        verbose_name_plural = "RegisterPageSettings"
+
+
+class SigninPageSettings(PageSettings):
+    """
+    Represents the community's Signin page settings.
+
+    Attributes
+    ----------
+    see description under PageSettings
+    """
+
+    def __str__(self):
+        return "SigninPageSettings - %s" % (self.community)
+
+    class Meta:
+        db_table = "signin_page_settings"
+        verbose_name_plural = "SigninPageSettings"
 
 
 class Message(models.Model):
