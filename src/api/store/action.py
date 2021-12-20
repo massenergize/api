@@ -1,4 +1,4 @@
-from database.models import Action, UserProfile, Community, Media, CommunityAdminGroup
+from database.models import Action, UserProfile, Community, Media, UserActionRel
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -6,6 +6,7 @@ from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
+from .utils import get_community
 
 class ActionStore:
   def __init__(self):

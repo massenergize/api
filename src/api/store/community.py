@@ -5,10 +5,8 @@ from database.models import (
     CustomCommunityWebsiteDomain,
     UserProfile,
     Action,
-    Event,
     Graph,
     Media,
-    ActivityLog,
     AboutUsPageSettings,
     ActionsPageSettings,
     ContactUsPageSettings,
@@ -45,11 +43,11 @@ from database.models import (
     CommunityAdminGroup,
     Location,
     RealEstateUnit,
+    UserActionRel,
 )
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
-    ServerError,
     CustomMassenergizeError,
 )
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -910,6 +908,40 @@ class CommunityStore:
             return None, CustomMassenergizeError(str(e))
 
 
+    def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            # list actions completed by members of a community or team.  Include any actions which are DONE or TODO (so not really completed)
+            # include actions from other communities that users in this community completed on their homes
+            community = get_community_or_die(context, args)
+    
+            actions_completed = []
+            completed_actions = UserActionRel.objects.filter(real_estate_unit__community=community, is_deleted=False).select_related('action__calculator_action')
+            for completed_action in completed_actions:
+              action_id = completed_action.action.id
+              action_carbon = 0 if completed_action.status != "DONE" else \
+                completed_action.carbon_impact if completed_action.carbon_impact != 0 else \
+                completed_action.action.calculator_action.average_points if completed_action.action.calculator_action else 0
+              done = 1 if completed_action.status == "DONE" else 0
+              todo = 1 if completed_action.status == "TODO" else 0
+
+              #if action_id in [action["ID"] for action in actions_completed]:
+              ind = next((actions_completed.index(a) for a in actions_completed if a["id"]==action_id), None)
+              if ind:
+                actions_completed[ind]["done_count"] += done
+                actions_completed[ind]["carbon_total"] += action_carbon
+                actions_completed[ind]["todo_count"] += todo
+              else:
+                action_name = completed_action.action.title
+                category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
+                action_category = category_obj.name if category_obj else None
+                actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
+
+            return actions_completed, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+
 ########### Helper functions  ###########
 
 def can_use_this_subdomain(subdomain: str, community: Community=None) -> bool:
@@ -958,4 +990,6 @@ def reserve_subdomain(subdomain: str, community: Community=None):
         # if subdomain does not exist then we need to create a new one
         new_subdomain = Subdomain(name=subdomain, community=community, in_use=True)
         new_subdomain.save()
+
+
 

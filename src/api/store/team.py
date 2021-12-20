@@ -1,4 +1,4 @@
-from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup
+from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from django.utils.text import slugify
 from _main_.utils.context import Context
@@ -469,3 +469,45 @@ class TeamStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
+
+  def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+      # list actions completed by members of a team.  
+      # Include any actions which are DONE or TODO (so not really completed)
+      team_id = args.pop("team_id", None)
+      actions_completed = []
+
+      if not team_id:
+        return [], CustomMassenergizeError('Please provide a valid team_id')
+
+      team = Team.objects.filter(id=team_id).first()
+      users = get_team_users(team)
+
+      completed_actions = UserActionRel.objects.filter(user__in=users, is_deleted=False).select_related('action', 'action__calculator_action')
+      for completed_action in completed_actions:
+          action_id = completed_action.action.id
+          action_carbon = 0 if completed_action.status != "DONE" else \
+            completed_action.carbon_impact if completed_action.carbon_impact != 0 else \
+            completed_action.action.calculator_action.average_points if completed_action.action.calculator_action else 0
+          done = 1 if completed_action.status == "DONE" else 0
+          todo = 1 if completed_action.status == "TODO" else 0
+       
+          #if action_id in [action["ID"] for action in actions_completed]:
+          ind = next((actions_completed.index(a) for a in actions_completed if a["id"]==action_id), None)
+          if ind:
+            actions_completed[ind]["done_count"] += done
+            actions_completed[ind]["carbon_total"] += action_carbon
+            actions_completed[ind]["todo_count"] += todo
+          else:
+            action_name = completed_action.action.title
+            category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
+            action_category = category_obj.name if category_obj else None
+            actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
+
+
+
+      return actions_completed, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
