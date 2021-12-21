@@ -17,8 +17,5 @@ src/Dockerrun.aws.json
 .idea
 src/api/tests/TestCases.json
 src/api/store/ZIPCODE_FIXES.json
-**/**/migrations
-**/**/settings.py
-src/_main_/settings.py
 src/_main_/utils/GeoLite2-City/*
 *GeoLite2-City.mmdb

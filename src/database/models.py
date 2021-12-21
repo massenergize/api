@@ -708,7 +708,6 @@ class UserMediaUpload(models.Model):
     )
     communities = models.ManyToManyField(
         Community,
-        null=True,
         related_name="community_uploads",
     )
     media = models.OneToOneField(

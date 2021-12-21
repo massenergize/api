@@ -1,6 +1,5 @@
 """Handler file for all routes pertaining to auths"""
 
-from _main_.settings import IS_LOCAL
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import parse_list, parse_bool, check_length, rename_field
 from api.services.auth import AuthService
