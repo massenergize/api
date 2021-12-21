@@ -1,11 +1,6 @@
 from django.test import TestCase, Client
-from django.conf import settings as django_settings
 from urllib.parse import urlencode
-from _main_.settings import BASE_DIR
-from _main_.utils.massenergize_response import MassenergizeResponse
-from database.models import Event, Team, Community, UserProfile, Action, UserActionRel, TeamMember, RealEstateUnit, CommunityAdminGroup
-from carbon_calculator.models import Action as CCAction
-from _main_.utils.utils import load_json
+from database.models import Event, EventAttendee, Community, CommunityAdminGroup
 from api.tests.common import signinAs, setupCC, createUsers
 from datetime import datetime
 
@@ -35,19 +30,31 @@ class EventsTestCase(TestCase):
         self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
         self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
-
         self.startTime = datetime.now()
         self.endTime = datetime.now()
-        self.EVENT1 = Event.objects.create(community=self.COMMUNITY, name="event1", start_date_and_time=self.startTime, end_date_and_time=self.endTime)
-        self.EVENT2 = Event.objects.create(community=self.COMMUNITY, name="event2", start_date_and_time=self.startTime, end_date_and_time=self.endTime)
-        self.EVENT3 = Event.objects.create(community=self.COMMUNITY, name="event3", start_date_and_time=self.startTime, end_date_and_time=self.endTime)
-        self.EVENT4 = Event.objects.create(community=self.COMMUNITY, name="event4", start_date_and_time=self.startTime, end_date_and_time=self.endTime)
+        self.EVENT1 = Event.objects.create(community=self.COMMUNITY, name="event1", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT2 = Event.objects.create(community=self.COMMUNITY, name="event2", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT3 = Event.objects.create(community=self.COMMUNITY, name="event3", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT4 = Event.objects.create(community=self.COMMUNITY, name="event4", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
         self.EVENT1.save()
         self.EVENT2.save()
         self.EVENT3.save()
         self.EVENT4.save()
 
-      
+        # a recurring event, to test the date updating
+        self.EVENT5 = Event.objects.create(community=self.COMMUNITY, name="event5", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT5.is_recurring = True
+        self.EVENT5.recurring_details = {
+          "recurring_type": "week", 
+          "separation_count": 1, 
+          "day_of_week": "Sunday", 
+          #"week_of_month": week_of_month,
+          #"final_date": str(final_date)
+        } 
+        self.EVENT5.save()
+
+        self.RSVP = EventAttendee.objects.create(user=self.USER, event=self.EVENT1, status="GOING").save()
+  
     @classmethod
     def tearDownClass(self):
         pass
@@ -264,7 +271,6 @@ class EventsTestCase(TestCase):
         # test logged as sadmin
         #signinAs(self.client, self.SADMIN)
 
-    # TODO
     def test_get_rsvp(self):
         
         # test not logged
@@ -276,13 +282,51 @@ class EventsTestCase(TestCase):
         signinAs(self.client, self.USER)
         response = self.client.post('/api/events.rsvp.get', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
-#        self.assertEqual(response["data"]["status"], "RSVP")
+        self.assertEqual(response["data"]["status"], "GOING")
 
-        # test logged as cadmin
-        #signinAs(self.client, self.CADMIN)
+        # an event the user didn't reply to
+        response = self.client.post('/api/events.rsvp.get', urlencode({"event_id": self.EVENT2.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertEqual(response["data"], None)
+
+        # a different user who happens to be a CADMIN
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/events.rsvp.get', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertEqual(response["data"], None)
 
         # test logged as sadmin
         #signinAs(self.client, self.SADMIN)
+
+    def test_list_rsvps(self):
+        
+        # test not logged
+        signinAs(self.client, None)
+        response = self.client.post('/api/events.rsvp.list', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # test logged as user
+        signinAs(self.client, self.USER)
+        response = self.client.post('/api/events.rsvp.list', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # test logged as cadmin
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/events.rsvp.list', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertEqual(response["data"][0]["status"], "GOING")
+
+        response = self.client.post('/api/events.rsvp.list', urlencode({"event_id": self.EVENT2.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertEqual(response["data"], [])
+
+
+
+        # test logged as sadmin
+        #signinAs(self.client, self.SADMIN)
+        #response = self.client.post('/api/events.rsvp.get', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
+        #self.assertFalse(response["success"])
+        #print(response)
 
     def test_recurring_event(self):
         # BHN - updated datetime strings to have "T" and "Z".  May be more forgiving format
@@ -301,3 +345,12 @@ class EventsTestCase(TestCase):
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.update', urlencode({"event_id":self.EVENT1.id,"name":"test event", "is_recurring": True, "separation_count":1, "day_of_week":"Wednesday", "start_date_and_time":"2021-08-04T09:55:22Z", "end_date_and_time":"2021-08-04T10:55:22Z"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
+
+    def test_events_date_update(self):
+
+        # test not logged
+        signinAs(self.client, None)
+        response = self.client.post('/api/events.date.update', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+        
