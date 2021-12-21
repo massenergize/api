@@ -9,6 +9,7 @@ from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
 from _main_.settings import RUN_SERVER_LOCALLY
+from api.handlers.deviceprofile import DeviceHandler
 
 
 class AuthHandler(RouteHandler):
@@ -63,6 +64,11 @@ class AuthHandler(RouteHandler):
     context: Context = request.context
 
     user_info, err = self.service.whoami(context)
+
+    # TODO: Integrate device handling into whoami
+    # device_handler = DeviceHandler()
+    # device_response = device_handler.log_device(request)
+
     if err:
       return err
     return MassenergizeResponse(data=user_info)
