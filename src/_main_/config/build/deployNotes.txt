@@ -1,4 +1,5 @@
-Dec 17:
+Dec 21:
+- Media library support
 - Event RSVPs list route
 - User edited testimonials
 - Change to visit_logs for anonymous and registered users
