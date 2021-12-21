@@ -1,6 +1,7 @@
 from api.handlers.action import ActionHandler
 from api.handlers.admin import AdminHandler
 from api.handlers.auth import AuthHandler
+from api.handlers.media_library import MediaLibraryHandler
 from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
 from api.handlers.page_settings__actions import ActionsPageSettingsHandler
 from api.handlers.page_settings__events import EventsPageSettingsHandler
@@ -34,44 +35,43 @@ from django.urls import path, include
 
 
 ROUTE_HANDLERS = [
-  AboutUsPageSettingsHandler(),
-  ActionsPageSettingsHandler(),
-  ActionHandler(),
-  AdminHandler(),
-  AuthHandler(),
-  CommunityHandler(),
-  ContactUsPageSettingsHandler(),
-  DeviceHandler(),
-  DonatePageSettingsHandler(),
-  DownloadHandler(),
-  EventHandler(),
-  EventsPageSettingsHandler(),
-  GoalHandler(),
-  GraphHandler(),
-  HomePageSettingsHandler(),
-  ImpactPageSettingsHandler(),
-  MessageHandler(),
-  MiscellaneousHandler(),
-  PolicyHandler(),
-  SubscriberHandler(),
-  SummaryHandler(),
-  TagHandler(),
-  TagCollectionHandler(),
-  TeamHandler(),
-  TeamsPageSettingsHandler(),
-  TestimonialHandler(),
-  TestimonialsPageSettingsHandler(),
-  UserHandler(),
-  VendorHandler(),
-  VendorsPageSettingsHandler(),
-  RegisterPageSettingsHandler(),
-  SigninPageSettingsHandler()
+    AboutUsPageSettingsHandler(),
+    ActionsPageSettingsHandler(),
+    ActionHandler(),
+    AdminHandler(),
+    AuthHandler(),
+    CommunityHandler(),
+    ContactUsPageSettingsHandler(),
+    DeviceHandler(),
+    DonatePageSettingsHandler(),
+    DownloadHandler(),
+    EventHandler(),
+    EventsPageSettingsHandler(),
+    GoalHandler(),
+    GraphHandler(),
+    HomePageSettingsHandler(),
+    ImpactPageSettingsHandler(),
+    MessageHandler(),
+    MiscellaneousHandler(),
+    PolicyHandler(),
+    SubscriberHandler(),
+    SummaryHandler(),
+    TagHandler(),
+    TagCollectionHandler(),
+    TeamHandler(),
+    TeamsPageSettingsHandler(),
+    TestimonialHandler(),
+    TestimonialsPageSettingsHandler(),
+    UserHandler(),
+    VendorHandler(),
+    VendorsPageSettingsHandler(),
+    MediaLibraryHandler(),
+    RegisterPageSettingsHandler(),
+    SigninPageSettingsHandler(),
 ]
 
 urlpatterns = [
-  path('cc/', include('carbon_calculator.urls')),
+    path("cc/", include("carbon_calculator.urls")),
 ]
 for handler in ROUTE_HANDLERS:
-  urlpatterns.extend(handler.get_routes_to_views())
-
-
+    urlpatterns.extend(handler.get_routes_to_views())

@@ -27,6 +27,7 @@ class EventHandler(RouteHandler):
     self.add("/events.delete", self.delete)
     self.add("/events.remove", self.delete)
     self.add("/events.rank", self.rank)
+    self.add("/events.rsvp.list", self.get_rsvp_list)
     self.add("/events.rsvp.get", self.get_rsvp_status)
     self.add("/events.rsvp.update", self.rsvp_update)
     self.add("/events.rsvp.remove", self.rsvp_remove)
@@ -68,6 +69,25 @@ class EventHandler(RouteHandler):
       return err
 
     event_info, err = self.service.copy_event(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=event_info)
+
+
+  @admins_only
+  def get_rsvp_list(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    self.validator.expect("event_id", int)
+    # TODO: return list for all events from a community
+    #self.validator.expect("community_id", int)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.get_rsvp_list(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)

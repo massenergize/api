@@ -435,7 +435,6 @@ class EventStore:
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
     
-    
     if community_id:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
@@ -456,7 +455,7 @@ class EventStore:
     tod = datetime.datetime.utcnow() 
     today = pytz.utc.localize(tod)
 
-    for event in events.iterator():
+    for event in events:
       # protect against recurring event with no recurring details saved
       if not event.is_recurring or not event.recurring_details or not event.recurring_details['separation_count']:
         continue
@@ -600,6 +599,27 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
+
+  def get_rsvp_list(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+      event_id = args.pop("event_id", None)
+      # TODO: return list of attendees for all events of a community
+      #community_id = args.pop("community_id", None)
+
+      if event_id:
+        event = Event.objects.filter(pk=event_id).first()
+        if not event:
+          return None, InvalidResourceError()
+
+        event_attendees = EventAttendee.objects.filter(event=event)
+        return event_attendees, None
+
+      else:
+        return None, InvalidResourceError()
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def get_rsvp_status(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:

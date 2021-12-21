@@ -93,7 +93,7 @@ class DownloadHandler(RouteHandler):
 
     community_id = args.pop('community_id', None)
 
-    (communities_data, community_name), err = self.service.metrics_download(context, community_id)
+    (communities_data, community_name), err = self.service.metrics_download(context, args, community_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return self._get_csv_response(data=communities_data, download_type='metrics')

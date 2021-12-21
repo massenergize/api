@@ -30,15 +30,12 @@ class DeviceStore:
       return None, CustomMassenergizeError(e)
   
   def __device_attr_handler(self, new_device, args):
-    # TODO: Timestamp here for now. We might pass it here from somewhere else later.
     ip_address = args["ip_address"]
     device_type = args["device_type"]
     operating_system = args["operating_system"]
     browser = args["browser"]
-    # new_visit_log = args.pop('visit_log', context.visit_log)
 
     if ip_address:
-        # TODO: Anything we want to do with a device's IP address can happen here
         new_device.ip_address = ip_address
 
     if device_type:
@@ -72,17 +69,19 @@ class DeviceStore:
       id = args.pop("id", None)
       if id: # If the cookie exists check for a device
         devices = DeviceProfile.objects.filter(id=id)
-        if devices: # If the device is in the database
+        if devices:
           devices.update(**args)
           device = devices.first()
-        else: # If the device can't be found
+        else:
           device = device, err = self.create_device(context, args, save=False)
           if err:
-            return device, err
+            # print(f"Device does not exist in the DB: {err}")
+            return None, err
       else: # If the cookie does not exist we'll create one
         device, err = self.create_device(context, args, save=False)
         if err:
-          return device, err
+          # print(f"Failed to create the device: {err}")
+          return None, err
 
       ip_address = args.pop("ip_address", None)
       device_type = args.pop("device_type", None)
@@ -115,19 +114,17 @@ class DeviceStore:
       else:
         device.update_visit_log(date_time)
 
-      # if location: # TODO: Bring back when GeoIP licensing is sorted out
-      #   new_location, created = Location.objects.get_or_create(
-      #     location_type="ZIP_CODE_ONLY",
-      #     zipcode=location["zipcode"]
-      #   )
-      #   print(f"10 -------------------------------------------------- {new_location}")
-      #   if created:
-      #     new_location.state = location["state"]
-      #     new_location.city = location["city"]
-      #     new_location.save()
-      #     print(f"11 -------------------------------------------------- {new_location}")
-      # 
-      #   device.update_device_location(new_location)
+      if location:
+        new_location, created = Location.objects.get_or_create(
+          location_type="ZIP_CODE_ONLY",
+          zipcode=location["zipcode"]
+        )
+        if created:
+          new_location.state = location["state"]
+          new_location.city = location["city"]
+          new_location.save()
+      
+        device.update_device_location(new_location)
 
       device.save()
       return device, None
@@ -139,7 +136,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def metric_anonymous_users(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_anonymous_users(self) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = DeviceProfile.objects.filter(user_profiles=None).count()
       if not metric:
@@ -150,7 +147,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def metric_anonymous_community_users(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_anonymous_community_users(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = DeviceProfile.objects.filter(user_profiles=None).count() # TODO: add community filter
       if not metric:
@@ -161,7 +158,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def metric_user_profiles(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_user_profiles(self) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = UserProfile.objects.all().count()
       if not metric:
@@ -172,7 +169,7 @@ class DeviceStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
-  def metric_community_profiles(self,  context: Context, args, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+  def metric_community_profiles(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       metric = UserProfile.objects.filter(communities__id=community_id).count()
       if not metric:
@@ -218,7 +215,6 @@ class DeviceStore:
       
       # data = self.monthly_profiles(community_id, start_date, end_date, delta)
       data = None
-
       # TODO WIP: aggregate user profile creation counts based on chosen range and period
 
       if not data:

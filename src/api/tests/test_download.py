@@ -87,7 +87,7 @@ class DownloadTestCase(TestCase):
     pass
 
   def test_download_users(self):
-    print("test_download_users")
+    #print("test_download_users")
     # all routes admins only
 
     # try downloading users from a team
@@ -158,7 +158,7 @@ class DownloadTestCase(TestCase):
 
 
   def test_download_actions(self):
-    print("test_download_actions")
+    #print("test_download_actions")
     # all routes admins only
 
     # try downloading users from a team
@@ -204,7 +204,6 @@ class DownloadTestCase(TestCase):
     response = self.client.post('/api/downloads.actions', urlencode({}), content_type="application/x-www-form-urlencoded")
     self.assertEquals(type(response), HttpResponse)
     rows = response.content.decode("utf-8").split('\r\n')
-    print(rows)
     self.assertGreater(len(rows),4)    # one header row, at least two data rows, and final empty row
     headerdata = rows[0].split(',')
     self.assertEqual(headerdata[0],'community')

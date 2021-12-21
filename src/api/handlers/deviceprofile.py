@@ -6,6 +6,7 @@ from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 from api.services.deviceprofile import DeviceService
 from _main_.utils.GeoIP import GeoIP
+from _main_.utils.massenergize_errors import InvalidResourceError
 
 class DeviceHandler(RouteHandler):
 
@@ -47,7 +48,7 @@ class DeviceHandler(RouteHandler):
   def log_device(self, request):
     context: Context = request.context
     args: dict = context.args
-    
+
     self.validator.rename("device_id", "id")
     self.validator.rename("device_profile_id", "id")
     self.validator.expect("id", str)
@@ -77,6 +78,7 @@ class DeviceHandler(RouteHandler):
       
     device, err = self.service.log_device(context, args, location)
     if err:
+      # print(err)
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=device)
 
@@ -95,17 +97,21 @@ class DeviceHandler(RouteHandler):
     metric = args.get("metric", None)
     community_id = args.get("community_id", None)
     
-    if metric == "anonymous_users":
-      metric, err = self.service.metric_anonymous_users(context, args)
+    if metric:
+      if metric == "anonymous_users":
+        metric, err = self.service.metric_anonymous_users(context, args)
 
-    elif metric == "anonymous_community_users":
-      metric, err = self.service.metric_anonymous_community_users(context, args, community_id)
+      elif community_id and metric == "anonymous_community_users":
+        metric, err = self.service.metric_anonymous_community_users(community_id)
 
-    elif metric == "user_profiles":
-      metric, err = self.service.metric_user_profiles(context, args)
+      elif community_id and metric == "community_profiles":
+        metric, err = self.service.metric_community_profiles(community_id)
 
-    elif metric == "community_profiles":
-      metric, err = self.service.metric_community_profiles(context, args, community_id)
+      elif community_id and metric == "community_profiles_over_time":
+        metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
+      
+      else:
+        return InvalidResourceError(f"{metric} is not a valid metric.")
     
     if err:
         return MassenergizeResponse(error=str(err), status=err.status)
@@ -124,17 +130,21 @@ class DeviceHandler(RouteHandler):
     if err:
       return err
     
-    metric = args["metric"] if "metric" in args else None
-    community_id = args["community_id"] if "community_id" in args else None
+    metric = args.get("metric", None)
+    community_id = args.get("community_id", None)
     
-    if metric == "anonymous_community_users" and community_id:
-      metric, err = self.service.metric_anonymous_community_users(context, args, community_id)
-    
-    elif metric == "community_profiles" and community_id:
-      metric, err = self.service.metric_community_profiles(context, args, community_id)
+    if metric:
+      if community_id and metric == "anonymous_community_users":
+        metric, err = self.service.metric_anonymous_community_users(community_id)
+      
+      elif community_id and metric == "community_profiles":
+        metric, err = self.service.metric_community_profiles(community_id)
 
-    elif metric == "community_profiles_over_time" and community_id:
-      metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
+      elif community_id and metric == "community_profiles_over_time":
+        metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
+      
+      else:
+        return InvalidResourceError(f"{metric} is not a valid metric.")
     
     if err:
         return MassenergizeResponse(error=str(err), status=err.status)

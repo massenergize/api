@@ -1,10 +1,11 @@
-from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, Tag
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
+from .utils import get_community, get_user
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
+
 
 class TestimonialStore:
   def __init__(self):
@@ -20,42 +21,47 @@ class TestimonialStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-
   def list_testimonials(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       subdomain = args.pop('subdomain', None)
       community_id = args.pop('community_id', None)
+      community, _ = get_community(community_id, subdomain)
+
       user_id = args.pop('user_id', None)
       user_email = args.pop('user_email', None)
+      user, _ = get_user(user_id, user_email)
 
       testimonials = []
 
-      if context.is_sandbox:
-        if subdomain:
-          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False)
-        elif community_id:
-          testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False)
-        elif user_id:
-          testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False)
-        elif user_email:
-          testimonials = Testimonial.objects.filter(user__email=user_email, is_deleted=False)
+      if community:
+        testimonials = Testimonial.objects.filter(
+              community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
 
+      elif user:
+        testimonials = Testimonial.objects.filter(
+              user=user, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
       else:
-        if subdomain:
-          # testimonials touch many things through foreign key relationships
-          testimonials = Testimonial.objects.filter(community__subdomain=subdomain, is_deleted=False, is_published=True).prefetch_related('tags__tag_collection','action__tags','vendor','community')
-        elif community_id:
-          testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False, is_published=True)
-        elif user_id:
-          testimonials = Testimonial.objects.filter(user__id=user_id, is_deleted=False, is_published=True)
-        elif user_email:
-          testimonials = Testimonial.objects.filter(user__email=user_email, is_deleted=False, is_published=True)
+        # need to specify a community or a user
+        return None, InvalidResourceError()
+
+      # From the total list of testimonials, filter the ones that get sent back
+      # if this is not the sandbox or the user is not a community admin of the community or the user is not the author,
+      # only show published testimonials
+      is_community_admin = False
+      if community and context.user_is_community_admin:
+        cadmins =  CommunityAdminGroup.objects.filter(community=community).first().members.all()
+        is_community_admin = user in cadmins
+
+      if not context.is_sandbox and not is_community_admin:
+        if context.user_is_logged_in:
+          testimonials = testimonials.filter(Q(user__id=context.user_id) | Q(is_published=True))
+        else:
+          testimonials = testimonials.filter(is_published=True)
 
       return testimonials, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-
 
   def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -69,13 +75,13 @@ class TestimonialStore:
       preferred_name = args.pop('preferred_name', None)
 
       args["title"] = args.get("title", "Thank You")[:100]
-     
+
       new_testimonial: Testimonial = Testimonial.objects.create(**args)
 
       user = None
       if user_email:
         user_email = user_email.strip()
-        #verify that provided emails are valid user
+        # verify that provided emails are valid user
         if not UserProfile.objects.filter(email=user_email).exists():
           return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
 
@@ -120,20 +126,22 @@ class TestimonialStore:
           tags_to_set.append(tag)
       if tags_to_set:
         new_testimonial.tags.set(tags_to_set)
-    
+
       return new_testimonial, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-
   def update_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.pop("id", None)
       testimonial = Testimonial.objects.filter(id=id)
+
       if not testimonial:
         return None, InvalidResourceError()
-      
+      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
+      if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+        return None, NotAuthorizedError()
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
@@ -147,7 +155,7 @@ class TestimonialStore:
       if image:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_testimonial.image = media
-        
+
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
         new_testimonial.action = testimonial_action
@@ -167,8 +175,8 @@ class TestimonialStore:
         new_testimonial.community = None
 
       if rank:
-        new_testimonial.rank = rank
-      
+          new_testimonial.rank = rank
+
       tags_to_set = []
       for t in tags:
         tag = Tag.objects.filter(pk=t).first()
@@ -183,22 +191,20 @@ class TestimonialStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-
   def rank_testimonial(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
 
-      if id and rank:     
+      if id and rank:
         testimonials = Testimonial.objects.filter(id=id)
         testimonials.update(rank=rank)
         return testimonials.first(), None
       else:
         raise Exception("Testimonial Rank and ID not provided to testimonials.rank")
     except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
-
+        capture_message(str(e), level="error")
+        return None, CustomMassenergizeError(e)
 
   def delete_testimonial(self, context: Context, testimonial_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -208,7 +214,6 @@ class TestimonialStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-
 
   def list_testimonials_for_community_admin(self,  context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
@@ -223,15 +228,14 @@ class TestimonialStore:
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
 
-        testimonials = Testimonial.objects.filter(community__id__in = comm_ids, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+        testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
 
-      testimonials = Testimonial.objects.filter(community__id = community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+      testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return testimonials, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-
 
   def list_testimonials_for_super_admin(self, context: Context):
     try:
