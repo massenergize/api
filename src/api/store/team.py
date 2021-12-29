@@ -39,7 +39,7 @@ class TeamStore:
       if not team:
         return None, InvalidResourceError()
 
-      userOnTeam = False 
+      userOnTeam = False
       if context.user_id:    # None for anonymous usage
         user = UserProfile.objects.get(id=context.user_id)
         userOnTeam = TeamMember.objects.filter(team=team, user=user).exists()
@@ -494,7 +494,7 @@ class TeamStore:
        
           #if action_id in [action["ID"] for action in actions_completed]:
           ind = next((actions_completed.index(a) for a in actions_completed if a["id"]==action_id), None)
-          if ind:
+          if ind != None:
             actions_completed[ind]["done_count"] += done
             actions_completed[ind]["carbon_total"] += action_carbon
             actions_completed[ind]["todo_count"] += todo
@@ -504,8 +504,7 @@ class TeamStore:
             action_category = category_obj.name if category_obj else None
             actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
 
-
-
+      actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
       return actions_completed, None
     except Exception as e:
       capture_message(str(e), level="error")
