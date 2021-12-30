@@ -1581,6 +1581,10 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
+    def info(self):
+        data = model_to_dict(self, ['id', 'name'])
+        return data
+
     def simple_json(self):
         data = model_to_dict(
             self, exclude=["tags", "image", "community", "invited_communities"]
