@@ -32,7 +32,7 @@ class DownloadStore:
     'total_yearly_lbs_carbon', 'testimonials_count', 'impact', 'cost', 'is_global']
 
     self.user_info_columns = ['First Name', 'Last Name', 'Preferred Name', 'Role', 'Email', 'Created', 'households_count', 'testimonials_count']
-    
+
     self.team_info_columns = ['name', 'members_count', 'parent', 'total_yearly_lbs_carbon', 'testimonials_count']
 
     self.community_info_columns = ['name', 'location', 'members_count', 'teams_count', 'testimonials_count', 'actions_count', 'events_count',
@@ -41,7 +41,7 @@ class DownloadStore:
     'carbon_user_reported', 'carbon_manual_addition', 'carbon_state/partner_reported', 'carbon_total', 'carbon_goal', 'carbon_goal_fraction',
     'actions_per_member', 'most_done_action', 'second_most_done_action', 'highest_impact_action', 'second_highest_impact_action']
     for category in self.action_categories:
-      self.community_info_columns += [category.name + " reported", category.name + " state/partner_reported"] 
+      self.community_info_columns += [category.name + " reported", category.name + " state/partner_reported"]
 
 
 #Fields should include for Actions, Households, Carbon Reduction: user reported, manual addition, goal for this period, (calculated) % of goal.
@@ -68,17 +68,17 @@ class DownloadStore:
 
   def _get_user_info_cells(self, user):
     user_cells = {}
-  
+
     if (isinstance(user, Subscriber)):
         full_name = user.name
         space = full_name.find(' ')
         first_name = full_name[:space]
         last_name = full_name[space+1:]
         user_cells = {
-          'First Name': first_name, 
-          'Last Name': last_name, 
-          'Email': user.email, 
-          'Role': 'Subscriber', 
+          'First Name': first_name,
+          'Last Name': last_name,
+          'Email': user.email,
+          'Role': 'Subscriber',
           'Created': user.created_at.strftime("%Y-%m-%d")}
     elif (isinstance(user, RealEstateUnit)):
         # for geographic communities, list non-members who have households in the community
@@ -86,7 +86,7 @@ class DownloadStore:
         user = reu.user_real_estate_units.first()
         if not user:
           return None
-  
+
         if reu.address and reu.address.city:
           city = reu.address.city
         else:
@@ -113,9 +113,9 @@ class DownloadStore:
 
         user_cells = {'First Name': first_name,
                       'Last Name' : last_name,
-                      'Preferred Name': user.preferred_name, 
-                      'Role': community + ' member, household in ' + city, 
-                      'Email': user.email, 
+                      'Preferred Name': user.preferred_name,
+                      'Role': community + ' member, household in ' + city,
+                      'Email': user.email,
                       'Created': user.created_at.strftime("%Y-%m-%d")}
 
     else:
@@ -168,25 +168,18 @@ class DownloadStore:
     if (isinstance(user, Subscriber)):
       return [''] # for _ in range(len(teams))]
 
-    cell_text = ''
-    user_team_members = TeamMember.objects.filter(user=user).select_related('team')
-    for team in teams:
-
-      team_member = user_team_members.filter(team=team).first()
-      if team_member:
-        if cell_text != "": cell_text += ", "
-        cell_text = cell_text + team.name
-        if team_member.is_admin:
-          cell_text += "(ADMIN)"
-
-    cells = [cell_text]  
-    return cells
+    teams = teams.filter(
+      teammember__user=user).values_list('name', 'teammember__is_admin')
+    team_names = []
+    for team_name, is_admin in teams:
+      team_names.append((team_name + '(ADMIN)') if is_admin else team_name)
+    return [', '.join(team_names)]
 
 
   def _get_action_info_cells(self, action):
     average_carbon_points = action.calculator_action.average_points if action.calculator_action \
       else int(action.average_carbon_score) if action.average_carbon_score.isdigit() else 0
-    
+
     cc_action = action.calculator_action.name if action.calculator_action else ''
 
     category_obj = action.tags.filter(tag_collection__name='Category').first()
@@ -201,7 +194,7 @@ class DownloadStore:
     done_count = done_count
 
     testimonials_count = str(Testimonial.objects.filter(is_deleted=False, action=action).count())
-    
+
     action_cells = {
       'title': action.title, 'yearly_lbs_carbon': average_carbon_points,
       'total_yearly_lbs_carbon': total_carbon_points,
@@ -210,7 +203,7 @@ class DownloadStore:
       'cost': cost, 'is_global': action.is_global,
       'testimonials_count': testimonials_count, 'done_count': done_count
     }
-    
+
     return self._get_cells_from_dict(self.action_info_columns, action_cells)
 
 
@@ -220,7 +213,7 @@ class DownloadStore:
       data = Data.objects.filter(tag=action_category, community=community).first()
       if not data:
         continue
-      rows.append(self._get_cells_from_dict(self.action_info_columns, 
+      rows.append(self._get_cells_from_dict(self.action_info_columns,
                     {'title': 'STATE-REPORTED', 'category' : action_category.name, 'done_count': str(data.reported_value)}))
     return rows
 
@@ -250,7 +243,7 @@ class DownloadStore:
     }
     if team.parent:
       team_cells['parent'] = team.parent.name
-    
+
     return self._get_cells_from_dict(self.team_info_columns, team_cells)
 
 
@@ -282,7 +275,7 @@ class DownloadStore:
       location_string += '['
       for loc in community.locations.all():
         if location_string != '[':
-          location_string += ','        
+          location_string += ','
         location_string += str(loc)
       location_string += ']'
 
@@ -326,10 +319,10 @@ class DownloadStore:
     highest_impact_action = actions_by_impact[0] if actions_of_members > 0 and len(actions_by_impact) > 0 else ''
     second_highest_impact_action = actions_by_impact[1] if actions_of_members > 0 and len(actions_by_impact) > 1 else ''
 
-    if not community.goal:    
+    if not community.goal:
       # this may be the case for some bogus community like "Global", in which case make a temporary Goal
       community.goal = Goal()
-      
+
     goal = community.goal
     actions_manual_addition = goal.initial_number_of_actions
     households_manual_addition = goal.initial_number_of_households
@@ -348,14 +341,14 @@ class DownloadStore:
     carbon_fraction = round(carbon_total/carbon_goal, 2) if carbon_goal>0 else 0.
 
     community_cells = {
-      'name': community.name, 'location': location_string, 
-      'members_count': str(members_count), 'teams_count': teams_count, 'actions_count': str(actions_count), 
+      'name': community.name, 'location': location_string,
+      'members_count': str(members_count), 'teams_count': teams_count, 'actions_count': str(actions_count),
       'testimonials_count': testimonials_count, 'events_count': events_count,
       'actions_user_reported': actions_user_reported, 'actions_manual_addition': actions_manual_addition, 'actions_state/partner_reported': actions_partner, 'actions_total': actions_total,'actions_goal': actions_goal, 'actions_goal_fraction': actions_fraction,
       'households_user_reported': households_count, 'households_manual_addition': households_manual_addition, 'households_state/partner_reported': households_partner, 'households_total': households_total,'households_goal': households_goal, 'households_goal_fraction': households_fraction,
       'carbon_user_reported': carbon_user_reported, 'carbon_manual_addition': carbon_manual_addition, 'carbon_state/partner_reported': carbon_partner, 'carbon_total': carbon_total,'carbon_goal': carbon_goal, 'carbon_goal_fraction': carbon_fraction,
       'actions_per_member': actions_per_member,
-      'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action, 
+      'most_done_action': most_done_action, 'second_most_done_action': second_most_done_action,
       'highest_impact_action': highest_impact_action, 'second_highest_impact_action': second_highest_impact_action
     }
     reported_actions = self._get_community_reported_data(community)
@@ -416,7 +409,7 @@ class DownloadStore:
     data = sorted(data, key=lambda row: row[0])
     # insert the columns
     data.insert(0, sub_columns)
-    data.insert(0, columns) 
+    data.insert(0, columns)
 
     return data
 
@@ -443,7 +436,7 @@ class DownloadStore:
     data = [columns, sub_columns]
 
     for user in users:
-      #BHN 20.1.10 Put teams list in one cell, ahead of actions 
+      #BHN 20.1.10 Put teams list in one cell, ahead of actions
       row = self._get_user_info_cells(user) \
           + self._get_user_teams_cells(user, teams) \
           + self._get_user_actions_cells(user, actions)
@@ -463,11 +456,11 @@ class DownloadStore:
     users = [cm.user for cm in TeamMember.objects.filter(team__id=team_id, \
             is_deleted=False, user__accepts_terms_and_conditions=True, user__is_deleted=False).select_related('user')]
 
-    # Soon teams could span communities, in which case actions list would be larger.  
+    # Soon teams could span communities, in which case actions list would be larger.
     # For now, take the primary community that a team is associated with; this may not be correct
     # TODO: loop over communities team is associated with and sort this all out
     team = Team.objects.get(id=team_id)
-    community_id = team.primary_community.id     
+    community_id = team.primary_community.id
     actions = Action.objects.filter(Q(community__id=community_id) | Q(is_global=True)) \
                                                       .filter(is_deleted=False)
 
@@ -601,7 +594,7 @@ class DownloadStore:
       self.community_id = community_id
       if community_id:
         community_name = Community.objects.get(id=community_id).name
-      
+
       # Allow community admins to do all actions dowload, same as super admins
       if community_id:
         return (self._community_actions_download(community_id), community_name), None

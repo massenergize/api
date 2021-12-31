@@ -17,11 +17,11 @@ class DownloadTestCase(TestCase):
     self.client = Client()
 
     self.USER, self.CADMIN, self.SADMIN = createUsers()
-    
+
     signinAs(self.client, self.SADMIN)
 
     setupCC(self.client)
-  
+
     COMMUNITY_NAME = "test_downloads"
     self.COMMUNITY = Community.objects.create(**{
       'subdomain': COMMUNITY_NAME,
@@ -76,7 +76,7 @@ class DownloadTestCase(TestCase):
     self.ACTION2.save()
     self.ACTION3.save()
 
-      
+
   @classmethod
   def tearDownClass(self):
     pass
@@ -153,9 +153,21 @@ class DownloadTestCase(TestCase):
     self.assertEqual(len(rows),8)    # two header rows, five data rows, and final empty row
     headerdata = rows[0].split(',')
     self.assertEqual(headerdata[4],'Email')
-    userdata = rows[2].split(',')      # data starts in third row
-    self.assertIn(userdata[4],[self.USER1.email, self.USER2.email, self.CADMIN.email, self.USER.email, self.SADMIN.email])
-
+    self.assertEqual(headerdata[10], 'TEAM')
+    expected_emails_teams = {
+      self.USER1.email: 'The Downloaders(ADMIN)',
+      self.USER2.email: '',
+      self.CADMIN.email: '',
+      self.USER.email: '',
+      self.SADMIN.email: '',
+    }
+    for user_row in rows[2:-1]:  # data starts in third row. last row empty.
+      userdata = user_row.split(',')
+      # pop the team value for a given email
+      team = expected_emails_teams.pop(userdata[4])
+      self.assertEqual(userdata[10], team)
+    # check that we found all expected emails/teams, and none remain
+    self.assertDictEqual(expected_emails_teams, {})
 
   def test_download_actions(self):
     #print("test_download_actions")
