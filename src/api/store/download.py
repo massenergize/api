@@ -166,12 +166,12 @@ class DownloadStore:
 
   def _get_user_teams_cells(self, user, teams):
     if (isinstance(user, Subscriber)):
-      return [''] # for _ in range(len(teams))]
+      return ['']
 
-    teams = teams.filter(
+    user_teams = teams.filter(
       teammember__user=user).values_list('name', 'teammember__is_admin')
     team_names = []
-    for team_name, is_admin in teams:
+    for team_name, is_admin in user_teams:
       team_names.append((team_name + '(ADMIN)') if is_admin else team_name)
     return [', '.join(team_names)]
 
