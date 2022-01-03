@@ -172,8 +172,13 @@ class VendorHandler(RouteHandler):
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    vendors, err = self.service.list_vendors_for_community_admin(context, community_id)
+
+    self.validator.expect("community_id", int, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    vendors, err = self.service.list_vendors_for_community_admin(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendors)
