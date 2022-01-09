@@ -78,7 +78,7 @@ def get_user_or_die(context, args):
 
 def get_admin_communities(context: Context):
   if not context.user_is_logged_in and context.user_is_admin():
-    return []
+    return [], None
   user = UserProfile.objects.get(pk=context.user_id)
   admin_groups = user.communityadmingroup_set.all()
   communities = [ag.community for ag in admin_groups]

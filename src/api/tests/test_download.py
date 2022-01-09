@@ -87,7 +87,7 @@ class DownloadTestCase(TestCase):
     pass
 
   def test_download_users(self):
-    print("test_download_users")
+    #print("test_download_users")
     # all routes admins only
 
     # try downloading users from a team
@@ -158,7 +158,7 @@ class DownloadTestCase(TestCase):
 
 
   def test_download_actions(self):
-    print("test_download_actions")
+    #print("test_download_actions")
     # all routes admins only
 
     # try downloading users from a team
@@ -201,9 +201,14 @@ class DownloadTestCase(TestCase):
     # don't specify community or team, cadmin signed in
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
-    response = response.toDict()
-    self.assertFalse(response["success"])
+    self.assertEquals(type(response), HttpResponse)
+    rows = response.content.decode("utf-8").split('\r\n')
+    self.assertGreater(len(rows),4)    # one header row, at least two data rows, and final empty row
+    headerdata = rows[0].split(',')
+    self.assertEqual(headerdata[0],'community')
+    self.assertEqual(headerdata[1],'title')
+    actiondata = rows[-2].split(',')      # get the last action from the download
+    self.assertIn(actiondata[1],[self.ACTION1.title, self.ACTION2.title])
 
     # don't specify community or team, sadmin signed in
     signinAs(self.client, self.SADMIN)
