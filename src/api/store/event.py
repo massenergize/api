@@ -600,6 +600,27 @@ class EventStore:
       return None, CustomMassenergizeError(str(e))
 
 
+  def get_rsvp_list(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+      event_id = args.pop("event_id", None)
+      # TODO: return list of attendees for all events of a community
+      #community_id = args.pop("community_id", None)
+
+      if event_id:
+        event = Event.objects.filter(pk=event_id).first()
+        if not event:
+          return None, InvalidResourceError()
+
+        event_attendees = EventAttendee.objects.filter(event=event)
+        return event_attendees, None
+
+      else:
+        return None, InvalidResourceError()
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
   def get_rsvp_status(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop("event_id", None)
