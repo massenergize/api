@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.0.18",
-  "BUILD_VERSION_NOTES": "Nov 23: fixes for imported e-mail addresses\nNov 14:\n- Fix numerous bugs since 4.0 deployment:\n- Make sandbox sites work more completely\n- fix csv downloads\n- Admin contact emails go to primary contact\n- Sort Communities by location/name\n- User import fixes\nOct 17th Deployment - Version 4.0\n- Make cookie secure\n"
+  "BUILD_VERSION": "4.0.19",
+  "BUILD_VERSION_NOTES": "Jan 9 2022: Bug fixes for Event RSVPs\nNov 23: fixes for imported e-mail addresses\nNov 14:\n- Fix numerous bugs since 4.0 deployment:\n- Make sandbox sites work more completely\n- fix csv downloads\n- Admin contact emails go to primary contact\n- Sort Communities by location/name\n- User import fixes\nOct 17th Deployment - Version 4.0\n- Make cookie secure\n"
 }

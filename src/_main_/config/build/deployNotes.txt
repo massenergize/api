@@ -1,3 +1,4 @@
+Jan 9 2022: Bug fixes for Event RSVPs
 Nov 23: fixes for imported e-mail addresses
 Nov 14:
 - Fix numerous bugs since 4.0 deployment:
