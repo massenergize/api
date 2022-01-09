@@ -286,7 +286,7 @@ class UserStore:
     try:
       user = get_user_or_die(context, args)
       if not user:
-        return []
+        return [], None
       return EventAttendee.objects.filter(user=user), None
     except Exception as e:
       capture_message(str(e), level="error")
