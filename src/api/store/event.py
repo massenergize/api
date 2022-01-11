@@ -569,8 +569,12 @@ class EventStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
+      if community_id == 0:
+        # return actions from all communities
+        return self.list_events_for_super_admin(context)
+        
       # community_id coming from admin portal is 'undefined'
-      if not community_id or community_id=='undefined':
+      elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -589,8 +593,6 @@ class EventStore:
 
   def list_events_for_super_admin(self, context: Context):
     try:
-      if not context.user_is_super_admin:
-        return None, NotAuthorizedError()
       # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
       # not as their own separate events
       events = Event.objects.filter(is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')

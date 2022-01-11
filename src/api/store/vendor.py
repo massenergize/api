@@ -208,7 +208,7 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_vendors_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_vendors_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_vendors_for_super_admin(context)
@@ -216,8 +216,13 @@ class VendorStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
-      # community_id coming from admin portal as "null"
-      if not community_id or community_id=='undefined' or community_id=='null':     
+      # community_id coming from admin portal as "null"      
+      community_id = args.pop('community_id', None)
+      if community_id == 0:
+        # return actions from all communities
+        return self.list_vendors_for_super_admin(context)
+
+      if not community_id:     
         # different code in action.py/event.py
         #user = UserProfile.objects.get(pk=context.user_id)
         #admin_groups = user.communityadmingroup_set.all()
