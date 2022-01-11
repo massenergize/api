@@ -81,7 +81,11 @@ def parse_int(b):
 
 def parse_date(d):
   try:
-    return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d %H:%M'))
+    if len(d) == 10:
+      return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d'))
+    else:
+      return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d %H:%M'))
+
   except Exception as e:
     capture_message(str(e), level="error")
     return timezone.now()
