@@ -177,8 +177,13 @@ class ActionHandler(RouteHandler):
   def community_admin_list(self, request): 
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    actions, err = self.service.list_actions_for_community_admin(context, community_id)
+
+    self.validator.expect("community_id", int, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    actions, err = self.service.list_actions_for_community_admin(context, args)
     if err:
       return err
     return MassenergizeResponse(data=actions)
