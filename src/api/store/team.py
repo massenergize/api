@@ -444,8 +444,16 @@ class TeamStore:
       if context.user_is_super_admin:
         return self.list_teams_for_super_admin(context)
 
+      elif not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       community_id = args.pop('community_id', None)
-      if not is_value(community_id):
+      if community_id == 0:
+        # return actions from all communities
+        return self.list_teams_for_super_admin(context)
+
+
+      elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -461,8 +469,6 @@ class TeamStore:
 
   def list_teams_for_super_admin(self, context: Context):
     try:
-      if not context.user_is_super_admin:
-        return None, NotAuthorizedError()
       teams = Team.objects.filter(is_deleted=False).select_related('logo', 'primary_community')
       return teams, None
 

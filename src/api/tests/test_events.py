@@ -287,13 +287,13 @@ class EventsTestCase(TestCase):
         # an event the user didn't reply to
         response = self.client.post('/api/events.rsvp.get', urlencode({"event_id": self.EVENT2.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
-        self.assertEqual(response["data"], None)
+        self.assertEqual(response["data"], {})
 
         # a different user who happens to be a CADMIN
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.rsvp.get', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertTrue(response["success"])
-        self.assertEqual(response["data"], None)
+        self.assertTrue(response["success"])      
+        self.assertEqual(response["data"], {})
 
         # test logged as sadmin
         #signinAs(self.client, self.SADMIN)

@@ -650,6 +650,8 @@ class UserProfile(models.Model):
                 new = []
                 for day in old.keys():
                     old_format = "%d/%m/%Y"
+                    if len(day) < 10:
+                      old_format = "%d/%m/%y"
                     dt_object = datetime.datetime.strptime(day, old_format)
                     day = dt_object.strftime(new_format)
                     new.append(day)
@@ -797,6 +799,8 @@ class DeviceProfile(models.Model):
                 new = []
                 for day in old.keys():
                     old_format = "%d/%m/%Y"
+                    if len(day) < 10:
+                      old_format = "%d/%m/%y"
                     dt_object = datetime.datetime.strptime(day, old_format)
                     day = dt_object.strftime(new_format)
                     new.append(day)
@@ -1492,23 +1496,26 @@ class Action(models.Model):
                 "rank",
                 "average_carbon_score",
                 "featured_summary",
+                "steps_to_take",
+                "deep_dive",
+                "about",
             ],
         )
         data["image"] = get_json_if_not_none(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
         data["tags"] = [t.simple_json() for t in self.tags.all()]
-        data["steps_to_take"] = self.steps_to_take
-        data["deep_dive"] = self.deep_dive
-        data["about"] = self.about
+        #data["steps_to_take"] = self.steps_to_take
+        #data["deep_dive"] = self.deep_dive
+        #data["about"] = self.about
         data["community"] = get_summary_info(self.community)
-        data["vendors"] = [v.info() for v in self.vendors.all()]
+        #data["vendors"] = [v.info() for v in self.vendors.all()]
         return data
 
     def full_json(self):
         data = self.simple_json()
         data["is_global"] = self.is_global
-        data["steps_to_take"] = self.steps_to_take
-        data["about"] = self.about
+        #data["steps_to_take"] = self.steps_to_take
+        #data["about"] = self.about
         data["geographic_area"] = self.geographic_area
         data["properties"] = [p.simple_json() for p in self.properties.all()]
         data["vendors"] = [v.simple_json() for v in self.vendors.all()]
