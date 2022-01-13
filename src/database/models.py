@@ -1605,6 +1605,9 @@ class Event(models.Model):
             c.simple_json() for c in self.invited_communities.all()
         ]
         data["more_info"] = self.more_info
+    
+        # temporarily - rsvp_enabled stored as is_external_event ; will change this and migrate DBs in sync
+        data["rsvp_enabled"] = self.is_external_event
         return data
 
     def full_json(self):
