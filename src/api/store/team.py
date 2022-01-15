@@ -368,10 +368,22 @@ class TeamStore:
     try:
       team_id = args.get("id", None)
       user_id = args.get("user_id", None)
+      user_email = args.get("email", None)
+      is_admin = args.get("is_admin", False)
 
       team = Team.objects.get(id=team_id)
-      user = UserProfile.objects.get(id=user_id)
+
+      if user_id:
+        user = UserProfile.objects.get(id=user_id)
+      elif user_email:
+        user = UserProfile.objects.get(email=user_email)
+      else:
+        return None, CustomMassenergizeError("User email or id not specified")
+
       teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)      
+      if is_admin:
+        teamMember.is_admin = True
+
       if created:
         teamMember.save()
       

@@ -20,7 +20,7 @@ class TestimonialHandler(RouteHandler):
   def registerRoutes(self):
     self.add("/testimonials.info", self.info)
     self.add("/testimonials.create", self.create)
-    self.add("/testimonials.add", self.create)
+    self.add("/testimonials.add", self.submit)
     self.add("/testimonials.list", self.list)
     self.add("/testimonials.update", self.update)
     self.add("/testimonials.delete", self.delete)
@@ -47,7 +47,7 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
-  @login_required
+  @admins_only
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -72,6 +72,38 @@ class TestimonialHandler(RouteHandler):
     args["anonymous"] = False
 
     testimonial_info, err = self.service.create_testimonial(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=testimonial_info)
+
+# same as create, except this is for user submitted testimonials
+  @login_required
+  def submit(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("title", str, is_required=True)
+    self.validator.expect('community', int)
+    self.validator.expect('action', int)
+    self.validator.expect('vendor', int)
+    self.validator.expect("tags", list)
+    self.validator.expect("is_approved", bool)
+    self.validator.expect("is_published", bool)
+    self.validator.rename('community_id', 'community')
+    self.validator.rename('action_id', 'action')
+    self.validator.rename('vendor_id', 'vendor')
+    self.validator.rename('preferredName', 'preferred_name')
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+
+    # no anonymous option anymore
+    args["anonymous"] = False
+
+    # user submitted testimonial, so notify the community admins
+    user_submitted = True
+    testimonial_info, err = self.service.create_testimonial(context, args, user_submitted)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)

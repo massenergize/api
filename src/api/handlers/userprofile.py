@@ -162,6 +162,7 @@ class UserHandler(RouteHandler):
     args, err = (self.validator
       .expect("action_id", str, is_required=True)
       .expect("household_id", str, is_required=False)
+      .expect("date_completed", "date", is_required=False)
       .verify(context.args)
     )
     if err:
@@ -176,13 +177,14 @@ class UserHandler(RouteHandler):
     context: Context = request.context
     
     args, err = (self.validator
-      .expect("action_id", str, is_required=True)
-      .expect("household_id", str, is_required=False)
+      .expect("action_id", int, is_required=True)
+      .expect("household_id", int, is_required=False)
+      .expect("date_completed", "date", is_required=False)
       .verify(context.args)
     )
     if err:
       return err
-
+    print(args)
     user_info, err = self.service.add_action_completed(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

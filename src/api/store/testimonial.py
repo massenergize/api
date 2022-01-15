@@ -20,7 +20,7 @@ class TestimonialStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-
+      
   def list_testimonials(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       subdomain = args.pop('subdomain', None)
@@ -89,35 +89,23 @@ class TestimonialStore:
         if user:
           new_testimonial.user = user
 
-      if image:
-        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-        new_testimonial.image = media
+          if image:
+            media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
+            new_testimonial.image = media
 
-      if action:
-        testimonial_action = Action.objects.get(id=action)
-        new_testimonial.action = testimonial_action
+          if action:
+            testimonial_action = Action.objects.get(id=action)
+            new_testimonial.action = testimonial_action
 
-      if vendor:
-        testimonial_vendor = Vendor.objects.get(id=vendor)
-        new_testimonial.vendor = testimonial_vendor
+          if vendor:
+            testimonial_vendor = Vendor.objects.get(id=vendor)
+            new_testimonial.vendor = testimonial_vendor
 
-      if community:
-        testimonial_community = Community.objects.get(id=community)
-        new_testimonial.community = testimonial_community
-      else:
-        testimonial_community = None
-
-      # eliminating anonymous testimonials
-      new_testimonial.anonymous = False
-      if not preferred_name:
-        if user:
-          if user.preferred_name:
-            preferred_name = user.preferred_name
+          if community:
+            testimonial_community = Community.objects.get(id=community)
+            new_testimonial.community = testimonial_community
           else:
-            preferred_name =  user.full_name + ' from ' + ('' if not testimonial_community else testimonial_community.name)
-      new_testimonial.preferred_name = preferred_name
-
-      new_testimonial.save()
+            testimonial_community = None
 
       tags_to_set = []
       for t in tags:
@@ -126,6 +114,7 @@ class TestimonialStore:
           tags_to_set.append(tag)
       if tags_to_set:
         new_testimonial.tags.set(tags_to_set)
+        new_testimonial.save()
 
       return new_testimonial, None
     except Exception as e:
@@ -248,8 +237,8 @@ class TestimonialStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      events = Testimonial.objects.filter(is_deleted=False).select_related('image', 'community', 'vendor').prefetch_related('tags')
-      return events, None
+      testimonials = Testimonial.objects.filter(is_deleted=False).select_related('image', 'community', 'vendor').prefetch_related('tags')
+      return testimonials, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))

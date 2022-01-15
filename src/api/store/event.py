@@ -101,6 +101,7 @@ class EventStore:
       new_event.start_date_and_time = event_to_copy.start_date_and_time
       new_event.end_date_and_time = event_to_copy.end_date_and_time
       new_event.description = event_to_copy.description
+      new_event.is_external_event = event_to_copy.is_external_event   # really rsvp_enabled
       new_event.featured_summary = event_to_copy.featured_summary
       new_event.location = event_to_copy.location
       if not (event_to_copy.is_recurring == None):
@@ -197,6 +198,11 @@ class EventStore:
       week_of_month = args.pop("week_of_month", None)
       final_date = args.pop('final_date', None)
 
+      rsvp_enabled = args.pop('rsvp_enabled', False)
+      if rsvp_enabled:
+        # this boolean is never used, use this - then switch name to rsvp_enabled to migrate DBs in sync
+        args['is_external_event'] = True
+
       if is_recurring:
         if final_date:
           final_date = _local_datetime(final_date).date()
@@ -281,6 +287,10 @@ class EventStore:
       upcoming_is_cancelled = args.pop("upcoming_is_cancelled", None)
       upcoming_is_rescheduled = args.pop('upcoming_is_rescheduled', None)
       final_date = args.pop('final_date', None)
+
+      rsvp_enabled = args.pop('rsvp_enabled', False)
+      # this boolean is never used, use this - then switch name to rsvp_enabled to migrate DBs in sync
+      args['is_external_event'] = rsvp_enabled
 
       if is_recurring:
 

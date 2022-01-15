@@ -650,6 +650,8 @@ class UserProfile(models.Model):
                 new = []
                 for day in old.keys():
                     old_format = "%d/%m/%Y"
+                    if len(day) < 10:
+                      old_format = "%d/%m/%y"
                     dt_object = datetime.datetime.strptime(day, old_format)
                     day = dt_object.strftime(new_format)
                     new.append(day)
@@ -797,6 +799,8 @@ class DeviceProfile(models.Model):
                 new = []
                 for day in old.keys():
                     old_format = "%d/%m/%Y"
+                    if len(day) < 10:
+                      old_format = "%d/%m/%y"
                     dt_object = datetime.datetime.strptime(day, old_format)
                     day = dt_object.strftime(new_format)
                     new.append(day)
@@ -1601,6 +1605,9 @@ class Event(models.Model):
             c.simple_json() for c in self.invited_communities.all()
         ]
         data["more_info"] = self.more_info
+    
+        # temporarily - rsvp_enabled stored as is_external_event ; will change this and migrate DBs in sync
+        data["rsvp_enabled"] = self.is_external_event
         return data
 
     def full_json(self):

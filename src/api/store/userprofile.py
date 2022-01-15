@@ -76,7 +76,13 @@ def _update_action_data_totals(action, household, value):
 
     data = Data.objects.filter(community=community, tag=t)
     if data:
-      data.update(value=F("value") + value)
+      # protect against going below 0
+      #  data.update(value=F("value") + value)
+      d = data.first()
+      value = max(d.value + value, 0)
+      if value != d.value:
+        d.value = value
+        d.save()
 
     elif value>0:
       # data for this community, action does not exist so create one
@@ -528,16 +534,23 @@ class UserStore:
       if not context.user_is_logged_in:
         return [], CustomMassenergizeError("sign_in_required")
       
-      user_action = UserActionRel.objects.get(pk=user_action_id)
-      oldstatus = user_action.status
-      action = user_action.action
-      reu = user_action.real_estate_unit
+      # Allow for the possibility that a UserActionRel may have been deleted
+      user_action = UserActionRel.objects.filter(pk=user_action_id)
+      if user_action:
+        user_action = user_action.first()
+        oldstatus = user_action.status
+        action = user_action.action
+        reu = user_action.real_estate_unit
 
-      result = user_action.delete()
+        result = user_action.delete()
 
-      # if action had been marked as DONE, decrement community total for the action
-      if oldstatus == "DONE":
-        _update_action_data_totals(action, reu, -1)
+        # if action had been marked as DONE, decrement community total for the action
+        if oldstatus == "DONE":
+          _update_action_data_totals(action, reu, -1)
+
+      else:
+        # didn't find the action: something missing from database - probably a previous error -- no consequence
+        result = None
 
       return result, None
     except Exception as e:
