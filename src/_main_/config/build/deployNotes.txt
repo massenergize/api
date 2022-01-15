@@ -1,4 +1,5 @@
-Jan 12:
+Jan 15:
+- Notify cadmin when testimonial submitted
 - Fixes for Action dates
 - Cadmins can receive content from other communities (.listForCommunityAdmin routes)
 Dec 21:
