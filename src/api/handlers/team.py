@@ -193,8 +193,10 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    self.validator.expect("user_id", str, is_required=True)
-    self.validator.expect("id", str, is_required=True)
+    self.validator.expect("user_id", int)
+    self.validator.expect("email", int)
+    self.validator.expect("is_admin", bool)
+    self.validator.expect("id", int, is_required=True)
     self.validator.rename("team_id", "id")
     args, err = self.validator.verify(args, strict=True)
     if err:
