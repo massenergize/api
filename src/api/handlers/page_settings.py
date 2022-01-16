@@ -78,8 +78,8 @@ class PageSettingsHandler(RouteHandler):
       'platform_actions', 'state_actions', 'platform_carbon', 'manual_carbon' ]:
       if item in args.keys():
         more_info[item] = parse_bool(args.pop(item, False))
-    args["more_info"] = json.dumps(more_info)
-    
+    args["more_info"] = more_info
+
     page_setting_info, err = self.service.update_page_setting(args.get("id", None), args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
