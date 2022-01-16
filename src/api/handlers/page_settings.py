@@ -6,8 +6,10 @@ from api.services.page_settings import PageSettingsService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
+from _main_.utils.common import parse_bool
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
+import json
 
 
 class PageSettingsHandler(RouteHandler):
@@ -69,6 +71,15 @@ class PageSettingsHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    # special for impact page settings.  these variables won't exist otherwise
+    more_info = {}
+    for item in ['display_households', 'display_actions', 'display_carbon', 'platform_households', 'state_households', 'manual_households', 
+      'platform_actions', 'state_actions', 'platform_carbon', 'manual_carbon' ]:
+      if item in args.keys():
+        more_info[item] = parse_bool(args.pop(item, False))
+    args["more_info"] = json.dumps(more_info)
+    
     page_setting_info, err = self.service.update_page_setting(args.get("id", None), args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -79,7 +90,7 @@ class PageSettingsHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     page_setting_id = args.get("id", None)
-    page_setting_info, err = self.service.delete_page_setting(args.get("id", None))
+    page_setting_info, err = self.service.delete_page_setting(page_setting_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=page_setting_info)
