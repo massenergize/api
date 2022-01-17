@@ -72,8 +72,6 @@ class TestimonialStore:
       community = args.pop('community', None)
       user_email = args.pop('user_email', context.user_email)
 
-      preferred_name = args.pop('preferred_name', None)
-
       args["title"] = args.get("title", "Thank You")[:100]
 
       new_testimonial: Testimonial = Testimonial.objects.create(**args)
@@ -89,23 +87,23 @@ class TestimonialStore:
         if user:
           new_testimonial.user = user
 
-          if image:
-            media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-            new_testimonial.image = media
+      if image:
+        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
+        new_testimonial.image = media
 
-          if action:
-            testimonial_action = Action.objects.get(id=action)
-            new_testimonial.action = testimonial_action
+      if action:
+        testimonial_action = Action.objects.get(id=action)
+        new_testimonial.action = testimonial_action
 
-          if vendor:
-            testimonial_vendor = Vendor.objects.get(id=vendor)
-            new_testimonial.vendor = testimonial_vendor
+      if vendor:
+        testimonial_vendor = Vendor.objects.get(id=vendor)
+        new_testimonial.vendor = testimonial_vendor
 
-          if community:
-            testimonial_community = Community.objects.get(id=community)
-            new_testimonial.community = testimonial_community
-          else:
-            testimonial_community = None
+      if community:
+        testimonial_community = Community.objects.get(id=community)
+        new_testimonial.community = testimonial_community
+      else:
+        testimonial_community = None
 
       tags_to_set = []
       for t in tags:
@@ -114,7 +112,8 @@ class TestimonialStore:
           tags_to_set.append(tag)
       if tags_to_set:
         new_testimonial.tags.set(tags_to_set)
-        new_testimonial.save()
+        
+      new_testimonial.save()
 
       return new_testimonial, None
     except Exception as e:
