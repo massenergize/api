@@ -167,6 +167,7 @@ class UserHandler(RouteHandler):
     )
     if err:
       return err
+      
     user_info, err = self.service.add_action_todo(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -184,7 +185,7 @@ class UserHandler(RouteHandler):
     )
     if err:
       return err
-    print(args)
+
     user_info, err = self.service.add_action_completed(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

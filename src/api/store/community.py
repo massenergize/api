@@ -494,7 +494,13 @@ class CommunityStore:
                     # this could be slow?
                     data = category_graph["data"]
                     category_totals = [datum["reported_value"] for datum in data]
+                    solar_households = 0
 
+                    for datum in data:
+                        if datum.get("name", None) == 'Solar':
+                            solar_households = datum["reported_value"]
+                            break
+                    
                     goal = community.goal
                     total = ( 
                         goal.attained_number_of_households 
@@ -502,7 +508,8 @@ class CommunityStore:
                         + goal.attained_carbon_footprint_reduction
                     )
 
-                    goal.attained_number_of_households = max(category_totals)                    
+                    # 1/16/22 change from max(category_totals) to solar_households                  
+                    goal.attained_number_of_households = solar_households                    
                     goal.attained_number_of_actions = sum(category_totals)                   
                     goal.attained_carbon_footprint_reduction = 0
                 
