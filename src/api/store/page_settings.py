@@ -53,9 +53,13 @@ class PageSettingsStore:
       return None, InvalidResourceError()
     args['is_published'] = args.pop('is_published', '').lower() == 'true'
     
+    more_info = args.pop("more_info", None)
     image = args.pop('image', None)
     page_setting.update(**args)
     page_setting = page_setting.first()
+
+    if len(more_info.keys())>0:
+      page_setting.more_info = more_info
     
     # Page settings models support multiple images, but we currently allow just one.
     # @TODO handle uploading multiple images for pages that have many images (currently no pages actually use it yet)

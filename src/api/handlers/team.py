@@ -193,7 +193,7 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    self.validator.expect("user_id", int)
+    self.validator.expect("user_id", str)
     self.validator.expect("email", int)
     self.validator.expect("is_admin", bool)
     self.validator.expect("id", int, is_required=True)
