@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.1.16",
-  "BUILD_VERSION_NOTES": "Jan 15:\n- Notify cadmin when testimonial submitted\n- Fixes for Action dates\n- Cadmins can receive content from other communities (.listForCommunityAdmin routes)\nDec 21:\n- Media library support\n- Event RSVPs list route\n- User edited testimonials\n- Change to visit_logs for anonymous and registered users\nDec 5:\n- Customizable registration and signin pages\n- Improved user importing\n- Add DeviceProfile for tracking anonymous users\n- Add GeoIP for determining IP address location\nNov 14:\n- Fix numerous bugs since 4.0 deployment:\n- Make sandbox sites work more completely\n- fix csv downloads\n- Admin contact emails go to primary contact\n- Sort Communities by location/name\n- User import fixes\nOct 17th Deployment - Version 4.0\n- Make cookie secure\n"
+  "BUILD_VERSION": "4.1.17",
+  "BUILD_VERSION_NOTES": "Jan 17:\n- Graph data selection by Cadmins\n- Notify cadmin when testimonial submitted\n- Fixes for Action dates\n- Cadmins can receive content from other communities (.listForCommunityAdmin routes)\nDec 21:\n- Media library support\n- Event RSVPs list route\n- User edited testimonials\n- Change to visit_logs for anonymous and registered users\nDec 5:\n- Customizable registration and signin pages\n- Improved user importing\n- Add DeviceProfile for tracking anonymous users\n- Add GeoIP for determining IP address location\nNov 14:\n- Fix numerous bugs since 4.0 deployment:\n- Make sandbox sites work more completely\n- fix csv downloads\n- Admin contact emails go to primary contact\n- Sort Communities by location/name\n- User import fixes\nOct 17th Deployment - Version 4.0\n- Make cookie secure\n"
 }
