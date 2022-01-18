@@ -1,4 +1,7 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import (
+    MassEnergizeAPIError,
+    CustomMassenergizeError,
+)
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.misc import MiscellaneousStore
@@ -11,91 +14,101 @@ from _main_.utils.utils import load_json, load_text_contents
 from django.db.models.query import QuerySet
 from typing import Tuple
 
+
 class MiscellaneousService:
-  """
-  Service Layer for all the goals
-  """
+    """
+    Service Layer for all the goals
+    """
 
-  def __init__(self):
-    self.store =  MiscellaneousStore()
+    def __init__(self):
+        self.store = MiscellaneousStore()
 
-  
-  def navigation_menu_list(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    main_menu_items, err = self.store.navigation_menu_list(context, args)
-    if err:
-      return None, err
-    return serialize_all(main_menu_items), None
-  
-  def backfill(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    result, err = self.store.backfill(context, args)
-    if err:
-      return None, err
-    return result, None
+    def remake_navigation_menu(self) -> Tuple[dict, MassEnergizeAPIError]:
+        json = load_json(BASE_DIR + "/database/raw_data/portal/menu.json")
+        return self.store.remake_navigation_menu(json)
 
+    def navigation_menu_list(
+        self, context: Context, args
+    ) -> Tuple[dict, MassEnergizeAPIError]:
+        main_menu_items, err = self.store.navigation_menu_list(context, args)
+        if err:
+            return None, err
+        return serialize_all(main_menu_items), None
 
-  def home(self, ctx: Context, request):
-    deployments = Deployment.objects.all()[:3]
-    build_info = load_json(BASE_DIR + "/_main_/config/build/deployConfig.json")
-    deploy_notes = load_text_contents(BASE_DIR + "/_main_/config/build/deployNotes.txt")
-    
-    deployment = Deployment.objects.filter(version=build_info.get('BUILD_VERSION', "")).first()
-    if deployment:
-      if deployment.notes != deploy_notes:
-        deployment.notes = deploy_notes
-        deployment.save()
-    else:
-      deployment = Deployment.objects.create(
-        version=build_info.get('BUILD_VERSION', ''),
-        notes=deploy_notes
-      )
+    def backfill(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        result, err = self.store.backfill(context, args)
+        if err:
+            return None, err
+        return result, None
 
+    def home(self, ctx: Context, request):
+        deployments = Deployment.objects.all()[:3]
+        build_info = load_json(BASE_DIR + "/_main_/config/build/deployConfig.json")
+        deploy_notes = load_text_contents(
+            BASE_DIR + "/_main_/config/build/deployNotes.txt"
+        )
 
-    if IS_PROD:
-      SITE_TITLE = 'MassEnergize-API'
-      SITE_BACKGROUND_COLOR = '#310161'
-      SITE_FONT_COLOR = 'white'
-    elif IS_CANARY:
-      SITE_TITLE = 'CANARY: MassEnergize-API'
-      SITE_BACKGROUND_COLOR = '#310161'
-      SITE_FONT_COLOR = 'white'
-    else:
-      SITE_TITLE = 'DEV: MassEnergize-API'
-      SITE_BACKGROUND_COLOR = '#0b5466'
-      SITE_FONT_COLOR = 'white'
+        deployment = Deployment.objects.filter(
+            version=build_info.get("BUILD_VERSION", "")
+        ).first()
+        if deployment:
+            if deployment.notes != deploy_notes:
+                deployment.notes = deploy_notes
+                deployment.save()
+        else:
+            deployment = Deployment.objects.create(
+                version=build_info.get("BUILD_VERSION", ""), notes=deploy_notes
+            )
 
-    return render(request, 'index.html', {
-        'deployments': deployments,
-        "BUILD_INFO": build_info,
-        "DEPLOY_NOTES": deploy_notes,
-        'SITE_TITLE': SITE_TITLE,
-        'SITE_BACKGROUND_COLOR': SITE_BACKGROUND_COLOR,
-        'SITE_FONT_COLOR': SITE_FONT_COLOR
-      }
-    )
+        if IS_PROD:
+            SITE_TITLE = "MassEnergize-API"
+            SITE_BACKGROUND_COLOR = "#310161"
+            SITE_FONT_COLOR = "white"
+        elif IS_CANARY:
+            SITE_TITLE = "CANARY: MassEnergize-API"
+            SITE_BACKGROUND_COLOR = "#310161"
+            SITE_FONT_COLOR = "white"
+        else:
+            SITE_TITLE = "DEV: MassEnergize-API"
+            SITE_BACKGROUND_COLOR = "#0b5466"
+            SITE_FONT_COLOR = "white"
 
-  def create_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    carbon_data, err = self.store.create_carbon_equivalency(args)
-    if err:
-      return None, err
-    return serialize(carbon_data), None
+        return render(
+            request,
+            "index.html",
+            {
+                "deployments": deployments,
+                "BUILD_INFO": build_info,
+                "DEPLOY_NOTES": deploy_notes,
+                "SITE_TITLE": SITE_TITLE,
+                "SITE_BACKGROUND_COLOR": SITE_BACKGROUND_COLOR,
+                "SITE_FONT_COLOR": SITE_FONT_COLOR,
+            },
+        )
 
-  def update_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    carbon_data, err = self.store.update_carbon_equivalency(args)
-    if err:
-      return None, err
-    return serialize(carbon_data), None
-  
-  def get_carbon_equivalencies(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    carbon_data, err = self.store.get_carbon_equivalencies(args)
-    if err:
-      return None, err
-    if type(carbon_data)==QuerySet:
-      return serialize_all(carbon_data), None
-    else:
-      return serialize(carbon_data), None
+    def create_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+        carbon_data, err = self.store.create_carbon_equivalency(args)
+        if err:
+            return None, err
+        return serialize(carbon_data), None
 
-  def delete_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    carbon_data, err = self.store.delete_carbon_equivalency(args)
-    if err:
-      return None, err
-    return serialize(carbon_data), None
+    def update_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+        carbon_data, err = self.store.update_carbon_equivalency(args)
+        if err:
+            return None, err
+        return serialize(carbon_data), None
+
+    def get_carbon_equivalencies(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+        carbon_data, err = self.store.get_carbon_equivalencies(args)
+        if err:
+            return None, err
+        if type(carbon_data) == QuerySet:
+            return serialize_all(carbon_data), None
+        else:
+            return serialize(carbon_data), None
+
+    def delete_carbon_equivalency(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+        carbon_data, err = self.store.delete_carbon_equivalency(args)
+        if err:
+            return None, err
+        return serialize(carbon_data), None
