@@ -10,97 +10,103 @@ from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
 
+
 class MiscellaneousHandler(RouteHandler):
+    def __init__(self):
+        super().__init__()
+        self.service = MiscellaneousService()
+        self.registerRoutes()
 
-  def __init__(self):
-    super().__init__()
-    self.service = MiscellaneousService()
-    self.registerRoutes()
+    def registerRoutes(self) -> None:
+        self.add("/menus.remake", self.remake_navigation_menu)
+        self.add("/menus.list", self.navigation_menu_list)
+        self.add("/data.backfill", self.backfill)
+        self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
+        self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
+        self.add("/data.carbonEquivalency.get", self.get_carbon_equivalencies)
+        self.add("/data.carbonEquivalency.info", self.get_carbon_equivalencies)
+        self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
+        self.add("/home", self.home)
+        self.add("", self.home)
 
-  def registerRoutes(self) -> None:
-    self.add("/menus.list", self.navigation_menu_list) 
-    self.add("/data.backfill", self.backfill) 
-    self.add("/data.carbonEquivalency.create", self.create_carbon_equivalency)
-    self.add("/data.carbonEquivalency.update", self.update_carbon_equivalency)
-    self.add("/data.carbonEquivalency.get", self.get_carbon_equivalencies)
-    self.add("/data.carbonEquivalency.info", self.get_carbon_equivalencies)
-    self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
-    self.add("/home", self.home) 
-    self.add("", self.home) 
+    def remake_navigation_menu(self, request):
+        data, err = self.service.remake_navigation_menu()
+        if err:
+            return MassenergizeResponse(error=err)
+        return MassenergizeResponse(data=data)
 
-  def navigation_menu_list(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    goal_info, err = self.service.navigation_menu_list(context, args)
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=goal_info)
+    def navigation_menu_list(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        goal_info, err = self.service.navigation_menu_list(context, args)
+        if err:
+            return MassenergizeResponse(error=str(err), status=err.status)
+        return MassenergizeResponse(data=goal_info)
 
-  def backfill(self, request):
-    context: Context = request.context
-    args: dict = context.args
-    goal_info, err = self.service.backfill(context, args)
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=goal_info)
+    def backfill(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        goal_info, err = self.service.backfill(context, args)
+        if err:
+            return MassenergizeResponse(error=str(err), status=err.status)
+        return MassenergizeResponse(data=goal_info)
 
+    @super_admins_only
+    def create_carbon_equivalency(self, request):
+        context: Context = request.context
+        args: dict = context.args
 
-  @super_admins_only
-  def create_carbon_equivalency(self, request):
-    context: Context = request.context
-    args: dict = context.args
+        carbon_info, err = self.service.create_carbon_equivalency(args)
 
-    carbon_info, err = self.service.create_carbon_equivalency(args)
+        if err:
+            return MassenergizeResponse(error=str(err), status=err.status)
+        return MassenergizeResponse(data=carbon_info)
 
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=carbon_info)
+    @super_admins_only
+    def update_carbon_equivalency(self, request):
+        context: Context = request.context
+        args: dict = context.args
 
-  @super_admins_only
-  def update_carbon_equivalency(self, request):
-    context: Context = request.context
-    args: dict = context.args
+        # if id passed, return just one, otherwise all
+        self.validator.expect("id", int, is_required=True)
+        self.validator.rename("carbon_equivalency_id", "id")
+        args, err = self.validator.verify(args)
 
-    # if id passed, return just one, otherwise all
-    self.validator.expect("id", int, is_required=True)
-    self.validator.rename("carbon_equivalency_id", "id")
-    args, err = self.validator.verify(args)
+        carbon_info, err = self.service.update_carbon_equivalency(args)
 
-    carbon_info, err = self.service.update_carbon_equivalency(args)
+        if err:
+            return MassenergizeResponse(error=str(err), status=err.status)
+        return MassenergizeResponse(data=carbon_info)
 
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=carbon_info)
+    def get_carbon_equivalencies(self, request):
+        context: Context = request.context
+        args: dict = context.args
 
-  def get_carbon_equivalencies(self, request):
-    context: Context = request.context
-    args: dict = context.args
+        # if id passed, return just one, otherwise all
+        self.validator.expect("id", int)
+        self.validator.rename("carbon_equivalency_id", "id")
+        args, err = self.validator.verify(args)
 
-    # if id passed, return just one, otherwise all
-    self.validator.expect("id", int)
-    self.validator.rename("carbon_equivalency_id", "id")
-    args, err = self.validator.verify(args)
-    
-    carbon_info, err = self.service.get_carbon_equivalencies(args)
+        carbon_info, err = self.service.get_carbon_equivalencies(args)
 
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=carbon_info)
+        if err:
+            return MassenergizeResponse(error=str(err), status=err.status)
+        return MassenergizeResponse(data=carbon_info)
 
-  def delete_carbon_equivalency(self, request):
-    context: Context = request.context
-    args: dict = context.args
+    def delete_carbon_equivalency(self, request):
+        context: Context = request.context
+        args: dict = context.args
 
-    self.validator.expect("id", int, is_required=True)
-    self.validator.rename("carbon_equivalency_id", "id")
-    args, err = self.validator.verify(args)
-    
-    carbon_info, err = self.service.delete_carbon_equivalency(args)
+        self.validator.expect("id", int, is_required=True)
+        self.validator.rename("carbon_equivalency_id", "id")
+        args, err = self.validator.verify(args)
 
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=carbon_info)
+        carbon_info, err = self.service.delete_carbon_equivalency(args)
 
-  def home(self, request):
-    context: Context = request.context
-    return self.service.home(context, request)
+        if err:
+            return MassenergizeResponse(error=str(err), status=err.status)
+        return MassenergizeResponse(data=carbon_info)
+
+    def home(self, request):
+        context: Context = request.context
+        return self.service.home(context, request)
