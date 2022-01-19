@@ -61,54 +61,19 @@
     "title": "Quick Links",
     "links": [
       {
-        "link": "home",
-        "navItemId": "footer-home-id",
-        "name": "Home"
+        "link": "policies?name=Privacy%20Policy",
+        "navItemId": "footer-privacy-policy-id",
+        "name": "Privacy Policy"
       },
       {
-        "link": "actions",
-        "navItemId": "footer-actions-id",
-        "name": "Actions"
+        "link": "policies?name=Terms%20of%20Service",
+        "navItemId": "footer-terms-of-service-id",
+        "name": "Terms of Service"
       },
       {
-        "link": "services",
-        "navItemId": "footer-service-providers-id",
-        "name": "Service Providers"
-      },
-      {
-        "link": "testimonials",
-        "navItemId": "footer-testimonials-id",
-        "name": "Testimonials"
-      },
-      {
-        "link": "teams",
-        "navItemId": "footer-teams",
-        "name": "Teams"
-      },
-      {
-        "link": "impact",
-        "navItemId": "footer-impact-id",
-        "name": "Impact"
-      },
-      {
-        "link": "events",
-        "navItemId": "footer-events-id",
-        "name": "Events"
-      },
-      {
-        "link": "students",
-        "navItemId": "footer-students-id",
-        "name": "For Students"
-      },
-      {
-        "link": "aboutus",
-        "navItemId": "footer-about-us-id",
-        "name": "About Us"
-      },
-      {
-        "link": "policies",
-        "navItemId": "footer-policies-id",
-        "name": "Policies"
+        "link": "https://docs.google.com/forms/d/e/1FAIpQLScxNPrJNsyy6k834hsPdy_Rf0jaDcczRAkjCM3Z1xgYn49Zsw/viewform",
+        "navItemId": "footer-report-a-bug-id",
+        "name": "Report a bug/Suggest a feature"
       }
     ]
   }
