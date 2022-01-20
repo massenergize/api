@@ -2,11 +2,21 @@ import jwt
 from http.cookies import SimpleCookie
 from datetime import datetime
 from _main_.settings import SECRET_KEY
-from database.models import UserProfile
+from database.models import Community, UserProfile
 from carbon_calculator.models import CalcDefault
 import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
+
+
+def createCommunity(name="new-community"): 
+    return Community.objects.create(**{
+      'subdomain': name,
+      'name': name.capitalize(),
+      'accepted_terms_and_conditions': True,
+      'is_published': True,
+      'is_approved': True
+    })
 
 def setupCC(client):
     cq = CalcDefault.objects.all()
