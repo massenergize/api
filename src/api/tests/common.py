@@ -2,94 +2,142 @@ import jwt
 from http.cookies import SimpleCookie
 from datetime import datetime
 from _main_.settings import SECRET_KEY
-from database.models import Community, UserProfile
+from database.models import Action, Community, Event, UserMediaUpload, UserProfile
 from carbon_calculator.models import CalcDefault
 import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
-def createCommunity(name="new-community"): 
-    return Community.objects.create(**{
-      'subdomain': name,
-      'name': name.capitalize(),
-      'accepted_terms_and_conditions': True,
-      'is_published': True,
-      'is_approved': True
-    })
+def makeEvent(**kwargs):
+    community = kwargs.get("community")
+    title = kwargs.get("title") or "Event default title"
+    event = Event.objects.create(
+        **{
+            **kwargs,
+            "community": community,
+            "title": title,
+        }
+    )
+    return event
+
+def makeAction(**kwargs):
+    community = kwargs.get("community")
+    title = kwargs.get("title") or "Action default title"
+    action = Action.objects.create(
+        **{
+            **kwargs,
+            "community": community,
+            "title": title,
+        }
+    )
+    return action
+
+
+def makeUser(**kwargs):
+    full_name = kwargs.get("full_name") or "user_full_name"
+    email = kwargs.get("email") or "new_user_email@email.com"
+    return UserProfile.objects.create(
+        **{**kwargs, "full_name": full_name, "email": email}
+    )
+
+
+def makeUserUpload(**kwargs):
+    image = kwargs.get("image") or createImage()
+    title = kwargs.get("title") or "User upload default title"
+    return UserMediaUpload.objects.create(**{**kwargs, "image": image, "title": title})
+
+
+def makeCommunity(**kwargs):
+    subdomain = kwargs.get("subdomain") or "default_subdomain"
+    name = kwargs.get("name") or "community_default_name"
+    com = Community.object.create(
+        **{
+            "accepted_terms_and_conditions": True,
+            "is_published": True,
+            "is_approved": True,
+            **kwargs,
+            "subdomain": subdomain,
+            "name": name,
+        }
+    )
+    return com
+
 
 def setupCC(client):
     cq = CalcDefault.objects.all()
     num = cq.count()
-    if num<=0:
-        client.post('/cc/import',
-            {   "Confirm": "Yes",
-                "Actions":"carbon_calculator/content/Actions.csv",
-                "Questions":"carbon_calculator/content/Questions.csv",
-                "Stations":"carbon_calculator/content/Stations.csv",
-                "Groups":"carbon_calculator/content/Groups.csv",
-                "Organizations":"carbon_calculator/content/Organizations.csv",
-                "Events":"carbon_calculator/content/Events.csv",
-                "Defaults":"carbon_calculator/content/Defaults.csv"
-                })
+    if num <= 0:
+        client.post(
+            "/cc/import",
+            {
+                "Confirm": "Yes",
+                "Actions": "carbon_calculator/content/Actions.csv",
+                "Questions": "carbon_calculator/content/Questions.csv",
+                "Stations": "carbon_calculator/content/Stations.csv",
+                "Groups": "carbon_calculator/content/Groups.csv",
+                "Organizations": "carbon_calculator/content/Organizations.csv",
+                "Events": "carbon_calculator/content/Events.csv",
+                "Defaults": "carbon_calculator/content/Defaults.csv",
+            },
+        )
+
 
 def signinAs(client, user):
 
     if user:
-      print("Sign in as " + user.full_name)
-      dt = datetime.now()
-      dt.microsecond
+        print("Sign in as " + user.full_name)
+        dt = datetime.now()
+        dt.microsecond
 
-      payload = {
-          "user_id": str(user.id), 
-          "email": user.email,
-          "is_super_admin": user.is_super_admin, 
-          "is_community_admin": user.is_community_admin,
-          "iat": dt.microsecond,
-          "exp": dt.microsecond+1000000000,
-      }
+        payload = {
+            "user_id": str(user.id),
+            "email": user.email,
+            "is_super_admin": user.is_super_admin,
+            "is_community_admin": user.is_community_admin,
+            "iat": dt.microsecond,
+            "exp": dt.microsecond + 1000000000,
+        }
 
-      the_token = jwt.encode(
-          payload, 
-          SECRET_KEY, 
-          algorithm='HS256'
-      ).decode('utf-8')
+        the_token = jwt.encode(payload, SECRET_KEY, algorithm="HS256").decode("utf-8")
 
-      client.cookies = SimpleCookie({'token': the_token})
+        client.cookies = SimpleCookie({"token": the_token})
 
     else:
-      print("No user signed in")
-      client.cookies = SimpleCookie({'token': ""})
+        print("No user signed in")
+        client.cookies = SimpleCookie({"token": ""})
+
 
 def createUsers():
 
     user, created = UserProfile.objects.get_or_create(
         full_name="Regular User",
-        email="user@test.com", 
-        accepts_terms_and_conditions=True
+        email="user@test.com",
+        accepts_terms_and_conditions=True,
     )
     if created:
         user.save()
 
     cadmin, created = UserProfile.objects.get_or_create(
         full_name="Community Admin",
-        email="cadmin@test.com", 
+        email="cadmin@test.com",
         accepts_terms_and_conditions=True,
-        is_community_admin=True
+        is_community_admin=True,
     )
     if created:
         cadmin.save()
 
     sadmin, created = UserProfile.objects.get_or_create(
         full_name="Super Admin",
-        email="sadmin@test.com", 
-        accepts_terms_and_conditions=True, 
-        is_super_admin=True
+        email="sadmin@test.com",
+        accepts_terms_and_conditions=True,
+        is_super_admin=True,
     )
     if created:
         sadmin.save()
-        
+
     return user, cadmin, sadmin
+
 
 def createImage(picURL=None):
 
@@ -100,21 +148,23 @@ def createImage(picURL=None):
     resp = requests.get(picURL)
     if resp.status_code != requests.codes.ok:
         # Error handling here3
-        print("ERROR: Unable to import action photo from "+picURL)
+        print("ERROR: Unable to import action photo from " + picURL)
         image_file = None
     else:
         image = resp.content
-        file_name =  picURL.split("/")[-1]
+        file_name = picURL.split("/")[-1]
         file_type_ext = file_name.split(".")[-1]
 
-        content_type = 'image/jpeg'
-        if len(file_type_ext)>0 and file_type_ext.lower() == 'png':
-            content_type = 'image/png'
+        content_type = "image/jpeg"
+        if len(file_type_ext) > 0 and file_type_ext.lower() == "png":
+            content_type = "image/png"
 
         # Create a new Django file-like object to be used in models as ImageField using
         # InMemoryUploadedFile.  If you look at the source in Django, a
         # SimpleUploadedFile is essentially instantiated similarly to what is shown here
         img_io = BytesIO(image)
-        image_file = InMemoryUploadedFile(img_io, None, file_name, content_type, None, None)
+        image_file = InMemoryUploadedFile(
+            img_io, None, file_name, content_type, None, None
+        )
 
     return image_file

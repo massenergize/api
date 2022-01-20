@@ -90,6 +90,10 @@ class Console:
         easier to find
         """
         print(f"=================={key or'START LOG'}================")
-        for c in content: 
+        for c in content:
             print(c)
         print(f"==================END LOG================")
+
+    @staticmethod
+    def underline(text="-"):
+        print(f"--------------{text}---------------")
