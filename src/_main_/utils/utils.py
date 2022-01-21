@@ -95,5 +95,23 @@ class Console:
         print(f"==================END LOG================")
 
     @staticmethod
-    def underline(text="-"):
-        print(f"--------------{text}---------------")
+    def underline(text = None):
+        if text:
+            print(text)
+            print(Console.makeLine(len(text)))
+            return
+        print("-------------------------------")
+
+    @staticmethod
+    def makeLine(len):
+        string = ""
+        for a in range(len):
+            string += "-"
+        return string
+
+    @staticmethod
+    def header(text):
+        text = text or "Logging..."
+        print(Console.makeLine(len(text)))
+        print(text)
+        print(Console.makeLine(len(text)))

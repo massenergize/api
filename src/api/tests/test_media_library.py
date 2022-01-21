@@ -13,16 +13,6 @@ from api.tests.common import (
 )
 from _main_.utils.utils import Console
 
-
-"""
-1. Create user, admin, sadmin 
-2. Create multiple communities 
-3. Create multiple events, actions, testimonials , userMedia Uploads
-4. Create Media objects
-5. Link all of them 
-6. Then now test routes. How
-
-"""
 ROUTES = {
     "protected": {
         "fetch": "/api/gallery.fetch",
@@ -36,7 +26,7 @@ ROUTES = {
 # Run this particular test --> python manage.py test api.tests.test_media_library.TestMediaLibrary
 class TestMediaLibrary(TestCase):
     def setUp(self) -> None:
-        print("\n--------> Testing Media Library <----------\n")
+        Console.header("Testing Media Library Now")
         self.user, self.cadmin, self.sadmin = createUsers()
         self.client = Client()
         self.routes = ROUTES
@@ -85,23 +75,22 @@ class TestMediaLibrary(TestCase):
     #             print(f"{name} was able to add new upload to the library!")
     #     Console.underline("End test_user_add_new_upload")
 
-    def test_do_dummy_test(self):
-        self.inflate_database()
+    def test_fetch(self):
+        content = self.inflate_database()
+        community1, community2, community3 = content.get("communities")
+        route = self.routes.get("protected").get("fetch")
+        Console.header("Test Fetching Images As Admin")
+        for admin in [self.cadmin, self.sadmin]:
+            data = {"community_ids": [community1.id, community2.id, community3.id]}
+            signinAs(self.client, admin)
+            response = self.client.post(route, data)
+            print(response.content)
 
-    @classmethod
     def inflate_database(self):
-        """
-        Create communities
-        Assign users that manage the communities
-        Create Events, Testimonials & Actions that belong to the communities, with images
-        Now create user media uploads with new users created
-
-        """
-        Console.underline()
-        print(
+        Console.header(
             "Inflating database with communities, actions, events, media, and user media uploads"
         )
-        Console.underline()
+
         community1, community2, community3 = [
             makeCommunity(subdomain="first"),
             makeCommunity(subdomain="second"),
@@ -122,7 +111,7 @@ class TestMediaLibrary(TestCase):
             makeMedia(name="media6"),
             makeMedia(name="media7"),
             makeMedia(name="media8"),
-            makeMedia(name="media9"),
+            makeMedia(name="media9"), 
         ]
 
         events = [
