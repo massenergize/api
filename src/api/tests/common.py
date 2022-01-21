@@ -1,25 +1,43 @@
 import jwt
 from http.cookies import SimpleCookie
 from datetime import datetime
+from django.utils import timezone
 from _main_.settings import SECRET_KEY
-from database.models import Action, Community, Event, UserMediaUpload, UserProfile
+from database.models import (
+    Action,
+    Community,
+    Event,
+    Media,
+    UserMediaUpload,
+    UserProfile,
+)
 from carbon_calculator.models import CalcDefault
 import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
+def makeMedia(**kwargs):
+    name = (kwargs.get("name") or "New Media",)
+    file = kwargs.get("file") or createImage()
+    return Media.objects.create(**{**kwargs, "name": name, "file": file})
+
+
 def makeEvent(**kwargs):
     community = kwargs.get("community")
-    title = kwargs.get("title") or "Event default title"
+    name = kwargs.get("name") or "Event default Name"
     event = Event.objects.create(
         **{
+            "is_published": True,
+            "start_date_and_time": timezone.now(),
+            "end_date_and_time": timezone.now(),
             **kwargs,
             "community": community,
-            "title": title,
+            "name": name,
         }
     )
     return event
+
 
 def makeAction(**kwargs):
     community = kwargs.get("community")
@@ -43,15 +61,20 @@ def makeUser(**kwargs):
 
 
 def makeUserUpload(**kwargs):
-    image = kwargs.get("image") or createImage()
-    title = kwargs.get("title") or "User upload default title"
-    return UserMediaUpload.objects.create(**{**kwargs, "image": image, "title": title})
+    media = kwargs.get("media") or makeMedia()
+    communities = kwargs.get("communities")
+    if communities:
+        del kwargs["communities"]
+    up = UserMediaUpload.objects.create(**{**kwargs, "media": media})
+    if communities:
+        up.communities.set(communities)
+    return up
 
 
 def makeCommunity(**kwargs):
     subdomain = kwargs.get("subdomain") or "default_subdomain"
     name = kwargs.get("name") or "community_default_name"
-    com = Community.object.create(
+    com = Community.objects.create(
         **{
             "accepted_terms_and_conditions": True,
             "is_published": True,
@@ -61,6 +84,7 @@ def makeCommunity(**kwargs):
             "name": name,
         }
     )
+
     return com
 
 
