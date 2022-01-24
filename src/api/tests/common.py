@@ -1,3 +1,4 @@
+import time
 import jwt
 from http.cookies import SimpleCookie
 from datetime import datetime
@@ -6,8 +7,10 @@ from _main_.settings import SECRET_KEY
 from database.models import (
     Action,
     Community,
+    CommunityAdminGroup,
     Event,
     Media,
+    Testimonial,
     UserMediaUpload,
     UserProfile,
 )
@@ -18,9 +21,15 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 def makeMedia(**kwargs):
-    name = (kwargs.get("name") or "New Media",)
-    file = kwargs.get("file") or createImage()
+    name = kwargs.get("name") or "New Media"
+    file = kwargs.get("file") or kwargs.get("image") or createImage()
     return Media.objects.create(**{**kwargs, "name": name, "file": file})
+
+
+def makeTestimonial(**kwargs):
+    key = round(time.time() * 1000)
+    title = kwargs.get("title") or kwargs.get("name") or f"New Testimonial - {key}"
+    return Testimonial.objects.create(**{**kwargs, "title": title})
 
 
 def makeEvent(**kwargs):
@@ -50,6 +59,39 @@ def makeAction(**kwargs):
         }
     )
     return action
+
+
+def makeAdminGroup(**kwargs):
+    key = round(time.time() * 1000)
+    name = kwargs.get("name") or f"New Group - {key}"
+    members = kwargs.pop("members")
+    group = CommunityAdminGroup.objects.create(**{**kwargs, "name": name})
+    if members:
+        group.members.set(members)
+
+    return group
+
+
+def makeAdmin(**kwargs):
+    key = round(time.time() * 1000)
+    communities = kwargs.pop("communities")
+    full_name = kwargs.get("full_name") or f"user_full_name{key}"
+    email = kwargs.get("email") or f"mrsadmin{key}@email.com"
+    is_super_admin = kwargs.get("super_admin") or kwargs.get("is_super_admin")
+    admin = UserProfile.objects.create(
+        **{
+            **kwargs,
+            "full_name": full_name,
+            "email": email,
+            "accepts_terms_and_conditions": True,
+            "is_community_admin": True,
+            "is_super_admin": is_super_admin or False,
+        }
+    )
+    if communities:
+        for com in communities:
+            makeAdminGroup(community=com, members=[admin])
+    return admin
 
 
 def makeUser(**kwargs):

@@ -1,17 +1,22 @@
+import json
+from urllib.parse import urlencode
 from django.test import TestCase, Client
 from django.urls import reverse
 from api.tests.common import (
     createImage,
     createUsers,
     makeAction,
+    makeAdmin,
     makeCommunity,
     makeEvent,
     makeMedia,
+    makeTestimonial,
     makeUser,
     makeUserUpload,
     signinAs,
 )
 from _main_.utils.utils import Console
+from database.models import Media
 
 ROUTES = {
     "protected": {
@@ -75,16 +80,80 @@ class TestMediaLibrary(TestCase):
     #             print(f"{name} was able to add new upload to the library!")
     #     Console.underline("End test_user_add_new_upload")
 
-    def test_fetch(self):
-        content = self.inflate_database()
-        community1, community2, community3 = content.get("communities")
-        route = self.routes.get("protected").get("fetch")
-        Console.header("Test Fetching Images As Admin")
-        for admin in [self.cadmin, self.sadmin]:
-            data = {"community_ids": [community1.id, community2.id, community3.id]}
-            signinAs(self.client, admin)
-            response = self.client.post(route, data)
-            print(response.content)
+    # def test_fetch(self):
+    #     content = self.inflate_database()
+    #     community1, community2, community3 = content.get("communities")
+    #     route = self.routes.get("protected").get("fetch")
+    #     Console.header("Test Fetching Images As Admin")
+    #     for admin in [self.cadmin, self.sadmin]:
+    #         data = {"community_ids": list([community1.id, community2.id, community3.id])}
+    #         Console.log("Data", data)
+    #         signinAs(self.client, admin)
+    #         response = self.client.post(route, data)
+    #         print(response.content)
+    # to be continued!
+
+    # def test_image_info(self):
+    #     """
+    #     Idea:
+    #     Create an image record in the database
+    #     Use the image to create one event, an action, and a testiomonial record in the db
+    #     Run a request to retrieve information about the media record in the database
+    #     The request should retrieve one event, one action, and one testimonial that match the  just
+    #     created records.
+    #     """
+    #     media = makeMedia(name="Picture of my face")
+    #     event = makeEvent(image=media)
+    #     action = makeAction(image=media)
+    #     story = makeTestimonial(image=media)
+    #     community = makeCommunity(name="Lit Community")
+    #     Console.underline("Testing image info")
+    #     cadmin = makeAdmin(full_name="Pongo Admin", communities=[community])
+    #     signinAs(self.client, cadmin)
+    #     route = self.routes.get("protected").get("image-info")
+    #     response = self.client.post(route, {"media_id": media.id})
+    #     response = response.json()
+    #     data = response.get("data").get("info")
+    #     event_in_response = data.get("events")[0]
+    #     action_in_response = data.get("actions")[0]
+    #     story_in_response = data.get("testimonials")[0]
+    #     event_is_good = event.name == event_in_response.get("name")
+    #     action_is_good = action.title == action_in_response.get("title")
+    #     story_is_good = story.title == story_in_response.get("title")
+    #     if event_is_good:
+    #         print("Media retrieved appropriate related events")
+    #     self.assertTrue(event_is_good)
+
+    #     if action_is_good:
+    #         print("Media retrieved appropriate related actions")
+    #     self.assertTrue(action_is_good)
+
+    #     if story_is_good:
+    #         print("Media retrieved appropriated related testimonials")
+    #     self.assertTrue(story_is_good)
+
+    def test_remove_image(self):
+        """
+        Idea:
+        Create a media record in the database
+        Send http request to remove image from database
+        Expect an okay response
+        Try to find the item in the db again,
+        expect an empty response
+        """
+        media = makeMedia(name="Fake Media")
+        signinAs(self.client, self.cadmin)
+        if media:
+            print(f"New media record '{media.name}' is created!")
+        route = self.routes.get("protected").get("remove")
+        response = self.client.post(route, {"media_id": media.id})
+        response = response.json()
+        ok_response = response.get("success")
+        self.assertTrue(ok_response)
+        try:
+            Media.objects.get(id=media.id)
+        except Media.DoesNotExist:
+            print("Media has been removed successfully!")
 
     def inflate_database(self):
         Console.header(
@@ -111,7 +180,7 @@ class TestMediaLibrary(TestCase):
             makeMedia(name="media6"),
             makeMedia(name="media7"),
             makeMedia(name="media8"),
-            makeMedia(name="media9"), 
+            makeMedia(name="media9"),
         ]
 
         events = [
@@ -120,23 +189,23 @@ class TestMediaLibrary(TestCase):
             makeEvent(name="Third event", community=community3, image=media3),
         ]
 
-        actions = [
-            makeAction(title="Action1", community=community1, image=media4),
-            makeAction(title="Action2", community=community2, image=media5),
-            makeAction(title="Action3", community=community3, image=media6),
-        ]
+        # actions = [
+        #     makeAction(title="Action1", community=community1, image=media4),
+        #     makeAction(title="Action2", community=community2, image=media5),
+        #     makeAction(title="Action3", community=community3, image=media6),
+        # ]
 
-        uploads = [
-            makeUserUpload(media=media7, communities=[community1], user=user1),
-            makeUserUpload(media=media8, communities=[community2], user=user2),
-            makeUserUpload(media=media9, communities=[community3], user=user3),
-        ]
+        # uploads = [
+        #     makeUserUpload(media=media7, communities=[community1], user=user1),
+        #     makeUserUpload(media=media8, communities=[community2], user=user2),
+        #     makeUserUpload(media=media9, communities=[community3], user=user3),
+        # ]
         Console.underline()
 
         return {
-            "actions": actions,
+            # "actions": actions,
             "events": events,
-            "uploads": uploads,
+            # "uploads": uploads,
             "communities": [community1, community2, community3],
             "users": [user1, user2, user3],
             "media": [

@@ -92,10 +92,11 @@ class Console:
         print(f"=================={key or'START LOG'}================")
         for c in content:
             print(c)
+            print("..................................................")
         print(f"==================END LOG================")
 
     @staticmethod
-    def underline(text = None):
+    def underline(text=None):
         if text:
             print(text)
             print(Console.makeLine(len(text)))
