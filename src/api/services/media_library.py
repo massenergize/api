@@ -15,7 +15,7 @@ class MediaLibraryService:
         images, error = self.store.fetch_content(args)
         if error:
             return None, error
-        return self.organiseData(data=serialize_all(images), args=args), None
+        return self.organiseData(data=serialize_all(images, True), args=args), None
 
     def search(self, args):
         images, error = self.store.search(args)
