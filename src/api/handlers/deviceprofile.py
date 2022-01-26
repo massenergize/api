@@ -9,6 +9,8 @@ from _main_.settings import RUN_SERVER_LOCALLY
 from _main_.utils.GeoIP import GeoIP
 from _main_.utils.massenergize_errors import InvalidResourceError
 
+GOOGLE_MASSENERGIZE_IP = "35.209.206.77"
+
 class DeviceHandler(RouteHandler):
 
   def __init__(self):
@@ -63,7 +65,7 @@ class DeviceHandler(RouteHandler):
 
     ip_address = self.ipLocator.getIP(request)
     if not ip_address or ip_address in ['127.0.0.1']:
-      ip_address = "38.242.8.93" # For testing
+      ip_address = GOOGLE_MASSENERGIZE_IP   # just for unit testing, soi getGeo doesn't blow up
 
     args["ip_address"] = ip_address  
 
