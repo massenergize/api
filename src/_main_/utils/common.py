@@ -4,7 +4,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
 from datetime import datetime
-import cv2
+#import cv2
 from sentry_sdk import capture_message
 
 def get_request_contents(request):
@@ -154,18 +154,18 @@ def is_value(b):
     return True
   return False
 
-def resize_image(img, options={}):
-  if options.get("is_logo", False):
-    size = options.get("size", 500)
-    width = options.get("width", 250)
-    height = options.get("height", 100)
-    dimension = (width, height)
-    new_img = cv2.resize(img, dsize=size, dim=dimension, interpolation = cv2.INTER_AREA)
-    return new_img
-  else:
-    size = options.get("size", 500)
-    new_img = cv2.resize(img, dsize=size, interpolation = cv2.INTER_AREA)
-    return new_img
+#def resize_image(img, options={}):
+#  if options.get("is_logo", False):
+#    size = options.get("size", 500)
+#    width = options.get("width", 250)
+#    height = options.get("height", 100)
+#    dimension = (width, height)
+#    new_img = cv2.resize(img, dsize=size, dim=dimension, interpolation = cv2.INTER_AREA)
+#    return new_img
+#  else:
+#    size = options.get("size", 500)
+#    new_img = cv2.resize(img, dsize=size, interpolation = cv2.INTER_AREA)
+#    return new_img
 
 def _common_name(s):
   return (' '.join(s.split('_'))).title()

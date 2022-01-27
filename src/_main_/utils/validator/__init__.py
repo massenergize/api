@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, resize_image, is_value, parse_str_list
+from _main_.utils.common import parse_bool, parse_date, parse_list, parse_int, parse_string, parse_location, is_value, parse_str_list
 from sentry_sdk import capture_message
 
 class Validator:
