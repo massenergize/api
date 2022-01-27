@@ -1,10 +1,21 @@
 {
   "PortalMainNavLinks": [
     {
-      "link": "/",
+
       "name": "Home",
-      "navItemId": "menu-home-id"
-    },
+      "navItemId": "menu-home-id",
+       "children": [
+        {
+            "link": "/",
+            "name": "Home Page"
+        },
+        {
+            "link": "/?tour=true",
+            "name": "Take the tour"
+
+        }
+      ]
+    },   
     {
       "name": "Actions",
       "navItemId": "menu-actions-id",
@@ -20,41 +31,46 @@
         {
           "link": "testimonials",
           "name": "Testimonials"
-        },
-        {
-          "link": "teams",
-          "name": "Teams"
         }
       ]
+    },
+    {
+      "link": "/teams",
+      "navItemId": "menu-teams-id",
+      "name": "Teams"
+    },
+    {
+      "link": "/events",
+      "navItemId": "menu-events-id",
+      "name": "Events"
     },
     {
       "name": "About Us",
       "navItemId": "menu-about-us-id",
       "children": [
         {
-          "link": "/aboutus",
-          "name": "Our Story"
-        },
-        {
           "link": "/impact",
           "name": "Impact"
         },
         {
+          "link": "/aboutus",
+          "name": "Our Story"
+        },
+        {
           "link": "/donate",
           "name": "Donate"
+        },
+        {
+          "link": "/contactus",
+          "name": "Contact Us"
         }
       ]
-    },
-    {
-      "link": "/events",
-      "navItemId": "menu-events-id",
-      "name": "Events"
     }
   ],
   "PortalFooterContactInfo": {
-    "phone": "617-617-6176",
+    "phone": "-",
     "email": "info@massenergize.com",
-    "contactPerson": "Ellen Tohn",
+    "contactPerson": "MassEnergize Info",
     "contactPersonLink": "#"
   },
   "PortalFooterQuickLinks": {

@@ -90,6 +90,29 @@ class Console:
         easier to find
         """
         print(f"=================={key or'START LOG'}================")
-        for c in content: 
+        for c in content:
             print(c)
+            print("..................................................")
         print(f"==================END LOG================")
+
+    @staticmethod
+    def underline(text=None):
+        if text:
+            print(text)
+            print(Console.makeLine(len(text)))
+            return
+        print("-------------------------------")
+
+    @staticmethod
+    def makeLine(len):
+        string = ""
+        for a in range(len):
+            string += "-"
+        return string
+
+    @staticmethod
+    def header(text):
+        text = text or "Logging..."
+        print(Console.makeLine(len(text)))
+        print(text)
+        print(Console.makeLine(len(text)))

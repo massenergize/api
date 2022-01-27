@@ -27,7 +27,7 @@ class MediaLibraryHandler(RouteHandler):
         """Fetches image content related communities that admins can browse through"""
         context: Context = request.context
         args: dict = context.args
-        self.validator.expect("community_ids", list, is_required=True)
+        self.validator.expect("community_ids", "str_list", is_required=True)
         self.validator.expect("lower_limit", int, is_required=False)
         self.validator.expect("upper_limit", int, is_required=False)
         args, err = self.validator.verify(args, strict=True)

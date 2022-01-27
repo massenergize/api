@@ -5,8 +5,11 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 from api.services.deviceprofile import DeviceService
+from _main_.settings import RUN_SERVER_LOCALLY
 from _main_.utils.GeoIP import GeoIP
 from _main_.utils.massenergize_errors import InvalidResourceError
+
+GOOGLE_MASSENERGIZE_IP = "35.209.206.77"
 
 class DeviceHandler(RouteHandler):
 
@@ -57,24 +60,26 @@ class DeviceHandler(RouteHandler):
     if err:
       return err
 
-    if not context.is_admin_site:
-      ip_address = self.ipLocator.getIP(request)
-      if not ip_address or ip_address in ['127.0.0.1']:
-        ip_address = "38.242.8.93" # For testing
+    if RUN_SERVER_LOCALLY or context.is_admin_site:
+      return MassenergizeResponse(data=None)
 
-      args["ip_address"] = ip_address  
+    ip_address = self.ipLocator.getIP(request)
+    if not ip_address or ip_address in ['127.0.0.1']:
+      ip_address = GOOGLE_MASSENERGIZE_IP   # just for unit testing, soi getGeo doesn't blow up
 
-      location = self.ipLocator.getGeo(args["ip_address"])
+    args["ip_address"] = ip_address  
 
-      client_info = self.ipLocator.getBrowser(request)
-      if not client_info:
-        client_info = {}
+    location = self.ipLocator.getGeo(args["ip_address"])
 
-      device_type = client_info.get("device", "Unknown-device")
-      model = client_info.get("model", "Unknown-model")
-      args["device_type"] = f"{device_type}-{model}"
-      args["operating_system"] = client_info.get("os", "Unknown-os")
-      args["browser"] = client_info.get("browser", "Unknown-browser")
+    client_info = self.ipLocator.getBrowser(request)
+    if not client_info:
+      client_info = {}
+
+    device_type = client_info.get("device", "Unknown-device")
+    model = client_info.get("model", "Unknown-model")
+    args["device_type"] = f"{device_type}-{model}"
+    args["operating_system"] = client_info.get("os", "Unknown-os")
+    args["browser"] = client_info.get("browser", "Unknown-browser")
       
     device, err = self.service.log_device(context, args, location)
     if err:
