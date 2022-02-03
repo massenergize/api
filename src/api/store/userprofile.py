@@ -623,6 +623,7 @@ class UserStore:
         ret['team_leader'] = team_leader.full_name
         ret['team_leader_firstname'] = team_leader.full_name.split(" ")[0]
         ret['team_leader_email'] = team_leader.email
+        ret['team_id'] = team.id
 
       return ret, None
     except Exception as e:
