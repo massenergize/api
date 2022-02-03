@@ -125,11 +125,13 @@ class TestimonialStore:
       id = args.pop("id", None)
       testimonial = Testimonial.objects.filter(id=id)
 
+
       if not testimonial:
         return None, InvalidResourceError()
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
       if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
+      user_email = args.pop('user_email', None)      
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
