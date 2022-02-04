@@ -1,3 +1,5 @@
+Feb 4:
+- several bugs fixed
 Jan 17:
 - Graph data selection by Cadmins
 - Notify cadmin when testimonial submitted
