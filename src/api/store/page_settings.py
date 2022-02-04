@@ -60,6 +60,7 @@ class PageSettingsStore:
 
     if len(more_info.keys())>0:
       page_setting.more_info = more_info
+      page_setting.save()
     
     # Page settings models support multiple images, but we currently allow just one.
     # @TODO handle uploading multiple images for pages that have many images (currently no pages actually use it yet)
