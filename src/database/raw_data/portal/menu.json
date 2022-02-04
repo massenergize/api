@@ -7,7 +7,7 @@
        "children": [
         {
             "link": "/",
-            "name": "Home Page"
+            "name": "Home"
         },
         {
             "link": "/?tour=true",

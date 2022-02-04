@@ -49,6 +49,7 @@ def _send_invitation_email(user_info, mess):
   team_leader = user_info.get('team_leader', None)
   team_leader_firstname = user_info.get('team_leader_firstname', None)
   team_leader_email = user_info.get('team_leader_email', None)
+  team_id = user_info.get('team_id', 0)
 
   if mess and mess != "":
     custom_intro = "Here is a welcome message from " + cadmin_firstname
@@ -85,7 +86,8 @@ def _send_invitation_email(user_info, mess):
     'custom_intro': custom_intro,
     'custom_message': custom_message,
     'contactlink':f'{homelink}/contactus',
-    'signuplink': f'{homelink}/signup',
+    'teamlink': f'{homelink}/teams/{team_id}',
+    'signuplink': f'{homelink}/signin',
     'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
     }
   
