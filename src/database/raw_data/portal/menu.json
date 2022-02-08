@@ -11,7 +11,8 @@
         },
         {
             "link": "/?tour=true",
-            "name": "Take the tour"
+            "name": "Take the tour",
+            "navItemId": "take-the-tour"
 
         }
       ]
