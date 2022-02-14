@@ -41,30 +41,34 @@ def _send_invitation_email(user_info, mess):
   community_name = user_info.get("community", None)
   community_logo = user_info.get("community_logo", None)
   community_info = user_info.get("community_info", None)
-  team_name = user_info.get("team_name", None)
   location = user_info.get("location", None)
   subdomain = user_info.get("subdomain", "global")
   email = user_info.get("email", None)
   first_name = user_info.get("first_name", None)
+  team_name = user_info.get("team_name", None)
   team_leader = user_info.get('team_leader', None)
   team_leader_firstname = user_info.get('team_leader_firstname', None)
   team_leader_email = user_info.get('team_leader_email', None)
   team_id = user_info.get('team_id', 0)
 
+  if team_name == 'none' or team_name == "None":
+    team_name = None
+  if team_name:
+    email_template = 'team_invitation_email.html'
+  else:
+    email_template = 'community_invitation_email.html'
+
   if mess and mess != "":
-    custom_intro = "Here is a welcome message from " + cadmin_firstname
+    if team_name:
+      custom_intro = "Here is a welcome message from " + team_leader_firstname
+    else:
+      custom_intro = "Here is a welcome message from " + cadmin_firstname
     custom_message = mess
   else:
     custom_intro = "Here is how " + cadmin_firstname + " describes " + community_name
     custom_message = community_info
 
   subject = cadmin_name + " invites you to join the " + community_name + " Community"
-  #send_massenergize_email(subject=subject , msg=message, to=email)
-  email_template = 'community_invitation_email.html'
-  if team_name == 'none' or team_name == "None":
-    team_name = None
-  if team_name:
-    email_template = 'team_invitation_email.html'
 
   #community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
   #subdomain =   community.subdomain if community else "global"
