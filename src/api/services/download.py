@@ -24,3 +24,7 @@ class DownloadService:
     def teams_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
       teams_download, err = self.store.teams_download(context, community_id)
       return teams_download, err
+    
+    def metrics_download(self, context: Context, args, community_id) -> Tuple[list, MassEnergizeAPIError]:
+      communities_download, err = self.store.metrics_download(context, args, community_id)
+      return communities_download, err

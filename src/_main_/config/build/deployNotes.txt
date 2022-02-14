@@ -1,5 +1,20 @@
-Jan 9 2022: Bug fixes for Event RSVPs
-Nov 23: fixes for imported e-mail addresses
+Feb 4:
+- several bugs fixed
+Jan 17:
+- Graph data selection by Cadmins
+- Notify cadmin when testimonial submitted
+- Fixes for Action dates
+- Cadmins can receive content from other communities (.listForCommunityAdmin routes)
+Dec 21:
+- Media library support
+- Event RSVPs list route
+- User edited testimonials
+- Change to visit_logs for anonymous and registered users
+Dec 5:
+- Customizable registration and signin pages
+- Improved user importing
+- Add DeviceProfile for tracking anonymous users
+- Add GeoIP for determining IP address location
 Nov 14:
 - Fix numerous bugs since 4.0 deployment:
 - Make sandbox sites work more completely

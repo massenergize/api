@@ -368,10 +368,22 @@ class TeamStore:
     try:
       team_id = args.get("id", None)
       user_id = args.get("user_id", None)
+      user_email = args.get("email", None)
+      is_admin = args.get("is_admin", False)
 
       team = Team.objects.get(id=team_id)
-      user = UserProfile.objects.get(id=user_id)
+
+      if user_id:
+        user = UserProfile.objects.get(id=user_id)
+      elif user_email:
+        user = UserProfile.objects.get(email=user_email)
+      else:
+        return None, CustomMassenergizeError("User email or id not specified")
+
       teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)      
+      if is_admin:
+        teamMember.is_admin = True
+
       if created:
         teamMember.save()
       
@@ -444,8 +456,16 @@ class TeamStore:
       if context.user_is_super_admin:
         return self.list_teams_for_super_admin(context)
 
+      elif not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       community_id = args.pop('community_id', None)
-      if not is_value(community_id):
+      if community_id == 0:
+        # return actions from all communities
+        return self.list_teams_for_super_admin(context)
+
+
+      elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -461,8 +481,6 @@ class TeamStore:
 
   def list_teams_for_super_admin(self, context: Context):
     try:
-      if not context.user_is_super_admin:
-        return None, NotAuthorizedError()
       teams = Team.objects.filter(is_deleted=False).select_related('logo', 'primary_community')
       return teams, None
 

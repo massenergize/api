@@ -31,7 +31,7 @@ class UserProfileTestCase(TestCase):
         self.REAL_ESTATE_UNIT = RealEstateUnit.objects.create()
         self.REAL_ESTATE_UNIT.save()
 
-        self.USER2 = UserProfile.objects.create(email="user2@email2.com", full_name="user2test2", preferred_name="user2test2")
+        self.USER2 = UserProfile.objects.create(email="user2@email2.com", full_name="test user", preferred_name="user2test2")
 
         self.ACTION  = Action.objects.create()
         self.ACTION2 = Action.objects.create()
@@ -410,3 +410,26 @@ class UserProfileTestCase(TestCase):
         signinAs(self.client, self.SADMIN)
         response = self.client.post('/api/users.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
+
+    def test_import_users(self):
+        pass
+
+    def test_check_user_imported(self):
+
+        # not logged in, no email provided
+        signinAs(self.client, None)
+        response = self.client.post('/api/users.checkImported', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # not logged in, a validated email provided
+        response = self.client.post('/api/users.checkImported', urlencode({"email": self.USER.email}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertFalse(response["data"]["imported"])
+
+         # not logged in, an unvalidated email provided
+        response = self.client.post('/api/users.checkImported', urlencode({"email": self.USER2.email}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertTrue(response["data"]["imported"])
+        self.assertEqual(response["data"]["firstName"], self.USER2.full_name.split()[0])
+
+

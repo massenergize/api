@@ -1,5 +1,30 @@
-from database.models import Action,Vendor, Subdomain, Event, Community, Tag, Menu, Team, TeamMember, CommunityMember, RealEstateUnit, CommunityAdminGroup, UserProfile, Data, TagCollection, UserActionRel, Data, Location, Media
-from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
+from _main_.utils.utils import Console
+from database.models import (
+    Action,
+    Vendor,
+    Subdomain,
+    Event,
+    Community,
+    Tag,
+    Menu,
+    Team,
+    TeamMember,
+    CommunityMember,
+    RealEstateUnit,
+    CommunityAdminGroup,
+    UserProfile,
+    Data,
+    TagCollection,
+    UserActionRel,
+    Data,
+    Location,
+    Media,
+)
+from _main_.utils.massenergize_errors import (
+    CustomMassenergizeError,
+    InvalidResourceError,
+    MassEnergizeAPIError,
+)
 from _main_.utils.context import Context
 from database.utils.common import json_loader
 from database.models import CarbonEquivalency
@@ -7,11 +32,24 @@ from .utils import find_reu_community, split_location_string, check_location
 from sentry_sdk import capture_message
 from typing import Tuple
 
+
 class MiscellaneousStore:
     def __init__(self):
         self.name = "Miscellaneous Store/DB"
 
-    def navigation_menu_list(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    def remake_navigation_menu(self, json) -> Tuple[dict, MassEnergizeAPIError]:
+        Menu.objects.all().delete()
+        for name, menu in json.items():
+            new_menu = Menu(name=name, content=menu)
+            try:
+                new_menu.save()
+            except:
+                return {}, "Sorry, could not remake menu"
+        return json or {}, None
+
+    def navigation_menu_list(
+        self, context: Context, args
+    ) -> Tuple[list, MassEnergizeAPIError]:
         try:
             main_menu = Menu.objects.all()
             return main_menu, None
@@ -21,76 +59,85 @@ class MiscellaneousStore:
 
     def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         return self.backfill_graph_default_data(context, args), None
-    
+
     def backfill_subdomans(self):
         for c in Community.objects.all():
             try:
                 Subdomain(name=c.subdomain, in_use=True, community=c).save()
             except Exception as e:
                 print(e)
-            
-        
 
-
-    def backfill_teams(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    def backfill_teams(
+        self, context: Context, args
+    ) -> Tuple[list, MassEnergizeAPIError]:
         try:
             teams = Team.objects.all()
             for team in teams:
                 members = team.members.all()
                 for member in members:
                     team_member = TeamMember.objects.filter(
-                        user=member, team=team).first()
+                        user=member, team=team
+                    ).first()
                     if team_member:
                         team_member.is_admin = False
                         team_member.save()
                     if not team_member:
                         team_member = TeamMember.objects.create(
-                            user=member, team=team, is_admin=False)
+                            user=member, team=team, is_admin=False
+                        )
 
                 admins = team.admins.all()
                 for admin in admins:
                     team_member = TeamMember.objects.filter(
-                        user=admin, team=team).first()
+                        user=admin, team=team
+                    ).first()
                     if team_member:
                         team_member.is_admin = True
                         team_member.save()
                     else:
                         team_member = TeamMember.objects.create(
-                            user=admin, team=team, is_admin=True)
+                            user=admin, team=team, is_admin=True
+                        )
 
-            return {'teams_member_backfill': 'done'}, None
+            return {"teams_member_backfill": "done"}, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def backfill_community_members(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    def backfill_community_members(
+        self, context: Context, args
+    ) -> Tuple[list, MassEnergizeAPIError]:
         try:
             users = UserProfile.objects.all()
             for user in users:
                 for community in user.communities.all():
                     community_member: CommunityMember = CommunityMember.objects.filter(
-                        community=community, user=user).first()
+                        community=community, user=user
+                    ).first()
 
                     if community_member:
                         community_member.is_admin = False
                         community_member.save()
                     else:
                         community_member = CommunityMember.objects.create(
-                            community=community, user=user, is_admin=False)
+                            community=community, user=user, is_admin=False
+                        )
 
             admin_groups = CommunityAdminGroup.objects.all()
             for group in admin_groups:
                 for member in group.members.all():
                     community_member: CommunityMember = CommunityMember.objects.filter(
-                        community=group.community, user=member).first()
+                        community=group.community, user=member
+                    ).first()
                     if community_member:
                         community_member.is_admin = True
                         community_member.save()
                     else:
                         community_member = CommunityMember.objects.create(
-                            community=group.community, user=member, is_admin=True)
+                            community=group.community, user=member, is_admin=True
+                        )
 
-            return {'name': 'community_member_backfill', 'status': 'done'}, None
+            return {"name": "community_member_backfill", "status": "done"}, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -98,34 +145,49 @@ class MiscellaneousStore:
     def backfill_graph_default_data(self, context: Context, args):
         try:
             for community in Community.objects.all():
-                for tag in TagCollection.objects.get(name__icontains="Category").tag_set.all():
-                    d = Data.objects.filter(
-                        community=community, name=tag.name).first()
+                for tag in TagCollection.objects.get(
+                    name__icontains="Category"
+                ).tag_set.all():
+                    d = Data.objects.filter(community=community, name=tag.name).first()
                     if d:
                         oldval = d.value
                         val = 0
 
                         if community.is_geographically_focused:
                             user_actions = UserActionRel.objects.filter(
-                                real_estate_unit__community=community, status="DONE")
+                                real_estate_unit__community=community, status="DONE"
+                            )
                         else:
                             user_actions = UserActionRel.objects.filter(
-                                action__community=community, status="DONE")
+                                action__community=community, status="DONE"
+                            )
                         for user_action in user_actions:
-                            if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
+                            if (
+                                user_action.action
+                                and user_action.action.tags.filter(pk=tag.id).exists()
+                            ):
                                 val += 1
 
                         d.value = val
                         d.save()
-                        print("Backfill: Community: " + community.name + ", Category: " + tag.name + ", Old: " + str(oldval) + ", New: " + str(val) )
-            return {'graph_default_data': 'done'}, None
+                        print(
+                            "Backfill: Community: "
+                            + community.name
+                            + ", Category: "
+                            + tag.name
+                            + ", Old: "
+                            + str(oldval)
+                            + ", New: "
+                            + str(val)
+                        )
+            return {"graph_default_data": "done"}, None
 
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
     def backfill_real_estate_units(self, context: Context, args):
-        ZIPCODE_FIXES = json_loader('api/store/ZIPCODE_FIXES.json')
+        ZIPCODE_FIXES = json_loader("api/store/ZIPCODE_FIXES.json")
         try:
             # BHN - Feb 2021 - assign all real estate units to geographic communities
             # Set the community of a real estate unit based on the location of the real estate unit.
@@ -135,20 +197,25 @@ class MiscellaneousStore:
             print("Number of real estate units:" + str(reu_all.count()))
 
             userProfiles = UserProfile.objects.prefetch_related(
-                'real_estate_units').filter(is_deleted=False)
+                "real_estate_units"
+            ).filter(is_deleted=False)
             print("number of user profiles:" + str(userProfiles.count()))
 
             # loop over profiles and realEstateUnits associated with them
             for userProfile in userProfiles:
                 user = userProfile.email
                 reus = userProfile.real_estate_units.all()
-                msg = "User: %s (%s), %d households - %s" % (userProfile.full_name,
-                                                             userProfile.email, reus.count(), userProfile.created_at.strftime("%Y-%m-%d"))
+                msg = "User: %s (%s), %d households - %s" % (
+                    userProfile.full_name,
+                    userProfile.email,
+                    reus.count(),
+                    userProfile.created_at.strftime("%Y-%m-%d"),
+                )
                 print(msg)
 
                 for reu in reus:
                     street = unit_number = city = county = state = zip = ""
-                    loc = reu.location    # a JSON field
+                    loc = reu.location  # a JSON field
                     zip = None
 
                     if loc:
@@ -169,29 +236,30 @@ class MiscellaneousStore:
                                 state = loc_parts[2].upper()
                                 zip = loc_parts[3].strip()
                                 if not zip or (len(zip) != 5 and len(zip) != 10):
-                                    print("Invalid zipcode: " +
-                                          zip+", setting to 00000")
+                                    print(
+                                        "Invalid zipcode: " + zip + ", setting to 00000"
+                                    )
                                     zip = "00000"
                                 elif len(zip) == 10:
                                     zip = zip[0:5]
                         else:
                             # deal with odd cases which were encountered in the dev database
                             zip = "00000"
-                            state = "MA"      # may be wrong occasionally
+                            state = "MA"  # may be wrong occasionally
                             for entry in ZIPCODE_FIXES:
                                 if loc.find(entry) >= 0:
                                     zip = ZIPCODE_FIXES[entry]["zipcode"]
                                     city = ZIPCODE_FIXES[entry]["city"]
-                                    state = ZIPCODE_FIXES[entry].get(
-                                        "state", "MA")
+                                    state = ZIPCODE_FIXES[entry].get("state", "MA")
 
-                            print("Zipcode assigned "+zip)
+                            print("Zipcode assigned " + zip)
 
                         # create the Location for the RealEstateUnit
                         location_type, valid = check_location(
-                            street, unit_number, city, state, zip)
+                            street, unit_number, city, state, zip
+                        )
                         if not valid:
-                            print("check_location returns: "+location_type)
+                            print("check_location returns: " + location_type)
                             continue
 
                         # newloc, created = Location.objects.get_or_create(
@@ -202,7 +270,7 @@ class MiscellaneousStore:
                             zipcode=zip,
                             city=city,
                             county=county,
-                            state=state
+                            state=state,
                         )
                         if not newloc:
                             newloc = Location.objects.create(
@@ -212,11 +280,12 @@ class MiscellaneousStore:
                                 zipcode=zip,
                                 city=city,
                                 county=county,
-                                state=state)
-                            print("Zipcode "+zip+" created for town "+city)
+                                state=state,
+                            )
+                            print("Zipcode " + zip + " created for town " + city)
                         else:
                             newloc = newloc.first()
-                            print("Zipcode "+zip+" found for town "+city)
+                            print("Zipcode " + zip + " found for town " + city)
 
                         reu.address = newloc
                         reu.save()
@@ -240,7 +309,7 @@ class MiscellaneousStore:
 
                         # no location was stored?
                         if zip == "00000":
-                            print("No location found for RealEstateUnit "+str(reu))
+                            print("No location found for RealEstateUnit " + str(reu))
 
                         location_type = "ZIP_CODE_ONLY"
                         newloc, created = Location.objects.get_or_create(
@@ -250,108 +319,113 @@ class MiscellaneousStore:
                             zipcode=zip,
                             city=city,
                             county=county,
-                            state=state
+                            state=state,
                         )
                         if created:
-                            print("Location with zipcode "+zip+" created")
+                            print("Location with zipcode " + zip + " created")
                         else:
-                            print("Location with zipcode "+zip+" found")
+                            print("Location with zipcode " + zip + " found")
                         reu.address = newloc
                         reu.save()
 
                     # determine which, if any, community this household is actually in
                     community = find_reu_community(reu)
                     if community:
-                        print("Adding the REU with zipcode " + zip +
-                              " to the community " + community.name)
+                        print(
+                            "Adding the REU with zipcode "
+                            + zip
+                            + " to the community "
+                            + community.name
+                        )
                         reu.community = community
 
                     elif reu.community:
                         print(
-                            "REU not located in any community, but was labeled as belonging to the community "+reu.community.name)
+                            "REU not located in any community, but was labeled as belonging to the community "
+                            + reu.community.name
+                        )
                         reu.community = None
                     reu.save()
 
-            return {'backfill_real_estate_units': 'done'}, None
+            return {"backfill_real_estate_units": "done"}, None
 
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
- 
     def create_carbon_equivalency(self, args):
-      try:
-        new_carbon_equivalency = CarbonEquivalency.objects.create(**args)        
-        return new_carbon_equivalency, None
-  
-      except Exception as e:
-        capture_message(str(e), level="error")
-        return None, CustomMassenergizeError(e)
-  
-  
+        try:
+            new_carbon_equivalency = CarbonEquivalency.objects.create(**args)
+            return new_carbon_equivalency, None
+
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
     def update_carbon_equivalency(self, args):
-      try:
-        id = args.get("id", None)
-  
-        carbon_equivalencies = CarbonEquivalency.objects.filter(id=id)
-  
-        if not carbon_equivalencies:
-            return None, InvalidResourceError()
-  
-        carbon_equivalencies.update(**args)
-        carbon_equivalency = carbon_equivalencies.first()
-          
-        return carbon_equivalency, None
-  
-      except Exception as e:
-        capture_message(str(e), level="error")
-        return None, CustomMassenergizeError(e)
-  
-  
+        try:
+            id = args.get("id", None)
+
+            carbon_equivalencies = CarbonEquivalency.objects.filter(id=id)
+
+            if not carbon_equivalencies:
+                return None, InvalidResourceError()
+
+            carbon_equivalencies.update(**args)
+            carbon_equivalency = carbon_equivalencies.first()
+
+            return carbon_equivalency, None
+
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
     def get_carbon_equivalencies(self, args):
 
-      id = args.get("id", None)
-      if id:
-        carbon_equivalencies = CarbonEquivalency.objects.filter(id=id)
-        if not carbon_equivalencies:
-          return None, InvalidResourceError()
-        else:
-          carbon_equivalencies = carbon_equivalencies.first()
+        id = args.get("id", None)
+        if id:
+            carbon_equivalencies = CarbonEquivalency.objects.filter(id=id)
+            if not carbon_equivalencies:
+                return None, InvalidResourceError()
+            else:
+                carbon_equivalencies = carbon_equivalencies.first()
 
-      else:
-        carbon_equivalencies = CarbonEquivalency.objects.all()
-      return carbon_equivalencies, None
-  
+        else:
+            carbon_equivalencies = CarbonEquivalency.objects.all()
+        return carbon_equivalencies, None
+
     def delete_carbon_equivalency(self, args):
-      id = args.get('id', None)
-      carbon_equivalency = CarbonEquivalency.objects.filter(id=id)
-  
-      if not carbon_equivalency:
-        return None, InvalidResourceError()
-  
-      carbon_equivalency.delete()
-      return carbon_equivalency, None
-  
+        id = args.get("id", None)
+        carbon_equivalency = CarbonEquivalency.objects.filter(id=id)
+
+        if not carbon_equivalency:
+            return None, InvalidResourceError()
+
+        carbon_equivalency.delete()
+        return carbon_equivalency, None
+
     def generate_sitemap_for_portal(self):
         return {
-            'communities': Community.objects.filter(
-            is_deleted=False, 
-            is_published=True
-            ).values('id', 'subdomain', 'updated_at'),
-            'actions': Action.objects.filter(
-            is_deleted=False, 
-            is_published=True,
-            community__is_published=True,
-            community__is_deleted=False,
-            ).select_related('community').values('id', 'community__subdomain', 'updated_at'),
-            'services': Vendor.objects.filter(
-            is_deleted=False, 
-            is_published=True
-            ).prefetch_related('communities').values('id', 'communities__subdomain', 'updated_at'),
-            'events': Event.objects.filter(
-            is_deleted=False, 
-            is_published=True,
-            community__is_published=True,
-            community__is_deleted=False,
-            ).select_related('community').values('id', 'community__subdomain'),
+            "communities": Community.objects.filter(
+                is_deleted=False, is_published=True
+            ).values("id", "subdomain", "updated_at"),
+            "actions": Action.objects.filter(
+                is_deleted=False,
+                is_published=True,
+                community__is_published=True,
+                community__is_deleted=False,
+            )
+            .select_related("community")
+            .values("id", "community__subdomain", "updated_at"),
+            "services": Vendor.objects.filter(is_deleted=False, is_published=True)
+            .prefetch_related("communities")
+            .values("id", "communities__subdomain", "updated_at"),
+            "events": Event.objects.filter(
+                is_deleted=False,
+                is_published=True,
+                community__is_published=True,
+                community__is_deleted=False,
+            )
+            .select_related("community")
+            .values("id", "community__subdomain"),
         }

@@ -1,104 +1,97 @@
 {
-    "navLinks": [
+  "PortalMainNavLinks": [
+    {
+
+      "name": "Home",
+      "navItemId": "menu-home-id",
+       "children": [
         {
             "link": "/",
             "name": "Home"
         },
         {
-            "name": "Actions",
-            "children": [
-                {
-                    "link": "actions",
-                    "name": "All Actions"
-                },
-                {
-                    "link": "services",
-                    "name": "Service Providers"
-                },
-                {
-                    "link": "testimonials",
-                    "name": "Testimonials"
-                },
-                {
-                    "link": "teams",
-                    "name": "Teams"
-                }
-            ]
+            "link": "/?tour=true",
+            "name": "Take the tour",
+            "navItemId": "take-the-tour"
+
+        }
+      ]
+    },   
+    {
+      "name": "Actions",
+      "navItemId": "menu-actions-id",
+      "children": [
+        {
+          "link": "actions",
+          "name": "All Actions"
         },
         {
-            "name": "About Us",
-            "children": [
-                {
-                    "link": "/aboutus",
-                    "name": "Our Story"
-                },
-                {
-                    "link": "/impact",
-                    "name": "Impact"
-                },
-                {
-                    "link": "/donate",
-                    "name": "Donate"
-                }
-            ]
+          "link": "services",
+          "name": "Service Providers"
         },
         {
-            "link": "/events",
-            "name": "Events"
+          "link": "testimonials",
+          "name": "Testimonials"
         }
-    ],
-    "navBarSticky": false,
-    "footerData": {
-        "footerInfo": {
-            "phone": "617-617-6176",
-            "email": "info@massenergize.com",
-            "contactPerson": "Ellen Tohn",
-            "contactPersonLink": "#"
+      ]
+    },
+    {
+      "link": "/teams",
+      "navItemId": "menu-teams-id",
+      "name": "Teams"
+    },
+    {
+      "link": "/events",
+      "navItemId": "menu-events-id",
+      "name": "Events"
+    },
+    {
+      "name": "About Us",
+      "navItemId": "menu-about-us-id",
+      "children": [
+        {
+          "link": "/impact",
+          "name": "Impact"
         },
-        "footerLinks": {
-            "title": "Quick Links",
-            "links": [
-                {
-                    "link": "home",
-                    "name": "Home"
-                },
-                {
-                    "link": "actions",
-                    "name": "Actions"
-                },
-                {
-                    "link": "services",
-                    "name": "Service Providers"
-                },
-                {
-                    "link": "testimonials",
-                    "name": "Testimonials"
-                },
-                {
-                    "link": "teams",
-                    "name": "Teams"
-                },
-                {
-                    "link": "impact",
-                    "name": "Impact"
-                },
-                {
-                    "link": "events",
-                    "name": "Events"
-                },
-                {
-                    "link": "students",
-                    "name": "For Students"
-                },
-                {
-                    "link": "aboutus",
-                    "name": "About Us"
-                },
-                {
-                    "link": "policies",
-                    "name": "Policies"
-                }
-            ]
+        {
+          "link": "/aboutus",
+          "name": "Our Story"
+        },
+        {
+          "link": "/donate",
+          "name": "Donate"
+        },
+        {
+          "link": "/contactus",
+          "name": "Contact Us"
         }
+      ]
     }
+  ],
+  "PortalFooterContactInfo": {
+    "phone": "-",
+    "email": "info@massenergize.com",
+    "contactPerson": "MassEnergize Info",
+    "contactPersonLink": "#"
+  },
+  "PortalFooterQuickLinks": {
+    "title": "Quick Links",
+    "links": [
+      {
+        "link": "policies?name=Privacy%20Policy",
+        "navItemId": "footer-privacy-policy-id",
+        "name": "Privacy Policy"
+      },
+      {
+        "link": "policies?name=Terms%20of%20Service",
+        "navItemId": "footer-terms-of-service-id",
+        "name": "Terms of Service"
+      },
+      {
+        "link": "https://docs.google.com/forms/d/e/1FAIpQLScxNPrJNsyy6k834hsPdy_Rf0jaDcczRAkjCM3Z1xgYn49Zsw/viewform",
+        "navItemId": "footer-report-a-bug-id",
+        "name": "Report a bug/Suggest a feature"
+      }
+    ]
+  }
 }

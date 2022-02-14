@@ -76,7 +76,13 @@ def _update_action_data_totals(action, household, value):
 
     data = Data.objects.filter(community=community, tag=t)
     if data:
-      data.update(value=F("value") + value)
+      # protect against going below 0
+      #  data.update(value=F("value") + value)
+      d = data.first()
+      value = max(d.value + value, 0)
+      if value != d.value:
+        d.value = value
+        d.save()
 
     elif value>0:
       # data for this community, action does not exist so create one
@@ -296,10 +302,11 @@ class UserStore:
     try:
       email_address = args.get('email', None)
       profile = UserProfile.objects.filter(email=email_address).first()
-      if profile.accepts_terms_and_conditions:
+      # if user hasn't accepted T&C, need to finish that
+      if profile and not profile.accepts_terms_and_conditions:
         name = profile.full_name.split()
         first_name = name[0]
-        last_name = name[1]
+        last_name = name[-1]  # if no delimiter, first_name may be same as last_name
         return {"imported": True, "firstName": first_name, "lastName": last_name, "preferredName": first_name}, None
       return {"imported": False}, None
     except Exception as e:
@@ -383,6 +390,7 @@ class UserStore:
     try:
       user_id = args.get('id', None)
       email = args.get('email', None)
+      profile_picture = args.pop("profile_picture", None)
       
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -392,7 +400,6 @@ class UserStore:
         if not users:
           return None, InvalidResourceError()
         
-        profile_picture = args.pop("profile_picture", None)
         users.update(**args)
         user = users.first()
         
@@ -527,16 +534,23 @@ class UserStore:
       if not context.user_is_logged_in:
         return [], CustomMassenergizeError("sign_in_required")
       
-      user_action = UserActionRel.objects.get(pk=user_action_id)
-      oldstatus = user_action.status
-      action = user_action.action
-      reu = user_action.real_estate_unit
+      # Allow for the possibility that a UserActionRel may have been deleted
+      user_action = UserActionRel.objects.filter(pk=user_action_id)
+      if user_action:
+        user_action = user_action.first()
+        oldstatus = user_action.status
+        action = user_action.action
+        reu = user_action.real_estate_unit
 
-      result = user_action.delete()
+        result = user_action.delete()
 
-      # if action had been marked as DONE, decrement community total for the action
-      if oldstatus == "DONE":
-        _update_action_data_totals(action, reu, -1)
+        # if action had been marked as DONE, decrement community total for the action
+        if oldstatus == "DONE":
+          _update_action_data_totals(action, reu, -1)
+
+      else:
+        # didn't find the action: something missing from database - probably a previous error -- no consequence
+        result = None
 
       return result, None
     except Exception as e:
@@ -609,6 +623,7 @@ class UserStore:
         ret['team_leader'] = team_leader.full_name
         ret['team_leader_firstname'] = team_leader.full_name.split(" ")[0]
         ret['team_leader_email'] = team_leader.email
+        ret['team_id'] = team.id
 
       return ret, None
     except Exception as e:

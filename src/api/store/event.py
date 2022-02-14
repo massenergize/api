@@ -101,6 +101,7 @@ class EventStore:
       new_event.start_date_and_time = event_to_copy.start_date_and_time
       new_event.end_date_and_time = event_to_copy.end_date_and_time
       new_event.description = event_to_copy.description
+      new_event.is_external_event = event_to_copy.is_external_event   # really rsvp_enabled
       new_event.featured_summary = event_to_copy.featured_summary
       new_event.location = event_to_copy.location
       if not (event_to_copy.is_recurring == None):
@@ -197,6 +198,11 @@ class EventStore:
       week_of_month = args.pop("week_of_month", None)
       final_date = args.pop('final_date', None)
 
+      rsvp_enabled = args.pop('rsvp_enabled', False)
+      if rsvp_enabled:
+        # this boolean is never used, use this - then switch name to rsvp_enabled to migrate DBs in sync
+        args['is_external_event'] = True
+
       if is_recurring:
         if final_date:
           final_date = _local_datetime(final_date).date()
@@ -281,6 +287,10 @@ class EventStore:
       upcoming_is_cancelled = args.pop("upcoming_is_cancelled", None)
       upcoming_is_rescheduled = args.pop('upcoming_is_rescheduled', None)
       final_date = args.pop('final_date', None)
+
+      rsvp_enabled = args.pop('rsvp_enabled', False)
+      # this boolean is never used, use this - then switch name to rsvp_enabled to migrate DBs in sync
+      args['is_external_event'] = rsvp_enabled
 
       if is_recurring:
 
@@ -569,8 +579,12 @@ class EventStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
+      if community_id == 0:
+        # return actions from all communities
+        return self.list_events_for_super_admin(context)
+        
       # community_id coming from admin portal is 'undefined'
-      if not community_id or community_id=='undefined':
+      elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -589,8 +603,6 @@ class EventStore:
 
   def list_events_for_super_admin(self, context: Context):
     try:
-      if not context.user_is_super_admin:
-        return None, NotAuthorizedError()
       # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
       # not as their own separate events
       events = Event.objects.filter(is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')

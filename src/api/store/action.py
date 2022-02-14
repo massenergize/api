@@ -115,6 +115,7 @@ class ActionStore:
       new_action.is_published = False
       new_action.title = action_to_copy.title + "-Copy"
       new_action.is_global = False
+      new_action.community = None
       new_action.save()
       new_action.tags.set(old_tags)
       new_action.vendors.set(old_vendors)
@@ -142,7 +143,6 @@ class ActionStore:
 
       calculator_action = args.pop('calculator_action', None)
       action.update(**args)
-
       action = action.first()
 
       # If no image passed, don't delete the existing
@@ -207,15 +207,21 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
 
-  def list_actions_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_actions_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
+      community_id = args.pop("community_id", None)
+
       if context.user_is_super_admin:
         return self.list_actions_for_super_admin(context)
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
 
-      if not community_id:
+      if community_id == 0:
+        # return actions from all communities
+        return self.list_actions_for_super_admin(context)
+        
+      elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -234,7 +240,7 @@ class ActionStore:
     try:
       # if not context.user_is_super_admin:
       #   return None, CustomMassenergizeError("Insufficient Privileges")
-      actions = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+      actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
       return actions, None
     except Exception as e:
       capture_message(str(e), level="error")

@@ -109,6 +109,31 @@ class MessageStore:
       return None, CustomMassenergizeError(e)
 
 
+  def update_message_to_team_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+      message_id = args.pop('message_id', None) or args.pop('id', None)
+      title = args.pop("title", None)
+      body = args.pop("message", None) or args.pop("body", None)
+
+      if not message_id:
+        return None, InvalidResourceError()
+      message = Message.objects.filter(pk=message_id).first()
+
+      if message.body != body or message.title != title:
+        # message was modified in the admin portal
+        admin_email = context.user_email
+        body += '\n\n[This message was modified before forwarding by '+admin_email+']'
+        message.title = title
+        message.body = body
+        message.save()
+
+      return message, None 
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
   def reply_from_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       message_id = args.pop('message_id', None) or args.pop('id', None)

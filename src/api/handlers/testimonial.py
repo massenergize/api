@@ -18,19 +18,18 @@ class TestimonialHandler(RouteHandler):
     self.registerRoutes()
 
   def registerRoutes(self):
-    self.add("/testimonials.info", self.info) 
+    self.add("/testimonials.info", self.info)
     self.add("/testimonials.create", self.create)
-    self.add("/testimonials.add", self.create)
+    self.add("/testimonials.add", self.submit)
     self.add("/testimonials.list", self.list)
     self.add("/testimonials.update", self.update)
     self.add("/testimonials.delete", self.delete)
     self.add("/testimonials.remove", self.delete)
     self.add("/testimonials.rank", self.rank)
 
-    #admin routes
+    # admin routes
     self.add("/testimonials.listForCommunityAdmin", self.community_admin_list)
     self.add("/testimonials.listForSuperAdmin", self.super_admin_list)
-    
 
   def info(self, request):
     context: Context = request.context
@@ -48,8 +47,7 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
-
-  @login_required
+  @admins_only
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -72,8 +70,40 @@ class TestimonialHandler(RouteHandler):
 
     # no anonymous option anymore
     args["anonymous"] = False
- 
+
     testimonial_info, err = self.service.create_testimonial(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=testimonial_info)
+
+# same as create, except this is for user submitted testimonials
+  @login_required
+  def submit(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("title", str, is_required=True)
+    self.validator.expect('community', int)
+    self.validator.expect('action', int)
+    self.validator.expect('vendor', int)
+    self.validator.expect("tags", list)
+    self.validator.expect("is_approved", bool)
+    self.validator.expect("is_published", bool)
+    self.validator.rename('community_id', 'community')
+    self.validator.rename('action_id', 'action')
+    self.validator.rename('vendor_id', 'vendor')
+    self.validator.rename('preferredName', 'preferred_name')
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+
+    # no anonymous option anymore
+    args["anonymous"] = False
+
+    # user submitted testimonial, so notify the community admins
+    user_submitted = True
+    testimonial_info, err = self.service.create_testimonial(context, args, user_submitted)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
@@ -86,11 +116,15 @@ class TestimonialHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=testimonial_info)
 
-  @admins_only
+  # @admins_only
+  # changed to @Login_Required so I can edit the testimonial as the creator and admin
+  @login_required
   def update(self, request):
+
+    # check if admin or user who submitted the testimonial
     context: Context = request.context
     args: dict = context.args
-    
+
     self.validator.expect("id", int, is_required=True)
     self.validator.expect("is_approved", bool)
     self.validator.expect("is_published", bool)
@@ -106,7 +140,7 @@ class TestimonialHandler(RouteHandler):
 
     if err:
       return err
-      
+
     testimonial_info, err = self.service.update_testimonial(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
@@ -117,7 +151,7 @@ class TestimonialHandler(RouteHandler):
     """ Update the rank of a testimonial, nothing else """
     context: Context = request.context
     args: dict = context.args
-      
+
     self.validator.expect("id", int, is_required=True)
     self.validator.expect("rank", int, is_required=True)
     self.validator.rename("testimonial_id", "id")

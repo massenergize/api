@@ -19,6 +19,8 @@ from database.models import (
     EventsPageSettings,
     TestimonialsPageSettings,
     VendorsPageSettings,
+    RegisterPageSettings,
+    SigninPageSettings,
     Goal,
     CommunityAdminGroup,
     Subdomain,
@@ -492,7 +494,13 @@ class CommunityStore:
                     # this could be slow?
                     data = category_graph["data"]
                     category_totals = [datum["reported_value"] for datum in data]
+                    solar_households = 0
 
+                    for datum in data:
+                        if datum.get("name", None) == 'Solar':
+                            solar_households = datum["reported_value"]
+                            break
+                    
                     goal = community.goal
                     total = ( 
                         goal.attained_number_of_households 
@@ -500,7 +508,8 @@ class CommunityStore:
                         + goal.attained_carbon_footprint_reduction
                     )
 
-                    goal.attained_number_of_households = max(category_totals)                    
+                    # 1/16/22 change from max(category_totals) to solar_households                  
+                    goal.attained_number_of_households = solar_households                    
                     goal.attained_number_of_actions = sum(category_totals)                   
                     goal.attained_carbon_footprint_reduction = 0
                 
@@ -683,6 +692,14 @@ class CommunityStore:
                 TestimonialsPageSettings, f"Testimonials", community
             ):
                 raise Exception("Failed to clone settings for Testimonials page")
+            if not _clone_page_settings(
+                RegisterPageSettings, f"Register", community
+            ):
+                raise Exception("Failed to clone settings for Register page")
+            if not _clone_page_settings(
+                SigninPageSettings, f"Signin", community
+            ):
+                raise Exception("Failed to clone settings for Signin page")
 
             admin_group_name = f"{community.name}-{community.subdomain}-Admin-Group"
             comm_admin: CommunityAdminGroup = CommunityAdminGroup.objects.create(
