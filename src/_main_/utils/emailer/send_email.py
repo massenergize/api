@@ -91,10 +91,10 @@ def old_send_massenergize_mass_email(subject, msg, recipient_emails):
 def send_massenergize_mass_email(subject, msg, recipient_emails):
   message = pystmark.Message(
     subject=subject,
-    to=recipient_emails,
     sender=FROM_EMAIL, 
     html=msg, 
   )
+  message.recipients = recipient_emails
   response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
 
   if not response.ok:
