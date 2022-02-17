@@ -8,7 +8,7 @@ from _main_.settings import EMAIL_POSTMARK_SERVER_TOKEN
 
 FROM_EMAIL = 'no-reply@massenergize.org'
 
-def send_massenergize_email(subject, msg, to):
+def old_send_massenergize_email(subject, msg, to):
   ok = send_mail(
       subject,
       msg,
@@ -18,6 +18,20 @@ def send_massenergize_email(subject, msg, to):
   )
 
   if not ok:
+    capture_message(f"Error Occurred in Sending Email to {to}", level="error")
+    return False
+  return True
+
+def send_massenergize_email(subject, msg, to):
+  message = pystmark.Message(
+    subject=subject,
+    to=to,
+    sender=FROM_EMAIL, 
+    html=msg, 
+  )
+  response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
+
+  if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
@@ -58,7 +72,7 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
   return True
 
 
-def send_massenergize_mass_email(subject, msg, recipient_emails):
+def old_send_massenergize_mass_email(subject, msg, recipient_emails):
   ok = send_mail(
       subject,
       msg,
@@ -68,6 +82,22 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
   )
 
   if not ok:
+    capture_message("Error occurred in sending some emails", level="error")
+
+    return False
+
+  return True
+
+def send_massenergize_mass_email(subject, msg, recipient_emails):
+  message = pystmark.Message(
+    subject=subject,
+    to=recipient_emails,
+    sender=FROM_EMAIL, 
+    html=msg, 
+  )
+  response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
+
+  if not response.ok:
     capture_message("Error occurred in sending some emails", level="error")
 
     return False
