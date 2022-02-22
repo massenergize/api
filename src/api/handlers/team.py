@@ -195,7 +195,7 @@ class TeamHandler(RouteHandler):
 
     # verify the body of the incoming request
     self.validator.expect("user_id", str)
-    self.validator.expect("email", int)
+    self.validator.expect("email", str)
     self.validator.expect("is_admin", bool)
     self.validator.expect("id", int, is_required=True)
     self.validator.rename("team_id", "id")

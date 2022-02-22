@@ -381,11 +381,8 @@ class TeamStore:
         return None, CustomMassenergizeError("User email or id not specified")
 
       teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)      
-      if is_admin:
-        teamMember.is_admin = True
-
-      if created:
-        teamMember.save()
+      teamMember.is_admin = is_admin
+      teamMember.save()
       
       return team, None
     except Exception as e:
