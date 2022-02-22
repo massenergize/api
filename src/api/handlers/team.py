@@ -35,6 +35,7 @@ class TeamHandler(RouteHandler):
     self.add("/teams.contactAdmin", self.message_admin)
     self.add("/teams.members", self.members)
     self.add("/teams.members.preferredNames", self.members_preferred_names)
+    self.add("/teams.actions.completed", self.actions_completed)
 
     #admin routes
     self.add("/teams.listForCommunityAdmin", self.community_admin_list)
@@ -261,6 +262,21 @@ class TeamHandler(RouteHandler):
     return MassenergizeResponse(data=team_members_preferred_names_info)
 
 
+  def actions_completed(self, request): 
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect('team_id', int, is_required=True)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    action_info, err = self.team.list_actions_completed(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=action_info)
+
+
   @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
@@ -275,6 +291,7 @@ class TeamHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=teams)
+
 
   @super_admins_only
   def super_admin_list(self, request):

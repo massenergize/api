@@ -28,6 +28,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.join", self.join)
     self.add("/communities.leave", self.leave)
     self.add("/communities.custom.website.add", self.add_custom_website)
+    self.add("/communities.actions.completed", self.actions_completed)
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list)
@@ -239,3 +240,21 @@ class CommunityHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=communities)
+
+  def actions_completed(self, request): 
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect('community_id', int, is_required=False)
+    self.validator.expect('subdomain', str, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    action_info, err = self.service.list_actions_completed(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=action_info)
+
+
+
