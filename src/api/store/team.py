@@ -506,7 +506,7 @@ class TeamStore:
               category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
               action_category = category_obj.name if category_obj else None
               actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, 
-              "todo_count":todo, "community":{"id":completed_action.action.community.id,'subdomain':completed_action.action.community.subdomain}})
+              "todo_count":todo, "community":{"id":completed_action.action.community.id,'subdomain':completed_action.action.community.subdomain, "name":completed_action.action.community.name}})
               actions_recorded.append(action_id)
 
       actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
