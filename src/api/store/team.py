@@ -480,7 +480,7 @@ class TeamStore:
       """
       team_id = args.pop("team_id", None)
       actions_completed = []
-
+      actions_recorded = [] 
       if not team_id:
         return [], CustomMassenergizeError('Please provide a valid team_id')
 
@@ -501,11 +501,13 @@ class TeamStore:
             actions_completed[ind]["carbon_total"] += action_carbon
             actions_completed[ind]["todo_count"] += todo
           else:
-            action_name = completed_action.action.title
-            category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
-            action_category = category_obj.name if category_obj else None
-            actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, 
-            "todo_count":todo, "community":{"id":completed_action.action.community.id,'subdomain':completed_action.action.community.subdomain}})
+            if action_id not in actions_recorded:
+              action_name = completed_action.action.title
+              category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
+              action_category = category_obj.name if category_obj else None
+              actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, 
+              "todo_count":todo, "community":{"id":completed_action.action.community.id,'subdomain':completed_action.action.community.subdomain}})
+              actions_recorded.append(action_id)
 
       actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
       return actions_completed, None

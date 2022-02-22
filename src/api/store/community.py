@@ -916,6 +916,7 @@ class CommunityStore:
             community = get_community_or_die(context, args)
     
             actions_completed = []
+            actions_recorded = []
             completed_actions = UserActionRel.objects.filter(real_estate_unit__community=community, is_deleted=False).select_related('action__calculator_action')
             for completed_action in completed_actions:
               action_id = completed_action.action.id
@@ -930,10 +931,12 @@ class CommunityStore:
                 actions_completed[ind]["carbon_total"] += action_carbon
                 actions_completed[ind]["todo_count"] += todo
               else:
-                action_name = completed_action.action.title
-                category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
-                action_category = category_obj.name if category_obj else None
-                actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
+                if action_id not in actions_recorded:
+                    action_name = completed_action.action.title
+                    category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
+                    action_category = category_obj.name if category_obj else None
+                    actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
+                    actions_recorded.append(action_id)
 
             return actions_completed, None
         except Exception as e:
