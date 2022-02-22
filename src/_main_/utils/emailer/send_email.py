@@ -2,10 +2,13 @@ from django.core.mail import send_mail, EmailMessage, send_mass_mail, EmailMulti
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from sentry_sdk import capture_message
+import pystmark
+
+from _main_.settings import EMAIL_POSTMARK_SERVER_TOKEN
 
 FROM_EMAIL = 'no-reply@massenergize.org'
 
-def send_massenergize_email(subject, msg, to):
+def old_send_massenergize_email(subject, msg, to):
   ok = send_mail(
       subject,
       msg,
@@ -19,8 +22,23 @@ def send_massenergize_email(subject, msg, to):
     return False
   return True
 
+def send_massenergize_email(subject, msg, to):
+  message = pystmark.Message(
+    subject=subject,
+    to=to,
+    sender=FROM_EMAIL, 
+    html=msg, 
+  )
+  response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
 
-def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
+  if not response.ok:
+    capture_message(f"Error Occurred in Sending Email to {to}", level="error")
+    print(response.raise_for_status())
+    return False
+  return True
+
+
+def old_send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
   if not from_email:
     from_email = FROM_EMAIL
   html_content = render_to_string(massenergize_email_type, content_variables)
@@ -34,8 +52,29 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
     return False
   return True
 
+def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
+  if not from_email:
+    from_email = FROM_EMAIL
+  html_content = render_to_string(massenergize_email_type, content_variables)
+  text_content = strip_tags(html_content)
 
-def send_massenergize_mass_email(subject, msg, recipient_emails):
+  message = pystmark.Message(
+    subject=subject,
+    to=to,
+    sender=from_email, 
+    html=html_content, 
+    text=text_content
+  )
+  response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
+
+  if not response.ok:
+    capture_message(f"Error Occurred in Sending Email to {to}", level="error")
+    print(response.raise_for_status())
+    return False
+  return True
+
+
+def old_send_massenergize_mass_email(subject, msg, recipient_emails):
   ok = send_mail(
       subject,
       msg,
@@ -47,6 +86,22 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
   if not ok:
     capture_message("Error occurred in sending some emails", level="error")
 
+    return False
+
+  return True
+
+def send_massenergize_mass_email(subject, msg, recipient_emails):
+  message = pystmark.Message(
+    subject=subject,
+    sender=FROM_EMAIL, 
+    html=msg, 
+  )
+  message.recipients = recipient_emails
+  response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
+
+  if not response.ok:
+    capture_message("Error occurred in sending some emails", level="error")
+    print(response.raise_for_status())
     return False
 
   return True
