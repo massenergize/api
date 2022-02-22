@@ -55,6 +55,7 @@ class DeviceHandler(RouteHandler):
     self.validator.rename("device_id", "id")
     self.validator.rename("device_profile_id", "id")
     self.validator.expect("id", str)
+    self.validator.expect("community_id", int)
     args, err = self.validator.verify(args)
 
     if err:
@@ -81,6 +82,10 @@ class DeviceHandler(RouteHandler):
     args["operating_system"] = client_info.get("os", "Unknown-os")
     args["browser"] = client_info.get("browser", "Unknown-browser")
       
+    rejected_browsers = ['HeadlessChrome']
+    if args["browser"] in rejected_browsers:
+      return MassenergizeResponse(data=None)
+    
     device, err = self.service.log_device(context, args, location)
     if err:
       # print(err)

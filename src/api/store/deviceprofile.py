@@ -1,17 +1,10 @@
-from calendar import month
-from django.http import HttpRequest
 from datetime import datetime
-from api.handlers.userprofile import UserHandler
 from database.models import UserProfile, DeviceProfile, Location, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
-  CustomMassenergizeError, NotAuthorizedError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
 from _main_.settings import DEBUG
 from sentry_sdk import capture_message
-import json
 from typing import Tuple
-
 
 class DeviceStore:
 
@@ -51,6 +44,7 @@ class DeviceStore:
     try:
       new_device: DeviceProfile = DeviceProfile.objects.create(**args)
       
+      # question: is this needed?  those values not already part of new_device through create with the args?
       self.__device_attr_handler(new_device, args)
 
       if save:
@@ -66,39 +60,60 @@ class DeviceStore:
     date_time = datetime.now()
     device = None
     try:
-      id = args.pop("id", None)
+      # keeping id in args so if DeviceProfile recreated uses same id
+      id = args.get("id", None)
+
+      community_id = args.pop("community_id", None)
+      if community_id:
+        community = Community.objects.get()
+
       if id: # If the cookie exists check for a device
         devices = DeviceProfile.objects.filter(id=id)
         if devices:
           devices.update(**args)
           device = devices.first()
+
         else:
-          device = device, err = self.create_device(context, args, save=False)
+          # not the usual case, cookie exists but device not in database; not a problem
+          device, err = self.create_device(context, args, save=False)
           if err:
             # print(f"Device does not exist in the DB: {err}")
             return None, err
-      else: # If the cookie does not exist we'll create one
-        device, err = self.create_device(context, args, save=False)
-        if err:
-          # print(f"Failed to create the device: {err}")
-          return None, err
 
-      ip_address = args.pop("ip_address", None)
-      device_type = args.pop("device_type", None)
-      operating_system = args.pop("operating_system", None)
-      browser = args.pop("browser", None)
+      else: 
+        # If the cookie wasn't found, search for this device
+        devices = DeviceProfile.objects.filter(**args)
+        if devices:
+          device = devices.first()
 
-      if ip_address:
-        device.ip_address = ip_address
+        else:
+          # device not found, create one
+          device, err = self.create_device(context, args, save=False)
+          if err:
+            # print(f"Failed to create the device: {err}")
+            return None, err
 
-      if device_type:
-        device.device_type = device_type
-      
-      if operating_system:
-        device.operating_system = operating_system
-      
-      if browser:
-        device.browser = browser
+      #don't think we need to do this since create or update updates these values
+      # ip_address = args.pop("ip_address", None)
+      #device_type = args.pop("device_type", None)
+      #operating_system = args.pop("operating_system", None)
+      #browser = args.pop("browser", None)
+      #if ip_address:
+      #  device.ip_address = ip_address
+    
+      #if device_type:
+      #  device.device_type = device_type
+      #
+      #if operating_system:
+      #  device.operating_system = operating_system
+      #
+      #if browser:
+      #  device.browser = browser
+
+ 
+      # assuming this is from a community site, record which community
+      if community:
+        device.update_communities(community)
 
       # If user is logged in we log to the user account
       # otherwise to the device
@@ -111,8 +126,10 @@ class DeviceStore:
         device.update_user_profiles(user)
         user.update_visit_log(date_time)
         user.save()
-      else:
-        device.update_visit_log(date_time)
+
+      #else:
+      # question: why not update the device visit log even if there is a user profile
+      device.update_visit_log(date_time)
 
       if location:
         new_location, created = Location.objects.get_or_create(
