@@ -117,3 +117,12 @@ class TeamService:
     if err:
       return None, err
     return serialize_all(teams), None
+
+
+  def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    completed_actions_list, err = self.store.list_actions_completed(context, args)
+    if err:
+      return None, err
+    return completed_actions_list, None
+
+
