@@ -769,6 +769,7 @@ class DeviceProfile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     user_profiles = models.ManyToManyField(UserProfile, blank=True)
     ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    communities = models.ManyToManyField(Community, blank=True)
     location = models.ManyToManyField(Location, blank=True)
     device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
     operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
@@ -787,6 +788,9 @@ class DeviceProfile(models.Model):
 
     def update_user_profiles(self, user):
         self.user_profiles.add(user)
+
+    def update_communities(self, community):
+        self.communities.add(community)
 
     def update_visit_log(self, date_time):
         try:
