@@ -4,7 +4,7 @@ from django.utils.text import slugify
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
 from _main_.utils.common import is_value
-from .utils import get_community_or_die, get_user_or_die, get_admin_communities
+from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
@@ -472,8 +472,12 @@ class TeamStore:
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      # list actions completed by members of a team.  
-      # Include any actions which are DONE or TODO (so not really completed)
+      """
+      Find all the actions that members of a team have interacted with (DONE, or added to their TODO)
+      Then create a summary for each of the actions: 
+      i.e How many users have DONE the action or added to their TODO list 
+      And the carbon_total if a user has DONE it  
+      """
       team_id = args.pop("team_id", None)
       actions_completed = []
 
@@ -486,13 +490,11 @@ class TeamStore:
       completed_actions = UserActionRel.objects.filter(user__in=users, is_deleted=False).select_related('action', 'action__calculator_action')
       for completed_action in completed_actions:
           action_id = completed_action.action.id
-          action_carbon = 0 if completed_action.status != "DONE" else \
-            completed_action.carbon_impact if completed_action.carbon_impact != 0 else \
-            completed_action.action.calculator_action.average_points if completed_action.action.calculator_action else 0
+          action_carbon = getCarbonScoreFromActionRel(completed_action)
           done = 1 if completed_action.status == "DONE" else 0
           todo = 1 if completed_action.status == "TODO" else 0
        
-          #if action_id in [action["ID"] for action in actions_completed]:
+          #Get id of the action, if it has already been recorded, so that its fields can be updated, else, add to the array 
           ind = next((actions_completed.index(a) for a in actions_completed if a["id"]==action_id), None)
           if ind != None:
             actions_completed[ind]["done_count"] += done
@@ -502,7 +504,8 @@ class TeamStore:
             action_name = completed_action.action.title
             category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
             action_category = category_obj.name if category_obj else None
-            actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
+            actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, 
+            "todo_count":todo, "community":{"id":completed_action.action.community.id,'subdomain':completed_action.action.community.subdomain}})
 
       actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
       return actions_completed, None

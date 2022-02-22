@@ -58,6 +58,7 @@ from .utils import (
     get_community_or_die,
     get_user_or_die,
     get_new_title,
+    getCarbonScoreFromActionRel,
     is_reu_in_community,
     check_location,
 )
@@ -918,9 +919,7 @@ class CommunityStore:
             completed_actions = UserActionRel.objects.filter(real_estate_unit__community=community, is_deleted=False).select_related('action__calculator_action')
             for completed_action in completed_actions:
               action_id = completed_action.action.id
-              action_carbon = 0 if completed_action.status != "DONE" else \
-                completed_action.carbon_impact if completed_action.carbon_impact != 0 else \
-                completed_action.action.calculator_action.average_points if completed_action.action.calculator_action else 0
+              action_carbon = getCarbonScoreFromActionRel(completed_action)
               done = 1 if completed_action.status == "DONE" else 0
               todo = 1 if completed_action.status == "TODO" else 0
 
