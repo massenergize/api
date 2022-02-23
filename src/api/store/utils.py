@@ -105,7 +105,7 @@ def remove_dups(lst):
 
 def get_new_title(new_community, old_title):
   """
-  Given an old title for an action to be copied, it will generate a new one 
+  Given an old title for an action or to be copied, it will generate a new one 
   for use by a clone of the same actuon
   # remove the "TEMPLATE", "TEMP" or "TMP" prefix or suffix
   """
@@ -129,12 +129,14 @@ def get_new_title(new_community, old_title):
       elif loc>0:
         new_title = old_title[0:loc-1]
 
+  if not new_community: return new_title
+
   # add community name to suffix (not the action id
   # #make sure the action title does not exceed the max length expected
   suffix = f'-{new_community.subdomain}'
   len_suffix = len(suffix)
   new_title_len = min(len(new_title), SHORT_STR_LEN - len_suffix)
-  return new_title[0:new_title_len]+suffix
+  return new_title[0:new_title_len-1]+suffix
 
 
 def find_reu_community(reu, verbose=False):

@@ -1,12 +1,28 @@
+from importlib.machinery import SOURCE_SUFFIXES
 from database.models import Action, UserProfile, Community, Media, UserActionRel
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from database.utils.constants import SHORT_STR_LEN
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
-from .utils import get_community
+from .utils import get_new_title
+
+def _copy_title(old_title):
+  # return first unique title
+  new_title = get_new_title(None, old_title) 
+  version = 0
+  while version<1000:
+    suffix = "-Copy%d" % version
+    newlen = min(len(new_title), SHORT_STR_LEN - len(suffix))
+    title = new_title[0:newlen] + suffix
+    test = Action.objects.filter(title=title).first()
+    if not test:
+      return title
+    version += 1  
+  return None
 
 class ActionStore:
   def __init__(self):
@@ -116,22 +132,28 @@ class ActionStore:
 
   def copy_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
+      print("copy_action")
       action_id = args.get("action_id", None)
       #find the action
       action_to_copy: Action = Action.objects.filter(id=action_id).first()
       if not action_to_copy:
         return None, InvalidResourceError()
-      old_tags = action_to_copy.tags.all()
-      old_vendors = action_to_copy.vendors.all()
+
       new_action = action_to_copy
       new_action.pk = None
       new_action.is_published = False
-      new_action.title = action_to_copy.title + "-Copy"
+
+      new_title = _copy_title(action_to_copy.title)
+      new_action.title = new_title
       new_action.is_global = False
       new_action.community = None
       new_action.save()
+
+      old_tags = action_to_copy.tags.all()
+      old_vendors = action_to_copy.vendors.all()
       new_action.tags.set(old_tags)
       new_action.vendors.set(old_vendors)
+      new_action.save()
       return new_action, None
     except Exception as e:
       capture_message(str(e), level="error")

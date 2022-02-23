@@ -6,9 +6,24 @@ from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
+from database.utils.constants import SHORT_STR_LEN
 from sentry_sdk import capture_message
 from typing import Tuple
-import random
+from .utils import get_new_title
+
+def _copy_title(old_title):
+  # return first unique title
+  # Community will be None at first
+  new_title = get_new_title(None, old_title)
+  version = 0
+  while version<1000:
+    suffix = "-Copy%d" % version
+    newlen = min(len(new_title), SHORT_STR_LEN - len(suffix))
+    title = new_title[0:newlen] + suffix
+    if not Vendor.objects.filter(name=title).first():
+      return title
+    version += 1  
+  return None
 
 class VendorStore:
   def __init__(self):
@@ -208,13 +223,23 @@ class VendorStore:
       vendor: Vendor = Vendor.objects.get(id=vendor_id)
       if not vendor:
         return CustomMassenergizeError(f"No vendor with id {vendor_id}")
-        
-      vendor.pk = None
-      vendor.is_published = False
-      vendor.is_verified = False
-      vendor.name = f"{vendor.name}-Copy-{random.randint(1,100000)}"
-      vendor.save()
-      return vendor, None
+
+      old_tags = vendor.tags.all()
+      new_vendor = vendor
+
+      new_vendor.pk = None
+      new_vendor.is_published = False
+      new_vendor.is_verified = False
+
+      new_name = _copy_title(vendor.name)
+      new_vendor.name = new_name
+      new_vendor.save()
+
+      if old_tags:
+        new_vendor.tags.set(old_tags)
+      new_vendor.save()
+
+      return new_vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

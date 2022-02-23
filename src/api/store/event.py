@@ -6,9 +6,25 @@ from sentry_sdk import capture_message
 from .utils import get_user_or_die
 import datetime
 from datetime import timedelta
+from database.utils.constants import SHORT_STR_LEN
 import calendar
 import pytz
 from typing import Tuple
+from .utils import get_new_title
+
+def _copy_title(old_title):
+  # return first unique title
+  # Community will be None at first
+  new_title = get_new_title(None, old_title)
+  version = 0
+  while version<1000:
+    suffix = "-Copy%d" % version
+    newlen = min(len(new_title), SHORT_STR_LEN - len(suffix))
+    title = new_title[0:newlen] + suffix
+    if not Event.objects.filter(name=title).first():
+      return title
+    version += 1  
+  return None
 
 def _local_datetime(date_and_time):
   # the local date (in Massachusetts) is different than the UTC date
@@ -72,9 +88,10 @@ class EventStore:
 
   def get_event_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+
       event_id = args.pop("event_id")
 
-      events_selected = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(id=event_id)
+      events_selected = Event.objects.filter(id=event_id).select_related('image', 'community').prefetch_related('tags', 'invited_communities')
       event = events_selected.first()
       if not event:
         return None, InvalidResourceError()
@@ -93,26 +110,28 @@ class EventStore:
         return None, InvalidResourceError()
       
       old_tags = event_to_copy.tags.all()
-      event_to_copy.pk = None
       new_event = event_to_copy 
-      new_event.name = event_to_copy.name + "-Copy"
+      new_event.pk = None
+
+      new_name = _copy_title(event_to_copy.name)
+      new_event.name = new_name
       new_event.is_published=False
       new_event.is_global = False
       new_event.start_date_and_time = event_to_copy.start_date_and_time
       new_event.end_date_and_time = event_to_copy.end_date_and_time
       new_event.description = event_to_copy.description
-      new_event.rsvp_enabled = event_to_copy.rsvp_enabled   # really rsvp_enabled
+      new_event.rsvp_enabled = event_to_copy.rsvp_enabled
       new_event.featured_summary = event_to_copy.featured_summary
+
       new_event.location = event_to_copy.location
       if not (event_to_copy.is_recurring == None):
         new_event.is_recurring = event_to_copy.is_recurring
         new_event.recurring_details = event_to_copy.recurring_details
       new_event.save()
 
-      #copy tags over
-      for t in old_tags:
-        new_event.tags.add(t)
-
+      if old_tags:
+        new_event.tags.set(old_tags)
+      new_event.save()
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
