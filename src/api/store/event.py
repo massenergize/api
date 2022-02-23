@@ -187,6 +187,7 @@ class EventStore:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
+      user_email = args.pop('user_email', context.user_email)
 
       start_date_and_time = args.get('start_date_and_time', None)
       end_date_and_time = args.get('end_date_and_time', None)
@@ -243,6 +244,17 @@ class EventStore:
 
       if tags:
         new_event.tags.set(tags)
+
+      user = None
+      if user_email:
+        user_email = user_email.strip()
+        # verify that provided emails are valid user
+        if not UserProfile.objects.filter(email=user_email).exists():
+          return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
+
+        user = UserProfile.objects.filter(email=user_email).first()
+        if user:
+          new_event.user = user
 
       if is_recurring:
 

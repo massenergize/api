@@ -63,6 +63,7 @@ class VendorStore:
       communities = args.pop('communities', [])
       image = args.pop('image', None)
       website = args.pop('website', None)
+      user_email = args.pop('user_email', context.user_email)
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       key_contact_name = args.pop('key_contact_name', None)
       key_contact_email = args.pop('key_contact_email', None)
@@ -85,6 +86,17 @@ class VendorStore:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
         if onboarding_contact:
           new_vendor.onboarding_contact = onboarding_contact
+
+      user = None
+      if user_email:
+        user_email = user_email.strip()
+        # verify that provided emails are valid user
+        if not UserProfile.objects.filter(email=user_email).exists():
+          return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
+
+        user = UserProfile.objects.filter(email=user_email).first()
+        if user:
+          new_vendor.user = user
 
       if website:
         new_vendor.more_info = {'website': website}

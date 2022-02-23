@@ -1,8 +1,12 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.action import ActionStore
 from _main_.utils.context import Context
+from _main_.utils.constants import ADMIN_URL_ROOT, SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from .utils import send_slack_message
+from api.store.utils import get_user_or_die
 from typing import Tuple
 
 class ActionService:
@@ -26,10 +30,53 @@ class ActionService:
     return serialize_all(actions), None
 
 
-  def create_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_action(self, context: Context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
     action, err = self.store.create_action(context, args)
     if err:
       return None, err
+
+    if user_submitted:
+
+      # For now, send e-mail to primary community contact for a site
+      admin_email = action.community.owner_email
+      admin_name = action.community.owner_name
+      first_name = admin_name.split(" ")[0]
+      if not first_name or first_name == "":
+        first_name = admin_name
+
+      community_name = action.community.name
+
+      user = get_user_or_die(context, args)
+      if user:
+        name = user.full_name
+        email = user.email
+      else:
+        return None, CustomMassenergizeError('Action submission incomplete')
+
+      subject = 'User Action Submitted'
+
+      content_variables = {
+        'name': first_name,
+        'community_name': community_name,
+        'url': f"{ADMIN_URL_ROOT}/admin/edit/{action.id}/action",
+        'from_name': name,
+        'email': email,
+        'title': action.title,
+        'body': action.featured_summary,
+      }
+      send_massenergize_rich_email(
+            subject, admin_email, 'action_submitted_email.html', content_variables)
+
+      send_slack_message(
+          SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+          "from_name": name,
+          "email": email,
+          "subject": action.title,
+          "message": action.featured_summary,
+          "url": f"{ADMIN_URL_ROOT}/admin/edit/{action.id}/action",
+          "community": community_name
+      }) 
+
     return serialize(action), None
 
 

@@ -64,6 +64,7 @@ class ActionStore:
       image = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
       title = args.get('title', None)
+      user_email = args.pop('user_email', context.user_email)
 
       actions = Action.objects.filter(title=title, community__id=community_id)
       if actions:
@@ -80,7 +81,18 @@ class ActionStore:
       if image:
         media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
         new_action.image = media
-      
+
+      user = None
+      if user_email:
+        user_email = user_email.strip()
+        # verify that provided emails are valid user
+        if not UserProfile.objects.filter(email=user_email).exists():
+          return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
+
+        user = UserProfile.objects.filter(email=user_email).first()
+        if user:
+          new_action.user = user
+
       #save so you set an id
       new_action.save()
 
