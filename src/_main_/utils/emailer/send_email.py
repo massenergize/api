@@ -93,7 +93,7 @@ def send_massenergize_email_template(subject, to, massenergize_email_type, conte
     template_id=template_id_welocme,
     template_model=t_model
   )
-  response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
+  response = pystmark.send_with_template(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
 
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
