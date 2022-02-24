@@ -73,6 +73,34 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
     return False
   return True
 
+def send_massenergize_email_template(subject, to, massenergize_email_type, content_variables, from_email=None):
+  if not from_email:
+    from_email = FROM_EMAIL
+
+  t_model = {
+    "homelink": "asdf",
+    "logo": "asdf",
+    "name": "asdf",
+    "community": "asdf",
+  }
+
+  template_id_welocme = 27142713
+
+  message = pystmark.Message(
+    subject=subject,
+    to=to,
+    sender=from_email, 
+    template_id=template_id_welocme,
+    template_model=t_model
+  )
+  response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
+
+  if not response.ok:
+    capture_message(f"Error Occurred in Sending Email to {to}", level="error")
+    print(response.raise_for_status())
+    return False
+  return True
+
 
 def old_send_massenergize_mass_email(subject, msg, recipient_emails):
   ok = send_mail(
