@@ -77,13 +77,14 @@ def send_massenergize_email_template(subject, to, massenergize_email_type, conte
   if not from_email:
     from_email = FROM_EMAIL
 
-  t_model = {
+  t_model = { # Fill out template model
     "homelink": "asdf",
     "logo": "asdf",
     "name": "asdf",
     "community": "asdf",
   }
 
+  # TODO: Create references to all templates 
   template_id_welocme = 27142713
 
   message = pystmark.Message(
