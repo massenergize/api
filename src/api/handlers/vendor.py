@@ -192,11 +192,11 @@ class VendorHandler(RouteHandler):
   def copy(self, request):
     context: Context = request.context
     args: dict = context.args
-    args = rename_field(args, 'vendor_id', 'id')
-    vendor_id = args.pop('id', None)
+    vendor_id = args.get('vendor_id', None)
+    
     if not vendor_id:
       return CustomMassenergizeError("Please Provide Vendor Id")
-    vendor_info, err = self.service.copy_vendor(vendor_id)
+    vendor_info, err = self.service.copy_vendor(context, args)
     if err:
       return err
     return MassenergizeResponse(data=vendor_info)

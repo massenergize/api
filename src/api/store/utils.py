@@ -105,8 +105,8 @@ def remove_dups(lst):
 
 def get_new_title(new_community, old_title):
   """
-  Given an old title for an action or to be copied, it will generate a new one 
-  for use by a clone of the same actuon
+  Given an old title or name for an action, event or vendor to be copied, it will generate a new one 
+  for use by a clone of the same action, event or vendor
   # remove the "TEMPLATE", "TEMP" or "TMP" prefix or suffix
   """
   new_title = old_title

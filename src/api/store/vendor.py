@@ -1,10 +1,9 @@
 from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_community_or_die, get_admin_communities
+from .utils import get_community_or_die, get_admin_communities, get_new_title
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -208,26 +207,53 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def copy_vendor(self, vendor_id) -> Tuple[Vendor, MassEnergizeAPIError]:
+  def copy_vendor(self, context: Context, args) -> Tuple[Vendor, MassEnergizeAPIError]:
     try:
+      vendor_id = args.get("vendor_id", None)
       vendor: Vendor = Vendor.objects.get(id=vendor_id)
       if not vendor:
-        return CustomMassenergizeError(f"No vendor with id {vendor_id}")
+        return None, InvalidResourceError()
 
       old_tags = vendor.tags.all()
-      new_vendor = vendor
 
-      new_vendor.pk = None
+
+      # the copy will have "-Copy" appended to the name; if that already exists, keep it but update specifics
+      new_name = get_new_title(None, vendor.name) + "-Copy"
+      existing_vendor = Vendor.objects.filter(name=new_name).first()
+      if existing_vendor:
+        # keep existing event with that name
+        new_vendor = existing_vendor
+        # copy specifics from the event to copy
+        new_vendor.phone_number = vendor.phone_number
+        new_vendor.email = vendor.email
+        new_vendor.description = vendor.description
+        new_vendor.logo = vendor.logo
+        new_vendor.banner = vendor.banner
+        new_vendor.address = vendor.address
+        new_vendor.key_contact = vendor.key_contact
+        new_vendor.service_area = vendor.service_area
+        new_vendor.service_area_states = vendor.service_area_states
+        new_vendor.properties_serviced = vendor.properties_serviced
+        new_vendor.onboarding_date = vendor.onboarding_date
+        new_vendor.onboarding_contact = vendor.onboarding_contact
+        new_vendor.verification_checklist = vendor.verification_checklist
+        new_vendor.location = vendor.location
+        new_vendor.more_info = vendor.more_info
+
+      else:
+        new_vendor = vendor        
+        new_vendor.pk = None
+
+      new_vendor.name = new_name
       new_vendor.is_published = False
       new_vendor.is_verified = False
 
-      # the copy will have "-Copy" appended to the name; if that already exists, delete it first
-      new_name = vendor.name + "-Copy"
-      check = Vendor.objects.filter(name=new_name).first()
-      if check:
-        check.delete()
+      # keep record of who made the copy
+      if context.user_email:
+        user = UserProfile.objects.filter(email=context.user_email).first()
+        if user:
+          new_vendor.user = user
 
-      new_vendor.name = new_name
       new_vendor.save()
 
       if old_tags:

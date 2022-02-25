@@ -99,8 +99,8 @@ class VendorService:
     return serialize(vendor), None
 
 
-  def copy_vendor(self, vendor_id) -> Tuple[dict, MassEnergizeAPIError]:
-    vendor, err = self.store.copy_vendor(vendor_id)
+  def copy_vendor(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    vendor, err = self.store.copy_vendor(context, args)
     if err:
       return None, err
     return serialize(vendor), None

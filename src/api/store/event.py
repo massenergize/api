@@ -3,7 +3,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from django.db.models import Q
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
-from .utils import get_user_or_die
+from .utils import get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
 import calendar
@@ -94,32 +94,47 @@ class EventStore:
         return None, InvalidResourceError()
       
       old_tags = event_to_copy.tags.all()
-      new_event = event_to_copy 
-      new_event.pk = None
 
-      # the copy will have "-Copy" appended to the name; if that already exists, delete it first
-      new_name = event_to_copy.name + "-Copy"
-      check = Event.objects.filter(name=new_name, community=None).first()
-      if check:
-        check.delete()
+      # the copy will have "-Copy" appended to the name; if that already exists, keep it but update specifics
+      new_name = get_new_title(None, event_to_copy.name) + "-Copy"
+      existing_event = Event.objects.filter(name=new_name, community=None).first()
+      if existing_event:
+        # keep existing event with that name
+        new_event = existing_event
+        # copy specifics from the event to copy
+        new_event.start_date_and_time = event_to_copy.start_date_and_time
+        new_event.end_date_and_time = event_to_copy.end_date_and_time
+        new_event.description = event_to_copy.description
+        new_event.rsvp_enabled = event_to_copy.rsvp_enabled
+        new_event.image = event_to_copy.image
+        new_event.featured_summary = event_to_copy.featured_summary
+        new_event.location = event_to_copy.location
+        new_event.more_info = event_to_copy.more_info
+        new_event.external_link = event_to_copy.external_link
+        if not (event_to_copy.is_recurring == None):
+          new_event.is_recurring = event_to_copy.is_recurring
+          new_event.recurring_details = event_to_copy.recurring_details
+        
+      else:
+        new_event = event_to_copy        
+        new_event.pk = None
+        new_event.name = new_name
 
-      new_event.name = new_name
+      new_event.archive=False
       new_event.is_published=False
       new_event.is_global = False
-      new_event.start_date_and_time = event_to_copy.start_date_and_time
-      new_event.end_date_and_time = event_to_copy.end_date_and_time
-      new_event.description = event_to_copy.description
-      new_event.rsvp_enabled = event_to_copy.rsvp_enabled
-      new_event.featured_summary = event_to_copy.featured_summary
 
-      new_event.location = event_to_copy.location
-      if not (event_to_copy.is_recurring == None):
-        new_event.is_recurring = event_to_copy.is_recurring
-        new_event.recurring_details = event_to_copy.recurring_details
+      # keep record of who made the copy
+      if context.user_email:
+        user = UserProfile.objects.filter(email=context.user_email).first()
+        if user:
+          new_event.user = user
+
       new_event.save()
 
       if old_tags:
         new_event.tags.set(old_tags)
+
       new_event.save()
       return new_event, None
     except Exception as e:
