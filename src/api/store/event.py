@@ -6,25 +6,9 @@ from sentry_sdk import capture_message
 from .utils import get_user_or_die
 import datetime
 from datetime import timedelta
-from database.utils.constants import SHORT_STR_LEN
 import calendar
 import pytz
 from typing import Tuple
-from .utils import get_new_title
-
-def _copy_title(old_title):
-  # return first unique title
-  # Community will be None at first
-  new_title = get_new_title(None, old_title)
-  version = 0
-  while version<1000:
-    suffix = "-Copy%d" % version
-    newlen = min(len(new_title), SHORT_STR_LEN - len(suffix))
-    title = new_title[0:newlen] + suffix
-    if not Event.objects.filter(name=title).first():
-      return title
-    version += 1  
-  return None
 
 def _local_datetime(date_and_time):
   # the local date (in Massachusetts) is different than the UTC date
@@ -113,7 +97,12 @@ class EventStore:
       new_event = event_to_copy 
       new_event.pk = None
 
-      new_name = _copy_title(event_to_copy.name)
+      # the copy will have "-Copy" appended to the name; if that already exists, delete it first
+      new_name = event_to_copy.name + "-Copy"
+      check = Event.objects.filter(name=new_name, community=None).first()
+      if check:
+        check.delete()
+
       new_event.name = new_name
       new_event.is_published=False
       new_event.is_global = False

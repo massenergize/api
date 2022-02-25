@@ -128,7 +128,8 @@ class ActionHandlerTest(TestCase):
       # test update signed as user
       signinAs(self.client, self.USER)
       update_response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "user_title"}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertFalse(update_response["success"])
+      self.assertTrue(update_response["success"])
+      self.assertEquals(update_response["data"]["title"], "user_title")
 
       # test update as cadmin
       signinAs(self.client, self.CADMIN)

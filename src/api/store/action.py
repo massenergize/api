@@ -4,25 +4,9 @@ from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from database.utils.constants import SHORT_STR_LEN
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
-from .utils import get_new_title
-
-def _copy_title(old_title):
-  # return first unique title
-  new_title = get_new_title(None, old_title) 
-  version = 0
-  while version<1000:
-    suffix = "-Copy%d" % version
-    newlen = min(len(new_title), SHORT_STR_LEN - len(suffix))
-    title = new_title[0:newlen] + suffix
-    test = Action.objects.filter(title=title).first()
-    if not test:
-      return title
-    version += 1  
-  return None
 
 class ActionStore:
   def __init__(self):
@@ -143,7 +127,12 @@ class ActionStore:
       new_action.pk = None
       new_action.is_published = False
 
-      new_title = _copy_title(action_to_copy.title)
+      # the copy will have "-Copy" appended to the name; if that already exists, delete it first
+      new_title = action_to_copy.title + "-Copy"
+      check = Action.objects.filter(title=new_title, community=None).first()
+      if check:
+        check.delete()
+
       new_action.title = new_title
       new_action.is_global = False
       new_action.community = None

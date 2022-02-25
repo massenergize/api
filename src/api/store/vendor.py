@@ -6,24 +6,8 @@ from _main_.utils.context import Context
 from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities
 from _main_.utils.context import Context
-from database.utils.constants import SHORT_STR_LEN
 from sentry_sdk import capture_message
 from typing import Tuple
-from .utils import get_new_title
-
-def _copy_title(old_title):
-  # return first unique title
-  # Community will be None at first
-  new_title = get_new_title(None, old_title)
-  version = 0
-  while version<1000:
-    suffix = "-Copy%d" % version
-    newlen = min(len(new_title), SHORT_STR_LEN - len(suffix))
-    title = new_title[0:newlen] + suffix
-    if not Vendor.objects.filter(name=title).first():
-      return title
-    version += 1  
-  return None
 
 class VendorStore:
   def __init__(self):
@@ -72,7 +56,7 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_vendor(self, ctx: Context, args) -> Tuple[Vendor, MassEnergizeAPIError]:
+  def create_vendor(self, context: Context, args) -> Tuple[Vendor, MassEnergizeAPIError]:
     try:
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
@@ -135,6 +119,15 @@ class VendorStore:
     
     try:
       vendor_id = args.pop('vendor_id', None)
+      vendor = Vendor.objects.filter(id=vendor_id)
+      if not vendor:
+        return None, InvalidResourceError()  
+
+      # checks if requesting user is the vendor creator, super admin or community admin else throw error
+      test = vendor.first()
+      if (not test.user or test.user.id != context.user_id) and not context.user_is_super_admin and not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       communities = args.pop('communities', [])
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       website = args.pop('website', None)
@@ -150,9 +143,6 @@ class VendorStore:
       if not have_address:
         args['location'] = None
 
-      vendor = Vendor.objects.filter(id=vendor_id)   
-      if not vendor:
-        return None, InvalidResourceError()  
       vendor.update(**args)
       vendor = vendor.first()
       
@@ -231,7 +221,12 @@ class VendorStore:
       new_vendor.is_published = False
       new_vendor.is_verified = False
 
-      new_name = _copy_title(vendor.name)
+      # the copy will have "-Copy" appended to the name; if that already exists, delete it first
+      new_name = vendor.name + "-Copy"
+      check = Vendor.objects.filter(name=new_name).first()
+      if check:
+        check.delete()
+
       new_vendor.name = new_name
       new_vendor.save()
 

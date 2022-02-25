@@ -123,8 +123,6 @@ class VendorHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
 
-  # @admins_only
-  # changed to @Login_Required so I can edit the vendor as the creator and admin
   @login_required
   def update(self, request):
     context: Context  = request.context
@@ -158,6 +156,7 @@ class VendorHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
+
   @admins_only
   def rank(self, request):
     context: Context = request.context
@@ -189,7 +188,7 @@ class VendorHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=vendor_info)
 
-  @login_required
+  @admins_only
   def copy(self, request):
     context: Context = request.context
     args: dict = context.args

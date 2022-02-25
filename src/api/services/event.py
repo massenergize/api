@@ -1,4 +1,4 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.event import EventStore
 from _main_.utils.constants import ADMIN_URL_ROOT, SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
