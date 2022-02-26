@@ -132,10 +132,10 @@ class EventStore:
 
       new_event.save()
 
-      if old_tags:
-        new_event.tags.set(old_tags)
+      for tag in old_tags:
+        new_event.tags.add(tag)
+        new_event.save()
 
-      new_event.save()
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")

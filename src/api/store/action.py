@@ -156,10 +156,12 @@ class ActionStore:
 
       new_action.save()
 
-      old_tags = action_to_copy.tags.all()
-      old_vendors = action_to_copy.vendors.all()
-      new_action.tags.set(old_tags)
-      new_action.vendors.set(old_vendors)
+      for tag in action_to_copy.tags.all():
+        new_action.tags.add(tag)
+
+      for vendor in action_to_copy.vendors.all():
+        new_action.vendors.add(vendor)
+        
       new_action.save()
       return new_action, None
     except Exception as e:

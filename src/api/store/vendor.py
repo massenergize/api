@@ -214,9 +214,6 @@ class VendorStore:
       if not vendor:
         return None, InvalidResourceError()
 
-      old_tags = vendor.tags.all()
-
-
       # the copy will have "-Copy" appended to the name; if that already exists, keep it but update specifics
       new_name = get_new_title(None, vendor.name) + "-Copy"
       existing_vendor = Vendor.objects.filter(name=new_name).first()
@@ -256,8 +253,8 @@ class VendorStore:
 
       new_vendor.save()
 
-      if old_tags:
-        new_vendor.tags.set(old_tags)
+      for tag in vendor.tags.all():
+        new_vendor.tags.add(tag)
       new_vendor.save()
 
       return new_vendor, None
