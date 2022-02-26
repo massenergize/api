@@ -769,6 +769,7 @@ class DeviceProfile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     user_profiles = models.ManyToManyField(UserProfile, blank=True)
     ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    communities = models.ManyToManyField(Community, blank=True)
     location = models.ManyToManyField(Location, blank=True)
     device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
     operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
@@ -787,6 +788,9 @@ class DeviceProfile(models.Model):
 
     def update_user_profiles(self, user):
         self.user_profiles.add(user)
+
+    def update_communities(self, community):
+        self.communities.add(community)
 
     def update_visit_log(self, date_time):
         try:
@@ -1577,7 +1581,7 @@ class Event(models.Model):
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    is_external_event = models.BooleanField(default=False, blank=True)
+    rsvp_enabled = models.BooleanField(default=False, blank=True)
     more_info = models.JSONField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
@@ -1605,9 +1609,7 @@ class Event(models.Model):
             c.simple_json() for c in self.invited_communities.all()
         ]
         data["more_info"] = self.more_info
-    
-        # temporarily - rsvp_enabled stored as is_external_event ; will change this and migrate DBs in sync
-        data["rsvp_enabled"] = self.is_external_event
+        data["rsvp_enabled"] = self.rsvp_enabled
         return data
 
     def full_json(self):

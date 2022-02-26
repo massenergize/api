@@ -7,6 +7,13 @@ from database.utils.constants import SHORT_STR_LEN
 import zipcodes
 from sentry_sdk import capture_message
 
+
+def getCarbonScoreFromActionRel(actionRel): 
+  if not actionRel or actionRel.status !="DONE":  return 0 
+  if actionRel.carbon_impact : return actionRel.carbon_impact
+  if actionRel.action.calculator_action: return actionRel.action.calculator_action.average_points
+  return 0
+
 def get_community(community_id=None, subdomain=None):
   try:
     if community_id:

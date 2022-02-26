@@ -256,6 +256,8 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+EMAIL_POSTMARK_SERVER_TOKEN = os.environ.get('EMAIL_POSTMARK_SERVER_TOKEN')
+
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'

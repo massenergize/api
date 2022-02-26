@@ -1,26 +1,19 @@
-Feb 4:
-- several bugs fixed
-Jan 17:
+Feb 22
+- integrate PostMark service
+- add routes for completed actions list for communities and teams
+Feb 14 Deployment - Version 4.2
 - Graph data selection by Cadmins
 - Notify cadmin when testimonial submitted
-- Fixes for Action dates
+- Action dates implemented
 - Cadmins can receive content from other communities (.listForCommunityAdmin routes)
-Dec 21:
 - Media library support
 - Event RSVPs list route
-- User edited testimonials
-- Change to visit_logs for anonymous and registered users
-Dec 5:
-- Customizable registration and signin pages
+- User submitted testimonials can be edited
+- Visit_logs for anonymous and registered users
 - Improved user importing
 - Add DeviceProfile for tracking anonymous users
 - Add GeoIP for determining IP address location
-Nov 14:
-- Fix numerous bugs since 4.0 deployment:
-- Make sandbox sites work more completely
-- fix csv downloads
 - Admin contact emails go to primary contact
 - Sort Communities by location/name
-- User import fixes
 Oct 17th Deployment - Version 4.0
 - Make cookie secure
