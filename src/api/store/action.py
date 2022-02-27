@@ -1,12 +1,11 @@
 from database.models import Action, UserProfile, Community, Media, UserActionRel
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from .utils import get_new_title
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
-from .utils import get_community
 
 class ActionStore:
   def __init__(self):
@@ -64,6 +63,7 @@ class ActionStore:
       image = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
       title = args.get('title', None)
+      user_email = args.pop('user_email', context.user_email)
 
       actions = Action.objects.filter(title=title, community__id=community_id)
       if actions:
@@ -80,7 +80,18 @@ class ActionStore:
       if image:
         media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
         new_action.image = media
-      
+
+      user = None
+      if user_email:
+        user_email = user_email.strip()
+        # verify that provided emails are valid user
+        if not UserProfile.objects.filter(email=user_email).exists():
+          return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
+
+        user = UserProfile.objects.filter(email=user_email).first()
+        if user:
+          new_action.user = user
+
       #save so you set an id
       new_action.save()
 
@@ -105,21 +116,53 @@ class ActionStore:
   def copy_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       action_id = args.get("action_id", None)
+
       #find the action
       action_to_copy: Action = Action.objects.filter(id=action_id).first()
       if not action_to_copy:
         return None, InvalidResourceError()
-      old_tags = action_to_copy.tags.all()
-      old_vendors = action_to_copy.vendors.all()
-      new_action = action_to_copy
-      new_action.pk = None
+
+      # the copy will have "-Copy" appended to the name; if that already exists, delete it first
+      new_title = get_new_title(None, action_to_copy.title) + "-Copy"
+      existing_action = Action.objects.filter(title=new_title, community=None).first()
+      if existing_action:
+        # keep existing action with that title, and linkages
+        new_action = existing_action
+        # copy specifics from the action to copy
+        new_action.featured_summary = action_to_copy.featured_summary
+        new_action.steps_to_take = action_to_copy.steps_to_take
+        new_action.deep_dive = action_to_copy.deep_dive
+        new_action.about = action_to_copy.about
+        new_action.primary_category = action_to_copy.primary_category
+        new_action.geographic_area = action_to_copy.geographic_area
+        new_action.icon = action_to_copy.icon
+        new_action.image = action_to_copy.image
+        new_action.calculator_action = action_to_copy.calculator_action
+        new_action.average_carbon_score = action_to_copy.average_carbon_score
+      else:
+        new_action = action_to_copy        
+        new_action.pk = None
+        new_action.title = new_title
+
       new_action.is_published = False
-      new_action.title = action_to_copy.title + "-Copy"
       new_action.is_global = False
       new_action.community = None
+
+      # keep record of who made the copy
+      if context.user_email:
+        user = UserProfile.objects.filter(email=context.user_email).first()
+        if user:
+          new_action.user = user
+
       new_action.save()
-      new_action.tags.set(old_tags)
-      new_action.vendors.set(old_vendors)
+
+      for tag in action_to_copy.tags.all():
+        new_action.tags.add(tag)
+
+      for vendor in action_to_copy.vendors.all():
+        new_action.vendors.add(vendor)
+        
+      new_action.save()
       return new_action, None
     except Exception as e:
       capture_message(str(e), level="error")

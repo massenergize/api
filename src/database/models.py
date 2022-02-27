@@ -1362,6 +1362,8 @@ class Vendor(models.Model):
         Community, blank=True, related_name="community_vendors"
     )
     tags = models.ManyToManyField(Tag, related_name="vendor_tags", blank=True)
+    # which user posted this vendor
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
 
@@ -1410,6 +1412,9 @@ class Vendor(models.Model):
         data["website"] = self.more_info and self.more_info.get("website", None)
         data["key_contact"] = self.key_contact
         data["location"] = self.location
+        if self.user:
+            data["user_email"] = self.user.email
+
         return data
 
     class Meta:
@@ -1476,6 +1481,8 @@ class Action(models.Model):
         Community, on_delete=models.SET_NULL, null=True, blank=True, db_index=True
     )
     rank = models.PositiveSmallIntegerField(default=0, blank=True)
+    # which user posted this action originally
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
@@ -1523,6 +1530,8 @@ class Action(models.Model):
         data["geographic_area"] = self.geographic_area
         data["properties"] = [p.simple_json() for p in self.properties.all()]
         data["vendors"] = [v.simple_json() for v in self.vendors.all()]
+        if self.user:
+            data["user_email"] = self.user.email
         return data
 
     class Meta:
@@ -1586,6 +1595,8 @@ class Event(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
+    # which user posted this event - may be the responsible party
+    user = models.ForeignKey(UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True)
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
 
@@ -1610,6 +1621,9 @@ class Event(models.Model):
         ]
         data["more_info"] = self.more_info
         data["rsvp_enabled"] = self.rsvp_enabled
+        if self.user:
+            data["user_email"] = self.user.email
+
         return data
 
     def full_json(self):

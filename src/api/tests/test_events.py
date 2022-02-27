@@ -190,7 +190,8 @@ class EventsTestCase(TestCase):
         # test logged as user
         signinAs(self.client, self.USER)
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertFalse(response["success"])
+        self.assertTrue(response["success"])
+        self.assertEqual(response["data"]["name"], "updated_name")
 
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)

@@ -1,6 +1,10 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.event import EventStore
+from _main_.utils.constants import ADMIN_URL_ROOT, SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from .utils import send_slack_message
+from api.store.utils import get_user_or_die
 from typing import Tuple
 
 class EventService:
@@ -69,10 +73,53 @@ class EventService:
     return serialize_all(events), None
 
 
-  def create_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_event(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
     event, err = self.store.create_event(context, args)
     if err:
       return None, err
+
+    if user_submitted:
+
+      # For now, send e-mail to primary community contact for a site
+      admin_email = event.community.owner_email
+      admin_name = event.community.owner_name
+      first_name = admin_name.split(" ")[0]
+      if not first_name or first_name == "":
+        first_name = admin_name
+
+      community_name = event.community.name
+
+      user = get_user_or_die(context, args)
+      if user:
+        name = user.full_name
+        email = user.email
+      else:
+        return None, CustomMassenergizeError('Event submission incomplete')
+
+      subject = 'User Event Submitted'
+
+      content_variables = {
+        'name': first_name,
+        'community_name': community_name,
+        'url': f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
+        'from_name': name,
+        'email': email,
+        'title': event.title,
+        'body': event.description,
+      }
+      send_massenergize_rich_email(
+            subject, admin_email, 'event_submitted_email.html', content_variables)
+
+      send_slack_message(
+          SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+          "from_name": name,
+          "email": email,
+          "subject": event.title,
+          "message": event.description,
+          "url": f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
+          "community": community_name
+      }) 
+
     return serialize(event), None
 
 

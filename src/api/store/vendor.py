@@ -1,14 +1,12 @@
 from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from django.utils.text import slugify
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_community_or_die, get_admin_communities
+from .utils import get_community_or_die, get_admin_communities, get_new_title
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
-import random
 
 class VendorStore:
   def __init__(self):
@@ -57,12 +55,13 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_vendor(self, ctx: Context, args) -> Tuple[Vendor, MassEnergizeAPIError]:
+  def create_vendor(self, context: Context, args) -> Tuple[Vendor, MassEnergizeAPIError]:
     try:
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
       image = args.pop('image', None)
       website = args.pop('website', None)
+      user_email = args.pop('user_email', context.user_email)
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       key_contact_name = args.pop('key_contact_name', None)
       key_contact_email = args.pop('key_contact_email', None)
@@ -86,6 +85,17 @@ class VendorStore:
         if onboarding_contact:
           new_vendor.onboarding_contact = onboarding_contact
 
+      user = None
+      if user_email:
+        user_email = user_email.strip()
+        # verify that provided emails are valid user
+        if not UserProfile.objects.filter(email=user_email).exists():
+          return None, CustomMassenergizeError(f"Email: {user_email} is not registered with us")
+
+        user = UserProfile.objects.filter(email=user_email).first()
+        if user:
+          new_vendor.user = user
+
       if website:
         new_vendor.more_info = {'website': website}
       
@@ -108,6 +118,15 @@ class VendorStore:
     
     try:
       vendor_id = args.pop('vendor_id', None)
+      vendor = Vendor.objects.filter(id=vendor_id)
+      if not vendor:
+        return None, InvalidResourceError()  
+
+      # checks if requesting user is the vendor creator, super admin or community admin else throw error
+      test = vendor.first()
+      if (not test.user or test.user.id != context.user_id) and not context.user_is_super_admin and not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       communities = args.pop('communities', [])
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
       website = args.pop('website', None)
@@ -123,9 +142,6 @@ class VendorStore:
       if not have_address:
         args['location'] = None
 
-      vendor = Vendor.objects.filter(id=vendor_id)   
-      if not vendor:
-        return None, InvalidResourceError()  
       vendor.update(**args)
       vendor = vendor.first()
       
@@ -191,18 +207,57 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def copy_vendor(self, vendor_id) -> Tuple[Vendor, MassEnergizeAPIError]:
+  def copy_vendor(self, context: Context, args) -> Tuple[Vendor, MassEnergizeAPIError]:
     try:
+      vendor_id = args.get("vendor_id", None)
       vendor: Vendor = Vendor.objects.get(id=vendor_id)
       if not vendor:
-        return CustomMassenergizeError(f"No vendor with id {vendor_id}")
-        
-      vendor.pk = None
-      vendor.is_published = False
-      vendor.is_verified = False
-      vendor.name = f"{vendor.name}-Copy-{random.randint(1,100000)}"
-      vendor.save()
-      return vendor, None
+        return None, InvalidResourceError()
+
+      # the copy will have "-Copy" appended to the name; if that already exists, keep it but update specifics
+      new_name = get_new_title(None, vendor.name) + "-Copy"
+      existing_vendor = Vendor.objects.filter(name=new_name).first()
+      if existing_vendor:
+        # keep existing event with that name
+        new_vendor = existing_vendor
+        # copy specifics from the event to copy
+        new_vendor.phone_number = vendor.phone_number
+        new_vendor.email = vendor.email
+        new_vendor.description = vendor.description
+        new_vendor.logo = vendor.logo
+        new_vendor.banner = vendor.banner
+        new_vendor.address = vendor.address
+        new_vendor.key_contact = vendor.key_contact
+        new_vendor.service_area = vendor.service_area
+        new_vendor.service_area_states = vendor.service_area_states
+        new_vendor.properties_serviced = vendor.properties_serviced
+        new_vendor.onboarding_date = vendor.onboarding_date
+        new_vendor.onboarding_contact = vendor.onboarding_contact
+        new_vendor.verification_checklist = vendor.verification_checklist
+        new_vendor.location = vendor.location
+        new_vendor.more_info = vendor.more_info
+
+      else:
+        new_vendor = vendor        
+        new_vendor.pk = None
+
+      new_vendor.name = new_name
+      new_vendor.is_published = False
+      new_vendor.is_verified = False
+
+      # keep record of who made the copy
+      if context.user_email:
+        user = UserProfile.objects.filter(email=context.user_email).first()
+        if user:
+          new_vendor.user = user
+
+      new_vendor.save()
+
+      for tag in vendor.tags.all():
+        new_vendor.tags.add(tag)
+      new_vendor.save()
+
+      return new_vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
