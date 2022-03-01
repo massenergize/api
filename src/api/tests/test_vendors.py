@@ -27,6 +27,8 @@ class VendorsTestCase(TestCase):
       self.COMMUNITY = Community.objects.create(**{
         'subdomain': COMMUNITY_NAME,
         'name': COMMUNITY_NAME.capitalize(),
+        'owner_email': 'no-reply@massenergize.org',
+        'owner_name': 'Community Owner',
         'accepted_terms_and_conditions': True
       })
   
@@ -40,6 +42,12 @@ class VendorsTestCase(TestCase):
       self.VENDOR2.communities.set([self.COMMUNITY])
       self.VENDOR1.save()
       self.VENDOR2.save()
+
+      # a user submitted vendor
+      signinAs(self.client, self.USER)
+      response = self.client.post('/api/vendors.add', urlencode({"name": "User Submitted Vendor", "community_id":self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.SUBMITTED_VENDOR_ID = response["data"]["id"]
+
         
     @classmethod
     def tearDownClass(self):
@@ -106,14 +114,22 @@ class VendorsTestCase(TestCase):
 
         # test logged as user
         signinAs(self.client, self.USER)
-        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name1"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
+
+        # test logged as user who submitted a vendor
+        # TODO: make this test work
+        # signinAs(self.client, self.USER)
+        #response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.SUBMITTED_VENDOR_ID, "name": "updated_name1", "community_id":self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        #print(response)
+        #self.assertTrue(response["success"])
+        #self.assertEqual(response["data"]["name"], "updated_name1")
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name2"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
-        self.assertEqual(response["data"]["name"], "updated_name")
+        self.assertEqual(response["data"]["name"], "updated_name2")
 
     def test_copy(self):
         # test not logged in
@@ -124,7 +140,7 @@ class VendorsTestCase(TestCase):
         # test logged as user
         signinAs(self.client, self.USER)
         response = self.client.post('/api/vendors.copy', urlencode({"vendor_id": self.VENDOR1.id}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertTrue(response["success"])
+        self.assertFalse(response["success"])
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)

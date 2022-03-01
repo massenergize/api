@@ -20,7 +20,8 @@ class ActionHandler(RouteHandler):
   def registerRoutes(self):
     self.add("/actions.info", self.info) 
     self.add("/actions.create", self.create)
-    self.add("/actions.add", self.create)
+    self.add("/actions.add", self.submit)
+    self.add("/actions.submit", self.submit)
     self.add("/actions.list", self.list)
     self.add("/actions.update", self.update)
     self.add("/actions.delete", self.delete)
@@ -76,6 +77,35 @@ class ActionHandler(RouteHandler):
     return MassenergizeResponse(data=action_info)
 
 
+# same as create, except this is for user submitted actions
+  @login_required
+  def submit(self, request): 
+    context: Context = request.context
+    args = context.get_request_body() 
+    (self.validator
+      .expect("title", str, is_required=True, options={"min_length": 4, "max_length": 40})
+      .expect("community_id", int, is_required=True)
+      .expect("image", "file", is_required=False, options={"is_logo": True})
+      .expect("vendors", list, is_required=False)
+      #.expect("calculator_action", int, is_required=False)
+      #.expect("rank", int, is_required=False)
+      #.expect("is_global", bool, is_required=False)
+      #.expect("is_published", bool, is_required=False)
+      #.expect("tags", list, is_required=False)
+    )
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    # user submitted action, so notify the community admins
+    user_submitted = True
+    action_info, err = self.service.create_action(context, args, user_submitted)
+    if err:
+      return err
+    return MassenergizeResponse(data=action_info)
+
+
   def list(self, request): 
     context: Context = request.context
     args: dict = context.args
@@ -93,7 +123,9 @@ class ActionHandler(RouteHandler):
     return MassenergizeResponse(data=action_info)
 
 
-  @admins_only
+  # @admins_only
+  # changed to @Login_Required so I can edit the action as the creator and admin
+  @login_required
   def update(self, request): 
     context: Context = request.context
     args = context.get_request_body() 
