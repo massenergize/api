@@ -27,6 +27,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/data.carbonEquivalency.info", self.get_carbon_equivalencies)
         self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
         self.add("/home", self.home)
+        self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
 
     def remake_navigation_menu(self, request):
@@ -110,3 +111,21 @@ class MiscellaneousHandler(RouteHandler):
     def home(self, request):
         context: Context = request.context
         return self.service.home(context, request)
+
+    def authenticateFrontendInTestMode(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("passport_key", str, is_required=True)
+        self.validator.expect("email", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+            return MassenergizeResponse(error=str(err), status=err.status)
+
+        token, error = self.service.authenticateFrontendInTestMode(args)
+        if error:
+            return MassenergizeResponse(error=str(error), status=error.status)
+
+        response =  MassenergizeResponse(data=token)
+        response.set_cookie("token", value=token, max_age=24*60*60, samesite='Strict')
+        return response

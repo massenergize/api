@@ -1,6 +1,7 @@
 """
 Middle ware for authorization for users before they access specific resources
 """
+from base64 import decode
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError, MassEnergizeAPIError, MassenergizeResponse
 from _main_.utils.context import Context
 from _main_.settings import SECRET_KEY, RUN_SERVER_LOCALLY
@@ -8,6 +9,8 @@ from firebase_admin import auth
 import jwt
 from sentry_sdk import capture_message
 from typing import Tuple
+
+from _main_.utils.utils import Console
 
 class MassenergizeJWTAuthMiddleware:
 
