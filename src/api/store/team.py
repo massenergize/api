@@ -1,10 +1,10 @@
-from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup
+from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from django.utils.text import slugify
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
 from _main_.utils.common import is_value
-from .utils import get_community_or_die, get_user_or_die, get_admin_communities
+from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
@@ -39,7 +39,7 @@ class TeamStore:
       if not team:
         return None, InvalidResourceError()
 
-      userOnTeam = False 
+      userOnTeam = False
       if context.user_id:    # None for anonymous usage
         user = UserProfile.objects.get(id=context.user_id)
         userOnTeam = TeamMember.objects.filter(team=team, user=user).exists()
@@ -381,11 +381,8 @@ class TeamStore:
         return None, CustomMassenergizeError("User email or id not specified")
 
       teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)      
-      if is_admin:
-        teamMember.is_admin = True
-
-      if created:
-        teamMember.save()
+      teamMember.is_admin = is_admin
+      teamMember.save()
       
       return team, None
     except Exception as e:
@@ -487,3 +484,49 @@ class TeamStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
+
+  def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    try:
+      """
+      Find all the actions that members of a team have interacted with (DONE, or added to their TODO)
+      Then create a summary for each of the actions: 
+      i.e How many users have DONE the action or added to their TODO list 
+      And the carbon_total if a user has DONE it  
+      """
+      team_id = args.pop("team_id", None)
+      actions_completed = []
+      actions_recorded = [] 
+      if not team_id:
+        return [], CustomMassenergizeError('Please provide a valid team_id')
+
+      team = Team.objects.filter(id=team_id).first()
+      users = get_team_users(team)
+
+      completed_actions = UserActionRel.objects.filter(user__in=users, is_deleted=False).select_related('action', 'action__calculator_action')
+      for completed_action in completed_actions:
+          action_id = completed_action.action.id
+          action_carbon = getCarbonScoreFromActionRel(completed_action)
+          done = 1 if completed_action.status == "DONE" else 0
+          todo = 1 if completed_action.status == "TODO" else 0
+       
+          #Get id of the action, if it has already been recorded, so that its fields can be updated, else, add to the array 
+          ind = next((actions_completed.index(a) for a in actions_completed if a["id"]==action_id), None)
+          if ind != None:
+            actions_completed[ind]["done_count"] += done
+            actions_completed[ind]["carbon_total"] += action_carbon
+            actions_completed[ind]["todo_count"] += todo
+          else:
+            if action_id not in actions_recorded:
+              action_name = completed_action.action.title
+              category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
+              action_category = category_obj.name if category_obj else None
+              actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, 
+              "todo_count":todo, "community":{"id":completed_action.action.community.id,'subdomain':completed_action.action.community.subdomain, "name":completed_action.action.community.name}})
+              actions_recorded.append(action_id)
+
+      actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
+      return actions_completed, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+

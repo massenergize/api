@@ -7,6 +7,13 @@ from database.utils.constants import SHORT_STR_LEN
 import zipcodes
 from sentry_sdk import capture_message
 
+
+def getCarbonScoreFromActionRel(actionRel): 
+  if not actionRel or actionRel.status !="DONE":  return 0 
+  if actionRel.carbon_impact : return actionRel.carbon_impact
+  if actionRel.action.calculator_action: return actionRel.action.calculator_action.average_points
+  return 0
+
 def get_community(community_id=None, subdomain=None):
   try:
     if community_id:
@@ -98,8 +105,8 @@ def remove_dups(lst):
 
 def get_new_title(new_community, old_title):
   """
-  Given an old title for an action to be copied, it will generate a new one 
-  for use by a clone of the same actuon
+  Given an old title or name for an action, event or vendor to be copied, it will generate a new one 
+  for use by a clone of the same action, event or vendor
   # remove the "TEMPLATE", "TEMP" or "TMP" prefix or suffix
   """
   new_title = old_title
@@ -122,12 +129,14 @@ def get_new_title(new_community, old_title):
       elif loc>0:
         new_title = old_title[0:loc-1]
 
+  if not new_community: return new_title
+
   # add community name to suffix (not the action id
   # #make sure the action title does not exceed the max length expected
   suffix = f'-{new_community.subdomain}'
   len_suffix = len(suffix)
   new_title_len = min(len(new_title), SHORT_STR_LEN - len_suffix)
-  return new_title[0:new_title_len]+suffix
+  return new_title[0:new_title_len-1]+suffix
 
 
 def find_reu_community(reu, verbose=False):

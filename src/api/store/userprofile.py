@@ -333,6 +333,8 @@ class UserStore:
       # allow home address to be passed in
       location = args.pop('location', '')
       profile_picture = args.pop("profile_picture", None)
+      color = args.pop('color', '')
+      #print("Color is "+color)
       
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
@@ -344,7 +346,6 @@ class UserStore:
           email=args.get('email'),
           is_vendor=args.get('is_vendor', False),
           accepts_terms_and_conditions=args.pop('accepts_terms_and_conditions', False),
-          preferences={'color': args.get('color', '')}
         )
         
         if profile_picture:
@@ -357,15 +358,16 @@ class UserStore:
           new_user.profile_picture = pic
           new_user.save()
       
-      
+        if color:
+          new_user.preferences = {'color': color}
+          new_user.save()
+
       else:
         new_user: UserProfile = user
         # if user was imported but profile incomplete, updates user with info submitted in form
         if not new_user.accepts_terms_and_conditions:
           new_user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
-          is_vendor = args.get('is_vendor', False)
-          preferences = {'color': args.get('color')}
-      
+       
       community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
       if not community_member_exists:
         # add them as a member to community 

@@ -19,7 +19,8 @@ class EventHandler(RouteHandler):
   def registerRoutes(self) -> None:
     self.add("/events.info", self.info) 
     self.add("/events.create", self.create)
-    self.add("/events.add", self.create)
+    self.add("/events.add", self.submit)
+    self.add("/events.submit", self.submit)
     self.add("/events.copy", self.copy)
     self.add("/events.list", self.list)
     self.add("/events.update", self.update)
@@ -170,7 +171,6 @@ class EventHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
-  # TODO implement validator
   @admins_only
   def create(self, request):
     context: Context = request.context
@@ -191,6 +191,33 @@ class EventHandler(RouteHandler):
       return err
 
     event_info, err = self.service.create_event(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=event_info)
+
+  
+  @login_required
+  def submit(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect('name', str, is_required=True, options={"min_length":5, "max_length":100})
+    self.validator.expect('tags', list)
+    #self.validator.expect('is_global', bool)
+    #self.validator.expect('archive', bool)
+    #self.validator.expect('is_published', bool)
+    self.validator.expect('is_recurring', bool)
+    self.validator.expect('have_address', bool)
+    self.validator.expect('location', 'location')
+    self.validator.expect('rsvp_enabled', bool)
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+
+    # user submitted event, so notify the community admins
+    user_submitted = True
+    event_info, err = self.service.create_event(context, args, user_submitted)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
@@ -239,8 +266,9 @@ class EventHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=event_info)
 
-  # TODO implement validator
-  @admins_only
+  # @admins_only
+  # changed to @Login_Required so I can edit the event as the creator and admin
+  @login_required
   def update(self, request):
     context: Context = request.context
     args: dict = context.args

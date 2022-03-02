@@ -769,6 +769,7 @@ class DeviceProfile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
     user_profiles = models.ManyToManyField(UserProfile, blank=True)
     ip_address = models.CharField(max_length=SHORT_STR_LEN, null=True)
+    communities = models.ManyToManyField(Community, blank=True)
     location = models.ManyToManyField(Location, blank=True)
     device_type = models.CharField(max_length=SHORT_STR_LEN, null=True)
     operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
@@ -787,6 +788,9 @@ class DeviceProfile(models.Model):
 
     def update_user_profiles(self, user):
         self.user_profiles.add(user)
+
+    def update_communities(self, community):
+        self.communities.add(community)
 
     def update_visit_log(self, date_time):
         try:
@@ -1358,6 +1362,8 @@ class Vendor(models.Model):
         Community, blank=True, related_name="community_vendors"
     )
     tags = models.ManyToManyField(Tag, related_name="vendor_tags", blank=True)
+    # which user posted this vendor
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
 
@@ -1406,6 +1412,9 @@ class Vendor(models.Model):
         data["website"] = self.more_info and self.more_info.get("website", None)
         data["key_contact"] = self.key_contact
         data["location"] = self.location
+        if self.user:
+            data["user_email"] = self.user.email
+
         return data
 
     class Meta:
@@ -1472,6 +1481,8 @@ class Action(models.Model):
         Community, on_delete=models.SET_NULL, null=True, blank=True, db_index=True
     )
     rank = models.PositiveSmallIntegerField(default=0, blank=True)
+    # which user posted this action originally
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
@@ -1519,6 +1530,8 @@ class Action(models.Model):
         data["geographic_area"] = self.geographic_area
         data["properties"] = [p.simple_json() for p in self.properties.all()]
         data["vendors"] = [v.simple_json() for v in self.vendors.all()]
+        if self.user:
+            data["user_email"] = self.user.email
         return data
 
     class Meta:
@@ -1577,11 +1590,13 @@ class Event(models.Model):
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    is_external_event = models.BooleanField(default=False, blank=True)
+    rsvp_enabled = models.BooleanField(default=False, blank=True)
     more_info = models.JSONField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
+    # which user posted this event - may be the responsible party
+    user = models.ForeignKey(UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True)
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
 
@@ -1605,9 +1620,10 @@ class Event(models.Model):
             c.simple_json() for c in self.invited_communities.all()
         ]
         data["more_info"] = self.more_info
-    
-        # temporarily - rsvp_enabled stored as is_external_event ; will change this and migrate DBs in sync
-        data["rsvp_enabled"] = self.is_external_event
+        data["rsvp_enabled"] = self.rsvp_enabled
+        if self.user:
+            data["user_email"] = self.user.email
+
         return data
 
     def full_json(self):
