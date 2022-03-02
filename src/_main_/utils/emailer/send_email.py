@@ -10,19 +10,28 @@ from _main_.settings import EMAIL_POSTMARK_API_ENDPOINT_URL
 
 FROM_EMAIL = 'no-reply@massenergize.org'
 
-def get_email_templates():
+def get_email_templates(count, offset, TemplateType=None, LayoutTemplate=None):
   request = requests.get("{}/templates".format(EMAIL_POSTMARK_API_ENDPOINT_URL),headers={
     "Accept": "application/json",
     "X-Postmark-Server-Token": EMAIL_POSTMARK_SERVER_TOKEN
   }, params={
-    "Count": 10,
-    "Offset": 0
-  }
-  )
+    "Count": count,
+    "Offset": offset
+  })
 
   return request.json()
 
-templates = get_email_templates()
+templates = get_email_templates(10, 0)
+
+def get_template(TemplateId=None):
+  request = requests.get("{}/templates".format(EMAIL_POSTMARK_API_ENDPOINT_URL),headers={
+    "Accept": "application/json",
+    "X-Postmark-Server-Token": EMAIL_POSTMARK_SERVER_TOKEN
+  }, params={
+    "TemplateId": TemplateId
+  })
+
+  return request.json()
 
 def old_send_massenergize_email(subject, msg, to):
   ok = send_mail(
