@@ -57,12 +57,13 @@ class MassenergizeJWTAuthMiddleware:
       ctx = Context()
 
       #set request body
-      ctx.set_request_body(request)
+      ctx.set_request_body(request,filter_out =["__token"])
 
       # path = self._get_clean_path(request)
 
       #extract JWT auth token
-      token = request.COOKIES.get('token', None) 
+      token =  request.POST.get("__token") or request.COOKIES.get('token', None) 
+    
       if token:
         decoded_token, err = self._get_decoded_token(token)
         if err:

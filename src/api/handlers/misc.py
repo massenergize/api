@@ -5,7 +5,7 @@ from _main_.utils.common import get_request_contents
 from api.services.misc import MiscellaneousService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
-from _main_.utils.utils import get_models_and_field_types
+from _main_.utils.utils import Console, get_models_and_field_types
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
@@ -115,7 +115,7 @@ class MiscellaneousHandler(RouteHandler):
     def authenticateFrontendInTestMode(self, request):
         context: Context = request.context
         args: dict = context.args
-
+        Console.log("I am the args bro", args)
         self.validator.expect("passport_key", str, is_required=True)
         self.validator.expect("email", str, is_required=True)
         args, err = self.validator.verify(args)
