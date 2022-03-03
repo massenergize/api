@@ -50,21 +50,6 @@ def get_template(TemplateId=None):
   return request.json()
 
 
-def old_send_massenergize_email(subject, msg, to):
-  ok = send_mail(
-      subject,
-      msg,
-      FROM_EMAIL, #from
-      [to],
-      fail_silently=False,
-  )
-
-  if not ok:
-    capture_message(f"Error Occurred in Sending Email to {to}", level="error")
-    return False
-  return True
-
-
 def send_massenergize_email(subject, msg, to):
   message = pystmark.Message(
     subject=subject,
@@ -77,21 +62,6 @@ def send_massenergize_email(subject, msg, to):
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     print(response.raise_for_status())
-    return False
-  return True
-
-
-def old_send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
-  if not from_email:
-    from_email = FROM_EMAIL
-  html_content = render_to_string(massenergize_email_type, content_variables)
-  text_content = strip_tags(html_content)
-  msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
-  msg.attach_alternative(html_content, "text/html")
-  ok = msg.send(fail_silently=True)
-
-  if not ok:
-    capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
 
@@ -118,7 +88,7 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
   return True
 
 
-def send_massenergize_email_from_template(subject, to, massenergize_email_type, content_variables, from_email=None):
+def send_massenergize_email_from_template(to: str, from_email: str = None, template_id: int = None):
   if not from_email:
     from_email = FROM_EMAIL
 
@@ -129,13 +99,14 @@ def send_massenergize_email_from_template(subject, to, massenergize_email_type, 
     "community": "asdf",
   }
 
-  # TODO: Create references to all templates 
-  template_id_welocme = 27142713
+  # TODO: Create references to all templates
+  if (not template_id):
+    template_id = 27142713
 
   message = pystmark.Message(
     to=to,
     sender=from_email, 
-    template_id=template_id_welocme,
+    template_id=template_id,
     template_model=t_model
   )
 
@@ -148,21 +119,7 @@ def send_massenergize_email_from_template(subject, to, massenergize_email_type, 
   return True
 
 
-def old_send_massenergize_mass_email(subject, msg, recipient_emails):
-  ok = send_mail(
-      subject,
-      msg,
-      FROM_EMAIL, #from
-      recipient_list=recipient_emails,
-      fail_silently=True,
-  )
-
-  if not ok:
-    capture_message("Error occurred in sending some emails", level="error")
-
-    return False
-
-  return True
+# send_massenergize_email_from_template("dave.kinghorn@massenergize.org", "dave.kinghorn@massenergize.org")
 
 
 def send_massenergize_mass_email(subject, msg, to):
@@ -180,6 +137,3 @@ def send_massenergize_mass_email(subject, msg, to):
     return False
 
   return True
-
-
-get_email_templates()
