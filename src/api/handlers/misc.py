@@ -115,7 +115,6 @@ class MiscellaneousHandler(RouteHandler):
     def authenticateFrontendInTestMode(self, request):
         context: Context = request.context
         args: dict = context.args
-        Console.log("I am the args bro", args)
         self.validator.expect("passport_key", str, is_required=True)
         self.validator.expect("email", str, is_required=True)
         args, err = self.validator.verify(args)
