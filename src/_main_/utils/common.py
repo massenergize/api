@@ -7,7 +7,8 @@ from datetime import datetime
 #import cv2
 from sentry_sdk import capture_message
 
-def get_request_contents(request):
+def get_request_contents(request,**kwargs):
+  filter_out = kwargs.get("filter_out")
   try:
     if request.method != 'POST' :
       return request.GET.dict()
@@ -23,6 +24,9 @@ def get_request_contents(request):
     else:
       args = request.POST.dict()
     
+    if filter_out: 
+      for key in filter_out: 
+        args.pop(key, None)
     return args
 
   except Exception as e:    
