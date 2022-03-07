@@ -1,3 +1,5 @@
+from django.test import Client
+import os
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     CustomMassenergizeError,
@@ -7,6 +9,7 @@ from _main_.utils.common import serialize, serialize_all
 from api.store.misc import MiscellaneousStore
 from _main_.utils.context import Context
 from django.shortcuts import render
+from api.tests.common import makeAuthToken, signinAs
 from database.models import Deployment
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
 from sentry_sdk import capture_message
@@ -14,7 +17,7 @@ from _main_.utils.utils import load_json, load_text_contents
 from django.db.models.query import QuerySet
 from typing import Tuple
 
-
+PASSPORT_KEY = os.environ.get("TEST_PASSPORT_KEY")
 class MiscellaneousService:
     """
     Service Layer for all the goals
@@ -112,3 +115,13 @@ class MiscellaneousService:
         if err:
             return None, err
         return serialize(carbon_data), None
+
+    def authenticateFrontendInTestMode(self, args): 
+        passport_key = args.get("passport_key") 
+        if passport_key != PASSPORT_KEY: 
+            return None, CustomMassenergizeError("invalid_passport_key")
+        user, err =  self.store.authenticateFrontendInTestMode(args)
+        if err: return None, CustomMassenergizeError(str(err))
+        client = Client()
+        return signinAs(client,user), None
+        

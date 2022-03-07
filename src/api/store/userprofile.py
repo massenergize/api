@@ -86,7 +86,9 @@ def _update_action_data_totals(action, household, value):
 
     elif value>0:
       # data for this community, action does not exist so create one
-      d = Data(tag=t, community=community, value=value, name=f"{t.name}")
+      d = Data.objects.create(value=value, name=f"{t.name}")
+      d.community=community
+      d.tag = t
       d.save()
 
 
