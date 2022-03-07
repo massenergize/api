@@ -22,15 +22,15 @@
       "navItemId": "menu-actions-id",
       "children": [
         {
-          "link": "actions",
+          "link": "/actions",
           "name": "All Actions"
         },
         {
-          "link": "services",
+          "link": "/services",
           "name": "Service Providers"
         },
         {
-          "link": "testimonials",
+          "link": "/testimonials",
           "name": "Testimonials"
         }
       ]

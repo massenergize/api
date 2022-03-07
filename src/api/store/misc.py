@@ -1,4 +1,5 @@
 from _main_.utils.utils import Console
+from api.tests.common import createUsers
 from database.models import (
     Action,
     Vendor,
@@ -36,7 +37,13 @@ from typing import Tuple
 class MiscellaneousStore:
     def __init__(self):
         self.name = "Miscellaneous Store/DB"
-
+    def authenticateFrontendInTestMode(self, args): 
+        email = args.get("email"); 
+        user = UserProfile.objects.filter(email = email).first() 
+        if not user: 
+            user = createUsers(email = email, full_name = "Master Chef - Test")
+        return user, None
+        
     def remake_navigation_menu(self, json) -> Tuple[dict, MassEnergizeAPIError]:
         Menu.objects.all().delete()
         for name, menu in json.items():
