@@ -65,7 +65,7 @@ class DeviceStore:
 
       community_id = args.pop("community_id", None)
       if community_id:
-        community = Community.objects.get()
+        community = Community.objects.get(id=community_id)
 
       if id: # If the cookie exists check for a device
         devices = DeviceProfile.objects.filter(id=id)
