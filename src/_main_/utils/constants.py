@@ -29,7 +29,7 @@ ADMIN_URL_ROOT = (
 )
 
 SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = "https://hooks.slack.com/workflows/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"
-
+SLACK_SUPER_ADMINS_WEBHOOK_URL = "https://hooks.slack.com/services/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"
 
 # TODO: @Add more words to this reserved list
 RESERVED_SUBDOMAIN_LIST = load_json(

@@ -3,7 +3,7 @@ from database.models import UserProfile, CommunityMember, EventAttendee, RealEst
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.emailer.send_email import send_massenergize_email
+#from _main_.utils.emailer.send_email import send_massenergize_email
 from _main_.utils.context import Context
 from _main_.settings import DEBUG
 from django.db.models import F
@@ -12,6 +12,8 @@ from .utils import get_community, get_user, get_user_or_die, get_community_or_di
   find_reu_community, split_location_string, check_location
 import json
 from typing import Tuple
+from api.services.utils import send_slack_message
+from _main_.utils.constants import SLACK_SUPER_ADMINS_WEBHOOK_URL
 
 
 def _get_or_create_reu_location(args, user=None):
@@ -33,7 +35,7 @@ def _get_or_create_reu_location(args, user=None):
   else:
     # Legacy: get address from location string
     loc_parts = split_location_string(location)
-    street = unit_number = city = county = state = zipcode = None
+    street = unit_number = city = county = state = zipcode = country = None
     if len(loc_parts) >= 4:
       street = loc_parts[0]
       unit_number = ''
@@ -65,7 +67,14 @@ def _get_or_create_reu_location(args, user=None):
     print("Location with zipcode " + zipcode + " found for user " + user.preferred_name)
   return reuloc
 
-def _update_action_data_totals(action, household, value):        
+def _update_action_data_totals(action, household, delta): 
+
+  # data corruption has been seen, and this routine is one possible culprit
+  if abs(delta)>1:
+    # this is only used to increment or decrement values by one.  Something wrong here
+    msg = "_update_action_data_totals: data corruption check 1: delta %d" % (delta)
+    raise Exception(msg)
+
   # update community totals for this action
   for t in action.tags.all():
 
@@ -74,23 +83,49 @@ def _update_action_data_totals(action, household, value):
     if action.community.is_geographically_focused:
       community = household.community
 
+    # take note of community action goal, to avoid data corruption
+    actions_goal = 1000
+    if community.goal:
+      actions_goal = max(community.goal.target_number_of_actions, actions_goal)
+
     data = Data.objects.filter(community=community, tag=t)
     if data:
       # protect against going below 0
       #  data.update(value=F("value") + value)
       d = data.first()
-      value = max(d.value + value, 0)
-      if value != d.value:
+
+      oldvalue = d.value
+      if oldvalue > actions_goal:
+        # oldvalue already too high
+        msg = "_update_action_data_totals: data corruption check 2: old value %d" % (oldvalue)
+        raise Exception(msg)
+
+      value = max(oldvalue + delta, 0)
+      if value != oldvalue:
+
+        # check for data corruption:
+        if abs(value-oldvalue)>1:
+          # this is only used to increment or decrement values by one.  Something wrong here
+          msg = "_update_action_data_totals: data corruption check 3: old value %d, new value %d" % (oldvalue, value)
+          raise Exception(msg)
+
+
         d.value = value
         d.save()
 
-    elif value>0:
+    elif delta>0:
       # data for this community, action does not exist so create one
-      d = Data.objects.create(value=value, name=f"{t.name}")
+      d = Data.objects.create(value=delta, name=f"{t.name}")
       d.community=community
       d.tag = t
-      d.save()
 
+      #final check for corruption:
+      if d.value > actions_goal:
+        # oldvalue already too high
+        msg = "_update_action_data_totals: data corruption check 4: d.value %d" % (d.value)
+        raise Exception(msg)
+
+      d.save()
 
 class UserStore:
   def __init__(self):
@@ -189,6 +224,7 @@ class UserStore:
 
       return action_rel, None
     except Exception as e:
+      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"message": str(e)}) 
       capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
@@ -558,6 +594,7 @@ class UserStore:
 
       return result, None
     except Exception as e:
+      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"message": str(e)}) 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
   
