@@ -10,7 +10,7 @@ env=remote
 export DJANGO_ENV=$(env)
 start:
 	python deployment/prepare_to_deploy.py local 1
-	python manage.py runserver
+	DJANGO_ENV=local python manage.py runserver
 .PHONY: start
 
 
