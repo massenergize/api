@@ -35,9 +35,9 @@ class Context:
     self.user_is_community_admin = decoded_token.get('is_community_admin', False)
 
 
-  def set_request_body(self, request):
+  def set_request_body(self, request,**kwargs):
     #get the request args
-    self.args = get_request_contents(request)
+    self.args = get_request_contents(request, **kwargs)
     self.request = request
     self.is_sandbox = parse_bool(self.args.pop('__is_sandbox', False))
     self.community = self.args.pop('__community', None)

@@ -148,27 +148,29 @@ def setupCC(client):
             },
         )
 
+def makeAuthToken(user): 
+    dt = datetime.now()
+    dt.microsecond
 
+    payload = {
+        "user_id": str(user.id),
+        "email": user.email,
+        "is_super_admin": user.is_super_admin,
+        "is_community_admin": user.is_community_admin,
+        "iat": dt.microsecond,
+        "exp": dt.microsecond + 1000000000,
+    }
+
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256").decode("utf-8")
+        
 def signinAs(client, user):
 
     if user:
         print("Sign in as " + user.full_name)
-        dt = datetime.now()
-        dt.microsecond
-
-        payload = {
-            "user_id": str(user.id),
-            "email": user.email,
-            "is_super_admin": user.is_super_admin,
-            "is_community_admin": user.is_community_admin,
-            "iat": dt.microsecond,
-            "exp": dt.microsecond + 1000000000,
-        }
-
-        the_token = jwt.encode(payload, SECRET_KEY, algorithm="HS256").decode("utf-8")
+        the_token = makeAuthToken(user)
 
         client.cookies = SimpleCookie({"token": the_token})
-
+        return the_token
     else:
         print("No user signed in")
         client.cookies = SimpleCookie({"token": ""})
