@@ -1,5 +1,6 @@
 #from django.shortcuts import render
 from django.http import JsonResponse
+from _main_.tasks import debug_task
 from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
 from database.utils.common import get_request_contents
@@ -21,6 +22,7 @@ def ping(request):
     return Json(None)
 
 def index(request):
+    debug_task.delay()
     return MassenergizeResponse(CALC.AllActionsList())
 
 def actioninfo(request, action):

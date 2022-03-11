@@ -92,6 +92,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'django_celery_results',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -270,3 +273,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
 
+
+# Celery Setup
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+result_backend = "django-db"
+accept_content = ['application/json']
+task_serializer = ['json']
+result_serializer = ['json']
+timezone = os.environ.get("CELERY_TIMEZONE")
+
+# Celery Beat Setup
+CELERY_BEAT_SCHEDULER= 'django_celery_beat.schedulers:DatabaseScheduler'
