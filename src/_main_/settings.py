@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     'django_hosts',
     'authentication',
     'carbon_calculator',
+    'task_queue',
     'database',
     'api',
     'website',
