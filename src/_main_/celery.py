@@ -7,8 +7,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "_main_.settings")
 
 app = Celery('_main_')
 
-# app.conf.enable_utc = False
-# app.conf.update(timezone=os.environ.get("CELERY_TIMEZONE"))
 app.config_from_object("django.conf:settings", namespace='CELERY')
 
 
