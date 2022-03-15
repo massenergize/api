@@ -326,7 +326,7 @@ class GraphStore:
 
       return None, None
     except Exception as e:
-      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"message": str(e)}) 
+      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)}) 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
@@ -438,10 +438,11 @@ class GraphStore:
             if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
               val += 1
 
-          d.value = val
-          d.save()
-          print("WARNING - data_fix: Community: " + community.name
-              + ", Category: " + tag.name
-              + ", Old: "  + str(oldval)
-              + ", New: "  + str(val))
+          if (val != d.value) :
+            d.value = val
+            d.save()
+            print("WARNING - data_fix: Community: " + community.name
+                + ", Category: " + tag.name
+                + ", Old: "  + str(oldval)
+                + ", New: "  + str(val))
 
