@@ -11,6 +11,6 @@ def run_some_task(self,task_id):
     if task.job_name:
         FUNCTIONS[task.job_name]()
         task.status = TaskStatus.active
-    print('''Running task with title {title} .'''.format(title=task.name))
+    print('''Completed  task with title {title} .'''.format(title=task.name))
 
         

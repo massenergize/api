@@ -44,9 +44,4 @@ class TaskQueueService:
       return None, err
     return serialize(task), None
 
-  def deactivate_task(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    task, err = self.store.deactivate_task(args)
-    if err:
-      return None, err
-    return serialize(task), None
 

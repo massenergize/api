@@ -70,23 +70,12 @@ class TaskQueueStore:
   def delete_task(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       task_id = args["id"]
-      task = Task.objects.filter(id=task_id)
-      if not task.first():
+      task = Task.objects.get(id=task_id)
+      if not task:
         return None, InvalidResourceError()
 
-      task.first().terminate()
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
-
-  def deactivate_task(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    try:
-      task_id = args["id"]
-      task = Task.objects.filter(id=task_id)
-      if not task.first():
-        return None, InvalidResourceError()
-
-      task.first().stop()
+      task.delete()
+      return task, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

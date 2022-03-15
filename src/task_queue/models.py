@@ -72,8 +72,6 @@ class Task(models.Model):
     @property
     def interval_schedule(self):
         """returns the interval schedule"""
-
-        print("===== self.recurring_interval: ", self.name)
         if self.recurring_interval == schedules["EVERY_MINUTE"]:
             minutes, created = CrontabSchedule.objects.get_or_create(
                 minute='*')
@@ -117,7 +115,6 @@ class Task(models.Model):
 
     def terminate(self):
         """terminates the task"""
-        self.stop()
         schedule = self.schedule
         self.delete()
         schedule.delete()

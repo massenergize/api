@@ -17,7 +17,6 @@ class TaskQueueHandler(RouteHandler):
   def registerRoutes(self):
     self.add("/tasks.create", self.create)
     self.add("/tasks.delete", self.delete)
-    self.add("/tasks.deactivate", self.delete)
     self.add("/tasks.update", self.update)
     self.add("/tasks.list", self.list_tasks)
     self.add("/tasks.info", self.info)
@@ -94,7 +93,7 @@ class TaskQueueHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=task)
 
-  @login_required
+  # @login_required
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -112,19 +111,3 @@ class TaskQueueHandler(RouteHandler):
     return MassenergizeResponse(data=task)
 
 
-  @login_required
-  def deactivate(self, request):
-    context: Context = request.context
-    args: dict = context.args
-
-    # verify the body of the incoming request
-    self.validator.expect("id", str, is_required=True)
-    args, err = self.validator.verify(args, strict=True)
-    if err:
-      return err
-
-    task, err = self.service.deactivate_task(args)
-
-    if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-    return MassenergizeResponse(data=task)
