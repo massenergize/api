@@ -38,8 +38,9 @@ class TaskQueueStore:
         name=args.get("name", None),
         job_name=args.get("job_name", None),
         status=args.get("status", None),
-        info=args.get("info", None),
+        recurring_details=args.get("recurring_details", None),
         recurring_interval=args.get("recurring_interval", None),
+        creator = context.user
       )
       task.save()
 

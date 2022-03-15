@@ -5,7 +5,10 @@
 
 def send_greeting():
     print('hello')
-    return
+    return {
+        'message': 'hello'
+        
+    }
 
 def send_dashbord_ready_msg():
     print('You dashboard is redy')

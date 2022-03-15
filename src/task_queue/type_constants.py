@@ -17,11 +17,16 @@ class ScheculeInterval(TypeConstants):
     EVERY_MONTH = 'EVERY_MONTH'
     EVERY_QUARTER = 'EVERY_QUARTER'
     EVERY_YEAR = 'EVERY_YEAR'
+    ONE_OFF = 'ONE_OFF'
 
 
 class TaskStatus(TypeConstants):
-    active = 'Active'
-    disabled = 'Disabled'
+    CREATED  =  "CREATED"
+    PENDING = 'PENDING'
+    RUNNING = 'RUNNING'
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+
 
 
 schedules = {
@@ -31,4 +36,5 @@ schedules = {
     "EVERY_MONTH":'EVERY_MONTH',
     "EVERY_QUARTER" : 'EVERY_QUARTER',
     "EVERY_YEAR" : 'EVERY_YEAR',
+    "ONE_OFF":'ONE_OFF'
 }

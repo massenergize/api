@@ -2,6 +2,7 @@ import json
 from time import timezone
 from django.db import models
 from django.forms import model_to_dict
+from database.models import UserProfile
 from database.utils.constants import SHORT_STR_LEN
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from task_queue.type_constants import ScheculeInterval, TaskStatus, schedules
@@ -22,7 +23,7 @@ class Task(models.Model):
         choices=TaskStatus.choices(),
         blank=True,
         null=True,
-        default=TaskStatus.active,
+        default=TaskStatus.CREATED,
     )
 
     job_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
@@ -44,7 +45,16 @@ class Task(models.Model):
         related_name='task_queue_schedule',
     )
 
-    info = models.JSONField(blank=True, null=True)
+    recurring_details = models.JSONField(blank=True, null=True)
+
+    creator = models.ForeignKey(
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='task_queue_creator',
+        to=UserProfile
+
+    )
 
     def simple_json(self):
        return model_to_dict(self, exclude=['schedule'])
@@ -96,6 +106,8 @@ class Task(models.Model):
             quarter, created = CrontabSchedule.objects.get_or_create(
                 month_of_year='1,4,7,10', day_of_month='*', hour='*', minute='*')
             return quarter
+
+
 
         raise NotImplementedError(
             '''Interval Schedule for {interval} is not added.'''.format(

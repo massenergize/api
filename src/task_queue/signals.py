@@ -1,8 +1,5 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from task_queue.type_constants import TaskStatus
-
 from .models import Task
 
  

@@ -45,7 +45,7 @@ class TaskQueueHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("name", str, is_required=True)
-    self.validator.expect("info", str)
+    self.validator.expect("recurring_details", str)
     self.validator.expect("job_name", 'str', is_required=True)
     self.validator.expect("recurring_interval", 'str', is_required=True)
     self.validator.rename("status", "str")
