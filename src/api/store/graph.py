@@ -8,7 +8,7 @@ from .utils import get_community_or_die
 from sentry_sdk import capture_message
 from typing import Tuple
 from api.services.utils import send_slack_message
-from _main_.utils.constants import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 
 def get_households_engaged(community: Community):
 

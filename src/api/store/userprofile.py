@@ -13,7 +13,7 @@ from .utils import get_community, get_user, get_user_or_die, get_community_or_di
 import json
 from typing import Tuple
 from api.services.utils import send_slack_message
-from _main_.utils.constants import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 
 
 def _get_or_create_reu_location(args, user=None):
