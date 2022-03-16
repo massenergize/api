@@ -2,6 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
+from database.models import UserProfile
 
 from task_queue.models import Task
 
@@ -34,14 +35,18 @@ class TaskQueueStore:
 
   def create_task(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      
       task = Task.objects.create(
         name=args.get("name", None),
         job_name=args.get("job_name", None),
         status=args.get("status", None),
         recurring_details=args.get("recurring_details", None),
         recurring_interval=args.get("recurring_interval", None),
-        creator = context.user
       )
+      if context.user_email:
+        user = UserProfile.objects.filter(email=context.user_email).first()
+        if user:
+          task.creator = user
       task.save()
 
       return task, None

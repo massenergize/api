@@ -1,12 +1,11 @@
 from celery import shared_task
-from task_queue.async_functions import FUNCTIONS
-from task_queue.type_constants import TaskStatus
-
+from .jobs import FUNCTIONS
 from .models import Task
+from .type_constants import TaskStatus
 
 
-@shared_task(bind=True)
-def run_some_task(self,task_id):
+@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 5})
+def run_some_task(self, task_id):
     task = Task.objects.get(id=task_id)
     func = FUNCTIONS.get(task.job_name)
     if func:
@@ -18,4 +17,4 @@ def run_some_task(self,task_id):
 
     task.save()
 
-        
+

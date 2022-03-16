@@ -44,6 +44,7 @@ class TaskQueueHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
+
     self.validator.expect("name", str, is_required=True)
     self.validator.expect("recurring_details", str)
     self.validator.expect("job_name", 'str', is_required=True)
@@ -53,7 +54,7 @@ class TaskQueueHandler(RouteHandler):
     args, err = self.validator.verify(args)
     if err:
       return err
-
+    
     task, err = self.service.create_task(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)

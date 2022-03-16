@@ -5,15 +5,17 @@ from django.forms import model_to_dict
 from database.models import UserProfile
 from database.utils.constants import SHORT_STR_LEN
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
+from task_queue.jobs import FUNCTIONS
 from task_queue.type_constants import ScheculeInterval, TaskStatus, schedules
+
 
 # Create your models here.
 
 
 class Task(models.Model):
     """
-    
-    """
+
+      """
     id = models.AutoField(primary_key=True)
 
     name = models.CharField(max_length=SHORT_STR_LEN, blank=False)
@@ -26,7 +28,8 @@ class Task(models.Model):
         default=TaskStatus.CREATED,
     )
 
-    job_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    job_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True,
+                                choices=[(x, x) for x in FUNCTIONS.keys()])
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -53,13 +56,10 @@ class Task(models.Model):
         on_delete=models.CASCADE,
         related_name='task_queue_creator',
         to=UserProfile
-
     )
 
     def simple_json(self):
-       return model_to_dict(self, exclude=['schedule'])
-
-
+        return model_to_dict(self, exclude=['schedule'])
 
     def delete(self, *args, **kwargs):
         if self.schedule is not None:
@@ -72,6 +72,7 @@ class Task(models.Model):
             task='task_queue.tasks.run_some_task',
             crontab=self.interval_schedule,
             args=json.dumps([self.id]),
+            one_off=True if self.recurring_interval == schedules["ONE_OFF"] else False,
         )
         self.save()
         self.start()
@@ -79,35 +80,69 @@ class Task(models.Model):
     def __str__(self) -> str:
         return f'{self.name} || {self.status} || {self.recurring_interval}'
 
+
     @property
     def interval_schedule(self):
         """returns the interval schedule"""
+        details = json.loads(self.recurring_details)
+
         if self.recurring_interval == schedules["EVERY_MINUTE"]:
             minutes, created = CrontabSchedule.objects.get_or_create(
-                minute='*')
+                minute=details["minute"] if details["minute"] else "*")
             return minutes
         if self.recurring_interval == schedules["EVERY_HOUR"]:
-            hour, created = CrontabSchedule.objects.get_or_create(hour='*')
+            hour, created = CrontabSchedule.objects.get_or_create(
+                hour=details["hour"] if details["hour"] else "*", minute=details['minute'] if details['minute'] else "*")
             return hour
         if self.recurring_interval == schedules["EVERY_DAY"]:
             day, created = CrontabSchedule.objects.get_or_create(
-                day_of_week='*')
+                day_of_week=details["day_of_week"] if details["day_of_week"] else "*",
+                hour=details["hour"] if details["hour"] else "*",
+                minute=details["minute"] if details["minute"] else "*",
+            )
             return day
+
+        if self.recurring_interval == schedules["EVERY_WEEK"]:
+            week, created = CrontabSchedule.objects.get_or_create(
+                day_of_week=details["day_of_week"] if details["day_of_week"] else "*",
+                hour=details["hour"] if details["hour"] else "*",
+                minute=details["minute"] if details["minute"] else "*",
+            )
+            return week
 
         if self.recurring_interval == schedules["EVERY_MONTH"]:
             month, created = CrontabSchedule.objects.get_or_create(
-                month_of_year='*')
+                day_of_month=details["day_of_month"] if details["day_of_month"] else "*",
+                hour=details["hour"] if details["hour"] else "*",
+                minute=details["minute"] if details["minute"] else "*",
+            )
             return month
         if self.recurring_interval == schedules["EVERY_YEAR"]:
             year, created = CrontabSchedule.objects.get_or_create(
-                month_of_year='1')
+                month_of_year=details["month_of_year"] if details["month_of_year"] else "*",
+                day_of_month=details["day_of_month"] if details["day_of_month"] else "*",
+                hour=details["hour"] if details["hour"] else "*",
+                minute=details["minute"] if details["minute"] else "*",
+            )
             return year
         if self.recurring_interval == schedules["EVERY_QUARTER"]:
             quarter, created = CrontabSchedule.objects.get_or_create(
-                month_of_year='1,4,7,10', day_of_month='*', hour='*', minute='*')
+                month_of_year=details["month_of_year"] if details["month_of_year"] else "*",
+                day_of_month=details["day_of_month"] if details["day_of_month"] else "*",
+                hour=details["hour"] if details["hour"] else "*",
+                minute=details["minute"] if details["minute"] else "*",
+
+            )
             return quarter
 
-
+        if self.recurring_interval == schedules["ONE_OFF"]:
+            one_off, created = CrontabSchedule.objects.get_or_create(
+                month_of_year=details["month_of_year"] if details["month_of_year"] else "*",
+                day_of_month=details["day_of_month"] if details["day_of_month"] else "*",
+                hour=details["hour"] if details["hour"] else "*",
+                minute=details["minute"] if details["minute"] else "*",
+            )
+            return one_off
 
         raise NotImplementedError(
             '''Interval Schedule for {interval} is not added.'''.format(
@@ -124,9 +159,3 @@ class Task(models.Model):
         schedule = self.schedule
         schedule.enabled = True
         schedule.save()
-
-    def terminate(self):
-        """terminates the task"""
-        schedule = self.schedule
-        self.delete()
-        schedule.delete()
