@@ -50,7 +50,7 @@ class EventService:
     if err:
       return None, err
 
-    if event_attendee.status == "Going":
+    if event_attendee and event_attendee.status == "Going":
       event = event_attendee.event
 
       event_name = event.name
