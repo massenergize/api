@@ -224,7 +224,7 @@ class UserStore:
 
       return action_rel, None
     except Exception as e:
-      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)}) 
+      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
       capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
@@ -594,7 +594,7 @@ class UserStore:
 
       return result, None
     except Exception as e:
-      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)}) 
+      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(str(e))
   

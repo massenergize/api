@@ -326,7 +326,7 @@ class GraphStore:
 
       return None, None
     except Exception as e:
-      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)}) 
+      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
