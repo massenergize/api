@@ -3,13 +3,13 @@
 
 ### HOW IT WORKS
 
-...............................................
+The task queue is a simple queue of tasks. Each task is a function that gets called whenever an instance of a PeriodicTask is scheduled.The instance of a PeriodicTask is wired to a Task model instance which contains the name of the function (i.e the "key" of the function in `jobs.py`)  and the time when it should be executed. 
+
+When a PeriodicTask is scheduled, an `id` of Task model instance is passed as an argument to a function in `task_queue/tasks.py` file. This id is used to get a specific Task instance. Dictionary lookup is used to get the function name that corresponds to a key in `FUNCTIONS` dictionary.
 
 
 
-
-
-### Taks model
+### Task model
 
 | Field             	| Description                                                                                                                                                                                            	|
 |--------------------	|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|
