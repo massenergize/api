@@ -8,7 +8,7 @@ from .utils import get_community_or_die
 from sentry_sdk import capture_message
 from typing import Tuple
 from api.services.utils import send_slack_message
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, RUN_SERVER_LOCALLY
 
 def get_households_engaged(community: Community):
 
@@ -424,11 +424,7 @@ class GraphStore:
           action__community=community, status="DONE"
         )
 
-
       for d in Data.objects.filter(community=community):
-
-      #for tag in TagCollection.objects.get(name__icontains="Category").tag_set.all():
-        #d = Data.objects.filter(community=community, name=tag.name).first()
         if d and d.value>action_goal:
           oldval = d.value
           val = 0
@@ -441,7 +437,8 @@ class GraphStore:
           if (val != d.value) :
             d.value = val
             d.save()
-            print("WARNING - data_fix: Community: " + community.name
+            if RUN_SERVER_LOCALLY:
+              print("WARNING - data_fix: Community: " + community.name
                 + ", Category: " + tag.name
                 + ", Old: "  + str(oldval)
                 + ", New: "  + str(val))
