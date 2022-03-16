@@ -1614,16 +1614,12 @@ class Event(models.Model):
         data = model_to_dict(
             self, exclude=["tags", "image", "community", "invited_communities", "user"]
         )
-        #data["start_date_and_time"] = self.start_date_and_time
-        #data["end_date_and_time"] = self.end_date_and_time
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_json_if_not_none(self.community)
         data["image"] = None if not self.image else self.image.full_json()
         data["invited_communities"] = [
             c.simple_json() for c in self.invited_communities.all()
         ]
-        #data["more_info"] = self.more_info
-        #data["rsvp_enabled"] = self.rsvp_enabled
         if self.user:
             data["user_email"] = self.user.email
 

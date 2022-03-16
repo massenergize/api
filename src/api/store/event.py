@@ -253,8 +253,6 @@ class EventStore:
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community_id")
 
-      print("before event .create()")
-      print(args)
       new_event: Event = Event.objects.create(**args)
       if community:
         new_event.community = community
@@ -372,8 +370,6 @@ class EventStore:
         community = Community.objects.filter(pk=community).first()
 
       # update the event instance
-      print("before event .create()")
-      print(args)
       events.update(**args)
       event: Event = events.first()
 
