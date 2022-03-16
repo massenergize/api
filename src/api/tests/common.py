@@ -180,7 +180,7 @@ def createUsers():
 
     user, created = UserProfile.objects.get_or_create(
         full_name="Regular User",
-        email="user@test.com",
+        email="no-reply@massenergize.org",
         accepts_terms_and_conditions=True,
     )
     if created:
@@ -188,7 +188,7 @@ def createUsers():
 
     cadmin, created = UserProfile.objects.get_or_create(
         full_name="Community Admin",
-        email="cadmin@test.com",
+        email="no-reply+1@massenergize.org",
         accepts_terms_and_conditions=True,
         is_community_admin=True,
     )
@@ -197,7 +197,7 @@ def createUsers():
 
     sadmin, created = UserProfile.objects.get_or_create(
         full_name="Super Admin",
-        email="sadmin@test.com",
+        email="no-reply+2@massenergize.org",
         accepts_terms_and_conditions=True,
         is_super_admin=True,
     )
