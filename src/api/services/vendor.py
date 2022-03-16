@@ -31,7 +31,18 @@ class VendorService:
 
   def create_vendor(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
 
+
     if user_submitted:
+      
+      #checks if added vendor form contains a valid email before creating the vendor and sending the email
+      user = get_user_or_die(context, args)
+      if user:
+        name = user.full_name
+        email = user.email
+      else:
+        return None, CustomMassenergizeError('Vendor submission incomplete')
+
+
       # this should be coming from a community site
       community = get_community_or_die(context, args)
       if not community:
@@ -52,12 +63,6 @@ class VendorService:
 
       community_name = community.name
 
-      user = get_user_or_die(context, args)
-      if user:
-        name = user.full_name
-        email = user.email
-      else:
-        return None, CustomMassenergizeError('Vendor submission incomplete')
 
       subject = 'User Service Provider Submitted'
 

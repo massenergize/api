@@ -104,7 +104,7 @@ class EventService:
         'url': f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
         'from_name': name,
         'email': email,
-        'title': event.title,
+        'title': event.name,
         'body': event.description,
       }
       send_massenergize_rich_email(
@@ -114,7 +114,7 @@ class EventService:
           SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
           "from_name": name,
           "email": email,
-          "subject": event.title,
+          "subject": event.name,
           "message": event.description,
           "url": f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
           "community": community_name

@@ -62,8 +62,8 @@ class TestimonialService:
         'title': testimonial.title,
         'body': testimonial.body,
       }
-      send_massenergize_rich_email(
-            subject, admin_email, 'testimonial_submitted_email.html', content_variables)
+      #send_massenergize_rich_email(
+      #      subject, admin_email, 'testimonial_submitted_email.html', content_variables)
 
       send_slack_message(
           SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {

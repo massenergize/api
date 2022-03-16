@@ -74,7 +74,10 @@ def get_user_or_die(context, args):
   if user_id:
     return UserProfile.objects.get(pk=user_id)
   elif user_email:
-    return UserProfile.objects.get(email=user_email)
+    try:
+      return UserProfile.objects.get(email=user_email)
+    except:
+      return None 
   elif context.user_id:
     return UserProfile.objects.get(pk=context.user_id)
   elif context.user_email:

@@ -211,7 +211,6 @@ class EventStore:
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
       user_email = args.pop('user_email', context.user_email)
-
       start_date_and_time = args.get('start_date_and_time', None)
       end_date_and_time = args.get('end_date_and_time', None)
       is_recurring  = args.pop('is_recurring', False)
