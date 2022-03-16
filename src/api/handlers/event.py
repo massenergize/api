@@ -185,6 +185,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
+    self.validator.expect('rsvp_email', bool)
     args, err = self.validator.verify(args)
 
     if err:
@@ -203,13 +204,11 @@ class EventHandler(RouteHandler):
 
     self.validator.expect('name', str, is_required=True, options={"min_length":5, "max_length":100})
     self.validator.expect('tags', list)
-    #self.validator.expect('is_global', bool)
-    #self.validator.expect('archive', bool)
-    #self.validator.expect('is_published', bool)
     self.validator.expect('is_recurring', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
+    self.validator.expect('rsvp_email', bool)
     args, err = self.validator.verify(args)
 
     if err:
@@ -285,6 +284,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('upcoming_is_cancelled', bool)
     self.validator.expect('upcoming_is_rescheduled', bool)
     self.validator.expect('rsvp_enabled', bool)
+    self.validator.expect('rsvp_email', bool)
     args, err = self.validator.verify(args)
 
     if err:
