@@ -1,11 +1,22 @@
 # ASYNCHRONOUS TASKS PROCESSING
 
 
+### PACKAGES INSTALLED
+ - celery
+ - redis 
+ - django-celery-beat 
+ - django-celery-results
+
+ <br>
+
+
 ### HOW IT WORKS
 
 The task queue is a simple queue of tasks. Each task is a function that gets called whenever an instance of a PeriodicTask is scheduled.The instance of a PeriodicTask is wired to a Task model instance which contains the name of the function (i.e the "key" of the function in `jobs.py`)  and the time when it should be executed. 
 
-When a PeriodicTask is scheduled, an `id` of Task model instance is passed as an argument to a function in `task_queue/tasks.py` file. This id is used to get a specific Task instance. Dictionary lookup is used to get the function name that corresponds to a key in `FUNCTIONS` dictionary.
+When a PeriodicTask is scheduled, an `id` is passed down to a function in `task_queue/tasks.py` file. This id is used to get a specific Task instance to run. Using the `job_name` field of the Task instance, a dictionary lookup is used to get the function in the `FUNCTIONS` dictionary whose `key` corresponds to the `job_name`. The function is then fired if it exists. 
+
+<br>
 
 
 
@@ -27,7 +38,7 @@ When a PeriodicTask is scheduled, an `id` of Task model instance is passed as an
 ### ADDING FUNCTIONS
 
 - import the function into `jobs.py `  file.
-- Added the function as a value to the `FUNCTIONS` dict with a discriptive name.
+- Added the function as a value to the `FUNCTIONS` dict with a descriptive name.
 
 _NOTE:_ The code does not support direct addition of arguments
 
