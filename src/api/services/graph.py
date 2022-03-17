@@ -88,3 +88,6 @@ class GraphService:
     if err:
       return None, err
     return result, None
+
+  def debug_data_fix(self) -> None:
+    self.store.debug_data_fix()
