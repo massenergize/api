@@ -792,7 +792,7 @@ class CommunityStore:
             # TODO: check that locations have changed before going through the effort of
 
             geographic = args.get("is_geographically_focused", False)
-            if geographic:
+            if geographic and locations:
                 geography_type = args.get("geography_type", None)
                 if self._are_locations_updated(geography_type, locations, community):
                     self._update_locations(geography_type, locations, community)
