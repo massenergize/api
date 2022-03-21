@@ -1,5 +1,4 @@
 import json
-from time import timezone
 from django.db import models
 from django.forms import model_to_dict
 from database.models import UserProfile
@@ -14,7 +13,6 @@ from task_queue.type_constants import ScheculeInterval, TaskStatus, schedules
 
 class Task(models.Model):
     """
-
       """
     id = models.AutoField(primary_key=True)
 
