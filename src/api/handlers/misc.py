@@ -1,5 +1,6 @@
 """Handler file for all routes pertaining to goals"""
 
+from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents
 from api.services.misc import MiscellaneousService
@@ -29,6 +30,12 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/home", self.home)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
+        self.add("/check.cookie.is.active", self.check_cookie_expiration_status)
+
+    @admins_only
+    def check_cookie_expiration_status(self, request):
+        context: Context = request.context
+        return MassenergizeResponse(data={"cookie_is_active": context.user_is_logged_in})
 
     def remake_navigation_menu(self, request):
         data, err = self.service.remake_navigation_menu()
@@ -125,6 +132,8 @@ class MiscellaneousHandler(RouteHandler):
         if error:
             return MassenergizeResponse(error=str(error), status=error.status)
 
-        response =  MassenergizeResponse(data=token)
-        response.set_cookie("token", value=token, max_age=24*60*60, samesite='Strict')
+        response = MassenergizeResponse(data=token)
+        response.set_cookie(
+            "token", value=token, max_age=24 * 60 * 60, samesite="Strict"
+        )
         return response
