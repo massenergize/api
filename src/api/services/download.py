@@ -1,5 +1,4 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
 from typing import Tuple
@@ -53,9 +52,6 @@ class DownloadService:
         return [], None
 
     def metrics_download(self, context: Context, args, community_id) -> Tuple[list, MassEnergizeAPIError]:
-        # communities_download, err = self.store.metrics_download(
-        #     context, args, community_id)
-
         data = {
             'community_id': community_id,
             'user_is_community_admin': context.user_is_community_admin,
