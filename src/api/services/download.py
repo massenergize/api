@@ -12,7 +12,6 @@ class DownloadService:
         self.store = DownloadStore()
 
     def users_download(self, context: Context, community_id=None, team_id=None) -> Tuple[list, MassEnergizeAPIError]:
-        print(type(context))
         data = {
             'community_id': community_id,
             'team_id': team_id,
