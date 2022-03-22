@@ -1,3 +1,4 @@
+import dataclasses
 import datetime
 import json
 from django.db import models
@@ -1591,6 +1592,8 @@ class Event(models.Model):
     is_global = models.BooleanField(default=False, blank=True)
     external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
     rsvp_enabled = models.BooleanField(default=False, blank=True)
+    rsvp_email = models.BooleanField(default=False, blank=True)
+    rsvp_message = models.TextField(max_length=LONG_STR_LEN, blank=True)
     more_info = models.JSONField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
@@ -1609,18 +1612,14 @@ class Event(models.Model):
 
     def simple_json(self):
         data = model_to_dict(
-            self, exclude=["tags", "image", "community", "invited_communities"]
+            self, exclude=["tags", "image", "community", "invited_communities", "user"]
         )
-        data["start_date_and_time"] = self.start_date_and_time
-        data["end_date_and_time"] = self.end_date_and_time
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_json_if_not_none(self.community)
         data["image"] = None if not self.image else self.image.full_json()
         data["invited_communities"] = [
             c.simple_json() for c in self.invited_communities.all()
         ]
-        data["more_info"] = self.more_info
-        data["rsvp_enabled"] = self.rsvp_enabled
         if self.user:
             data["user_email"] = self.user.email
 

@@ -16,6 +16,8 @@ class GraphHandler(RouteHandler):
     super().__init__()
     self.service = GraphService()
     self.registerRoutes()
+    # understand data problem
+    self.debug_data_fix()
 
   def registerRoutes(self) -> None:
     self.add("/graphs.info", self.info) 
@@ -220,3 +222,6 @@ class GraphHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=graphs)
+
+  def debug_data_fix(self) -> None:
+    self.service.debug_data_fix()
