@@ -3,28 +3,65 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
 from typing import Tuple
+from api.tasks import download_data
+
 
 class DownloadService:
 
     def __init__(self):
-      self.store = DownloadStore()
+        self.store = DownloadStore()
 
     def users_download(self, context: Context, community_id=None, team_id=None) -> Tuple[list, MassEnergizeAPIError]:
-      users_download, err = self.store.users_download(context, community_id, team_id)
-      return users_download, err
+        print(type(context))
+        data = {
+            'community_id': community_id,
+            'team_id': team_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email
+        }
+        download_data.delay(data, 'users')
+        return [], None
 
     def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
-      actions_download, err = self.store.actions_download(context, community_id)
-      return actions_download, err
+        data = {
+            'community_id': community_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email
+        }
+        download_data.delay(data, 'actions')
+        return [], None
 
     def communities_download(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-      communities_download, err = self.store.communities_download(context)
-      return communities_download, err
+        data = {
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin': context.user_is_super_admin,
+            'email': context.user_email
+        }
+        download_data.delay(data, 'actions')
+        return [], None
 
     def teams_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
-      teams_download, err = self.store.teams_download(context, community_id)
-      return teams_download, err
-    
+        data = {
+            'community_id': community_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin': context.user_is_super_admin,
+            'email': context.user_email
+        }
+        download_data.delay(data, 'teams')
+        return [], None
+
     def metrics_download(self, context: Context, args, community_id) -> Tuple[list, MassEnergizeAPIError]:
-      communities_download, err = self.store.metrics_download(context, args, community_id)
-      return communities_download, err
+        # communities_download, err = self.store.metrics_download(
+        #     context, args, community_id)
+
+        data = {
+            'community_id': community_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin': context.user_is_super_admin,
+            'email': context.user_email
+        }
+
+        download_data.delay(data, 'metrics')
+        return [], None
