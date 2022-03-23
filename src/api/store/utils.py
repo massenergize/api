@@ -74,6 +74,7 @@ def get_user_or_die(context, args):
   if user_id:
     return UserProfile.objects.get(pk=user_id)
   elif user_email:
+    #added try catch as it can crash if passed email does not exist in DB.
     try:
       return UserProfile.objects.get(email=user_email)
     except:

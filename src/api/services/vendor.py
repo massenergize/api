@@ -34,15 +34,6 @@ class VendorService:
 
     if user_submitted:
       
-      #checks if added vendor form contains a valid email before creating the vendor and sending the email
-      user = get_user_or_die(context, args)
-      if user:
-        name = user.full_name
-        email = user.email
-      else:
-        return None, CustomMassenergizeError('Vendor submission incomplete')
-
-
       # this should be coming from a community site
       community = get_community_or_die(context, args)
       if not community:
@@ -53,6 +44,13 @@ class VendorService:
       return None, err
 
     if user_submitted:
+
+      user = get_user_or_die(context, args)
+      if user:
+        name = user.full_name
+        email = user.email
+      else:
+        return None, CustomMassenergizeError('Vendor submission incomplete')
 
       # For now, send e-mail to primary community contact for a site
       admin_email = community.owner_email

@@ -114,6 +114,7 @@ class EventService:
           SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
           "from_name": name,
           "email": email,
+          #changed to name as thats the field name in the DB otherwise it would crash
           "subject": event.name,
           "message": event.description,
           "url": f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
