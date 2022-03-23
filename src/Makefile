@@ -1,5 +1,5 @@
 init:
-	pip install -r requirements.txt
+	pip3 install -r requirements.txt
 	touch prod.env
 	touch dev.env
 	touch local.env
