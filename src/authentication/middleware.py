@@ -75,7 +75,7 @@ class MassenergizeJWTAuthMiddleware:
 
           # Extend work time when working on the Admin portal so work is not lost
           MAX_AGE = 24*60*60    # one day
-          ctx.cookie_expiration = decoded_token.get("exp")
+          ctx.cookie_expiration = MAX_AGE
           response = MassenergizeResponse(None)
 
           # BHN: I'm not sure why the cookie needs to be deleted first
