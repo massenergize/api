@@ -74,5 +74,5 @@ export TEST_OUTPUTS=$(outfile)
 export GENERATE_INPUTS=$(generate_inputs)
 
 test:	
-	python -W ignore manage.py test $(package)
+	DJANGO_ENV=test python3 -W ignore manage.py test $(package)
 .PHONY: test

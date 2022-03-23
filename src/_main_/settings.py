@@ -18,6 +18,8 @@ from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from _main_.utils.utils import is_test_mode
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -178,8 +180,14 @@ DATABASES = {
         'HOST'     : os.environ.get('DATABASE_HOST'),
         'PORT'     : os.environ.get('DATABASE_PORT')
     },
+    'test_db': {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": 'test.sqlite3',
+    }
 }
 
+if is_test_mode():
+    DATABASES['default'] = DATABASES['test_db']
 
 # CACHES = {
 #     'default': {
