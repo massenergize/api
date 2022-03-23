@@ -62,8 +62,6 @@ class MassenergizeJWTAuthMiddleware:
       # path = self._get_clean_path(request)
 
       #extract JWT auth token
-      cookietoken = request.COOKIES.get('token', None)
-      outtoken = request.POST.get("__token", None)
       token = request.COOKIES.get('token', None) or request.POST.get("__token", None)
       if token:
         decoded_token, err = self._get_decoded_token(token)
@@ -73,14 +71,18 @@ class MassenergizeJWTAuthMiddleware:
 
         # at this point the user has an active session
         ctx.set_user_credentials(decoded_token)
-
         if ctx.user_is_admin() and ctx.is_admin_site:
 
           # Extend work time when working on the Admin portal so work is not lost
           MAX_AGE = 24*60*60    # one day
+          ctx.cookie_expiration = decoded_token.get("exp")
           response = MassenergizeResponse(None)
 
           # BHN: I'm not sure why the cookie needs to be deleted first
+          ''' Frimpong's response to BHN: Because for some of our CRUD operations, we are directly passing on the request data to be 
+          passed in the models to for saving or updating. When that happens, there is an extra field called "__token" that the django 
+          models dont recognise. So django will have a fit, lool!
+          '''
           # but set_cookie doesn't keep it from expiring as I expected
           response.delete_cookie("token")
           if RUN_SERVER_LOCALLY:

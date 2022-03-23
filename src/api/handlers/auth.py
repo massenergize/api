@@ -25,6 +25,7 @@ class AuthHandler(RouteHandler):
     self.add("/auth.whoami", self.whoami)
     self.add("/auth.test", self.whoami)
     self.add("/auth.verifyCaptcha", self.verify_captcha)
+    self.add("/auth.token.refresh", self.refresh_token)
   
   
   def login(self, request): 
@@ -65,6 +66,7 @@ class AuthHandler(RouteHandler):
     user_info, err = self.service.whoami(context)
     if err:
       return err
+    user_info = {**user_info, "cookie_expiration_in_seconds":context.cookie_expiration}
     return MassenergizeResponse(data=user_info)
 
 
@@ -77,4 +79,19 @@ class AuthHandler(RouteHandler):
     
     return MassenergizeResponse(data=verification)
 
+  @admins_only
+  def refresh_token(self, request): 
+    context : Context = request.context; 
+    result, error = self.service.refresh_token(context);
+    if error : return MassenergizeResponse(error = str(error))
+    user = result.get("user")
+    token = result.get("token")
+    MAX_AGE = 24*60*60 
+    response =  MassenergizeResponse(data = {**user, "cookie_expiration_in_seconds":MAX_AGE})
 
+    if RUN_SERVER_LOCALLY:
+      response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
+    else:
+      response.set_cookie("token", secure=True, value=token, max_age=MAX_AGE, samesite='None')
+    return response
+    

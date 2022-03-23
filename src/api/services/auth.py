@@ -1,7 +1,10 @@
+from typing import Dict, Tuple
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.context import Context
+from _main_.utils.utils import Console
+from api.services.utils import make_token
 from database.utils.json_response_wrapper import Json
 from firebase_admin import auth
 from django.middleware.csrf import get_token
@@ -115,3 +118,14 @@ class AuthService:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+  def refresh_token(self, context:Context)-> Tuple[Dict, MassEnergizeAPIError]: 
+    args = context.args or {}
+    firebase_id_token = args.get("idToken", None)
+    decoded_token = auth.verify_id_token(firebase_id_token)
+    user_email = decoded_token.get("email")
+    user = UserProfile.objects.filter(email=user_email).first();
+    token, error =make_token(user, decoded_token); 
+    if error : return None, error
+    return {"user": user.full_json(), "token":token}, None
+   

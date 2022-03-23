@@ -26,6 +26,7 @@ class Context:
     self.community = None
     self.is_admin_site = False
     self.request = None
+    self.cookie_expiration = None
 
   def set_user_credentials(self, decoded_token):
     self.user_is_logged_in = True
