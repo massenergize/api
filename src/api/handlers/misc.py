@@ -30,13 +30,8 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/home", self.home)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
-        self.add("/check.cookie.is.active", self.check_cookie_expiration_status)
 
-    @admins_only
-    def check_cookie_expiration_status(self, request):
-        context: Context = request.context
-        return MassenergizeResponse(data={"cookie_is_active": context.user_is_logged_in})
-
+   
     def remake_navigation_menu(self, request):
         data, err = self.service.remake_navigation_menu()
         if err:
