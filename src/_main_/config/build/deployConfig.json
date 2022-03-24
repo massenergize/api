@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.2.9",
+  "BUILD_VERSION": "4.2.11",
   "BUILD_VERSION_NOTES": "Mar 16:\n- email for event rsvps\nFeb 27\n- routes for user submitted Actions, Events, Vendors, and fix copy routes\n- integrate PostMark service\n- add routes for completed actions list for communities and teams\nFeb 14 Deployment - Version 4.2\n- Graph data selection by Cadmins\n- Notify cadmin when testimonial submitted\n- Action dates implemented\n- Cadmins can receive content from other communities (.listForCommunityAdmin routes)\n- Media library support\n- Event RSVPs list route\n- User submitted testimonials can be edited\n- Visit_logs for anonymous and registered users\n- Improved user importing\n- Add DeviceProfile for tracking anonymous users\n- Add GeoIP for determining IP address location\n- Admin contact emails go to primary contact\n- Sort Communities by location/name\nOct 17th Deployment - Version 4.0\n- Make cookie secure\n"
 }

@@ -28,9 +28,6 @@ ADMIN_URL_ROOT = (
     else "https://admin.massenergize.dev"
 )
 
-SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = "https://hooks.slack.com/workflows/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"
-
-
 # TODO: @Add more words to this reserved list
 RESERVED_SUBDOMAIN_LIST = load_json(
     BASE_DIR + "/_main_/utils/json_files/reserved_subdomains.json"

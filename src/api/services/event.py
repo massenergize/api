@@ -1,7 +1,8 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.event import EventStore
-from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.settings import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die

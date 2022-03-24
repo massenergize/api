@@ -36,7 +36,7 @@ class AuthService:
         user_email = decoded_token.get("email")
         
         user = UserProfile.objects.filter(email=user_email).first()
-        if (not user):
+        if (not user or not user.accepts_terms_and_conditions):
           # there is a case where user is authenticated with firebase but
           # does has not completed a massenergize registration form
           # to sign up in our system

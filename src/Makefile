@@ -1,5 +1,5 @@
 init:
-	pip install -r requirements.txt
+	pip3 install -r requirements.txt
 	touch prod.env
 	touch dev.env
 	touch local.env
@@ -9,13 +9,13 @@ init:
 env=remote
 export DJANGO_ENV=$(env)
 start:
-	python deployment/prepare_to_deploy.py local 1
-	DJANGO_ENV=local python manage.py runserver
+	python3 deployment/prepare_to_deploy.py local 1
+	python3 manage.py runserver
 .PHONY: start
 
 
 prepare-prod:
-	python deployment/prepare_to_deploy.py --prod 0 1
+	python3 deployment/prepare_to_deploy.py --prod 0 1
 .PHONY: prepare-prod
 
 VERSION=latest
@@ -29,7 +29,7 @@ deploy-prod:
 .PHONY: deploy-prod
 
 prepare-canary:
-	python deployment/prepare_to_deploy.py --canary 0 1
+	python3 deployment/prepare_to_deploy.py --canary 0 1
 .PHONY: prepare-canary
 
 CANARY_VERSION=latest
@@ -43,7 +43,7 @@ deploy-canary:
 .PHONY: deploy-canary
 
 prepare-dev:
-	python deployment/prepare_to_deploy.py --dev 0 1
+	python3 deployment/prepare_to_deploy.py --dev 0 1
 .PHONY: deploy-dev
 
 DEV_VERSION=latest
@@ -57,10 +57,15 @@ deploy-dev:
 .PHONY: deploy-dev
 
 deploy:
-	python deployment/prepare_to_deploy.py --dev
+	python3 deployment/prepare_to_deploy.py --dev
 	docker-compose build
 	docker-compose push
 .PHONY: deploy
+
+.PHONY: migrations
+migrations: 
+	python3 manage.py makemigrations
+	python3 manage.py migrate
 
 # Default: test api routes
 package=api
@@ -73,6 +78,12 @@ export TEST_INPUTS=$(infile)
 export TEST_OUTPUTS=$(outfile)
 export GENERATE_INPUTS=$(generate_inputs)
 
-test:	
-	python -W ignore manage.py test $(package)
+test:
+	if [[ -f "test.sqlite3" ]]; \
+	then \
+		rm test.sqlite3; \
+	fi
+	touch test.sqlite3
+	DJANGO_ENV=test python3 manage.py migrate
+	DJANGO_ENV=test python3 -W ignore manage.py test $(package)
 .PHONY: test
