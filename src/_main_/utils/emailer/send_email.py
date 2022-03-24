@@ -5,10 +5,14 @@ from sentry_sdk import capture_message
 import pystmark
 
 from _main_.settings import EMAIL_POSTMARK_SERVER_TOKEN
+from _main_.utils.utils import is_test_mode
 
 FROM_EMAIL = 'no-reply@massenergize.org'
 
 def old_send_massenergize_email(subject, msg, to):
+  if is_test_mode():
+    return True
+
   ok = send_mail(
       subject,
       msg,
@@ -23,6 +27,9 @@ def old_send_massenergize_email(subject, msg, to):
   return True
 
 def send_massenergize_email(subject, msg, to):
+  if is_test_mode():
+    return True
+
   message = pystmark.Message(
     subject=subject,
     to=to,
@@ -55,6 +62,9 @@ def send_massenergize_email_with_attachments(subject, msg, to, file, file_name):
 
 
 def old_send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
+  if is_test_mode():
+    return True
+
   if not from_email:
     from_email = FROM_EMAIL
   html_content = render_to_string(massenergize_email_type, content_variables)
@@ -69,6 +79,9 @@ def old_send_massenergize_rich_email(subject, to, massenergize_email_type, conte
   return True
 
 def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
+  if is_test_mode():
+    return True
+  
   if not from_email:
     from_email = FROM_EMAIL
   html_content = render_to_string(massenergize_email_type, content_variables)
@@ -91,6 +104,9 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
 
 
 def old_send_massenergize_mass_email(subject, msg, recipient_emails):
+  if is_test_mode():
+    return True
+
   ok = send_mail(
       subject,
       msg,
@@ -107,6 +123,9 @@ def old_send_massenergize_mass_email(subject, msg, recipient_emails):
   return True
 
 def send_massenergize_mass_email(subject, msg, recipient_emails):
+  if is_test_mode():
+    return True
+
   message = pystmark.Message(
     subject=subject,
     sender=FROM_EMAIL, 
