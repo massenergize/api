@@ -122,8 +122,7 @@ class CCD():
             csvfile.close()
         return status
     def importDefaults(self,fileName):
-        fileName = Path('.').parent.parent/fileName
-        print(fileName)
+        csvfile = None
         try:
             status = True
             with open(fileName, newline='') as csvfile:
