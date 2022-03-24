@@ -116,8 +116,9 @@ MIDDLEWARE = [
 
 
 #-------- FILE STORAGE CONFIGURATION ---------------------#
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATICFILES_STORAGE  = 'storages.backends.s3boto3.S3Boto3Storage'
+if not is_test_mode():
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STATICFILES_STORAGE  = 'storages.backends.s3boto3.S3Boto3Storage'
 #-------- FILE STORAGE CONFIGURATION ---------------------#
 
 
@@ -268,14 +269,18 @@ EMAIL_POSTMARK_SERVER_TOKEN = os.environ.get('EMAIL_POSTMARK_SERVER_TOKEN')
 SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_COMMUNITY_ADMINS_WEBHOOK_URL')
 SLACK_SUPER_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_SUPER_ADMINS_WEBHOOK_URL')
 
+TEST_DIR = 'test_data'
 
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+if is_test_mode():
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, TEST_DIR, 'media')
+    STATIC_ROOT = os.path.join(BASE_DIR, TEST_DIR, 'static')
 
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
