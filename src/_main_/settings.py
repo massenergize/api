@@ -276,11 +276,11 @@ TEST_DIR = 'test_data'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 if is_test_mode():
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-else:
     MEDIA_ROOT = os.path.join(BASE_DIR, TEST_DIR, 'media')
     STATIC_ROOT = os.path.join(BASE_DIR, TEST_DIR, 'static')
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'

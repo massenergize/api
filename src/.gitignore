@@ -10,3 +10,4 @@ prod.env
 prepare-for-deploy.py
 deployment/aws/
 *.sqlite3*
+test_data/
