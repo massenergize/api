@@ -78,6 +78,12 @@ export TEST_INPUTS=$(infile)
 export TEST_OUTPUTS=$(outfile)
 export GENERATE_INPUTS=$(generate_inputs)
 
-test: migrations
+test:
+	if [[ -f "test.sqlite3" ]]; \
+	then \
+		rm test.sqlite3; \
+	fi
+	touch test.sqlite3
+	DJANGO_ENV=test python3 manage.py migrate
 	DJANGO_ENV=test python3 -W ignore manage.py test $(package)
 .PHONY: test

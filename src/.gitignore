@@ -9,3 +9,4 @@ prod.env
 .ebextensions/securelistener-clb.config
 prepare-for-deploy.py
 deployment/aws/
+*.sqlite3*
