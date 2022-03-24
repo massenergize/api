@@ -1,9 +1,11 @@
+from fileinput import filename
 from .models import CalcDefault
 from .calcUsers import CalcUserLocality
 from datetime import datetime
 import time
 import timeit
 import csv
+from pathlib import Path  # python3 only
 
 def getLocality(inputs):
     id = inputs.get("user_id","")
@@ -120,6 +122,7 @@ class CCD():
             csvfile.close()
         return status
     def importDefaults(self,fileName):
+        fileName = Path('.')/fileName
         try:
             status = True
             with open(fileName, newline='') as csvfile:
