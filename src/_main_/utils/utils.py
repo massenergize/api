@@ -1,4 +1,4 @@
-import json
+import json, os
 import django.db.models.base as Base
 import inspect
 from django.db.models.fields.related import ManyToManyField, ForeignKey
@@ -116,3 +116,7 @@ class Console:
         print(Console.makeLine(len(text)))
         print(text)
         print(Console.makeLine(len(text)))
+
+
+def is_test_mode():
+    return os.environ.get("DJANGO_ENV", "").lower() == 'test'
