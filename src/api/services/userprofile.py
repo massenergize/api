@@ -95,7 +95,8 @@ def _send_invitation_email(user_info, mess):
     'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
     }
   
-  send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
+  #send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
+  send_massenergize_rich_email(subject, email, email_template, content_variables)
 
 class UserService:
   """
