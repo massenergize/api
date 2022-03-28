@@ -19,6 +19,7 @@ class TaskQueueHandler(RouteHandler):
     self.add("/tasks.delete", self.delete)
     self.add("/tasks.update", self.update)
     self.add("/tasks.list", self.list_tasks)
+    self.add("/tasks.functions.list", self.list_tasks_funtions)
     self.add("/tasks.info", self.info)
 
   @login_required
@@ -66,6 +67,15 @@ class TaskQueueHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     tasks, err = self.service.list_taks(context, args)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data=tasks)
+
+
+  def list_tasks_funtions(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    tasks, err = self.service.list_tasks_funtions(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=tasks)

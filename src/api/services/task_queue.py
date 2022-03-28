@@ -3,6 +3,7 @@ from _main_.utils.common import serialize, serialize_all
 from api.store.task_queue import TaskQueueStore
 from _main_.utils.context import Context
 from typing import Tuple
+from task_queue.jobs import FUNCTIONS
 
 
 class TaskQueueService:
@@ -24,6 +25,10 @@ class TaskQueueService:
     if err:
       return None, err
     return serialize_all(task), None
+
+  def list_tasks_funtions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    functions = list(FUNCTIONS.keys())
+    return functions, None
 
 
   def create_task(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
