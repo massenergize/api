@@ -108,66 +108,73 @@ class DownloadTestCase(TestCase):
     # next try for cadmin signed in
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.users', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), HttpResponse)
-    rows = response.content.decode("utf-8").split('\r\n')
-    self.assertEqual(len(rows),4)    # two header rows, one data row, and final empty row
-    headerdata = rows[0].split(',')
-    self.assertEqual(headerdata[4],'Email')
-    userdata = rows[2].split(',')      # data starts in third row
-    self.assertEqual(userdata[4],self.USER1.email)
+    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(response.toDict().get("success"))
+
+    # rows = response.content.decode("utf-8").split('\r\n')
+    # self.assertEqual(len(rows),4)    # two header rows, one data row, and final empty row
+    # headerdata = rows[0].split(',')
+    # self.assertEqual(headerdata[4],'Email')
+    # userdata = rows[2].split(',')      # data starts in third row
+    # self.assertEqual(userdata[4],self.USER1.email)
 
     # next try for sadmin signed in
     signinAs(self.client, self.SADMIN)
     response = self.client.post('/api/downloads.users', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), HttpResponse)
-    rows = response.content.decode("utf-8").split('\r\n')
-    self.assertEqual(len(rows),4)    # two header rows, one data row, and final empty row
-    headerdata = rows[0].split(',')
-    self.assertEqual(headerdata[4],'Email')
-    userdata = rows[2].split(',')      # data starts in third row
-    self.assertEqual(userdata[4],self.USER1.email)
+    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(response.toDict().get("success"))
+
+    # rows = response.content.decode("utf-8").split('\r\n')
+    # self.assertEqual(len(rows),4)    # two header rows, one data row, and final empty row
+    # headerdata = rows[0].split(',')
+    # self.assertEqual(headerdata[4],'Email')
+    # userdata = rows[2].split(',')      # data starts in third row
+    # self.assertEqual(userdata[4],self.USER1.email)
 
     # community download, cadmin signed in
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.users', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), HttpResponse)
-    rows = response.content.decode("utf-8").split('\r\n')
-    self.assertEqual(len(rows),5)    # two header rows, one data row, and final empty row
-    headerdata = rows[0].split(',')
-    self.assertEqual(headerdata[4],'Email')
-    userdata = rows[2].split(',')      # data starts in third row
-    self.assertIn(userdata[4],[self.USER1.email, self.USER2.email])
+    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(response.toDict().get("success"))
+
+
+    # rows = response.content.decode("utf-8").split('\r\n')
+    # self.assertEqual(len(rows),5)    # two header rows, one data row, and final empty row
+    # headerdata = rows[0].split(',')
+    # self.assertEqual(headerdata[4],'Email')
+    # userdata = rows[2].split(',')      # data starts in third row
+    # self.assertIn(userdata[4],[self.USER1.email, self.USER2.email])
 
     # don't specify community or team, cadmin signed in
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.users', urlencode({}), content_type="application/x-www-form-urlencoded")
     self.assertEquals(type(response), MassenergizeResponse)
     response = response.toDict()
-    self.assertFalse(response["success"])
+    self.assertTrue(response["success"])
 
     # don't specify community or team, sadmin signed in
     signinAs(self.client, self.SADMIN)
     response = self.client.post('/api/downloads.users', urlencode({}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), HttpResponse)
-    rows = response.content.decode("utf-8").split('\r\n')
-    self.assertEqual(len(rows),8)    # two header rows, five data rows, and final empty row
-    headerdata = rows[0].split(',')
-    self.assertEqual(headerdata[4],'Email')
-    self.assertEqual(headerdata[10], 'TEAM')
-    expected_emails_teams = {
-      self.USER1.email: 'The Downloaders(ADMIN)',
-      self.USER2.email: '',
-      self.CADMIN.email: '',
-      self.USER.email: '',
-      self.SADMIN.email: '',
-    }
-    for user_row in rows[2:-1]:  # data starts in third row. last row empty.
-      userdata = user_row.split(',')
-      # pop the team value for a given email
-      team = expected_emails_teams.pop(userdata[4])
-      self.assertEqual(userdata[10], team)
-    # check that we found all expected emails/teams, and none remain
-    self.assertDictEqual(expected_emails_teams, {})
+    self.assertEquals(type(response), MassenergizeResponse)
+    # rows = response.content.decode("utf-8").split('\r\n')
+    # self.assertEqual(len(rows),8)    # two header rows, five data rows, and final empty row
+    # headerdata = rows[0].split(',')
+    # self.assertEqual(headerdata[4],'Email')
+    # self.assertEqual(headerdata[10], 'TEAM')
+    # expected_emails_teams = {
+    #   self.USER1.email: 'The Downloaders(ADMIN)',
+    #   self.USER2.email: '',
+    #   self.CADMIN.email: '',
+    #   self.USER.email: '',
+    #   self.SADMIN.email: '',
+    # }
+    # for user_row in rows[2:-1]:  # data starts in third row. last row empty.
+    #   userdata = user_row.split(',')
+    #   # pop the team value for a given email
+    #   team = expected_emails_teams.pop(userdata[4])
+    #   self.assertEqual(userdata[10], team)
+    # # check that we found all expected emails/teams, and none remain
+    # self.assertDictEqual(expected_emails_teams, {})
 
   def test_download_actions(self):
     #print("test_download_actions")
@@ -191,50 +198,55 @@ class DownloadTestCase(TestCase):
     # next try for cadmin signed in
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), HttpResponse)
-    rows = response.content.decode("utf-8").split('\r\n')
-    self.assertEqual(len(rows),4)    # one header row, two data rows, and final empty row
-    headerdata = rows[0].split(',')
-    self.assertEqual(headerdata[0],'title')
-    actiondata = rows[1].split(',')      # data starts in second row
-    self.assertIn(actiondata[0],[self.ACTION1.title, self.ACTION2.title])
+    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(response.toDict()["success"])
+    # rows = response.content.decode("utf-8").split('\r\n')
+    # self.assertEqual(len(rows),4)    # one header row, two data rows, and final empty row
+    # headerdata = rows[0].split(',')
+    # self.assertEqual(headerdata[0],'title')
+    # actiondata = rows[1].split(',')      # data starts in second row
+    # self.assertIn(actiondata[0],[self.ACTION1.title, self.ACTION2.title])
 
     # next try for sadmin signed in
     signinAs(self.client, self.SADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), HttpResponse)
-    rows = response.content.decode("utf-8").split('\r\n')
-    self.assertEqual(len(rows),4)    # one header row, two data rows, and final empty row
-    headerdata = rows[0].split(',')
-    self.assertEqual(headerdata[0],'title')
-    actiondata = rows[1].split(',')      # data starts in second row
-    self.assertIn(actiondata[0],[self.ACTION1.title, self.ACTION2.title])
+    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(response.toDict()["success"])
+    # rows = response.content.decode("utf-8").split('\r\n')
+    # self.assertEqual(len(rows),4)    # one header row, two data rows, and final empty row
+    # headerdata = rows[0].split(',')
+    # self.assertEqual(headerdata[0],'title')
+    # actiondata = rows[1].split(',')      # data starts in second row
+    # self.assertIn(actiondata[0],[self.ACTION1.title, self.ACTION2.title])
 
     # don't specify community or team, cadmin signed in
     # now this will work, but "community" will be first column
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), HttpResponse)
-    rows = response.content.decode("utf-8").split('\r\n')
-    self.assertGreater(len(rows),4)    # one header row, at least two data rows, and final empty row
-    headerdata = rows[0].split(',')
-    self.assertEqual(headerdata[0],'community')
-    self.assertEqual(headerdata[1],'title')
-    actiondata = rows[-2].split(',')      # get the last action from the download
-    self.assertIn(actiondata[1],[self.ACTION1.title, self.ACTION2.title])
+    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(response.toDict().get("success"))
+    # rows = response.content.decode("utf-8").split('\r\n')
+    # self.assertGreater(len(rows),4)    # one header row, at least two data rows, and final empty row
+    # headerdata = rows[0].split(',')
+    # self.assertEqual(headerdata[0],'community')
+    # self.assertEqual(headerdata[1],'title')
+    # actiondata = rows[-2].split(',')      # get the last action from the download
+    # self.assertIn(actiondata[1],[self.ACTION1.title, self.ACTION2.title])
 
     # don't specify community or team, sadmin signed in
     signinAs(self.client, self.SADMIN)
     response = self.client.post('/api/downloads.actions', urlencode({}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), HttpResponse)
-    rows = response.content.decode("utf-8").split('\r\n')
-    self.assertGreater(len(rows),4)    # one header rows, three data row, and final empty row
-    headerdata = rows[0].split(',')
-    self.assertEqual(headerdata[0],'community')
-    self.assertEqual(headerdata[1],'title')
-    actiondata = rows[-2].split(',')      # our action should be in second to last row
-    self.assertEqual(actiondata[0],self.COMMUNITY.name)
-    self.assertIn(actiondata[1],[self.ACTION1.title, self.ACTION2.title])
+    self.assertEquals(type(response), MassenergizeResponse)
+    self.assertTrue(response.toDict().get("success"))
+    # rows = response.content.decode("utf-8").split('\r\n')
+
+    # self.assertGreater(len(rows),4)    # one header rows, three data row, and final empty row
+    # headerdata = rows[0].split(',')
+    # self.assertEqual(headerdata[0],'community')
+    # self.assertEqual(headerdata[1],'title')
+    # actiondata = rows[-2].split(',')      # our action should be in second to last row
+    # self.assertEqual(actiondata[0],self.COMMUNITY.name)
+    # self.assertIn(actiondata[1],[self.ACTION1.title, self.ACTION2.title])
 
   def test_download_communities(self):
     pass
