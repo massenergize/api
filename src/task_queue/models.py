@@ -2,10 +2,11 @@ import json
 from django.db import models
 from django.forms import model_to_dict
 from database.models import UserProfile
+from database.utils.common import get_summary_info
 from database.utils.constants import SHORT_STR_LEN
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from task_queue.jobs import FUNCTIONS
-from task_queue.type_constants import ScheculeInterval, TaskStatus, schedules
+from task_queue.type_constants import ScheduleInterval, TaskStatus, schedules
 
 
 # Create your models here.
@@ -33,14 +34,14 @@ class Task(models.Model):
 
     recurring_interval = models.CharField(
         max_length=SHORT_STR_LEN,
-        choices=ScheculeInterval.choices(),
+        choices=ScheduleInterval.choices(),
         blank=True,
         null=True
     )
 
     schedule = models.OneToOneField(
         PeriodicTask,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='task_queue_schedule',
@@ -51,18 +52,30 @@ class Task(models.Model):
     creator = models.ForeignKey(
         blank=True,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='task_queue_creator',
         to=UserProfile
     )
 
     def simple_json(self):
-        return model_to_dict(self, exclude=['schedule'])
+        res = model_to_dict(self, exclude=['schedule'])
+        res["creator"] = get_summary_info(self.creator)["full_name"]
+        res["is_active"] = self.schedule.enabled
+        return res
+
+
+        # helper functions
 
     def delete(self, *args, **kwargs):
         if self.schedule is not None:
             self.schedule.delete()
         return super(self.__class__, self).delete(*args, **kwargs)
+
+
+    def delete_periodic_task(self):
+        if self.schedule is not None:
+            self.schedule.delete()
+
 
     def create_task(self):
         self.schedule = PeriodicTask.objects.create(
@@ -93,7 +106,6 @@ class Task(models.Model):
             return hour
         if self.recurring_interval == schedules["EVERY_DAY"]:
             day, created = CrontabSchedule.objects.get_or_create(
-                day_of_week=details["day_of_week"] if details["day_of_week"] else "*",
                 hour=details["hour"] if details["hour"] else "0",
                 minute=details["minute"] if details["minute"] else "0",
             )
@@ -151,6 +163,7 @@ class Task(models.Model):
         schedule.enabled = False
         schedule.save()
 
+ 
     def start(self):
         """starts the task"""
         schedule = self.schedule

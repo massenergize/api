@@ -20,13 +20,13 @@ class TaskQueueService:
       return None, err
     return serialize(task, full=True), None
 
-  def list_taks(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def list_tasks(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     task, err = self.store.list_tasks(context, args)
     if err:
       return None, err
     return serialize_all(task), None
 
-  def list_tasks_funtions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def list_tasks_functions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     functions = list(FUNCTIONS.keys())
     return functions, None
 
@@ -45,6 +45,20 @@ class TaskQueueService:
 
   def delete_task(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     task, err = self.store.delete_task(args)
+    if err:
+      return None, err
+    return serialize(task), None
+
+  def activate_task(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    task, err = self.store.activate_task(args)
+    if err:
+      return None, err
+    return serialize(task), None
+
+
+
+  def deactivate_task(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    task, err = self.store.deactivate_task(args)
     if err:
       return None, err
     return serialize(task), None

@@ -10,7 +10,7 @@ class TypeConstants(Enum):
         return [(value, value) for value in constants_class.all()]
 
 
-class ScheculeInterval(TypeConstants):
+class ScheduleInterval(TypeConstants):
     EVERY_MINUTE = 'EVERY_MINUTE'
     EVERY_HOUR = 'EVERY_HOUR'
     EVERY_WEEK = 'EVERY_WEEK'

@@ -3,7 +3,6 @@ from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
 from database.models import UserProfile
-
 from task_queue.models import Task
 
 
@@ -63,10 +62,12 @@ class TaskQueueStore:
       task = Task.objects.filter(id=task_id)
       if not task.first():
           return None, InvalidResourceError()
-
       task.update(**args)
-
-      return task.first(), None
+      
+      task = Task.objects.filter(id=task_id).first()
+      task.delete_periodic_task()
+      task.create_task()
+      return task, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -79,8 +80,36 @@ class TaskQueueStore:
       task = Task.objects.get(id=task_id)
       if not task:
         return None, InvalidResourceError()
-
       task.delete()
+      return task, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def activate_task(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      task_id = args["id"]
+      task = Task.objects.get(id=task_id)
+      if not task:
+        return None, InvalidResourceError()
+
+      task.start()
+      return task, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+
+  def deactivate_task(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      task_id = args["id"]
+      task = Task.objects.get(id=task_id)
+      if not task:
+        return None, InvalidResourceError()
+
+      task.stop()
       return task, None
     except Exception as e:
       capture_message(str(e), level="error")
