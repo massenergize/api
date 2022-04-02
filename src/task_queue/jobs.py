@@ -1,7 +1,6 @@
-from .views import fib, test_function
+from .views import test_function
 
 
 FUNCTIONS = {
     'test': test_function,
-    "Fibonacci": fib,
 }

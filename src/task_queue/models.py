@@ -61,6 +61,7 @@ class Task(models.Model):
         res = model_to_dict(self, exclude=['schedule'])
         res["creator"] = get_summary_info(self.creator)["full_name"]
         res["is_active"] = self.schedule.enabled
+        res["last_run_at"] = self.schedule.last_run_at
         return res
 
 
