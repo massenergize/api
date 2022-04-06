@@ -367,7 +367,14 @@ class UserStore:
       
       email = args.get('email', None)
       community = get_community_or_die(context, args)
-      
+
+      # added for special case of guest users, mark them as such in user_info
+      user_info = args.get('user_info', None)     
+      full_name = args.get('full_name')
+      if 'guest' in full_name.lower():
+        # this is a guest user
+        user_info = { 'user_type': 'guest_user' }
+
       # allow home address to be passed in
       location = args.pop('location', '')
       profile_picture = args.pop("profile_picture", None)
@@ -379,7 +386,7 @@ class UserStore:
       user = UserProfile.objects.filter(email=email).first()
       if not user:
         new_user: UserProfile = UserProfile.objects.create(
-          full_name=args.get('full_name'),
+          full_name=full_name,
           preferred_name=args.get('preferred_name', None),
           email=args.get('email'),
           is_vendor=args.get('is_vendor', False),
@@ -400,8 +407,24 @@ class UserStore:
           new_user.preferences = {'color': color}
           new_user.save()
 
-      else:
+        if user_info:
+          new_user.user_info = user_info
+          new_user.save()
+
+      else:   # user exists
         new_user: UserProfile = user
+
+        # if user name changed, update it
+        if full_name != new_user.full_name:
+          new_user.full_name = full_name
+          preferred_name=args.get('preferred_name', None)
+          if preferred_name:
+            new_user.preferred_name = preferred_name
+
+          if 'guest' not in full_name.lower():
+            # this is not a guest user
+            user_info = { 'user_type': 'standard_user' }
+        
         # if user was imported but profile incomplete, updates user with info submitted in form
         if not new_user.accepts_terms_and_conditions:
           new_user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
@@ -415,6 +438,8 @@ class UserStore:
         household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
                                                   location=location)
         new_user.real_estate_units.add(household)
+
+      new_user.save()
       
       res = {
         "user": new_user,
