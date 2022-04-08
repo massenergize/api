@@ -95,7 +95,8 @@ def _send_invitation_email(user_info, mess):
     'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
     }
   
-  send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
+  #send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
+  send_massenergize_rich_email(subject, email, email_template, content_variables)
 
 class UserService:
   """
@@ -179,24 +180,25 @@ class UserService:
     
     community = res["community"]
     user = res["user"]
-    community_name =  community.name if community else "Global Massenergize Community"
-    community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
-    subdomain =   community.subdomain if community else "global"
-    subject = f'Welcome to {community_name}, a MassEnergize community'
-    homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
-    
-    content_variables = {
-      'name': user.preferred_name,
-      'community': community_name,
-      'homelink': homelink,
-      'logo': community_logo,
-      'actionslink':f'{homelink}/actions',
-      'eventslink':f'{homelink}/events',
-      'serviceslink': f'{homelink}/services',
-      'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
-      }
-    
-    send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables)
+    if user.accepts_terms_and_conditions:   # a complete user profile, not a guest
+      community_name =  community.name if community else "Global Massenergize Community"
+      community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+      subdomain =   community.subdomain if community else "global"
+      subject = f'Welcome to {community_name}, a MassEnergize community'
+      homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
+
+      content_variables = {
+        'name': user.preferred_name,
+        'community': community_name,
+        'homelink': homelink,
+        'logo': community_logo,
+        'actionslink':f'{homelink}/actions',
+        'eventslink':f'{homelink}/events',
+        'serviceslink': f'{homelink}/services',
+        'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
+        }
+
+      send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables)
 
     return serialize(user, full=True), None
 

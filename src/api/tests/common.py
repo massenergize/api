@@ -166,13 +166,11 @@ def makeAuthToken(user):
 def signinAs(client, user):
 
     if user:
-        print("Sign in as " + user.full_name)
         the_token = makeAuthToken(user)
 
         client.cookies = SimpleCookie({"token": the_token})
         return the_token
     else:
-        print("No user signed in")
         client.cookies = SimpleCookie({"token": ""})
 
 
