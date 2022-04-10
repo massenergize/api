@@ -14,7 +14,7 @@ import json
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
-
+from api.utils.constants import STANDARD_USER, INVITED_USER, GUEST_USER
 
 def _get_or_create_reu_location(args, user=None):
   unit_type = args.pop('unit_type', None)
@@ -361,7 +361,7 @@ class UserStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-  
+
   def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       
@@ -371,9 +371,16 @@ class UserStore:
       # added for special case of guest users, mark them as such in user_info
       user_info = args.get('user_info', None)     
       full_name = args.get('full_name')
+      preferred_name = args.get('preferred_name', None)
+
+      new_user_type = STANDARD_USER
       if 'guest' in full_name.lower():
-        # this is a guest user
-        user_info = { 'user_type': 'guest_user' }
+        new_user_type = GUEST_USER
+
+      if not user_info or user_info == {}:
+        user_info = { 'user_type': new_user_type }
+      else:
+        user_info['user_type'] = new_user_type
 
       # allow home address to be passed in
       location = args.pop('location', '')
@@ -383,66 +390,80 @@ class UserStore:
       
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
-      user = UserProfile.objects.filter(email=email).first()
-      if not user:
-        new_user: UserProfile = UserProfile.objects.create(
+      existing_user = UserProfile.objects.filter(email=email).first()
+      if not existing_user:
+        user: UserProfile = UserProfile.objects.create(
           full_name=full_name,
-          preferred_name=args.get('preferred_name', None),
-          email=args.get('email'),
+          preferred_name=preferred_name,
+          email=email,
           is_vendor=args.get('is_vendor', False),
           accepts_terms_and_conditions=args.pop('accepts_terms_and_conditions', False),
         )
         
         if profile_picture:
           pic = Media()
-          pic.name = f'{new_user.full_name} profpic'
+          pic.name = f'{user.full_name} profpic'
           pic.file = profile_picture
           pic.media_type = 'image'
           pic.save()
           
-          new_user.profile_picture = pic
-          new_user.save()
+          user.profile_picture = pic
+          user.save()
       
         if color:
-          new_user.preferences = {'color': color}
-          new_user.save()
+          user.preferences = {'color': color}
+          user.save()
 
         if user_info:
-          new_user.user_info = user_info
-          new_user.save()
+          user.user_info = user_info
+          user.save()
 
       else:   # user exists
-        new_user: UserProfile = user
+        # while calling users.create with existing user isn't normal, it can happen for different cases:
+        # 1. User used to exist but firebase profile wasn't found.  Probably User had been 'deleted' but still existed in database
+        # 2. User was an guest or invited user (partial profile), signing in for real, with complete profile
+        # 3. User was an invited user (partial profile), signing in as a guest.  Don't update the name
+        # 4. User was a standard user, signing in as a guest user.  Don't update the profile
 
-        # if user name changed, update it
-        if full_name != new_user.full_name:
-          new_user.full_name = full_name
-          preferred_name=args.get('preferred_name', None)
+        user: UserProfile = existing_user
+
+        existing_user_type = STANDARD_USER
+        if not user.accepts_terms_and_conditions:
+          if user.user_info:
+            existing_user_type = user.user_info.get('user_type',STANDARD_USER)
+
+        if new_user_type != GUEST_USER:
+          # case 1 or 2: update existing user profile with this new info
+
+          # if user name changed, update it
+          if full_name != user.full_name:
+            user.full_name = full_name
+
           if preferred_name:
-            new_user.preferred_name = preferred_name
+            user.preferred_name = preferred_name
 
-          if 'guest' not in full_name.lower():
-            # this is not a guest user
-            user_info = { 'user_type': 'standard_user' }
-        
-        # if user was imported but profile incomplete, updates user with info submitted in form
-        if not new_user.accepts_terms_and_conditions:
-          new_user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+          if user_info:
+            user.user_info = user_info
+
+          # if user was imported but profile incomplete, updates user with info submitted in form
+          if not user.accepts_terms_and_conditions:
+            user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
        
-      community_member_exists = CommunityMember.objects.filter(user=new_user, community=community).exists()
+      community_member_exists = CommunityMember.objects.filter(user=user, community=community).exists()
       if not community_member_exists:
         # add them as a member to community 
-        CommunityMember.objects.create(user=new_user, community=community)
+        CommunityMember.objects.create(user=user, community=community)
         
-        # create their first household
-        household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
+        # create their first household, if a location was specified
+        if location and location != '':
+          household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
                                                   location=location)
-        new_user.real_estate_units.add(household)
+          user.real_estate_units.add(household)
 
-      new_user.save()
+      user.save()
       
       res = {
-        "user": new_user,
+        "user": user,
         "community": community
       }
       return res, None
