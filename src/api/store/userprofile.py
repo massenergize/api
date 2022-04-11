@@ -372,9 +372,10 @@ class UserStore:
       user_info = args.get('user_info', None)     
       full_name = args.get('full_name')
       preferred_name = args.get('preferred_name', None)
+      is_guest = args.pop('is_guest', False)
 
       new_user_type = STANDARD_USER
-      if 'guest' in full_name.lower():
+      if is_guest:
         new_user_type = GUEST_USER
 
       if not user_info or user_info == {}:
@@ -454,11 +455,12 @@ class UserStore:
         # add them as a member to community 
         CommunityMember.objects.create(user=user, community=community)
         
-        # create their first household, if a location was specified
-        if location and location != '':
-          household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
+      # create their first household, if a location was specified, and if they don't have a household
+      reu = user.real_estate_units.all()
+      if reu.count() == 0:
+        household = RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
                                                   location=location)
-          user.real_estate_units.add(household)
+        user.real_estate_units.add(household)
 
       user.save()
       

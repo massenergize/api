@@ -6,6 +6,7 @@ from django.db.models.fields import BooleanField, related
 from django.db.models.query_utils import select_related_descend
 from database.utils.constants import *
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
+from api.utils.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 import uuid
@@ -638,6 +639,12 @@ class UserProfile(models.Model):
             c.community.name for c in CommunityMember.objects.filter(user=self)
         ]
         res["households"] = [h.simple_json() for h in self.real_estate_units.all()]
+
+        is_guest = False
+        if self.user_info:
+            is_guest = (self.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
+        res["is_guest"] = is_guest
+
         return res
 
     def update_visit_log(self, date_time):
@@ -692,6 +699,12 @@ class UserProfile(models.Model):
         data["teams"] = team_members
         data["profile_picture"] = get_json_if_not_none(self.profile_picture)
         data["visit_log"] = self.visit_log
+
+        is_guest = False
+        if self.user_info:
+            is_guest = (self.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
+        data["is_guest"] = is_guest
+
         return data
 
     class Meta:
