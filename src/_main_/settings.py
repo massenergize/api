@@ -94,9 +94,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'django_celery_results',
-    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -292,13 +289,5 @@ MEDIAFILES_LOCATION = 'media'
 
 # Celery Setup
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-result_backend = "django-db"
 accept_content = ['application/json']
 task_serializer = ['json']
-result_serializer = ['json']
-'''
-Default timezone is UTC but could be changed.
-'''
-
-# Celery Beat Setup
-CELERY_BEAT_SCHEDULER= 'django_celery_beat.schedulers:DatabaseScheduler'
