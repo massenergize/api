@@ -2,6 +2,7 @@ from typing import Tuple
 
 from django.core.exceptions import ValidationError
 from _main_.utils.utils import Console
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, Media, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
@@ -101,10 +102,7 @@ class MediaLibraryStore:
             queries = [self.generateQueryWithScope(f, com_ids) for f in filters]
 
         if len(queries) == 0:
-            return (
-                None,
-                "Could not build query with your provided filters, please try again",
-            )
+            return None, CustomMassenergizeError("Could not build query with your provided filters, please try again")
 
         query = queries.pop()
         for qObj in queries:
@@ -138,11 +136,11 @@ class MediaLibraryStore:
                 communities = Community.objects.filter(id__in=community_ids)
             user = UserProfile.objects.get(id=user_id)
         except Community.DoesNotExist:
-            return None, "Please provide valid 'community_ids'"
+            return None, CustomMassenergizeError("Please provide valid 'community_ids'")
         except UserProfile.DoesNotExist:
-            return None, "Please provide a valid 'user_id'"
+            return None, CustomMassenergizeError("Please provide a valid 'user_id'")
         except ValidationError:
-            return None, "Please provide a valid 'user_id'"
+            return None, CustomMassenergizeError("Please provide a valid 'user_id'")
         user_media = self.makeMediaAndSave(
             user=user,
             communities=communities,
@@ -150,10 +148,7 @@ class MediaLibraryStore:
             title=title,
             is_universal=is_universal,
         )
-        return (
-            user_media,
-            None,
-        )
+        return user_media, None
 
     def makeMediaAndSave(self, **kwargs):
         title = kwargs.get("title")
@@ -178,10 +173,8 @@ class MediaLibraryStore:
         try:
             media = Media.objects.get(pk=media_id)
         except Media.DoesNotExist:
-            return None, "Media could not be found, provide a valid 'media_id'"
+            return None, CustomMassenergizeError("Media could not be found, provide a valid 'media_id'")
         except:
-            return (
-                None,
-                "Sorry, something happened we could not find the media you are looking for",
-            )
+            return None, CustomMassenergizeError("Sorry, something happened we could not find the media you are looking for")
+            
         return media, None

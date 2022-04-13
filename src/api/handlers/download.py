@@ -51,7 +51,7 @@ class DownloadHandler(RouteHandler):
 
     (users_data, community_name), err = self.service.users_download(context, community_id=community_id, team_id=team_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return self._get_csv_response(data=users_data, download_type='users', community_name=community_name)
 
 
@@ -62,7 +62,7 @@ class DownloadHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     (actions_data, community_name), err = self.service.actions_download(context, community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return self._get_csv_response(data=actions_data, download_type='actions', community_name=community_name)
 
 
@@ -72,7 +72,7 @@ class DownloadHandler(RouteHandler):
     #args: dict = context.args
     (communities_data, dummy), err = self.service.communities_download(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return self._get_csv_response(data=communities_data, download_type='communities')
 
 
@@ -83,7 +83,7 @@ class DownloadHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     (teams_data, community_name), err = self.service.teams_download(context, community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return self._get_csv_response(data=teams_data, download_type='teams', community_name=community_name)
   
   @admins_only
@@ -95,5 +95,5 @@ class DownloadHandler(RouteHandler):
 
     (communities_data, community_name), err = self.service.metrics_download(context, args, community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return self._get_csv_response(data=communities_data, download_type='metrics')

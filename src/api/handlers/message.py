@@ -35,7 +35,7 @@ class MessageHandler(RouteHandler):
     args = rename_field(args, 'message_id', 'id')
     message_info, err = self.service.get_message_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=message_info)
 
   @admins_only
@@ -44,7 +44,7 @@ class MessageHandler(RouteHandler):
     args = context.get_request_body()
     message_info, err = self.service.forward_to_team_admins(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=message_info)
 
   @admins_only
@@ -53,7 +53,7 @@ class MessageHandler(RouteHandler):
     args = context.get_request_body()
     message_info, err = self.service.reply_from_community_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=message_info)
 
   @admins_only
@@ -66,7 +66,7 @@ class MessageHandler(RouteHandler):
       return CustomMassenergizeError("Please Provide Message Id")
     message_info, err = self.service.delete_message(message_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=message_info)
 
   @admins_only
@@ -74,7 +74,7 @@ class MessageHandler(RouteHandler):
     context: Context = request.context
     messages, err = self.service.list_team_admin_messages_for_community_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=messages)
 
   @admins_only
@@ -83,5 +83,5 @@ class MessageHandler(RouteHandler):
     args: dict = context.args
     messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=messages)
