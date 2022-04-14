@@ -19,9 +19,10 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
     writer = csv.writer(response)
     for row in data:
         writer.writerow(row)
+        
 
     send_massenergize_email_with_attachments(
-        f"{download_type.capitalize()} Data", f"This email contains the {download_type} data you requested.", email, response.content, filename)
+        f"{download_type.capitalize()} Data", f"Here is the {download_type} data you requested. Please see the attachment for details", email, response.content, filename)
     return True
 
 

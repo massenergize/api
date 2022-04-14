@@ -34,7 +34,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = True
+IS_LOCAL = False
 
 try:
     if IS_PROD:
@@ -94,9 +94,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'django_celery_results',
-    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -299,11 +296,5 @@ BROKER_TRANSPORT_OPTIONS = {
 }
 BROKER_URL = os.environ.get("CELERY_BROKER_URL")
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-
-result_backend = "django-db"
 accept_content = ['application/json']
 task_serializer = ['json']
-result_serializer = ['json']
-
-# Celery Beat Setup
-CELERY_BEAT_SCHEDULER= 'django_celery_beat.schedulers:DatabaseScheduler'
