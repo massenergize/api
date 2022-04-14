@@ -190,8 +190,8 @@ DATABASES = {
     }
 }
 
-if is_test_mode():
-    DATABASES['default'] = DATABASES['test_db']
+# if is_test_mode():
+DATABASES['default'] = DATABASES['test_db']
 
 # CACHES = {
 #     'default': {
@@ -291,14 +291,19 @@ MEDIAFILES_LOCATION = 'media'
 
 
 # Celery Setup
+CELERY_DEFAULT_QUEUE = os.getenv('CELERY_DEFAULT_QUEUE') # name of your sqs queue
+CELERY_RESULT_BACKEND = None  # Disabling the results backend since not supported with SQS
+BROKER_TRANSPORT_OPTIONS = {
+    'polling_interval': 20,
+    'region': 'us-east-2',
+}
+BROKER_URL = os.environ.get("CELERY_BROKER_URL")
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
+
 result_backend = "django-db"
 accept_content = ['application/json']
 task_serializer = ['json']
 result_serializer = ['json']
-'''
-Default timezone is UTC but could be changed.
-'''
 
 # Celery Beat Setup
 CELERY_BEAT_SCHEDULER= 'django_celery_beat.schedulers:DatabaseScheduler'
