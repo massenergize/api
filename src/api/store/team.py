@@ -214,7 +214,7 @@ class TeamStore:
       capture_message(str(e), level="error")
       if team:
         team.delete()
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def update_team(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -345,7 +345,7 @@ class TeamStore:
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def leave_team(self, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
@@ -362,7 +362,7 @@ class TeamStore:
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def add_team_member(self, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
@@ -483,7 +483,7 @@ class TeamStore:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:

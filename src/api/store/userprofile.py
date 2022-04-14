@@ -228,7 +228,7 @@ class UserStore:
       capture_message(str(e), level="error")
       import traceback
       traceback.print_exc()
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
 
   def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -244,7 +244,7 @@ class UserStore:
     
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def remove_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -256,7 +256,7 @@ class UserStore:
     
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def add_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -278,7 +278,7 @@ class UserStore:
     
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def edit_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -307,7 +307,7 @@ class UserStore:
       return reu, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def list_households(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -316,7 +316,7 @@ class UserStore:
       return user.real_estate_units.all(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def list_users(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
     community, err = get_community(community_id)
@@ -571,7 +571,7 @@ class UserStore:
       return users, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def add_action_todo(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     return self._add_action_rel(context, args, "TODO")
@@ -596,7 +596,7 @@ class UserStore:
       return todo, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def list_completed_actions(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -615,7 +615,7 @@ class UserStore:
       return todo, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def remove_user_action(self, context: Context, user_action_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -644,7 +644,7 @@ class UserStore:
     except Exception as e:
       send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
   
   def add_invited_user(self, context: Context, args, first_name, last_name, email) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -717,5 +717,5 @@ class UserStore:
       return ret, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 

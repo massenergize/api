@@ -7,6 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 
 class CommunityHandler(RouteHandler):
 
@@ -48,7 +49,7 @@ class CommunityHandler(RouteHandler):
 
     community_info, err = self.service.get_community_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=community_info)
 
 
@@ -70,9 +71,9 @@ class CommunityHandler(RouteHandler):
     if executor_id == args.get("user_id", None):
       community_info, err = self.service.join_community(context, args)
     else:
-      return MassenergizeResponse(error="Executor dosen't have sufficient permissions to use community.leave on this user")
+      return CustomMassenergizeError("Executor dosen't have sufficient permissions to use community.leave on this user")
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=community_info)
 
 
@@ -94,10 +95,10 @@ class CommunityHandler(RouteHandler):
     if executor_id == args.get("user_id", None):
       community_info, err = self.service.leave_community(context, args)
     else:
-      return MassenergizeResponse(error="Executor dosen't have sufficient permissions to use community.leave on this user")
+      return CustomMassenergizeError("Executor dosen't have sufficient permissions to use community.leave on this user")
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=community_info)
 
 
@@ -108,15 +109,15 @@ class CommunityHandler(RouteHandler):
 
     args['accepted_terms_and_conditions'] = parse_bool(args.pop('accepted_terms_and_conditions', None))
     if not args['accepted_terms_and_conditions']:
-      return MassenergizeResponse(error="Please accept the terms and conditions")
+      return CustomMassenergizeError("Please accept the terms and conditions")
     
     ok, err = check_length(args, 'name', 3, 25)
     if not ok:
-      return MassenergizeResponse(error=str(err))
+      return err
     
     ok, err = check_length(args, 'subdomain', 4, 20)
     if not ok:
-      return MassenergizeResponse(error=str(err))
+      return err
       
     args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', False))
     args['is_published'] = parse_bool(args.pop('is_published', False))
@@ -130,7 +131,7 @@ class CommunityHandler(RouteHandler):
     
     community_info, err = self.service.create_community(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=community_info)
 
 
@@ -140,7 +141,7 @@ class CommunityHandler(RouteHandler):
     args = context.args
     community_info, err = self.service.list_communities(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=community_info)
 
   @admins_only
@@ -151,17 +152,17 @@ class CommunityHandler(RouteHandler):
     args = rename_field(args, 'id', 'community_id')
     community_id = args.get('community_id', None)
     if not community_id:
-      return MassenergizeResponse(error='Please provide an ID')
+      return CustomMassenergizeError('Please provide an ID')
 
     if(args.get('name', None)):
       ok, err = check_length(args, 'name', 3, 25)
       if not ok:
-        return MassenergizeResponse(error=str(err))
+        return err
     
     if(args.get('subdomain', None)):
       ok, err = check_length(args, 'subdomain', 4, 20)
       if not ok:
-        return MassenergizeResponse(error=str(err))
+        return err
 
     if(args.get('owner_name', None)):
       args['owner_name'] = args.get('owner_name', None)
@@ -182,7 +183,7 @@ class CommunityHandler(RouteHandler):
 
     community_info, err = self.service.update_community(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=community_info)
 
 
@@ -200,7 +201,7 @@ class CommunityHandler(RouteHandler):
 
     community_info, err = self.service.delete_community(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=community_info)
 
 
@@ -210,7 +211,7 @@ class CommunityHandler(RouteHandler):
     #args = context.get_request_body()
     communities, err = self.service.list_communities_for_community_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=communities)
 
 
@@ -220,7 +221,7 @@ class CommunityHandler(RouteHandler):
     #args = context.get_request_body()
     communities, err = self.service.list_communities_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=communities)
 
 
@@ -238,7 +239,7 @@ class CommunityHandler(RouteHandler):
 
     communities, err = self.service.add_custom_website(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=communities)
 
   def actions_completed(self, request): 

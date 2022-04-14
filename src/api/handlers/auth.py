@@ -86,7 +86,7 @@ class AuthHandler(RouteHandler):
 
     # if the signin is from an admin site then set it to 24 hrs
     if(context.is_admin_site):
-      return NotAuthorizedError
+      return NotAuthorizedError()
 
     user_info, token, err = self.service.guest_login(context)
     if err:
