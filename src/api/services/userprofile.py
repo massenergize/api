@@ -289,7 +289,7 @@ class UserService:
 
       except Exception as e:
         print("Error string: " + str(e))
-        return None, CustomMassenergizeError(str(e))
+        return None, CustomMassenergizeError(e)
     if err:
       return None, err
     return {'invalidEmails': invalid_emails}, None
@@ -329,7 +329,7 @@ class UserService:
 
       except Exception as e:
         print(str(e))
-        return None, CustomMassenergizeError(str(e))
+        return None, CustomMassenergizeError(e)
     if err:
       return None, err
     return {'invalidEmails': invalid_emails}, None

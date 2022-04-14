@@ -41,7 +41,7 @@ class MiscellaneousHandler(RouteHandler):
         args: dict = context.args
         goal_info, err = self.service.navigation_menu_list(context, args)
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=goal_info)
 
     def backfill(self, request):
@@ -49,7 +49,7 @@ class MiscellaneousHandler(RouteHandler):
         args: dict = context.args
         goal_info, err = self.service.backfill(context, args)
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=goal_info)
 
     @super_admins_only
@@ -60,7 +60,7 @@ class MiscellaneousHandler(RouteHandler):
         carbon_info, err = self.service.create_carbon_equivalency(args)
 
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=carbon_info)
 
     @super_admins_only
@@ -76,7 +76,7 @@ class MiscellaneousHandler(RouteHandler):
         carbon_info, err = self.service.update_carbon_equivalency(args)
 
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=carbon_info)
 
     def get_carbon_equivalencies(self, request):
@@ -91,7 +91,7 @@ class MiscellaneousHandler(RouteHandler):
         carbon_info, err = self.service.get_carbon_equivalencies(args)
 
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=carbon_info)
 
     def delete_carbon_equivalency(self, request):
@@ -105,7 +105,7 @@ class MiscellaneousHandler(RouteHandler):
         carbon_info, err = self.service.delete_carbon_equivalency(args)
 
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=carbon_info)
 
     def home(self, request):
@@ -119,7 +119,7 @@ class MiscellaneousHandler(RouteHandler):
         self.validator.expect("email", str, is_required=True)
         args, err = self.validator.verify(args)
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
 
         token, error = self.service.authenticateFrontendInTestMode(args)
         if error:

@@ -178,7 +178,7 @@ class MessageStore:
       return messages, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def list_team_admin_messages(self, context: Context):
     try:
@@ -193,4 +193,4 @@ class MessageStore:
       return messages, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)

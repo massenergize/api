@@ -7,7 +7,7 @@ from api.decorators import admins_only, super_admins_only, login_required
 from api.services.deviceprofile import DeviceService
 from _main_.settings import RUN_SERVER_LOCALLY
 from _main_.utils.GeoIP import GeoIP
-from _main_.utils.massenergize_errors import InvalidResourceError
+from _main_.utils.massenergize_errors import CustomMassenergizeError
 
 GOOGLE_MASSENERGIZE_IP = "35.209.206.77"
 
@@ -45,7 +45,7 @@ class DeviceHandler(RouteHandler):
 
     device_info, err = self.service.get_device_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=device_info)
   
   def log_device(self, request):
@@ -89,7 +89,7 @@ class DeviceHandler(RouteHandler):
     device, err = self.service.log_device(context, args, location)
     if err:
       # print(err)
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=device)
 
   @super_admins_only
@@ -121,10 +121,10 @@ class DeviceHandler(RouteHandler):
         metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
       
       else:
-        return InvalidResourceError(f"{metric} is not a valid metric.")
+        return CustomMassenergizeError(f"{metric} is not a valid metric.")
     
     if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
+        return err
         
     return MassenergizeResponse(data=metric)
   
@@ -154,10 +154,10 @@ class DeviceHandler(RouteHandler):
         metric, err = self.service.metric_community_profiles_over_time(context, args, community_id)
       
       else:
-        return InvalidResourceError(f"{metric} is not a valid metric.")
+        return CustomMassenergizeError(f"{metric} is not a valid metric.")
     
     if err:
-        return MassenergizeResponse(error=str(err), status=err.status)
+        return err
     
     return MassenergizeResponse(data=metric)
   
@@ -175,7 +175,7 @@ class DeviceHandler(RouteHandler):
           
     device_info, err = self.service.update_device(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=device_info)
 
   def delete(self, request):
@@ -192,5 +192,5 @@ class DeviceHandler(RouteHandler):
 
     device_info, err = self.service.delete_device(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=device_info)

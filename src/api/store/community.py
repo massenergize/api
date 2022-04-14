@@ -876,7 +876,7 @@ class CommunityStore:
             return communities, None
         except Exception as e:
             capture_exception(e)
-            return None, CustomMassenergizeError(str(e))
+            return None, CustomMassenergizeError(e)
 
     def add_custom_website(self, context, args):
         try:
@@ -903,7 +903,7 @@ class CommunityStore:
             return community_website, None
         except Exception as e:
             capture_exception(e)
-            return None, CustomMassenergizeError(str(e))
+            return None, CustomMassenergizeError(e)
 
     def get_graphs(self, context, community_id):
         try:
@@ -913,7 +913,7 @@ class CommunityStore:
             return graphs, None
         except Exception as e:
             capture_exception(e)
-            return None, CustomMassenergizeError(str(e))
+            return None, CustomMassenergizeError(e)
 
 
     def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
