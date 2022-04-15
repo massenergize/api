@@ -180,7 +180,8 @@ class UserService:
     
     community = res["community"]
     user = res["user"]
-    if user.accepts_terms_and_conditions:   # a complete user profile, not a guest
+    send_email = res["new_user_email"]
+    if send_email:   # a complete user profile, not a guest
       community_name =  community.name if community else "Global Massenergize Community"
       community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
       subdomain =   community.subdomain if community else "global"

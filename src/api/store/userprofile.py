@@ -391,6 +391,8 @@ class UserStore:
       
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
+
+      new_user_email = False
       existing_user = UserProfile.objects.filter(email=email).first()
       if not existing_user:
         user: UserProfile = UserProfile.objects.create(
@@ -418,6 +420,8 @@ class UserStore:
         if user_info:
           user.user_info = user_info
           user.save()
+
+        new_user_email = user.accepts_terms_and_conditions # user completes profile
 
       else:   # user exists
         # while calling users.create with existing user isn't normal, it can happen for different cases:
@@ -449,6 +453,7 @@ class UserStore:
           # if user was imported but profile incomplete, updates user with info submitted in form
           if not user.accepts_terms_and_conditions:
             user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+            new_user_email = user.accepts_terms_and_conditions  # user completes profile
        
       community_member_exists = CommunityMember.objects.filter(user=user, community=community).exists()
       if not community_member_exists:
@@ -466,7 +471,8 @@ class UserStore:
       
       res = {
         "user": user,
-        "community": community
+        "community": community,
+        "new_user_email": new_user_email,
       }
       return res, None
     
