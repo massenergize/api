@@ -40,7 +40,6 @@ def send_massenergize_email(subject, msg, to):
 
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
-    print(response.raise_for_status())
     return False
   return True
 
@@ -56,7 +55,6 @@ def send_massenergize_email_with_attachments(subject, msg, to, file, file_name):
 
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
-    print(response.raise_for_status())
     return False
   return True
 
@@ -98,7 +96,6 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
 
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
-    print(response.raise_for_status())
     return False
   return True
 
@@ -136,7 +133,6 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
 
   if not response.ok:
     capture_message("Error occurred in sending some emails", level="error")
-    print(response.raise_for_status())
     return False
 
   return True

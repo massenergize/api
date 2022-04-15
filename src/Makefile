@@ -90,4 +90,7 @@ test:
 
 
 celery:
-	DJANGO_ENV=local celery -A _main_.celeryapp worker -l info
+	DJANGO_ENV=local celery -A _main_.celery.app worker -l info
+
+celery-remote:
+	celery -A _main_.celery.app worker -l info
