@@ -6,6 +6,8 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from django.http import HttpResponse
 from database.models import Team, Community, UserProfile, TeamMember, CommunityAdminGroup, CommunityMember, Action
 from api.tests.common import signinAs, setupCC, createUsers
+from unittest.mock import patch
+from api.tasks import download_data
 
 class DownloadTestCase(TestCase):
 
@@ -86,7 +88,9 @@ class DownloadTestCase(TestCase):
     # this gets run on every test case
     pass
 
-  def test_download_users(self):
+  
+  @patch("api.tasks.download_data.delay", return_value=None)
+  def test_download_users(self, mocked_delay):
     #print("test_download_users")
     # all routes admins only
 
@@ -176,7 +180,8 @@ class DownloadTestCase(TestCase):
     # # check that we found all expected emails/teams, and none remain
     # self.assertDictEqual(expected_emails_teams, {})
 
-  def test_download_actions(self):
+  @patch("api.tasks.download_data.delay", return_value=None)
+  def test_download_actions(self, mocked_delay):
     #print("test_download_actions")
     # all routes admins only
 
