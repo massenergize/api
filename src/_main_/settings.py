@@ -28,8 +28,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 RUN_SERVER_LOCALLY = False
+RUN_CELERY_LOCALLY = False
+
 if DJANGO_ENV == "local":
     RUN_SERVER_LOCALLY = True
+    RUN_CELERY_LOCALLY = True
 
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
@@ -50,7 +53,6 @@ try:
 
 except Exception:
     load_dotenv()
-
 
 # ********  END LOAD CONFIG DATA ***********#
 
@@ -285,16 +287,3 @@ else:
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-
-
-# Celery Setup
-CELERY_DEFAULT_QUEUE = os.getenv('CELERY_DEFAULT_QUEUE') # name of your sqs queue
-CELERY_RESULT_BACKEND = None  # Disabling the results backend since not supported with SQS
-BROKER_TRANSPORT_OPTIONS = {
-    'polling_interval': 20,
-    'region': 'us-east-2',
-}
-BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-accept_content = ['application/json']
-task_serializer = ['json']

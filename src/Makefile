@@ -87,3 +87,7 @@ test:
 	DJANGO_ENV=test python3 manage.py migrate
 	DJANGO_ENV=test python3 -W ignore manage.py test $(package)
 .PHONY: test
+
+
+celery:
+	DJANGO_ENV=local celery -A _main_.celeryapp worker -l info
