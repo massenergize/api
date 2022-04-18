@@ -37,7 +37,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -189,8 +189,8 @@ DATABASES = {
     }
 }
 
-# if is_test_mode():
-DATABASES['default'] = DATABASES['test_db']
+if is_test_mode():
+    DATABASES['default'] = DATABASES['test_db']
 
 # CACHES = {
 #     'default': {
