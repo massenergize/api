@@ -30,6 +30,9 @@ DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 RUN_SERVER_LOCALLY = False
 RUN_CELERY_LOCALLY = False
 
+if is_test_mode():
+    RUN_CELERY_LOCALLY = True
+
 if DJANGO_ENV == "local":
     RUN_SERVER_LOCALLY = True
     RUN_CELERY_LOCALLY = True
