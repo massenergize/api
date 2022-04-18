@@ -58,7 +58,7 @@ class GoalStore:
       return goals, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def create_goal(self, community_id, team_id, user_id, args) -> Tuple[Goal, MassEnergizeAPIError]:
@@ -98,7 +98,7 @@ class GoalStore:
       return new_goal, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def update_goal(self, goal_id, args) -> Tuple[Goal, MassEnergizeAPIError]:
     try:
@@ -116,7 +116,7 @@ class GoalStore:
       return goal.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def delete_goal(self, goal_id) -> Tuple[Goal, MassEnergizeAPIError]:
     try:
@@ -129,7 +129,7 @@ class GoalStore:
       return goals_to_delete.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def copy_goal(self, goal_id) -> Tuple[Goal, MassEnergizeAPIError]:
     try:
@@ -145,7 +145,7 @@ class GoalStore:
       return new_goal, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def _get_goals_from_community(self, community):
@@ -197,7 +197,7 @@ class GoalStore:
       return goals, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def increase_value(self, goal_id, field_name):
@@ -209,7 +209,7 @@ class GoalStore:
       return goals_to_incr.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def decrease_value(self, goal_id, field_name):
@@ -221,4 +221,4 @@ class GoalStore:
       return goals_to_decrease.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)

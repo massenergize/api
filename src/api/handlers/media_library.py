@@ -32,10 +32,10 @@ class MediaLibraryHandler(RouteHandler):
         self.validator.expect("upper_limit", int, is_required=False)
         args, err = self.validator.verify(args, strict=True)
         if err:
-            return MassenergizeResponse(error=str(err))
+            return err
         images, error = self.service.fetch_content(args)
         if error:
-            return MassenergizeResponse(error=str(error))
+            return error
         return MassenergizeResponse(data=images)
 
     @admins_only
@@ -52,12 +52,12 @@ class MediaLibraryHandler(RouteHandler):
         )
         args, err = self.validator.verify(args, strict=True)
         if err:
-            return MassenergizeResponse(error=str(err))
+            return err
 
         args["context"] = context
         images, error = self.service.search(args)
         if error:
-            return MassenergizeResponse(error=str(error))
+            return error
         return MassenergizeResponse(data=images)
 
     @admins_only
@@ -68,11 +68,11 @@ class MediaLibraryHandler(RouteHandler):
         self.validator.expect("media_id", int, is_required=True)
         args, err = self.validator.verify(args, strict=True)
         if err:
-            return MassenergizeResponse(error=str(err))
+            return err
 
         response, error = self.service.remove(args)
         if error:
-            return MassenergizeResponse(error=str(error))
+            return error
         return MassenergizeResponse(data=response)
 
     def addToGallery(self, request):
@@ -86,10 +86,10 @@ class MediaLibraryHandler(RouteHandler):
         )
         args, err = self.validator.verify(args, strict=True)
         if err:
-            return MassenergizeResponse(error=str(err))
+            return err
         image, error = self.service.addToGallery(args)
         if error:
-            return MassenergizeResponse(error=str(error))
+            return error
         return MassenergizeResponse(data=image)
 
     @admins_only
@@ -100,9 +100,9 @@ class MediaLibraryHandler(RouteHandler):
         self.validator.expect("media_id", int, is_required=True)
         args, err = self.validator.verify(args, strict=True)
         if err:
-            return MassenergizeResponse(error=str(err))
+            return err
 
         response, error = self.service.getImageInfo(args)
         if error:
-            return MassenergizeResponse(error=str(error))
+            return error
         return MassenergizeResponse(data=response)

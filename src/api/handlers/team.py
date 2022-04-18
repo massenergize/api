@@ -55,7 +55,7 @@ class TeamHandler(RouteHandler):
     team_info, err = self.team.get_team_info(context, args)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -75,7 +75,7 @@ class TeamHandler(RouteHandler):
 
     team_info, err = self.team.create_team(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
 
@@ -84,7 +84,7 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_info, err = self.team.list_teams(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
 
@@ -94,7 +94,7 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     team_info, err = self.team.team_stats(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -117,7 +117,7 @@ class TeamHandler(RouteHandler):
     team_info, err = self.team.update_team(context, args)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @admins_only
@@ -135,7 +135,7 @@ class TeamHandler(RouteHandler):
     team_info, err = self.team.delete_team(args)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -159,7 +159,7 @@ class TeamHandler(RouteHandler):
       err = CustomMassenergizeError("Executor dosen't have sufficient permissions to use teams.leave on this user")
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -184,7 +184,7 @@ class TeamHandler(RouteHandler):
       err = CustomMassenergizeError("Executor dosen't have sufficient permissions to use teams.leave on this user")
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
 
@@ -206,7 +206,7 @@ class TeamHandler(RouteHandler):
     team_info, err = self.team.add_member(args)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
 
@@ -226,7 +226,7 @@ class TeamHandler(RouteHandler):
 
     team_info, err = self.team.remove_team_member(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -241,7 +241,7 @@ class TeamHandler(RouteHandler):
 
     team_info, err = self.team.message_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)      
 
   @admins_only
@@ -250,7 +250,7 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_members_info, err = self.team.members(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_members_info)
 
   def members_preferred_names(self, request):
@@ -258,7 +258,7 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_members_preferred_names_info, err = self.team.members_preferred_names(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_members_preferred_names_info)
 
 
@@ -289,7 +289,7 @@ class TeamHandler(RouteHandler):
 
     teams, err = self.team.list_teams_for_community_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=teams)
 
 
@@ -299,5 +299,5 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     teams, err = self.team.list_teams_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=teams)

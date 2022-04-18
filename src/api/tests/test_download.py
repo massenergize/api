@@ -152,7 +152,6 @@ class DownloadTestCase(TestCase):
     # don't specify community or team, cadmin signed in
     signinAs(self.client, self.CADMIN)
     response = self.client.post('/api/downloads.users', urlencode({}), content_type="application/x-www-form-urlencoded")
-    self.assertEquals(type(response), MassenergizeResponse)
     response = response.toDict()
     self.assertTrue(response["success"])
 

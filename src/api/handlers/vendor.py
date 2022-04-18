@@ -43,7 +43,7 @@ class VendorHandler(RouteHandler):
     args = rename_field(args, 'vendor_id', 'id')
     vendor_info, err = self.service.get_vendor_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @admins_only
@@ -76,7 +76,7 @@ class VendorHandler(RouteHandler):
 
     vendor_info, err = self.service.create_vendor(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @login_required
@@ -111,7 +111,7 @@ class VendorHandler(RouteHandler):
     user_submitted = True
     vendor_info, err = self.service.create_vendor(context, args, user_submitted)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
 
@@ -120,7 +120,7 @@ class VendorHandler(RouteHandler):
     args = context.get_request_body()      
     vendor_info, err = self.service.list_vendors(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @login_required
@@ -154,7 +154,7 @@ class VendorHandler(RouteHandler):
 
     vendor_info, err = self.service.update_vendor(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @admins_only
@@ -168,11 +168,11 @@ class VendorHandler(RouteHandler):
 
     args, err = self.validator.verify(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
 
     vendor_info, err = self.service.rank_vendor(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @admins_only
@@ -185,7 +185,7 @@ class VendorHandler(RouteHandler):
       return CustomMassenergizeError("Please Provide Vendor Id")
     vendor_info, err = self.service.delete_vendor(vendor_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @admins_only
@@ -213,7 +213,7 @@ class VendorHandler(RouteHandler):
 
     vendors, err = self.service.list_vendors_for_community_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendors)
 
   @super_admins_only
@@ -221,5 +221,5 @@ class VendorHandler(RouteHandler):
     context: Context = request.context
     vendors, err = self.service.list_vendors_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendors)
