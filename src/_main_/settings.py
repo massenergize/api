@@ -34,7 +34,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -147,7 +147,8 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
 AWS_DEFAULT_ACL = None
 APPEND_SLASH = True
-CORS_ORIGIN_ALLOW_ALL = True
+# this was CORS_ORIGIN_ALLOW_ALL
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440*3
 
