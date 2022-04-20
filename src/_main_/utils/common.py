@@ -13,6 +13,9 @@ def get_request_contents(request,**kwargs):
     if request.method != 'POST' :
       return request.GET.dict()
 
+
+    print(f"----- get_request_contents: {request.POST.dict()}")
+
     args = {}
     if request.content_type == 'application/x-www-form-urlencoded':
       args = parser.parse(request.POST.urlencode())

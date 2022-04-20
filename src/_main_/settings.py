@@ -34,7 +34,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'carbon_calculator',
     'database',
     'api',
+    'anymail',
     'website',
     'corsheaders',
     'django.contrib.admin',
@@ -258,7 +259,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
+EMAIL_BACKEND = "anymail.backends.postmark.EmailBackend"
 EMAIL_USE_TLS = True 
 EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 587 
@@ -286,3 +287,8 @@ else:
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
 
+
+ANYMAIL = {
+    "POSTMARK_SERVER_TOKEN": "db5ed13b-afc3-4083-857f-e6d6c0f885ad",
+    'WEBHOOK_SECRET': 'ZYXWVUTSRQPONMLK:JIHGFEDCBA9876543210'
+}
