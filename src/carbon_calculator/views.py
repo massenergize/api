@@ -1,6 +1,4 @@
 #from django.shortcuts import render
-from django.dispatch import receiver
-from anymail.signals import inbound
 from django.http import JsonResponse
 from database.utils.json_response_wrapper import Json
 from django.views.decorators.csrf import csrf_exempt
@@ -120,17 +118,3 @@ def users(request):
 #        return self.data.get(key, default)
 
 
-
-
-@receiver(inbound)  # add weak=False if inside some other function/class
-def handle_inbound(sender, event, esp_name, **kwargs):
-    print("==== here ===========")
-    message = event.message
-    print("Received message from %s (envelope sender %s) with subject '%s'" % (
-          message.from_email, message.envelope_sender, message.subject))
-
-    return JsonResponse({"message" : "success"})
-
-def test(request):
-    print("==== here ===========")
-    return JsonResponse({"message" : "success"})

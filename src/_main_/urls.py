@@ -18,8 +18,6 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
-from carbon_calculator.views import test
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/cc/',include('carbon_calculator.urls')),
@@ -27,7 +25,6 @@ urlpatterns = [
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
     path('api/', include('api.urls')),
-    path('hooks/', test),
     path('', include('website.urls')),
 ]
 

@@ -5,7 +5,7 @@ class WebhooksService:
   def __init__(self):
    pass
 
-  def process_inbound_webhook(self, args):
+  def process_inbound_webhook(self,context,  args):
     print("===== WEBHOOK ARGS =====", args)
     return {}, None
 

@@ -57,7 +57,7 @@ except Exception:
 SECRET_KEY =  os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = RUN_SERVER_LOCALLY
+DEBUG = True
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
@@ -73,7 +73,8 @@ ALLOWED_HOSTS = [
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
     'massenergize.test',
-    'massenergize.test:3000'
+    'massenergize.test:3000',
+    '0302-41-139-40-2.ngrok.io'
 ]
 
 if RUN_SERVER_LOCALLY:
@@ -86,7 +87,6 @@ INSTALLED_APPS = [
     'carbon_calculator',
     'database',
     'api',
-    'anymail',
     'website',
     'corsheaders',
     'django.contrib.admin',
@@ -286,9 +286,3 @@ else:
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-
-
-ANYMAIL = {
-    "POSTMARK_SERVER_TOKEN": os.environ.get('POSTMARK_TEST_SERVER_TOKEN'),
-    'WEBHOOK_SECRET': 'random:random'
-}

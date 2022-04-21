@@ -1,5 +1,6 @@
 """Handler file for all routes pertaining to tags"""
 
+import json
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -18,9 +19,9 @@ class WebhooksHandler(RouteHandler):
 
   def process_inbound_webhook(self, request):
     context: Context = request.context
-    args: dict = context.args
-    print("==== ARGS =====")
-    res, err = self.service.process_inbound_webhook(args)
+    args: dict = json.loads(request.body)
+    print("==== ARGS =====", args)
+    res, err = self.service.process_inbound_webhook(context, args)
     
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
