@@ -404,42 +404,45 @@ class GraphStore:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def debug_data_fix(self) -> None:
-    # attempting to fix the problem with data getting screwed up
-    for community in Community.objects.all().select_related('goal'):
-      if community.goal:
-        action_goal= max(community.goal.target_number_of_actions, 100)
-      else:
-        # communities that don't have goals
-        action_goal = 100
+    try:
+      # attempting to fix the problem with data getting screwed up
+      for community in Community.objects.all().select_related('goal'):
+        if community.goal:
+          action_goal= max(community.goal.target_number_of_actions, 100)
+        else:
+          # communities that don't have goals
+          action_goal = 100
 
-      if community.is_geographically_focused:
-        user_actions = UserActionRel.objects.filter(
-          real_estate_unit__community=community, status="DONE"
-        )
-      else:
-        user_actions = UserActionRel.objects.filter(
-          action__community=community, status="DONE"
-        )
+        if community.is_geographically_focused:
+          user_actions = UserActionRel.objects.filter(
+            real_estate_unit__community=community, status="DONE"
+          )
+        else:
+          user_actions = UserActionRel.objects.filter(
+            action__community=community, status="DONE"
+          )
 
-      for d in Data.objects.filter(community=community):
-        if d and d.value>action_goal:
-          oldval = d.value
-          val = 0
-          tag = d.tag
+        for d in Data.objects.filter(community=community):
+          if d and d.value>action_goal:
+            oldval = d.value
+            val = 0
+            tag = d.tag
 
-          for user_action in user_actions:
-            if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
-              val += 1
+            for user_action in user_actions:
+              if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
+                val += 1
 
-          if (val != d.value) :
-            d.value = val
-            d.save()
-            if RUN_SERVER_LOCALLY:
-              print("WARNING - data_fix: Community: " + community.name
-                + ", Category: " + tag.name
-                + ", Old: "  + str(oldval)
-                + ", New: "  + str(val))
+            if (val != d.value) :
+              d.value = val
+              d.save()
+              if RUN_SERVER_LOCALLY:
+                print("WARNING - data_fix: Community: " + community.name
+                  + ", Category: " + tag.name
+                  + ", Old: "  + str(oldval)
+                  + ", New: "  + str(val))
+    except:
+      pass
 

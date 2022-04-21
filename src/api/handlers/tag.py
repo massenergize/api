@@ -36,7 +36,7 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     tag_info, err = self.service.get_tag_info(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
   @super_admins_only
@@ -45,7 +45,7 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     tag_info, err = self.service.create(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
 
@@ -56,7 +56,7 @@ class TagHandler(RouteHandler):
     user_id = args.pop('user_id', None)
     tag_info, err = self.service.list_tags(community_id, user_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
   @super_admins_only
@@ -65,7 +65,7 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     tag_info, err = self.service.update_tag(args.get("id", None), args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
   @super_admins_only
@@ -75,7 +75,7 @@ class TagHandler(RouteHandler):
     tag_id = args.get("id", None)
     tag_info, err = self.service.delete_tag(args.get("id", None))
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
   @admins_only
@@ -85,7 +85,7 @@ class TagHandler(RouteHandler):
     community_id = args.pop("community_id", None)
     tags, err = self.service.list_tags_for_community_admin(community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tags)
 
   @admins_only
@@ -94,5 +94,5 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     tags, err = self.service.list_tags_for_super_admin()
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tags)

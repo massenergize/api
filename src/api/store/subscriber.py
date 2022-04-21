@@ -60,7 +60,7 @@ class SubscriberStore:
       return subscriber, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def delete_subscriber(self, subscriber_id) -> Tuple[Subscriber, MassEnergizeAPIError]:
@@ -73,7 +73,7 @@ class SubscriberStore:
       return subscribers_to_delete.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def copy_subscriber(self, subscriber_id) -> Tuple[Subscriber, MassEnergizeAPIError]:
     try:
@@ -89,7 +89,7 @@ class SubscriberStore:
       return new_subscriber, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def list_subscribers_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -130,4 +130,4 @@ class SubscriberStore:
       return subscribers, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)

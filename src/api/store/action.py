@@ -167,7 +167,7 @@ class ActionStore:
     except Exception as e:
       capture_message(str(e), level="error")
     
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def update_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -237,7 +237,7 @@ class ActionStore:
         raise Exception("Action Rank and ID not provided to actions.rank")
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def delete_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
@@ -249,7 +249,7 @@ class ActionStore:
       return action_to_delete, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def list_actions_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
@@ -288,4 +288,4 @@ class ActionStore:
       return actions, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
