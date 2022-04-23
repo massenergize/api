@@ -45,7 +45,7 @@ class PageSettingsHandler(RouteHandler):
     args = rename_field(args, self.pageName+'_page_id', 'id')
     page_setting_info, err = self.service.get_page_setting_info(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=page_setting_info)
 
   @super_admins_only
@@ -54,7 +54,7 @@ class PageSettingsHandler(RouteHandler):
     args: dict = context.args
     page_setting_info, err = self.service.create_page_setting(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=page_setting_info)
 
   @admins_only
@@ -64,7 +64,7 @@ class PageSettingsHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     page_setting_info, err = self.service.list_page_settings(community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=page_setting_info)
 
   @admins_only
@@ -82,7 +82,7 @@ class PageSettingsHandler(RouteHandler):
 
     page_setting_info, err = self.service.update_page_setting(args.get("id", None), args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=page_setting_info)
 
   @admins_only
@@ -92,7 +92,7 @@ class PageSettingsHandler(RouteHandler):
     page_setting_id = args.get("id", None)
     page_setting_info, err = self.service.delete_page_setting(page_setting_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=page_setting_info)
 
   @admins_only
@@ -102,7 +102,7 @@ class PageSettingsHandler(RouteHandler):
     community_id = args.pop("community_id", None)
     page_settings, err = self.service.list_page_settings_for_community_admin(community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=page_settings)
 
   @super_admins_only
@@ -111,5 +111,5 @@ class PageSettingsHandler(RouteHandler):
     args: dict = context.args
     page_settings, err = self.service.list_page_settings_for_super_admin()
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=page_settings)

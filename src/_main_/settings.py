@@ -28,8 +28,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 RUN_SERVER_LOCALLY = False
+RUN_CELERY_LOCALLY = False
+
+if is_test_mode():
+    RUN_CELERY_LOCALLY = True
+
 if DJANGO_ENV == "local":
     RUN_SERVER_LOCALLY = True
+    RUN_CELERY_LOCALLY = True
 
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
@@ -50,7 +56,6 @@ try:
 
 except Exception:
     load_dotenv()
-
 
 # ********  END LOAD CONFIG DATA ***********#
 
@@ -84,7 +89,6 @@ INSTALLED_APPS = [
     'django_hosts',
     'authentication',
     'carbon_calculator',
-    'task_queue',
     'database',
     'api',
     'website',
@@ -95,9 +99,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'django_celery_results',
-    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -289,17 +290,3 @@ else:
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-
-
-# Celery Setup
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
-result_backend = "django-db"
-accept_content = ['application/json']
-task_serializer = ['json']
-result_serializer = ['json']
-'''
-Default timezone is UTC but could be changed.
-'''
-
-# Celery Beat Setup
-CELERY_BEAT_SCHEDULER= 'django_celery_beat.schedulers:DatabaseScheduler'

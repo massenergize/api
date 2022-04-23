@@ -28,7 +28,7 @@ class SummaryHandler(RouteHandler):
     community_id = args.pop("community_id", None)
     summary, err = self.service.summary_for_community_admin(context, community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=summary)
 
   @super_admins_only
@@ -37,5 +37,5 @@ class SummaryHandler(RouteHandler):
     args: dict = context.args
     summary, err = self.service.summary_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=summary)

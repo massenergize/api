@@ -24,7 +24,6 @@ from api.handlers.subscriber import SubscriberHandler
 from api.handlers.summary import SummaryHandler
 from api.handlers.tag import TagHandler
 from api.handlers.tag_collection import TagCollectionHandler
-from api.handlers.task_queue import TaskQueueHandler
 from api.handlers.team import TeamHandler
 from api.handlers.page_settings__teams import TeamsPageSettingsHandler
 from api.handlers.testimonial import TestimonialHandler
@@ -69,7 +68,6 @@ ROUTE_HANDLERS = [
     MediaLibraryHandler(),
     RegisterPageSettingsHandler(),
     SigninPageSettingsHandler(),
-    TaskQueueHandler(),
 ]
 
 urlpatterns = [

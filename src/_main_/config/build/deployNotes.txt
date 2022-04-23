@@ -1,3 +1,7 @@
+Apr 14:
+- make all error returns consistent
+- back-end support for guest signins
+- invitation e-mail from sender bug
 Mar 16:
 - email for event rsvps
 Feb 27

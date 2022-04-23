@@ -52,7 +52,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.get_event_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     
     return MassenergizeResponse(data=event_info)
 
@@ -70,7 +70,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.copy_event(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -89,7 +89,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.get_rsvp_list(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -106,7 +106,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.get_rsvp_status(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -124,7 +124,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.rsvp_update(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -142,7 +142,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.rsvp_remove(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   # @login_required
@@ -152,7 +152,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.update_recurring_event_date(context, args)
     if err: 
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   @login_required
@@ -168,7 +168,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.get_event_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   @admins_only
@@ -193,7 +193,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.create_event(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   
@@ -218,7 +218,7 @@ class EventHandler(RouteHandler):
     user_submitted = True
     event_info, err = self.service.create_event(context, args, user_submitted)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   
@@ -231,7 +231,7 @@ class EventHandler(RouteHandler):
     
     
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     
     return MassenergizeResponse(data=exceptions)
 
@@ -251,7 +251,7 @@ class EventHandler(RouteHandler):
     event_info, err = self.service.list_events(context, args)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
 
     return MassenergizeResponse(data=event_info)
 
@@ -262,7 +262,7 @@ class EventHandler(RouteHandler):
     event_info, err = self.service.update_recurring_event_date(context, args)
    
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   # @admins_only
@@ -292,7 +292,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.update_event(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   @admins_only
@@ -306,11 +306,11 @@ class EventHandler(RouteHandler):
 
     args, err = self.validator.verify(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
 
     event_info, err = self.service.rank_event(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -321,7 +321,7 @@ class EventHandler(RouteHandler):
     event_id = args.get("event_id", None)
     event_info, err = self.service.delete_event(context, event_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -337,7 +337,7 @@ class EventHandler(RouteHandler):
 
     events, err = self.service.list_events_for_community_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=events)
 
 
@@ -346,5 +346,5 @@ class EventHandler(RouteHandler):
     context: Context = request.context
     events, err = self.service.list_events_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=events)

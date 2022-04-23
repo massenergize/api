@@ -562,7 +562,7 @@ class EventStore:
 
       except Exception as e:
         print(str(e))
-        return CustomMassenergizeError(str(e))
+        return CustomMassenergizeError(e)
     return events, None
 
   def rank_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -637,7 +637,7 @@ class EventStore:
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def get_rsvp_list(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:

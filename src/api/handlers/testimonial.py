@@ -45,7 +45,7 @@ class TestimonialHandler(RouteHandler):
 
     testimonial_info, err = self.service.get_testimonial_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonial_info)
 
   @admins_only
@@ -74,7 +74,7 @@ class TestimonialHandler(RouteHandler):
 
     testimonial_info, err = self.service.create_testimonial(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonial_info)
 
 # same as create, except this is for user submitted testimonials
@@ -106,7 +106,7 @@ class TestimonialHandler(RouteHandler):
     user_submitted = True
     testimonial_info, err = self.service.create_testimonial(context, args, user_submitted)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonial_info)
 
   def list(self, request):
@@ -114,7 +114,7 @@ class TestimonialHandler(RouteHandler):
     args = context.args
     testimonial_info, err = self.service.list_testimonials(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonial_info)
 
   # @admins_only
@@ -144,7 +144,7 @@ class TestimonialHandler(RouteHandler):
 
     testimonial_info, err = self.service.update_testimonial(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonial_info)
 
   @admins_only
@@ -163,7 +163,7 @@ class TestimonialHandler(RouteHandler):
 
     testimonial_info, err = self.service.rank_testimonial(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonial_info)
 
   @admins_only
@@ -173,7 +173,7 @@ class TestimonialHandler(RouteHandler):
     testimonial_id = args.pop('testimonial_id', None)
     testimonial_info, err = self.service.delete_testimonial(context, testimonial_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonial_info)
 
   @admins_only
@@ -183,7 +183,7 @@ class TestimonialHandler(RouteHandler):
     community_id = args.pop("community_id", None)
     testimonials, err = self.service.list_testimonials_for_community_admin(context, community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonials)
 
   @super_admins_only
@@ -191,5 +191,5 @@ class TestimonialHandler(RouteHandler):
     context: Context = request.context
     testimonials, err = self.service.list_testimonials_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=testimonials)
