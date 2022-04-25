@@ -23,6 +23,7 @@ from database.models import (
     Goal,
 )
 from api.store.team import get_team_users
+from api.utils.constants import STANDARD_USER, GUEST_USER
 from api.store.tag_collection import TagCollectionStore
 from api.store.deviceprofile import DeviceStore
 from django.db.models import Q
@@ -216,6 +217,12 @@ class DownloadStore:
             user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
             testimonials_count = user_testimonials.count() if user_testimonials else "0"
 
+            is_guest = False
+            if user.user_info:
+                is_guest = (user.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
+
+            is_invited = not is_guest and not user.accepts_terms_and_conditions
+
             user_cells = {
                 "First Name": first_name,
                 "Last Name": last_name,
@@ -227,6 +234,10 @@ class DownloadStore:
                 if user.is_community_admin
                 else "vendor"
                 if user.is_vendor
+                else "guest"
+                if is_guest
+                else "invited"
+                if is_invited
                 else "community member",
                 "Created": user.created_at.strftime("%Y-%m-%d"),
                 "households_count": user_households,
@@ -579,7 +590,8 @@ class DownloadStore:
     def _all_users_download(self):
         users = list(
             UserProfile.objects.filter(
-                is_deleted=False, accepts_terms_and_conditions=True
+                is_deleted=False, 
+                #accepts_terms_and_conditions=True
             )
         ) + list(Subscriber.objects.filter(is_deleted=False))
         actions = Action.objects.filter(is_deleted=False)
@@ -657,7 +669,7 @@ class DownloadStore:
                 community__id=community_id,
                 is_deleted=False,
                 user__is_deleted=False,
-                user__accepts_terms_and_conditions=True,
+                #user__accepts_terms_and_conditions=True,
             ).select_related("user")
         ] + list(
             Subscriber.objects.filter(community__id=community_id, is_deleted=False)
