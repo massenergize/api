@@ -137,6 +137,13 @@ class UserService:
     return serialize_all(user), None
 
 
+  def list_publicview(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    publicview, err = self.store.list_publicview(context, args)
+    if err:
+      return None, err
+    return {'public_user_list': publicview}, None
+
+
   def list_actions_todo(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     actions_todo, err = self.store.list_todo_actions(context, args)
     if err:
