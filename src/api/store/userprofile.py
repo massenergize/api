@@ -421,6 +421,7 @@ class UserStore:
       
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
+      email = email.lower()     # avoid multiple copies
 
       new_user_email = False
       existing_user = UserProfile.objects.filter(email=email).first()
