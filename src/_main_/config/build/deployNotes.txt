@@ -1,26 +1,5 @@
-Apr 21 deployment to prod:
-- make all error returns consistent
+Apr 29:
+- avoid duplicate Welcome emails
+- new route users.listForPublicView
 - back-end support for guest signins
-- invitation e-mail from sender bug
-Mar 16:
-- email for event rsvps
-Feb 27
-- routes for user submitted Actions, Events, Vendors, and fix copy routes
-- integrate PostMark service
-- add routes for completed actions list for communities and teams
-Feb 14 Deployment - Version 4.2
-- Graph data selection by Cadmins
-- Notify cadmin when testimonial submitted
-- Action dates implemented
-- Cadmins can receive content from other communities (.listForCommunityAdmin routes)
-- Media library support
-- Event RSVPs list route
-- User submitted testimonials can be edited
-- Visit_logs for anonymous and registered users
-- Improved user importing
-- Add DeviceProfile for tracking anonymous users
-- Add GeoIP for determining IP address location
-- Admin contact emails go to primary contact
-- Sort Communities by location/name
-Oct 17th Deployment - Version 4.0
-- Make cookie secure
+

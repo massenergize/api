@@ -33,7 +33,7 @@ class UserHandler(RouteHandler):
     self.add("/users.households.list", self.list_households)
     self.add("/users.events.list", self.list_events)
     self.add("/users.checkImported", self.check_user_imported)
-    #self.add("/users.completeImported", self.complete_imported_user)
+    self.add("/users.listForPublicView", self.list_publicview)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
@@ -76,6 +76,22 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     community_id = args.pop('community_id', None)
     user_info, err = self.service.list_users(community_id)
+    if err:
+      return err
+    return MassenergizeResponse(data=user_info)
+
+
+  def list_publicview(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    args, err = (self.validator
+      .expect("community_id", int, is_required=True)
+      .expect("min_points", int, is_required=False)
+      .verify(context.args))
+    if err:
+      return err
+
+    user_info, err = self.service.list_publicview(context, args)
     if err:
       return err
     return MassenergizeResponse(data=user_info)
