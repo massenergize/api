@@ -3,7 +3,6 @@ from django.conf import settings as django_settings
 from urllib.parse import urlencode
 from _main_.settings import BASE_DIR
 from _main_.utils.massenergize_response import MassenergizeResponse
-from django.http import HttpResponse
 from database.models import Team, Community, UserProfile, TeamMember, CommunityAdminGroup, CommunityMember, Action
 from api.tests.common import signinAs, setupCC, createUsers
 from unittest.mock import patch

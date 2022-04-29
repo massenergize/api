@@ -620,6 +620,56 @@ class UserProfile(models.Model):
     def info(self):
         return model_to_dict(self, ["id", "email", "full_name"])
 
+    def summary(self):
+        summaryData = model_to_dict(self,["preferred_name", "is_guest"])
+        summaryData["joined"] = self.created_at.date()
+        summaryData["profile_picture"] = get_json_if_not_none(self.profile_picture)
+ 
+        done_actions = UserActionRel.objects.filter(
+                user=self, status="DONE"
+            ).prefetch_related("action__calculator_action")
+        done_points = 0
+        for actionRel in done_actions:
+            if actionRel.action and actionRel.action.calculator_action:
+                done_points += actionRel.action.calculator_action.average_points
+            else:
+                done_points += actionRel.carbon_impact
+
+        todo_actions = UserActionRel.objects.filter(
+                user=self, status="TODO"
+            ).prefetch_related("action__calculator_action")
+        todo_points = 0
+        for actionRel in todo_actions:
+            if actionRel.action and actionRel.action.calculator_action:
+                todo_points += actionRel.action.calculator_action.average_points
+            else:
+                todo_points += actionRel.carbon_impact
+
+        user_testimonials = Testimonial.objects.filter(is_deleted=False, is_approved=True, user=self)
+        testimonials_count = user_testimonials.count() if user_testimonials else "0"
+
+        teams = Team.objects.filter(is_deleted=False, is_published=True)
+        user_teams = teams.filter(teammember__user=self).values_list("name", "teammember__is_admin")
+
+        teams_count = 0
+        teams_led = 0
+        team_names = []
+        for team_name, is_admin in user_teams:
+            team_names.append((team_name + "(ADMIN)") if is_admin else team_name)
+            teams_count += 1
+            if is_admin: teams_led += 1
+
+        summaryData["actions_done"] = done_actions.count()
+        summaryData["actions_done_points"] = done_points
+        summaryData["actions_todo"] = todo_actions.count()
+        summaryData["actions_todo_points"] = todo_points
+        summaryData["teams_count"] = teams_count
+        summaryData["teams_led"] = teams_led
+        summaryData["teams"] = team_names
+        summaryData["testimonials"] = testimonials_count
+
+        return summaryData
+
     def simple_json(self):
         res = model_to_dict(
             self,
