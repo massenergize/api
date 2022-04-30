@@ -16,7 +16,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install xmllint
-      run: sudo apt-get install libssl-dev libcurl4-openssl-dev python-dev
+      run: sudo apt-get install libssl-dev libcurl4-openssl-dev 
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
