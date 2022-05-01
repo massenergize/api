@@ -21,9 +21,10 @@ class TaskQueueService:
     return serialize(task, full=True), None
 
   def list_tasks(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    args = {'creator__id': context.user_id}
     task, err = self.store.list_tasks(context, args)
     if err:
-      return None, err
+      return None, err 
     return serialize_all(task), None
 
   def list_tasks_functions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
