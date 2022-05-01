@@ -50,7 +50,7 @@ class TaskQueueHandler(RouteHandler):
     self.validator.expect("name", str, is_required=True)
     self.validator.expect("recurring_details", str)
     self.validator.expect("job_name", 'str', is_required=True)
-    self.validator.expect("recurring_interval", 'str', is_required=True)
+    self.validator.expect("frequency", 'str', is_required=True)
     self.validator.expect("status", "str")
 
     args, err = self.validator.verify(args)
@@ -91,7 +91,7 @@ class TaskQueueHandler(RouteHandler):
     self.validator.expect("name", 'str', is_required=False)
     self.validator.expect("recurring_details", 'str')
     self.validator.expect("job_name", 'str', is_required=False)
-    self.validator.expect("recurring_interval", 'str', is_required=False)
+    self.validator.expect("frequency", 'str', is_required=False)
     self.validator.expect("status", 'str', is_required=False)
 
     args, err = self.validator.verify(args)

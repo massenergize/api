@@ -25,7 +25,8 @@ class TaskQueueStore:
 
   def list_tasks(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-        tasks = Task.objects.all()
+        filter_args = args
+        tasks = Task.objects.filter(**filter_args)
         return tasks, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -39,7 +40,7 @@ class TaskQueueStore:
         job_name=args.get("job_name", None),
         status=args.get("status", 'PENDING'),
         recurring_details=args.get("recurring_details", None),
-        recurring_interval=args.get("recurring_interval", None),
+        frequency=args.get("frequency", None),
       )
       if context.user_email:
         user = UserProfile.objects.filter(email=context.user_email).first()
