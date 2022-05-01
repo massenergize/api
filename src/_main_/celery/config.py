@@ -12,7 +12,7 @@ class CeleryConfig:
                 "task_serializer": "json",
                 "result_serializer": "json",
                 "accept_content": ["json"],
-                'celery_beat_scheduler': 'django_celery_beat.schedulers:DatabaseScheduler',
+                'beat_scheduler': 'django_celery_beat.schedulers:DatabaseScheduler',
 
             }
         else:
@@ -26,6 +26,7 @@ class CeleryConfig:
                 "task_serializer": "json",
                 "result_serializer": "json",
                 "accept_content": ["json"],
+                'beat_scheduler': 'django_celery_beat.schedulers:DatabaseScheduler',
                 "broker_transport_options": {
                     "region": "us-east-2",
                     "predefined_queues": {"celery": {"url": sqs_url}},
