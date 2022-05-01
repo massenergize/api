@@ -32,6 +32,8 @@ class TaskQueueService:
 
 
   def create_task(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    if not args.get("job_name", None):
+      return None, MassEnergizeAPIError("Automatic proccess is required")
     task, err = self.store.create_task(context, args)
     if err:
       return None, err

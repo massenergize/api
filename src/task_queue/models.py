@@ -60,8 +60,8 @@ class Task(models.Model):
     def simple_json(self):
         res = model_to_dict(self, exclude=['schedule'])
         res["creator"] = get_summary_info(self.creator)["full_name"]
-        res["is_active"] = self.schedule.enabled
-        res["last_run_at"] = self.schedule.last_run_at
+        res["is_active"] = self.schedule.enabled if self.schedule else False
+        res["last_run_at"] = self.schedule.last_run_at if self.schedule else None
         return res
 
 
@@ -86,6 +86,7 @@ class Task(models.Model):
             args=json.dumps([self.id]),
             one_off=True if self.recurring_interval == schedules["ONE_OFF"] else False,
         )
+        
         self.save()
         self.start()
 

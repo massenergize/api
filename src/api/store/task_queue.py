@@ -34,11 +34,10 @@ class TaskQueueStore:
 
   def create_task(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      
       task = Task.objects.create(
         name=args.get("name", None),
         job_name=args.get("job_name", None),
-        status=args.get("status", None),
+        status=args.get("status", 'PENDING'),
         recurring_details=args.get("recurring_details", None),
         recurring_interval=args.get("recurring_interval", None),
       )
