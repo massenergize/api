@@ -14,10 +14,9 @@ app.autodiscover_tasks()
 
 
 app.conf.beat_schedule = {
-    'generate_and_send_weekly_digest_to_cadmins': {
-        'task': 'api.tasks.generate_and_send_weekly_digest_to_cadmins',
-        # 'schedule': crontab(day_of_week=1, hour=0, minute=0),
-        'schedule': crontab(minute='*', hour='*'),
+    'generate_and_send_weekly_report_to_sadmins': {
+        'task': 'api.tasks.generate_and_send_weekly_report_to_sadmins',
+        'schedule': crontab(day_of_week=1, hour=0, minute=0),
     }
 }
 

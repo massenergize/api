@@ -7,6 +7,7 @@ from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS
 from api.store.download import DownloadStore
 from celery import shared_task
 from api.store.download import DownloadStore
+from api.utils.constants import SADMIN_EMAIL_TEMPLATE_ID
 from database.models import Community, CommunityMember, UserActionRel, UserProfile
 from django.utils import timezone
 import datetime
@@ -26,8 +27,7 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
         writer.writerow(row)
         
 
-    send_massenergize_email_with_attachments(
-        f"{download_type.capitalize()} Data", f"Here is the {download_type} data you requested. Please see the attachment for details", email, response.content, filename)
+    send_massenergize_email_with_attachments(f"{download_type.capitalize()} Data", f"Here is the {download_type} data you requested. Please see the attachment for details", email, response.content, filename)
     return True
 
 
@@ -90,31 +90,53 @@ def download_data(self, args, download_type):
 
 
 @shared_task(bind=True)
-def generate_and_send_weekly_digest_to_cadmins(self):
+def generate_and_send_weekly_report_to_sadmins(self):
     today = datetime.datetime.utcnow().replace(tzinfo=utc)
     one_week_ago = today - timezone.timedelta(days=7)
+    super_admins = UserProfile.objects.filter(is_super_admin=True)
 
-    all_super_admins= UserProfile.objects.filter(is_super_admin=True)
-    live_communities = Community.objects.filter(is_approved=True).count()
-    drafted_communities = Community.objects.filter(is_approved=False).count()
-    communities_and_number_of_weekly_signups = CommunityMember.objects.filter(community__is_approved=True, created_at__gte=one_week_ago).values('community__name').annotate(signups=Count("community")).order_by('community')
-    actions_taken_by_each_community = UserActionRel.objects.filter(created_at__gte=one_week_ago).exclude(status='SAVE_FOR_LATER').values(
-        'action__community__name', 'carbon_impact').annotate(actions=Count("action__community")).order_by('action__community')
+    communities = Community.objects.all().order_by('is_approved')
+    communities_total_signups = CommunityMember.objects.filter(community__is_approved=True).values('community__name').annotate(signups=Count("community")).order_by('community')
+    communities_weekly_signups = CommunityMember.objects.filter(community__is_approved=True, created_at__gte=one_week_ago).values('community__name').annotate(signups=Count("community")).order_by('community')
+    communities_total_actions = UserActionRel.objects.filter(created_at__gte=one_week_ago).exclude(status='SAVE_FOR_LATER').values('action__community__name', 'carbon_impact').annotate(actions=Count("action__community")).order_by('action__community')
+    communities_weekly_done_actions = UserActionRel.objects.filter(created_at__gte=one_week_ago, created_at__lte=today, status='DONE').values('action__community__name', 'carbon_impact').annotate(actions=Count("action__community")).order_by('action__community')
+    communities_weekly_todo_actions = UserActionRel.objects.filter(created_at__gte=one_week_ago, created_at__lte=today, status="TODO").values('action__community__name', 'carbon_impact').annotate(actions=Count("action__community")).order_by('action__community')
 
+    response = HttpResponse(content_type="text/csv")
+    writer = csv.writer(response)
+    writer.writerow(['Community','Total Signups', 'Signups This Week', 'Total Actions Taken', ' Actions Taken This Week ', 'Actions in ToDo This Week'])
 
+    for community in communities:
+        community_name = community.name
+        total_signups  = communities_total_signups.filter(community__name=community_name).first()
+        community_total_signup = total_signups['signups'] if total_signups else 0
+        weekly_signups = communities_weekly_signups.filter(community__name=community_name).first()
+        community_weekly_signup = weekly_signups['signups'] if weekly_signups else 0
+
+        total_actions = communities_total_actions.filter(action__community__name=community_name).first()
+        community_actions_taken = total_actions['actions'] if total_actions else 0
+
+        weekly_done_actions = communities_weekly_done_actions.filter(action__community__name=community_name).first()
+        community_weekly_done_actions = weekly_done_actions['actions'] if weekly_done_actions else 0
+
+        weekly_todo_actions = communities_weekly_todo_actions.filter(action__community__name=community_name).first()
+        community_weekly_todo_actions = weekly_todo_actions['actions'] if weekly_todo_actions else 0
+
+        writer.writerow([community_name, community_total_signup,community_weekly_signup, community_actions_taken, community_weekly_done_actions, community_weekly_todo_actions])
+
+    send_email(response.content, f'Weekly Report({one_week_ago.date()} to {today.date()}).csv', super_admins)
 
     return "success"
 
 
+def send_email(file, file_name, users):
+    end = datetime.datetime.utcnow().replace(tzinfo=utc)
+    start = end - timezone.timedelta(days=7)
+    for user in users:
+        t_model = {
+            'name':user.full_name.toCapitalize(),
+            'start': str(start.date()),
+            'end': str(end.date()),
+        }
+        send_massenergize_email_with_attachments(SADMIN_EMAIL_TEMPLATE_ID, t_model, user.email, file, file_name)
 
-
-
-# cws
-# aec
-
-
-
-
-    # for all signups for commnuity last week use communityMember model
-    #  for actions taken last week use UserActionRel model
-    return 'not implemented'
