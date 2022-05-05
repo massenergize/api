@@ -12,6 +12,7 @@ FROM_EMAIL = 'no-reply@massenergize.org'
 def old_send_massenergize_email(subject, msg, to):
   if is_test_mode():
     return True
+    
 
   ok = send_mail(
       subject,
