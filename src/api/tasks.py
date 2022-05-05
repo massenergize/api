@@ -7,8 +7,8 @@ from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS
 from api.store.download import DownloadStore
 from celery import shared_task
 from api.store.download import DownloadStore
-from api.utils.constants import SADMIN_EMAIL_TEMPLATE_ID
-from database.models import Community, CommunityMember, UserActionRel, UserProfile
+from api.utils.constants import CADMIN_EMAIL_TEMPLATE_ID, SADMIN_EMAIL_TEMPLATE_ID
+from database.models import Community, CommunityAdminGroup, CommunityMember, UserActionRel, UserProfile
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
@@ -25,8 +25,6 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
     writer = csv.writer(response)
     for row in data:
         writer.writerow(row)
-        
-
     send_massenergize_email_with_attachments(f"{download_type.capitalize()} Data", f"Here is the {download_type} data you requested. Please see the attachment for details", email, response.content, filename)
     return True
 
@@ -90,10 +88,10 @@ def download_data(self, args, download_type):
 
 
 @shared_task(bind=True)
-def generate_and_send_weekly_report_to_sadmins(self):
+def generate_and_send_weekly_report(self):
     today = datetime.datetime.utcnow().replace(tzinfo=utc)
     one_week_ago = today - timezone.timedelta(days=7)
-    super_admins = UserProfile.objects.filter(is_super_admin=True)
+    super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
 
     communities = Community.objects.all().order_by('is_approved')
     communities_total_signups = CommunityMember.objects.filter(community__is_approved=True).values('community__name').annotate(signups=Count("community")).order_by('community')
@@ -108,6 +106,11 @@ def generate_and_send_weekly_report_to_sadmins(self):
 
     for community in communities:
         community_name = community.name
+        all_community_admins = CommunityAdminGroup.objects.filter(community=community).values_list('members__email', flat=True)
+        all_community_admins = list(all_community_admins)
+
+
+
         total_signups  = communities_total_signups.filter(community__name=community_name).first()
         community_total_signup = total_signups['signups'] if total_signups else 0
         weekly_signups = communities_weekly_signups.filter(community__name=community_name).first()
@@ -122,21 +125,33 @@ def generate_and_send_weekly_report_to_sadmins(self):
         weekly_todo_actions = communities_weekly_todo_actions.filter(action__community__name=community_name).first()
         community_weekly_todo_actions = weekly_todo_actions['actions'] if weekly_todo_actions else 0
 
+
+        cadmin_temp_data ={
+            'community': community_name,
+            'signups': community_weekly_signup,
+            'actions_done': community_weekly_done_actions,
+            'actions_todo': community_weekly_todo_actions,
+            'start': str(one_week_ago.date()),
+            'end': str(today.date()),
+
+        }
+        
+
+        send_email(None, None,all_community_admins, CADMIN_EMAIL_TEMPLATE_ID,cadmin_temp_data)
+
         writer.writerow([community_name, community_total_signup,community_weekly_signup, community_actions_taken, community_weekly_done_actions, community_weekly_todo_actions])
+    
+    sadmin_temp_data =  {
+            'name':"there",
+            'start': str(one_week_ago.date()),
+            'end': str(today.date()),
+        }
 
-    send_email(response.content, f'Weekly Report({one_week_ago.date()} to {today.date()}).csv', super_admins)
-
+    send_email(response.content, f'Weekly Report({one_week_ago.date()} to {today.date()}).csv',list(super_admins), SADMIN_EMAIL_TEMPLATE_ID, sadmin_temp_data )
     return "success"
 
 
-def send_email(file, file_name, users):
-    end = datetime.datetime.utcnow().replace(tzinfo=utc)
-    start = end - timezone.timedelta(days=7)
-    for user in users:
-        t_model = {
-            'name':user.full_name.toCapitalize(),
-            'start': str(start.date()),
-            'end': str(end.date()),
-        }
-        send_massenergize_email_with_attachments(SADMIN_EMAIL_TEMPLATE_ID, t_model, user.email, file, file_name)
+
+def send_email(file, file_name, email_list, temp_id, t_model):
+    send_massenergize_email_with_attachments(temp_id, t_model, email_list, file, file_name)
 
