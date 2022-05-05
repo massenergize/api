@@ -7,6 +7,7 @@ from api.store.download import DownloadStore
 from celery import shared_task
 from api.store.download import DownloadStore
 from api.utils.constants import ME_DATA_DOWNLOAD_TEMP_ID
+from database.models import UserProfile
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None):
@@ -18,12 +19,12 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
     writer = csv.writer(response)
     for row in data:
         writer.writerow(row)
-
+    user = UserProfile.objects.get(email=email)
     temp_data = {
         'data_type': download_type,
-        "name":"there"
+        "name":user.full_name,
     }
-        
+    
     send_massenergize_email_with_attachments(ME_DATA_DOWNLOAD_TEMP_ID,temp_data,email, response.content, filename)
     return True
 
