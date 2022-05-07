@@ -288,7 +288,7 @@ class CommunitiesTestCase(TestCase):
     # test community as different admin user
     signinAs(self.client, self.SADMIN)
     join_response = self.client.post('/api/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(join_response["success"])
+    self.assertTrue(join_response["success"])
 
     # test community as same user
     signinAs(self.client, self.USER3)

@@ -326,6 +326,37 @@ class UserStore:
       return [], None
     return community.userprofile_set.all(), None
   
+  def list_publicview(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    community_id = args.pop('community_id', None)
+    community, err = get_community(community_id)    
+    if not community:
+      print(err)
+      return [], None
+
+    LEADERBOARD_MINIMUM = 100
+    min_points = args.get("min_points", LEADERBOARD_MINIMUM)
+
+    publicview = []
+
+    community_users = [
+            cm.user
+            for cm in CommunityMember.objects.filter(
+                community__id=community_id,
+                is_deleted=False,
+                user__is_deleted=False,
+                #user__accepts_terms_and_conditions=True,   # include guests, not by name
+            ).select_related("user")
+        ]
+
+    #summary includes only publicly viewable info, not id, email or full name
+    for user in community_users:
+      summary = user.summary()
+      action_points = summary["actions_done_points"] + summary["actions_todo_points"]
+      if action_points > min_points:
+        publicview.append(summary)
+
+    return publicview, None
+  
   def list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       user = get_user_or_die(context, args)
@@ -387,10 +418,12 @@ class UserStore:
       location = args.pop('location', '')
       profile_picture = args.pop("profile_picture", None)
       color = args.pop('color', '')
-      #print("Color is "+color)
       
       if not email:
         return None, CustomMassenergizeError("email required for sign up")
+      email = email.lower()     # avoid multiple copies
+
+      new_user_email = False
       existing_user = UserProfile.objects.filter(email=email).first()
       if not existing_user:
         user: UserProfile = UserProfile.objects.create(
@@ -418,6 +451,8 @@ class UserStore:
         if user_info:
           user.user_info = user_info
           user.save()
+
+        new_user_email = user.accepts_terms_and_conditions # user completes profile
 
       else:   # user exists
         # while calling users.create with existing user isn't normal, it can happen for different cases:
@@ -449,6 +484,7 @@ class UserStore:
           # if user was imported but profile incomplete, updates user with info submitted in form
           if not user.accepts_terms_and_conditions:
             user.accepts_terms_and_conditions = args.pop('accepts_terms_and_conditions', False)
+            new_user_email = user.accepts_terms_and_conditions  # user completes profile
        
       community_member_exists = CommunityMember.objects.filter(user=user, community=community).exists()
       if not community_member_exists:
@@ -466,7 +502,8 @@ class UserStore:
       
       res = {
         "user": user,
-        "community": community
+        "community": community,
+        "new_user_email": new_user_email,
       }
       return res, None
     
