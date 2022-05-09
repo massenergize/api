@@ -94,3 +94,9 @@ celery:
 
 celery-remote:
 	celery -A _main_.celery.app worker -l info
+
+celery-beat-remote:
+	celery -A _main_.celery.app beat -l info
+
+celery-beat:
+	DJANGO_ENV=local celery -A _main_.celery.app beat -l info

@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    container_name: app
+    expose:
+      - "8000"
+    image: app-image
+    restart: on-failure
+
+  celery_worker:
+    command: sh -c "celery -A _main_.celery.app worker -l info"
+    depends_on:
+      - app
+    hostname: celery_worker
+    image: app-image
+    restart: on-failure
+
+  celery_beat:
+    command: sh -c "celery -A _main_.celery.app beat -l info"
+    depends_on:
+      - app
+    hostname: celery_beat
+    image: app-image
+    restart: on-failure
