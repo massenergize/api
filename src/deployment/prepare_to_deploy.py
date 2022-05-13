@@ -73,7 +73,7 @@ def run():
   build_version = generate_config(target, is_local, is_deploy)
   update_aws_docker_config(target, build_version)
   
-  return f"ALL GOOD! - Ready for Launch to {target.capitalize()}", True
+  return f"ALL GOOD! - Ready for Launch v{build_version} to {target.capitalize()}", True
 
 
 def get_target_config(target, is_local, is_deploy):
@@ -115,16 +115,20 @@ def generate_new_build_number(target) -> str:
   part1 = parts[0] if len(parts) > 0 else 0
   part2 = parts[1] if len(parts) > 1 else 0
   part3 = parts[2] if len(parts) > 2 else 0
+  part4 = parts[3] if len(parts) > 3 else 0
 
-  part3 += 1
-  if part3 >=100:
-    part2 += 1
-    part3 = 0
-    if part2 >= 100:
-      part1 +=1
-      part2 = 0
+  part4 += 1
+  if part4 >=100:
+    part3 += 1
+    part4 += 0
+    if part3 >=100:
+      part2 += 1
+      part3 = 0
+      if part2 >= 100:
+        part1 +=1
+        part2 = 0
   
-  return f'{part1}.{part2}.{part3}'
+  return f'{part1}.{part2}.{part3}.{part4}'
 
 
 def load_json_contents(path) -> dict:

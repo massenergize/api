@@ -5,9 +5,10 @@ services:
     build: .
     command: sh -c "python manage.py runserver 0.0.0.0:8000"
     container_name: app
-    expose:
-      - "8000"
-    image: app-image
+    ports:
+      - "80:8000" # for deployed version
+      - "8000:8000" # for localhost testing
+    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:4.2.34.9
     restart: on-failure
 
   celery_worker:
@@ -15,7 +16,7 @@ services:
     depends_on:
       - app
     hostname: celery_worker
-    image: app-image
+    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:4.2.34.9
     restart: on-failure
 
   celery_beat:
@@ -23,5 +24,5 @@ services:
     depends_on:
       - app
     hostname: celery_beat
-    image: app-image
+    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev:4.2.34.9
     restart: on-failure

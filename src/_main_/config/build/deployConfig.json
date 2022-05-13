@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.2.20",
+  "BUILD_VERSION": "4.2.34.9",
   "BUILD_VERSION_NOTES": "Apr 29:\n- avoid duplicate Welcome emails\n- new route users.listForPublicView\n- back-end support for guest signins\n\n"
 }
