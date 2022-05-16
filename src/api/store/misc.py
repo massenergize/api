@@ -20,6 +20,7 @@ from database.models import (
     Data,
     Location,
     Media,
+    HomePageSettings,
 )
 from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
@@ -37,6 +38,8 @@ from typing import Tuple
 class MiscellaneousStore:
     def __init__(self):
         self.name = "Miscellaneous Store/DB"
+        #self.list_commonly_used_icons()
+
     def authenticateFrontendInTestMode(self, args): 
         email = args.get("email"); 
         user = UserProfile.objects.filter(email = email).first() 
@@ -436,3 +439,30 @@ class MiscellaneousStore:
             .select_related("community")
             .values("id", "community__subdomain"),
         }
+
+    # utility routine to list icons from the database
+    def list_commonly_used_icons(self):
+
+        common_icons = {}
+        #action.icon
+        #button.icon
+        #service.icon
+        #card.icon
+        #tag.icon
+        #CarbonEquivalency.icon
+
+        #HomePageSettings.featured_links json
+        all_hps = HomePageSettings.objects.all()
+        for hps in all_hps:
+            if hps.featured_links:
+                for item in hps.featured_links:
+                    icon = item["icon"]
+                    if icon in common_icons.keys():
+                        common_icons[icon] += 1
+                    else:
+                        common_icons[icon] = 1
+
+        sorted_keys = sorted(common_icons, key=common_icons.get, reverse=True)
+        for key in sorted_keys:
+            print(str(key) + ": " + str(common_icons[key]))
+
