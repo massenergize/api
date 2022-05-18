@@ -27,6 +27,19 @@ class MessageService:
       message, err = self.store.get_message_info(context, args)
       if err:
         return None, err
+      new_args = {
+          "parent": message,
+          'community_id': message.community.pk,
+          'title': args.get('title'),
+          'body': args.get('body'),
+          'email': args.get('to'),
+
+        }
+
+      created, create_err = self.store.message_admin(context, new_args)
+      if create_err:
+        return None, create_err
+
       title = args.pop('title', None)
       to = args.pop('to', None)
       body = args.pop('body', None)

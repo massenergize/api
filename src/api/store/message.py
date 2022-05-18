@@ -54,13 +54,14 @@ class MessageStore:
       email = args.pop("email", None) or context.user_email
       body = args.pop("body", None)
       uploaded_file = args.pop("uploaded_file", None)
+      parent = args.pop("parent", None)
 
 
       community, err = get_community(community_id, subdomain)
       if err:
         return None, err
       
-      new_message = Message.objects.create(user_name=user_name, title=title, body=body, community=community)
+      new_message = Message.objects.create(user_name=user_name, title=title, body=body, community=community,parent=parent)
       new_message.save()
       user, err = get_user(context.user_id, email)
       if err:
