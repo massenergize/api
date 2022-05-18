@@ -76,8 +76,7 @@ class VendorStore:
 
       new_vendor = Vendor.objects.create(**args)
       if image:
-        logo = Media(name=f"Logo-{slugify(new_vendor.name)}", file=image)
-        logo.save()
+        logo = Media.objects.filter(pk = image[0]).first()
         new_vendor.logo = logo
       
       if onboarding_contact_email:
@@ -157,10 +156,12 @@ class VendorStore:
         else:
           vendor.key_contact = key_contact
 
-      if image:
-        logo = Media(name=f"Logo-{slugify(vendor.name)}", file=image)
-        logo.save()
-        vendor.logo = logo
+      if image: #now, images will always come as an array of ids, or "reset" string 
+        if image[0] == "reset": #if image is reset, delete the existing image
+          vendor.logo = None
+        else:
+          logo = Media.objects.filter(id = image[0]).first()
+          vendor.logo = logo
       
       if onboarding_contact_email:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
