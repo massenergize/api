@@ -1,3 +1,4 @@
+from _main_.utils.utils import Console
 from database.models import Action, UserProfile, Community, Media, UserActionRel
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
@@ -77,8 +78,10 @@ class ActionStore:
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
-      if image:
-        media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
+      if image: #now, images will always come as an array of ids, or "reset" string 
+        if image == "reset": #if image is reset, delete the existing image
+          new_action.image = None
+        media = Media.objects.filter(pk = image[0]).first()
         new_action.image = media
 
       user = None
@@ -189,10 +192,13 @@ class ActionStore:
       action.update(**args)
       action = action.first()
 
-      # If no image passed, don't delete the existing
-      if image:
-        media = Media.objects.create(name=f"{action.title}-Action-Image", file=image)
-        action.image = media
+      if image: #now, images will always come as an array of ids, or "reset" string 
+        Console.log("I amt he iamges", image,image[0],type(image))
+        if image[0] == "reset": #if image is reset, delete the existing image
+          action.image = None
+        else:
+          media = Media.objects.filter(id = image[0]).first()
+          action.image = media
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
