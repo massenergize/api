@@ -78,9 +78,7 @@ class ActionStore:
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
-      if image: #now, images will always come as an array of ids, or "reset" string 
-        if image == "reset": #if image is reset, delete the existing image
-          new_action.image = None
+      if image: #now, images will always come as an array of ids 
         media = Media.objects.filter(pk = image[0]).first()
         new_action.image = media
 
@@ -193,7 +191,6 @@ class ActionStore:
       action = action.first()
 
       if image: #now, images will always come as an array of ids, or "reset" string 
-        Console.log("I amt he iamges", image,image[0],type(image))
         if image[0] == "reset": #if image is reset, delete the existing image
           action.image = None
         else:
