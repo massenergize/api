@@ -42,7 +42,10 @@ class MessageService:
       title = args.pop('title', None)
       to = args.pop('to', None)
       body = args.pop('body', None)
-      success = send_massenergize_email(title, body, to)
+      orig_date = message.created_at.strftime("%Y-%m-%d %H:%M")
+
+      reply_body = body + "\r\n\r\n============================================\r\nIn reply to the following message received "+orig_date + ":\r\n\r\n" + message.body
+      success = send_massenergize_email(title, reply_body, to)
       if success:
         message.have_replied = True
         message.save()
