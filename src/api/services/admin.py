@@ -3,7 +3,7 @@ from _main_.utils.common import serialize, serialize_all
 from api.store.admin import AdminStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.settings import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from .utils import send_slack_message
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -112,7 +112,8 @@ class AdminService:
           subject, admin_email, 'contact_admin_email.html', content_variables)
 
         send_slack_message(
-            SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            SLACK_SUPER_ADMINS_WEBHOOK_URL, {
             "from_name": message.user_name,
             "email": message.email,
             "subject": message.title,

@@ -6,7 +6,7 @@ from database.models import TeamMember
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.settings import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from .utils import send_slack_message
 from sentry_sdk import capture_message
 from typing import Tuple
