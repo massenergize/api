@@ -193,11 +193,14 @@ class EventsTestCase(TestCase):
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "updated_name")
 
+
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "name": "updated_name1"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "updated_name1")
+        # check that community name is not lost
+        self.assertEqual(response["data"]["community"]["id"],self.COMMUNITY.id)
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)

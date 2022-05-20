@@ -36,7 +36,7 @@ class ActionHandlerTest(TestCase):
       self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
       self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
-      self.TESTIMONIAL1 = Testimonial.objects.create(title="testimonial1")
+      self.TESTIMONIAL1 = Testimonial.objects.create(title="testimonial1", community=self.COMMUNITY)
       self.TESTIMONIAL1.save()
 
     @classmethod
@@ -134,6 +134,7 @@ class ActionHandlerTest(TestCase):
         update_response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(update_response["success"])
         self.assertTrue(update_response["data"]["is_approved"])
+        self.assertEqual(update_response["data"]["community"]["id"], self.COMMUNITY.id)
 
     def test_delete(self):
         # create testimonials in method because they will be deleted

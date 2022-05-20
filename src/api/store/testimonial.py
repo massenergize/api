@@ -167,9 +167,10 @@ class TestimonialStore:
 
       if community:
         testimonial_community = Community.objects.filter(id=community).first()
-        new_testimonial.community = testimonial_community
-      else:
-        new_testimonial.community = None
+        if testimonial_community:
+          new_testimonial.community = testimonial_community
+        else:
+          new_testimonial.community = None
 
       if rank:
           new_testimonial.rank = rank
