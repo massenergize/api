@@ -114,6 +114,7 @@ class AdminService:
         send_slack_message(
             #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
             SLACK_SUPER_ADMINS_WEBHOOK_URL, {
+            "content": "Message to Community Admin for "+message.community.name,
             "from_name": message.user_name,
             "email": message.email,
             "subject": message.title,
