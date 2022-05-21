@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": true,
-  "BUILD_VERSION": "4.2.23",
-  "BUILD_VERSION_NOTES": "Apr 29:\n- avoid duplicate Welcome emails\n- new route users.listForPublicView\n- back-end support for guest signins\n\n"
+  "BUILD_VERSION": "4.2.24",
+  "BUILD_VERSION_NOTES": "May 20:\n- implement messages to team leaders\n- avoid duplicate Welcome emails\n- new route users.listForPublicView\n- back-end support for guest signins\n\n"
 }
