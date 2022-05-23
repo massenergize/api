@@ -3169,3 +3169,39 @@ class Deployment(models.Model):
     class Meta:
         db_table = "deployments"
         ordering = ("-version",)
+
+
+class FeatureFlag(models.Model):
+    """
+    A class used to represent Feature flags to turn on for
+    communities, teams and users
+    """
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    owner = models.CharField( max_length=SHORT_STR_LEN)
+    global_on = models.BooleanField(default=False)
+    is_frontend = models.BooleanField(default=False)
+    communities = models.ManyToManyField(Community, related_name="community_feature_flags")
+    users = models.ManyToManyField(UserProfile, related_name="users_feature_flags")
+    teams = models.ManyToManyField(Team, related_name="team_feature_flags")
+    notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_on = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    def simple_json(self):
+        return model_to_dict(self)
+
+    def full_json(self):
+        res = self.simple_json()
+        res["communities"] = [c.id for c in self.communities]
+        res["users"] = [u.id for u in self.users]
+        res["teams"] = [t.id for t in self.teams]
+        return res
+
+    class Meta:
+        db_table = "feature_flags"
+        ordering = ("-name",)
