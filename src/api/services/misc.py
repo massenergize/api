@@ -125,3 +125,6 @@ class MiscellaneousService:
         client = Client()
         return signinAs(client,user), None
         
+    def feature_flags_info(self, ctx: Context, request) -> Tuple[dict, MassEnergizeAPIError]:
+        json = load_json(BASE_DIR + "/database/raw_data/portal/menu.json")
+        return self.store.remake_navigation_menu(json)
