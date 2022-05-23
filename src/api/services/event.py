@@ -7,6 +7,7 @@ from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
 from typing import Tuple
+from sentry_sdk import capture_message
 from django.utils.safestring import mark_safe
 #import datetime
 #from datetime import timedelta
@@ -47,59 +48,63 @@ class EventService:
     return serialize(event), None
 
   def rsvp_update(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    event_attendee, err = self.store.rsvp_update(context, args)
-    if err:
-      return None, err
+    try:
+      event_attendee, err = self.store.rsvp_update(context, args)
+      if err:
+        return None, err
 
-    if event_attendee and event_attendee.status == "Going":
-      event = event_attendee.event
+      if event_attendee and event_attendee.status == "Going":
+        event = event_attendee.event
 
-      event_name = event.name
+        event_name = event.name
 
-      # may add these event details
-      #date_and_time = _local_datetime(event.start_date_and_time)
-      #event_details = "Date and time: " + str(date_and_time)
-      #if event.location:
-      #  event_details += "/nLocation: " + event.location
+        # may add these event details
+        #date_and_time = _local_datetime(event.start_date_and_time)
+        #event_details = "Date and time: " + str(date_and_time)
+        #if event.location:
+        #  event_details += "/nLocation: " + event.location
 
-      if event.rsvp_email:
-        user_email = event_attendee.user.email
-        user_name = event_attendee.user.full_name
+        if event.rsvp_email:
+          user_email = event_attendee.user.email
+          user_name = event_attendee.user.full_name
 
-        first_name = user_name.split(" ")[0]
-        if not first_name or first_name == "":
-          first_name = user_name
+          first_name = user_name.split(" ")[0]
+          if not first_name or first_name == "":
+            first_name = user_name
 
-        community = event.community
-        community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
-        community_name = community.name
+          community = event.community
+          community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+          community_name = community.name
 
-        # need to validate e-mails from community admins
-        #from_email = community.owner_email
-        from_email = None
+          # need to validate e-mails from community admins
+          #from_email = community.owner_email
+          from_email = None
 
-        homelink = f'{COMMUNITY_URL_ROOT}/{community.subdomain}'
-
-
-        subject = 'Thank you for registering for ' + event_name
-
-        content_variables = {
-          'name': first_name,
-          'community': community_name,
-          'event_name': event_name,
-          'event_link': f"{homelink}/events/{event.id}",
-          'custom_message': mark_safe(event.rsvp_message),
-          'homelink': homelink,
-          'contactlink': f'{homelink}/contactus',
-          'logo': community_logo,
-          'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
-        }
-
-        send_massenergize_rich_email(
-            subject, user_email, 'event_rsvp_email.html', content_variables, from_email)
+          homelink = f'{COMMUNITY_URL_ROOT}/{community.subdomain}'
 
 
-    return serialize(event_attendee), None
+          subject = 'Thank you for registering for ' + event_name
+
+          content_variables = {
+            'name': first_name,
+            'community': community_name,
+            'event_name': event_name,
+            'event_link': f"{homelink}/events/{event.id}",
+            'custom_message': mark_safe(event.rsvp_message),
+            'homelink': homelink,
+            'contactlink': f'{homelink}/contactus',
+            'logo': community_logo,
+            'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
+          }
+
+          send_massenergize_rich_email(
+              subject, user_email, 'event_rsvp_email.html', content_variables, from_email)
+
+
+      return serialize(event_attendee), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def rsvp_remove(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     event, err = self.store.rsvp_remove(context, args)
@@ -136,53 +141,57 @@ class EventService:
 
 
   def create_event(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
-    event, err = self.store.create_event(context, args)
-    if err:
-      return None, err
+    try:
+      event, err = self.store.create_event(context, args)
+      if err:
+        return None, err
 
-    if user_submitted:
+      if user_submitted:
 
-      # For now, send e-mail to primary community contact for a site
-      admin_email = event.community.owner_email
-      admin_name = event.community.owner_name
-      first_name = admin_name.split(" ")[0]
-      if not first_name or first_name == "":
-        first_name = admin_name
+        # For now, send e-mail to primary community contact for a site
+        admin_email = event.community.owner_email
+        admin_name = event.community.owner_name
+        first_name = admin_name.split(" ")[0]
+        if not first_name or first_name == "":
+          first_name = admin_name
 
-      community_name = event.community.name
+        community_name = event.community.name
 
-      user = get_user_or_die(context, args)
-      if user:
-        name = user.full_name
-        email = user.email
-      else:
-        return None, CustomMassenergizeError('Event submission incomplete')
+        user = get_user_or_die(context, args)
+        if user:
+          name = user.full_name
+          email = user.email
+        else:
+          return None, CustomMassenergizeError('Event submission incomplete')
 
-      subject = 'User Event Submitted'
+        subject = 'User Event Submitted'
 
-      content_variables = {
-        'name': first_name,
-        'community_name': community_name,
-        'url': f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
-        'from_name': name,
-        'email': email,
-        'title': event.title,
-        'body': event.description,
-      }
-      send_massenergize_rich_email(
-            subject, admin_email, 'event_submitted_email.html', content_variables)
+        content_variables = {
+          'name': first_name,
+          'community_name': community_name,
+          'url': f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
+          'from_name': name,
+          'email': email,
+          'title': event.title,
+          'body': event.description,
+        }
+        send_massenergize_rich_email(
+              subject, admin_email, 'event_submitted_email.html', content_variables)
 
-      send_slack_message(
-          SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
-          "from_name": name,
-          "email": email,
-          "subject": event.title,
-          "message": event.description,
-          "url": f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
-          "community": community_name
-      }) 
+        send_slack_message(
+            SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            "from_name": name,
+            "email": email,
+            "subject": event.title,
+            "message": event.description,
+            "url": f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
+            "community": community_name
+        }) 
 
-    return serialize(event), None
+      return serialize(event), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def update_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:

@@ -320,6 +320,8 @@ class EventStore:
       upcoming_is_rescheduled = args.pop('upcoming_is_rescheduled', None)
       final_date = args.pop('final_date', None)
 
+      community_id = args.pop("community_id", None)
+
       if is_recurring:
 
         if final_date:
@@ -365,9 +367,6 @@ class EventStore:
       if not have_address:
         args['location'] = None
 
-      community = args.pop("community_id", None)
-      if community:
-        community = Community.objects.filter(pk=community).first()
 
       # update the event instance
       events.update(**args)
@@ -377,10 +376,12 @@ class EventStore:
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         event.image = media
       
-      if community:
-        event.community = community
-      else:
-        event.community = None
+      if community_id:
+        community = Community.objects.filter(pk=community_id).first()
+        if community:
+          event.community = community
+        else:
+          event.community = None
 
       if tags:
         event.tags.set(tags)

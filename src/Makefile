@@ -91,6 +91,7 @@ test:
 
 celery:
 	DJANGO_ENV=local celery -A _main_.celery.app worker -l info
+.PHONY: celery 
 
 celery-remote:
 	celery -A _main_.celery.app worker -l info
