@@ -92,6 +92,8 @@ INSTALLED_APPS = [
     'database',
     'api',
     'website',
+    "task_queue",
+    'django_celery_beat',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -54,6 +54,7 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name)
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
+  
 
 
 def old_send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):

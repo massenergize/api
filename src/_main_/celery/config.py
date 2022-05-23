@@ -12,6 +12,8 @@ class CeleryConfig:
                 "task_serializer": "json",
                 "result_serializer": "json",
                 "accept_content": ["json"],
+                'beat_scheduler': 'django_celery_beat.schedulers:DatabaseScheduler',
+
             }
         else:
             sqs_url = os.environ.get("SQS_AWS_ENDPOINT", None)
@@ -24,6 +26,7 @@ class CeleryConfig:
                 "task_serializer": "json",
                 "result_serializer": "json",
                 "accept_content": ["json"],
+                'beat_scheduler': 'django_celery_beat.schedulers:DatabaseScheduler',
                 "broker_transport_options": {
                     "region": "us-east-2",
                     "predefined_queues": {"celery": {"url": sqs_url}},
