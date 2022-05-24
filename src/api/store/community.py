@@ -617,7 +617,6 @@ class CommunityStore:
                 self._update_real_estate_units_with_community(community)
 
             if logo:
-                Console.log("Here is the logo", logo)
                 cLogo = Media.objects.filter(id = logo).first() 
                 community.logo = cLogo
             if favicon:
@@ -797,7 +796,6 @@ class CommunityStore:
                 if self._are_locations_updated(geography_type, locations, community):
                     self._update_locations(geography_type, locations, community)
                     self._update_real_estate_units_with_community(community)
-            Console.log("ITs here bruh", logo)
             if logo:
                 if logo == "reset":
                     community.logo = None
