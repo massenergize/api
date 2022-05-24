@@ -5,9 +5,9 @@ from _main_.utils.common import get_request_contents, rename_field, rename_field
 from _main_.utils.utils import Console
 from api.services.page_settings__home import HomePageSettingsService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from sentry_sdk import capture_message
 from api.decorators import admins_only, super_admins_only, login_required
 
 class HomePageSettingsHandler(RouteHandler):
@@ -109,9 +109,6 @@ class HomePageSettingsHandler(RouteHandler):
 
     home_page_setting_info, err = self.service.update_home_page_setting(args)
 
-    if err:
-      return err
-    return MassenergizeResponse(data=home_page_setting_info)
 
   @super_admins_only
   def delete(self, request):

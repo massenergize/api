@@ -272,7 +272,8 @@ class EventHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-
+    self.validator.rename('community', 'community_id')
+    self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('event_id', int, is_required=True)
     self.validator.expect('name', str, is_required=True, options={"min_length":5, "max_length":100})
     self.validator.expect('tags', list)

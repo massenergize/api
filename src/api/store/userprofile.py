@@ -692,12 +692,17 @@ class UserStore:
       community_id = args.get("community_id", None)
       community = Community.objects.filter(id=community_id).first()
 
-      location = community.location.get("city", "")
-      if location != "":
-        location += ", "
-      location += community.location.get("state", "MA")
-      location = "in " + location
-      
+      city = community.location.get("city", None)
+      state = community.location.get("state", None)
+
+      location = ""
+      if city or state:
+        location = "in "
+        if city and city != "": 
+          location += city + ", "
+        if state and state != "":
+          location += state
+
       team_name = args.get('team_name', None)
       team = None
       if team_name and team_name != "none":
