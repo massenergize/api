@@ -59,7 +59,7 @@ class VendorStore:
     try:
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       website = args.pop('website', None)
       user_email = args.pop('user_email', context.user_email)
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
@@ -75,8 +75,8 @@ class VendorStore:
         args['location'] = None
 
       new_vendor = Vendor.objects.create(**args)
-      if image:
-        logo = Media.objects.filter(pk = image[0]).first()
+      if images:
+        logo = Media.objects.filter(pk = images[0]).first()
         new_vendor.logo = logo
       
       if onboarding_contact_email:
@@ -135,7 +135,7 @@ class VendorStore:
         "name": key_contact_name,
         "email": key_contact_email
       }
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       tags = args.pop('tags', [])
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -156,11 +156,11 @@ class VendorStore:
         else:
           vendor.key_contact = key_contact
 
-      if image: #now, images will always come as an array of ids, or "reset" string 
-        if image[0] == "reset": #if image is reset, delete the existing image
+      if images: #now, images will always come as an array of ids, or "reset" string 
+        if images[0] == "reset": #if image is reset, delete the existing image
           vendor.logo = None
         else:
-          logo = Media.objects.filter(id = image[0]).first()
+          logo = Media.objects.filter(id = images[0]).first()
           vendor.logo = logo
       
       if onboarding_contact_email:

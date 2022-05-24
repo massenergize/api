@@ -2,6 +2,7 @@
 
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field, rename_fields, parse_bool, parse_list, check_length, parse_int
+from _main_.utils.utils import Console
 from api.services.page_settings__home import HomePageSettingsService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
@@ -61,7 +62,9 @@ class HomePageSettingsHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-
+    images = args.get("images")
+    if images: 
+      args["images"] = images.split(",")
     #featured links
     args['show_featured_links'] = parse_bool(args.pop('show_featured_links', True))
     args['featured_links'] = [

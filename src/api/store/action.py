@@ -61,7 +61,7 @@ class ActionStore:
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
@@ -78,8 +78,8 @@ class ActionStore:
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
-      if image: #now, images will always come as an array of ids 
-        media = Media.objects.filter(pk = image[0]).first()
+      if images: #now, images will always come as an array of ids 
+        media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media
 
       user = None
@@ -231,7 +231,6 @@ class ActionStore:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
-
       if id and rank:
         actions = Action.objects.filter(id=id)
         actions.update(rank=rank)
