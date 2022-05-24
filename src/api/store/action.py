@@ -1,4 +1,5 @@
 from _main_.utils.utils import Console
+from api.tests.common import RESET
 from database.models import Action, UserProfile, Community, Media, UserActionRel
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
@@ -191,7 +192,7 @@ class ActionStore:
       action = action.first()
 
       if image: #now, images will always come as an array of ids, or "reset" string 
-        if image[0] == "reset": #if image is reset, delete the existing image
+        if image[0] == RESET: #if image is reset, delete the existing image
           action.image = None
         else:
           media = Media.objects.filter(id = image[0]).first()

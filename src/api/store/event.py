@@ -1,4 +1,5 @@
 from _main_.utils.utils import Console
+from api.tests.common import RESET
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
@@ -374,7 +375,7 @@ class EventStore:
       event: Event = events.first()
 
       if image: #now, images will always come as an array of ids, or "reset" string 
-        if image[0] == "reset": #if image is reset, delete the existing image
+        if image[0] == RESET: #if image is reset, delete the existing image
           event.image = None
         else:
           media = Media.objects.filter(id = image[0]).first()

@@ -1,4 +1,5 @@
 from _main_.utils.utils import Console
+from api.tests.common import RESET
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from django.utils.text import slugify
@@ -295,7 +296,7 @@ class TeamStore:
             team.parent = None
      
       if logo: #now, images will always come as an array of ids, or "reset" string 
-        if logo[0] == "reset": #if image is reset, delete the existing image
+        if logo[0] == RESET: #if image is reset, delete the existing image
           team.image = None
         else:
           media = Media.objects.filter(id = logo[0]).first()

@@ -19,7 +19,7 @@ import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-
+RESET = "reset"
 def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
     file = kwargs.get("file") or kwargs.get("image") or createImage()

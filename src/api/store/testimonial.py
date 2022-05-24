@@ -1,3 +1,4 @@
+from api.tests.common import RESET
 from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
@@ -154,7 +155,7 @@ class TestimonialStore:
       #     media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
       #     new_testimonial.image = media
       if images: 
-        if images[0] == "reset": 
+        if images[0] == RESET: 
           new_testimonial.image = None
         else:
           image = Media.objects.filter(id = images[0]).first(); 

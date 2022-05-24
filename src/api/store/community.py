@@ -1,4 +1,5 @@
 from _main_.utils.utils import Console, strip_website
+from api.tests.common import RESET
 from database.models import (
     Community,
     CommunityMember,
@@ -797,7 +798,7 @@ class CommunityStore:
                     self._update_locations(geography_type, locations, community)
                     self._update_real_estate_units_with_community(community)
             if logo:
-                if logo == "reset":
+                if logo == RESET:
                     community.logo = None
                     community.save()
                 else:
