@@ -65,7 +65,7 @@ class TestimonialStore:
 
   def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      image = args.pop('image', None)
+      images = args.pop("image")
       tags = args.pop('tags', [])
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
@@ -87,9 +87,10 @@ class TestimonialStore:
         if user:
           new_testimonial.user = user
 
-      if image:
-        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-        new_testimonial.image = media
+      
+      if images: 
+        image = Media.objects.filter(id = images[0]).first(); 
+        new_testimonial.image = image
 
       if action:
         testimonial_action = Action.objects.get(id=action)
@@ -112,7 +113,7 @@ class TestimonialStore:
           tags_to_set.append(tag)
       if tags_to_set:
         new_testimonial.tags.set(tags_to_set)
-        
+
       new_testimonial.save()
 
       return new_testimonial, None
@@ -132,7 +133,7 @@ class TestimonialStore:
       if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
       user_email = args.pop('user_email', None)      
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
@@ -141,17 +142,23 @@ class TestimonialStore:
       testimonial.update(**args)
       new_testimonial = testimonial.first()
 
-      #checks if testimonial being submitted needs its image to be deleted 
-      #extracts image ID and deletes image
-      if bool(type(image) == str):
-        if image.find("ImgToDel") == 0:
-          ID = int(image.split("---")[1])
-          Media.objects.filter(id=ID).delete()
+      # #checks if testimonial being submitted needs its image to be deleted 
+      # #extracts image ID and deletes image
+      # if bool(type(image) == str):
+      #   if image.find("ImgToDel") == 0:
+      #     ID = int(image.split("---")[1])
+      #     Media.objects.filter(id=ID).delete()
+      #     new_testimonial.image = None
+      # # If no image passed, then we don't delete the existing one
+      # elif image:
+      #     media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
+      #     new_testimonial.image = media
+      if images: 
+        if images[0] == "reset": 
           new_testimonial.image = None
-      # If no image passed, then we don't delete the existing one
-      elif image:
-          media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-          new_testimonial.image = media
+        else:
+          image = Media.objects.filter(id = images[0]).first(); 
+          new_testimonial.image = image
       
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
