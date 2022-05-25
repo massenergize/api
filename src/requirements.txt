@@ -12,7 +12,7 @@ django-cors-headers==3.4.0
 firebase-admin==4.3.0
 jsons==1.2.0
 querystring-parser==1.2.4
-PyJWT==1.7.1
+PyJWT==2.4.0
 python-dotenv==0.13.0
 sentry-sdk==0.19.5
 zipcodes==1.1.2
