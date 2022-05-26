@@ -3,7 +3,7 @@ from _main_.utils.common import serialize, serialize_all
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.utils.constants import COMMUNITY_URL_ROOT
+from _main_.utils.constants import COMMUNITY_URL_ROOT,  ME_LOGO_PNG
 import os, csv
 import re
 from sentry_sdk import capture_message
@@ -71,7 +71,7 @@ def _send_invitation_email(user_info, mess):
 
   subject = cadmin_name + " invites you to join the " + community_name + " Community"
 
-  #community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+  #community_logo =  community.logo.file.url if community and community.logo else ME_LOGO_PNG
   #subdomain =   community.subdomain if community else "global"
   #subject = f'Welcome to {community_name}, a MassEnergize community'
   homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
@@ -192,7 +192,7 @@ class UserService:
       send_email = res["new_user_email"]
       if send_email:   # a complete user profile, not a guest
         community_name =  community.name if community else "Global Massenergize Community"
-        community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+        community_logo =  community.logo.file.url if community and community.logo else ME_LOGO_PNG
         subdomain =   community.subdomain if community else "global"
         subject = f'Welcome to {community_name}, a MassEnergize community'
         homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'

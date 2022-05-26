@@ -1,7 +1,7 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.event import EventStore
-from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from .utils import send_slack_message
@@ -73,7 +73,7 @@ class EventService:
             first_name = user_name
 
           community = event.community
-          community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+          community_logo =  community.logo.file.url if community and community.logo else ME_LOGO_PNG
           community_name = community.name
 
           # need to validate e-mails from community admins
