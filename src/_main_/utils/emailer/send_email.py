@@ -35,7 +35,7 @@ def send_massenergize_email(subject, msg, to):
     subject=subject,
     to=to,
     sender=FROM_EMAIL, 
-    html=msg, 
+    text=msg, 
   )
   response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
 
