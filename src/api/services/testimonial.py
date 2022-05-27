@@ -1,10 +1,11 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.constants import ADMIN_URL_ROOT
-from _main_.settings import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from .utils import send_slack_message
 from api.store.testimonial import TestimonialStore
+from sentry_sdk import capture_message
 from typing import Tuple
 
 class TestimonialService:
@@ -31,52 +32,58 @@ class TestimonialService:
 
 
   def create_testimonial(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
-    testimonial, err = self.store.create_testimonial(context, args)
-    if err:
-      return None, err
+    try:
+      testimonial, err = self.store.create_testimonial(context, args)
+      if err:
+        return None, err
 
-    if user_submitted:
+      if user_submitted:
 
-      # For now, send e-mail to primary community contact for a site
-      admin_email = testimonial.community.owner_email
-      admin_name = testimonial.community.owner_name
-      first_name = admin_name.split(" ")[0]
-      if not first_name or first_name == "":
-        first_name = admin_name
+        # For now, send e-mail to primary community contact for a site
+        admin_email = testimonial.community.owner_email
+        admin_name = testimonial.community.owner_name
+        first_name = admin_name.split(" ")[0]
+        if not first_name or first_name == "":
+          first_name = admin_name
 
-      community_name = testimonial.community.name
-      user = testimonial.user
-      if user:
-        name = user.full_name
-        email = user.email
-      else:
-        return None, CustomMassenergizeError('Testimonial submission incomplete')
+        community_name = testimonial.community.name
+        user = testimonial.user
+        if user:
+          name = user.full_name
+          email = user.email
+        else:
+          return None, CustomMassenergizeError('Testimonial submission incomplete')
 
-      subject = 'User Testimonial Submitted'
+        subject = 'User Testimonial Submitted'
 
-      content_variables = {
-        'name': first_name,
-        'community_name': community_name,
-        'url': f"{ADMIN_URL_ROOT}/admin/edit/{testimonial.id}/testimonial",
-        'from_name': name,
-        'email': email,
-        'title': testimonial.title,
-        'body': testimonial.body,
-      }
-      send_massenergize_rich_email(
-            subject, admin_email, 'testimonial_submitted_email.html', content_variables)
+        content_variables = {
+          'name': first_name,
+          'community_name': community_name,
+          'url': f"{ADMIN_URL_ROOT}/admin/edit/{testimonial.id}/testimonial",
+          'from_name': name,
+          'email': email,
+          'title': testimonial.title,
+          'body': testimonial.body,
+        }
+        send_massenergize_rich_email(
+              subject, admin_email, 'testimonial_submitted_email.html', content_variables)
 
-      send_slack_message(
-          SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
-          "from_name": name,
-          "email": email,
-          "subject": testimonial.title,
-          "message": testimonial.body,
-          "url": f"{ADMIN_URL_ROOT}/admin/edit/{testimonial.id}/testimonial",
-          "community": community_name
-      }) 
+        send_slack_message(
+            #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            SLACK_SUPER_ADMINS_WEBHOOK_URL, {
+            "content": "User submitted Testimonial for "+community_name,
+            "from_name": name,
+            "email": email,
+            "subject": testimonial.title,
+            "message": testimonial.body,
+            "url": f"{ADMIN_URL_ROOT}/admin/edit/{testimonial.id}/testimonial",
+            "community": community_name
+        }) 
 
-    return serialize(testimonial), None
+      return serialize(testimonial), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def update_testimonial(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:

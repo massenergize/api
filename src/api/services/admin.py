@@ -1,11 +1,11 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.admin import AdminStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.settings import SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from .utils import send_slack_message
+from sentry_sdk import capture_message
 from typing import Tuple
 
 class AdminService:
@@ -17,9 +17,11 @@ class AdminService:
         self.store = AdminStore()
 
     def add_super_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+      try:
         admin, err = self.store.add_super_admin(context, args)
         if err:
             return None, err
+
         subject = 'Welcome to the MassEnergize Team'
         content_variables = {
             'name': admin.full_name,
@@ -30,6 +32,9 @@ class AdminService:
         send_massenergize_rich_email(
             subject, admin.email, 'new_admin_email.html', content_variables)
         return serialize(admin, full=True), None
+      except Exception as e:
+        capture_message(str(e), level="error")
+        return None, CustomMassenergizeError(e)
 
     def remove_super_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admin, err = self.store.remove_super_admin(context, args)
@@ -44,10 +49,11 @@ class AdminService:
         return serialize_all(admins), None
 
     def add_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+      try:    
         res, err = self.store.add_community_admin(context, args)
-
         if err:
             return None, err
+
         subject = 'Welcome to the MassEnergize Team'
         content_variables = {
             'name': res["name"],
@@ -60,6 +66,9 @@ class AdminService:
         send_massenergize_rich_email(
             subject, res["email"], 'new_admin_email.html', content_variables)
         return res, None
+      except Exception as e:
+        capture_message(str(e), level="error")
+        return None, CustomMassenergizeError(e)
 
     def remove_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admin, err = self.store.remove_community_admin(context, args)
@@ -74,7 +83,7 @@ class AdminService:
         return serialize(admins), None
 
     def message_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-
+      try:
         message, err = self.store.message_admin(context, args)
         if err:
             return None, err
@@ -103,7 +112,9 @@ class AdminService:
           subject, admin_email, 'contact_admin_email.html', content_variables)
 
         send_slack_message(
-            SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            SLACK_SUPER_ADMINS_WEBHOOK_URL, {
+            "content": "Message to Community Admin for "+message.community.name,
             "from_name": message.user_name,
             "email": message.email,
             "subject": message.title,
@@ -113,6 +124,9 @@ class AdminService:
         }) 
 
         return serialize(message), None
+      except Exception as e:
+        capture_message(str(e), level="error")
+        return None, CustomMassenergizeError(e)
 
     def list_admin_messages(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admins, err = self.store.list_admin_messages(context, args)
