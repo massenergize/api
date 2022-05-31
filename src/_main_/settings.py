@@ -91,7 +91,6 @@ INSTALLED_APPS = [
     'carbon_calculator',
     'database',
     'api',
-    'django_celery_beat',
     'website',
     "task_queue",
     'django_celery_beat',
