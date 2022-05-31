@@ -20,8 +20,6 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
         filename = "all-%s-data.csv" % download_type
     else:
         filename = "%s-%s-data.csv" % (community_name, download_type)
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response['Content-Disposition'] = 'attachment; filename="%s"' % filename
     writer = csv.writer(response)
     for row in data:
         writer.writerow(row)
