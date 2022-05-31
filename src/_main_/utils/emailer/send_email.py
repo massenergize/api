@@ -56,7 +56,6 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name)
   return True
   
 
-
 def old_send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
   if is_test_mode():
     return True
