@@ -1,6 +1,7 @@
 from api.handlers.action import ActionHandler
 from api.handlers.admin import AdminHandler
 from api.handlers.auth import AuthHandler
+from api.handlers.inbound_webhook import InboundWebhookHandler
 from api.handlers.media_library import MediaLibraryHandler
 from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
 from api.handlers.page_settings__actions import ActionsPageSettingsHandler
@@ -69,7 +70,8 @@ ROUTE_HANDLERS = [
     MediaLibraryHandler(),
     RegisterPageSettingsHandler(),
     SigninPageSettingsHandler(),
-    TaskQueueHandler()
+    TaskQueueHandler(),
+    InboundWebhookHandler()
 ]
 
 urlpatterns = [
