@@ -1,7 +1,8 @@
 
-from task_queue.views import test_function
+from task_queue.views import community_admin_nudge, super_admin_nudge
 
 
 FUNCTIONS = {
-    "test_job": test_function,
+    'Super admin nudge':super_admin_nudge,
+    "Community Admin nudge":community_admin_nudge
 }
