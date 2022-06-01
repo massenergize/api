@@ -43,8 +43,8 @@ def super_admin_nudge():
 
     data = query_db()
 
-    # super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
-    super_admins = ['abdullai.tahiru@gmail.com']
+    super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
+
     for community in communities:
         community_name = community.name
         all_community_admins = CommunityAdminGroup.objects.filter(community=community).values_list('members__email', flat=True)
@@ -87,7 +87,7 @@ def community_admin_nudge():
         community_name = community.name
 
         all_community_admins = CommunityAdminGroup.objects.filter(community=community).values_list('members__email', flat=True)
-        all_community_admins = list(all_community_admins)
+        cadmin_email_list = list(all_community_admins)
 
         weekly_signups = data.get('weekly_sign_ups').filter(community__name=community_name).first()
         community_weekly_signup = weekly_signups['signups'] if weekly_signups else 0
@@ -111,7 +111,7 @@ def community_admin_nudge():
         }
         
 
-        send_nudge(None, None,["abdullai.tahiru@gmail.com"], CADMIN_EMAIL_TEMPLATE_ID,temp_data)
+        send_nudge(None, None,cadmin_email_list, CADMIN_EMAIL_TEMPLATE_ID,temp_data)
     return "Success"
 
 
