@@ -1,3 +1,5 @@
+from _main_.utils.utils import Console
+from api.tests.common import RESET
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
@@ -257,8 +259,8 @@ class EventStore:
       if community:
         new_event.community = community
 
-      if image:
-        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
+      if image: #now, images will always come as an array of ids 
+        media = Media.objects.filter(pk = image[0]).first()
         new_event.image = media
 
       if tags:
@@ -372,9 +374,12 @@ class EventStore:
       events.update(**args)
       event: Event = events.first()
 
-      if image:
-        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-        event.image = media
+      if image: #now, images will always come as an array of ids, or "reset" string 
+        if image[0] == RESET: #if image is reset, delete the existing image
+          event.image = None
+        else:
+          media = Media.objects.filter(id = image[0]).first()
+          event.image = media
       
       if community_id:
         community = Community.objects.filter(pk=community_id).first()

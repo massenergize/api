@@ -65,7 +65,7 @@ class VendorHandler(RouteHandler):
       .expect("communities", list, is_required=False)
       .expect("service_area_states", 'str_list', is_required=False)
       .expect("properties_serviced", 'str_list', is_required=False)
-      .expect("image", "file", is_required=False)
+      .expect("image", "str_list", is_required=False)
       .expect("tags", list, is_required=False)
       .expect("location", "location", is_required=False)
     )
@@ -144,7 +144,7 @@ class VendorHandler(RouteHandler):
       .expect("service_area_states", 'str_list', is_required=False)
       .expect("properties_serviced", 'str_list', is_required=False)
       .expect("tags", list, is_required=False)
-      .expect("image", "file", is_required=False)
+      .expect("image", "str_list", is_required=False)
       .expect("location", "location", is_required=False)
     )
 

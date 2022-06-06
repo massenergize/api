@@ -3082,6 +3082,7 @@ class Message(models.Model):
     archive = models.BooleanField(default=False, blank=True)
     starred = models.BooleanField(default=False, blank=True)
     response = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
+    parent = models.ForeignKey('self', blank=True, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
@@ -3092,6 +3093,7 @@ class Message(models.Model):
         res["community"] = get_summary_info(self.community)
         res["team"] = get_summary_info(self.team)
         res["user"] = get_summary_info(self.user)
+        res["replies"] = [r.simple_json() for r in Message.objects.filter(parent=self, archive=False)]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
 

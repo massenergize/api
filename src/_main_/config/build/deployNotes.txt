@@ -1,4 +1,4 @@
-May 20:
+May 27: Bug fix release:
 - implement messages to team leaders
 - avoid duplicate Welcome emails
 - new route users.listForPublicView
