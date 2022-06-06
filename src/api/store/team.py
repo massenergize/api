@@ -1,3 +1,5 @@
+from _main_.utils.utils import Console
+from api.tests.common import RESET
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from django.utils.text import slugify
@@ -184,9 +186,9 @@ class TeamStore:
         else:
           return None, CustomMassenergizeError("Cannot set parent team")
 
-      if logo_file:
-        logo = Media.objects.create(file=logo_file, name=f"{slugify(team.name)}-TeamLogo")
-        logo.save()
+  
+      if logo_file: #now, images will always come as an array of ids 
+        logo = Media.objects.filter(pk = logo_file[0]).first()
         team.logo = logo
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
@@ -292,17 +294,13 @@ class TeamStore:
       else:  
           if parent_id == 0:
             team.parent = None
-
-      if logo:
-          # if existing logo, the string length is around 300 characters
-          # If a new logo updated, this will be the length of the file, much larger than that       
-          new_logo = len(logo) > 1000
-          if new_logo:
-            logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
-            logo.save()
-            team.logo = logo
-          else: 
-            team.logo = None 
+     
+      if logo: #now, images will always come as an array of ids, or "reset" string 
+        if logo[0] == RESET: #if image is reset, delete the existing image
+          team.image = None
+        else:
+          media = Media.objects.filter(id = logo[0]).first()
+          team.logo = media
 
       team.save()
       return team, None
