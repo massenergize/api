@@ -22,25 +22,42 @@ class MessageService:
       return None, err
     return serialize(message, full=True), None
 
-  def reply_from_community_admin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def reply_from_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       message, err = self.store.get_message_info(context, args)
       if err:
         return None, err
+      new_args = {
+          "parent": message,
+          'community_id': message.community.pk,
+          'title': args.get('title'),
+          'body': args.get('body'),
+          'email': args.get('to'),
+        }
+
+      reply, create_err = self.store.message_admin(context, new_args)
+      if create_err:
+        return None, create_err
+
       title = args.pop('title', None)
       to = args.pop('to', None)
       body = args.pop('body', None)
-      success = send_massenergize_email(title, body, to)
+      orig_date = message.created_at.strftime("%Y-%m-%d %H:%M")
+
+      reply_body = body + "\r\n\r\n============================================\r\nIn reply to the following message received "+orig_date + ":\r\n\r\n" + message.body
+      success = send_massenergize_email(title, reply_body, to)
       if success:
         message.have_replied = True
         message.save()
-      # attached_file = args.pop('attached_file', None)    
-      return success, None
+      # attached_file = args.pop('attached_file', None)
+      # 
+      # return reply message   
+      return serialize(reply), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def forward_to_team_admins(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def forward_to_team_admins(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       # the message may have been modified, so don't just send the old one
 
@@ -82,7 +99,7 @@ class MessageService:
 
       # attached_file = args.pop('attached_file', None)    
 
-      return True, None
+      return serialize(message), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

@@ -54,13 +54,14 @@ class MessageStore:
       email = args.pop("email", None) or context.user_email
       body = args.pop("body", None)
       uploaded_file = args.pop("uploaded_file", None)
+      parent = args.pop("parent", None)
 
 
       community, err = get_community(community_id, subdomain)
       if err:
         return None, err
       
-      new_message = Message.objects.create(user_name=user_name, title=title, body=body, community=community)
+      new_message = Message.objects.create(user_name=user_name, title=title, body=body, community=community,parent=parent)
       new_message.save()
       user, err = get_user(context.user_id, email)
       if err:
@@ -82,7 +83,6 @@ class MessageStore:
 
   def message_team_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      user_name = args.pop("user_name", None)
       team_id = args.pop("team_id", None)
       title = args.pop("title", None)
       email = args.pop("email", None) or context.user_email
@@ -98,8 +98,10 @@ class MessageStore:
       user, err = get_user(context.user_id)
       if err:
         return None, err
+      user_name = args.pop("user_name", None) or user.full_name
 
-      new_message = Message.objects.create(user_name=user_name, user=user, title=title, body=body, community=team.primary_community, team=team, is_team_admin_message=True)
+
+      new_message = Message.objects.create(user_name=user_name, user=user, email=email, title=title, body=body, community=team.primary_community, team=team, is_team_admin_message=True)
       new_message.save()
 
       return new_message, None 

@@ -35,7 +35,7 @@ def send_massenergize_email(subject, msg, to):
     subject=subject,
     to=to,
     sender=FROM_EMAIL, 
-    html=msg, 
+    text=msg, 
   )
   response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
 
@@ -55,7 +55,6 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name)
     return False
   return True
   
-
 
 def old_send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
   if is_test_mode():
