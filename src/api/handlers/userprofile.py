@@ -34,6 +34,7 @@ class UserHandler(RouteHandler):
     self.add("/users.events.list", self.list_events)
     self.add("/users.checkImported", self.check_user_imported)
     self.add("/users.listForPublicView", self.list_publicview)
+    self.add("/users.guest.make.permanent", self.make_guest_permanent)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
@@ -48,6 +49,24 @@ class UserHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=user_info)
+
+  def make_guest_permanent(self, request): 
+    context: Context = request.context
+    args: dict = context.args
+    args, err = (self.validator.expect("id", int, is_required=True)
+    .expect("accepts_terms_and_conditions", bool, is_required=True)
+    .expect("full_name", str, is_required=True)
+      .expect("preferred_name", str, is_required=True)
+      .expect("is_vendor", bool)
+      .expect("is_guest", bool)
+      .expect("community_id", int)
+      .verify(context.args))
+    if err: 
+      return MassenergizeResponse(error=err);
+    user, error = self.service.make_guest_permanent(context,args);
+    if error: 
+      return MassenergizeResponse(error=err);
+    return MassenergizeResponse(data = user)
 
   def create(self, request):
     context: Context = request.context

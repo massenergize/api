@@ -181,6 +181,17 @@ class UserService:
       return None, err
     return imported_info, None
 
+  def make_guest_permanent(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try: 
+      user, error = self.store.make_guest_permanent(context, args);
+      if error: return None, error
+      # then we can send an email here that congratulates them for becoming a member 
+
+      return serialize(user, full=True), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
   def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       res, err = self.store.create_user(context, args)

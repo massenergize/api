@@ -393,6 +393,27 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  def make_guest_permanent(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try: 
+      community = get_community_or_die(context, args)
+      location = args.pop("location","") 
+      id = args.pop("id", None); 
+      user = UserProfile.objects.filter(id = id).first() 
+      if not user: return None, "Sorry, could not locate the guest user..."
+      user.update(**args) 
+      house =RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
+                                                  location=location)
+      user.real_estate_units.add(house);
+      
+      user.save(); 
+      return user, None;
+      
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
   def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       
