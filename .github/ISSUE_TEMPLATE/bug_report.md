@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve our API
 title: ''
-labels: API, bug
+labels: API, bug, enhancement
 assignees: ''
 
 ---
