@@ -43,7 +43,8 @@ def super_admin_nudge():
 
     data = query_db()
 
-    super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
+    # super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
+    super_admins =["abdullai.tahiru@gmail.com"]
 
     for community in communities:
         community_name = community.name
@@ -67,7 +68,7 @@ def super_admin_nudge():
     
 
         writer.writerow([community_name, community_total_signup,community_weekly_signup, community_actions_taken, community_weekly_done_actions, community_weekly_todo_actions])
-    
+        break
     temp_data =  {
             'name':"there",
             'start': str(one_week_ago.date()),
