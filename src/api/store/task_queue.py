@@ -43,10 +43,10 @@ class TaskQueueStore:
         frequency=args.get("frequency", None),
       )
       if context.user_email:
-        user = UserProfile.objects.filter(email=context.user_email).first()
-        # add create_task()  here 
+        user = UserProfile.objects.filter(email=context.user_email).first() 
         if user:
           task.creator = user
+        task.create_task()
       task.save()
 
       return task, None
