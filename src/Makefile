@@ -100,6 +100,7 @@ beat:
 celery-remote:
 	celery -A _main_.celery.app worker -l info
 
-.PHONY: local
-local: 
+
+.PHONY: full-celery-local
+full-celery-local: 
 	make -j 2 start celery
