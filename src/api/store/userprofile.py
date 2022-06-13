@@ -1,3 +1,4 @@
+from _main_.utils.utils import Console
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
@@ -396,14 +397,27 @@ class UserStore:
   def make_guest_permanent(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try: 
       community = get_community_or_die(context, args)
+      color = args.pop("color", "")
       location = args.pop("location","") 
+      Console.log("I think I am the location", location)
       id = args.pop("id", None); 
-      user = UserProfile.objects.filter(id = id).first() 
+      user = UserProfile.objects.filter(pk = id).first() 
       if not user: return None, "Sorry, could not locate the guest user..."
-      user.update(**args) 
-      house =RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
-                                                  location=location)
-      user.real_estate_units.add(house);
+      if location: 
+        house =RealEstateUnit.objects.create(name="Home", unit_type="residential", community=community,
+                                                    location=location)
+      user.real_estate_units.add(house)
+      if user.email:
+        user.email = args.get("email")
+      user.is_vendor = args.get("is_vendor") 
+      user.full_name = args.get("full_name") 
+      user.preferred_name = args.get("preferred_name")      
+      user.accepts_terms_and_conditions = args.get("accepts_terms_and_conditions")                                
+      
+      if color:
+        user.preferences = {'color': color}
+
+      user.user_info = {"user_type":STANDARD_USER}
       
       user.save(); 
       return user, None;

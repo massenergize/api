@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.utils import Console
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
@@ -184,9 +185,10 @@ class UserService:
   def make_guest_permanent(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try: 
       user, error = self.store.make_guest_permanent(context, args);
+      Console.log("This is the error", error, user);
       if error: return None, error
       # then we can send an email here that congratulates them for becoming a member 
-
+      Console.log("So you did come here innit", user)
       return serialize(user, full=True), None
     except Exception as e:
       capture_message(str(e), level="error")
