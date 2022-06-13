@@ -90,7 +90,7 @@ test:
 
 
 celery:
-	DJANGO_ENV=local celery -A _main_.celery.app worker -l info
+	DJANGO_ENV=local celery -A _main_.celery.app worker -l info -B
 .PHONY: celery 
 
 
@@ -100,3 +100,6 @@ beat:
 celery-remote:
 	celery -A _main_.celery.app worker -l info
 
+.PHONY: local
+local: 
+	make -j 2 start celery
