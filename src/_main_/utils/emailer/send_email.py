@@ -74,7 +74,7 @@ def old_send_massenergize_rich_email(subject, to, massenergize_email_type, conte
     return False
   return True
 
-def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
+def send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None, msg_id=None):
   if is_test_mode():
     return True
   
@@ -90,6 +90,9 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
     html=html_content, 
     text=text_content
   )
+  if msg_id:
+    message.add_header('msg_id', str(msg_id))
+
   response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
 
   if not response.ok:

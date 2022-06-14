@@ -108,8 +108,7 @@ class AdminService:
             "subject": message.title,
             "message_body": message.body,
         }
-        send_massenergize_rich_email(
-          subject, admin_email, 'contact_admin_email.html', content_variables)
+        send_massenergize_rich_email(subject=subject, to=admin_email, massenergize_email_type='contact_admin_email.html', content_variables=content_variables, msg_id=message.id)
 
         send_slack_message(
             #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {

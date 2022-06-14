@@ -79,7 +79,7 @@ ALLOWED_HOSTS = [
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
     'massenergize.test',
     'massenergize.test:3000',
-    'be65-41-210-60-80.ngrok.io'
+    '0dc6-41-210-60-80.ngrok.io'
 ]
 
 if RUN_SERVER_LOCALLY:
