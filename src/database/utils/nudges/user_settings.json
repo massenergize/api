@@ -1,0 +1,48 @@
+{
+  "general_settings": {
+    "frequency": {
+      "text": "How frequently would you like to receive notifications from us about new events, actions, or financial incentives?",
+      "values": {
+        "as_posted": {
+          "name": "As posted",
+          "value": false
+        },
+        "per_day": {
+          "name": "A summary per day",
+          "value": false
+        },
+        "per_week": {
+          "name": "As summary per week",
+          "value": false
+        },
+        "per_month": {
+          "name": "A summary per month",
+          "value": false
+        },
+        "never": { "name": "Never", "value": false }
+      }
+    },
+    "news_letter": {
+      "text": "Send me news  updates in my community",
+      "values": {
+        "as_posted": { "name": "As posted", "value": false },
+        "never": { "name": "Never", "value": false }
+      }
+    },
+    "messaging": {
+      "text": "Would you like to receive messages from other members of the community?",
+      "values": {
+        "yes": { "name": "Yes", "value": false },
+        "from_team": { "name": "Only from those on my team", "value": false },
+        "no": { "name": "No", "value": false }
+      }
+    }
+  },
+  "advanced_settings": {
+    "upcoming_events": {},
+    "upcoming_actions": {},
+    "new_teams": {},
+    "new_testimonials": {},
+    "your_activity_updates": {}
+  }
+}

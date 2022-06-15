@@ -6,6 +6,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
+from database.utils.nudges.user_nudge_settings import UserNudgeSettings
 
 class UserHandler(RouteHandler):
 
@@ -40,6 +41,10 @@ class UserHandler(RouteHandler):
     self.add("/users.listForSuperAdmin", self.super_admin_list)
     self.add("/users.import", self.import_users)
 
+    self.add("/users.justTesting", self.test)
+
+  def test(self, request): 
+    return MassenergizeResponse(data = UserNudgeSettings.Settings);
   @login_required
   def info(self, request):
     context: Context = request.context
