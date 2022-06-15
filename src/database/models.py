@@ -354,7 +354,6 @@ class Community(models.Model):
                 "id",
                 "name",
                 "subdomain",
-                "is_approved",
                 "owner_phone_number",
                 "owner_name",
                 "owner_email",
@@ -1382,6 +1381,9 @@ class Vendor(models.Model):
     created_at: DateTime
       The date and time of the last time any updates were made to the information
       about this Vendor
+    is_approved: boolean
+      after the community admin reviews this, can check the box
+
     """
 
     id = models.AutoField(primary_key=True)
@@ -1431,6 +1433,7 @@ class Vendor(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    is_approved = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name
@@ -1515,6 +1518,9 @@ class Action(models.Model):
     created_at: DateTime
       The date and time of the last time any updates were made to the information
       about this real estate unit
+    is_approved: boolean
+      after the community admin reviews this, can check the box
+
     """
 
     id = models.AutoField(primary_key=True)
@@ -1552,6 +1558,7 @@ class Action(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    is_approved = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.title
@@ -1565,6 +1572,7 @@ class Action(models.Model):
             [
                 "id",
                 "is_published",
+                "is_approved",
                 "is_deleted",
                 "title",
                 "is_global",
@@ -1635,6 +1643,9 @@ class Event(models.Model):
       and it has a RecurringPattern instance attached to it.
     recurring_details: JSON
       stores information about the recurrence pattern of the event if is_recurring = True
+    is_approved: boolean
+      after the community admin reviews this, can check the box
+
     """
 
     id = models.AutoField(primary_key=True)
@@ -1666,6 +1677,7 @@ class Event(models.Model):
     user = models.ForeignKey(UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True)
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
+    is_approved = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name
@@ -1876,7 +1888,7 @@ class Testimonial(models.Model):
     body: str (HTML)
       more information for this testimony.
     is_approved: boolean
-      after the community admin reviews this, he can check the box
+      after the community admin reviews this, can check the box
     """
 
     id = models.AutoField(primary_key=True)
