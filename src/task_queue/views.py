@@ -67,7 +67,6 @@ def super_admin_nudge():
     
 
         writer.writerow([community_name, community_total_signup,community_weekly_signup, community_actions_taken, community_weekly_done_actions, community_weekly_todo_actions])
-        break
     temp_data =  {
             'name':"there",
             'start': str(one_week_ago.date()),
