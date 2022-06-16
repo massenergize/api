@@ -578,7 +578,7 @@ class UserStore:
 
       # mark all real_estate_units is_deleted=true
       for reu in user.real_estate_units.all():
-        reu.is_delted = True
+        reu.is_deleted = True
         reu.save()
 
       #if a CommunityMember links to user, mark is_deleted=true
