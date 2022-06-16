@@ -1,7 +1,9 @@
 """Handler file for all routes pertaining to users"""
 from functools import wraps
+from _main_.utils import context
 from _main_.utils.route_handler import RouteHandler
 from api.services.userprofile import UserService
+from api.store.userprofile import UserStore
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
@@ -13,6 +15,7 @@ class UserHandler(RouteHandler):
     super().__init__()
     self.service = UserService()
     self.registerRoutes()
+    self.store = UserStore()
 
   def registerRoutes(self):
     self.add("/users.info", self.info) 
@@ -34,6 +37,7 @@ class UserHandler(RouteHandler):
     self.add("/users.events.list", self.list_events)
     self.add("/users.checkImported", self.check_user_imported)
     self.add("/users.listForPublicView", self.list_publicview)
+    self.add("/users.validate.username", self.validate_username)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
@@ -48,6 +52,13 @@ class UserHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=user_info)
+  
+  def validate_username(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    is_valid = self.store.validate_username(args["suggestion"], args["community"])
+    return MassenergizeResponse(is_valid)
 
   def create(self, request):
     context: Context = request.context
