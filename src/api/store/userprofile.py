@@ -552,15 +552,8 @@ class UserStore:
   
   def delete_user(self, context: Context, user_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      if not user_id:
-        return None, InvalidResourceError()
-      
-      # check to make sure the one deleting is an admin
-      if not context.user_is_admin():
-        
-        # if they are not an admin make sure they can only delete themselves
-        if context.user_id != user_id:
-          return None, NotAuthorizedError()
+      if not self._has_access(context, user_id):
+        return None, CustomMassenergizeError("permission_denied")
       
       users = UserProfile.objects.filter(id=user_id)
       user = users.first()
