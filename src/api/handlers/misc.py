@@ -9,6 +9,8 @@ from _main_.utils.utils import Console, get_models_and_field_types
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
+from database.utils.nudges.admin_settings import AdminNudgeSettings
+from database.utils.nudges.user_nudge_settings import UserNudgeSettings
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -29,6 +31,13 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/home", self.home)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
+        self.add("/settings.list", self.fetch_available_settings)
+
+    def fetch_available_settings(self, request): 
+        context: Context = request.context
+        if context.user_is_admin(): 
+            return MassenergizeResponse(data = AdminNudgeSettings.Settings)
+        return MassenergizeResponse(data = UserNudgeSettings.Settings) 
 
     def remake_navigation_menu(self, request):
         data, err = self.service.remake_navigation_menu()
