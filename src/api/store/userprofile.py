@@ -681,7 +681,9 @@ class UserStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
+      # List all users including guests
+      #  users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
+      users = UserProfile.objects.filter(is_deleted=False)
       return users, None
     except Exception as e:
       capture_message(str(e), level="error")
