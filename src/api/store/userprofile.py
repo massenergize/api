@@ -131,12 +131,12 @@ class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
   
-  def validate_username(self, username, community_id):
+  def validate_username(self, username):
     if (not username):
         return False
 
-    # checks if username already exists in a specific community
-    return not UserProfile.objects.filter(preferred_name=username, communities__id=community_id).exists()
+    # checks if username already exists
+    return not UserProfile.objects.filter(preferred_name=username).exists()
   
   def _has_access(self, context: Context, user_id=None, email=None):
     """
