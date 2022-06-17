@@ -30,7 +30,8 @@ def QueryAllCalcUsers(args):
     event = args.get('Event','')
     group = args.get('Group','')
     if event == '':
-        users = UserProfile.objects.all()
+        #users = UserProfile.objects.all()
+        users = UserProfile.objects.filter(is_deleted=False)
     else:
         users = None
         event = Event.objects.filter(name=event).first()
@@ -268,7 +269,8 @@ def ExportCalcUsers(fileName, event):
             if event=='':   #all events
                 # this needs to be fixed
                 #users = UserProfile.objects.filter(other_info)
-                users = UserProfile.objects.all()
+                #users = UserProfile.objects.all()
+                users = UserProfile.objects.filter(is_deleted=False)
                 actions = Action.objects.all()
                 for action in actions:
                     rowtext.append(action.name)

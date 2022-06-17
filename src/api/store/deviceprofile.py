@@ -177,7 +177,8 @@ class DeviceStore:
 
   def metric_user_profiles(self) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      metric = UserProfile.objects.all().count()
+      #metric = UserProfile.objects.all().count()
+      metric = UserProfile.objects.filter(is_deleted=False).count()
       if not metric:
         return None, InvalidResourceError()
       return metric, None
