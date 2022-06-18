@@ -57,7 +57,7 @@ class UserHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    is_valid = self.store.validate_username(args["suggestion"])
+    is_valid = self.store.validate_username(args["username"])
     return MassenergizeResponse(is_valid)
 
   def create(self, request):
