@@ -1,5 +1,5 @@
 from os.path import dirname, abspath, join
-import sys, os
+import sys, os, semver
 THIS_DIR = dirname(__file__)
 CODE_DIR = abspath(join(THIS_DIR, '..'))
 sys.path.append(CODE_DIR)
@@ -108,23 +108,16 @@ def get_target_config(target, is_local, is_deploy):
     }
 
 
-def generate_new_build_number(target) -> str:
+def generate_new_build_number(target, is_major=False) -> str:
   old_build_versions = load_json_contents(BUILD_VERSION_PATH)
   build_version_for_target = old_build_versions.get(target)
-  parts = [int(k) for k in build_version_for_target.split('.')]
-  part1 = parts[0] if len(parts) > 0 else 0
-  part2 = parts[1] if len(parts) > 1 else 0
-  part3 = parts[2] if len(parts) > 2 else 0
-
-  if part3 >=100:
-    part2 += 1
-    part3 = 0
-    if part2 >= 100:
-      part1 +=1
-      part2 = 0
-  
-  return f'{part1}.{part2}.{part3}'
-
+  version =  semver.VersionInfo.parse(build_version_for_target)
+  if is_major:
+    version =  version.bump_major()
+  else:
+    version =  version.bump_minor()
+  print(version)
+  return str(version)
 
 def load_json_contents(path) -> dict:
   data = {}
@@ -175,6 +168,7 @@ def update_aws_docker_config(target, build_version):
   dst_docker_run_aws_file = os.path.join(__location__, '../Dockerrun.aws.json') 
   dst_secure_listener_file = os.path.join(__location__, '../.ebextensions/securelistener-clb.config') 
   dst_elastic_bean_stalk = os.path.join(__location__, '../.elasticbeanstalk/config.yml') 
+  dst_docker_compose = os.path.join(__location__, '../docker-compose.yml') 
 
   dev_version_txt = os.path.join(__location__, '../api_version_dev.txt') 
   prod_version_txt = os.path.join(__location__, '../api_version_prod.txt') 
@@ -184,6 +178,7 @@ def update_aws_docker_config(target, build_version):
     src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.prod.aws.json') 
     src_secure_listener_file = os.path.join(__location__, '../deployment/aws/prodSecureListener.config') 
     src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/prodElasticBeanstalkConfig.yml') 
+    src_docker_compose = os.path.join(__location__, '../deployment/aws/docker-compose.prod.yml') 
     write_any_content(prod_version_txt, build_version)
     
 
@@ -191,13 +186,15 @@ def update_aws_docker_config(target, build_version):
     src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.canary.aws.json') 
     src_secure_listener_file = os.path.join(__location__, '../deployment/aws/canarySecureListener.config') 
     src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/canaryElasticBeanstalkConfig.yml') 
+    src_docker_compose = os.path.join(__location__, '../deployment/aws/docker-compose.canary.yml') 
     write_any_content(canary_version_txt, build_version)
 
   else:
     # assume dev
     src_docker_run_aws_file = os.path.join(__location__, '../deployment/aws/Dockerrun.dev.aws.json') 
     src_secure_listener_file = os.path.join(__location__, '../deployment/aws/devSecureListener.config') 
-    src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/devElasticBeanstalkConfig.yml') 
+    src_elastic_bean_stalk = os.path.join(__location__, '../deployment/aws/devElasticBeanstalkConfig.yml')
+    src_docker_compose = os.path.join(__location__, '../deployment/aws/docker-compose.dev.yml')  
     write_any_content(dev_version_txt, build_version)
 
   transfer_file_contents(src_docker_run_aws_file, dst_docker_run_aws_file)
@@ -207,14 +204,11 @@ def update_aws_docker_config(target, build_version):
 
   transfer_file_contents(src_secure_listener_file, dst_secure_listener_file)
   transfer_file_contents(src_elastic_bean_stalk, dst_elastic_bean_stalk)
-
+  transfer_file_contents(src_docker_compose, dst_docker_compose)
 
 def transfer_file_contents(src, dst):
   src_content = load_text_contents(src)
   write_any_content(dst, src_content)
-
-
-
 
 
 if __name__ == "__main__":
