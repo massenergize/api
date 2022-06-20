@@ -107,16 +107,27 @@ def get_target_config(target, is_local, is_deploy):
       "BUILD_VERSION_NOTES": deploy_notes
     }
 
+def get_release_bump():
+  bump_input = input("Enter 1: for patch release, 2: for Minor release, 3: Major Release: ")
+  if bump_input and bump_input.lower() in ['1', 'p', 'patch']:
+    return 'PATCH'
+  elif bump_input and bump_input.lower() in ['3', 'major']:
+    return 'MAJOR'
+  return 'MINOR'
 
-def generate_new_build_number(target, is_major=False) -> str:
+def generate_new_build_number(target) -> str:
   old_build_versions = load_json_contents(BUILD_VERSION_PATH)
   build_version_for_target = old_build_versions.get(target)
   version =  semver.VersionInfo.parse(build_version_for_target)
-  if is_major:
+
+  release_bump_type = get_release_bump()
+  if release_bump_type == 'MAJOR':
     version =  version.bump_major()
+  elif release_bump_type == 'PATCH':
+    version =  version.bump_patch()
   else:
     version =  version.bump_minor()
-  print(version)
+
   return str(version)
 
 def load_json_contents(path) -> dict:
