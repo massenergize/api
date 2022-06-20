@@ -5,8 +5,8 @@ from django.db import models
 from django.db.models.fields import BooleanField, related
 from django.db.models.query_utils import select_related_descend
 from database.utils.constants import *
-from database.utils.nudges.admin_settings import AdminNudgeSettings
-from database.utils.nudges.user_nudge_settings import UserNudgeSettings
+from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.user_settings import UserPortalSettings
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from api.utils.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
@@ -698,8 +698,8 @@ class UserProfile(models.Model):
         res["is_guest"] = is_guest
 
         preferences = self.preferences or {}
-        user_nudge_settings = preferences.get("user_nudge_settings") or UserNudgeSettings.Defaults
-        admin_nudge_settings = preferences.get("admin_nudge_settings") or AdminNudgeSettings.Defaults
+        user_nudge_settings = preferences.get("user_nudge_settings") or UserPortalSettings.Defaults
+        admin_nudge_settings = preferences.get("admin_nudge_settings") or AdminPortalSettings.Defaults
         res["preferences"] = {**preferences, "user_nudge_settings":user_nudge_settings, "admin_nudge_settings": admin_nudge_settings}
        
 
@@ -764,8 +764,8 @@ class UserProfile(models.Model):
         data["is_guest"] = is_guest
 
         preferences = self.preferences or {}
-        user_nudge_settings = preferences.get("user_nudge_settings") or UserNudgeSettings.Defaults
-        admin_nudge_settings = preferences.get("admin_nudge_settings") or AdminNudgeSettings.Defaults
+        user_nudge_settings = preferences.get("user_nudge_settings") or UserPortalSettings.Defaults
+        admin_nudge_settings = preferences.get("admin_nudge_settings") or AdminPortalSettings.Defaults
         data["preferences"] = {**preferences, "user_nudge_settings":user_nudge_settings, "admin_nudge_settings": admin_nudge_settings}
        
 

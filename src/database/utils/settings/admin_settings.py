@@ -1,13 +1,14 @@
-class AdminNudgeSettings:
+class AdminPortalSettings:
     Settings = {
         "general_settings": {
+            "live": True,
             "name": "General Settings",
             "options": {
                 "notifications": {
                     "live": True,
                     "text": "I wish to receive notifications",
                     "values": {
-                        "yes": {"name": "Immediately", "value": False},
+                        "immediately": {"name": "Immediately", "value": False},
                         "daily": {"name": "Daily", "value": False},
                         "weekly": {"name": "Weekly", "value": False},
                         "monthly": {"name": "Monthly", "value": False},
@@ -21,8 +22,8 @@ class AdminNudgeSettings:
                         "no": {"name": "No", "value": False},
                     },
                 },
-                "specific_notifcations": {
-                    "live": False,
+                "specific_notifications": {
+                    "live": True,  # We flip this when ready for this iteration
                     "type": "checkbox",
                     "text": "I wish to receive notifications about the following (select all that apply)",
                     "values": {
@@ -30,7 +31,7 @@ class AdminNudgeSettings:
                             "name": "New community member",
                             "value": False,
                         },
-                        "new_action_created_update": {
+                        "new_action_creation_update": {
                             "name": "New action created",
                             "value": False,
                         },
@@ -38,7 +39,7 @@ class AdminNudgeSettings:
                             "name": "New action taken",
                             "value": False,
                         },
-                        "new_event_created_update": {
+                        "new_event_creation_update": {
                             "name": "New event created",
                             "value": False,
                         },
@@ -50,15 +51,20 @@ class AdminNudgeSettings:
                             "name": "New testimonial submitted",
                             "value": False,
                         },
+                        "new_team_submission_update": {
+                            "name": "New Team Created",
+                            "value": False,
+                        },
                     },
                 },
             },
         },
         "other_communities": {
             "name": "Other Settings",
+            "live": False,
             "options": {
                 "updates_for_new_user": {
-                    "live": False,
+                    "live": True,  # We flip this when ready for this iteration
                     "text": "Keep me informed about my community's users",
                     "values": {
                         "by_email_only": {"name": "By email only", "value": False},
@@ -66,7 +72,7 @@ class AdminNudgeSettings:
                     },
                 },
                 "updates_for_new_action": {
-                    "live": False,
+                    "live": True,  # We flip this when ready for this iteration
                     "text": "Notify me when another community creates a new action",
                     "values": {
                         "by_email_only": {"name": "Yes, by email only", "value": False},
@@ -74,7 +80,7 @@ class AdminNudgeSettings:
                     },
                 },
                 "communities_to_include": {
-                    "live": False,
+                    "live": True,
                     "text": "Communities to include (select all that apply)",
                     "type": "checkbox",
                     "expected_data_source": "list-of-communities",
@@ -86,26 +92,27 @@ class AdminNudgeSettings:
 
     Defaults = {
         "general_settings": {
-            "notifications": {"values": {"weekly": {"value": True}}},
-            "user_updates": {"values": {"by_email_only": {"value": True}}},
+            "notifications": {"weekly": {"value": True}},
+            "user_updates": {"by_email_only": {"value": True}},
             "specific_notifications": {
-                "values": {
-                    "new_member_update": {
-                        "value": False,
-                    },
-                    "new_action_created_update": {
-                        "value": True,
-                    },
-                    "event_RSVP_update": {
-                        "value": False,
-                    },
-                    "new_testimonial_submission_update": {
-                        "value": False,
-                    },
-                    "new_event_created_update": {
-                        "value": False,
-                    },
-                }
+                "new_member_update": {
+                    "value": True,
+                },
+                "new_action_creation_update": {
+                    "value": True,
+                },
+                "event_RSVP_update": {
+                    "value": True,
+                },
+                "new_event_creation_update": {
+                    "value": True,
+                },
+                "new_testimonial_submission_update": {
+                    "value": True,
+                },
+                "new_team_submission_update": {
+                    "value": True,
+                },
             },
-        }
+        },
     }

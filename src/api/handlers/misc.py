@@ -9,8 +9,9 @@ from _main_.utils.utils import Console, get_models_and_field_types
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
-from database.utils.nudges.admin_settings import AdminNudgeSettings
-from database.utils.nudges.user_nudge_settings import UserNudgeSettings
+from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.user_settings import UserPortalSettings
+
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -36,8 +37,8 @@ class MiscellaneousHandler(RouteHandler):
     def fetch_available_settings(self, request): 
         context: Context = request.context
         if context.user_is_admin(): 
-            return MassenergizeResponse(data = AdminNudgeSettings.Settings)
-        return MassenergizeResponse(data = UserNudgeSettings.Settings) 
+            return MassenergizeResponse(data = AdminPortalSettings.Settings)
+        return MassenergizeResponse(data = UserPortalSettings.Settings) 
 
     def remake_navigation_menu(self, request):
         data, err = self.service.remake_navigation_menu()

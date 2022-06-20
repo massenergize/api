@@ -19,7 +19,7 @@ common_options = {
 }
 
 
-class UserNudgeSettings:
+class UserPortalSettings:
 
     Settings = {
         "general_settings": {
