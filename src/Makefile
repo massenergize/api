@@ -39,6 +39,7 @@ deploy-canary:
 	docker build -t massenergize/api-canary .
 	docker tag massenergize/api-canary:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
+	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:latest
 	eb deploy --label $(CANARY_VERSION)
 .PHONY: deploy-canary
 
