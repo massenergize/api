@@ -1089,13 +1089,14 @@ class Team(models.Model):
         res["is_closed"] = self.is_closed
         res["is_published"] = self.is_published
         res["parent"] = get_json_if_not_none(self.parent)
+        res["admins"] = [a.simple_json() for a in self.teammember_set.all() if a.is_admin]
         return res
 
     def full_json(self):
         data = self.simple_json()
         # Q: should this be in simple_json?
         data["communities"] = [c.simple_json() for c in self.communities.all()]
-        data["admins"] = [a.simple_json() for a in self.admins.all()]
+        # data["admins"] = [a.simple_json() for a in self.admins.all()]
         data["members"] = [m.simple_json() for m in self.members.all()]
         data["goal"] = get_json_if_not_none(self.goal)
         data["banner"] = get_json_if_not_none(self.banner)

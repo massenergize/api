@@ -1,4 +1,5 @@
-from _main_.utils.utils import strip_website
+from _main_.utils.utils import Console, strip_website
+from api.tests.common import RESET
 from database.models import (
     Community,
     CommunityMember,
@@ -617,8 +618,7 @@ class CommunityStore:
                 self._update_real_estate_units_with_community(community)
 
             if logo:
-                cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
-                cLogo.save()
+                cLogo = Media.objects.filter(id = logo).first() 
                 community.logo = cLogo
             if favicon:
                 cFav = Media(
@@ -797,12 +797,14 @@ class CommunityStore:
                 if self._are_locations_updated(geography_type, locations, community):
                     self._update_locations(geography_type, locations, community)
                     self._update_real_estate_units_with_community(community)
-
             if logo:
-                cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
-                cLogo.save()
-                community.logo = cLogo
-                community.save()
+                if logo == RESET:
+                    community.logo = None
+                    community.save()
+                else:
+                    cLogo = Media.objects.filter(id = logo).first();
+                    community.logo = cLogo
+                    community.save()
 
             if favicon:
                 cFavicon = Media(
