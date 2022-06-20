@@ -201,13 +201,15 @@ class TestimonialStore:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
-
-      if id and rank:
+      if id:
         testimonials = Testimonial.objects.filter(id=id)
-        testimonials.update(rank=rank)
-        return testimonials.first(), None
+        if type(rank) == int  and int(rank) is not None:
+          testimonials.update(rank=rank)
+          return testimonials.first(), None
+        else:
+          return None, CustomMassenergizeError("Testimonial rank not provided to testimonials.rank")
       else:
-        raise Exception("Testimonial Rank and ID not provided to testimonials.rank")
+        raise Exception("Testimonial ID not provided to testimonials.rank")
     except Exception as e:
         capture_message(str(e), level="error")
         return None, CustomMassenergizeError(e)
