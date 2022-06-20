@@ -232,12 +232,15 @@ class ActionStore:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
-      if id and rank:
+      if id:
         actions = Action.objects.filter(id=id)
-        actions.update(rank=rank)
-        return actions.first(), None
+        if type(rank) == int  and int(rank) is not None:
+          actions.update(rank=rank)
+          return actions.first(), None
+        else:
+          return None, CustomMassenergizeError("Action rank not provided to actions.rank")
       else:
-        raise Exception("Action Rank and ID not provided to actions.rank")
+        raise Exception("Action ID not provided to actions.rank")
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
