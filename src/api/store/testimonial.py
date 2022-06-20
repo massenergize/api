@@ -66,7 +66,7 @@ class TestimonialStore:
 
   def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      images = args.pop("image")
+      images = args.pop("image", [])
       tags = args.pop('tags', [])
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)

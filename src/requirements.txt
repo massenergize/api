@@ -26,3 +26,4 @@ user_agents==2.2.0
 pystmark==0.5.1
 pycurl==7.19.3.1
 redis==4.1.4
+semver==2.13.0
