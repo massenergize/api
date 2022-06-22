@@ -698,9 +698,9 @@ class UserProfile(models.Model):
         res["is_guest"] = is_guest
 
         preferences = self.preferences or {}
-        user_nudge_settings = preferences.get("user_nudge_settings") or UserPortalSettings.Defaults
-        admin_nudge_settings = preferences.get("admin_nudge_settings") or AdminPortalSettings.Defaults
-        res["preferences"] = {**preferences, "user_nudge_settings":user_nudge_settings, "admin_nudge_settings": admin_nudge_settings}
+        user_portal_settings = preferences.get("user_portal_settings") or UserPortalSettings.Defaults
+        admin_portal_settings = preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
+        res["preferences"] = {**preferences, "user_portal_settings":user_portal_settings, "admin_portal_settings": admin_portal_settings}
        
 
         return res
@@ -764,9 +764,9 @@ class UserProfile(models.Model):
         data["is_guest"] = is_guest
 
         preferences = self.preferences or {}
-        user_nudge_settings = preferences.get("user_nudge_settings") or UserPortalSettings.Defaults
-        admin_nudge_settings = preferences.get("admin_nudge_settings") or AdminPortalSettings.Defaults
-        data["preferences"] = {**preferences, "user_nudge_settings":user_nudge_settings, "admin_nudge_settings": admin_nudge_settings}
+        user_portal_settings = preferences.get("user_portal_settings") or UserPortalSettings.Defaults
+        admin_portal_settings = preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
+        data["preferences"] = {**preferences, "user_portal_settings":user_portal_settings, "admin_portal_settings": admin_portal_settings}
        
 
         return data

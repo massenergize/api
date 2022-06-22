@@ -26,11 +26,6 @@ class UserPortalSettings:
             "name": "General Settings",
             "live": True,
             "options": {
-                "testing_Checkboxes": {
-                    "type": "checkbox",
-                    "text": "This is a question that requires a checkbox?",
-                    "values": common_options,
-                },
                 "update_frequency": {
                     "type": "radio",
                     "text": "How frequently would you like to receive notifications from us about new events, actions, or financial incentives?",
