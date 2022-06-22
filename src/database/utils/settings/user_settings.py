@@ -27,11 +27,13 @@ class UserPortalSettings:
             "live": True,
             "options": {
                 "update_frequency": {
+                    "live":True,
                     "type": "radio",
                     "text": "How frequently would you like to receive notifications from us about new events, actions, or financial incentives?",
                     "values": common_options,
                 },
                 "news_letter": {
+                    "live":True,
                     "type": "radio",
                     "text": "Send me news  updates in my community",
                     "values": {
@@ -40,6 +42,7 @@ class UserPortalSettings:
                     },
                 },
                 "messaging": {
+                    "live":True,
                     "type": "radio",
                     "text": "Would you like to receive messages from other members of the community?",
                     "values": {
@@ -55,7 +58,7 @@ class UserPortalSettings:
         },
         "advanced_settings": {
             "name": "Advanced Settings",
-            "live": True,
+            "live": False,
             "options": {
                 "upcoming_events": {
                     "live": False,
