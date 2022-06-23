@@ -234,7 +234,7 @@ class ActionStore:
       rank = args.get("rank", None)
       if id:
         actions = Action.objects.filter(id=id)
-        if type(rank) == int  and int(rank) is not None:
+        if rank is not None:
           actions.update(rank=rank)
           return actions.first(), None
         else:
