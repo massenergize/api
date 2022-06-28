@@ -516,6 +516,7 @@ class UserStore:
       user_id = args.get('id', None)
       email = args.get('email', None)
       profile_picture = args.pop("profile_picture", None)
+      preferences = args.pop("preferences", None)
       
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -528,6 +529,9 @@ class UserStore:
         users.update(**args)
         user = users.first()
         
+        if preferences: 
+          user.preferences = json.loads(preferences)
+          user.save()
         if profile_picture:
           if profile_picture == "reset":
             user.profile_picture = None

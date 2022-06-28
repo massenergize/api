@@ -7,6 +7,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 
+
 class UserHandler(RouteHandler):
 
   def __init__(self):
