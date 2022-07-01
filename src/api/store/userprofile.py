@@ -425,7 +425,6 @@ class UserStore:
 
       new_user_email = False
       existing_user = UserProfile.objects.filter(email=email).first()
-      existing_user =False
       if not existing_user:
         if is_guest:
           send_massenergize_email_with_attachments(GUEST_USER_EMAIL_TEMPLATE_ID,{"community":community.name}, email, None, None)
