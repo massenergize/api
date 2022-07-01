@@ -136,7 +136,7 @@ class UserStore:
         return False
 
     # checks if username already exists
-    return not UserProfile.objects.filter(preferred_name=username).exists()
+    return not UserProfile.objects.filter(preferred_name=username).exists(), None
   
   def _has_access(self, context: Context, user_id=None, email=None):
     """
