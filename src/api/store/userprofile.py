@@ -14,7 +14,7 @@ from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from api.utils.constants import STANDARD_USER, INVITED_USER, GUEST_USER
-from _main_.utils.emailer.send_email import send_massenergize_email, email_bounced
+from _main_.utils.emailer.send_email import send_massenergize_email
 
 def _get_or_create_reu_location(args, user=None):
   unit_type = args.pop('unit_type', None)
@@ -424,16 +424,11 @@ class UserStore:
       email = email.lower()     # avoid multiple copies
 
       new_user_email = False
-      # existing_user = UserProfile.objects.filter(email=email).first()
+      existing_user = UserProfile.objects.filter(email=email).first()
       existing_user =False
       if not existing_user:
         if is_guest:
           send_massenergize_email("Welcome Message", "You have successfully signed up as guest", email)
-          is_email_bounced = email_bounced(email)
-          print("===== status =======", is_email_bounced)
-          return None, CustomMassenergizeError("XYZ")
-          if is_email_bounced.raise_for_status():
-            None, CustomMassenergizeError("The email provided is invalid. Try again with different email")
         user: UserProfile = UserProfile.objects.create(
           full_name=full_name,
           preferred_name=preferred_name,

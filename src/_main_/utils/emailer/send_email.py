@@ -21,7 +21,6 @@ def old_send_massenergize_email(subject, msg, to):
       [to],
       fail_silently=False,
   )
-  print("==== OK FROM EMAIL SEND =======", ok)
   if not ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
@@ -39,16 +38,11 @@ def send_massenergize_email(subject, msg, to):
   )
   response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
   response.raise_for_status()
-  print("====== RESPONSE =====", response)
 
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
-
-def email_bounced(email):
-   bounce =  pystmark.Bounces(api_key=EMAIL_POSTMARK_SERVER_TOKEN, secure=False).get(email_filter=email)
-   return bounce
 
 def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name):
   message = pystmark.Message(sender=FROM_EMAIL, to=to, template_id=temp, template_model=t_model)
