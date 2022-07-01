@@ -8,7 +8,7 @@ from database.models import UserProfile
 
 ONE_DAY = 60*60*24
 HARD_BOUNCE="HardBounce"
-WELCOME_MESSAGE="Welcome Message"
+WELCOME_MESSAGE="Welcome Message From MassEnergize"
 
 class WebhookService:
   """

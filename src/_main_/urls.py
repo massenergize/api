@@ -17,7 +17,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
-from .webhook import handle_bounce_webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,7 +25,6 @@ urlpatterns = [
     path('auth/', include('authentication.urls')),
     path('authentication/', include('authentication.urls')),
     path('api/', include('api.urls')),
-    path('bounce.webhook.get',handle_bounce_webhook ),
     path('', include('website.urls')),
     
 ]
