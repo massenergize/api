@@ -100,5 +100,5 @@ beat:
 celery-remote:
 	celery -A _main_.celery.app worker -l info
 
-beat:
+beat-remote:
 	celery -A _main_.celery.app beat -l info
