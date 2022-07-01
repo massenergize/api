@@ -1,3 +1,4 @@
+from tkinter import N
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
@@ -132,11 +133,24 @@ class UserStore:
     self.name = "UserProfile Store/DB"
   
   def validate_username(self, username):
-    if (not username):
-        return False
+    # returns [is_valid, suggestion], error
+    
+    try:    
+        if (not username):
+            return [False, None], None
 
-    # checks if username already exists
-    return not UserProfile.objects.filter(preferred_name=username).exists()
+        # checks if username already exists
+        if not UserProfile.objects.filter(preferred_name=username).exists():
+            return [True, username], None
+
+        # username exists, finds next available closest username
+        usernames = list(UserProfile.objects.filter(preferred_name__istartswith=username).order_by('-preferred_name').values_list("preferred_name", flat=True))
+
+        num = int(usernames[0][len(username)+1:]) + 1
+        suggestion = username + "-" + str(num)
+        return [False, suggestion], None
+    except Exception as e:
+        return None, CustomMassenergizeError(e)
   
   def _has_access(self, context: Context, user_id=None, email=None):
     """
