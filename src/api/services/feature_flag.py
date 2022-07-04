@@ -6,6 +6,7 @@ from _main_.utils.massenergize_errors import (
 )
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
+from api.store.feature_flag import FeatureFlagStore
 from api.store.misc import MiscellaneousStore
 from _main_.utils.context import Context
 from django.shortcuts import render
@@ -23,7 +24,14 @@ class FeatureFlagService:
     """
 
     def __init__(self):
-        self.store = MiscellaneousStore()
+        self.store = FeatureFlagStore()
+
+    def feature_flag_info(self, ctx: Context, feature_flag_id) -> Tuple[dict, MassEnergizeAPIError]:
+        ff, err = self.store.get_feature_flags(ctx, feature_flag_id)
+        if err:
+            return None, err
+
+        return ff, None
 
     def feature_flags(self, ctx: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         features, err = self.store.get_feature_flags(ctx, args)

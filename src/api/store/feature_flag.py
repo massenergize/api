@@ -14,7 +14,7 @@ from sentry_sdk import capture_message
 from typing import Tuple
 
 
-class MiscellaneousStore:
+class FeatureFlagStore:
     def __init__(self):
         self.name = "Miscellaneous Store/DB"
 
