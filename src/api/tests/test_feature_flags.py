@@ -30,23 +30,23 @@ class FeatureFlagHandlerTest(TestCase):
         'accepted_terms_and_conditions': True
       })
 
-      admin_group_name  = f"{self.COMMUNITY.name}-{self.COMMUNITY.subdomain}-Admin-Group"
-      self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
-      self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
+      future_expiration = datetime.now() + timedelta(days=3)
+      past_expiration = datetime.now() - timedelta(days=3)
 
-      expiration = datetime.now() + timedelta(days=3)
-      self.FeatureFlag1 = FeatureFlag(name="FF1", on_for_everyone=True, expires_on=expiration)
-      self.FeatureFlag2 = FeatureFlag(name="FF2", expires_on=expiration)
-      self.FeatureFlag3 = FeatureFlag(name="FF3", expires_on=expiration)
-
-
-      self.FeatureFlag1.save()
-      self.FeatureFlag2.save()
+      # turned on for everyone and expires in the future
+      self.FeatureFlag1 = FeatureFlag.objects.create(name="FF1", on_for_everyone=True, expires_on=future_expiration)
+      
+      # turned on for only my communtiy
+      self.FeatureFlag2 = FeatureFlag.objects.create(name="FF2", expires_on=future_expiration)
       self.FeatureFlag2.communities.add(self.COMMUNITY)
 
-      self.FeatureFlag3.save()
+      # turned on only for specific user
+      self.FeatureFlag3 = FeatureFlag.objects.create(name="FF3", expires_on=future_expiration)
       self.FeatureFlag3.users.add(self.USER)
- 
+
+      # turned on for everyone but expired
+      self.FeatureFlag4 = FeatureFlag.objects.create(name="FF4", expires_on=past_expiration)
+
  
     @classmethod
     def tearDownClass(self):
@@ -57,27 +57,50 @@ class FeatureFlagHandlerTest(TestCase):
       pass
 
     def test_info(self):
-      # test info not logged in
       signinAs(self.client, None)
-      response = self.client.post('/api/featureFlags.info', urlencode({"id": self.FeatureFlag1.id}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertTrue(response.get('success'))
-      self.assertDictEqual(response.get('data', {}), serialize(self.FeatureFlag1, True))
+      for ff in [self.FeatureFlag1, self.FeatureFlag2, self.FeatureFlag3, self.FeatureFlag4]:
+        response = self.client.post('/api/featureFlags.info', urlencode({"id": ff.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response.get('success'))
+        data = response.get('data', {})
+        expected = serialize(ff, True)
+        self.assertEqual(expected.get('id'), data.get('id'))
+        self.assertEqual(expected.get('name'), data.get('name'))
 
-      # test info logged as user
-      signinAs(self.client, self.USER)
-      response = self.client.post('/api/featureFlags.info', urlencode({"id": self.FeatureFlag2.id}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertTrue(response.get('success'))
-      self.assertDictEqual(response.get('data', {}), serialize(self.FeatureFlag2, True))
 
     def test_list(self):
       # test list not logged in
       signinAs(self.client, None)
-      response = self.client.post('/api/featureFlags.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertTrue(response.get('success'))
-      self.assertEqual(response.get('data', {}), {})
 
-      # test list logged as user
-      signinAs(self.client, self.USER)
+      # when no community is specified and user not signed in
+      response = self.client.post('/api/featureFlags.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response.get('success'))
+      data = response.get('data', {})
+      # we should have only a size of 1
+      self.assertEqual(1, len(data))
+      # we should only see feature flag 1 since its globally turned on and is not expired
+      self.assertIn(self.FeatureFlag1.name, data) # we should only see the frst feature flag
+      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF$ since its expired
+
+
+      # when the community is specified and user not signed in
       response = self.client.post('/api/featureFlags.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response.get('success'))
-      self.assertEqual(response.get('data', {}), {})
+      data = response.get('data', {})
+      self.assertEqual(2, len(data))
+      # we should only see exactly 2 feature flags
+      self.assertIn(self.FeatureFlag1.name, data) # we should only see the frst feature flag
+      self.assertIn(self.FeatureFlag2.name, data) # we should only see the frst feature flag
+      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF$ since its expired
+
+      # test list with user provided
+      signinAs(self.client, self.USER)
+      response = self.client.post('/api/featureFlags.list', urlencode({"user_id": self.USER.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response.get('success'))
+      data = response.get('data', {})
+      # we should have only a size of 1
+      self.assertEqual(2, len(data))
+      # we should only see feature flag 1 since its globally turned on and is not expired
+      self.assertIn(self.FeatureFlag1.name, data) # we should only see the frst feature flag
+      self.assertIn(self.FeatureFlag3.name, data) # we should only see the frst feature flag
+      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF$ since its expired
+
