@@ -186,6 +186,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
+    self.validator.expect("image","str_list")
     args, err = self.validator.verify(args)
 
     if err:
@@ -286,6 +287,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('upcoming_is_rescheduled', bool)
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
+    self.validator.expect("image","str_list")
     args, err = self.validator.verify(args)
 
     if err:

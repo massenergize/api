@@ -5,6 +5,8 @@ from django.db import models
 from django.db.models.fields import BooleanField, related
 from django.db.models.query_utils import select_related_descend
 from database.utils.constants import *
+from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.user_settings import UserPortalSettings
 from .utils.common import json_loader, get_json_if_not_none, get_summary_info
 from api.utils.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
@@ -695,6 +697,12 @@ class UserProfile(models.Model):
             is_guest = (self.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
         res["is_guest"] = is_guest
 
+        preferences = self.preferences or {}
+        user_portal_settings = preferences.get("user_portal_settings") or UserPortalSettings.Defaults
+        admin_portal_settings = preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
+        res["preferences"] = {**preferences, "user_portal_settings":user_portal_settings, "admin_portal_settings": admin_portal_settings}
+       
+
         return res
 
     def update_visit_log(self, date_time):
@@ -754,6 +762,12 @@ class UserProfile(models.Model):
         if self.user_info:
             is_guest = (self.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
         data["is_guest"] = is_guest
+
+        preferences = self.preferences or {}
+        user_portal_settings = preferences.get("user_portal_settings") or UserPortalSettings.Defaults
+        admin_portal_settings = preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
+        data["preferences"] = {**preferences, "user_portal_settings":user_portal_settings, "admin_portal_settings": admin_portal_settings}
+       
 
         return data
 
@@ -1089,13 +1103,14 @@ class Team(models.Model):
         res["is_closed"] = self.is_closed
         res["is_published"] = self.is_published
         res["parent"] = get_json_if_not_none(self.parent)
+        res["admins"] = [a.simple_json() for a in self.teammember_set.all() if a.is_admin]
         return res
 
     def full_json(self):
         data = self.simple_json()
         # Q: should this be in simple_json?
         data["communities"] = [c.simple_json() for c in self.communities.all()]
-        data["admins"] = [a.simple_json() for a in self.admins.all()]
+        # data["admins"] = [a.simple_json() for a in self.admins.all()]
         data["members"] = [m.simple_json() for m in self.members.all()]
         data["goal"] = get_json_if_not_none(self.goal)
         data["banner"] = get_json_if_not_none(self.banner)
@@ -3082,6 +3097,7 @@ class Message(models.Model):
     archive = models.BooleanField(default=False, blank=True)
     starred = models.BooleanField(default=False, blank=True)
     response = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
+    parent = models.ForeignKey('self', blank=True, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
@@ -3092,6 +3108,7 @@ class Message(models.Model):
         res["community"] = get_summary_info(self.community)
         res["team"] = get_summary_info(self.team)
         res["user"] = get_summary_info(self.user)
+        res["replies"] = [r.simple_json() for r in Message.objects.filter(parent=self, archive=False)]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
 

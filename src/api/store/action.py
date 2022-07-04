@@ -1,3 +1,5 @@
+from _main_.utils.utils import Console
+from api.tests.common import RESET
 from database.models import Action, UserProfile, Community, Media, UserActionRel
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
@@ -60,7 +62,7 @@ class ActionStore:
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
@@ -77,8 +79,8 @@ class ActionStore:
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
-      if image:
-        media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
+      if images: #now, images will always come as an array of ids 
+        media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media
 
       user = None
@@ -189,10 +191,12 @@ class ActionStore:
       action.update(**args)
       action = action.first()
 
-      # If no image passed, don't delete the existing
-      if image:
-        media = Media.objects.create(name=f"{action.title}-Action-Image", file=image)
-        action.image = media
+      if image: #now, images will always come as an array of ids, or "reset" string 
+        if image[0] == RESET: #if image is reset, delete the existing image
+          action.image = None
+        else:
+          media = Media.objects.filter(id = image[0]).first()
+          action.image = media
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
@@ -228,7 +232,6 @@ class ActionStore:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
-
       if id and rank:
         actions = Action.objects.filter(id=id)
         actions.update(rank=rank)
