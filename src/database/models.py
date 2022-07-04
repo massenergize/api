@@ -3199,8 +3199,8 @@ class FeatureFlag(models.Model):
 
     def full_json(self):
         res = self.simple_json()
-        res["communities"] = [c.id for c in self.communities]
-        res["users"] = [u.id for u in self.users]
+        res["communities"] = [c.id for c in self.communities.all()]
+        res["users"] = [u.id for u in self.users.all()]
         return res
 
     class Meta:

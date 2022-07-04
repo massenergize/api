@@ -6,7 +6,7 @@ from database.models import FeatureFlag, Community, CommunityAdminGroup
 from urllib.parse import urlencode
 from api.tests.common import signinAs, setupCC, createUsers
 
-class ActionHandlerTest(TestCase):
+class FeatureFlagHandlerTest(TestCase):
 
     @classmethod
     def setUpClass(self):
@@ -21,7 +21,7 @@ class ActionHandlerTest(TestCase):
 
       setupCC(self.client)
 
-      COMMUNITY_NAME = "test_actions"
+      COMMUNITY_NAME = "test_feature_flags"
       self.COMMUNITY = Community.objects.create(**{
         'subdomain': COMMUNITY_NAME,
         'name': COMMUNITY_NAME.capitalize(),
@@ -32,7 +32,7 @@ class ActionHandlerTest(TestCase):
       self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
       self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
-      self.FeatureFlag1 = FeatureFlag(name="FF1", is_on_for_everyone=True)
+      self.FeatureFlag1 = FeatureFlag(name="FF1", on_for_everyone=True)
       self.FeatureFlag2 = FeatureFlag(name="FF2")
       self.FeatureFlag3 = FeatureFlag(name="FF3")
 
@@ -56,21 +56,25 @@ class ActionHandlerTest(TestCase):
     def test_info(self):
       # test info not logged in
       signinAs(self.client, None)
-      response = self.client.post('/api/featureFlags.info', urlencode({"id": self.ACTION1.id}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertTrue(response["success"])
+      response = self.client.post('/api/featureFlags.info', urlencode({"id": self.FeatureFlag1.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response.get('success'))
+      self.assertDictEqual(response.get('data', {}), self.FeatureFlag1.full_json())
 
       # test info logged as user
       signinAs(self.client, self.USER)
-      response = self.client.post('/api/featureFlags.info', urlencode({"id": self.ACTION1.id}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertTrue(response["success"])
+      response = self.client.post('/api/featureFlags.info', urlencode({"id": self.FeatureFlag2.id}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response.get('success'))
+      self.assertDictEqual(response.get('data', {}), self.FeatureFlag2.full_json())
 
     def test_list(self):
       # test list not logged in
       signinAs(self.client, None)
       response = self.client.post('/api/featureFlags.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertTrue(response["success"])
+      self.assertTrue(response.get('success'))
+      self.assertEqual(response.get('data', {}), {})
 
       # test list logged as user
       signinAs(self.client, self.USER)
       response = self.client.post('/api/featureFlags.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertTrue(response["success"])
+      self.assertTrue(response.get('success'))
+      self.assertEqual(response.get('data', {}), {})
