@@ -27,11 +27,11 @@ class FeatureFlagService:
         self.store = FeatureFlagStore()
 
     def feature_flag_info(self, ctx: Context, feature_flag_id) -> Tuple[dict, MassEnergizeAPIError]:
-        ff, err = self.store.get_feature_flags(ctx, feature_flag_id)
+        ff, err = self.store.get_feature_flag_info(ctx, feature_flag_id)
         if err:
             return None, err
 
-        return ff, None
+        return serialize(ff, True), None
 
     def feature_flags(self, ctx: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         features, err = self.store.get_feature_flags(ctx, args)

@@ -31,17 +31,18 @@ class FeatureFlagStore:
 
     def get_feature_flags(self, ctx: Context, args: dict) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            community = get_community(args.get('community_id'), args.get('subdomain'))
-            user = get_user(ctx.user_id, ctx.user_email)
 
             # first get the un-expired feature flags that are turned on for everyone
             ff = FeatureFlag.objects.filter(expires_on__gt=datetime.now(), on_for_everyone=True) # if it is turned on for everyone we want it
             
             # if community is found, fetch the feature flags turned ON specifically for this community
+            community,_ = get_community(args.get('community_id'), args.get('subdomain'))
             if community:
-                ff |= community.community_feature_flags_set.filter(expires_on__gt=datetime.now())
+                ff |= community.community_feature_flags.filter(expires_on__gt=datetime.now())
+            
+            user,_ = get_user(ctx.user_id, ctx.user_email)
             if user:
-                ff |= user.user_feature_flags_set.filter(expires_on__gt=datetime.now())
+                ff |= user.user_feature_flags.filter(expires_on__gt=datetime.now())
 
             return ff, None
         except Exception as e:
