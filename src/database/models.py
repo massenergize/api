@@ -1,4 +1,3 @@
-import dataclasses
 import datetime
 import json
 from django.db import models
@@ -3195,10 +3194,10 @@ class FeatureFlag(models.Model):
         return f"{self.name}"
 
     def simple_json(self):
-        return model_to_dict(self)
+        return model_to_dict(self, fields=['id', 'name', 'expires_on'])
 
     def full_json(self):
-        res = self.simple_json()
+        res = model_to_dict(self, exclude=['communuties', 'users'])
         res["communities"] = [c.id for c in self.communities.all()]
         res["users"] = [u.id for u in self.users.all()]
         return res

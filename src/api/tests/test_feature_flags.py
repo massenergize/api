@@ -1,7 +1,9 @@
 """
 This is the test file for actions
 """
+from datetime import datetime, timedelta
 from django.test import  TestCase, Client
+from _main_.utils.common import serialize
 from database.models import FeatureFlag, Community, CommunityAdminGroup
 from urllib.parse import urlencode
 from api.tests.common import signinAs, setupCC, createUsers
@@ -32,9 +34,10 @@ class FeatureFlagHandlerTest(TestCase):
       self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
       self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
-      self.FeatureFlag1 = FeatureFlag(name="FF1", on_for_everyone=True)
-      self.FeatureFlag2 = FeatureFlag(name="FF2")
-      self.FeatureFlag3 = FeatureFlag(name="FF3")
+      expiration = datetime.now() + timedelta(days=3)
+      self.FeatureFlag1 = FeatureFlag(name="FF1", on_for_everyone=True, expires_on=expiration)
+      self.FeatureFlag2 = FeatureFlag(name="FF2", expires_on=expiration)
+      self.FeatureFlag3 = FeatureFlag(name="FF3", expires_on=expiration)
 
 
       self.FeatureFlag1.save()
@@ -58,13 +61,13 @@ class FeatureFlagHandlerTest(TestCase):
       signinAs(self.client, None)
       response = self.client.post('/api/featureFlags.info', urlencode({"id": self.FeatureFlag1.id}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response.get('success'))
-      self.assertDictEqual(response.get('data', {}), self.FeatureFlag1.full_json())
+      self.assertDictEqual(response.get('data', {}), serialize(self.FeatureFlag1, True))
 
       # test info logged as user
       signinAs(self.client, self.USER)
       response = self.client.post('/api/featureFlags.info', urlencode({"id": self.FeatureFlag2.id}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response.get('success'))
-      self.assertDictEqual(response.get('data', {}), self.FeatureFlag2.full_json())
+      self.assertDictEqual(response.get('data', {}), serialize(self.FeatureFlag2, True))
 
     def test_list(self):
       # test list not logged in
