@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db.models import Q
 from api.tests.common import createUsers
 from database.models import (
@@ -467,12 +468,3 @@ class MiscellaneousStore:
         sorted_keys = sorted(common_icons, key=common_icons.get, reverse=True)
         for key in sorted_keys:
             print(str(key) + ": " + str(common_icons[key]))
-
-    def get_feature_flags(self, ctx: Context, args: dict) -> Tuple[dict, MassEnergizeAPIError]:
-        ff = FeatureFlag.objects.filter(
-            Q(globally_on=True) | 
-            Q(communities__in=[ctx.community] | 
-            Q(users__in=[ctx.user_id])) #todo: date check
-        )
-
-        return ff, None

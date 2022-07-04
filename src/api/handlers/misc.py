@@ -28,8 +28,6 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/data.carbonEquivalency.delete", self.delete_carbon_equivalency)
         self.add("/home", self.home)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
-        self.add("/features.info", self.feature_flags_info)
-        self.add("/featuresFlags.info", self.feature_flags_info)
         self.add("", self.home)
 
     def remake_navigation_menu(self, request):
@@ -130,10 +128,3 @@ class MiscellaneousHandler(RouteHandler):
         response =  MassenergizeResponse(data=token)
         response.set_cookie("token", value=token, max_age=24*60*60, samesite='Strict')
         return response
-
-    def feature_flags_info(self, request):
-        context: Context = request.context
-        data, err = self.service.feature_flags_info(context)
-        if err:
-            return MassenergizeResponse(error=err)
-        return MassenergizeResponse(data=data)
