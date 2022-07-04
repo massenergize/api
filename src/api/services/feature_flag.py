@@ -37,5 +37,5 @@ class FeatureFlagService:
         features, err = self.store.get_feature_flags(ctx, args)
         if err:
             return None, err
-        features = { f: f.simple_json() for f in features }
+        features = { f.name: f.simple_json() for f in features }
         return features, None
