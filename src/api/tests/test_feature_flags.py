@@ -78,29 +78,29 @@ class FeatureFlagHandlerTest(TestCase):
       # we should have only a size of 1
       self.assertEqual(1, len(data))
       # we should only see feature flag 1 since its globally turned on and is not expired
-      self.assertIn(self.FeatureFlag1.name, data) # we should only see the frst feature flag
-      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF$ since its expired
+      self.assertIn(self.FeatureFlag1.name, data) # we should only see the first feature flag
+      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF4 since its expired
 
 
       # when the community is specified and user not signed in
       response = self.client.post('/api/featureFlags.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response.get('success'))
       data = response.get('data', {})
-      self.assertEqual(2, len(data))
       # we should only see exactly 2 feature flags
-      self.assertIn(self.FeatureFlag1.name, data) # we should only see the frst feature flag
-      self.assertIn(self.FeatureFlag2.name, data) # we should only see the frst feature flag
-      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF$ since its expired
+      self.assertEqual(2, len(data))
+      self.assertIn(self.FeatureFlag1.name, data) # we should only see the first feature flag
+      self.assertIn(self.FeatureFlag2.name, data) # we should only see the first feature flag
+      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF4 since its expired
 
       # test list with user provided
       signinAs(self.client, self.USER)
       response = self.client.post('/api/featureFlags.list', urlencode({"user_id": self.USER.id}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response.get('success'))
       data = response.get('data', {})
-      # we should have only a size of 1
+      # we should have only a size of 2
       self.assertEqual(2, len(data))
       # we should only see feature flag 1 since its globally turned on and is not expired
-      self.assertIn(self.FeatureFlag1.name, data) # we should only see the frst feature flag
-      self.assertIn(self.FeatureFlag3.name, data) # we should only see the frst feature flag
-      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF$ since its expired
+      self.assertIn(self.FeatureFlag1.name, data) # we should only see the first feature flag
+      self.assertIn(self.FeatureFlag3.name, data) # we should see FF3 since this user was added to it
+      self.assertNotIn(self.FeatureFlag4.name, data) # we should never see FF4 since its expired
 
