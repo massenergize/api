@@ -28,6 +28,7 @@ class ActionHandler(RouteHandler):
     self.add("/actions.remove", self.delete)
     self.add("/actions.rank", self.rank)
     self.add("/actions.copy", self.copy)
+    self.add("/actions.import", self.import_action)
 
     #admin routes
     self.add("/actions.listForCommunityAdmin", self.community_admin_list)
@@ -228,3 +229,12 @@ class ActionHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=actions)
+
+  def import_action(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    data, err = self.service.import_action(args["documentID"])
+    if err:
+      return err
+    return MassenergizeResponse(data=data)
