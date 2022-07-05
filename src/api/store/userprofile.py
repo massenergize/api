@@ -134,7 +134,6 @@ class UserStore:
   
   def validate_username(self, username):
     # returns [is_valid, suggestion], error
-    
     try:    
         if (not username):
             return [False, None], None
@@ -144,11 +143,26 @@ class UserStore:
             return [True, username], None
 
         # username exists, finds next available closest username
-        usernames = list(UserProfile.objects.filter(preferred_name__istartswith=username).order_by('-preferred_name').values_list("preferred_name", flat=True))
+        usernames = list(UserProfile.objects.filter(preferred_name__istartswith=username).order_by('preferred_name').values_list("preferred_name", flat=True))
 
-        num = int(usernames[0][len(username)+1:]) + 1
-        suggestion = username + "-" + str(num)
-        return [False, suggestion], None
+        if len(usernames) == 1:
+            suggestion = username + "-0"
+            return [False, suggestion], None
+        numbers = [int(x[x.index("-")+1:]) for x in usernames[1:]]
+        full_list = [x for x in range(len(numbers))]
+        
+        # next available is at the end
+        if numbers == full_list:
+            num = int(usernames[-1][len(username)+1:]) + 1
+            suggestion = username + "-" + str(num)
+            return [False, suggestion], None
+
+        #next available is in between existing usernames
+        for i in range(len(numbers)):
+            if numbers[i] != full_list[i]:
+                suggestion = username + "-" + str(i)
+                return [False, suggestion], None
+        
     except Exception as e:
         return None, CustomMassenergizeError(e)
   
