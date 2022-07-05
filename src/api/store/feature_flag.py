@@ -36,11 +36,11 @@ class FeatureFlagStore:
             ff = FeatureFlag.objects.filter(expires_on__gt=datetime.now(), on_for_everyone=True) # if it is turned on for everyone we want it
             
             # if community is found, fetch the feature flags turned ON specifically for this community
-            community,_ = get_community(args.get('community_id'), args.get('subdomain'))
+            community,_ = get_community(args.get('community_id') or ctx.community, args.get('subdomain'))
             if community:
                 ff |= community.community_feature_flags.filter(expires_on__gt=datetime.now())
             
-            user,_ = get_user(ctx.user_id, ctx.user_email)
+            user,_ = get_user(args.get('user_id') or ctx.user_id, args.get('user_email') or ctx.user_email)
             if user:
                 ff |= user.user_feature_flags.filter(expires_on__gt=datetime.now())
 
