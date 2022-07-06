@@ -69,6 +69,8 @@ class ActionService:
         for i in range(buffer, len(doc), 2):
             field = doc[i].get("paragraph").get("elements")[0].get("textRun").get("content")[:-2].lower()
             data = doc[i+1].get("paragraph").get("elements")[0].get("textRun").get("content")[:-1]
+            
+            # fields.append({"name": field, "defaultValue": data})
             fields[field] = data
         print(fields)
 
