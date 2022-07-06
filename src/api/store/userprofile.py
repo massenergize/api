@@ -568,6 +568,9 @@ class UserStore:
       
       users = UserProfile.objects.filter(id=user_id)
       user = users.first()
+      # since we do not delete the record from the database but mark it as deleted, and the email needs to be unique,
+      # modify the email address in case the person wants to create a profile again with that email. 
+      # This allows us to tell exactly what happened in case we need to find out what happened to a users profile.
       old_email = user.email
       new_email = "DELETED-" + datetime.today().strftime('%Y%m%d-%H%M') + "-" + old_email 
       users.update(is_deleted=True, email=new_email)
