@@ -192,6 +192,9 @@ class EventHandler(RouteHandler):
     if err:
       return err
 
+    # not user submitted
+    args["is_approved"] = args.pop("is_approved", True) 
+
     event_info, err = self.service.create_event(context, args)
     if err:
       return err

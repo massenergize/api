@@ -74,6 +74,9 @@ class VendorHandler(RouteHandler):
     if err:
       return err
 
+    # not user submitted
+    args["is_approved"] = args.pop("is_approved", True) 
+
     vendor_info, err = self.service.create_vendor(context, args)
     if err:
       return err
