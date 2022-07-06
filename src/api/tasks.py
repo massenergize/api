@@ -6,6 +6,11 @@ from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS
 from api.store.download import DownloadStore
 from celery import shared_task
 from api.store.download import DownloadStore
+from api.utils.constants import CADMIN_EMAIL_TEMPLATE_ID, DATA_DOWNLOAD_TEMPLATE_ID, SADMIN_EMAIL_TEMPLATE_ID
+from database.models import Community, CommunityAdminGroup, CommunityMember, UserActionRel, UserProfile
+from django.utils import timezone
+import datetime
+from django.utils.timezone import utc
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None):
@@ -17,7 +22,12 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
     writer = csv.writer(response)
     for row in data:
         writer.writerow(row)
-    send_massenergize_email_with_attachments(f"{download_type.capitalize()} Data", f"Here is the {download_type} data you requested. Please see the attachment for details", email, response.content, filename)
+    user = UserProfile.objects.get(email=email)
+    temp_data = {
+        'data_type': download_type,
+        "name":user.full_name,
+    }
+    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE_ID,temp_data,email, response.content, filename)
     return True
 
 

@@ -131,6 +131,13 @@ class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
   
+  def validate_username(self, username):
+    if (not username):
+        return False
+
+    # checks if username already exists
+    return not UserProfile.objects.filter(preferred_name=username).exists(), None
+  
   def _has_access(self, context: Context, user_id=None, email=None):
     """
     Checks to make sure if the user has access to the user profile they want to 
@@ -516,6 +523,7 @@ class UserStore:
       user_id = args.get('id', None)
       email = args.get('email', None)
       profile_picture = args.pop("profile_picture", None)
+      preferences = args.pop("preferences", None)
       
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -528,6 +536,9 @@ class UserStore:
         users.update(**args)
         user = users.first()
         
+        if preferences: 
+          user.preferences = json.loads(preferences)
+          user.save()
         if profile_picture:
           if profile_picture == "reset":
             user.profile_picture = None

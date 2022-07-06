@@ -163,7 +163,7 @@ class UserService:
       return None, err
     return result, None
 
-  def  list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.list_events_for_user(context, args)
     if err:
       return None, err
@@ -180,6 +180,12 @@ class UserService:
     if err:
       return None, err
     return imported_info, None
+
+  def validate_username(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    valid_username, err = self.store.validate_username(args)
+    if err:
+      return None, err
+    return valid_username, None
 
   def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
