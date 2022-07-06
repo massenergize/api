@@ -580,15 +580,11 @@ class UserStore:
         communityMember.is_deleted = True
         communityMember.save()
 
-      # if a Team includes on Admins, remove it and notify other admins. if no other admins notify cadmin
+      # if a Team includes on Admins, remove it.
+      # TODO: and notify other admins. if no other admins notify cadmin
       teams = user.team_admins.filter(is_deleted=False)
       for team in teams:
         team.admins.remove(user)
-        # Don't bother with the notify
-        # if team.admins.count() == 0:
-        #  community_admin = team.primary_community.owner_email
-        #  msg = "User %s has been deleted, and Team %s no longer has a Team Admin" % (old_email, team.name)
-        #  cadmin_messages.append(msg)
 
       # SKIP team.members which isn't used
 

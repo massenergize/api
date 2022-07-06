@@ -30,7 +30,6 @@ def QueryAllCalcUsers(args):
     event = args.get('Event','')
     group = args.get('Group','')
     if event == '':
-        #users = UserProfile.objects.all()
         users = UserProfile.objects.filter(is_deleted=False)
     else:
         users = None
@@ -267,9 +266,7 @@ def ExportCalcUsers(fileName, event):
             rowtext = ["First Name","Last Name","e-mail","Locality","Groups","Over13","AcceptsTNC","Created","Updated"]
             actionList = []
             if event=='':   #all events
-                # this needs to be fixed
-                #users = UserProfile.objects.filter(other_info)
-                #users = UserProfile.objects.all()
+                # TODO: this needs to be fixed to filter users on other_info so only CarbonSaver users are counted here
                 users = UserProfile.objects.filter(is_deleted=False)
                 actions = Action.objects.all()
                 for action in actions:
