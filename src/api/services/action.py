@@ -9,6 +9,7 @@ from .utils import send_slack_message
 from api.store.utils import get_user_or_die
 from sentry_sdk import capture_message
 from typing import Tuple
+from django.forms.models import model_to_dict
 
 class ActionService:
   """
@@ -123,3 +124,21 @@ class ActionService:
     if err:
       return None, err
     return serialize_all(actions), None
+
+  def export_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    # gets action info
+    action, err = self.store.get_action_info(context, args)
+    if err:
+        return None, err
+
+    action_dict = model_to_dict( action )
+    # action_json = serialize('json', [ action, ])
+    print(action_dict)
+    print(action_dict['title'])
+    print(action_dict['community'])
+
+    # creates and populates google doc with action info
+
+
+    return {"success": True}, None
+

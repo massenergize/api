@@ -292,3 +292,10 @@ class ActionStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+#   def get_all_action_info(self, args):
+#     try:
+#         action = Action.objects.get(id=args['id'])
+#         return action, None
+#     except Exception as e:
+#         return None, CustomMassenergizeError(e)
