@@ -143,6 +143,7 @@ class VendorHandler(RouteHandler):
       .expect("phone_number", str, is_required=False)
       .expect("have_address", bool, is_required=False)
       .expect("is_published", bool, is_required=False)
+      .expect("is_approved", bool, is_required=False)
       .expect("communities", list, is_required=False)
       .expect("service_area_states", 'str_list', is_required=False)
       .expect("properties_serviced", 'str_list', is_required=False)

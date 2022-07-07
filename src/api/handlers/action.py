@@ -136,6 +136,7 @@ class ActionHandler(RouteHandler):
       .expect("image", "str_list", is_required=False, options={"is_logo": True})
       .expect("rank", int, is_required=False)
       .expect("is_global", bool, is_required=False)
+      .expect("is_approved", bool, is_required=False)
       .expect("is_published", bool, is_required=False)
       .expect("tags", list, is_required=False)
       .expect("vendors", list, is_required=False)

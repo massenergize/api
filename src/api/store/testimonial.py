@@ -126,13 +126,13 @@ class TestimonialStore:
     try:
       id = args.pop("id", None)
       testimonial = Testimonial.objects.filter(id=id)
-
-
       if not testimonial:
         return None, InvalidResourceError()
+
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
       if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
+
       user_email = args.pop('user_email', None)      
       images = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -140,48 +140,39 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       rank = args.pop('rank', None)
-      testimonial.update(**args)
-      new_testimonial = testimonial.first()
+      is_published = args.pop('is_published', None)
 
-      # #checks if testimonial being submitted needs its image to be deleted 
-      # #extracts image ID and deletes image
-      # if bool(type(image) == str):
-      #   if image.find("ImgToDel") == 0:
-      #     ID = int(image.split("---")[1])
-      #     Media.objects.filter(id=ID).delete()
-      #     new_testimonial.image = None
-      # # If no image passed, then we don't delete the existing one
-      # elif image:
-      #     media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-      #     new_testimonial.image = media
+      testimonial.update(**args)
+      testimonial = testimonial.first()
+
       if images: 
         if images[0] == RESET: 
-          new_testimonial.image = None
+          testimonial.image = None
         else:
           image = Media.objects.filter(id = images[0]).first(); 
-          new_testimonial.image = image
+          testimonial.image = image
       
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
-        new_testimonial.action = testimonial_action
+        testimonial.action = testimonial_action
       else:
-        new_testimonial.action = None
+        testimonial.action = None
 
       if vendor:
         testimonial_vendor = Vendor.objects.filter(id=vendor).first()
-        new_testimonial.vendor = testimonial_vendor
+        testimonial.vendor = testimonial_vendor
       else:
-        new_testimonial.vendor = None
+        testimonial.vendor = None
 
       if community:
         testimonial_community = Community.objects.filter(id=community).first()
         if testimonial_community:
-          new_testimonial.community = testimonial_community
+          testimonial.community = testimonial_community
         else:
-          new_testimonial.community = None
+          testimonial.community = None
 
       if rank:
-          new_testimonial.rank = rank
+          testimonial.rank = rank
 
       tags_to_set = []
       for t in tags:
@@ -189,10 +180,20 @@ class TestimonialStore:
         if tag:
           tags_to_set.append(tag)
       if tags_to_set:
-        new_testimonial.tags.set(tags_to_set)
+        testimonial.tags.set(tags_to_set)
 
-      new_testimonial.save()
-      return new_testimonial, None
+      if is_published==False:
+        testimonial.is_published = False
+
+      elif is_published and not testimonial.is_published:
+        # only publish testimonial if it has been approved
+        if testimonial.is_approved:
+          testimonial.is_published = True
+        else:
+          return None, CustomMassenergizeError("Testimonial needs to be approved before it can be made live")
+
+      testimonial.save()
+      return testimonial, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
