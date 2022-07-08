@@ -91,15 +91,18 @@ test:
 
 
 celery:
-	DJANGO_ENV=local celery -A _main_.celery.app worker -l info
+	DJANGO_ENV=local celery -A _main_.celery.app worker -l info -B
 .PHONY: celery 
 
-
 beat:
-	DJANGO_ENV=local celery -A _main_.celery.app beat -l info
+	celery -A _main_.celery.app beat -l info
 
 celery-remote:
 	celery -A _main_.celery.app worker -l info
+
+full-celery-local: 
+	make -j 2 start celery
+.PHONY: full-celery-local
 
 beat-remote:
 	celery -A _main_.celery.app beat -l info
