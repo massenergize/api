@@ -91,7 +91,7 @@ test:
 
 
 celery:
-	DJANGO_ENV=local celery -A _main_.celery.app worker -l info
+	DJANGO_ENV=local celery -A _main_.celery.app worker -l info -B
 .PHONY: celery 
 
 
@@ -109,3 +109,6 @@ start-local:
     make celery &
     DJANGO_ENV=local python3 manage.py runserver
 .PHONY: start-local
+local: 
+	make -j 2 start celery
+.PHONY: local
