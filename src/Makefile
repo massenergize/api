@@ -104,11 +104,7 @@ celery-remote:
 beat-remote:
 	celery -A _main_.celery.app beat -l info
 
-start-local:
-    python3 deployment/prepare_to_deploy.py local 1
-    make celery &
-    DJANGO_ENV=local python3 manage.py runserver
-.PHONY: start-local
-local: 
+.PHONY: full-celery-local
+full-celery-local: 
 	make -j 2 start celery
 .PHONY: local
