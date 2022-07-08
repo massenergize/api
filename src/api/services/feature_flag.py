@@ -1,5 +1,6 @@
 from django.test import Client
 import os
+from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagCostants
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     CustomMassenergizeError,
@@ -18,6 +19,7 @@ from _main_.utils.utils import load_json, load_text_contents
 from django.db.models.query import QuerySet
 from typing import Tuple
 
+
 class FeatureFlagService:
     """
     Service Layer for all the goals
@@ -26,7 +28,9 @@ class FeatureFlagService:
     def __init__(self):
         self.store = FeatureFlagStore()
 
-    def feature_flag_info(self, ctx: Context, feature_flag_id) -> Tuple[dict, MassEnergizeAPIError]:
+    def feature_flag_info(
+        self, ctx: Context, feature_flag_id
+    ) -> Tuple[dict, MassEnergizeAPIError]:
         ff, err = self.store.get_feature_flag_info(ctx, feature_flag_id)
         if err:
             return None, err
@@ -39,16 +43,36 @@ class FeatureFlagService:
             return None, err
         # features = { f.name: f.simple_json() for f in features }
         return feature.simple_json(), None
-    def update_feature_flag(self, ctx: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+
+    def update_feature_flag(
+        self, ctx: Context, args
+    ) -> Tuple[dict, MassEnergizeAPIError]:
         feature, err = self.store.update_feature_flag(ctx, args)
         if err:
             return None, err
         # features = { f.name: f.simple_json() for f in features }
         return feature.simple_json(), None
 
-    def feature_flags(self, ctx: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    def list_feature_flags(
+        self, ctx: Context, args
+    ) -> Tuple[dict, MassEnergizeAPIError]:
+        features, err = self.store.list_feature_flags(ctx, args)
+        if err:
+            return None, err
+        ff = [f.simple_json() for f in features]
+        return {
+            "features": ff,
+            "keys": {
+                "audience": FeatureFlagCostants.AUDIENCE,
+                "scope": FeatureFlagCostants.SCOPE,
+            },
+        }, None
+
+    def get_feature_flags(
+        self, ctx: Context, args
+    ) -> Tuple[dict, MassEnergizeAPIError]:
         features, err = self.store.get_feature_flags(ctx, args)
         if err:
             return None, err
-        features = { f.name: f.simple_json() for f in features }
+        features = {f.name: f.simple_json() for f in features}
         return features, None
