@@ -43,8 +43,7 @@ def super_admin_nudge():
 
     data = query_db()
 
-    # super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
-    super_admins =["abdullai.tahiru@gmail.com"]
+    super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
 
     for community in communities:
         community_name = community.name

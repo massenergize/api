@@ -27,8 +27,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
-RUN_SERVER_LOCALLY = True
-RUN_CELERY_LOCALLY = True
+RUN_SERVER_LOCALLY = False
+RUN_CELERY_LOCALLY = False
 
 if is_test_mode():
     RUN_CELERY_LOCALLY = True
