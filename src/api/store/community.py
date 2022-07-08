@@ -572,7 +572,7 @@ class CommunityStore:
         self, context: Context, args
     ) -> Tuple[list, MassEnergizeAPIError]:
         try:
-            if context.is_sandbox:
+            if context['is_sandbox']:
                 communities = Community.objects.filter(
                     is_deleted=False, is_approved=True
                 ).exclude(subdomain="template")

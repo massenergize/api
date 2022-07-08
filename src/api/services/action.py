@@ -20,6 +20,11 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from api.store.vendor import VendorStore
+from api.store.community import CommunityStore
+from api.store.tag import TagStore
+from api.store.utils import get_community
+
 class ActionService:
   """
   Service Layer for all the actions
@@ -27,6 +32,9 @@ class ActionService:
 
   def __init__(self):
     self.store =  ActionStore()
+    self.vendor_store = VendorStore()
+    self.community_store = CommunityStore()
+    self.tag_store = TagStore()
 
   def import_action(self, docID) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -57,27 +65,119 @@ class ActionService:
         service = build('docs', 'v1', credentials=creds)
         document = service.documents().get(documentId=docID).execute()
 
-        # gets all of the content in the google doc -- MATTIA
-        content = ""
+        # gets all of the content in the google doc
         doc = document.get("body").get("content")
         
-        # excludes lines for metadata, title, instructions
-        # count them in google doc action template
+        # excludes lines for metadata, title, instructions in doc
         buffer = 13
 
+        # mapping from doc field names to frontend form field names
+        FIELD_NAMES = {
+            "CATEGORY TAG"      : "Category",
+            "COST TAG"          : "Cost",
+            "IMPACT TAG"        : "Impact",
+            "LOCATION TAG"      : "Own/Rent/Condo",
+            "TITLE"             : "title",
+            "RANK"              : "rank",
+            "ABOUT"             : "about",
+            "IS TEMPLATE"       : "is_global",
+            "COMMUNITY"         : "community",
+            "CALCULATOR ACTION" : "calculator_action",
+            "FEATURED SUMMARY"  : "featured_summary",
+            "STEPS TO TAKE"     : "steps_to_take",
+            "DEEP DIVE"         : "deep_dive",
+            "VENDORS"           : "vendors"
+        }
+
+        # mapping from community name to community subdomain
+        SUBDOMAINS = {}
+        all_communities, err = self.community_store.list_communities({'is_sandbox': False}, {})
+        if err:
+            return None, err
+        for c in all_communities:
+            info = c.info()
+            SUBDOMAINS[info['name']] = info['subdomain']
+        
         fields = {}
         for i in range(buffer, len(doc), 2):
-            field = doc[i].get("paragraph").get("elements")[0].get("textRun").get("content")[:-2].lower()
-            data = doc[i+1].get("paragraph").get("elements")[0].get("textRun").get("content")[:-1]
-            
-            # fields.append({"name": field, "defaultValue": data})
-            fields[field] = data
-        print(fields)
+            field = FIELD_NAMES[doc[i].get("paragraph").get("elements")[0].get("textRun").get("content")[:-2]]
+            data = doc[i+1].get("paragraph").get("elements")[0].get("textRun").get("content")
+            data = data[:-1] if data[-1] == '\n' else data
 
+            if field == "vendors" or field == "Category" or field == "Cost" or field == "Impact" or field == "Own/Rent/Condo":
+                multi = data.split(',')
+                data = []
+                for x in multi:
+                    data.append(x.strip())
+
+            if field == "community":
+                fields['subdomain'] = SUBDOMAINS[data]
+
+            if field == "is_global":
+                if data.lower() == "no" or data.lower() == "false":
+                    data = "false"
+                else:
+                    data = "true"
+            
+            fields[field] = data
+        
+
+        # check that supplied community exists
+        if not fields.get('subdomain', None):
+            fields['community'] = ""
+            fields['vendors'] = []
+        else:
+            community, err = get_community(subdomain=fields['subdomain'])
+            if err:
+                return None, err
+            community_id = community.info()['id']
+
+            # check that vendor[s] are valid for supplied community        
+            vendors_qs, err = self.vendor_store.list_vendors({'is_sandbox': False}, {"community_id": community_id})
+            if err:
+                return None, err
+            vendors = vendors_qs.values_list('name', flat=True)
+
+            for v in fields['vendors']:
+                if v not in vendors:
+                    fields['vendors'].remove(v)
+
+            # check that category is valid
+            # TODO: should be using community specific tags but line below is not working
+            # tags, err = self.tag_store.list_tags(community_id)
+            tags, err = self.tag_store.list_tags_for_super_admin()
+            if err:
+                return None, err
+
+            if fields['Category'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Category"]:
+                print("here - ca")
+                fields['Category'] = []
+
+        tags, err = self.tag_store.list_tags_for_super_admin()
+        if err:
+            return None, err
+
+        # check that only one cost and impact are provided and they are valid
+        if fields['Cost'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Cost"]:
+            print("here - co")
+            fields['Cost'] = []
+        if fields['Impact'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Impact"]:
+            print("here - i")
+            fields['Impact'] = []
+
+        # check that location value[s] are valid
+        locations = [tag.name for tag in tags if tag.tag_collection.name == "Own/Rent/Condo"]
+        for l in fields['Own/Rent/Condo']:
+            if l not in locations:
+                fields['Own/Rent/Condo'].remove(l)
+
+        # TODO: Validate carbon calculator input
+
+        
+        print("SENDING:", fields)
         return fields, None
     
     except Exception as e:
-        print(e)
         return None, e
   
   def get_action_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
