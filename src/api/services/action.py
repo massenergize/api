@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+from requests import request
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.action import ActionStore
@@ -10,6 +13,19 @@ from api.store.utils import get_user_or_die
 from sentry_sdk import capture_message
 from typing import Tuple
 from django.forms.models import model_to_dict
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+import os.path
+import re
+CLEANER = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+SCOPES = ["https://www.googleapis.com/auth/documents.readonly", 'https://www.googleapis.com/auth/drive']
+
+from api.store.utils import get_community
 
 class ActionService:
   """
@@ -132,13 +148,138 @@ class ActionService:
         return None, err
 
     action_dict = model_to_dict( action )
-    # action_json = serialize('json', [ action, ])
-    print(action_dict)
-    print(action_dict['title'])
-    print(action_dict['community'])
 
     # creates and populates google doc with action info
+    creds = None
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open('token.json', 'w') as token:
+            token.write(creds.to_json())
 
+    try:
+        service = build('docs', 'v1', credentials=creds)
+
+        # creating new google doc
+        title = action_dict['title']
+        body = {
+            'title': title
+        }
+        doc = service.documents() \
+            .create(body=body).execute()
+
+        requests = []
+        index_prev = 0
+        skip_fields = ["id", "icon", "image", "user", "properties", "geographic_area", "average_carbon_score", "primary_category"] 
+
+        FIELD_NAMES = {
+            "title"             : "TITLE",
+            "rank"              : "RANK",
+            "featured_summary"  : "FEATURED SUMMARY",
+            "steps_to_take"     : "FEATURED SUMMARY",
+            "deep_dive"         : "DEEP DIVE",
+            "about"             : "ABOUT",
+            "calculator_action" : "CALCULATOR ACTION",
+            "community"         : "COMMUNITY",
+            "is_deleted"        : "IS DELETED",
+            "is_published"      : "IS PUBLISHED",
+            "tags"              : "TAGS",
+            "vendors"           : "VENDORS",
+            "is_global"         : "IS TEMPLATE"
+            
+        }
+
+        for k in list(action_dict):
+            if k not in skip_fields:
+                key = FIELD_NAMES[k]
+                value = action_dict[k]
+
+                if key == "COMMUNITY":
+                    community, err = get_community(community_id=value)
+                    if err:
+                        return None, err
+                    value = community.name
+
+                if key == "CALCULATOR ACTION":
+                    # TODO: replace CCAction number with name
+                    pass
+
+                if key == "VENDORS":
+                    vendors = []
+                    for v in value:
+                        vendors.append(v.name)
+                    value = ", ".join(vendors)
+
+                if key == "TAGS":
+                    location_tags = []
+                    cost_tag = ""
+                    impact_tag = ""
+                    category_tag = ""
+                    for t in value:
+                        tag = t.name
+                        if t.tag_collection.name == "Own/Rent/Condo":
+                            location_tags.append(tag)
+                        elif t.tag_collection.name == "Cost":
+                            cost_tag = tag
+                        elif t.tag_collection.name == "Impact":
+                            impact_tag = tag
+                        else:
+                            category_tag = tag
+
+                    value = "Category: {}\nCost: {}\nImpact: {}\nOwn/Rent/Condo: {}".format(category_tag, cost_tag, impact_tag, ", ".join(location_tags))  
+  
+                if isinstance(value, str):
+                    # filters out HTML tags
+                    # https://stackoverflow.com/questions/9662346/python-code-to-remove-html-tags-from-a-string
+                    value = re.sub(CLEANER, '', value)
+                
+                if value == None or value == [] or value == "":
+                    value = "N/A"
+                
+                value = str(value)
+                while value[-1] == '\n':
+                    value = value[:-1]
+
+                text = "{}\n{}\n\n".format(key, value)
+
+                requests += [
+                    {
+                       'insertText': {
+                        'location': {
+                            'index': 1 + index_prev
+                        },
+                        'text' : text
+                    }},
+                    {
+                    'updateTextStyle': {
+                        'range': {
+                            'startIndex': 1 + index_prev,
+                            'endIndex': 1 + index_prev + len(key)
+                        },
+                        'textStyle': {
+                            'underline': True
+                        },
+                        'fields': 'underline'
+                    }}
+                ]
+
+                index_prev += len(text)
+
+        result = service.documents().batchUpdate(documentId=doc.get("documentId"), body={'requests': requests}).execute()
+    except HttpError as e:
+        print(e)
+        return None, e
 
     return {"success": True}, None
 
