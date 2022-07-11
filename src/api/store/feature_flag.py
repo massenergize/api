@@ -43,7 +43,7 @@ class FeatureFlagStore:
             com_ids = args.pop("community_ids", [])
             user_ids = args.pop("user_ids", [])
             communities = Community.objects.filter(id__in=com_ids) if com_ids else None
-            users = UserProfile.objects.filter(id=user_ids) if user_ids else None
+            users = UserProfile.objects.filter(id__in=user_ids) if user_ids else None
             flag = FeatureFlag(**args)
             flag.save()
             if communities:
