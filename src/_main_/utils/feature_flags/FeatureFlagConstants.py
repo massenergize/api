@@ -17,12 +17,12 @@ class FeatureFlagCostants:
 
     @staticmethod
     def forEveryone():
-        return FeatureFlagCostants.AUDIENCE["EVERYONE"]
+        return FeatureFlagCostants.AUDIENCE["EVERYONE"]["key"]
 
     @staticmethod
     def isUserFrontend(_type):
-        return FeatureFlagCostants.SCOPE["FRONTEND_PORTAL"] == _type
+        return FeatureFlagCostants.SCOPE["FRONTEND_PORTAL"]["key"] == _type
 
     @staticmethod
     def forUserFrontend():
-        return FeatureFlagCostants.SCOPE["FRONTEND_PORTAL"]
+        return FeatureFlagCostants.SCOPE["FRONTEND_PORTAL"]["key"]

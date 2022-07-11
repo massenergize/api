@@ -29,6 +29,8 @@ class FeatureFlagHandler(RouteHandler):
         ).expect(
             "owner", str
         ).expect(
+            "scope", str
+        ).expect(
             "audience", str, is_required=True
         ).expect(
             "user_audience", str, is_required=True
@@ -78,6 +80,7 @@ class FeatureFlagHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=data)
+
     def get_feature_flags(self, request):
         context: Context = request.context
         data, err = self.service.get_feature_flags(context, context.args)

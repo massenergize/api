@@ -3215,7 +3215,7 @@ class FeatureFlag(models.Model):
         return f"{self.name}"
 
     def simple_json(self):
-        res= model_to_dict(self, fields=['id', 'name', 'expires_on',"audience", "user_audience","key"])
+        res= model_to_dict(self, fields=['id', 'name', 'expires_on',"audience", "user_audience","key", "scope","notes"])
         res["communities"] = [{"id":c.id, "name":c.name} for c in self.communities.all()]
         return res
 
