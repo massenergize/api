@@ -163,3 +163,14 @@ class FeatureFlagStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
+
+    def delete_feature_flag(
+        self, ctx: Context, args: dict
+    ) -> Tuple[dict, MassEnergizeAPIError]:
+        id = args.get("id")
+        try:
+            ff = FeatureFlag.objects.filter(id=id).first().delete()
+            return id, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
