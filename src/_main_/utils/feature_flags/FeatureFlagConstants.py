@@ -20,9 +20,18 @@ class FeatureFlagCostants:
         return FeatureFlagCostants.AUDIENCE["EVERYONE"]["key"]
 
     @staticmethod
+    def isSpecific():
+        return FeatureFlagCostants.AUDIENCE["SPECIFIC"]["key"]
+
+    @staticmethod
     def isUserFrontend(_type):
         return FeatureFlagCostants.SCOPE["FRONTEND_PORTAL"]["key"] == _type
 
     @staticmethod
     def forUserFrontend():
         return FeatureFlagCostants.SCOPE["FRONTEND_PORTAL"]["key"]
+    @staticmethod
+    def forAdminFrontend():
+        return FeatureFlagCostants.SCOPE["ADMIN_FRONTEND"]["key"]
+
+ 
