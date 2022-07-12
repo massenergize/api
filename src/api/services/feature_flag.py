@@ -76,3 +76,11 @@ class FeatureFlagService:
             return None, err
         features = {f.name: f.simple_json() for f in features}
         return features, None
+    def delete_feature_flag(
+        self, ctx: Context, args
+    ) -> Tuple[dict, MassEnergizeAPIError]:
+        f, err = self.store.delete_feature_flag(ctx, args)
+        if err:
+            return None, err
+      
+        return f, None

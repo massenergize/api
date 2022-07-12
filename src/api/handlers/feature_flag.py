@@ -18,6 +18,7 @@ class FeatureFlagHandler(RouteHandler):
         self.add("/featureFlags.get", self.get_feature_flags)
         self.add("/featureFlags.add", self.add_feature_flag)
         self.add("/featureFlags.info.update", self.update_feature_flag)
+        self.add("/featureFlags.delete", self.delete_feature_flag)
 
     def add_feature_flag(self, request):
         context: Context = request.context
@@ -84,6 +85,17 @@ class FeatureFlagHandler(RouteHandler):
     def get_feature_flags(self, request):
         context: Context = request.context
         data, err = self.service.get_feature_flags(context, context.args)
+        if err:
+            return err
+        return MassenergizeResponse(data=data)
+    def delete_feature_flag(self, request):
+        context: Context = request.context
+        self.validator.expect("id", int, is_required=True)
+        args, err = self.validator.verify(context.args, strict=True)
+        if err:
+            return err
+
+        data, err = self.service.delete_feature_flag(context, args)
         if err:
             return err
         return MassenergizeResponse(data=data)
