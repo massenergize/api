@@ -39,7 +39,6 @@ deploy-canary:
 	docker build -t massenergize/api-canary .
 	docker tag massenergize/api-canary:latest 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
 	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:$(CANARY_VERSION)
-	docker push 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-canary:latest
 	eb deploy --label $(CANARY_VERSION)
 .PHONY: deploy-canary
 
@@ -88,7 +87,6 @@ test:
 	DJANGO_ENV=test python3 manage.py migrate
 	DJANGO_ENV=test python3 -W ignore manage.py test $(package)
 .PHONY: test
-
 
 celery:
 	DJANGO_ENV=local celery -A _main_.celery.app worker -l info -B
