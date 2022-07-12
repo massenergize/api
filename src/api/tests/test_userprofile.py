@@ -224,6 +224,7 @@ class UserProfileTestCase(TestCase):
         signinAs(self.client, user1)
         delete_response = self.client.post('/api/users.delete', urlencode({"user_id": user1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(delete_response["success"])
+        self.assertNotEqual(delete_response["data"]["email"], user1.email)
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
