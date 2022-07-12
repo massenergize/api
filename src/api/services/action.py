@@ -9,7 +9,7 @@ from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from .utils import send_slack_message
-from api.store.utils import get_user_or_die
+from api.store.utils import get_user_or_die, get_community
 from sentry_sdk import capture_message
 from typing import Tuple
 from django.forms.models import model_to_dict
@@ -25,7 +25,7 @@ import re
 CLEANER = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 SCOPES = ["https://www.googleapis.com/auth/documents.readonly", 'https://www.googleapis.com/auth/drive']
 
-from api.store.utils import get_community
+from carbon_calculator.models import Action as CCAction
 
 class ActionService:
   """
@@ -176,18 +176,16 @@ class ActionService:
         body = {
             'title': title
         }
-        doc = service.documents() \
-            .create(body=body).execute()
+        doc = service.documents().create(body=body).execute()
+        DOCUMENT_ID = doc['documentId']
 
-        requests = []
-        index_prev = 0
         skip_fields = ["id", "icon", "image", "user", "properties", "geographic_area", "average_carbon_score", "primary_category"] 
 
         FIELD_NAMES = {
             "title"             : "TITLE",
             "rank"              : "RANK",
             "featured_summary"  : "FEATURED SUMMARY",
-            "steps_to_take"     : "FEATURED SUMMARY",
+            "steps_to_take"     : "STEPS TO TAKE",
             "deep_dive"         : "DEEP DIVE",
             "about"             : "ABOUT",
             "calculator_action" : "CALCULATOR ACTION",
@@ -196,10 +194,10 @@ class ActionService:
             "is_published"      : "IS PUBLISHED",
             "tags"              : "TAGS",
             "vendors"           : "VENDORS",
-            "is_global"         : "IS TEMPLATE"
-            
+            "is_global"         : "IS TEMPLATE" 
         }
 
+        text = ""
         for k in list(action_dict):
             if k not in skip_fields:
                 key = FIELD_NAMES[k]
@@ -211,9 +209,9 @@ class ActionService:
                         return None, err
                     value = community.name
 
-                if key == "CALCULATOR ACTION":
-                    # TODO: replace CCAction number with name
-                    pass
+                if key == "CALCULATOR ACTION" and value is not None:
+                    cc_action = CCAction.objects.get(id=value)
+                    value = cc_action.description
 
                 if key == "VENDORS":
                     vendors = []
@@ -241,7 +239,6 @@ class ActionService:
   
                 if isinstance(value, str):
                     # filters out HTML tags
-                    # https://stackoverflow.com/questions/9662346/python-code-to-remove-html-tags-from-a-string
                     value = re.sub(CLEANER, '', value)
                 
                 if value == None or value == [] or value == "":
@@ -251,35 +248,117 @@ class ActionService:
                 while value[-1] == '\n':
                     value = value[:-1]
 
-                text = "{}\n{}\n\n".format(key, value)
+                field = "{}\n{}\n\n".format(key, value)
+                text += field
 
-                requests += [
+        requests = [
+            {
+                'insertText': {
+                    'location': {
+                        'index': 1
+                    },
+                    'text' : text,
+                }
+            }
+        ]
+
+        # populates doc with field information
+        service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': requests}).execute()
+
+        # formatting document
+        document = service.documents().get(documentId=DOCUMENT_ID).execute()
+        content = document.get("body").get("content")
+
+        field_titles = FIELD_NAMES.values()
+        requests = [
+            {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': 1,
+                        'endIndex': content[-1]['endIndex']
+                    },
+                    'textStyle': {
+                        'weightedFontFamily': {
+                            'fontFamily': 'Times New Roman'
+                        },
+                        'fontSize': {
+                            'magnitude': 12,
+                            'unit': 'PT'
+                        },
+                    },
+                    'fields': 'weightedFontFamily, fontSize'
+                }
+            }
+        ]
+        
+        for i in range(1, len(content)):
+            if content[i]['paragraph']['elements'][0]['textRun']['content'][:-1] in field_titles:
+                requests.append(
                     {
-                       'insertText': {
-                        'location': {
-                            'index': 1 + index_prev
-                        },
-                        'text' : text
-                    }},
-                    {
-                    'updateTextStyle': {
-                        'range': {
-                            'startIndex': 1 + index_prev,
-                            'endIndex': 1 + index_prev + len(key)
-                        },
-                        'textStyle': {
-                            'underline': True
-                        },
-                        'fields': 'underline'
-                    }}
-                ]
-
-                index_prev += len(text)
-
-        result = service.documents().batchUpdate(documentId=doc.get("documentId"), body={'requests': requests}).execute()
+                        'updateTextStyle': {
+                            'range': {
+                                'startIndex': content[i]['startIndex'],
+                                'endIndex': content[i]['endIndex']
+                            },
+                            'textStyle': {
+                                'underline': True,
+                                'fontSize': {
+                                    'magnitude': 14,
+                                    'unit': 'PT'
+                                },
+                            },
+                            'fields': 'underline, fontSize' 
+                        }
+                    }
+                )
+        service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': requests}).execute()
     except HttpError as e:
         print(e)
         return None, e
 
     return {"success": True}, None
 
+     # title_idxs.append((running_index, running_index + len(key)))
+                # running_index += len(field)
+            
+
+                # print(text)
+                # requests += [
+                #     {
+                #        'insertText': {
+                #         'location': {
+                #             'index': index_prev
+                #         },
+                #         'text' : text,
+                #     }},
+                #     {
+                #     'updateTextStyle': {
+                #         'range': {
+                #             'startIndex': index_prev,
+                #             'endIndex': index_prev + len(key)
+                #         },
+                #         'textStyle': {
+                #             'underline': True
+                #         },
+                #         'fields': 'underline'
+                #     }}
+                # ]
+
+                # index_prev += len(text)
+    # for start, end in title_idxs:
+        #     requests.append(
+        #         {
+        #             'updateTextStyle': {
+        #                 'range': {
+        #                     'startIndex': start,
+        #                     'endIndex': end
+        #                 },
+        #                 'textStyle': {
+        #                     'underline': True
+        #                 },
+        #                 'fields': 'underline'
+        #             }
+        #         }
+        #     )
+     # requests = []
+     # index_prev = 1
