@@ -24,6 +24,7 @@ from api.store.vendor import VendorStore
 from api.store.community import CommunityStore
 from api.store.tag import TagStore
 from api.store.utils import get_community
+from carbon_calculator.carbonCalculator import CarbonCalculator
 
 class ActionService:
   """
@@ -35,6 +36,7 @@ class ActionService:
     self.vendor_store = VendorStore()
     self.community_store = CommunityStore()
     self.tag_store = TagStore()
+    self.carbon_calc = CarbonCalculator()
 
   def import_action(self, docID) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -76,7 +78,7 @@ class ActionService:
             "CATEGORY TAG"      : "Category",
             "COST TAG"          : "Cost",
             "IMPACT TAG"        : "Impact",
-            "LOCATION TAG"      : "Own/Rent/Condo",
+            "OWN/RENT/CONDO TAG": "Own/Rent/Condo",
             "TITLE"             : "title",
             "RANK"              : "rank",
             "ABOUT"             : "about",
@@ -121,7 +123,6 @@ class ActionService:
             
             fields[field] = data
         
-
         # check that supplied community exists
         if not fields.get('subdomain', None):
             fields['community'] = ""
@@ -149,29 +150,50 @@ class ActionService:
             if err:
                 return None, err
 
-            if fields['Category'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Category"]:
-                print("here - ca")
-                fields['Category'] = []
+        #     print("here")
+        #     # print([[tag.name] for tag in tags if tag.tag_collection == "Cost"])
+        #     # if fields['Category'] not in [[tag.name] for tag in tags if tag.tag_collection == "Category"]:
+        #     #     print("here - ca")
+        #     #     fields['Category'] = []
+        #     all_categories = []
+        #     all_costs = []
+        #     all_impacts = []
+        #     all_own_rent_condo = []
+        #     for t in tags:
+        #         tag = t.name
+        #         if t.tag_collection.name == "Category":
+        #             all_categories.append(tag)
+        #         elif t.tag_collection.name == "Cost":
+        #             all_costs.append(tag)
+        #         elif t.tag_collection.name == "Impact":
+        #             all_impacts.append(tag)
+        #         else:
+        #             all_own_rent_condo.append(tag)
+        #     print(all_costs)
 
-        tags, err = self.tag_store.list_tags_for_super_admin()
-        if err:
-            return None, err
+        #     print("here2")
 
-        # check that only one cost and impact are provided and they are valid
-        if fields['Cost'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Cost"]:
-            print("here - co")
-            fields['Cost'] = []
-        if fields['Impact'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Impact"]:
-            print("here - i")
-            fields['Impact'] = []
+        # tags, err = self.tag_store.list_tags_for_super_admin()
+        # if err:
+        #     return None, err
 
-        # check that location value[s] are valid
-        locations = [tag.name for tag in tags if tag.tag_collection.name == "Own/Rent/Condo"]
-        for l in fields['Own/Rent/Condo']:
-            if l not in locations:
-                fields['Own/Rent/Condo'].remove(l)
+        # # check that only one cost and impact are provided and they are valid
+        # if fields['Cost'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Cost"]:
+        #     print("here - co")
+        #     fields['Cost'] = []
+        # if fields['Impact'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Impact"]:
+        #     print("here - i")
+        #     fields['Impact'] = []
+
+        # # check that location value[s] are valid
+        # locations = [tag.name for tag in tags if tag.tag_collection.name == "Own/Rent/Condo"]
+        # for l in fields['Own/Rent/Condo']:
+        #     if l not in locations:
+        #         fields['Own/Rent/Condo'].remove(l)
 
         # TODO: Validate carbon calculator input
+        if not field['calculator_action'] or not len(self.carbon_calc.Query(action=field['calculator_action']) == 1):
+            field['calculator_action'] = ""
 
         
         print("SENDING:", fields)
