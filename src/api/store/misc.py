@@ -118,7 +118,8 @@ class MiscellaneousStore:
         self, context: Context, args
     ) -> Tuple[list, MassEnergizeAPIError]:
         try:
-            users = UserProfile.objects.all()
+            #users = UserProfile.objects.all()
+            users = UserProfile.objects.filter(is_deleted=False)
             for user in users:
                 for community in user.communities.all():
                     community_member: CommunityMember = CommunityMember.objects.filter(
