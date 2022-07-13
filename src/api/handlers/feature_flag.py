@@ -1,6 +1,7 @@
 """Handler file for all routes pertaining to feature flags"""
 
 from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only, login_required
 from api.services.feature_flag import FeatureFlagService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -19,7 +20,8 @@ class FeatureFlagHandler(RouteHandler):
         self.add("/featureFlags.add", self.add_feature_flag)
         self.add("/featureFlags.info.update", self.update_feature_flag)
         self.add("/featureFlags.delete", self.delete_feature_flag)
-
+        
+    @admins_only
     def add_feature_flag(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -47,6 +49,7 @@ class FeatureFlagHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
+    @admins_only
     def update_feature_flag(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -62,6 +65,7 @@ class FeatureFlagHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
+    @login_required
     def feature_flag_info(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -75,6 +79,7 @@ class FeatureFlagHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
+    @admins_only
     def list_feature_flags(self, request):
         context: Context = request.context
         data, err = self.service.list_feature_flags(context, context.args)
@@ -82,12 +87,15 @@ class FeatureFlagHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
+    @login_required
     def get_feature_flags(self, request):
         context: Context = request.context
         data, err = self.service.get_feature_flags(context, context.args)
         if err:
             return err
         return MassenergizeResponse(data=data)
+
+    @admins_only
     def delete_feature_flag(self, request):
         context: Context = request.context
         self.validator.expect("id", int, is_required=True)
