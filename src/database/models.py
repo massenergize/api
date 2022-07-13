@@ -3203,7 +3203,7 @@ class FeatureFlag(models.Model):
     def full_json(self):
         res = model_to_dict(self, exclude=['communities', 'users'])
         res["communities"] = [{"id":c.id, "name":c.name} for c in self.communities.all()]
-        res["users"] = [u.id for u in self.users.all()]
+        res["users"] = [{"id":u.id, "preferred_name":u.preferred_name,"email":u.email} for u in self.users.all()]
         return res
 
     class Meta:
