@@ -41,8 +41,7 @@ class FeatureFlagService:
         feature, err = self.store.add_feature_flag(ctx, args)
         if err:
             return None, err
-        # features = { f.name: f.simple_json() for f in features }
-        return feature.simple_json(), None
+        return feature.full_json(), None
 
     def update_feature_flag(
         self, ctx: Context, args
@@ -50,8 +49,7 @@ class FeatureFlagService:
         feature, err = self.store.update_feature_flag(ctx, args)
         if err:
             return None, err
-        # features = { f.name: f.simple_json() for f in features }
-        return feature.simple_json(), None
+        return feature.full_json(), None
 
     def list_feature_flags(
         self, ctx: Context, args
@@ -59,7 +57,7 @@ class FeatureFlagService:
         features, err = self.store.list_feature_flags(ctx, args)
         if err:
             return None, err
-        ff = [f.simple_json() for f in features]
+        ff = serialize_all(features, True)
         return {
             "features": ff,
             "keys": {
