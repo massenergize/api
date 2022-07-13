@@ -89,64 +89,65 @@ class FeatureFlagStore:
         self, ctx: Context, args: dict
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            email = args.get("email") or ctx.user_email
+            email = args.get("user_email") or ctx.user_email
             user_id = args.get("user_id") or ctx.user_id
             is_admin = args.get("is_admin") or ctx.is_admin_site
-
+            subdomain = args.get("subdomain")
             """
-            Look for:
-                Active Features AND
-                Features that belong to every community OR
-                Features that belong to every user OR
-                Features that are in a user's community,and user is not in the blacklist OR
-                Features that are active for a particular set of users, with this current user involved
+                What happens here: 
+                Admins Get: 
+                - All features that are set to be for everyone (on the admin platform) 
+                - All features that are specific to the communities they are admins of
+                - All features that are specific to the particular admin ( on the admin platform)
                 ------------------------
+                Normal Users Get 
+                - All features that are set to be for everyone ( on the user portal) 
+                - All features that are set to be for the community the user has just visited (on the user portal) 
+                - Features that are specific to the user ( on the user portal)
             """
-            # is_admin = ctx.is_admin_site
             user, _ = get_user(user_id, email)
             if not user:
                 return None, CustomMassenergizeError(
                     "Could not find any features related to user"
                 )
-            scope = FeatureFlagCostants.forUserFrontend()
-            if is_admin:
-                scope = FeatureFlagCostants.forAdminFrontend()
+            scope = (
+                FeatureFlagCostants.forAdminFrontend()
+                if is_admin
+                else FeatureFlagCostants.forUserFrontend()
+            )
+            # All feature flags that are specific to a platform, and for everyone
             ff = FeatureFlag.objects.filter(
-                expires_on__gt=datetime.now(), scope=scope
-            )  #
-            ff |= FeatureFlag.objects.filter(
                 expires_on__gt=datetime.now(),
                 audience=FeatureFlagCostants.forEveryone(),
+                scope=scope,
             )
+
+            if is_admin:
+                # Also fetch flags that are active for the communities that a user is an admin of
+                communities = [c.id for c in user.communityadmingroup_set.all()]
+                ff |= FeatureFlag.objects.filter(
+                    expires_on__gt=datetime.now(),
+                    audience=FeatureFlagCostants.forSpecificAudience(),
+                    communities__in=communities,
+                    scope=scope,
+                )
+            else:  # or if a normal user, fetch flags that are related to the community they just visited
+                community, _ = get_community(None, subdomain)
+                if community:
+                    ff |= user.community_features.filter(
+                        expires_on__gt=datetime.now(), scope=scope
+                    )
+            # Also fetch flags that are for all users
             ff |= FeatureFlag.objects.filter(
                 expires_on__gt=datetime.now(),
                 user_audience=FeatureFlagCostants.forEveryone(),
+                scope=scope,
             )
-            # if is_admin:
-            #     ff |= FeatureFlag.objects.filter(
-            #         expires_on__gt=datetime.now(),
-            #         communities__in=user,
-            #     )
-            ff |= user.user_feature_flags.filter(expires_on__gt=datetime.now())
 
-            # # first get the un-expired feature flags that are turned on for everyone
-            # ff = FeatureFlag.objects.filter(
-            #     expires_on__gt=datetime.now(), on_for_everyone=True
-            # )  # if it is turned on for everyone we want it
-
-            # # if community is found, fetch the feature flags turned ON specifically for this community
-            # community, _ = get_community(
-            #     args.get("community_id"), args.get("subdomain")
-            # )
-            # if community:
-            #     ff |= community.community_feature_flags.filter(
-            #         expires_on__gt=datetime.now()
-            #     )
-
-            # user, _ = get_user(ctx.user_id, ctx.user_email)
-            # if user:
-            #     ff |= user.user_feature_flags.filter(expires_on__gt=datetime.now())
-
+            # And now fetch flags that are specific tagged to a user
+            ff |= user.user_feature_flags.filter(
+                expires_on__gt=datetime.now(), scope=scope
+            )
             return ff, None
         except Exception as e:
             capture_message(str(e), level="error")

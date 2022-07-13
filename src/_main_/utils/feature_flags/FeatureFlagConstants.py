@@ -20,7 +20,7 @@ class FeatureFlagCostants:
         return FeatureFlagCostants.AUDIENCE["EVERYONE"]["key"]
 
     @staticmethod
-    def isSpecific():
+    def forSpecificAudience():
         return FeatureFlagCostants.AUDIENCE["SPECIFIC"]["key"]
 
     @staticmethod
