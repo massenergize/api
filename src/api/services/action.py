@@ -161,8 +161,9 @@ class ActionService:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
+            CURR_DIR = os.path.dirname(os.path.realpath(__file__))
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+                CURR_DIR+'/credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open('token.json', 'w') as token:
