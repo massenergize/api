@@ -5,7 +5,7 @@ from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
 )
 from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.common import serialize
+from _main_.utils.common import serialize, serialize_all
 from api.store.feature_flag import FeatureFlagStore
 from _main_.utils.context import Context
 from django.db.models.query import QuerySet
