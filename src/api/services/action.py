@@ -26,6 +26,9 @@ CLEANER = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
 SCOPES = ["https://www.googleapis.com/auth/documents.readonly", 'https://www.googleapis.com/auth/drive']
 
 from carbon_calculator.models import Action as CCAction
+from api.store.media_library import MediaLibraryStore
+from api.store.utils import get_user
+from datetime import datetime
 
 class ActionService:
   """
@@ -34,6 +37,7 @@ class ActionService:
 
   def __init__(self):
     self.store =  ActionStore()
+    self.media_store = MediaLibraryStore()
 
   def get_action_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     action, err = self.store.get_action_info(context, args)
@@ -171,38 +175,64 @@ class ActionService:
 
     try:
         service = build('docs', 'v1', credentials=creds)
+        drive = build('drive', 'v3', credentials=creds)
+        title = action_dict['title']
+
+        # creating new folder
+        folder_metadata = {
+            'name': title,
+            'mimeType': 'application/vnd.google-apps.folder'
+        }
+        folder = drive.files().create(body=folder_metadata, fields='id').execute()
+        FOLDER_ID = folder['id']
 
         # creating new google doc
-        title = action_dict['title']
         body = {
-            'title': title
+            'name': title,
+            'parents': [FOLDER_ID] # parent is 'root' if folder is 'MyDrive'
         }
-        doc = service.documents().create(body=body).execute()
-        DOCUMENT_ID = doc['documentId']
+        # doc = service.documents().create(body=body).execute()
+        template_id = "1dmhMOZQp6mnk1_8xbCxHZnpChlhji0av_supMe147gU"
+        doc = drive.files().copy(fileId=template_id, body=body, supportsAllDrives= True).execute()
+        DOCUMENT_ID = doc['id']
 
-        skip_fields = ["id", "icon", "image", "user", "properties", "geographic_area", "average_carbon_score", "primary_category"] 
+        skip_fields = ["id", "properties", "geographic_area", "average_carbon_score", "primary_category", "is_deleted", "is_published", "is_global", "rank", "icon"] 
 
         FIELD_NAMES = {
             "title"             : "TITLE",
-            "rank"              : "RANK",
             "featured_summary"  : "FEATURED SUMMARY",
             "steps_to_take"     : "STEPS TO TAKE",
             "deep_dive"         : "DEEP DIVE",
             "about"             : "ABOUT",
             "calculator_action" : "CALCULATOR ACTION",
             "community"         : "COMMUNITY",
-            "is_deleted"        : "IS DELETED",
-            "is_published"      : "IS PUBLISHED",
+            "image"             : "IMAGE",
+            "user"              : "USER",
             "tags"              : "TAGS",
             "vendors"           : "VENDORS",
-            "is_global"         : "IS TEMPLATE" 
         }
 
-        text = ""
+        action_content = ""
+        provider = None
         for k in list(action_dict):
             if k not in skip_fields:
                 key = FIELD_NAMES[k]
                 value = action_dict[k]
+
+                if key == "USER" and value is not None:
+                    user, err = get_user(value)
+                    if err:
+                        return None, err
+                    
+                    provider = user['full_name']
+                    value = None
+
+                if key == "IMAGE" and value is not None:
+                    img, err = self.media_store.getImageInfo({'media_id': value})
+                    if err:
+                        return None, err
+                    
+                    value = img.simple_json()['url']
 
                 if key == "COMMUNITY":
                     community, err = get_community(community_id=value)
@@ -222,9 +252,10 @@ class ActionService:
 
                 if key == "TAGS":
                     location_tags = []
-                    cost_tag = ""
-                    impact_tag = ""
-                    category_tag = ""
+                    cost_tag = None
+                    impact_tag = None
+                    category_tag = None
+                    tags = ""
                     for t in value:
                         tag = t.name
                         if t.tag_collection.name == "Own/Rent/Condo":
@@ -236,7 +267,16 @@ class ActionService:
                         else:
                             category_tag = tag
 
-                    value = "Category: {}\nCost: {}\nImpact: {}\nOwn/Rent/Condo: {}".format(category_tag, cost_tag, impact_tag, ", ".join(location_tags))  
+                    if category_tag:
+                        tags += "{} / ".format(category_tag)
+                    if cost_tag:
+                        tags += "{} / ".format(cost_tag)
+                    if impact_tag:
+                        tags += "{} / ".format(impact_tag)
+                    if len(location_tags) != 0:
+                        tags += ", ".join(location_tags)
+                    
+                    value = tags  
   
                 if isinstance(value, str):
                     # filters out HTML tags
@@ -249,38 +289,46 @@ class ActionService:
                 while value[-1] == '\n':
                     value = value[:-1]
 
-                field = "{}\n{}\n\n".format(key, value)
-                text += field
+                field = "{}\n{}\n".format(key, value) if key != "USER" else ""
+                action_content += field
 
+        if provider and provider != args['exporter']:
+                provider = "WHO PROVIDIED THIS?   {}, {}\n".format(provider, args['exporter'])
+        else:
+            provider = "WHO PROVIDED THIS?   {}\n".format(args['exporter'])
+
+        date = "WHEN:\t\t\t{}\n\n".format(datetime.now().strftime("%d %B, %Y"))
+
+        action_content = provider + date + action_content
         requests = [
-            {
+            {        
                 'insertText': {
                     'location': {
-                        'index': 1
+                        'index': 81 # if export action template changes, then this much change accordingly
                     },
-                    'text' : text,
+                    'text' : action_content,
                 }
             }
         ]
-
         # populates doc with field information
         service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': requests}).execute()
 
         # formatting document
         document = service.documents().get(documentId=DOCUMENT_ID).execute()
         content = document.get("body").get("content")
+        # print(content)
 
         field_titles = FIELD_NAMES.values()
         requests = [
             {
                 'updateTextStyle': {
                     'range': {
-                        'startIndex': 1,
+                        'startIndex': 31,
                         'endIndex': content[-1]['endIndex']
                     },
                     'textStyle': {
                         'weightedFontFamily': {
-                            'fontFamily': 'Times New Roman'
+                            'fontFamily': 'Arial'
                         },
                         'fontSize': {
                             'magnitude': 12,
@@ -289,11 +337,57 @@ class ActionService:
                     },
                     'fields': 'weightedFontFamily, fontSize'
                 }
+            },
+            {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': 1,
+                        'endIndex': 81 + 18
+                    },
+                    'textStyle':{
+                        'bold' : True,
+                    },
+                    'fields': 'bold'
+                },
+            },
+            {
+                'updateTextStyle': {
+                    'range': {
+                        'startIndex': 81 + len(provider),
+                        'endIndex': 81 + len(provider) + 5
+                    },
+                    'textStyle':{
+                        'bold' : True,
+                    },
+                    'fields': 'bold'
+                },
+            },
+            {
+            'updateParagraphStyle': {
+                'range': {
+                    'startIndex': 81 + len(provider) + len(date),
+                    'endIndex': content[-1]['endIndex']
+                },
+                'paragraphStyle': {
+                    
+                    'spaceAbove': {
+                        'magnitude': 0,
+                        'unit': 'PT'
+                    },
+                    'spaceBelow': {
+                        'magnitude': 0,
+                        'unit': 'PT'
+                    }
+                },
+                'fields': 'spaceAbove,spaceBelow'
             }
+        },
         ]
         
         for i in range(1, len(content)):
-            if content[i]['paragraph']['elements'][0]['textRun']['content'][:-1] in field_titles:
+            j = 1 if i == 1 else 0
+
+            if content[i]['paragraph']['elements'][j]['textRun']['content'][:-1] in field_titles:
                 requests.append(
                     {
                         'updateTextStyle': {
@@ -303,14 +397,32 @@ class ActionService:
                             },
                             'textStyle': {
                                 'underline': True,
-                                'fontSize': {
-                                    'magnitude': 14,
-                                    'unit': 'PT'
-                                },
+                                'bold': True
                             },
-                            'fields': 'underline, fontSize' 
+                            'fields': 'underline, bold' 
                         }
                     }
+                )
+                requests.append({
+                        'updateParagraphStyle': {
+                            'range': {
+                                'startIndex': content[i]['startIndex'],
+                                'endIndex': content[i]['endIndex']
+                            },
+                            'paragraphStyle': {
+                                
+                                'spaceAbove': {
+                                    'magnitude': 10,
+                                    'unit': 'PT'
+                                },
+                                'spaceBelow': {
+                                    'magnitude': 4,
+                                    'unit': 'PT'
+                                }
+                            },
+                            'fields': 'spaceAbove,spaceBelow'
+                        }
+                    },
                 )
         service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': requests}).execute()
     except HttpError as e:
