@@ -121,8 +121,11 @@
 									Here is a copy of the testimonial:<br/>
                                     From: {{from_name}} ({{email}})<br/>
                                     Title: {{title}}<br/>
-                                    <em>{{body}}</em>
+                              
 								</h4>
+								<div>
+									{{body | safe}}
+								</div>
 							</td>
 						</tr>
 
