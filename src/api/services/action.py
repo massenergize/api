@@ -19,11 +19,12 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaFileUpload
 
 import os.path
 import re
 CLEANER = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
-SCOPES = ["https://www.googleapis.com/auth/documents.readonly", 'https://www.googleapis.com/auth/drive']
+SCOPES = ['https://www.googleapis.com/auth/documents.readonly', 'https://www.googleapis.com/auth/drive']
 
 from carbon_calculator.models import Action as CCAction
 from api.store.media_library import MediaLibraryStore
@@ -178,10 +179,14 @@ class ActionService:
         drive = build('drive', 'v3', credentials=creds)
         title = action_dict['title']
 
+        # folder where new folder and doc will be placed, specified by user
+        PARENT_FOLDER_ID = args.get('folder', None) if not None else "root"
+        
         # creating new folder
         folder_metadata = {
             'name': title,
-            'mimeType': 'application/vnd.google-apps.folder'
+            'mimeType': 'application/vnd.google-apps.folder',
+            'parents': [PARENT_FOLDER_ID]
         }
         folder = drive.files().create(body=folder_metadata, fields='id').execute()
         FOLDER_ID = folder['id']
@@ -191,9 +196,8 @@ class ActionService:
             'name': title,
             'parents': [FOLDER_ID] # parent is 'root' if folder is 'MyDrive'
         }
-        # doc = service.documents().create(body=body).execute()
-        template_id = "1dmhMOZQp6mnk1_8xbCxHZnpChlhji0av_supMe147gU"
-        doc = drive.files().copy(fileId=template_id, body=body, supportsAllDrives= True).execute()
+        TEMPLATE_ID = "1dmhMOZQp6mnk1_8xbCxHZnpChlhji0av_supMe147gU"
+        doc = drive.files().copy(fileId=TEMPLATE_ID, body=body, supportsAllDrives=True, supportsTeamDrives=True).execute()
         DOCUMENT_ID = doc['id']
 
         skip_fields = ["id", "properties", "geographic_area", "average_carbon_score", "primary_category", "is_deleted", "is_published", "is_global", "rank", "icon"] 
@@ -233,6 +237,15 @@ class ActionService:
                         return None, err
                     
                     value = img.simple_json()['url']
+
+                    # creating image file and putting it in folder
+                    # print("image: ", value)
+                    # image_metadata = {
+                    #     'name': '{}.png'.format(title),
+                    #     'parents': [FOLDER_ID]
+                    # }
+                    # media = MediaFileUpload(value, mimetype='image/png')
+                    # service.files().create(body=image_metadata, media_body=media, ).execute()
 
                 if key == "COMMUNITY":
                     community, err = get_community(community_id=value)
@@ -292,10 +305,10 @@ class ActionService:
                 field = "{}\n{}\n".format(key, value) if key != "USER" else ""
                 action_content += field
 
-        if provider and provider != args['exporter']:
-                provider = "WHO PROVIDIED THIS?   {}, {}\n".format(provider, args['exporter'])
+        if provider and provider != args['exporter_name']:
+                provider = "WHO PROVIDIED THIS?   {}, {}\n".format(provider, args['exporter_name'])
         else:
-            provider = "WHO PROVIDED THIS?   {}\n".format(args['exporter'])
+            provider = "WHO PROVIDED THIS?   {}\n".format(args['exporter_name'])
 
         date = "WHEN:\t\t\t{}\n\n".format(datetime.now().strftime("%d %B, %Y"))
 
@@ -316,7 +329,6 @@ class ActionService:
         # formatting document
         document = service.documents().get(documentId=DOCUMENT_ID).execute()
         content = document.get("body").get("content")
-        # print(content)
 
         field_titles = FIELD_NAMES.values()
         requests = [
@@ -430,48 +442,3 @@ class ActionService:
         return None, e
 
     return {"success": True}, None
-
-     # title_idxs.append((running_index, running_index + len(key)))
-                # running_index += len(field)
-            
-
-                # print(text)
-                # requests += [
-                #     {
-                #        'insertText': {
-                #         'location': {
-                #             'index': index_prev
-                #         },
-                #         'text' : text,
-                #     }},
-                #     {
-                #     'updateTextStyle': {
-                #         'range': {
-                #             'startIndex': index_prev,
-                #             'endIndex': index_prev + len(key)
-                #         },
-                #         'textStyle': {
-                #             'underline': True
-                #         },
-                #         'fields': 'underline'
-                #     }}
-                # ]
-
-                # index_prev += len(text)
-    # for start, end in title_idxs:
-        #     requests.append(
-        #         {
-        #             'updateTextStyle': {
-        #                 'range': {
-        #                     'startIndex': start,
-        #                     'endIndex': end
-        #                 },
-        #                 'textStyle': {
-        #                     'underline': True
-        #                 },
-        #                 'fields': 'underline'
-        #             }
-        #         }
-        #     )
-     # requests = []
-     # index_prev = 1
