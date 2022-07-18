@@ -17,8 +17,6 @@ class TagStore:
 
 
   def list_tags(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    print(community_id)
-    print(type(community_id))
     tags = Tag.objects.filter(community__id=community_id)
     if not tags:
       return [], None

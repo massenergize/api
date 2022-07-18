@@ -1,5 +1,4 @@
 from __future__ import print_function
-from dataclasses import field
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.action import ActionStore
@@ -25,6 +24,7 @@ from api.store.community import CommunityStore
 from api.store.tag import TagStore
 from api.store.utils import get_community
 from carbon_calculator.carbonCalculator import CarbonCalculator
+from django.core.exceptions import ObjectDoesNotExist
 
 class ActionService:
   """
@@ -88,7 +88,8 @@ class ActionService:
             "FEATURED SUMMARY"  : "featured_summary",
             "STEPS TO TAKE"     : "steps_to_take",
             "DEEP DIVE"         : "deep_dive",
-            "VENDORS"           : "vendors"
+            "VENDORS"           : "vendors",
+            "IMAGE LINK"        : "image",
         }
 
         # mapping from community name to community subdomain
@@ -103,10 +104,10 @@ class ActionService:
         fields = {}
         for i in range(buffer, len(doc), 2):
             field = FIELD_NAMES[doc[i].get("paragraph").get("elements")[0].get("textRun").get("content")[:-2]]
-            data = doc[i+1].get("paragraph").get("elements")[0].get("textRun").get("content")
+            data = doc[i+1].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
             data = data[:-1] if data[-1] == '\n' else data
 
-            if field == "vendors" or field == "Category" or field == "Cost" or field == "Impact" or field == "Own/Rent/Condo":
+            if field == "vendors" or field == "Category" or field == "Cost" or field == "Impact" or field == "Own/Rent/Condo" or field == "image":
                 multi = data.split(',')
                 data = []
                 for x in multi:
@@ -116,10 +117,10 @@ class ActionService:
                 fields['subdomain'] = SUBDOMAINS[data]
 
             if field == "is_global":
-                if data.lower() == "no" or data.lower() == "false":
-                    data = "false"
-                else:
-                    data = "true"
+                data = "false" if data.lower() == "no" or data.lower() == "false" else "true"
+
+            if field == "rank":
+                data = int(data)
             
             fields[field] = data
         
@@ -133,69 +134,91 @@ class ActionService:
                 return None, err
             community_id = community.info()['id']
 
+            # TODO: if sadmin, then crosscheck against ALL vendors
+
             # check that vendor[s] are valid for supplied community        
-            vendors_qs, err = self.vendor_store.list_vendors({'is_sandbox': False}, {"community_id": community_id})
-            if err:
-                return None, err
-            vendors = vendors_qs.values_list('name', flat=True)
+            if len(fields['vendors']) > 0:
+                vendors_qs, err = self.vendor_store.list_vendors({'is_sandbox': False}, {"community_id": community_id})
+                if err:
+                    return None, err
 
-            for v in fields['vendors']:
-                if v not in vendors:
-                    fields['vendors'].remove(v)
-
-            # check that category is valid
-            # TODO: should be using community specific tags but line below is not working
-            # tags, err = self.tag_store.list_tags(community_id)
-            tags, err = self.tag_store.list_tags_for_super_admin()
-            if err:
-                return None, err
-
-        #     print("here")
-        #     # print([[tag.name] for tag in tags if tag.tag_collection == "Cost"])
-        #     # if fields['Category'] not in [[tag.name] for tag in tags if tag.tag_collection == "Category"]:
-        #     #     print("here - ca")
-        #     #     fields['Category'] = []
-        #     all_categories = []
-        #     all_costs = []
-        #     all_impacts = []
-        #     all_own_rent_condo = []
-        #     for t in tags:
-        #         tag = t.name
-        #         if t.tag_collection.name == "Category":
-        #             all_categories.append(tag)
-        #         elif t.tag_collection.name == "Cost":
-        #             all_costs.append(tag)
-        #         elif t.tag_collection.name == "Impact":
-        #             all_impacts.append(tag)
-        #         else:
-        #             all_own_rent_condo.append(tag)
-        #     print(all_costs)
-
-        #     print("here2")
-
-        # tags, err = self.tag_store.list_tags_for_super_admin()
-        # if err:
-        #     return None, err
-
-        # # check that only one cost and impact are provided and they are valid
-        # if fields['Cost'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Cost"]:
-        #     print("here - co")
-        #     fields['Cost'] = []
-        # if fields['Impact'] not in [[tag.name] for tag in tags if tag.tag_collection.name == "Impact"]:
-        #     print("here - i")
-        #     fields['Impact'] = []
-
-        # # check that location value[s] are valid
-        # locations = [tag.name for tag in tags if tag.tag_collection.name == "Own/Rent/Condo"]
-        # for l in fields['Own/Rent/Condo']:
-        #     if l not in locations:
-        #         fields['Own/Rent/Condo'].remove(l)
-
-        # TODO: Validate carbon calculator input
-        if not field['calculator_action'] or not len(self.carbon_calc.Query(action=field['calculator_action']) == 1):
-            field['calculator_action'] = ""
-
+                valid_vendors = []
+                for v in fields['vendors']:
+                    try:
+                        id = vendors_qs.get(name=v).id
+                        valid_vendors.append(id)
+                    except ObjectDoesNotExist:
+                        pass
         
+                fields['vendors'] = valid_vendors
+
+        # check that tags are valid
+        tags, err = self.tag_store.list_tags_for_super_admin()
+        if err:
+            return None, err
+        
+        # possibly use tag_collections.list instead
+        all_categories = [[tag.name, str(tag.id)] for tag in tags if tag.tag_collection and tag.tag_collection.simple_json()['name'] == "Category"]
+        all_costs = [[tag.name, str(tag.id)] for tag in tags if tag.tag_collection and tag.tag_collection.simple_json()['name'] == "Cost"]
+        all_impacts = [[tag.name, str(tag.id)] for tag in tags if tag.tag_collection and tag.tag_collection.simple_json()['name'] == "Impact"]
+        all_own_rent_condo = [[tag.name, str(tag.id)] for tag in tags if tag.tag_collection and tag.tag_collection.simple_json()['name'] == "Own/Rent/Condo"]
+
+        # check that at most one category, impact, and cost are provided. If more, take only the first
+        found = False
+        if len(fields['Category']) > 0:
+            for name, id in all_categories:
+                if fields['Category'][0] == name:
+                    fields['Category'][0] = id
+                    found = True
+                    break
+
+        fields['Category'] = fields['Category'] if found else ""
+
+        found = False
+        if len(fields['Cost']) > 0:
+            for name, id in all_costs:
+                if fields['Cost'][0] == name:
+                    fields['Cost'][0] = id
+                    found = True
+                    break
+
+        fields['Cost'] = fields['Cost'] if found else ""
+
+        found = False
+        if len(fields['Impact']) > 0:
+            for name, id in all_impacts:
+                if fields['Impact'][0] == name:
+                    fields['Impact'][0] = id
+                    found = True
+                    break
+
+        fields['Impact'] = fields['Impact'] if found else ""
+    
+        # check that all Own/Rent/Condo, if any, are valid
+        found = False
+        for i in range(len(fields['Own/Rent/Condo'])):
+            for name, id in all_own_rent_condo:
+                if fields['Own/Rent/Condo'][i] == name:
+                    fields['Own/Rent/Condo'][i] = id
+                    found = True
+                    break
+
+        fields['Own/Rent/Condoory'] = fields['Own/Rent/Condo'] if found else ""
+
+        # check carbon calculator input
+        found = False
+        if fields['calculator_action']:
+            all_actions = [[str(a['id']), a['description']] for a in self.carbon_calc.AllActionsList()['actions']]
+            for id, desc in all_actions:
+                if fields['calculator_action'] == desc:
+                    fields['calculator_action'] = id
+                    found = True
+
+        fields['calculator_action'] = fields['calculator_action'] if found else ""
+
+        # TODO: check image link
+
+
         print("SENDING:", fields)
         return fields, None
     
