@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": true,
-  "BUILD_VERSION": "4.4.12",
-  "BUILD_VERSION_NOTES": "July 19: Bug fix release:\n- Fix to testimonial ranking\n\n"
+  "BUILD_VERSION": "4.4.13",
+  "BUILD_VERSION_NOTES": "July 19: Use .env files for Postmark templates.\n\n"
 }
