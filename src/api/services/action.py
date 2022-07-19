@@ -22,9 +22,11 @@ from googleapiclient.errors import HttpError
 from api.store.vendor import VendorStore
 from api.store.community import CommunityStore
 from api.store.tag import TagStore
+from api.store.media_library import MediaLibraryStore
 from api.store.utils import get_community
 from carbon_calculator.carbonCalculator import CarbonCalculator
 from django.core.exceptions import ObjectDoesNotExist
+import re
 
 class ActionService:
   """
@@ -33,12 +35,15 @@ class ActionService:
 
   def __init__(self):
     self.store =  ActionStore()
+    
+    # below is used only for importing actions
     self.vendor_store = VendorStore()
     self.community_store = CommunityStore()
     self.tag_store = TagStore()
+    self.media_store = MediaLibraryStore()
     self.carbon_calc = CarbonCalculator()
 
-  def import_action(self, docID) -> Tuple[dict, MassEnergizeAPIError]:
+  def import_action(self, docID, communities) -> Tuple[dict, MassEnergizeAPIError]:
     try:
         # If modifying these scopes, delete the file token.json.
         SCOPES = ["https://www.googleapis.com/auth/documents.readonly", 'https://www.googleapis.com/auth/drive']
@@ -107,7 +112,7 @@ class ActionService:
             data = doc[i+1].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
             data = data[:-1] if data[-1] == '\n' else data
 
-            if field == "vendors" or field == "Category" or field == "Cost" or field == "Impact" or field == "Own/Rent/Condo" or field == "image":
+            if field == "vendors" or field == "Category" or field == "Cost" or field == "Impact" or field == "Own/Rent/Condo":
                 multi = data.split(',')
                 data = []
                 for x in multi:
@@ -120,7 +125,7 @@ class ActionService:
                 data = "false" if data.lower() == "no" or data.lower() == "false" else "true"
 
             if field == "rank":
-                data = int(data)
+                data = re.sub("[^0-9]", "", data)
             
             fields[field] = data
         
@@ -133,8 +138,6 @@ class ActionService:
             if err:
                 return None, err
             community_id = community.info()['id']
-
-            # TODO: if sadmin, then crosscheck against ALL vendors
 
             # check that vendor[s] are valid for supplied community        
             if len(fields['vendors']) > 0:
@@ -151,6 +154,23 @@ class ActionService:
                         pass
         
                 fields['vendors'] = valid_vendors
+
+            # TODO: crosscheck image link with all public images too
+            # check that image link is valid for supplied community
+            if len(fields['image']) > 0:
+                communities = communities.split(",")
+                images, _ = self.media_store.fetch_content({'community_ids':communities})
+
+                found = False
+                for img in images:
+                    data = img.simple_json()
+                    
+                    if fields['image'] == data['url']:
+                        fields['image'] = [data['id']]
+                        found = True
+                        break
+                
+                fields['image'] = fields['image'] if found else []
 
         # check that tags are valid
         tags, err = self.tag_store.list_tags_for_super_admin()
@@ -203,7 +223,7 @@ class ActionService:
                     found = True
                     break
 
-        fields['Own/Rent/Condoory'] = fields['Own/Rent/Condo'] if found else ""
+        fields['Own/Rent/Condo'] = fields['Own/Rent/Condo'] if found else ""
 
         # check carbon calculator input
         found = False
@@ -215,9 +235,6 @@ class ActionService:
                     found = True
 
         fields['calculator_action'] = fields['calculator_action'] if found else ""
-
-        # TODO: check image link
-
 
         print("SENDING:", fields)
         return fields, None

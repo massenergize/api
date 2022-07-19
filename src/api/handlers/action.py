@@ -234,7 +234,7 @@ class ActionHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    data, err = self.service.import_action(args["documentID"])
+    data, err = self.service.import_action(args["documentID"], args["communities"])
     if err:
       return err
     return MassenergizeResponse(data=data)
