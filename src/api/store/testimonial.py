@@ -66,7 +66,7 @@ class TestimonialStore:
 
   def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      images = args.pop("image", [])
+      images = args.pop("image", None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
@@ -89,9 +89,16 @@ class TestimonialStore:
           new_testimonial.user = user
 
       
-      if images: 
-        image = Media.objects.filter(id = images[0]).first(); 
-        new_testimonial.image = image
+      if images:
+        if type(images) == list:
+          # from admin portal, using media library
+          image = Media.objects.filter(id = images[0]).first(); 
+          new_testimonial.image = image
+        else:
+          # from community portal, image upload
+          image = Media.objects.create(file=images, name=f"ImageFor {args.get('title', '')} Testimonial")
+          new_testimonial.image = image
+
 
       if action:
         testimonial_action = Action.objects.get(id=action)
