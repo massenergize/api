@@ -1,7 +1,8 @@
 """Handler file for all routes pertaining to feature flags"""
 
 from _main_.utils.route_handler import RouteHandler
-from api.decorators import admins_only, login_required
+from _main_.utils.utils import Console
+from api.decorators import admins_only, login_required, super_admins_only
 from api.services.feature_flag import FeatureFlagService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -15,13 +16,15 @@ class FeatureFlagHandler(RouteHandler):
 
     def registerRoutes(self) -> None:
         self.add("/featureFlags.info", self.feature_flag_info)
-        self.add("/featureFlags.list", self.list_feature_flags)
-        self.add("/featureFlags.get", self.get_feature_flags)
+        self.add("/featureFlags.list", self.get_feature_flags)
+        # For Super Admins
+        self.add("/featureFlags.listForSuperAdmins", self.list_feature_flags_for_super_admins)
         self.add("/featureFlags.add", self.add_feature_flag)
-        self.add("/featureFlags.info.update", self.update_feature_flag)
-        self.add("/featureFlags.delete", self.delete_feature_flag)
+        self.add("/featureFlag.update", self.update_feature_flag)
+        self.add("/featureFlag.delete", self.delete_feature_flag)
+       
         
-    @admins_only
+    @super_admins_only
     def add_feature_flag(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -49,7 +52,7 @@ class FeatureFlagHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
-    @admins_only
+    @super_admins_only
     def update_feature_flag(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -59,13 +62,12 @@ class FeatureFlagHandler(RouteHandler):
         args, err = self.validator.verify(args)
         if err:
             return err
-
         data, err = self.service.update_feature_flag(context, args)
         if err:
             return err
         return MassenergizeResponse(data=data)
 
-    @login_required
+
     def feature_flag_info(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -79,15 +81,14 @@ class FeatureFlagHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
-    @admins_only
-    def list_feature_flags(self, request):
+    @super_admins_only #update on Admin Frontend As Well
+    def list_feature_flags_for_super_admins(self, request):
         context: Context = request.context
-        data, err = self.service.list_feature_flags(context, context.args)
+        data, err = self.service.list_feature_flags_for_super_admins(context, context.args)
         if err:
             return err
         return MassenergizeResponse(data=data)
 
-    @login_required
     def get_feature_flags(self, request):
         context: Context = request.context
         data, err = self.service.get_feature_flags(context, context.args)
@@ -95,7 +96,7 @@ class FeatureFlagHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
-    @admins_only
+    @super_admins_only
     def delete_feature_flag(self, request):
         context: Context = request.context
         self.validator.expect("id", int, is_required=True)

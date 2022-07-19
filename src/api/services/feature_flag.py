@@ -1,6 +1,6 @@
 from django.test import Client
 import os
-from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagCostants
+from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
 )
@@ -43,18 +43,18 @@ class FeatureFlagService:
             return None, err
         return feature.full_json(), None
 
-    def list_feature_flags(
+    def list_feature_flags_for_super_admins(
         self, ctx: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
-        features, err = self.store.list_feature_flags(ctx, args)
+        features, err = self.store.list_feature_flags_for_super_admins(ctx, args)
         if err:
             return None, err
         ff = serialize_all(features, True)
         return {
             "features": ff,
             "keys": {
-                "audience": FeatureFlagCostants.AUDIENCE,
-                "scope": FeatureFlagCostants.SCOPE,
+                "audience": FeatureFlagConstants.AUDIENCE,
+                "scope": FeatureFlagConstants.SCOPE,
             },
         }, None
 

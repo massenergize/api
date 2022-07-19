@@ -1,4 +1,4 @@
-class FeatureFlagCostants:
+class FeatureFlagConstants:
     AUDIENCE = {
         "EVERYONE": {"name": "Everyone", "key": "EVERYONE"},
         "SPECIFIC": {"name": "Specific", "key": "SPECIFIC"},
@@ -12,26 +12,27 @@ class FeatureFlagCostants:
     }
 
     @staticmethod
-    def isForEveryone(_type):
-        return FeatureFlagCostants.AUDIENCE["EVERYONE"]["key"] == _type
+    def is_for_everyone(_type):
+        return FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"] == _type
 
     @staticmethod
-    def forEveryone():
-        return FeatureFlagCostants.AUDIENCE["EVERYONE"]["key"]
+    def for_everyone():
+        return FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
 
     @staticmethod
-    def forSpecificAudience():
-        return FeatureFlagCostants.AUDIENCE["SPECIFIC"]["key"]
+    def for_specific_audience():
+        return FeatureFlagConstants.AUDIENCE["SPECIFIC"]["key"]
 
     @staticmethod
-    def isUserFrontend(_type):
-        return FeatureFlagCostants.SCOPE["FRONTEND_PORTAL"]["key"] == _type
+    def is_user_frontend(_type):
+        return FeatureFlagConstants.SCOPE["FRONTEND_PORTAL"]["key"] == _type
 
     @staticmethod
-    def forUserFrontend():
-        return FeatureFlagCostants.SCOPE["FRONTEND_PORTAL"]["key"]
+    def for_user_frontend():
+        return FeatureFlagConstants.SCOPE["FRONTEND_PORTAL"]["key"]
+
     @staticmethod
-    def forAdminFrontend():
-        return FeatureFlagCostants.SCOPE["ADMIN_FRONTEND"]["key"]
+    def for_admin_frontend():
+        return FeatureFlagConstants.SCOPE["ADMIN_FRONTEND"]["key"]
 
  
