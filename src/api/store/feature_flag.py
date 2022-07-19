@@ -1,7 +1,8 @@
 from datetime import datetime
+from django.utils import timezone
 from _main_.utils.context import Context
 from django.db.models import Q
-from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagCostants
+from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
     InvalidResourceError,
@@ -11,13 +12,8 @@ from _main_.utils.utils import Console
 from database.models import Community, FeatureFlag, UserProfile
 
 from .utils import (
-    find_reu_community,
     get_community,
-    get_community_or_die,
     get_user,
-    get_user_or_die,
-    split_location_string,
-    check_location,
 )
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -93,6 +89,7 @@ class FeatureFlagStore:
             user_id = args.get("user_id") or ctx.user_id
             is_admin = args.get("is_admin") or ctx.is_admin_site
             subdomain = args.get("subdomain")
+            current_date_and_time = datetime.now(timezone.utc)
             """
                 What happens here: 
                 Admins Get: 
@@ -106,54 +103,54 @@ class FeatureFlagStore:
                 - Features that are specific to the user ( on the user portal)
             """
             user, _ = get_user(user_id, email)
-            if not user:
-                return None, CustomMassenergizeError(
-                    "Could not find any features related to user"
-                )
+           
             scope = (
-                FeatureFlagCostants.forAdminFrontend()
+                FeatureFlagConstants.for_admin_frontend()
                 if is_admin
-                else FeatureFlagCostants.forUserFrontend()
+                else FeatureFlagConstants.for_user_frontend()
             )
             # All feature flags that are specific to a platform, and for everyone
             ff = FeatureFlag.objects.filter(
-                expires_on__gt=datetime.now(),
-                audience=FeatureFlagCostants.forEveryone(),
+                expires_on__gt=current_date_and_time,
+                audience=FeatureFlagConstants.for_everyone(),
                 scope=scope,
             )
 
             if is_admin:
                 # Also fetch flags that are active for the communities that a user is an admin of
-                communities = [c.id for c in user.communityadmingroup_set.all()]
-                ff |= FeatureFlag.objects.filter(
-                    expires_on__gt=datetime.now(),
-                    audience=FeatureFlagCostants.forSpecificAudience(),
-                    communities__in=communities,
-                    scope=scope,
-                )
+                for group in user.communityadmingroup_set.all():
+                    ff |= group.community.community_feature_flags.filter(
+                        expires_on__gt=current_date_and_time,
+                        audience=FeatureFlagConstants.for_specific_audience(),
+                        scope=scope,
+                    )
+   
             else:  # or if a normal user, fetch flags that are related to the community they just visited
                 community, _ = get_community(None, subdomain)
                 if community:
-                    ff |= user.community_features.filter(
-                        expires_on__gt=datetime.now(), scope=scope
+                    ff |= community.community_feature_flags.filter(
+                        expires_on__gt=current_date_and_time,
+                        audience=FeatureFlagConstants.for_specific_audience(),
+                        scope=scope,
                     )
             # Also fetch flags that are for all users
             ff |= FeatureFlag.objects.filter(
-                expires_on__gt=datetime.now(),
-                user_audience=FeatureFlagCostants.forEveryone(),
+                expires_on__gt=current_date_and_time,
+                user_audience=FeatureFlagConstants.for_everyone(),
                 scope=scope,
             )
 
-            # And now fetch flags that are specific tagged to a user
-            ff |= user.user_feature_flags.filter(
-                expires_on__gt=datetime.now(), scope=scope
-            )
+            if user:
+                # And now fetch flags that are specifically tagged to a user
+                ff |= user.user_feature_flags.filter(
+                    expires_on__gt=current_date_and_time, scope=scope
+                )
             return ff, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_feature_flags(
+    def list_feature_flags_for_super_admins(
         self, ctx: Context, args: dict
     ) -> Tuple[dict, MassEnergizeAPIError]:
         # This just brings in ALL the feature flags available on the platform
