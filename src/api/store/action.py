@@ -124,6 +124,8 @@ class ActionStore:
       if not action_to_copy:
         return None, InvalidResourceError()
 
+      tags = action_to_copy.tags.all() 
+      vendors = action_to_copy.vendors.all()
       # the copy will have "-Copy" appended to the name; if that already exists, delete it first
       new_title = get_new_title(None, action_to_copy.title) + "-Copy"
       existing_action = Action.objects.filter(title=new_title, community=None).first()
@@ -158,10 +160,10 @@ class ActionStore:
 
       new_action.save()
 
-      for tag in action_to_copy.tags.all():
+      for tag in tags:
         new_action.tags.add(tag)
 
-      for vendor in action_to_copy.vendors.all():
+      for vendor in vendors:
         new_action.vendors.add(vendor)
         
       new_action.save()
