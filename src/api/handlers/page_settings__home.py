@@ -62,9 +62,11 @@ class HomePageSettingsHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
+
     images = args.get("images")
     if images: 
       args["images"] = images.split(",")
+
     #featured links
     args['show_featured_links'] = parse_bool(args.pop('show_featured_links', True))
     args['featured_links'] = [
@@ -108,6 +110,9 @@ class HomePageSettingsHandler(RouteHandler):
     # 9/29/21 goals setting moved to graphs.update, to consolidate input from admin portal
 
     home_page_setting_info, err = self.service.update_home_page_setting(args)
+    if err:
+      return err
+    return MassenergizeResponse(data=home_page_setting_info)
 
 
   @super_admins_only
