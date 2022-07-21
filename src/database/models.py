@@ -1580,11 +1580,10 @@ class Action(models.Model):
         data["image"] = get_json_if_not_none(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
         data["tags"] = [t.simple_json() for t in self.tags.all()]
-        #data["steps_to_take"] = self.steps_to_take
-        #data["deep_dive"] = self.deep_dive
-        #data["about"] = self.about
         data["community"] = get_summary_info(self.community)
-        #data["vendors"] = [v.info() for v in self.vendors.all()]
+        #if we dont add this, so that vendors will be preselected when creating/updating action. 
+        #List of vendors will typically not be that long, so this doesnt pose any problems
+        data["vendors"] = [v.info() for v in self.vendors.all()]
         return data
 
     def full_json(self):
@@ -1594,7 +1593,7 @@ class Action(models.Model):
         #data["about"] = self.about
         data["geographic_area"] = self.geographic_area
         data["properties"] = [p.simple_json() for p in self.properties.all()]
-        data["vendors"] = [v.simple_json() for v in self.vendors.all()]
+        # data["vendors"] = [v.simple_json() for v in self.vendors.all()]
         if self.user:
             data["user_email"] = self.user.email
         return data
