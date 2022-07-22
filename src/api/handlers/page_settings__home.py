@@ -63,7 +63,7 @@ class HomePageSettingsHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
 
-    images = args.get("images")
+    images = args.get("images", None)
     if images: 
       args["images"] = images.split(",")
 
