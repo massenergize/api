@@ -67,7 +67,7 @@ class AdminStore:
 
   def list_super_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      admins = UserProfile.objects.filter(is_super_admin=True)
+      admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False)
       return admins, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -209,7 +209,6 @@ class AdminStore:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
 
       user_name = args.pop("name", None) or args.pop("user_name", None) or "Unknown user"
-      print("user_name is: " + user_name)
       title = args.pop("title", None)
       email = args.pop("email", None) or context.user_email
       body = args.pop("body", None)

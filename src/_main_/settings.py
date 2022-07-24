@@ -28,12 +28,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 RUN_SERVER_LOCALLY = False
+RUN_CELERY_LOCALLY = False
+
+if is_test_mode():
+    RUN_CELERY_LOCALLY = True
+
 if DJANGO_ENV == "local":
     RUN_SERVER_LOCALLY = True
+    RUN_CELERY_LOCALLY = True
 
 # Database selection, development DB unless one of these chosen
-IS_PROD = True
-IS_CANARY = False
+IS_PROD = False
+IS_CANARY = True
 IS_LOCAL = False
 
 try:
@@ -50,7 +56,6 @@ try:
 
 except Exception:
     load_dotenv()
-
 
 # ********  END LOAD CONFIG DATA ***********#
 
@@ -87,6 +92,8 @@ INSTALLED_APPS = [
     'database',
     'api',
     'website',
+    "task_queue",
+    'django_celery_beat',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -270,6 +277,7 @@ SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_COMMUNITY_ADMINS_WEBH
 SLACK_SUPER_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_SUPER_ADMINS_WEBHOOK_URL')
 
 TEST_DIR = 'test_data'
+TEST_PASSPORT_KEY = os.environ.get('TEST_PASSPORT_KEY')
 
 
 # Static files (CSS, JavaScript, Images)
@@ -285,4 +293,3 @@ else:
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-

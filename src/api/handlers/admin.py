@@ -140,7 +140,7 @@ class AdminHandler(RouteHandler):
     args = context.get_request_body() 
 
     (self.validator
-      .add("community_id", str)
+      .add("community_id", int)
       .add("subdomain", str, is_required=False)
     )
 

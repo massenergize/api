@@ -1089,13 +1089,14 @@ class Team(models.Model):
         res["is_closed"] = self.is_closed
         res["is_published"] = self.is_published
         res["parent"] = get_json_if_not_none(self.parent)
+        res["admins"] = [a.simple_json() for a in self.teammember_set.all() if a.is_admin]
         return res
 
     def full_json(self):
         data = self.simple_json()
         # Q: should this be in simple_json?
         data["communities"] = [c.simple_json() for c in self.communities.all()]
-        data["admins"] = [a.simple_json() for a in self.admins.all()]
+        # data["admins"] = [a.simple_json() for a in self.admins.all()]
         data["members"] = [m.simple_json() for m in self.members.all()]
         data["goal"] = get_json_if_not_none(self.goal)
         data["banner"] = get_json_if_not_none(self.banner)
@@ -1579,11 +1580,10 @@ class Action(models.Model):
         data["image"] = get_json_if_not_none(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
         data["tags"] = [t.simple_json() for t in self.tags.all()]
-        #data["steps_to_take"] = self.steps_to_take
-        #data["deep_dive"] = self.deep_dive
-        #data["about"] = self.about
         data["community"] = get_summary_info(self.community)
-        #data["vendors"] = [v.info() for v in self.vendors.all()]
+        #if we dont add this, so that vendors will be preselected when creating/updating action. 
+        #List of vendors will typically not be that long, so this doesnt pose any problems
+        data["vendors"] = [v.info() for v in self.vendors.all()]
         return data
 
     def full_json(self):
@@ -1593,7 +1593,7 @@ class Action(models.Model):
         #data["about"] = self.about
         data["geographic_area"] = self.geographic_area
         data["properties"] = [p.simple_json() for p in self.properties.all()]
-        data["vendors"] = [v.simple_json() for v in self.vendors.all()]
+        # data["vendors"] = [v.simple_json() for v in self.vendors.all()]
         if self.user:
             data["user_email"] = self.user.email
         return data
@@ -3082,6 +3082,7 @@ class Message(models.Model):
     archive = models.BooleanField(default=False, blank=True)
     starred = models.BooleanField(default=False, blank=True)
     response = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
+    parent = models.ForeignKey('self', blank=True, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
@@ -3092,6 +3093,7 @@ class Message(models.Model):
         res["community"] = get_summary_info(self.community)
         res["team"] = get_summary_info(self.team)
         res["user"] = get_summary_info(self.user)
+        res["replies"] = [r.simple_json() for r in Message.objects.filter(parent=self, archive=False)]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
 

@@ -1,3 +1,5 @@
+from _main_.utils.utils import Console
+from api.tests.common import RESET
 from database.models import Action, UserProfile, Community, Media, UserActionRel
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
@@ -60,7 +62,7 @@ class ActionStore:
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
@@ -77,8 +79,8 @@ class ActionStore:
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
-      if image:
-        media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
+      if images: #now, images will always come as an array of ids 
+        media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media
 
       user = None
@@ -122,6 +124,8 @@ class ActionStore:
       if not action_to_copy:
         return None, InvalidResourceError()
 
+      tags = action_to_copy.tags.all() 
+      vendors = action_to_copy.vendors.all()
       # the copy will have "-Copy" appended to the name; if that already exists, delete it first
       new_title = get_new_title(None, action_to_copy.title) + "-Copy"
       existing_action = Action.objects.filter(title=new_title, community=None).first()
@@ -156,10 +160,10 @@ class ActionStore:
 
       new_action.save()
 
-      for tag in action_to_copy.tags.all():
+      for tag in tags:
         new_action.tags.add(tag)
 
-      for vendor in action_to_copy.vendors.all():
+      for vendor in vendors:
         new_action.vendors.add(vendor)
         
       new_action.save()
@@ -189,10 +193,12 @@ class ActionStore:
       action.update(**args)
       action = action.first()
 
-      # If no image passed, don't delete the existing
-      if image:
-        media = Media.objects.create(name=f"{action.title}-Action-Image", file=image)
-        action.image = media
+      if image: #now, images will always come as an array of ids, or "reset" string 
+        if image[0] == RESET: #if image is reset, delete the existing image
+          action.image = None
+        else:
+          media = Media.objects.filter(id = image[0]).first()
+          action.image = media
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
@@ -228,13 +234,15 @@ class ActionStore:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
-
-      if id and rank:
+      if id:
         actions = Action.objects.filter(id=id)
-        actions.update(rank=rank)
-        return actions.first(), None
+        if rank is not None:
+          actions.update(rank=rank)
+          return actions.first(), None
+        else:
+          return None, CustomMassenergizeError("Action rank not provided to actions.rank")
       else:
-        raise Exception("Action Rank and ID not provided to actions.rank")
+        raise Exception("Action ID not provided to actions.rank")
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
