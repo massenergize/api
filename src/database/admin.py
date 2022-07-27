@@ -6,13 +6,13 @@ from _main_.utils.constants import GLOBAL_SITE_SETTINGS
 from _main_.utils.utils import get_all_models
 
 from database.models import UserProfile
-from database.views import unique_usernames_cleanup, make_usernames_not_unique
+from database.views import make_selected_usernames_unique, make_usernames_not_unique
 
 #changing the default django site name
 admin.site.site_header = GLOBAL_SITE_SETTINGS["ADMIN_SITE_HEADER"]
 
 class UserProfileAdmin(admin.ModelAdmin):
-    actions = [unique_usernames_cleanup, make_usernames_not_unique]
+    actions = [make_selected_usernames_unique, make_usernames_not_unique]
 admin.site.register(UserProfile, UserProfileAdmin)
 
 

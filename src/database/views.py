@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from database.models import UserProfile
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 
 # Create your views here.
 
@@ -11,7 +12,7 @@ def make_usernames_not_unique(self, request, qs):
         user.preferred_name = "md"
         user.save()
 
-def unique_usernames_cleanup(self, request, qs):
+def make_selected_usernames_unique(self, request, qs):
     # key is username, value is list of UserProfile objects with that username
     usernames = {}
     
@@ -19,6 +20,8 @@ def unique_usernames_cleanup(self, request, qs):
     non_unique_usernames = set()
 
     # users = UserProfile.objects.all()
+    # if 'qs' is used instead of 'users', superadmin MUST select al users in admin page
+
     for user in qs:
         name = user.preferred_name
 
@@ -55,4 +58,13 @@ def unique_usernames_cleanup(self, request, qs):
             n.preferred_name = new_username
             n.save()
 
-    # TODO: send email to users informing them of username change
+            # sending email to user informing of change
+            template_model = {
+                'name'         : n.full_name.split(" ")[0], # just gets first name, is full name better?
+                'new_username' : new_username,
+                'old_username' : name
+            }
+            to = "mattia.danese@massenergize.org" # n.email
+            template_id = 28696806
+            
+            send_massenergize_email_with_attachments(template_id, template_model, to, None, None)
