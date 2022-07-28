@@ -7,12 +7,22 @@ from _main_.utils.utils import get_all_models
 
 from database.models import UserProfile
 from database.views import make_selected_usernames_unique, make_usernames_not_unique
-
+from rangefilter.filters import DateRangeFilter
 #changing the default django site name
 admin.site.site_header = GLOBAL_SITE_SETTINGS["ADMIN_SITE_HEADER"]
 
 class UserProfileAdmin(admin.ModelAdmin):
     actions = [make_selected_usernames_unique, make_usernames_not_unique]
+    list_display = ('full_name', 'email', 'all_communities')
+    search_fields = ['email', 'full_name']
+    list_filter = [('created_at', DateRangeFilter), 'communities', 'is_super_admin', 'is_community_admin', 'is_vendor']
+    date_hierarchy = 'created_at'
+
+    # can specify searchbox placeholder text in Django v4
+    # search_help_text = "Search by email or full name"
+
+    def all_communities(self, obj):
+        return ", ".join([c.name for c in obj.communities.all()])
 admin.site.register(UserProfile, UserProfileAdmin)
 
 
