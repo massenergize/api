@@ -799,6 +799,13 @@ class UserMediaUpload(models.Model):
     is_universal = BooleanField(
         default=False
     )  # True value here means image is available to EVERYONE, and EVERY COMMUNITY
+
+    is_community_image = BooleanField(default=False)
+    is_action_image = BooleanField(default=False)
+    is_event_image = BooleanField(default=False)
+    is_testimonial_image = BooleanField(default=False)
+    is_vendor_image = BooleanField(default=False)
+    
     settings = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

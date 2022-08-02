@@ -5,8 +5,15 @@ import inspect
 from _main_.utils.constants import GLOBAL_SITE_SETTINGS
 from _main_.utils.utils import get_all_models
 
+from database.models import Media
+from database.views import make_UserMediaUpload_for_every_Media
+
 #changing the default django site name
 admin.site.site_header = GLOBAL_SITE_SETTINGS["ADMIN_SITE_HEADER"]
+
+class MediaAdmin(admin.ModelAdmin):
+    actions = [make_UserMediaUpload_for_every_Media]
+admin.site.register(Media, MediaAdmin)
 
 
 def register_all_models():
