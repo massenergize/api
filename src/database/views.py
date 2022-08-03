@@ -11,12 +11,13 @@ from database.models import *
 
 def make_UserMediaUpload_for_every_Media(self, request, qs):
     # make_UserMediaUpload_for_Communities()
-    make_UserMediaUpload_for_Actions()
+    # make_UserMediaUpload_for_Actions()
+    # make_UserMediaUpload_for_Events()
+    # make_UserMediaUpload_for_Testimonials()
+    make_UserMediaUpload_for_Vendors()
     
 
 def make_UserMediaUpload_for_Communities():
-    print("IN COMMUNITIES")
-   
     community_media = Community.objects.order_by('id').values_list('id', 'logo', 'banner', 'favicon')
     
     for comm_id, logo, banner, favicon in community_media:
@@ -84,7 +85,7 @@ def make_UserMediaUpload_for_Actions():
     print("action media:", list(action_media))
 
     for comm_id, m_id, user in action_media:
-        if m_id is not None:
+        if m_id:
             community = Community.objects.get(id = comm_id) if comm_id else None
 
             if UserMediaUpload.objects.filter(media__id = m_id).exists():
@@ -111,7 +112,127 @@ def make_UserMediaUpload_for_Actions():
                 if community:
                     new_media.communities.add(community)
                     new_media.save()
+def make_UserMediaUpload_for_Events():
+    event_media = Event.objects.values_list('community', 'image', 'user')
+    print("event media:", list(event_media))
 
+    for comm_id, m_id, user in event_media:
+        if m_id:
+            community = Community.objects.get(id = comm_id) if comm_id else None
+
+            if UserMediaUpload.objects.filter(media__id = m_id).exists():
+                media = UserMediaUpload.objects.get(media__id = m_id)
+                
+                if community and community not in media.communities.all():
+                    media.communities.add(community)
+                media.is_event_image = True
+            else:
+                media = Media.objects.get(id = m_id)
+                
+                # not all actions (barely any) have a user, so community owner becomes user
+                # not all actions (barely any) have a community, so brad becomes user
+                if user:
+                    user = UserProfile.objects.get(id = str(user))
+                elif community:
+                    user = UserProfile.objects.get(email = community.owner_email) if UserProfile.objects.filter(email = community.owner_email).exists() else UserProfile.objects.get(email = 'brad@massenergize.org')
+                else:
+                    user = UserProfile.objects.get(email = 'brad@massenergize.org')
+
+                new_media = UserMediaUpload(user = user, media = media, is_event_image = True)
+                new_media.save()
+
+                if community:
+                    new_media.communities.add(community)
+                    new_media.save()
+
+def make_UserMediaUpload_for_Testimonials():
+    testimonial_media = Testimonial.objects.values_list('community', 'image', 'user')
+    print("testimonial media:", list(testimonial_media))
+
+    for comm_id, m_id, user in testimonial_media:
+        if m_id:
+            community = Community.objects.get(id = comm_id) if comm_id else None
+
+            if UserMediaUpload.objects.filter(media__id = m_id).exists():
+                media = UserMediaUpload.objects.get(media__id = m_id)
+                
+                if community and community not in media.communities.all():
+                    media.communities.add(community)
+                media.is_testimonial_image = True
+            else:
+                media = Media.objects.get(id = m_id)
+                
+                # not all actions (barely any) have a user, so community owner becomes user
+                # not all actions (barely any) have a community, so brad becomes user
+                if user:
+                    user = UserProfile.objects.get(id = str(user))
+                elif community:
+                    user = UserProfile.objects.get(email = community.owner_email) if UserProfile.objects.filter(email = community.owner_email).exists() else UserProfile.objects.get(email = 'brad@massenergize.org')
+                else:
+                    user = UserProfile.objects.get(email = 'brad@massenergize.org')
+
+                new_media = UserMediaUpload(user = user, media = media, is_testimonial_image = True)
+                new_media.save()
+
+                if community:
+                    new_media.communities.add(community)
+                    new_media.save()
+
+def make_UserMediaUpload_for_Vendors():
+    vendor_media = Vendor.objects.values_list('communities', 'logo', 'banner', 'user')
+    print("vendor media:", list(vendor_media))
+
+    for comm_id, logo, banner, user in vendor_media:
+        community = Community.objects.get(id = comm_id) if comm_id else None
+        
+        if logo and UserMediaUpload.objects.filter(media__id = logo).exists():
+                media = UserMediaUpload.objects.get(media__id = logo)
+                
+                if community and community not in media.communities.all():
+                    media.communities.add(community)
+                media.is_vendor_image = True
+        elif logo:
+                media = Media.objects.get(id = logo)
+                
+                # not all actions (barely any) have a user, so community owner becomes user
+                # not all actions (barely any) have a community, so brad becomes user
+                if user:
+                    user = UserProfile.objects.get(id = str(user))
+                elif community:
+                    user = UserProfile.objects.get(email = community.owner_email) if UserProfile.objects.filter(email = community.owner_email).exists() else UserProfile.objects.get(email = 'brad@massenergize.org')
+                else:
+                    user = UserProfile.objects.get(email = 'brad@massenergize.org')
+
+                new_media = UserMediaUpload(user = user, media = media, is_vendor_image = True)
+                new_media.save()
+
+                if community:
+                    new_media.communities.add(community)
+                new_media.save()
+        elif banner and UserMediaUpload.objects.filter(media__id = banner).exists():
+                media = UserMediaUpload.objects.get(media__id = banner)
+                
+                if community and community not in media.communities.all():
+                    media.communities.add(community)
+                media.is_vendor_image = True
+        elif banner:
+            media = Media.objects.get(id = banner)
+                
+            # not all actions (barely any) have a user, so community owner becomes user
+            # not all actions (barely any) have a community, so brad becomes user
+            if user:
+                user = UserProfile.objects.get(id = str(user))
+            elif community:
+                user = UserProfile.objects.get(email = community.owner_email) if UserProfile.objects.filter(email = community.owner_email).exists() else UserProfile.objects.get(email = 'brad@massenergize.org')
+            else:
+                user = UserProfile.objects.get(email = 'brad@massenergize.org')
+
+            new_media = UserMediaUpload(user = user, media = media, is_vendor_image = True)
+            new_media.save()
+
+            if community:
+                new_media.communities.ad
+        
 
 
 
