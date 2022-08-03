@@ -147,20 +147,19 @@ class UserStore:
         if len(usernames) == 1:
             suggestion = username + "-0"
             return [False, suggestion], None
-        numbers = [int(x[x.index("-")+1:]) for x in usernames[1:]]
-        full_list = [x for x in range(len(numbers))]
-        
-        # next available is at the end
-        if numbers == full_list:
-            num = int(usernames[-1][len(username)+1:]) + 1
-            suggestion = username + "-" + str(num)
-            return [False, suggestion], None
 
-        #next available is in between existing usernames
-        for i in range(len(numbers)):
-            if numbers[i] != full_list[i]:
-                suggestion = username + "-" + str(i)
-                return [False, suggestion], None
+        # more than one username starting with the test username
+        suggestion = None
+        for i in range(999):
+          test_username = username + "-" + str(i)
+          if not test_username in usernames:
+            suggestion = test_username
+            break
+        
+        if not suggestion:
+          return None, CustomMassenergizeError("No further usernames to suggest")
+        else:
+          return [False, suggestion], None
         
     except Exception as e:
         return None, CustomMassenergizeError(e)
