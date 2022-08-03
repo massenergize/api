@@ -67,7 +67,7 @@ class AdminStore:
 
   def list_super_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      admins = UserProfile.objects.filter(is_super_admin=True)
+      admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False)
       return admins, None
     except Exception as e:
       capture_message(str(e), level="error")

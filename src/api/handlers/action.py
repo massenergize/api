@@ -58,7 +58,7 @@ class ActionHandler(RouteHandler):
     (self.validator
       .expect("community_id", int, is_required=False)
       .expect("calculator_action", int, is_required=False)
-      .expect("image", "file", is_required=False, options={"is_logo": True})
+      .expect("image", "str_list", is_required=False, options={"is_logo": True})
       .expect("title", str, is_required=True, options={"min_length": 4, "max_length": 40})
       .expect("rank", int, is_required=False)
       .expect("is_global", bool, is_required=False)

@@ -66,7 +66,7 @@ class TestimonialStore:
 
   def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      images = args.pop("image", [])
+      images = args.pop("image", None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
@@ -89,9 +89,16 @@ class TestimonialStore:
           new_testimonial.user = user
 
       
-      if images: 
-        image = Media.objects.filter(id = images[0]).first(); 
-        new_testimonial.image = image
+      if images:
+        if type(images) == list:
+          # from admin portal, using media library
+          image = Media.objects.filter(id = images[0]).first(); 
+          new_testimonial.image = image
+        else:
+          # from community portal, image upload
+          image = Media.objects.create(file=images, name=f"ImageFor {args.get('title', '')} Testimonial")
+          new_testimonial.image = image
+
 
       if action:
         testimonial_action = Action.objects.get(id=action)
@@ -201,13 +208,15 @@ class TestimonialStore:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
-
-      if id and rank:
+      if id:
         testimonials = Testimonial.objects.filter(id=id)
-        testimonials.update(rank=rank)
-        return testimonials.first(), None
+        if type(rank) == int  and int(rank) is not None:
+          testimonials.update(rank=rank)
+          return testimonials.first(), None
+        else:
+          return None, CustomMassenergizeError("Testimonial rank not provided to testimonials.rank")
       else:
-        raise Exception("Testimonial Rank and ID not provided to testimonials.rank")
+        raise Exception("Testimonial ID not provided to testimonials.rank")
     except Exception as e:
         capture_message(str(e), level="error")
         return None, CustomMassenergizeError(e)
