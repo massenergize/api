@@ -95,7 +95,15 @@ def make_UserMediaUpload_for_Actions():
                 media.is_action_image = True
             else:
                 media = Media.objects.get(id = m_id)
-                user = UserProfile.objects.get(id = str(user))
+                
+                # not all actions (barely any) have a user, so community owner becomes user
+                #not all actions (barely any) have a community, so brad becomes user
+                if user:
+                    user = UserProfile.objects.get(id = str(user))
+                elif community:
+                    user = UserProfile.objects.get(email = community.owner_email) if UserProfile.objects.filter(email = community.owner_email).exists() else UserProfile.objects.get(email = 'brad@massenergize.org')
+                else:
+                    user = UserProfile.objects.get(email = 'brad@massenergize.org')
 
                 new_media = UserMediaUpload(user = user, media = media, is_action_image = True)
                 new_media.save()
