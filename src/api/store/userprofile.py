@@ -1,4 +1,3 @@
-from tkinter import N
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \

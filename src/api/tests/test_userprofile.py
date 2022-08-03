@@ -467,4 +467,19 @@ class UserProfileTestCase(TestCase):
         self.assertTrue(response["data"]["imported"])
         self.assertEqual(response["data"]["firstName"], self.USER2.full_name.split()[0])
 
+    def test_validate_username(self):
+        
+        # test logged as user
+        signinAs(self.client, self.USER2)
+        
+        # valid (unique) username
+        response = self.client.post('/api/users.validate.username', urlencode({'username': "thisUsernameDoesNotExistAlready"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertEqual(response["username"], "thisUsernameDoesNotExistAlready")
+
+        # invalid (not unique) username
+        response = self.client.post('/api/users.validate.username', urlencode({'username': "Kaat from AnyTown"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+        self.assertEqual(response["username"], "Kaat from AnyTown-0")
+
 
