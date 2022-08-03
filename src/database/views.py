@@ -10,11 +10,11 @@ from database.models import *
 
 
 def make_UserMediaUpload_for_every_Media(self, request, qs):
-    # make_UserMediaUpload_for_Communities()
+    make_UserMediaUpload_for_Communities()
     # make_UserMediaUpload_for_Actions()
     # make_UserMediaUpload_for_Events()
     # make_UserMediaUpload_for_Testimonials()
-    make_UserMediaUpload_for_Vendors()
+    # make_UserMediaUpload_for_Vendors()
     
 
 def make_UserMediaUpload_for_Communities():
@@ -23,14 +23,14 @@ def make_UserMediaUpload_for_Communities():
     for comm_id, logo, banner, favicon in community_media:
         community = Community.objects.get(id = comm_id)
 
-        if UserMediaUpload.objects.filter(media__id = logo).exists():
+        if logo and UserMediaUpload.objects.filter(media__id = logo).exists():
             media = UserMediaUpload.objects.get(media__id = logo)
             
             if community not in media.communities:
                 media.communities.add(community)
             media.is_community_image = True
 
-        elif logo is not None:
+        elif logo:
             # 'user' field must be UserProfile but Community.owner_email may not be connected to a UserProfile
             # using brad as interim owner for now
             user = UserProfile.objects.get(email = community.owner_email) if UserProfile.objects.filter(email = community.owner_email).exists() else UserProfile.objects.get(email = 'brad@massenergize.org')
@@ -43,13 +43,13 @@ def make_UserMediaUpload_for_Communities():
             new_media.save()
 
 
-        if UserMediaUpload.objects.filter(media__id = banner).exists():
+        if banner and UserMediaUpload.objects.filter(media__id = banner).exists():
             media = UserMediaUpload.objects.get(media__id = banner)
             
             if community not in media.communities:
                 media.communities.add(community)
             media.is_community_image = True
-        elif banner is not None:
+        elif banner:
             # 'user' field must be UserProfile but Community.owner_email may not be connected to a UserProfile
             # using brad as interim owner for now
             user = UserProfile.objects.get(email = community.owner_email) if UserProfile.objects.filter(email = community.owner_email).exists() else UserProfile.objects.get(email = 'brad@massenergize.org')
@@ -62,13 +62,13 @@ def make_UserMediaUpload_for_Communities():
             new_media.save()
 
 
-        if UserMediaUpload.objects.filter(media__id = favicon).exists():
+        if favicon and UserMediaUpload.objects.filter(media__id = favicon).exists():
             media = UserMediaUpload.objects.get(media__id = favicon)
             
             if community not in media.communities:
                 media.communities.add(community)
             media.is_community_image = True
-        elif favicon is not None:
+        elif favicon:
             # 'user' field must be UserProfile but Community.owner_email may not be connected to a UserProfile
             # using brad as interim owner for now
             user = UserProfile.objects.get(email = community.owner_email) if UserProfile.objects.filter(email = community.owner_email).exists() else UserProfile.objects.get(email = 'brad@massenergize.org')
@@ -209,7 +209,7 @@ def make_UserMediaUpload_for_Vendors():
                 if community:
                     new_media.communities.add(community)
                 new_media.save()
-        elif banner and UserMediaUpload.objects.filter(media__id = banner).exists():
+        if banner and UserMediaUpload.objects.filter(media__id = banner).exists():
                 media = UserMediaUpload.objects.get(media__id = banner)
                 
                 if community and community not in media.communities.all():
