@@ -1,4 +1,3 @@
-from uuid import UUID
 from django.shortcuts import render
 
 from database.models import *
