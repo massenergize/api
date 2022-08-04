@@ -480,9 +480,9 @@ class UserProfileTestCase(TestCase):
         self.assertEqual(response["data"]["suggested_username"], "thisUsernameDoesNotExistAlready")
 
         # invalid (not unique) username
-        response = self.client.post('/api/users.validate.username', urlencode({'username': "BradHN"}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/users.validate.username', urlencode({'username': self.USER2.preferred_name}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertFalse(response["data"]["valid"])
-        self.assertEqual(response["data"]["suggested_username"], "BradHN1")
+        self.assertEqual(response["data"]["suggested_username"], self.USER2.preferred_name+"1")
 
 
