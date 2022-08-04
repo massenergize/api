@@ -1,5 +1,5 @@
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
-  Vendor, Action, Data, Community, Media, TeamMember, Team
+  Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -15,6 +15,7 @@ from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, STANDARD_USER, INVITED_USER, GUEST_USER
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
+from datetime import datetime
 
 def _get_or_create_reu_location(args, user=None):
   unit_type = args.pop('unit_type', None)
@@ -130,6 +131,13 @@ def _update_action_data_totals(action, household, delta):
 class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
+  
+  def validate_username(self, username):
+    if (not username):
+        return False
+
+    # checks if username already exists
+    return not UserProfile.objects.filter(preferred_name=username).exists(), None
   
   def _has_access(self, context: Context, user_id=None, email=None):
     """
@@ -518,6 +526,7 @@ class UserStore:
       user_id = args.get('id', None)
       email = args.get('email', None)
       profile_picture = args.pop("profile_picture", None)
+      preferences = args.pop("preferences", None)
       
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -530,6 +539,9 @@ class UserStore:
         users.update(**args)
         user = users.first()
         
+        if preferences: 
+          user.preferences = json.loads(preferences)
+          user.save()
         if profile_picture:
           if profile_picture == "reset":
             user.profile_picture = None
@@ -554,18 +566,76 @@ class UserStore:
   
   def delete_user(self, context: Context, user_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      if not user_id:
-        return None, InvalidResourceError()
-      
-      # check to make sure the one deleting is an admin
-      if not context.user_is_admin():
-        
-        # if they are not an admin make sure they can only delete themselves
-        if context.user_id != user_id:
-          return None, NotAuthorizedError()
+      if not self._has_access(context, user_id):
+        return None, CustomMassenergizeError("permission_denied")
       
       users = UserProfile.objects.filter(id=user_id)
-      users.update(is_deleted=True)
+      user = users.first()
+      # since we do not delete the record from the database but mark it as deleted, and the email needs to be unique,
+      # modify the email address in case the person wants to create a profile again with that email. 
+      # This allows us to tell exactly what happened in case we need to find out what happened to a users profile.
+      old_email = user.email
+      new_email = "DELETED-" + datetime.today().strftime('%Y%m%d-%H%M') + "-" + old_email 
+      users.update(is_deleted=True, email=new_email)
+
+      user = users.first()
+
+      if user.profile_picture:
+        # don't unlink, just mark ad deleted
+        profile_picture = user.profile_picture
+        profile_picture.is_deleted = True
+        profile_picture.save()
+
+      # mark all real_estate_units is_deleted=true
+      for reu in user.real_estate_units.all():
+        reu.is_deleted = True
+        reu.save()
+
+      #if a CommunityMember links to user, mark is_deleted=true
+      communityMembers = CommunityMember.objects.filter(user=user, is_deleted=False)
+      for communityMember in communityMembers:
+        communityMember.is_deleted = True
+        communityMember.save()
+
+      # if a Team includes on Admins, remove it.
+      # TODO: and notify other admins. if no other admins notify cadmin
+      teams = user.team_admins.filter(is_deleted=False)
+      for team in teams:
+        team.admins.remove(user)
+
+      # SKIP team.members which isn't used
+
+      # if a TeamMember links to user, mark is_deleted=true
+      teamMembers = TeamMember.objects.filter(user=user, is_deleted=False)
+      for teamMember in teamMembers:
+        teamMember.is_deleted = True
+        teamMember.save()
+
+      # if a CommunityAdminGroup includes, remove it, notify lead cadmin
+      cadmin_groups = user.communityadmingroup_set.all()
+      for cadmin_group in cadmin_groups:
+        cadmin_group.members.remove(user)
+
+      # skip UserGroup which isn't used
+
+      # if an EventAttendee - mark is_deleted=true
+      event_attendees = EventAttendee.objects.filter(user=user, is_deleted=False)
+      for event_attendee in event_attendees:
+        event_attendee.is_deleted = True
+        event_attendee.save()
+
+      # if a Testimonial by user, mark is_delted=true, notify cadmin
+      for testimonial in Testimonial.objects.filter(user=user, is_deleted=False):
+        testimonial.is_deleted = True
+        testimonial.save()
+
+      # mark any UserActionRels is_deleted=true
+      for ual in UserActionRel.objects.filter(user=user, is_deleted=False):
+        ual.is_deleted=True
+        ual.save()
+
+      # SKIP - if a Vendor includes as onboarding contact, notify cadmin
+
       return users.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -606,7 +676,9 @@ class UserStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
+      # List all users including guests
+      #  users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
+      users = UserProfile.objects.filter(is_deleted=False)
       return users, None
     except Exception as e:
       capture_message(str(e), level="error")

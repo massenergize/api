@@ -96,7 +96,7 @@ class HomePageSettingsStore:
         args.pop('featured_links', [])
 
       #images
-      images = args.pop("images")
+      images = args.pop("images", None)
       if images: 
         found_images = [ Media.objects.filter(id = img_id).first() for img_id in images ]
         home_page_setting.images.clear() 

@@ -14,10 +14,6 @@ app.autodiscover_tasks()
 
 
 app.conf.beat_schedule = {
-    'generate_and_send_weekly_report': {
-        'task': 'api.tasks.generate_and_send_weekly_report',
-        'schedule': crontab(day_of_week=1, hour=0, minute=0),
-    }
 }
 
 @shared_task(bind=True)
