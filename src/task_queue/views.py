@@ -1,4 +1,5 @@
 import csv
+import itertools
 from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from api.utils.constants import CADMIN_EMAIL_TEMPLATE_ID, SADMIN_EMAIL_TEMPLATE_ID
@@ -117,3 +118,71 @@ def community_admin_nudge():
 
 def send_nudge(file, file_name, email_list, temp_id, t_model):
     send_massenergize_email_with_attachments(temp_id, t_model, email_list, file, file_name)
+
+def media_cleanup():
+    # TODO: possibly redo with dict instead??
+    print("MEDIA CLEANUP")
+    
+    all_used_media = []
+    not_used_media = []
+
+    # below are all the models that have a field that points to a Media object
+
+    all_community_media = itertools.chain(*Community.objects.values_list('logo', 'banner', 'favicon'))
+    all_used_media += all_community_media
+
+    all_action_media = Action.objects.values_list('image', flat=True)
+    all_used_media += all_action_media    
+
+    all_vendor_media = itertools.chain(*Vendor.objects.values_list('logo', 'banner'))
+    all_used_media += all_vendor_media
+
+    all_user_profile_media = UserProfile.objects.values_list('profile_picture', flat=True)
+    all_used_media += all_user_profile_media
+
+    all_team_media = itertools.chain(*Team.objects.values_list('images', 'logo', 'banner'))
+    all_used_media += all_team_media
+
+    all_service_media = Service.objects.values_list('image', flat=True)
+    all_used_media += all_service_media
+
+    all_event_media = Event.objects.values_list('image', flat=True)
+    all_used_media += all_event_media
+
+    all_testimonial_media = Testimonial.objects.values_list('image', flat=True)
+    all_used_media += all_testimonial_media
+    # --- The PageSettings model has been marked as abstract, so it doesn't permit direct querying. ---
+    
+    # all_page_settings_media = PageSettings.objects.values_list('images', flat=True)
+    # all_used_media += all_page_settings_media
+
+    all_page_section_media = PageSection.objects.values_list('images', flat=True)
+    all_used_media += all_page_section_media
+
+    all_impact_page_media = ImpactPageSettings.objects.values_list('images', flat=True)
+    all_used_media += all_impact_page_media
+
+    all_about_us_media = AboutUsPageSettings.objects.values_list('images', flat=True)
+    all_used_media += all_about_us_media
+
+    all_donate_media = DonatePageSettings.objects.values_list('images', flat=True)
+    all_used_media += all_donate_media
+
+    all_contact_us_media = ContactUsPageSettings.objects.values_list('images', flat=True)
+    all_used_media += all_contact_us_media
+
+    all_home_page_media = HomePageSettings.objects.values_list('images', flat=True)
+    all_used_media += all_home_page_media
+
+    all_card_media = Card.objects.values_list('media', flat=True)
+    all_used_media += all_card_media
+
+    all_slider_image_media = SliderImage.objects.values_list('image', flat=True)
+    all_used_media += all_slider_image_media
+
+    for m in Media.objects.all():
+        if m not in all_used_media:
+            not_used_media.append(m)
+
+    print(not_used_media)
+    return "Success"
