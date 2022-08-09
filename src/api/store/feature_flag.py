@@ -150,7 +150,7 @@ class FeatureFlagStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_feature_flags_for_super_admins(
+    def listForSuperAdmins(
         self, ctx: Context, args: dict
     ) -> Tuple[dict, MassEnergizeAPIError]:
         # This just brings in ALL the feature flags available on the platform
