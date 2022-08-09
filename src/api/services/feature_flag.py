@@ -43,20 +43,22 @@ class FeatureFlagService:
             return None, err
         return feature.full_json(), None
 
-    def list_feature_flags_for_super_admins(
+    def listForSuperAdmins(
         self, ctx: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
-        features, err = self.store.list_feature_flags_for_super_admins(ctx, args)
-        if err:
-            return None, err
-        ff = serialize_all(features, True)
-        return {
-            "features": ff,
+        features, err = self.store.listForSuperAdmins(ctx, args)
+        response = {
+            "features": None,
             "keys": {
                 "audience": FeatureFlagConstants.AUDIENCE,
                 "scope": FeatureFlagConstants.SCOPE,
             },
-        }, None
+        }
+        if err:
+            return response, err
+        ff = serialize_all(features, True)
+        response["features"] = ff
+        return response, None
 
     def get_feature_flags(
         self, ctx: Context, args

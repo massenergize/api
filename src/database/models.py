@@ -3192,6 +3192,16 @@ class FeatureFlag(models.Model):
     """
     A class used to represent Feature flags to turn on for
     communities and users
+
+    owner : str - The name of the user at the time of uploading. 
+    scope : str - Whether this flag is for backend, admin frontend, of user frontend 
+    audience : str - (Communities) Whether the feature is for every community/ Specific Communities / or All, except some communities
+    user_audience : str - (Users) Whether the feature is for every user/ Specific Users / or All, except some users
+    key : str - A unique simple key that can be used to look up the particular feature
+    communities :  Community - All communities involved  with the flag. Depending on the value of "audience" this could be a whitelist, or a blacklist
+    users : User - All users involved with the flag. Depending on the value of "user_audience" this could be a whitelist or a blacklist
+    notes : str - Any extra description worth noting
+    expires_on : DateTime - When the feature should expire. Null value means feature will never expire
     """
 
     id = models.AutoField(primary_key=True)

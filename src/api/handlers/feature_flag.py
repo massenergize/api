@@ -18,7 +18,7 @@ class FeatureFlagHandler(RouteHandler):
         self.add("/featureFlags.info", self.feature_flag_info)
         self.add("/featureFlags.list", self.get_feature_flags)
         # For Super Admins
-        self.add("/featureFlags.listForSuperAdmins", self.list_feature_flags_for_super_admins)
+        self.add("/featureFlags.listForSuperAdmins", self.listForSuperAdmins)
         self.add("/featureFlags.add", self.add_feature_flag)
         self.add("/featureFlag.update", self.update_feature_flag)
         self.add("/featureFlag.delete", self.delete_feature_flag)
@@ -82,9 +82,9 @@ class FeatureFlagHandler(RouteHandler):
         return MassenergizeResponse(data=data)
 
     @super_admins_only #update on Admin Frontend As Well
-    def list_feature_flags_for_super_admins(self, request):
+    def listForSuperAdmins(self, request):
         context: Context = request.context
-        data, err = self.service.list_feature_flags_for_super_admins(context, context.args)
+        data, err = self.service.listForSuperAdmins(context, context.args)
         if err:
             return err
         return MassenergizeResponse(data=data)
