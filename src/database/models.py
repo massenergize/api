@@ -3180,7 +3180,7 @@ class FeatureFlag(models.Model):
 
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    owner = models.CharField( max_length=SHORT_STR_LEN)
+    owner_email = models.EmailField(max_length=SHORT_STR_LEN)
     on_for_everyone = models.BooleanField(default=False)
     is_frontend = models.BooleanField(default=False)
     is_backend = models.BooleanField(default=False)
