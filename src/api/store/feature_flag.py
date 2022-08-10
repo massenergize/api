@@ -111,3 +111,15 @@ class FeatureFlagStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
+
+    def list_feature_flags(
+        self, ctx: Context, args: dict
+    ) -> Tuple[dict, MassEnergizeAPIError]:
+        # This just brings in ALL the feature flags available on the platform
+        try:
+            ff = FeatureFlag.objects.all().order_by("-created_at")
+
+            return ff, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)

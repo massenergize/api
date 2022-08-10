@@ -14,7 +14,8 @@ class FeatureFlagHandler(RouteHandler):
 
     def registerRoutes(self) -> None:
         self.add("/featureFlags.info", self.feature_flag_info)
-        self.add("/featureFlags.list", self.feature_flags)
+        self.add("/featureFlags.list", self.list_feature_flags)
+        self.add("/featureFlags.get", self.get_feature_flags)
         self.add("/featureFlags.add", self.add_feature_flag)
         self.add("/featureFlags.info.update", self.update_feature_flag)
 
@@ -71,9 +72,15 @@ class FeatureFlagHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=data)
 
-    def feature_flags(self, request):
+    def list_feature_flags(self, request):
         context: Context = request.context
-        data, err = self.service.feature_flags(context, context.args)
+        data, err = self.service.list_feature_flags(context, context.args)
+        if err:
+            return err
+        return MassenergizeResponse(data=data)
+    def get_feature_flags(self, request):
+        context: Context = request.context
+        data, err = self.service.get_feature_flags(context, context.args)
         if err:
             return err
         return MassenergizeResponse(data=data)
