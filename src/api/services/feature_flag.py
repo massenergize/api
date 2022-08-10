@@ -23,6 +23,19 @@ class FeatureFlagService:
 
         return serialize(ff, True), None
 
+    def add_feature_flag(self, ctx: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        feature, err = self.store.add_feature_flag(ctx, args)
+        if err:
+            return None, err
+        # features = { f.name: f.simple_json() for f in features }
+        return feature.simple_json(), None
+    def update_feature_flag(self, ctx: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        feature, err = self.store.update_feature_flag(ctx, args)
+        if err:
+            return None, err
+        # features = { f.name: f.simple_json() for f in features }
+        return feature.simple_json(), None
+
     def feature_flags(self, ctx: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         features, err = self.store.get_feature_flags(ctx, args)
         if err:
