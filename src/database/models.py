@@ -369,6 +369,7 @@ class Community(models.Model):
         )
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
+        
         return res
 
     def full_json(self):
@@ -419,6 +420,10 @@ class Community(models.Model):
                 )
         goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
+        # get features flags enabled for a community
+        features_flags = FeatureFlag.objects.filter(communities=self)
+        features_flags_json = [f.simple_json() for f in features_flags]
+
         locations = ""
         for loc in self.locations.all():
             if locations != "":
@@ -460,6 +465,7 @@ class Community(models.Model):
             "admins": admins,
             "geography_type": self.geography_type,
             "locations": locations,
+            'feature_flags': features_flags_json,
         }
 
     class Meta:
