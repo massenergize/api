@@ -108,24 +108,65 @@ class ActionService:
             SUBDOMAINS[info['name']] = info['subdomain']
         
         fields = {}
-        doc_idx = buffer
+        doc_idx = buffer + 1 # skipping title of 'title' field
         field_names_keys = list(FIELD_NAMES)
         arr_fields = ["vendors", "Category", "Cost", "Impact", "Own/Rent/Condo"]
         html_fields = ["about", "steps_to_take", "deep_dive"]
         
         def process_html_data(data):
             # need to parse out:
-            # - text
+            # - text DONE
             # - bullets
             # - links
-            # - font 
-            # - font size
+            # - font DONE
+            # - font size DONE
             # - font color
-            # - styling (bold, italics, underline)
-            print(data)
+            # - styling (bold, italics, underline) DONE
+            # print("all", data)
+            # print("paragraph", data[0]['paragraph'])
+            # print("elements", data[0]['paragraph']['elements'])
+            output = ""
 
-            return ""
+            for obj in data:
+                for elem in obj.get('paragraph').get('elements'):
+                    # print("CONTENT ->", elem.get('textRun'))
+                    # print("STYLING ->", elem['textRun']['textStyle'])
+                    # print("")
+                    content = elem.get('textRun').get('content')
+                    styles = elem.get('textRun').get('textStyle')
+                    style_string = 'style = "'
+                    # print(styles)
 
+                    bold = styles.get('bold')
+                    style_string += 'font-weight: bold; ' if bold else ""
+
+                    italic = styles.get('italic')
+                    style_string += 'font-style: italic; ' if italic else ""
+
+                    underline = styles.get('underline')
+                    style_string += 'text-decoration: underline; ' if underline else ""
+                    
+                    size = styles.get('fontSize').get('magnitude')
+                    style_string += 'font-size: ' + str(size) + 'px; ' if size else ""
+
+                    font = styles.get('weightedFontFamily', {}).get('fontFamily')
+                    style_string += 'font-family: ' + font + '; ' if font else ""
+
+                    red_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('red', 0)
+                    blue_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('blue', 0)
+                    green_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('green', 0)
+                    color = (int(red_color), int(blue_color), int(green_color))
+                    style_string += 'color: rgb' + str(color) + ';'
+
+                    style_string += '"'
+                    html_string = '<br>' if content == '\n' else '<span {}>{}</span>'.format(style_string, content)
+                    
+                    output += html_string
+
+            # print('OUTPUT:', output)
+            return output
+
+        # print(doc[doc_idx:])
         for i in range(0,len(FIELD_NAMES)):
             field = FIELD_NAMES[field_names_keys[i]]
             data = [] if field == "about" else ""
@@ -134,36 +175,37 @@ class ActionService:
                 for j in range(doc_idx + 1, len(doc)):
                     data += doc[j].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
             else:
-                while i != len(FIELD_NAMES) - 1 and doc[doc_idx].get("paragraph").get("elements")[0].get("textRun").get("content")[:-2] != field_names_keys[i+1]:
+                while i != len(FIELD_NAMES) - 1 and doc[doc_idx].get("paragraph").get("elements")[0].get("textRun").get("content").strip() != field_names_keys[i+1]:
                     if field == "about":
-                        data.append(doc[doc_idx+1])
+                        data.append(doc[doc_idx])
                     else:
-                        data += doc[doc_idx+1].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
+                        data += doc[doc_idx].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
 
-                    doc_idx += 2
+                    doc_idx += 1
 
-            if data and field in arr_fields:
-                multi = data.split(',')
-                data = []
-                for x in multi:
-                    data.append(x.strip())
+                if data and field in arr_fields:
+                    multi = data.split(',')
+                    data = []
+                    for x in multi:
+                        data.append(x.strip())
 
-            if field in arr_fields and data == "":
-                data = []
+                if field in arr_fields and data == "":
+                    data = []
 
-            if field == "about":
-                data = process_html_data(data)
+                if field == "about":
+                    data = process_html_data(data)
 
-            if data and field == "community":
-                fields['subdomain'] = SUBDOMAINS[data]
+                if data and field == "community":
+                    fields['subdomain'] = SUBDOMAINS[data]
 
-            if field == "is_global":
-                data = "false" if data.lower() == "no" or data.lower() == "false" or not data else "true"
+                if field == "is_global":
+                    data = "false" if data.lower() == "no" or data.lower() == "false" or not data else "true"
 
-            if data and field == "rank":
-                data = re.sub("[^0-9]", "", data)
-        
-            fields[field] = data
+                if data and field == "rank":
+                    data = re.sub("[^0-9]", "", data)
+                
+                doc_idx += 1
+                fields[field] = data
         
         # check that supplied community exists
         if not fields.get('subdomain', None):
