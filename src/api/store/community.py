@@ -610,7 +610,7 @@ class CommunityStore:
             favicon = args.pop("favicon", None)
             community = Community.objects.create(**args)
             community.save()
-
+           
             geographic = args.get("is_geographically_focused", False)
             if geographic:
                 geography_type = args.get("geography_type", None)
@@ -761,6 +761,9 @@ class CommunityStore:
             if community:
                 # if we did not succeed creating the community we should delete it
                 community.delete()
+                reserved = Subdomain.objects.filter(name = args.get("subdomain")).first()
+                if reserved: 
+                    reserved.delete()
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
