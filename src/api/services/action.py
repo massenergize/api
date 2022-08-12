@@ -1,4 +1,5 @@
 from __future__ import print_function
+from cgitb import html
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.action import ActionStore
@@ -80,17 +81,17 @@ class ActionService:
 
         # mapping from doc field names to frontend form field names
         FIELD_NAMES = {
+            "TITLE"             : "title",
+            "RANK"              : "rank",
+            "IS TEMPLATE"       : "is_global",
+            "COMMUNITY"         : "community",
             "CATEGORY TAG"      : "Category",
             "COST TAG"          : "Cost",
             "IMPACT TAG"        : "Impact",
             "OWN/RENT/CONDO TAG": "Own/Rent/Condo",
-            "TITLE"             : "title",
-            "RANK"              : "rank",
-            "ABOUT"             : "about",
-            "IS TEMPLATE"       : "is_global",
-            "COMMUNITY"         : "community",
             "CALCULATOR ACTION" : "calculator_action",
             "FEATURED SUMMARY"  : "featured_summary",
+            "ABOUT"             : "about",
             "STEPS TO TAKE"     : "steps_to_take",
             "DEEP DIVE"         : "deep_dive",
             "VENDORS"           : "vendors",
@@ -107,26 +108,61 @@ class ActionService:
             SUBDOMAINS[info['name']] = info['subdomain']
         
         fields = {}
-        for i in range(buffer, len(doc), 2):
-            field = FIELD_NAMES[doc[i].get("paragraph").get("elements")[0].get("textRun").get("content")[:-2]]
-            data = doc[i+1].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
-            data = data[:-1] if data[-1] == '\n' else data
+        doc_idx = buffer
+        field_names_keys = list(FIELD_NAMES)
+        arr_fields = ["vendors", "Category", "Cost", "Impact", "Own/Rent/Condo"]
+        html_fields = ["about", "steps_to_take", "deep_dive"]
+        
+        def process_html_data(data):
+            # need to parse out:
+            # - text
+            # - bullets
+            # - links
+            # - font 
+            # - font size
+            # - font color
+            # - styling (bold, italics, underline)
+            print(data)
 
-            if field == "vendors" or field == "Category" or field == "Cost" or field == "Impact" or field == "Own/Rent/Condo":
+            return ""
+
+        for i in range(0,len(FIELD_NAMES)):
+            field = FIELD_NAMES[field_names_keys[i]]
+            data = [] if field == "about" else ""
+
+            if i == len(FIELD_NAMES) - 1:
+                for j in range(doc_idx + 1, len(doc)):
+                    data += doc[j].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
+            else:
+                while i != len(FIELD_NAMES) - 1 and doc[doc_idx].get("paragraph").get("elements")[0].get("textRun").get("content")[:-2] != field_names_keys[i+1]:
+                    if field == "about":
+                        data.append(doc[doc_idx+1])
+                    else:
+                        data += doc[doc_idx+1].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
+
+                    doc_idx += 2
+
+            if data and field in arr_fields:
                 multi = data.split(',')
                 data = []
                 for x in multi:
                     data.append(x.strip())
 
-            if field == "community":
+            if field in arr_fields and data == "":
+                data = []
+
+            if field == "about":
+                data = process_html_data(data)
+
+            if data and field == "community":
                 fields['subdomain'] = SUBDOMAINS[data]
 
             if field == "is_global":
-                data = "false" if data.lower() == "no" or data.lower() == "false" else "true"
+                data = "false" if data.lower() == "no" or data.lower() == "false" or not data else "true"
 
-            if field == "rank":
+            if data and field == "rank":
                 data = re.sub("[^0-9]", "", data)
-            
+        
             fields[field] = data
         
         # check that supplied community exists
@@ -192,7 +228,7 @@ class ActionService:
                     found = True
                     break
 
-        fields['Category'] = fields['Category'] if found else ""
+        fields['Category'] = fields['Category'] if found else []
 
         found = False
         if len(fields['Cost']) > 0:
@@ -202,7 +238,7 @@ class ActionService:
                     found = True
                     break
 
-        fields['Cost'] = fields['Cost'] if found else ""
+        fields['Cost'] = fields['Cost'] if found else []
 
         found = False
         if len(fields['Impact']) > 0:
@@ -212,7 +248,7 @@ class ActionService:
                     found = True
                     break
 
-        fields['Impact'] = fields['Impact'] if found else ""
+        fields['Impact'] = fields['Impact'] if found else []
     
         # check that all Own/Rent/Condo, if any, are valid
         found = False
@@ -223,7 +259,7 @@ class ActionService:
                     found = True
                     break
 
-        fields['Own/Rent/Condo'] = fields['Own/Rent/Condo'] if found else ""
+        fields['Own/Rent/Condo'] = fields['Own/Rent/Condo'] if found else []
 
         # check carbon calculator input
         found = False
