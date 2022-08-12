@@ -411,6 +411,7 @@ class UserStore:
       full_name = args.get('full_name')
       preferred_name = args.get('preferred_name', None)
       is_guest = args.pop('is_guest', False)
+      is_new_guest_allowed = args.pop("is_new_guest_allowed", False)
 
       new_user_type = STANDARD_USER
       if is_guest:
@@ -432,6 +433,9 @@ class UserStore:
 
       new_user_email = False
       existing_user = UserProfile.objects.filter(email=email).first()
+      if not existing_user and not is_new_guest_allowed:
+        return None, CustomMassenergizeError("Guest account creation has been disabled for this community. Please use the other sign up methods.")
+
       if not existing_user:
         user: UserProfile = UserProfile.objects.create(
           full_name=full_name,

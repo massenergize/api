@@ -71,6 +71,7 @@ class UserHandler(RouteHandler):
       .expect("preferred_name", str, is_required=True)
       .expect("is_vendor", bool)
       .expect("is_guest", bool)
+      .expect("is_new_guest_allowed", bool)
       .expect("community_id", int)
       .verify(context.args)
     )
