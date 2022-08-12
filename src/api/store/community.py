@@ -709,15 +709,23 @@ class CommunityStore:
             if context.user_id:
                 user = UserProfile.objects.filter(pk=context.user_id).first()
                 if user:
+                    user.is_community_admin = True
+                    user.communities.add(community)
+                    user.save()
+
                     comm_admin.members.add(user)
                     comm_admin.save()
 
             owner_email = args.get("owner_email", None)
             if owner_email:
                 owner = UserProfile.objects.filter(email=owner_email) 
-                owner.update(is_community_admin = True)
+                # owner.update(is_community_admin = True)
                 owner = owner.first()
                 if owner:
+                    owner.is_community_admin = True
+                    owner.communities.add(community)
+                    owner.save()
+
                     comm_admin.members.add(owner)
                     comm_admin.save()
 
