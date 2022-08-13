@@ -116,8 +116,8 @@ class ActionService:
         def process_html_data(data):
             # need to parse out:
             # - text DONE
-            # - bullets
-            # - links
+            # - bullets DONE
+            # - links DONE
             # - font DONE
             # - font size DONE
             # - font color
@@ -126,6 +126,7 @@ class ActionService:
             # print("paragraph", data[0]['paragraph'])
             # print("elements", data[0]['paragraph']['elements'])
             output = ""
+            in_list = False
 
             for obj in data:
                 for elem in obj.get('paragraph').get('elements'):
@@ -155,13 +156,45 @@ class ActionService:
                     red_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('red', 0)
                     blue_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('blue', 0)
                     green_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('green', 0)
-                    color = (int(red_color), int(blue_color), int(green_color))
+                    color = (float(red_color), float(blue_color), float(green_color))
+                    # hex_color = '#%02x%02x%02x' % (int(red_color), int(blue_color), int(green_color))
+                    # style_string += 'color: ' + hex_color + ';'
                     style_string += 'color: rgb' + str(color) + ';'
 
+                    link = styles.get('link', {}).get('url')
+
                     style_string += '"'
-                    html_string = '<br>' if content == '\n' else '<span {}>{}</span>'.format(style_string, content)
-                    
+
+                    new_line = '<br>' if content[-1] == '\n' else ''
+                    content = content[:-1]
+
+                    html_string = ""
+
+                    if obj.get('paragraph', {}).get('bullet'):
+                        # accounts for extra new line since html bullets have padding
+                        output = output[:-4] if output[-4:] == '<br>' else output
+                        
+                        if in_list:
+                            html_string = '<li {}>{}</li>'.format(style_string, content)
+                        else:
+                            html_string = '<ul><li {}>{}</li>'.format(style_string, content)
+                        in_list = True
+                    else:
+                        if in_list:
+                            html_string = '</ul>'
+                        in_list = False
+
+                        if content == '':
+                            html_string += '{}'.format(new_line)
+                        elif link:
+                            html_string += '<a {} href="{}">{}</a>{}'.format(style_string, link, content, new_line)
+                        else:
+                            html_string += '<span {}>{}</span>{}'.format(style_string, content, new_line)
+                        
                     output += html_string
+            
+            if in_list:
+                output += '</ul>'
 
             # print('OUTPUT:', output)
             return output
