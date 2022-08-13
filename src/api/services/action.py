@@ -121,7 +121,7 @@ class ActionService:
             # - links DONE
             # - font DONE
             # - font size DONE
-            # - font color
+            # - font color DONE
             # - styling (bold, italics, underline) DONE
             # print("all", data)
             # print("paragraph", data[0]['paragraph'])
@@ -162,10 +162,8 @@ class ActionService:
                     red_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('red', 0)
                     blue_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('blue', 0)
                     green_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('green', 0)
-                    color = (float(red_color), float(blue_color), float(green_color))
-                    # hex_color = '#%02x%02x%02x' % (int(red_color), int(blue_color), int(green_color))
-                    # style_string += 'color: ' + hex_color + ';'
-                    style_string += 'color: rgb' + str(color) + ';'
+                    hex_color = '#%02x%02x%02x' % (int(red_color * 255), int(green_color * 255), int(blue_color * 255))
+                    style_string += 'color: ' + hex_color + ';'
 
                     link = styles.get('link', {}).get('url')
 
