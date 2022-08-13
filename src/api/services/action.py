@@ -1,5 +1,6 @@
 from __future__ import print_function
 from cgitb import html
+from dataclasses import dataclass
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.action import ActionStore
@@ -126,7 +127,12 @@ class ActionService:
             # print("paragraph", data[0]['paragraph'])
             # print("elements", data[0]['paragraph']['elements'])
             output = ""
-            in_list = False
+            in_unordered_list = False
+            in_ordered_list = False
+            
+            # support for more types of bullets is just a matter of noting more of the Doc IDs
+            UNORDERED_LIST = "kix.l2c1kf1n3bo0"
+            ORDERED_LIST = "kix.56eudp6yx4bc"
 
             for obj in data:
                 for elem in obj.get('paragraph').get('elements'):
@@ -174,15 +180,22 @@ class ActionService:
                         # accounts for extra new line since html bullets have padding
                         output = output[:-4] if output[-4:] == '<br>' else output
                         
-                        if in_list:
+                        if in_unordered_list or in_ordered_list:
                             html_string = '<li {}>{}</li>'.format(style_string, content)
+                        elif obj.get('paragraph', {}).get('bullet', {}).get('listId') == ORDERED_LIST:
+                            html_string = '<ol><li {}>{}</li>'.format(style_string, content)
+                            in_ordered_list = True
                         else:
+                            # unordered list is 'catch all' case
                             html_string = '<ul><li {}>{}</li>'.format(style_string, content)
-                        in_list = True
+                            in_unordered_list = True
                     else:
-                        if in_list:
+                        if in_ordered_list:
+                            html_string = '</ol>'
+                            in_ordered_list = False
+                        elif in_unordered_list:
                             html_string = '</ul>'
-                        in_list = False
+                            in_unordered_list = False
 
                         if content == '':
                             html_string += '{}'.format(new_line)
@@ -193,7 +206,9 @@ class ActionService:
                         
                     output += html_string
             
-            if in_list:
+            if in_ordered_list:
+                output += '</ol>'
+            elif in_unordered_list:
                 output += '</ul>'
 
             # print('OUTPUT:', output)
