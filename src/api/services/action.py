@@ -170,7 +170,7 @@ class ActionService:
                     style_string += '"'
 
                     new_line = '<br>' if content[-1] == '\n' else ''
-                    content = content[:-1]
+                    content = content[:-1] if new_line else content
 
                     html_string = ""
 
@@ -215,14 +215,14 @@ class ActionService:
         # print(doc[doc_idx:])
         for i in range(0,len(FIELD_NAMES)):
             field = FIELD_NAMES[field_names_keys[i]]
-            data = [] if field == "about" else ""
+            data = [] if field in html_fields else ""
 
             if i == len(FIELD_NAMES) - 1:
                 for j in range(doc_idx + 1, len(doc)):
                     data += doc[j].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
             else:
                 while i != len(FIELD_NAMES) - 1 and doc[doc_idx].get("paragraph").get("elements")[0].get("textRun").get("content").strip() != field_names_keys[i+1]:
-                    if field == "about":
+                    if field in html_fields:
                         data.append(doc[doc_idx])
                     else:
                         data += doc[doc_idx].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
@@ -238,7 +238,7 @@ class ActionService:
                 if field in arr_fields and data == "":
                     data = []
 
-                if field == "about":
+                if field in html_fields:
                     data = process_html_data(data)
 
                 if data and field == "community":
