@@ -218,8 +218,8 @@ class ActionService:
             data = [] if field in html_fields else ""
 
             if i == len(FIELD_NAMES) - 1:
-                for j in range(doc_idx + 1, len(doc)):
-                    data += doc[j].get("paragraph").get("elements")[0].get("textRun").get("content").strip()
+                for j in range(doc_idx, len(doc)):
+                    data += doc[j].get("paragraph").get("elements")[0].get("textRun").get("content").strip()  
             else:
                 while i != len(FIELD_NAMES) - 1 and doc[doc_idx].get("paragraph").get("elements")[0].get("textRun").get("content").strip() != field_names_keys[i+1]:
                     if field in html_fields:
@@ -242,7 +242,7 @@ class ActionService:
                     data = process_html_data(data)
 
                 if data and field == "community":
-                    fields['subdomain'] = SUBDOMAINS[data]
+                    fields['subdomain'] = SUBDOMAINS.get(data)
 
                 if field == "is_global":
                     data = "false" if data.lower() == "no" or data.lower() == "false" or not data else "true"
@@ -251,8 +251,8 @@ class ActionService:
                     data = re.sub("[^0-9]", "", data)
                 
                 doc_idx += 1
-                fields[field] = data
-        
+            fields[field] = data
+
         # check that supplied community exists
         if not fields.get('subdomain', None):
             fields['community'] = ""
@@ -262,6 +262,7 @@ class ActionService:
             if err:
                 return None, err
             community_id = community.info()['id']
+            fields['community'] = community_id
 
             # check that vendor[s] are valid for supplied community        
             if len(fields['vendors']) > 0:
