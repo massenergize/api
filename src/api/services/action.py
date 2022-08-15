@@ -129,10 +129,11 @@ class ActionService:
             output = ""
             in_unordered_list = False
             in_ordered_list = False
+            list_nest_level = 0
             
             # support for more types of bullets is just a matter of noting more of the Doc IDs
             UNORDERED_LIST = "kix.l2c1kf1n3bo0"
-            ORDERED_LIST = "kix.56eudp6yx4bc"
+            ORDERED_LIST = ["kix.56eudp6yx4bc", "kix.2x1fecli05g8"]
 
             for obj in data:
                 for elem in obj.get('paragraph').get('elements'):
@@ -174,26 +175,51 @@ class ActionService:
 
                     html_string = ""
 
-                    if obj.get('paragraph', {}).get('bullet'):
+                    if obj.get('paragraph', {}).get('bullet') and content != "":
                         # accounts for extra new line since html bullets have padding
                         output = output[:-4] if output[-4:] == '<br>' else output
+                        # makes new ordered list if nested bullet, otherwise just adds ordered list item
+                        if in_ordered_list:
+                            if obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel'):
+                                html_string = '<ol><li {}>{}</li>'.format(style_string, content)
+                                list_nest_level += 1
+                            else:
+                                # closes nested lists (if necessary) and adds list item
+                                html_string = ('</ol>' * list_nest_level) + '<li {}>{}</li>'.format(style_string, content)
+                                list_nest_level = 0
+
+                        # makes new unordered list if nested bullet, otherwise just adds unordered list item
+                        elif in_unordered_list:
+                            if obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel'):
+                                html_string = '<ul><li {}>{}</li>'.format(style_string, content)
+                                list_nest_level += 1
+                            else:
+                                # closes nested lists (if necessary) and adds list item
+                                html_string = ('</ul>' * list_nest_level) + '<li {}>{}</li>'.format(style_string, content)
+                                list_nest_level = 0
                         
-                        if in_unordered_list or in_ordered_list:
-                            html_string = '<li {}>{}</li>'.format(style_string, content)
-                        elif obj.get('paragraph', {}).get('bullet', {}).get('listId') == ORDERED_LIST:
+                        # new list case, creating corresponding list type ((un)ordered) based on 'listId'
+                        elif obj.get('paragraph', {}).get('bullet', {}).get('listId') in ORDERED_LIST:
                             html_string = '<ol><li {}>{}</li>'.format(style_string, content)
                             in_ordered_list = True
                         else:
                             # unordered list is 'catch all' case
                             html_string = '<ul><li {}>{}</li>'.format(style_string, content)
                             in_unordered_list = True
+                    
+                    # not in, or no longer in, a list
                     else:
                         if in_ordered_list:
-                            html_string = '</ol>'
+                            # by default there is at least one list to close, more close tags needed for nested bullets
+                            html_string = '</ol>' + '</ol>' * list_nest_level
+
                             in_ordered_list = False
+                            list_nest_level = 0
                         elif in_unordered_list:
-                            html_string = '</ul>'
+                            html_string = '</ul>' + '</ul>' * list_nest_level
+                            
                             in_unordered_list = False
+                            list_nest_level = 0
 
                         if content == '':
                             html_string += '{}'.format(new_line)
@@ -213,6 +239,7 @@ class ActionService:
             return output
 
         # print(doc[doc_idx:])
+        # return {}, {}
         for i in range(0,len(FIELD_NAMES)):
             field = FIELD_NAMES[field_names_keys[i]]
             data = [] if field in html_fields else ""
