@@ -132,11 +132,37 @@ class UserStore:
     self.name = "UserProfile Store/DB"
   
   def validate_username(self, username):
-    if (not username):
-        return False
+    # returns [is_valid, suggestion], error
+    try:    
+        if (not username):
+            return {'valid': False, 'suggested_username': None}, None
 
-    # checks if username already exists
-    return not UserProfile.objects.filter(preferred_name=username).exists(), None
+        # checks if username already exists
+        if not UserProfile.objects.filter(preferred_name=username).exists():
+            return {'valid': True, 'suggested_username': username}, None
+
+        # username exists, finds next available closest username
+        usernames = list(UserProfile.objects.filter(preferred_name__istartswith=username).order_by('preferred_name').values_list("preferred_name", flat=True))
+
+        if len(usernames) == 1:
+            suggestion = username + "1"
+            return {'valid': False, 'suggested_username': suggestion}, None
+
+        # more than one username starting with the test username
+        suggestion = None
+        for i in range(1, 999):
+          test_username = username + str(i)
+          if test_username not in usernames:
+            suggestion = test_username
+            break
+        
+        if not suggestion:
+          return None, CustomMassenergizeError("No further usernames to suggest")
+        else:
+          return {'valid': False, 'suggested_username': suggestion}, None
+        
+    except Exception as e:
+        return None, CustomMassenergizeError(e)
   
   def _has_access(self, context: Context, user_id=None, email=None):
     """
