@@ -14,6 +14,7 @@ from api.handlers.page_settings__donate import DonatePageSettingsHandler
 from api.handlers.page_settings__impact import ImpactPageSettingsHandler
 from api.handlers.download import DownloadHandler
 from api.handlers.event import EventHandler
+from api.handlers.feature_flag import FeatureFlagHandler
 from api.handlers.goal import GoalHandler
 from api.handlers.graph import GraphHandler
 from api.handlers.page_settings__home import HomePageSettingsHandler
@@ -48,6 +49,7 @@ ROUTE_HANDLERS = [
     DownloadHandler(),
     EventHandler(),
     EventsPageSettingsHandler(),
+    FeatureFlagHandler(),
     GoalHandler(),
     GraphHandler(),
     HomePageSettingsHandler(),

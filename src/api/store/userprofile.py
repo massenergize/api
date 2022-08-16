@@ -131,6 +131,39 @@ class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
   
+  def validate_username(self, username):
+    # returns [is_valid, suggestion], error
+    try:    
+        if (not username):
+            return {'valid': False, 'suggested_username': None}, None
+
+        # checks if username already exists
+        if not UserProfile.objects.filter(preferred_name=username).exists():
+            return {'valid': True, 'suggested_username': username}, None
+
+        # username exists, finds next available closest username
+        usernames = list(UserProfile.objects.filter(preferred_name__istartswith=username).order_by('preferred_name').values_list("preferred_name", flat=True))
+
+        if len(usernames) == 1:
+            suggestion = username + "1"
+            return {'valid': False, 'suggested_username': suggestion}, None
+
+        # more than one username starting with the test username
+        suggestion = None
+        for i in range(1, 999):
+          test_username = username + str(i)
+          if test_username not in usernames:
+            suggestion = test_username
+            break
+        
+        if not suggestion:
+          return None, CustomMassenergizeError("No further usernames to suggest")
+        else:
+          return {'valid': False, 'suggested_username': suggestion}, None
+        
+    except Exception as e:
+        return None, CustomMassenergizeError(e)
+  
   def _has_access(self, context: Context, user_id=None, email=None):
     """
     Checks to make sure if the user has access to the user profile they want to 
@@ -516,6 +549,7 @@ class UserStore:
       user_id = args.get('id', None)
       email = args.get('email', None)
       profile_picture = args.pop("profile_picture", None)
+      preferences = args.pop("preferences", None)
       
       if not self._has_access(context, user_id, email):
         return None, CustomMassenergizeError("permission_denied")
@@ -528,6 +562,9 @@ class UserStore:
         users.update(**args)
         user = users.first()
         
+        if preferences: 
+          user.preferences = json.loads(preferences)
+          user.save()
         if profile_picture:
           if profile_picture == "reset":
             user.profile_picture = None
