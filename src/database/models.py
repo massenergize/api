@@ -437,6 +437,10 @@ class Community(models.Model):
                 l = loc.zipcode
             locations += l
 
+
+        features_flags = FeatureFlag.objects.filter(communities=self)
+        features_flags_json = [f.simple_json() for f in features_flags]
+
         return {
             "id": self.id,
             "name": self.name,
@@ -460,6 +464,7 @@ class Community(models.Model):
             "admins": admins,
             "geography_type": self.geography_type,
             "locations": locations,
+            'feature_flags': features_flags_json,
         }
 
     class Meta:
@@ -742,6 +747,9 @@ class UserProfile(models.Model):
         #     for cm in CommunityMember.objects.filter(user=self, is_admin=True)
         # ]
 
+        feature_flags = FeatureFlag.objects.filter(users=self)
+        feature_flag_json = [f.simple_json() for f in feature_flags]
+
         data = model_to_dict(
             self, exclude=["real_estate_units", "communities", "roles"]
         )
@@ -767,7 +775,7 @@ class UserProfile(models.Model):
         user_portal_settings = preferences.get("user_portal_settings") or UserPortalSettings.Defaults
         admin_portal_settings = preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
         data["preferences"] = {**preferences, "user_portal_settings":user_portal_settings, "admin_portal_settings": admin_portal_settings}
-       
+        data['feature_flags'] = feature_flag_json
 
         return data
 
