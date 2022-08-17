@@ -265,6 +265,8 @@ class ActionService:
                 pass
             
             def insert_styling(self, attrs, is_bold, is_italics, link_url, length):
+                #TODO: either check if sub-dicts exists in 'textStyle' or make the default have all necessary fields as empty dicts
+                
                 styles = {
                     'updateTextStyle': {
                         'range': {
@@ -325,6 +327,8 @@ class ActionService:
                 self.styles_stack.pop()
 
                 if tag == 'p':
+                    self.insert_text('\n')
+                if len(self.elements_stack) == 0:
                     self.insert_text('\n')
 
             def handle_data(self, data):
