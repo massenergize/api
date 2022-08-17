@@ -210,8 +210,137 @@ class ActionService:
         html_fields = ["ABOUT", "STEPS TO TAKE", "DEEP DIVE"]
         
         class MyHTMLParser(HTMLParser):
-            pass
-        parser = MyHTMLParser()
+            def __init__(self, field, end):
+                self.requests = []
+                
+                self.end_index = end
+                self.field = field
+                
+                self.elements_stack = []
+                self.styles_stack = []
+
+                super().__init__()
+
+            # Helper functions to create Google Doc request objects 
+
+            def get_requests(self): 
+                self.insert_heading()
+                return self.requests
+            
+            def insert_heading(self):
+                self.requests.append({
+                    'insertText': {
+                        'location': {
+                            'index': self.end_index,
+                        },
+                        'text': self.field + "\n"
+                    }
+                })
+                self.requests.append({
+                    'updateTextStyle': {
+                        'range': {
+                            'startIndex': self.end_index,
+                            'endIndex': self.end_index + len(self.field)
+                        },
+                        'textStyle': {
+                            'bold': True,
+                            'underline': True
+                        },
+                        'fields': 'bold, underline'
+                    }
+                })
+            
+            def insert_text(self, text):
+                self.requests.insert(0, {
+                    'insertText': {
+                        'location': {
+                            'index': self.end_index,
+                        },
+                        'text': text
+                    }
+                })
+
+            def insert_link(self):
+                pass
+
+            def insert_bullets(self):
+                pass
+            
+            def insert_styling(self, attrs, is_bold, is_italics, length):
+                styles = {
+                    'updateTextStyle': {
+                        'range': {
+                            'startIndex': self.end_index,
+                            'endIndex': self.end_index + length
+                        },
+                        'textStyle': {},
+                        'fields': '*'
+                    }
+                }
+                
+                if is_bold:
+                    styles['updateTextStyle']['textStyle']['bold'] = True
+
+                if is_italics:
+                    styles['updateTextStyle']['textStyle']['italic'] = True
+
+                for attr in attrs:
+                    if attr[0] == 'style':
+                        style = attr[1].split(':')
+                        style[0] = style[0].strip()
+                        style[1] = style[1].strip().rstrip(';')
+
+                        if style[0].strip() == "text-decoration":
+                            if style[1] == "underline":
+                                styles['updateTextStyle']['textStyle']['underline'] = True
+                        elif style[0] == "color":
+                                hex_val = style[1].lstrip(' #')
+                                lv = len(hex_val)
+                                rgb = tuple(int(hex_val[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+                                rgb = [x / 255 for x in rgb]
+                                styles['updateTextStyle']['textStyle'] = {'foregroundColor': {'color': {'rgbColor': {'red': rgb[0]}}}}
+                                styles['updateTextStyle']['textStyle']['foregroundColor']['color']['rgbColor']['green'] = rgb[1]
+                                styles['updateTextStyle']['textStyle']['foregroundColor']['color']['rgbColor']['blue'] = rgb[2]
+                        elif style[0] == "font-family":
+                            # styles['updateTextStyle']['textStyle']['weightedFontFamily'] = {'fontFamily': style[1].strip(), 'weight': 400}
+                            styles['updateTextStyle']['textStyle'] = {'weightedFontFamily': {'fontFamily': style[1].split(',')[0].strip().strip("'")}}
+                        elif style[0] == "font-size":
+                            styles['updateTextStyle']['textStyle'] = {'fontSize': {'magnitude': style[1].rstrip('pt;'), 'unit': 'PT'}}
+
+                self.requests.insert(1, styles)
+            
+            # HTMLParser specific class functions
+
+            def handle_starttag(self, tag, attrs):
+                self.elements_stack.append(tag)
+                self.styles_stack.append(attrs)
+
+                # print("Start tag:", tag)
+                # for attr in attrs:
+                #     print("     attr:", attr)
+
+            def handle_endtag(self, tag):
+                # print("End tag  :", tag)
+                if tag == 'p':
+                    self.insert_text('\n')
+
+            def handle_data(self, data):
+                curr_elem = self.elements_stack.pop()
+                curr_style = self.styles_stack.pop()
+                is_bold = False
+                is_italics = False
+
+                if curr_elem == "strong":
+                    is_bold = True
+                if curr_elem == "em":
+                    is_italics = True
+
+                data = data.strip()
+                if data:
+                    self.insert_text(data)
+                    self.insert_styling(curr_style, is_bold, is_italics, len(data))
+
+                # print("Data     :", data)
 
         # order of fields will dictate the order of fields in Doc
         FIELD_NAMES = {
@@ -325,7 +454,15 @@ class ActionService:
             else:
                 if field in html_fields:
                     #TODO: handle html fields
-                    pass
+                    parser = MyHTMLParser(field, TEMPLATE_END_INDEX)
+                    parser.feed(value)
+                    
+                    req = parser.get_requests()
+                    # print(req)
+                    
+                    requests += req
+                    del parser
+
                 elif field == "COMMUNITY":
                     community, err = get_community(community_id=value)
                     if err:
@@ -389,6 +526,7 @@ class ActionService:
 
                 else:
                     # title and featured summary
+                    value = "N/A" if not value.strip() else value
                     requests += get_request(field + '\n', value + '\n\n')
 
         # adding provider, user, and date information
@@ -401,7 +539,7 @@ class ActionService:
                 return None, err
 
         if provider and provider != args['exporter_name']:
-            provider_text = "\nWHO PROVIDIED THIS?\t{}, {}\n".format(provider, args['exporter_name'])
+            provider_text = "\nWHO PROVIDED THIS?\t{}, {}\n".format(provider, args['exporter_name'])
         else:
             provider_text = "\nWHO PROVIDED THIS?\t{}\n".format(args['exporter_name'])
         
