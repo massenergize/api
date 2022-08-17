@@ -244,9 +244,10 @@ class ActionService:
                         },
                         'textStyle': {
                             'bold': True,
-                            'underline': True
+                            'underline': True,
+                            'foregroundColor': {'color': {'rgbColor': {'red': 0.0, 'green': 0.0, 'blue': 0.0}}}
                         },
-                        'fields': 'bold, underline'
+                        'fields': 'bold, underline, foregroundColor'
                     }
                 })
             
@@ -260,13 +261,10 @@ class ActionService:
                     }
                 })
 
-            def insert_link(self):
-                pass
-
             def insert_bullets(self):
                 pass
             
-            def insert_styling(self, attrs, is_bold, is_italics, length):
+            def insert_styling(self, attrs, is_bold, is_italics, link_url, length):
                 styles = {
                     'updateTextStyle': {
                         'range': {
@@ -277,12 +275,16 @@ class ActionService:
                         'fields': '*'
                     }
                 }
-                
-                if is_bold:
-                    styles['updateTextStyle']['textStyle']['bold'] = True
 
-                if is_italics:
-                    styles['updateTextStyle']['textStyle']['italic'] = True
+                if link_url:
+                    styles['updateTextStyle']['textStyle'] = {
+                        'link': {'url': link_url},
+                        'foregroundColor': {'color': {'rgbColor': {'red': 0.06666667, 'green': 0.33333334, 'blue': 0.8}}},
+                        'underline': True,
+                    }
+                
+                styles['updateTextStyle']['textStyle']['bold'] = is_bold
+                styles['updateTextStyle']['textStyle']['italic'] = is_italics
 
                 for attr in attrs:
                     if attr[0] == 'style':
@@ -298,9 +300,7 @@ class ActionService:
                                 lv = len(hex_val)
                                 rgb = tuple(int(hex_val[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
                                 rgb = [x / 255 for x in rgb]
-                                styles['updateTextStyle']['textStyle'] = {'foregroundColor': {'color': {'rgbColor': {'red': rgb[0]}}}}
-                                styles['updateTextStyle']['textStyle']['foregroundColor']['color']['rgbColor']['green'] = rgb[1]
-                                styles['updateTextStyle']['textStyle']['foregroundColor']['color']['rgbColor']['blue'] = rgb[2]
+                                styles['updateTextStyle']['textStyle'] = {'foregroundColor': {'color': {'rgbColor': {'red': rgb[0], 'green': rgb[1], 'blue': rgb[2]}}}}
                         elif style[0] == "font-family":
                             # styles['updateTextStyle']['textStyle']['weightedFontFamily'] = {'fontFamily': style[1].strip(), 'weight': 400}
                             styles['updateTextStyle']['textStyle'] = {'weightedFontFamily': {'fontFamily': style[1].split(',')[0].strip().strip("'")}}
@@ -321,24 +321,37 @@ class ActionService:
 
             def handle_endtag(self, tag):
                 # print("End tag  :", tag)
+                self.elements_stack.pop()
+                self.styles_stack.pop()
+
                 if tag == 'p':
                     self.insert_text('\n')
 
             def handle_data(self, data):
-                curr_elem = self.elements_stack.pop()
-                curr_style = self.styles_stack.pop()
-                is_bold = False
-                is_italics = False
+                if self.elements_stack and self.styles_stack:
+                    curr_elem = self.elements_stack[-1]
+                    curr_style = self.styles_stack[-1]
+                    is_bold = False
+                    is_italics = False
+                    link_url = None
 
-                if curr_elem == "strong":
-                    is_bold = True
-                if curr_elem == "em":
-                    is_italics = True
+                    data = data.strip()
+                    if not data:
+                        return
 
-                data = data.strip()
-                if data:
+                    if curr_elem == "strong":
+                        is_bold = True
+                    if curr_elem == "em":
+                        is_italics = True
+                    if curr_elem == "a":
+                        for style in curr_style:
+                            if style[0] == 'href':
+                                link_url = style[1]
+                                break
+                            
+                    
                     self.insert_text(data)
-                    self.insert_styling(curr_style, is_bold, is_italics, len(data))
+                    self.insert_styling(curr_style, is_bold, is_italics, link_url, len(data))
 
                 # print("Data     :", data)
 
@@ -458,7 +471,7 @@ class ActionService:
                     parser.feed(value)
                     
                     req = parser.get_requests()
-                    # print(req)
+                    print(req)
                     
                     requests += req
                     del parser
