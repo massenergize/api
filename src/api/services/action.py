@@ -1,6 +1,6 @@
 from __future__ import print_function
+from urllib import request
 
-from requests import request
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.action import ActionStore
@@ -20,6 +20,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
+
+from html.parser import HTMLParser
+from html.entities import name2codepoint
 
 import os.path
 import re
@@ -191,7 +194,7 @@ class ActionService:
         folder = drive.files().create(body=folder_metadata, fields='id').execute()
         FOLDER_ID = folder['id']
 
-        # creating new google doc
+        # creating new google doc by making a copy of the export template google doc
         body = {
             'name': title,
             'parents': [FOLDER_ID] # parent is 'root' if folder is 'MyDrive'
@@ -199,71 +202,154 @@ class ActionService:
         TEMPLATE_ID = "1dmhMOZQp6mnk1_8xbCxHZnpChlhji0av_supMe147gU"
         doc = drive.files().copy(fileId=TEMPLATE_ID, body=body, supportsAllDrives=True, supportsTeamDrives=True).execute()
         DOCUMENT_ID = doc['id']
+        
+        # TODO: create a file instead of copying template??
+        # doc = drive.files().create(body=body, supportsAllDrives=True, supportsTeamDrives=True, fields='id').execute()
 
-        skip_fields = ["id", "properties", "geographic_area", "average_carbon_score", "primary_category", "is_deleted", "is_published", "is_global", "rank", "icon"] 
+        skip_fields = ["id", "properties", "geographic_area", "average_carbon_score", "primary_category", "is_deleted", "is_published", "is_global", "rank", "icon", "user"] 
+        html_fields = ["ABOUT", "STEPS TO TAKE", "DEEP DIVE"]
+        
+        class MyHTMLParser(HTMLParser):
+            pass
+        parser = MyHTMLParser()
 
+        # order of fields will dictate the order of fields in Doc
         FIELD_NAMES = {
-            "title"             : "TITLE",
-            "featured_summary"  : "FEATURED SUMMARY",
-            "steps_to_take"     : "STEPS TO TAKE",
-            "deep_dive"         : "DEEP DIVE",
-            "about"             : "ABOUT",
-            "calculator_action" : "CALCULATOR ACTION",
-            "community"         : "COMMUNITY",
-            "image"             : "IMAGE",
-            "user"              : "USER",
-            "tags"              : "TAGS",
-            "vendors"           : "VENDORS",
+            "title"             : "TITLE", # no check needed
+            "community"         : "COMMUNITY", # check neded
+            "tags"              : "TAGS", # check neded
+            "calculator_action" : "CALCULATOR ACTION", # check neded
+            "featured_summary"  : "FEATURED SUMMARY", # no check needed
+            "about"             : "ABOUT", # html field
+            "steps_to_take"     : "STEPS TO TAKE", # html field
+            "deep_dive"         : "DEEP DIVE", # html field
+            "vendors"           : "VENDORS", # check neded
+            "image"             : "IMAGE", # check neded
         }
 
-        action_content = ""
         provider = None
-        for k in list(action_dict):
-            if k not in skip_fields:
-                key = FIELD_NAMES[k]
-                value = action_dict[k]
+        requests = []
+        TEMPLATE_END_INDEX = service.documents().get(documentId=TEMPLATE_ID).execute().get("body", {}).get("content", {})[-1].get("endIndex", 1) - 1
 
-                if key == "USER" and value is not None:
-                    user, err = get_user(value)
-                    if err:
-                        return None, err
-                    
-                    provider = user['full_name']
-                    value = None
+        # makes the Doc request object for all headings and non-html action fields
+        def get_request(heading_text, value_text, end=None, is_bold=False, is_underline=False):   
+            end = end if end else len(value_text)
 
-                if key == "IMAGE" and value is not None:
-                    img, err = self.media_store.getImageInfo({'media_id': value})
-                    if err:
-                        return None, err
-                    
-                    value = img.simple_json()['url']
+            # in the case of doc heading (provider and date)
+            if not heading_text:
+                return [
+                    {
+                        'insertText': {
+                            'location': {
+                                'index': TEMPLATE_END_INDEX,
+                            },
+                            'text': value_text
+                        }   
+                    },
+                    {
+                        'updateTextStyle': {
+                            'range': {
+                                'startIndex': TEMPLATE_END_INDEX,
+                                'endIndex': TEMPLATE_END_INDEX + end
+                            },
+                            'textStyle': {
+                                'bold': is_bold,
+                                'underline': is_underline
+                            },
+                            'fields': 'bold, underline'
+                        }
+                    },
+                    {
+                        'updateTextStyle': {
+                            'range': {
+                                'startIndex': TEMPLATE_END_INDEX + end,
+                                'endIndex': TEMPLATE_END_INDEX + len(value_text)
+                            },
+                            'textStyle': {},
+                            'fields': 'bold, underline'
+                        }
+                    },
+                ]
+            
+            # in the case of action fields
+            return [
+                {
+                    'insertText': {
+                        'location': {
+                            'index': TEMPLATE_END_INDEX,
+                        },
+                        'text': value_text
+                    }   
+                },
+                {
+                    'updateTextStyle': {
+                        'range': {
+                            'startIndex': TEMPLATE_END_INDEX,
+                            'endIndex': TEMPLATE_END_INDEX + len(value_text)
+                        },
+                        'textStyle': {},
+                        'fields': '*'
+                    }
+                },
+                {
+                    'insertText': {
+                        'location': {
+                            'index': TEMPLATE_END_INDEX,
+                        },
+                        'text': heading_text
+                    }   
+                }, 
+                {
+                    'updateTextStyle': {
+                        'range': {
+                            'startIndex': TEMPLATE_END_INDEX,
+                            'endIndex': TEMPLATE_END_INDEX + len(heading_text)
+                        },
+                        'textStyle': {
+                            'bold': True,
+                            'underline': True
+                        },
+                        'fields': 'bold, underline'
+                    }
+                },
+            ]
 
-                    # creating image file and putting it in folder
-                    # print("image: ", value)
-                    # image_metadata = {
-                    #     'name': '{}.png'.format(title),
-                    #     'parents': [FOLDER_ID]
-                    # }
-                    # media = MediaFileUpload(value, mimetype='image/png')
-                    # service.files().create(body=image_metadata, media_body=media, ).execute()
+        # reversing order of field names to preserve correct order (much easer to add to Doc backwards)
+        for f in list(FIELD_NAMES)[::-1]:
+            # print("On field:", f)
+            field = FIELD_NAMES[f]
+            value = action_dict[f]
 
-                if key == "COMMUNITY":
+            if not value:
+                requests += get_request(field + '\n', "N/A\n\n")
+            else:
+                if field in html_fields:
+                    #TODO: handle html fields
+                    pass
+                elif field == "COMMUNITY":
                     community, err = get_community(community_id=value)
                     if err:
                         return None, err
+                    
                     value = community.name
+                    requests += get_request(field + '\n', value + '\n\n')
 
-                if key == "CALCULATOR ACTION" and value is not None:
+                elif field == "CALCULATOR ACTION":
+                    # TODO: error handling if .get() doesn't return anything
                     cc_action = CCAction.objects.get(id=value)
+                    
                     value = cc_action.description
+                    requests += get_request(field + '\n', value + '\n\n')
 
-                if key == "VENDORS":
+                elif field == "VENDORS":
                     vendors = []
                     for v in value:
                         vendors.append(v.name)
+                    
                     value = ", ".join(vendors)
+                    requests += get_request(field + '\n', value + '\n\n')
 
-                if key == "TAGS":
+                elif field == "TAGS":
                     location_tags = []
                     cost_tag = None
                     impact_tag = None
@@ -280,6 +366,7 @@ class ActionService:
                         else:
                             category_tag = tag
 
+                    # TODO: check formatting when there are no tags, and when there are no location tags
                     if category_tag:
                         tags += "{} / ".format(category_tag)
                     if cost_tag:
@@ -289,153 +376,115 @@ class ActionService:
                     if len(location_tags) != 0:
                         tags += ", ".join(location_tags)
                     
-                    value = tags  
-  
-                if isinstance(value, str):
-                    # filters out HTML tags
-                    value = re.sub(CLEANER, '', value)
-                
-                if value == None or value == [] or value == "":
-                    value = "N/A"
-                
-                value = str(value)
-                while value[-1] == '\n':
-                    value = value[:-1]
+                    value = tags
+                    requests += get_request(field + '\n', value + '\n\n')
 
-                field = "{}\n{}\n".format(key, value) if key != "USER" else ""
-                action_content += field
+                elif field == "IMAGE":
+                    img, err = self.media_store.getImageInfo({'media_id': value})
+                    if err:
+                        return None, err
+                    
+                    value = img.simple_json()['url']
+                    requests += get_request(field + '\n', value + '\n\n')
+
+                else:
+                    # title and featured summary
+                    requests += get_request(field + '\n', value + '\n\n')
+
+        # adding provider, user, and date information
+        requests += get_request(None, "WHEN:\t\t\t{}\n\n".format(datetime.now().strftime("%d %B, %Y")), is_bold=True, end=len("WHEN:"))
+
+        provider = None    
+        if action_dict['user']:
+            provider, err = get_user(action_dict['user'])
+            if err:
+                return None, err
 
         if provider and provider != args['exporter_name']:
-                provider = "WHO PROVIDIED THIS?   {}, {}\n".format(provider, args['exporter_name'])
+            provider_text = "\nWHO PROVIDIED THIS?\t{}, {}\n".format(provider, args['exporter_name'])
         else:
-            provider = "WHO PROVIDED THIS?   {}\n".format(args['exporter_name'])
-
-        date = "WHEN:\t\t\t{}\n\n".format(datetime.now().strftime("%d %B, %Y"))
-
-        action_content = provider + date + action_content
-        requests = [
-            {        
-                'insertText': {
-                    'location': {
-                        'index': 81 # if export action template changes, then this much change accordingly
-                    },
-                    'text' : action_content,
-                }
-            }
-        ]
-        # populates doc with field information
-        service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': requests}).execute()
-
-        # formatting document
-        document = service.documents().get(documentId=DOCUMENT_ID).execute()
-        content = document.get("body").get("content")
-
-        field_titles = FIELD_NAMES.values()
-        requests = [
-            {
-                'updateTextStyle': {
-                    'range': {
-                        'startIndex': 31,
-                        'endIndex': content[-1]['endIndex']
-                    },
-                    'textStyle': {
-                        'weightedFontFamily': {
-                            'fontFamily': 'Arial'
-                        },
-                        'fontSize': {
-                            'magnitude': 12,
-                            'unit': 'PT'
-                        },
-                    },
-                    'fields': 'weightedFontFamily, fontSize'
-                }
-            },
-            {
-                'updateTextStyle': {
-                    'range': {
-                        'startIndex': 1,
-                        'endIndex': 81 + 18
-                    },
-                    'textStyle':{
-                        'bold' : True,
-                    },
-                    'fields': 'bold'
-                },
-            },
-            {
-                'updateTextStyle': {
-                    'range': {
-                        'startIndex': 81 + len(provider),
-                        'endIndex': 81 + len(provider) + 5
-                    },
-                    'textStyle':{
-                        'bold' : True,
-                    },
-                    'fields': 'bold'
-                },
-            },
-            {
-            'updateParagraphStyle': {
-                'range': {
-                    'startIndex': 81 + len(provider) + len(date),
-                    'endIndex': content[-1]['endIndex']
-                },
-                'paragraphStyle': {
-                    
-                    'spaceAbove': {
-                        'magnitude': 0,
-                        'unit': 'PT'
-                    },
-                    'spaceBelow': {
-                        'magnitude': 0,
-                        'unit': 'PT'
-                    }
-                },
-                'fields': 'spaceAbove,spaceBelow'
-            }
-        },
-        ]
+            provider_text = "\nWHO PROVIDED THIS?\t{}\n".format(args['exporter_name'])
         
-        for i in range(1, len(content)):
-            j = 1 if i == 1 else 0
+        requests += get_request(None, provider_text, is_bold=True, end=len("WHO PROVIDED THIS?"))
+        
+        ### BELOW IS ONLY NEEDED IF NEW DOC IS CREATED INSTEAD OF COPIED FROM TEMPLATE ###
 
-            if content[i]['paragraph']['elements'][j]['textRun']['content'][:-1] in field_titles:
-                requests.append(
-                    {
-                        'updateTextStyle': {
-                            'range': {
-                                'startIndex': content[i]['startIndex'],
-                                'endIndex': content[i]['endIndex']
-                            },
-                            'textStyle': {
-                                'underline': True,
-                                'bold': True
-                            },
-                            'fields': 'underline, bold' 
-                        }
-                    }
-                )
-                requests.append({
-                        'updateParagraphStyle': {
-                            'range': {
-                                'startIndex': content[i]['startIndex'],
-                                'endIndex': content[i]['endIndex']
-                            },
-                            'paragraphStyle': {
-                                
-                                'spaceAbove': {
-                                    'magnitude': 10,
-                                    'unit': 'PT'
-                                },
-                                'spaceBelow': {
-                                    'magnitude': 4,
-                                    'unit': 'PT'
-                                }
-                            },
-                            'fields': 'spaceAbove,spaceBelow'
-                        }
-                    },
-                )
+        # adding header (massEnergize logo, export action template, instructions link)
+        # heading = "\nExport Action Template\n\n"
+        # instructions_link = "https://docs.google.com/document/d/1GBt7-7keBwnusnstdEQA83WK3g1tId7K9rMUmPK0vXc/edit"
+        # instructions_text = "Instructions for submitting or modifying actions here\n"
+
+        # requests += [
+        #     {
+        #         'insertText': {
+        #             'location': {
+        #                 'index': 1,
+        #             },
+        #             'text': instructions_text
+        #         }   
+        #     },
+        #     {
+        #         'updateTextStyle': {
+        #             'range': {
+        #                 'startIndex': 1,
+        #                 'endIndex': len(instructions_text)
+        #             },
+        #             'textStyle': {
+        #                 'bold': True,
+        #                 'underline': True,
+        #                 'link': {
+        #                     'url': instructions_link
+        #                 }
+        #             },
+        #             'fields': 'bold, underline'
+        #         }
+        #     },
+        #     {
+        #         'insertText': {
+        #             'location': {
+        #                 'index': 1,
+        #             },
+        #             'text': heading
+        #         }   
+        #     },
+        #     {
+        #         'updateTextStyle': {
+        #             'range': {
+        #                 'startIndex': 1,
+        #                 'endIndex': len(heading)
+        #             },
+        #             'textStyle': {
+        #                 'bold': True,
+        #                 'fontSize': {
+        #                     'magnitude': 15,
+        #                     'unit': 'PT'
+        #                 },
+        #             },
+        #             'fields': 'bold'
+        #         }
+        #     },
+        #     {
+        #         'insertInlineImage': {
+        #             'location': {
+        #                 'index': 1
+        #             },
+        #             'uri':
+        #                 'https://fonts.gstatic.com/s/i/productlogos/docs_2020q4/v6/web-64dp/logo_docs_2020q4_color_1x_web_64dp.png',
+        #             'objectSize': {
+        #                 'height': {
+        #                     'magnitude': 50,
+        #                     'unit': 'PT'
+        #                 },
+        #                 'width': {
+        #                     'magnitude': 50,
+        #                     'unit': 'PT'
+        #                 }
+        #             }
+        #         }
+        #     }
+        # ]
+
+        # populates doc with all content and styling
         service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': requests}).execute()
     except HttpError as e:
         print(e)
