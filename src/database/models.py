@@ -1,6 +1,5 @@
 import datetime
 import json
-from tkinter.tix import IMAGE
 from django.db import models
 from django.db.models.fields import BooleanField, related
 from django.db.models.query_utils import select_related_descend
