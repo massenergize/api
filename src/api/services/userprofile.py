@@ -182,10 +182,10 @@ class UserService:
     return imported_info, None
 
   def validate_username(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    valid_username, err = self.store.validate_username(args)
+    info, err = self.store.validate_username(args)
     if err:
       return None, err
-    return valid_username, None
+    return info, None
 
   def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
