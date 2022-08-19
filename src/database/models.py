@@ -442,9 +442,16 @@ class Community(models.Model):
                 l = loc.zipcode
             locations += l
 
-
-        features_flags = FeatureFlag.objects.filter(communities=self)
-        features_flags_json = [f.simple_json() for f in features_flags]
+        # Feature flags can either enable features for specific communities, or disable them
+        feature_flags = FeatureFlag.objects.all()
+        feature_flags_json = []
+        for f in feature_flags:
+          specified_communities = f.communities.all()
+          enabled = ((f.audience == "EVERYONE") or       # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
+                 (f.audience == "SPECIFIC" and self in specified_communities) or 
+                 (f.audience == "ALL_EXCEPT" and self not in specified_communities))
+          if enabled:
+            feature_flags_json.append(f.simple_json())
 
         return {
             "id": self.id,
@@ -469,7 +476,7 @@ class Community(models.Model):
             "admins": admins,
             "geography_type": self.geography_type,
             "locations": locations,
-            'feature_flags': features_flags_json,
+            'feature_flags': feature_flags_json,
         }
 
     class Meta:
@@ -764,8 +771,16 @@ class UserProfile(models.Model):
         #     for cm in CommunityMember.objects.filter(user=self, is_admin=True)
         # ]
 
-        feature_flags = FeatureFlag.objects.filter(users=self)
-        feature_flag_json = [f.simple_json() for f in feature_flags]
+        # Feature flags can either enable features for specific users, or disable them for specific users
+        feature_flags = FeatureFlag.objects.all()
+        feature_flags_json = []
+        for f in feature_flags:
+          specified_users = f.users.all()
+          enabled = ((f.user_audience == "EVERYONE") or       # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
+                 (f.user_audience == "SPECIFIC" and self in specified_users) or 
+                 (f.user_audience == "ALL_EXCEPT" and self not in specified_users))
+          if enabled:
+            feature_flags_json.append(f.simple_json())
 
         data = model_to_dict(
             self, exclude=["real_estate_units", "communities", "roles"]
@@ -800,7 +815,7 @@ class UserProfile(models.Model):
             "user_portal_settings": user_portal_settings,
             "admin_portal_settings": admin_portal_settings,
         }
-        data['feature_flags'] = feature_flag_json
+        data['feature_flags'] = feature_flags_json
 
         return data
 
