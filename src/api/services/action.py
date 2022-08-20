@@ -215,16 +215,25 @@ class ActionService:
                 
                 self.end_index = end
                 self.field = field
-                
+                self.in_unordered_list = False
+                self.in_ordered_list = False
+
+                self.new_line_insert = {'insertText': {'location': {'index': end}, 'text': '\n'}}
+                self.required_beginning = [self.new_line_insert for i in range(2)]
+                self.text_edit_newline = ''.join(chr(i) for i in [13, 10])
+
                 self.elements_stack = []
                 self.styles_stack = []
+                self.last_tag = None
 
                 super().__init__()
 
             # Helper functions to create Google Doc request objects 
 
-            def get_requests(self): 
+            def get_requests(self):
                 self.insert_heading()
+                while self.requests[:2] != self.required_beginning:
+                    self.insert_text('\n')
                 return self.requests
             
             def insert_heading(self):
@@ -233,7 +242,7 @@ class ActionService:
                         'location': {
                             'index': self.end_index,
                         },
-                        'text': self.field + "\n"
+                        'text': self.field + '\n'
                     }
                 })
                 self.requests.append({
@@ -250,6 +259,14 @@ class ActionService:
                         'fields': 'bold, underline, foregroundColor'
                     }
                 })
+                self.requests.append({
+                    'deleteParagraphBullets': {
+                        'range': {
+                            'startIndex': self.end_index,
+                            'endIndex':  self.end_index + 1
+                        },
+                    }
+                })
             
             def insert_text(self, text):
                 self.requests.insert(0, {
@@ -260,12 +277,10 @@ class ActionService:
                         'text': text
                     }
                 })
-
-            def insert_bullets(self):
-                pass
             
             def insert_styling(self, attrs, is_bold, is_italics, link_url, length):
                 #TODO: either check if sub-dicts exists in 'textStyle' or make the default have all necessary fields as empty dicts
+                # coloring a link overwrites its style 
                 
                 styles = {
                     'updateTextStyle': {
@@ -310,26 +325,64 @@ class ActionService:
                             styles['updateTextStyle']['textStyle'] = {'fontSize': {'magnitude': style[1].rstrip('pt;'), 'unit': 'PT'}}
 
                 self.requests.insert(1, styles)
-            
+
+                if self.in_unordered_list:
+                    self.requests.insert(2, {
+                        'createParagraphBullets': {
+                            'range': {
+                                'startIndex': self.end_index,
+                                'endIndex':  self.end_index + length
+                            },
+                            'bulletPreset': 'BULLET_DISC_CIRCLE_SQUARE',
+                        }
+                    })
+                elif self.in_ordered_list:
+                    self.requests.insert(2, {
+                        'createParagraphBullets': {
+                            'range': {
+                                'startIndex': self.end_index,
+                                'endIndex':  self.end_index + length
+                            },
+                            'bulletPreset': 'NUMBERED_DECIMAL_NESTED',
+                        }
+                    })
+                else:
+                    self.requests.insert(2, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + length}}})
+
+
             # HTMLParser specific class functions
 
             def handle_starttag(self, tag, attrs):
                 self.elements_stack.append(tag)
                 self.styles_stack.append(attrs)
 
-                # print("Start tag:", tag)
-                # for attr in attrs:
-                #     print("     attr:", attr)
+                if tag == "ul":
+                    self.in_unordered_list = True
+
+                if tag == "ol":
+                    self.in_ordered_list = True
+
+                print("Start tag:", tag)
+                for attr in attrs:
+                    print("     attr:", attr)
 
             def handle_endtag(self, tag):
-                # print("End tag  :", tag)
+                print("End tag  :", tag)
                 self.elements_stack.pop()
                 self.styles_stack.pop()
 
-                if tag == 'p':
+                if tag == "ul":
+                    self.in_unordered_list = False
+                    self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
+
+                if tag == "ol":
+                    self.in_ordered_list = False
+                    self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
+
+                if tag == 'p' or tag == 'li':
                     self.insert_text('\n')
-                if len(self.elements_stack) == 0:
-                    self.insert_text('\n')
+
+                self.last_tag = tag
 
             def handle_data(self, data):
                 if self.elements_stack and self.styles_stack:
@@ -345,19 +398,25 @@ class ActionService:
 
                     if curr_elem == "strong":
                         is_bold = True
+                    
                     if curr_elem == "em":
                         is_italics = True
+                    
                     if curr_elem == "a":
                         for style in curr_style:
                             if style[0] == 'href':
                                 link_url = style[1]
                                 break
-                            
-                    
+
                     self.insert_text(data)
                     self.insert_styling(curr_style, is_bold, is_italics, link_url, len(data))
 
-                # print("Data     :", data)
+                elif self.last_tag not in ["p", "ol", "ul"]:
+                    print("here")
+                    self.insert_text('\n')
+                    self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
+
+                print("Data     :", data)
 
         # order of fields will dictate the order of fields in Doc
         FIELD_NAMES = {
