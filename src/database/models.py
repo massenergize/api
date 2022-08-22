@@ -450,6 +450,7 @@ class Community(models.Model):
           enabled = ((f.audience == "EVERYONE") or       # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
                  (f.audience == "SPECIFIC" and self in specified_communities) or 
                  (f.audience == "ALL_EXCEPT" and self not in specified_communities))
+          enabled = enabled and (not f.expires_on or f.expires_on > datetime.datetime.today())
           if enabled:
             feature_flags_json.append(f.simple_json())
 
@@ -779,6 +780,7 @@ class UserProfile(models.Model):
           enabled = ((f.user_audience == "EVERYONE") or       # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
                  (f.user_audience == "SPECIFIC" and self in specified_users) or 
                  (f.user_audience == "ALL_EXCEPT" and self not in specified_users))
+          enabled = enabled and (not f.expires_on or f.expires_on > datetime.datetime.today())
           if enabled:
             feature_flags_json.append(f.simple_json())
 
