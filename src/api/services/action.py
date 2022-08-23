@@ -327,8 +327,6 @@ class ActionService:
                             styles['updateTextStyle']['textStyle'] = {'fontSize': {'magnitude': style[1].rstrip('pt;'), 'unit': 'PT'}}
 
                 self.requests.insert(1, styles)
-
-                # list_start = self.end_index - self.list
                 
                 if self.in_unordered_list:
                     print("in styling unordered")
@@ -394,18 +392,12 @@ class ActionService:
                         self.in_unordered_list = False
                         self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
                     
-                    # if self.list_nesting_level == 0:
-                    #     self.in_unordered_list = False
-                    #     self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
-
                 if tag == "ol":
                     if self.list_nesting_level:
                         self.list_nesting_level -= 1
-
-                    if self.list_nesting_level == 0:
+                    else:
                         self.in_ordered_list = False
-                    
-                    self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
+                        self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
 
             def handle_data(self, data):
                 if self.elements_stack and self.styles_stack:
@@ -440,7 +432,6 @@ class ActionService:
                     self.insert_styling(curr_style, is_bold, is_italics, link_url, len(data))
 
                 elif self.last_tag not in ["p", "ol", "ul"]:
-                    print("here")
                     self.insert_text('\n')
                     self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
 
@@ -449,15 +440,15 @@ class ActionService:
         # order of fields will dictate the order of fields in Doc
         FIELD_NAMES = {
             "title"             : "TITLE", # no check needed
-            "community"         : "COMMUNITY", # check neded
-            "tags"              : "TAGS", # check neded
-            "calculator_action" : "CALCULATOR ACTION", # check neded
+            "community"         : "COMMUNITY", # check needed
+            "tags"              : "TAGS", # check needed
+            "calculator_action" : "CALCULATOR ACTION", # check needed
             "featured_summary"  : "FEATURED SUMMARY", # no check needed
             "about"             : "ABOUT", # html field
             "steps_to_take"     : "STEPS TO TAKE", # html field
             "deep_dive"         : "DEEP DIVE", # html field
-            "vendors"           : "VENDORS", # check neded
-            "image"             : "IMAGE", # check neded
+            "vendors"           : "VENDORS", # check needed
+            "image"             : "IMAGE", # check needed
         }
 
         provider = None
@@ -549,7 +540,6 @@ class ActionService:
 
         # reversing order of field names to preserve correct order (much easer to add to Doc backwards)
         for f in list(FIELD_NAMES)[::-1]:
-            # print("On field:", f)
             field = FIELD_NAMES[f]
             value = action_dict[f]
 
@@ -557,7 +547,6 @@ class ActionService:
                 requests += get_request(field + '\n', "N/A\n\n")
             else:
                 if field in html_fields:
-                    #TODO: handle html fields
                     parser = MyHTMLParser(field, TEMPLATE_END_INDEX)
                     parser.feed(value)
                     
@@ -648,83 +637,6 @@ class ActionService:
             provider_text = "\nWHO PROVIDED THIS?\t{}\n".format(args['exporter_name'])
         
         requests += get_request(None, provider_text, is_bold=True, end=len("WHO PROVIDED THIS?"))
-        
-        ### BELOW IS ONLY NEEDED IF NEW DOC IS CREATED INSTEAD OF COPIED FROM TEMPLATE ###
-
-        # adding header (massEnergize logo, export action template, instructions link)
-        # heading = "\nExport Action Template\n\n"
-        # instructions_link = "https://docs.google.com/document/d/1GBt7-7keBwnusnstdEQA83WK3g1tId7K9rMUmPK0vXc/edit"
-        # instructions_text = "Instructions for submitting or modifying actions here\n"
-
-        # requests += [
-        #     {
-        #         'insertText': {
-        #             'location': {
-        #                 'index': 1,
-        #             },
-        #             'text': instructions_text
-        #         }   
-        #     },
-        #     {
-        #         'updateTextStyle': {
-        #             'range': {
-        #                 'startIndex': 1,
-        #                 'endIndex': len(instructions_text)
-        #             },
-        #             'textStyle': {
-        #                 'bold': True,
-        #                 'underline': True,
-        #                 'link': {
-        #                     'url': instructions_link
-        #                 }
-        #             },
-        #             'fields': 'bold, underline'
-        #         }
-        #     },
-        #     {
-        #         'insertText': {
-        #             'location': {
-        #                 'index': 1,
-        #             },
-        #             'text': heading
-        #         }   
-        #     },
-        #     {
-        #         'updateTextStyle': {
-        #             'range': {
-        #                 'startIndex': 1,
-        #                 'endIndex': len(heading)
-        #             },
-        #             'textStyle': {
-        #                 'bold': True,
-        #                 'fontSize': {
-        #                     'magnitude': 15,
-        #                     'unit': 'PT'
-        #                 },
-        #             },
-        #             'fields': 'bold'
-        #         }
-        #     },
-        #     {
-        #         'insertInlineImage': {
-        #             'location': {
-        #                 'index': 1
-        #             },
-        #             'uri':
-        #                 'https://fonts.gstatic.com/s/i/productlogos/docs_2020q4/v6/web-64dp/logo_docs_2020q4_color_1x_web_64dp.png',
-        #             'objectSize': {
-        #                 'height': {
-        #                     'magnitude': 50,
-        #                     'unit': 'PT'
-        #                 },
-        #                 'width': {
-        #                     'magnitude': 50,
-        #                     'unit': 'PT'
-        #                 }
-        #             }
-        #         }
-        #     }
-        # ]
 
         # populates doc with all content and styling
         service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': requests}).execute()
