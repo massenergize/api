@@ -369,7 +369,6 @@ class ActionService:
                         else:
                             category_tag = tag
 
-                    # TODO: check formatting when there are no tags, and when there are no location tags
                     if category_tag:
                         tags += "{} / ".format(category_tag)
                     if cost_tag:
@@ -379,7 +378,7 @@ class ActionService:
                     if len(location_tags) != 0:
                         tags += ", ".join(location_tags)
                     
-                    value = tags
+                    value = tags[:-3] if tags[-3:] == " / " else tags
                     requests += get_request(field + '\n', value + '\n\n')
 
                 elif field == "IMAGE":
@@ -404,7 +403,7 @@ class ActionService:
             if err:
                 return None, err
 
-        if provider and provider != args['exporter_name']:
+        if provider and provider.full_name != args['exporter_name']:
             provider_text = "\nWHO PROVIDED THIS?\t{}, {}\n".format(provider, args['exporter_name'])
         else:
             provider_text = "\nWHO PROVIDED THIS?\t{}\n".format(args['exporter_name'])
