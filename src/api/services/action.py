@@ -215,8 +215,11 @@ class ActionService:
                 
                 self.end_index = end
                 self.field = field
+                
                 self.in_unordered_list = False
                 self.in_ordered_list = False
+                self.list_nesting_level = 0
+                self.last_tag = None
 
                 self.new_line_insert = {'insertText': {'location': {'index': end}, 'text': '\n'}}
                 self.required_beginning = [self.new_line_insert for i in range(2)]
@@ -224,7 +227,6 @@ class ActionService:
 
                 self.elements_stack = []
                 self.styles_stack = []
-                self.last_tag = None
 
                 super().__init__()
 
@@ -326,7 +328,10 @@ class ActionService:
 
                 self.requests.insert(1, styles)
 
+                # list_start = self.end_index - self.list
+                
                 if self.in_unordered_list:
+                    print("in styling unordered")
                     self.requests.insert(2, {
                         'createParagraphBullets': {
                             'range': {
@@ -357,12 +362,18 @@ class ActionService:
                 self.styles_stack.append(attrs)
 
                 if tag == "ul":
+                    if self.in_unordered_list:
+                        self.list_nesting_level += 1
+
                     self.in_unordered_list = True
 
                 if tag == "ol":
+                    if self.in_ordered_list:
+                        self.list_nesting_level += 1
+
                     self.in_ordered_list = True
 
-                print("Start tag:", tag)
+                print("Start tag:", tag, self.list_nesting_level)
                 for attr in attrs:
                     print("     attr:", attr)
 
@@ -371,18 +382,30 @@ class ActionService:
                 self.elements_stack.pop()
                 self.styles_stack.pop()
 
-                if tag == "ul":
-                    self.in_unordered_list = False
-                    self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
-
-                if tag == "ol":
-                    self.in_ordered_list = False
-                    self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
-
-                if tag == 'p' or tag == 'li':
+                if tag == 'p' or tag == 'li' and self.list_nesting_level == 0:
                     self.insert_text('\n')
 
                 self.last_tag = tag
+
+                if tag == "ul":
+                    if self.list_nesting_level:
+                        self.list_nesting_level -= 1
+                    else:
+                        self.in_unordered_list = False
+                        self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
+                    
+                    # if self.list_nesting_level == 0:
+                    #     self.in_unordered_list = False
+                    #     self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
+
+                if tag == "ol":
+                    if self.list_nesting_level:
+                        self.list_nesting_level -= 1
+
+                    if self.list_nesting_level == 0:
+                        self.in_ordered_list = False
+                    
+                    self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
 
             def handle_data(self, data):
                 if self.elements_stack and self.styles_stack:
@@ -407,6 +430,11 @@ class ActionService:
                             if style[0] == 'href':
                                 link_url = style[1]
                                 break
+                                
+                    if curr_elem == "li" and self.list_nesting_level:
+                        for i in range(self.list_nesting_level):
+                            data = '\t' + data
+                        data = '\n' + data
 
                     self.insert_text(data)
                     self.insert_styling(curr_style, is_bold, is_italics, link_url, len(data))
