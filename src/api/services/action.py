@@ -336,11 +336,13 @@ class ActionService:
                     requests += get_request(field + '\n', value + '\n\n')
 
                 elif field == "CALCULATOR ACTION":
-                    # TODO: error handling if .get() doesn't return anything
-                    cc_action = CCAction.objects.get(id=value)
-                    
-                    value = cc_action.description
-                    requests += get_request(field + '\n', value + '\n\n')
+                    try:
+                        cc_action = CCAction.objects.get(id=value)   
+                        
+                        value = cc_action.description
+                        requests += get_request(field + '\n', value + '\n\n')
+                    except CCAction.DoesNotExist:
+                        requests += get_request(field + '\n', "N/A" + '\n\n')
 
                 elif field == "VENDORS":
                     vendors = []
