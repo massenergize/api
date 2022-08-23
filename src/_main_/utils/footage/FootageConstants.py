@@ -13,39 +13,53 @@ class FootageConstants():
         },
     }
     TYPES = { 
-        "DELETE": {"key":"DELETE", "name":"Delete"},
-        "UPDATE": {"key":"UPDATE", "name":"Update"},
-        "CREATE": {"key":"CREATE", "name":"Create"},
-        "MESSAGE": {"key":"MESSAGE", "name":"Message"},
-        "SIGN_IN": {"key":"SIGN_IN", "name":"Sign In"},
-        "APPROVAL": {"key":"APPROVAL", "name":"Approval"},
-        "DISAPPROVAL": {"key":"DISAPPROVAL", "name":"Disapproval"},
+        "DELETE": {"key":"DELETE", "name":"Delete", "action_word":"deleted"},
+        "UPDATE": {"key":"UPDATE", "name":"Update","action_word":"updated"},
+        "CREATE": {"key":"CREATE", "name":"Create","action_word":"created"},
+        "COPY": {"key":"COPY", "name":"Copy","action_word":"copied"},
+        "MESSAGE": {"key":"MESSAGE", "name":"Message","action_word":"messaged"},
+        "SIGN_IN": {"key":"SIGN_IN", "name":"Sign In","action_word":"signed in"},
+        "APPROVAL": {"key":"APPROVAL", "name":"Approval","action_word":"approved"},
+        "DISAPPROVAL": {"key":"DISAPPROVAL", "name":"Disapproval","action_word":"dissapproved"},
     }
 
     @staticmethod 
+    def get_type(_type): 
+        if not _type: return {}
+        _type = FootageConstants.TYPES[_type]
+        return _type
+    @staticmethod 
     def on_admin_portal(): 
-        return FootageConstants["ADMIN_FRONTEND_PORTAL"].key
+        return FootageConstants.TYPES["ADMIN_FRONTEND_PORTAL"].key
 
     @staticmethod
-    def creating(): 
-        return FootageConstants["CREATE"].key
+    def create(): 
+        return FootageConstants.TYPES["CREATE"].key
 
     @staticmethod
-    def updating(): 
-        return FootageConstants["UPDATE"].key
+    def update(): 
+        return FootageConstants.TYPES["UPDATE"].key
 
     @staticmethod
-    def messaging(): 
-        return FootageConstants["MESSAGE"].key
+    def message(): 
+        return FootageConstants.TYPES["MESSAGE"].key
+
+    @staticmethod
+    def is_deleting(_type): 
+        return FootageConstants.TYPES["DELETE"].key == _type
+
+    @staticmethod
+    def delete(): 
+        return FootageConstants.TYPES["MESSAGE"].key
 
     @staticmethod
     def sign_in(): 
-        return FootageConstants["SIGN_IN"].key
+        return FootageConstants.TYPES["SIGN_IN"].key
 
     @staticmethod
-    def approved(): 
-        return FootageConstants["APPROVAL"].key
+    def approve(): 
+        return FootageConstants.TYPES["APPROVAL"].key
 
     @staticmethod
-    def dissapproved(): 
-        return FootageConstants["DISAPPROVAL"].key
+    def dissapprove(): 
+        return FootageConstants.TYPES["DISAPPROVAL"].key

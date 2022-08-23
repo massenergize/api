@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
 from database.models import Action, UserProfile, Community, Media, UserActionRel
@@ -109,6 +111,7 @@ class ActionStore:
           new_action.calculator_action = ccAction
 
       new_action.save()
+      Spy.create_action_footage(actions = [new_action], context = context, actor = new_action.user, type = FootageConstants.create())
       return new_action, None
 
     except Exception as e:
