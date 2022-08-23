@@ -124,4 +124,3 @@ class MiscellaneousService:
         if err: return None, CustomMassenergizeError(str(err))
         client = Client()
         return signinAs(client,user), None
-        
