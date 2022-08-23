@@ -22,9 +22,30 @@ class FootageConstants():
         "DISAPPROVAL": {"key":"DISAPPROVAL", "name":"Disapproval"},
     }
 
-    def __init__(self) -> None:
-        pass
-
     @staticmethod 
     def on_admin_portal(): 
         return FootageConstants["ADMIN_FRONTEND_PORTAL"].key
+
+    @staticmethod
+    def creating(): 
+        return FootageConstants["CREATE"].key
+
+    @staticmethod
+    def updating(): 
+        return FootageConstants["UPDATE"].key
+
+    @staticmethod
+    def messaging(): 
+        return FootageConstants["MESSAGE"].key
+
+    @staticmethod
+    def sign_in(): 
+        return FootageConstants["SIGN_IN"].key
+
+    @staticmethod
+    def approved(): 
+        return FootageConstants["APPROVAL"].key
+
+    @staticmethod
+    def dissapproved(): 
+        return FootageConstants["DISAPPROVAL"].key

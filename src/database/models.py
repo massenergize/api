@@ -3304,30 +3304,30 @@ class Footage(models.Model):
         type: The kind of activity that was just performed. Check FootageConstants.py(TYPES) for a list of all available activity types 
         portal: Which platform the activity happens on Check FootageConstants.py(PLATFORMS) for a list of available platforms
         description: A brief description of what happened in the activity E.g User405 deleted action with id 444
-        related_users : other users who are involved in the activity. (E.g an admin makes 3 other admins admin of a community. The "3 other" admins will be found here... )
-        community: The community that is directly involved in the activity took place. E.g - A user is Cadmin of 3 communities, and deletes an action. Only the community that is linked to action will be linked here. 
+        users : other users who are involved in the activity. (E.g an admin makes 3 other admins admin of a community. The "3 other" admins will be found here... )
+        communities: The communities that are directly involved in the activity that took place. E.g - A user is Cadmin of 3 communities, and deletes an action. Only the communities that are linked to action will be linked here. 
         by_super_admin: Just a field that lets you easily know the activity is a Sadmin activity
     """
     id = models.AutoField(primary_key=True)
     actor = models.ForeignKey(
-        UserProfile, on_delete=models.SET_NULL, null=False, blank=True
+        UserProfile, on_delete=models.DO_NOTHING, null=False, blank=True, related_name="footages"
     )
     activity_type = models.CharField(max_length=SHORT_STR_LEN, null=False)
     portal =  models.CharField(max_length=SHORT_STR_LEN)
     description = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
-    related_users = models.ManyToManyField(UserProfile, blank=True, null=True)
-    community = models.ForeignKey(
-        Community, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    related_users = models.ManyToManyField(UserProfile, blank=True, related_name ="appearances")
+    communities = models.ManyToManyField(Community,blank=True)
     by_super_admin = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    action = models.ManyToManyField(Action, blank=True, null=True)
-    testimonial = models.ManyToManyField(Testimonial, blank=True, null=True)
-    team = models.ManyToManyField(Team, blank=True, null=True)
-    event = models.ManyToManyField(Event, blank=True, null=True)
-    images = models.ManyToManyField(Media, blank=True, null=True)
-    message = models.ManyToManyField(Message, blank=True, null=True)
+    actions = models.ManyToManyField(Action, blank=True)
+    testimonials = models.ManyToManyField(Testimonial, blank=True)
+    teams = models.ManyToManyField(Team, blank=True)
+    events = models.ManyToManyField(Event, blank=True)
+    images = models.ManyToManyField(Media, blank=True)
+    messages = models.ManyToManyField(Message, blank=True)
     
+    def __str__(self) -> str:
+        return super().__str__()
     class Meta:
         db_table = "footages"
-        ordering = ("-name",)
+        ordering = ("-id",)
