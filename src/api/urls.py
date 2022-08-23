@@ -33,7 +33,9 @@ from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
 from api.handlers.page_settings__register import RegisterPageSettingsHandler
 from api.handlers.page_settings__signin import SigninPageSettingsHandler
+from api.handlers.webhook import WebhookHandler
 from django.urls import path, include
+
 
 
 ROUTE_HANDLERS = [
@@ -71,7 +73,8 @@ ROUTE_HANDLERS = [
     MediaLibraryHandler(),
     RegisterPageSettingsHandler(),
     SigninPageSettingsHandler(),
-    TaskQueueHandler()
+    TaskQueueHandler(),
+    WebhookHandler()
 ]
 
 urlpatterns = [
