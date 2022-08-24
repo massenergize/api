@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.fields import BooleanField, related
 from django.db.models.query_utils import select_related_descend
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
+from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
@@ -3313,7 +3314,7 @@ class Footage(models.Model):
         UserProfile, on_delete=models.DO_NOTHING, null=False, blank=True, related_name="footages"
     )
     activity_type = models.CharField(max_length=SHORT_STR_LEN, null=False)
-    portal =  models.CharField(max_length=SHORT_STR_LEN)
+    portal =  models.CharField(max_length=SHORT_STR_LEN, default=FootageConstants.on_admin_portal())
     notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
     related_users = models.ManyToManyField(UserProfile, blank=True, related_name ="appearances")
     communities = models.ManyToManyField(Community,blank=True)

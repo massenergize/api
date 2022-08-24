@@ -173,7 +173,7 @@ class ActionStore:
         
       new_action.save()
       # ----------------------------------------------------------------
-      Spy.create_action_footage(actions = [new_action,action_to_copy], context = context, actor = new_action.user, type = FootageConstants.copy(), notes =f"Copied from ID({action_to_copy.id}) to ({new_action.id})" )
+      Spy.create_action_footage(actions = [new_action,action_to_copy], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({action_to_copy.id}) to ({new_action.id})" )
       # ----------------------------------------------------------------
       return new_action, None
     except Exception as e:
@@ -251,7 +251,7 @@ class ActionStore:
           actions.update(rank=rank)
           action = actions.first()
           # ----------------------------------------------------------------
-          Spy.create_action_footage(actions = [action], context = context, type = FootageConstants.update(), notes=f"Rant updated to - {rank}")
+          Spy.create_action_footage(actions = [action], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
           # ----------------------------------------------------------------
           return action, None
         else:

@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
@@ -140,6 +142,9 @@ class EventStore:
         new_event.tags.add(tag)
         new_event.save()
 
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [new_event,event_to_copy], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({event_to_copy.id}) to ({new_event.id})" )
+      # ----------------------------------------------------------------
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -296,7 +301,10 @@ class EventStore:
           "final_date": str(final_date)
         } 
 
-      new_event.save()      
+      new_event.save()   
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [new_event], context = context, actor = new_event.user, type = FootageConstants.create())
+      # ----------------------------------------------------------------   
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -467,7 +475,11 @@ class EventStore:
             rescheduled.delete()
 
       # successful return
-      event.save()      
+      event.save()     
+      
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [event], context = context, type = FootageConstants.update())
+      # ---------------------------------------------------------------- 
       return event, None
 
     except Exception as e:
@@ -571,7 +583,7 @@ class EventStore:
         return CustomMassenergizeError(e)
     return events, None
 
-  def rank_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def rank_event(self, args, context: Context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get('id', None)
       rank = args.get('rank', None)
@@ -579,6 +591,10 @@ class EventStore:
 
         events = Event.objects.filter(id=id)
         events.update(rank=rank)
+        event = event.first() 
+        # ----------------------------------------------------------------
+        Spy.create_event_footage(actions = [event], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+        # ----------------------------------------------------------------
         return events.first(), None
       else:
         raise Exception("Rank and ID not provided to events.rank")
@@ -595,9 +611,13 @@ class EventStore:
       
       if len(events) > 1:
         return None, CustomMassenergizeError("Deleting multiple events not supported")
-
+      event = events.first()
       events.delete()
-      return events.first(), None
+      
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [event], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({event_id})")
+      # ----------------------------------------------------------------
+      return event, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

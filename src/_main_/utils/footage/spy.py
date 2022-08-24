@@ -57,6 +57,55 @@ class Spy:
             Console.log("Could not create action footage...", str(e))
 
     @staticmethod
+    def create_event_footage(**kwargs):
+        try:
+            events = kwargs.get("actions")
+            ctx = kwargs.get("context")
+            actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            notes = kwargs.get("notes", "")
+            communities = []
+            for a in events:
+                if a and a.community:
+                    communities.append(a.community)
+            footage = Spy.create_footage(
+                actor=actor,
+                notes=notes,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
+            )
+            footage.events.set(events)
+            footage.communities.set(communities)
+            return footage
+        except Exception as e:
+            Console.log("Could not create event footage...", str(e))
+
+    @staticmethod
+    def create_sign_in_footage(**kwargs):
+        try:
+            ctx = kwargs.get("context")
+            actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            footage = Spy.create_footage(
+                actor=actor,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
+            )
+            return footage
+        except Exception as e:
+            Console.log("Could not create sign in footage...", str(e))
+
+    @staticmethod
     def fetch_footages_for_community(**kwargs):
         community = kwargs.get("community") or kwargs.get("communities")
         if not community:

@@ -1,4 +1,3 @@
-from database.models import Footage
 
 
 class FootageConstants:
@@ -36,7 +35,11 @@ class FootageConstants:
 
     @staticmethod
     def on_admin_portal():
-        return FootageConstants.TYPES["ADMIN_FRONTEND_PORTAL"]["key"]
+        return FootageConstants.PLATFORMS["ADMIN_FRONTEND_PORTAL"]["key"]
+
+    @staticmethod
+    def on_user_portal():
+        return FootageConstants.PLATFORMS["ADMIN_FRONTEND_PORTAL"]["key"]
 
     @staticmethod
     def create():

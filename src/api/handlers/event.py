@@ -311,7 +311,7 @@ class EventHandler(RouteHandler):
     if err:
       return err
 
-    event_info, err = self.service.rank_event(args)
+    event_info, err = self.service.rank_event(args, context)
     if err:
       return err
     return MassenergizeResponse(data=event_info)
