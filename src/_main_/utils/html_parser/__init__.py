@@ -151,6 +151,10 @@ class MyHTMLParser(HTMLParser):
             # HTMLParser specific class functions
 
             def handle_starttag(self, tag, attrs):
+                # print("Start tag:", tag, self.list_nesting_level)
+                # for attr in attrs:
+                #     print("     attr:", attr)
+                
                 self.elements_stack.append(tag)
                 self.styles_stack.append(attrs)
 
@@ -166,12 +170,9 @@ class MyHTMLParser(HTMLParser):
 
                     self.in_ordered_list = True
 
-                print("Start tag:", tag, self.list_nesting_level)
-                for attr in attrs:
-                    print("     attr:", attr)
-
             def handle_endtag(self, tag):
-                print("End tag  :", tag)
+                # print("End tag  :", tag)
+                
                 self.elements_stack.pop()
                 self.styles_stack.pop()
 
@@ -195,6 +196,8 @@ class MyHTMLParser(HTMLParser):
                         self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
 
             def handle_data(self, data):
+                # print("Data     :", data)
+                
                 if self.elements_stack and self.styles_stack:
                     curr_elem = self.elements_stack[-1]
                     curr_style = self.styles_stack[-1]
@@ -234,5 +237,3 @@ class MyHTMLParser(HTMLParser):
                 elif self.last_tag not in ["p", "ol", "ul"]:
                     self.insert_text('\n')
                     self.requests.insert(1, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + 1}}})
-
-                print("Data     :", data)
