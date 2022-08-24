@@ -24,7 +24,7 @@ def fill_is_approved(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0117_message_parent'),
+        ('database', '0118_feature_flags'),
     ]
 
     operations = [
