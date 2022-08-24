@@ -1,7 +1,6 @@
 from html.parser import HTMLParser
 from html.entities import name2codepoint
 import re
-import string
 
 class MyHTMLParser(HTMLParser):
             def __init__(self, field, end):
