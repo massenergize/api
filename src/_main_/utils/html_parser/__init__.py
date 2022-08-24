@@ -1,5 +1,7 @@
 from html.parser import HTMLParser
 from html.entities import name2codepoint
+import re
+import string
 
 class MyHTMLParser(HTMLParser):
             def __init__(self, field, end):
@@ -19,6 +21,8 @@ class MyHTMLParser(HTMLParser):
 
                 self.elements_stack = []
                 self.styles_stack = []
+
+                self.no_capitals_pattern = re.compile("[^A-Z]")
 
                 super().__init__()
 
@@ -121,7 +125,6 @@ class MyHTMLParser(HTMLParser):
                 self.requests.insert(1, styles)
                 
                 if self.in_unordered_list:
-                    print("in styling unordered")
                     self.requests.insert(2, {
                         'createParagraphBullets': {
                             'range': {
@@ -214,11 +217,16 @@ class MyHTMLParser(HTMLParser):
                             if style[0] == 'href':
                                 link_url = style[1]
                                 break
-                                
+                    else:
+                        data += " "
+                        
+                    if curr_elem in ["p", "span", "strong", "em"]:
+                        # if doesnt start with capital, add leading space
+                        if re.match(self.no_capitals_pattern, data[0]):
+                            data = " " + data
+
                     if curr_elem == "li" and self.list_nesting_level:
-                        for i in range(self.list_nesting_level):
-                            data = '\t' + data
-                        data = '\n' + data
+                        data = '\n' + '\t' * self.list_nesting_level + data
 
                     self.insert_text(data)
                     self.insert_styling(curr_style, is_bold, is_italics, link_url, len(data))
