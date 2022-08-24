@@ -2,7 +2,7 @@ from turtle import update
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.utils import Console
-from database.models import CommunityAdminGroup, Footage
+from database.models import CommunityAdminGroup, Footage, UserProfile
 from django.db.models import Q
 
 LIMIT = 200
@@ -19,11 +19,11 @@ class Spy:
     @staticmethod
     def create_footage(**kwargs):
         try:
-            footage = Footage.objects.create({**kwargs})
+            footage = Footage.objects.create(**kwargs)
             footage.save()
             return footage
         except Exception as e:
-            Console.log("Could not create action footage...", str(e), kwargs)
+            Console.log("Could not create footage...", str(e), kwargs)
         # Dont do anything else, errors while saving footage should not hinder more
         # more important processes
 
@@ -33,22 +33,25 @@ class Spy:
             actions = kwargs.get("actions")
             ctx = kwargs.get("context")
             actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
             act_type = kwargs.get("type", None)
-            _type = FootageConstants.get_type(act_type)
-            # description = ""
-            # if FootageConstants.is_deleting(act_type):
-            #     description = f"{actor.user.preferred_name or '...'} {_type.get('action_word','...')} action(s) with IDs({', '.join([a.id for a in actions])})"
-            # else:
-            #     action = actions[0]
-            #     description = f"{actor.user.preferred_name or '...'} {_type.get('action_word','...')} an action. With ID({action.id})"
-                
+            notes = kwargs.get("notes", "")
+            communities = []
+            for a in actions:
+                if a and a.community:
+                    communities.append(a.community)
             footage = Spy.create_footage(
                 actor=actor,
-                activity_type=_type.get("key"),
-                by_super_admin=ctx.is_super_admin,
+                notes=notes,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
             )
             footage.actions.set(actions)
-            footage.communities.set(actions.community)
+            footage.communities.set(communities)
             return footage
         except Exception as e:
             Console.log("Could not create action footage...", str(e))

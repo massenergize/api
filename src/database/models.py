@@ -3314,7 +3314,7 @@ class Footage(models.Model):
     )
     activity_type = models.CharField(max_length=SHORT_STR_LEN, null=False)
     portal =  models.CharField(max_length=SHORT_STR_LEN)
-    description = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
+    notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
     related_users = models.ManyToManyField(UserProfile, blank=True, related_name ="appearances")
     communities = models.ManyToManyField(Community,blank=True)
     by_super_admin = models.BooleanField(default=False, blank=True)
@@ -3327,7 +3327,7 @@ class Footage(models.Model):
     messages = models.ManyToManyField(Message, blank=True)
     
     def __str__(self) -> str:
-        return super().__str__()
+        return f"{self.actor.preferred_name} - {self.activity_type}"
     class Meta:
         db_table = "footages"
         ordering = ("-id",)
