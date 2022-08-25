@@ -714,7 +714,9 @@ class CommunityStore:
 
             owner_email = args.get("owner_email", None)
             if owner_email:
-                owner = UserProfile.objects.filter(email=owner_email).first()
+                owner = UserProfile.objects.filter(email=owner_email) 
+                owner.update(is_community_admin = True)
+                owner = owner.first()
                 if owner:
                     comm_admin.members.add(owner)
                     comm_admin.save()
