@@ -125,6 +125,8 @@ class ActionService:
             ORDERED_LIST = ["kix.56eudp6yx4bc", "kix.2x1fecli05g8"]
 
             for obj in data:
+                html_string = ""
+                
                 for elem in obj.get('paragraph').get('elements'):
                     content = elem.get('textRun').get('content')
                     styles = elem.get('textRun').get('textStyle')
@@ -155,65 +157,65 @@ class ActionService:
 
                     style_string += '"'
 
+                    # newline character shows up as text if in content, must be extracted and replaced with <br>
                     new_line = '<br>' if content[-1] == '\n' else ''
                     content = content[:-1] if new_line else content
 
-                    html_string = ""
-
-                    if obj.get('paragraph', {}).get('bullet') and content != "":
-                        # accounts for extra new line since html bullets have padding
-                        output = output[:-4] if output[-4:] == '<br>' else output
-                        # makes new ordered list if nested bullet, otherwise just adds ordered list item
-                        if in_ordered_list:
-                            if obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel'):
-                                html_string = '<ol><li {}>{}</li>'.format(style_string, content)
-                                list_nest_level += 1
-                            else:
-                                # closes nested lists (if necessary) and adds list item
-                                html_string = ('</ol>' * list_nest_level) + '<li {}>{}</li>'.format(style_string, content)
-                                list_nest_level = 0
-
-                        # makes new unordered list if nested bullet, otherwise just adds unordered list item
-                        elif in_unordered_list:
-                            if obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel'):
-                                html_string = '<ul><li {}>{}</li>'.format(style_string, content)
-                                list_nest_level += 1
-                            else:
-                                # closes nested lists (if necessary) and adds list item
-                                html_string = ('</ul>' * list_nest_level) + '<li {}>{}</li>'.format(style_string, content)
-                                list_nest_level = 0
-                        
-                        # new list case, creating corresponding list type ((un)ordered) based on 'listId'
-                        elif obj.get('paragraph', {}).get('bullet', {}).get('listId') in ORDERED_LIST:
-                            html_string = '<ol><li {}>{}</li>'.format(style_string, content)
-                            in_ordered_list = True
-                        else:
-                            # unordered list is 'catch all' case
-                            html_string = '<ul><li {}>{}</li>'.format(style_string, content)
-                            in_unordered_list = True
-                    
-                    # not in, or no longer in, a list
+                    if content == '':
+                        # case when orignally content was just a newline character
+                        html_string += '{}'.format(new_line)
+                    elif link:
+                        html_string += '<a {} href="{}">{}</a>{}'.format(style_string, link, content, new_line)
                     else:
-                        if in_ordered_list:
-                            # by default there is at least one list to close, more close tags needed for nested bullets
-                            html_string = '</ol>' + '</ol>' * list_nest_level
+                        html_string += '<span {}>{}</span>{}'.format(style_string, content, new_line)
 
-                            in_ordered_list = False
-                            list_nest_level = 0
-                        elif in_unordered_list:
-                            html_string = '</ul>' + '</ul>' * list_nest_level
-                            
-                            in_unordered_list = False
-                            list_nest_level = 0
-
-                        if content == '':
-                            html_string += '{}'.format(new_line)
-                        elif link:
-                            html_string += '<a {} href="{}">{}</a>{}'.format(style_string, link, content, new_line)
+                if obj.get('paragraph', {}).get('bullet'): # and content != ""
+                    # takes out previously added <br> since html bullets have padding
+                    output = output[:-4] if output[-4:] == '<br>' else output
+                    # makes new ordered list if nested bullet, otherwise just adds ordered list item
+                    if in_ordered_list:
+                        if obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel'):
+                            html_string = '<ol><li>{}</li>'.format(html_string)
+                            list_nest_level += 1
                         else:
-                            html_string += '<span {}>{}</span>{}'.format(style_string, content, new_line)
+                            # closes nested lists (if necessary) and adds list item
+                            html_string = ('</ol>' * list_nest_level) + '<li>{}</li>'.format(html_string)
+                            list_nest_level = 0
+
+                    # makes new unordered list if nested bullet, otherwise just adds unordered list item
+                    elif in_unordered_list:
+                        if obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel'):
+                            html_string = '<ul><li>{}</li>'.format(html_string)
+                            list_nest_level += 1
+                        else:
+                            # closes nested lists (if necessary) and adds list item
+                            html_string = ('</ul>' * list_nest_level) + '<li>{}</li>'.format(html_string)
+                            list_nest_level = 0
+                    
+                    # new list case, creating corresponding list type ((un)ordered) based on 'listId'
+                    elif obj.get('paragraph', {}).get('bullet', {}).get('listId') in ORDERED_LIST:
+                        html_string = '<ol><li>{}</li>'.format(html_string)
+                        in_ordered_list = True
+                    else:
+                        # unordered list is 'catch all' case
+                        html_string = '<ul><li>{}</li>'.format(html_string)
+                        in_unordered_list = True
+                
+                # not in, or no longer in, a list
+                else:
+                    if in_ordered_list:
+                        # by default there is at least one list to close, more close tags needed for nested bullets at end of list
+                        html_string = '</ol>' + '</ol>' * list_nest_level
+
+                        in_ordered_list = False
+                        list_nest_level = 0
+                    elif in_unordered_list:
+                        html_string = '</ul>' + '</ul>' * list_nest_level
                         
-                    output += html_string
+                        in_unordered_list = False
+                        list_nest_level = 0
+                        
+                output += html_string
             
             if in_ordered_list:
                 output += '</ol>'
@@ -247,7 +249,7 @@ class ActionService:
                 if field in arr_fields and data == "":
                     data = []
 
-                if field in html_fields:
+                if data and field in html_fields:
                     data = process_html_data(data)
 
                 if data and field == "community":
