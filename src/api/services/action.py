@@ -140,7 +140,7 @@ class ActionService:
                     style_string += 'text-decoration: underline; ' if underline else ""
                     
                     size = styles.get('fontSize').get('magnitude')
-                    style_string += 'font-size: ' + str(size) + 'px; ' if size else ""
+                    style_string += 'font-size: ' + str(size) + 'pt; ' if size else ""
 
                     font = styles.get('weightedFontFamily', {}).get('fontFamily')
                     style_string += 'font-family: ' + font + '; ' if font else ""
