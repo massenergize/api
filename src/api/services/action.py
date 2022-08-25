@@ -77,7 +77,7 @@ class ActionService:
         # gets all of the content in the google doc
         doc = document.get("body").get("content")
         
-        # excludes lines for metadata, title, instructions in doc
+        # excludes lines for metadata, title, instructions in template doc
         buffer = 13
 
         # mapping from doc field names to frontend form field names
@@ -115,17 +115,6 @@ class ActionService:
         html_fields = ["about", "steps_to_take", "deep_dive"]
         
         def process_html_data(data):
-            # need to parse out:
-            # - text DONE
-            # - bullets DONE
-            # - links DONE
-            # - font DONE
-            # - font size DONE
-            # - font color DONE
-            # - styling (bold, italics, underline) DONE
-            # print("all", data)
-            # print("paragraph", data[0]['paragraph'])
-            # print("elements", data[0]['paragraph']['elements'])
             output = ""
             in_unordered_list = False
             in_ordered_list = False
@@ -137,13 +126,9 @@ class ActionService:
 
             for obj in data:
                 for elem in obj.get('paragraph').get('elements'):
-                    # print("CONTENT ->", elem.get('textRun'))
-                    # print("STYLING ->", elem['textRun']['textStyle'])
-                    # print("")
                     content = elem.get('textRun').get('content')
                     styles = elem.get('textRun').get('textStyle')
                     style_string = 'style = "'
-                    # print(styles)
 
                     bold = styles.get('bold')
                     style_string += 'font-weight: bold; ' if bold else ""
@@ -235,11 +220,8 @@ class ActionService:
             elif in_unordered_list:
                 output += '</ul>'
 
-            # print('OUTPUT:', output)
             return output
 
-        # print(doc[doc_idx:])
-        # return {}, {}
         for i in range(0,len(FIELD_NAMES)):
             field = FIELD_NAMES[field_names_keys[i]]
             data = [] if field in html_fields else ""
