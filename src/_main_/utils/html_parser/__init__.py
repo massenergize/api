@@ -14,6 +14,8 @@ class MyHTMLParser(HTMLParser):
         self.in_ordered_list = False
         self.list_nesting_level = 0
         self.last_tag = None
+        self.curr_bold = False
+        self.curr_italics = False
 
         self.new_line_insert = {'insertText': {'location': {'index': end}, 'text': '\n'}}
         self.required_beginning = [self.new_line_insert for i in range(2)]
@@ -52,9 +54,12 @@ class MyHTMLParser(HTMLParser):
                 'textStyle': {
                     'bold': True,
                     'underline': True,
-                    'foregroundColor': {'color': {'rgbColor': {'red': 0.0, 'green': 0.0, 'blue': 0.0}}}
+                    'italic': False,
+                    'foregroundColor': {'color': {'rgbColor': {'red': 0.0, 'green': 0.0, 'blue': 0.0}}},
+                    'fontSize': {'magnitude': 11, 'unit': 'PT'},
+                    'weightedFontFamily': {'fontFamily': 'Arial'}
                 },
-                'fields': 'bold, underline, foregroundColor'
+                'fields': 'bold, underline, italic, foregroundColor, fontSize, weightedFontFamily'
             }
         })
         self.requests.append({
@@ -101,26 +106,41 @@ class MyHTMLParser(HTMLParser):
         styles['updateTextStyle']['textStyle']['bold'] = is_bold
         styles['updateTextStyle']['textStyle']['italic'] = is_italics
 
-        for attr in attrs:
-            if attr[0] == 'style':
-                style = attr[1].split(':')
-                style[0] = style[0].strip()
-                style[1] = style[1].strip().rstrip(';')
+        for attr_name, attr_val in attrs:
+            if attr_name == 'style' and attr_val:
+                html_styles = attr_val.split(';')
+                for s in html_styles:
+                    if not s:
+                        continue
+                    
+                    style_name, style_val = s.split(":")
+                    style_name = style_name.strip()
+                    style_val = style_val.strip()
 
-                if style[0].strip() == "text-decoration":
-                    if style[1] == "underline":
-                        styles['updateTextStyle']['textStyle']['underline'] = True
-                elif style[0] == "color":
-                        hex_val = style[1].lstrip(' #')
-                        lv = len(hex_val)
-                        rgb = tuple(int(hex_val[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
-                        rgb = [x / 255 for x in rgb]
-                        styles['updateTextStyle']['textStyle'] = {'foregroundColor': {'color': {'rgbColor': {'red': rgb[0], 'green': rgb[1], 'blue': rgb[2]}}}}
-                elif style[0] == "font-family":
-                    # styles['updateTextStyle']['textStyle']['weightedFontFamily'] = {'fontFamily': style[1].strip(), 'weight': 400}
-                    styles['updateTextStyle']['textStyle'] = {'weightedFontFamily': {'fontFamily': style[1].split(',')[0].strip().strip("'")}}
-                elif style[0] == "font-size":
-                    styles['updateTextStyle']['textStyle'] = {'fontSize': {'magnitude': style[1].rstrip('pt;'), 'unit': 'PT'}}
+                    if style_name == "text-decoration":
+                        if style_val == "underline":
+                            styles['updateTextStyle']['textStyle']['underline'] = True
+                    elif style_name == "color":
+                            hex_val = style_val.lstrip('#')
+                            lv = len(hex_val)
+                            rgb = tuple(int(hex_val[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+                            rgb = [x / 255 for x in rgb]
+
+                            styles['updateTextStyle']['textStyle']['foregroundColor'] = {}
+                            styles['updateTextStyle']['textStyle']['foregroundColor']['color'] = {}
+                            styles['updateTextStyle']['textStyle']['foregroundColor']['color']['rgbColor'] = {}
+                            styles['updateTextStyle']['textStyle']['foregroundColor']['color']['rgbColor']['red'] = rgb[0]
+                            styles['updateTextStyle']['textStyle']['foregroundColor']['color']['rgbColor']['green'] = rgb[1]
+                            styles['updateTextStyle']['textStyle']['foregroundColor']['color']['rgbColor']['blue'] = rgb[2]
+                    elif style_name == "font-family":
+                        styles['updateTextStyle']['textStyle']['weightedFontFamily'] = {}
+                        styles['updateTextStyle']['textStyle']['weightedFontFamily']['fontFamily'] = style_val.split(',')[0].strip().strip("'")
+                    elif style_name == "font-size":
+                        styles['updateTextStyle']['textStyle']['fontSize'] = {}
+                        styles['updateTextStyle']['textStyle']['fontSize']['magnitude'] = style_val.rstrip('pt')
+                        styles['updateTextStyle']['textStyle']['fontSize']['unit'] = 'PT'
+
+                    # print("ADDING STYLING:\n{}".format(styles))
 
         self.requests.insert(1, styles)
         
@@ -147,7 +167,6 @@ class MyHTMLParser(HTMLParser):
         else:
             self.requests.insert(2, {'deleteParagraphBullets': {'range': {'startIndex': self.end_index, 'endIndex': self.end_index + length}}})
 
-
     # HTMLParser specific class functions
 
     def handle_starttag(self, tag, attrs):
@@ -157,6 +176,12 @@ class MyHTMLParser(HTMLParser):
         
         self.elements_stack.append(tag)
         self.styles_stack.append(attrs)
+
+        if tag == "strong":
+            self.curr_bold = True
+
+        if tag == "em":
+            self.curr_italics = True
 
         if tag == "ul":
             if self.in_unordered_list:
@@ -181,6 +206,12 @@ class MyHTMLParser(HTMLParser):
 
         self.last_tag = tag
 
+        if tag == "strong":
+            self.curr_bold = False
+
+        if tag == "em":
+            self.curr_italics = False
+        
         if tag == "ul":
             if self.list_nesting_level:
                 self.list_nesting_level -= 1
@@ -209,10 +240,10 @@ class MyHTMLParser(HTMLParser):
             if not data:
                 return
 
-            if curr_elem == "strong":
+            if curr_elem == "strong" or self.curr_bold:
                 is_bold = True
             
-            if curr_elem == "em":
+            if curr_elem == "em" or self.curr_italics:
                 is_italics = True
             
             if curr_elem == "a":
@@ -223,7 +254,7 @@ class MyHTMLParser(HTMLParser):
             else:
                 data += " "
                 
-            if curr_elem in ["p", "span", "strong", "em"]:
+            if curr_elem in ["p", "span", "strong", "em", "li"]:
                 # if doesnt start with capital, add leading space
                 if re.match(self.no_capitals_or_punctuation_pattern, data[0]):
                     data = " " + data
