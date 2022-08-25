@@ -168,14 +168,19 @@ class ActionService:
                 if obj.get('paragraph', {}).get('bullet'):
                     list_id = obj['paragraph']['bullet']['listId']
                     list_style = document['lists'][list_id]['listProperties']['nestingLevels'][0].get('glyphType', "")
-                    
+                    curr_nest_level = obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel', 0)
+
                     # takes out previously added <br> since html bullets have padding
                     output = output[:-4] if output[-4:] == '<br>' else output
                     # makes new ordered list if nested bullet, otherwise just adds ordered list item
                     if in_ordered_list:
-                        if obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel'):
-                            html_string = '<ol><li>{}</li>'.format(html_string)
-                            list_nest_level += 1
+                        if curr_nest_level:
+                            # if same nesting level as previous bullet, then just add <li>, otherwise make new nested list
+                            if curr_nest_level == list_nest_level:
+                                html_string = '<li>{}</li>'.format(html_string)
+                            else:
+                                html_string = '<ol><li>{}</li>'.format(html_string)
+                                list_nest_level += 1
                         else:
                             # closes nested lists (if necessary) and adds list item
                             html_string = ('</ol>' * list_nest_level) + '<li>{}</li>'.format(html_string)
@@ -183,9 +188,13 @@ class ActionService:
 
                     # makes new unordered list if nested bullet, otherwise just adds unordered list item
                     elif in_unordered_list:
-                        if obj.get('paragraph', {}).get('bullet', {}).get('nestingLevel'):
-                            html_string = '<ul><li>{}</li>'.format(html_string)
-                            list_nest_level += 1
+                        if curr_nest_level:
+                            # if same nesting level as previous bullet, then just add <li>, otherwise make new nested list
+                            if curr_nest_level == list_nest_level:
+                                html_string = '<li>{}</li>'.format(html_string)
+                            else:
+                                html_string = '<ul><li>{}</li>'.format(html_string)
+                                list_nest_level += 1
                         else:
                             # closes nested lists (if necessary) and adds list item
                             html_string = ('</ul>' * list_nest_level) + '<li>{}</li>'.format(html_string)
@@ -214,7 +223,8 @@ class ActionService:
                         
                         in_unordered_list = False
                         list_nest_level = 0
-                        
+
+                # adding html for current obj (can be multiple elements) to output string
                 output += html_string
             
             if in_ordered_list:
