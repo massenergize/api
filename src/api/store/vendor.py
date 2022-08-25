@@ -122,8 +122,7 @@ class VendorStore:
         return None, InvalidResourceError()  
 
       # checks if requesting user is the vendor creator, super admin or community admin else throw error
-      test = vendor.first()
-      if (not test.user or test.user.id != context.user_id) and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(vendor.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
       communities = args.pop('communities', [])
@@ -140,6 +139,8 @@ class VendorStore:
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
+      is_published = args.pop('is_published', None)
+
 
       vendor.update(**args)
       vendor = vendor.first()
@@ -173,6 +174,16 @@ class VendorStore:
 
       if website:
         vendor.more_info = {'website': website}
+
+      if is_published==False:
+        vendor.is_published = False
+
+      elif is_published and not vendor.is_published:
+        # only publish vendor if it has been approved
+        if vendor.is_approved:
+          vendor.is_published = True
+        else:
+          return None, CustomMassenergizeError("Service provider needs to be approved before it can be made live")
         
       vendor.save()
       return vendor, None
