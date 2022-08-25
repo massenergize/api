@@ -119,10 +119,6 @@ class ActionService:
             in_unordered_list = False
             in_ordered_list = False
             list_nest_level = 0
-            
-            # support for more types of bullets is just a matter of noting more of the Doc IDs
-            UNORDERED_LIST = "kix.l2c1kf1n3bo0"
-            ORDERED_LIST = ["kix.56eudp6yx4bc", "kix.2x1fecli05g8"]
 
             for obj in data:
                 html_string = ""
@@ -169,7 +165,10 @@ class ActionService:
                     else:
                         html_string += '<span {}>{}</span>{}'.format(style_string, content, new_line)
 
-                if obj.get('paragraph', {}).get('bullet'): # and content != ""
+                if obj.get('paragraph', {}).get('bullet'):
+                    list_id = obj['paragraph']['bullet']['listId']
+                    list_style = document['lists'][list_id]['listProperties']['nestingLevels'][0].get('glyphType', "")
+                    
                     # takes out previously added <br> since html bullets have padding
                     output = output[:-4] if output[-4:] == '<br>' else output
                     # makes new ordered list if nested bullet, otherwise just adds ordered list item
@@ -193,7 +192,8 @@ class ActionService:
                             list_nest_level = 0
                     
                     # new list case, creating corresponding list type ((un)ordered) based on 'listId'
-                    elif obj.get('paragraph', {}).get('bullet', {}).get('listId') in ORDERED_LIST:
+                    elif list_style == "DECIMAL":
+                        # ordered list
                         html_string = '<ol><li>{}</li>'.format(html_string)
                         in_ordered_list = True
                     else:
