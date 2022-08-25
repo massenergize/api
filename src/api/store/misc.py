@@ -1,7 +1,9 @@
-from _main_.utils.utils import Console
+from datetime import datetime
+from django.db.models import Q
 from api.tests.common import createUsers
 from database.models import (
     Action,
+    FeatureFlag,
     Vendor,
     Subdomain,
     Event,
@@ -118,7 +120,8 @@ class MiscellaneousStore:
         self, context: Context, args
     ) -> Tuple[list, MassEnergizeAPIError]:
         try:
-            users = UserProfile.objects.all()
+            #users = UserProfile.objects.all()
+            users = UserProfile.objects.filter(is_deleted=False)
             for user in users:
                 for community in user.communities.all():
                     community_member: CommunityMember = CommunityMember.objects.filter(
@@ -465,4 +468,3 @@ class MiscellaneousStore:
         sorted_keys = sorted(common_icons, key=common_icons.get, reverse=True)
         for key in sorted_keys:
             print(str(key) + ": " + str(common_icons[key]))
-

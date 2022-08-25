@@ -186,10 +186,14 @@ class EventHandler(RouteHandler):
     self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
+    self.validator.expect("image","str_list")
     args, err = self.validator.verify(args)
 
     if err:
       return err
+
+    # not user submitted
+    args["is_approved"] = args.pop("is_approved", True) 
 
     event_info, err = self.service.create_event(context, args)
     if err:
@@ -216,6 +220,8 @@ class EventHandler(RouteHandler):
 
     # user submitted event, so notify the community admins
     user_submitted = True
+    args["is_approved"] = False 
+
     event_info, err = self.service.create_event(context, args, user_submitted)
     if err:
       return err
@@ -274,11 +280,12 @@ class EventHandler(RouteHandler):
     self.validator.rename('community', 'community_id')
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('event_id', int, is_required=True)
-    self.validator.expect('name', str, is_required=True, options={"min_length":5, "max_length":100})
+    self.validator.expect('name', str, is_required=False, options={"min_length":5, "max_length":100})
     self.validator.expect('tags', list)
     self.validator.expect('is_global', bool)
     self.validator.expect('archive', bool)
     self.validator.expect('is_published', bool)
+    self.validator.expect('is_approved', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     self.validator.expect('is_recurring', bool)
@@ -286,6 +293,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('upcoming_is_rescheduled', bool)
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
+    self.validator.expect("image","str_list")
     args, err = self.validator.verify(args)
 
     if err:

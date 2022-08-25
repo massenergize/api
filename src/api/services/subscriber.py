@@ -2,7 +2,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassene
 from _main_.utils.common import serialize, serialize_all
 from api.store.subscriber import SubscriberStore
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.utils.constants import COMMUNITY_URL_ROOT
+from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from sentry_sdk import capture_message
 from typing import Tuple
 
@@ -37,7 +37,7 @@ class SubscriberService:
       content_variables = {
         'name': subscriber.name,
         'id': subscriber.id,
-        'logo': subscriber.community.logo.file.url if subscriber.community and subscriber.community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png',
+        'logo': subscriber.community.logo.file.url if subscriber.community and subscriber.community.logo else ME_LOGO_PNG,
         'community': subscriber.community.name if subscriber.community and subscriber.community.name else 'MassEnergize',
         'homelink': '%s/%s' %(COMMUNITY_URL_ROOT, subscriber.community.subdomain) if subscriber.community else COMMUNITY_URL_ROOT
       }

@@ -59,7 +59,7 @@ class VendorStore:
     try:
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       website = args.pop('website', None)
       user_email = args.pop('user_email', context.user_email)
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
@@ -75,9 +75,8 @@ class VendorStore:
         args['location'] = None
 
       new_vendor = Vendor.objects.create(**args)
-      if image:
-        logo = Media(name=f"Logo-{slugify(new_vendor.name)}", file=image)
-        logo.save()
+      if images:
+        logo = Media.objects.filter(pk = images[0]).first()
         new_vendor.logo = logo
       
       if onboarding_contact_email:
@@ -123,8 +122,7 @@ class VendorStore:
         return None, InvalidResourceError()  
 
       # checks if requesting user is the vendor creator, super admin or community admin else throw error
-      test = vendor.first()
-      if (not test.user or test.user.id != context.user_id) and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(vendor.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
       communities = args.pop('communities', [])
@@ -136,11 +134,13 @@ class VendorStore:
         "name": key_contact_name,
         "email": key_contact_email
       }
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       tags = args.pop('tags', [])
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
+      is_published = args.pop('is_published', None)
+
 
       vendor.update(**args)
       vendor = vendor.first()
@@ -157,10 +157,12 @@ class VendorStore:
         else:
           vendor.key_contact = key_contact
 
-      if image:
-        logo = Media(name=f"Logo-{slugify(vendor.name)}", file=image)
-        logo.save()
-        vendor.logo = logo
+      if images: #now, images will always come as an array of ids, or "reset" string 
+        if images[0] == "reset": #if image is reset, delete the existing image
+          vendor.logo = None
+        else:
+          logo = Media.objects.filter(id = images[0]).first()
+          vendor.logo = logo
       
       if onboarding_contact_email:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
@@ -172,6 +174,16 @@ class VendorStore:
 
       if website:
         vendor.more_info = {'website': website}
+
+      if is_published==False:
+        vendor.is_published = False
+
+      elif is_published and not vendor.is_published:
+        # only publish vendor if it has been approved
+        if vendor.is_approved:
+          vendor.is_published = True
+        else:
+          return None, CustomMassenergizeError("Service provider needs to be approved before it can be made live")
         
       vendor.save()
       return vendor, None

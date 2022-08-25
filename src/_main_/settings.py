@@ -28,7 +28,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
 RUN_SERVER_LOCALLY = False
-RUN_CELERY_LOCALLY = False
+RUN_CELERY_LOCALLY = True
 
 if is_test_mode():
     RUN_CELERY_LOCALLY = True
@@ -277,6 +277,7 @@ SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_COMMUNITY_ADMINS_WEBH
 SLACK_SUPER_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_SUPER_ADMINS_WEBHOOK_URL')
 
 TEST_DIR = 'test_data'
+TEST_PASSPORT_KEY = os.environ.get('TEST_PASSPORT_KEY')
 
 
 # Static files (CSS, JavaScript, Images)

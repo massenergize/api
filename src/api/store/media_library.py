@@ -15,7 +15,7 @@ class MediaLibraryStore:
         self.name = "MediaLibrary Store/DB"
 
     def fetch_content(self, args):
-        com_ids = args.get("community_ids")
+        com_ids = args.get("community_ids") or []
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         images = None
@@ -84,7 +84,6 @@ class MediaLibraryStore:
         lower_limit = args.get("lower_limit")
         images = None
         queries = None
-        Console.log("ARGS", args)
 
         """
         Options
@@ -93,7 +92,7 @@ class MediaLibraryStore:
             - User is super admin, collect images from any community, with provided filters
         2. User provides target communities, use filters to search for images in the provided target communities
         """
-        if any_community:
+        if any_community == True:
             if context.user_is_community_admin:
                 queries = [self.generateQueryWithScope(f, com_ids) for f in filters]
             else:

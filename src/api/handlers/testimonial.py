@@ -64,6 +64,7 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('action_id', 'action')
     self.validator.rename('vendor_id', 'vendor')
     self.validator.rename('preferredName', 'preferred_name')
+    self.validator.expect("image", "str_list")
     args, err = self.validator.verify(args)
 
     if err:
@@ -87,9 +88,6 @@ class TestimonialHandler(RouteHandler):
     self.validator.expect('community', int)
     self.validator.expect('action', int)
     self.validator.expect('vendor', int)
-    #self.validator.expect("tags", list)
-    #self.validator.expect("is_approved", bool)
-    #self.validator.expect("is_published", bool)
     self.validator.rename('community_id', 'community')
     self.validator.rename('action_id', 'action')
     self.validator.rename('vendor_id', 'vendor')
@@ -137,6 +135,7 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('community_id', 'community')
     self.validator.rename('action_id', 'action')
     self.validator.rename('vendor_id', 'vendor')
+    self.validator.expect("image", "str_list")
     args, err = self.validator.verify(args)
 
     if err:

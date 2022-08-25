@@ -11,13 +11,13 @@ from _main_.utils.context import Context
 from django.shortcuts import render
 from api.tests.common import makeAuthToken, signinAs
 from database.models import Deployment
-from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
+from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, TEST_PASSPORT_KEY
 from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from django.db.models.query import QuerySet
 from typing import Tuple
 
-PASSPORT_KEY = os.environ.get("TEST_PASSPORT_KEY")
+# PASSPORT_KEY = os.environ.get("TEST_PASSPORT_KEY")
 class MiscellaneousService:
     """
     Service Layer for all the goals
@@ -118,10 +118,9 @@ class MiscellaneousService:
 
     def authenticateFrontendInTestMode(self, args): 
         passport_key = args.get("passport_key") 
-        if passport_key != PASSPORT_KEY: 
+        if passport_key != TEST_PASSPORT_KEY: 
             return None, CustomMassenergizeError("invalid_passport_key")
         user, err =  self.store.authenticateFrontendInTestMode(args)
         if err: return None, CustomMassenergizeError(str(err))
         client = Client()
         return signinAs(client,user), None
-        

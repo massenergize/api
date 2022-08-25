@@ -1,4 +1,5 @@
-from _main_.utils.utils import strip_website
+from _main_.utils.utils import Console, strip_website
+from api.tests.common import RESET
 from database.models import (
     Community,
     CommunityMember,
@@ -609,7 +610,7 @@ class CommunityStore:
             favicon = args.pop("favicon", None)
             community = Community.objects.create(**args)
             community.save()
-
+           
             geographic = args.get("is_geographically_focused", False)
             if geographic:
                 geography_type = args.get("geography_type", None)
@@ -617,8 +618,7 @@ class CommunityStore:
                 self._update_real_estate_units_with_community(community)
 
             if logo:
-                cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
-                cLogo.save()
+                cLogo = Media.objects.filter(id = logo).first() 
                 community.logo = cLogo
             if favicon:
                 cFav = Media(
@@ -761,6 +761,9 @@ class CommunityStore:
             if community:
                 # if we did not succeed creating the community we should delete it
                 community.delete()
+                reserved = Subdomain.objects.filter(name = args.get("subdomain")).first()
+                if reserved: 
+                    reserved.delete()
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
@@ -797,12 +800,14 @@ class CommunityStore:
                 if self._are_locations_updated(geography_type, locations, community):
                     self._update_locations(geography_type, locations, community)
                     self._update_real_estate_units_with_community(community)
-
             if logo:
-                cLogo = Media(file=logo, name=f"{args.get('name', '')} CommunityLogo")
-                cLogo.save()
-                community.logo = cLogo
-                community.save()
+                if logo == RESET:
+                    community.logo = None
+                    community.save()
+                else:
+                    cLogo = Media.objects.filter(id = logo).first();
+                    community.logo = cLogo
+                    community.save()
 
             if favicon:
                 cFavicon = Media(

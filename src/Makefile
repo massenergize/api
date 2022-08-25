@@ -88,13 +88,19 @@ test:
 	DJANGO_ENV=test python3 -W ignore manage.py test $(package)
 .PHONY: test
 
-
 celery:
-	DJANGO_ENV=local celery -A _main_.celery.app worker -l info
+	DJANGO_ENV=local celery -A _main_.celery.app worker -l info -B
 .PHONY: celery 
+
+beat:
+	celery -A _main_.celery.app beat -l info
 
 celery-remote:
 	celery -A _main_.celery.app worker -l info
 
-beat:
+full-celery-local: 
+	make -j 2 start celery
+.PHONY: full-celery-local
+
+beat-remote:
 	celery -A _main_.celery.app beat -l info

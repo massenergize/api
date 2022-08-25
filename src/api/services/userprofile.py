@@ -3,7 +3,7 @@ from _main_.utils.common import serialize, serialize_all
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.utils.constants import COMMUNITY_URL_ROOT
+from _main_.utils.constants import COMMUNITY_URL_ROOT,  ME_LOGO_PNG
 import os, csv
 import re
 from sentry_sdk import capture_message
@@ -71,7 +71,7 @@ def _send_invitation_email(user_info, mess):
 
   subject = cadmin_name + " invites you to join the " + community_name + " Community"
 
-  #community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+  #community_logo =  community.logo.file.url if community and community.logo else ME_LOGO_PNG
   #subdomain =   community.subdomain if community else "global"
   #subject = f'Welcome to {community_name}, a MassEnergize community'
   homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
@@ -163,7 +163,7 @@ class UserService:
       return None, err
     return result, None
 
-  def  list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.list_events_for_user(context, args)
     if err:
       return None, err
@@ -181,6 +181,12 @@ class UserService:
       return None, err
     return imported_info, None
 
+  def validate_username(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    info, err = self.store.validate_username(args)
+    if err:
+      return None, err
+    return info, None
+
   def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       res, err = self.store.create_user(context, args)
@@ -192,7 +198,7 @@ class UserService:
       send_email = res["new_user_email"]
       if send_email:   # a complete user profile, not a guest
         community_name =  community.name if community else "Global Massenergize Community"
-        community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+        community_logo =  community.logo.file.url if community and community.logo else ME_LOGO_PNG
         subdomain =   community.subdomain if community else "global"
         subject = f'Welcome to {community_name}, a MassEnergize community'
         homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
