@@ -124,6 +124,62 @@ class Spy:
             Console.log("Could not create vendor footage...", str(e))
 
     @staticmethod
+    def create_testimonial_footage(**kwargs):
+        try:
+            items = kwargs.get("testimonials")
+            ctx = kwargs.get("context")
+            actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            notes = kwargs.get("notes", "")
+            communities = []
+            if not FootageConstants.is_copying(act_type): 
+                for a in items:
+                    if a and a.community:
+                        communities.append(a.community)
+            
+            footage = Spy.create_footage(
+                actor=actor,
+                notes=notes,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
+                item_type = FootageConstants.ITEM_TYPES["TESTIMONIAL"]["key"]
+            )
+            footage.testimonials.set(items)
+            footage.communities.set(communities)
+            return footage
+        except Exception as e:
+            Console.log("Could not create testimonial footage...", str(e))
+    @staticmethod
+    def create_media_footage(**kwargs):
+        try:
+            items = kwargs.get("media")
+            ctx = kwargs.get("context")
+            actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            notes = kwargs.get("notes", "")
+            footage = Spy.create_footage(
+                actor=actor,
+                notes=notes,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
+                item_type = FootageConstants.ITEM_TYPES["MEDIA"]["key"]
+            )
+            footage.images.set(items)
+            return footage
+        except Exception as e:
+            Console.log("Could not create media footage...", str(e))
+
+    @staticmethod
     def create_sign_in_footage(**kwargs):
         try:
             ctx = kwargs.get("context")

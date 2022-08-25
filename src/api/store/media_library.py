@@ -1,6 +1,8 @@
 from typing import Tuple
 
 from django.core.exceptions import ValidationError
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, Media, UserMediaUpload, UserProfile
@@ -118,12 +120,16 @@ class MediaLibraryStore:
 
         return images, None
 
-    def remove(self, args):
+    def remove(self, args,context):
         media_id = args.get("media_id")
-        Media.objects.get(pk=media_id).delete()
+        media = Media.objects.get(pk=media_id)
+        # ----------------------------------------------------------------
+        Spy.create_media_footage(media = [media], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({media_id})")
+        # ----------------------------------------------------------------
+        media.delete()
         return True, None
 
-    def addToGallery(self, args):
+    def addToGallery(self, args,context):
         community_ids = args.get("community_ids")
         user_id = args.get("user_id")
         title = args.get("title") or "Gallery Upload"
@@ -147,6 +153,9 @@ class MediaLibraryStore:
             title=title,
             is_universal=is_universal,
         )
+        # ----------------------------------------------------------------
+        Spy.create_media_footage(media = [user_media.media], context = context,  type = FootageConstants.create())
+        # ----------------------------------------------------------------
         return user_media, None
 
     def makeMediaAndSave(self, **kwargs):

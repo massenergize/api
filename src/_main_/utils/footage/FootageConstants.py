@@ -82,10 +82,10 @@ class FootageConstants:
     ITEM_TYPES = { 
         "ACTION":{"key":"ACTION", "json_field":"is_action"},
         "EVENT":{"key":"EVENT", "json_field":"is_event"},
+        "VENDOR":{"key":"VENDOR", "json_field":"is_vendor"},
+        "AUTH":{"key":"AUTH", "json_field":"is_authentication"},
+        "TESTIMONIAL":{"key":"TESTIMONIAL", "json_field":"is_testimonial"},
+        "MEDIA":{"key":"MEDIA", "json_field":"is_media"},
         "TEAM":{"key":"TEAM", "json_field":"is_team"},
         "MESSAGE":{"key":"MESSAGE", "json_field":"is_message"},
-        "AUTH":{"key":"AUTH", "json_field":"is_authentication"},
-        "TESTIMONIAL":{"TESTIMONIAL":"ACTION", "json_field":"is_testimonial"},
-        "MEDIA":{"key":"MEDIA", "json_field":"is_media"},
-        "VENDOR":{"key":"VENDOR", "json_field":"is_vendor"},
     }
