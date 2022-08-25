@@ -1,6 +1,4 @@
 from __future__ import print_function
-from cgitb import html
-from dataclasses import dataclass
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.action import ActionStore
@@ -78,7 +76,8 @@ class ActionService:
         doc = document.get("body").get("content")
         
         # excludes lines for metadata, title, instructions in template doc
-        buffer = 13
+        # set equal to the line number of the 'title' field label (images, blank lines, and single/multi-bullets all count as 1 individual line)
+        buffer = 11
 
         # mapping from doc field names to frontend form field names
         FIELD_NAMES = {
@@ -109,7 +108,7 @@ class ActionService:
             SUBDOMAINS[info['name']] = info['subdomain']
         
         fields = {}
-        doc_idx = buffer + 1 # skipping title of 'title' field
+        doc_idx = buffer + 1 # skipping 'title' field label
         field_names_keys = list(FIELD_NAMES)
         arr_fields = ["vendors", "Category", "Cost", "Impact", "Own/Rent/Condo"]
         html_fields = ["about", "steps_to_take", "deep_dive"]
@@ -382,7 +381,6 @@ class ActionService:
 
         fields['calculator_action'] = fields['calculator_action'] if found else ""
 
-        print("SENDING:", fields)
         return fields, None
     
     except Exception as e:
