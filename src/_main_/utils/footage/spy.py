@@ -41,14 +41,16 @@ class Spy:
             act_type = kwargs.get("type", None)
             notes = kwargs.get("notes", "")
             communities = []
-            for a in actions:
-                if a and a.community:
-                    communities.append(a.community)
+            if not FootageConstants.is_copying(act_type): 
+                for a in actions:
+                    if a and a.community:
+                        communities.append(a.community)
             footage = Spy.create_footage(
                 actor=actor,
                 notes=notes,
                 activity_type=act_type,
                 by_super_admin=ctx.user_is_super_admin,
+                item_type = FootageConstants.ITEM_TYPES["ACTION"]["key"]
             )
             footage.actions.set(actions)
             footage.communities.set(communities)
@@ -59,7 +61,7 @@ class Spy:
     @staticmethod
     def create_event_footage(**kwargs):
         try:
-            events = kwargs.get("actions")
+            events = kwargs.get("events")
             ctx = kwargs.get("context")
             actor = kwargs.get("actor")
             actor = (
@@ -70,20 +72,56 @@ class Spy:
             act_type = kwargs.get("type", None)
             notes = kwargs.get("notes", "")
             communities = []
-            for a in events:
-                if a and a.community:
-                    communities.append(a.community)
+            if not FootageConstants.is_copying(act_type): 
+                for a in events:
+                    if a and a.community:
+                        communities.append(a.community)
+                        
             footage = Spy.create_footage(
                 actor=actor,
                 notes=notes,
                 activity_type=act_type,
                 by_super_admin=ctx.user_is_super_admin,
+                item_type = FootageConstants.ITEM_TYPES["EVENT"]["key"]
             )
             footage.events.set(events)
             footage.communities.set(communities)
             return footage
         except Exception as e:
             Console.log("Could not create event footage...", str(e))
+
+    @staticmethod
+    def create_vendor_footage(**kwargs):
+        try:
+            items = kwargs.get("vendors")
+            ctx = kwargs.get("context")
+            actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            notes = kwargs.get("notes", "")
+            communities = []
+            if not FootageConstants.is_copying(act_type): 
+                for a in items:
+                    if a and a.communities:
+                        coms = [a for a in a.communities.all()]
+                        communities = communities + coms
+            
+            footage = Spy.create_footage(
+                actor=actor,
+                notes=notes,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
+                item_type = FootageConstants.ITEM_TYPES["VENDOR"]["key"]
+            )
+            footage.vendors.set(items)
+            footage.communities.set(communities)
+            return footage
+        except Exception as e:
+            Console.log("Could not create vendor footage...", str(e))
 
     @staticmethod
     def create_sign_in_footage(**kwargs):
@@ -100,6 +138,7 @@ class Spy:
                 actor=actor,
                 activity_type=act_type,
                 by_super_admin=ctx.user_is_super_admin,
+                item_type = FootageConstants.ITEM_TYPES["AUTH"]["key"]
             )
             return footage
         except Exception as e:

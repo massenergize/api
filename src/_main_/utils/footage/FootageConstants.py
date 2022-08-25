@@ -1,30 +1,7 @@
 
 
 class FootageConstants:
-    PLATFORMS = {
-        "ADMIN_FRONTEND_PORTAL": {
-            "key": "ADMIN_FRONTEND_PORTAL",
-            "name": "Admin Portal",
-        },
-        "USER_FRONTEND_PORTAL": {
-            "key": "USER_FRONTEND_PORTAL",
-            "name": "User Portal",
-        },
-    }
-    TYPES = {
-        "DELETE": {"key": "DELETE", "name": "Delete", "action_word": "deleted"},
-        "UPDATE": {"key": "UPDATE", "name": "Update", "action_word": "updated"},
-        "CREATE": {"key": "CREATE", "name": "Create", "action_word": "created"},
-        "COPY": {"key": "COPY", "name": "Copy", "action_word": "copied"},
-        "MESSAGE": {"key": "MESSAGE", "name": "Message", "action_word": "messaged"},
-        "SIGN_IN": {"key": "SIGN_IN", "name": "Sign In", "action_word": "signed in"},
-        "APPROVAL": {"key": "APPROVAL", "name": "Approval", "action_word": "approved"},
-        "DISAPPROVAL": {
-            "key": "DISAPPROVAL",
-            "name": "Disapproval",
-            "action_word": "dissapproved",
-        },
-    }
+   
 
     @staticmethod
     def get_type(_type):
@@ -54,6 +31,9 @@ class FootageConstants:
         return FootageConstants.TYPES["MESSAGE"]["key"]
 
     @staticmethod
+    def is_copying(_type):
+        return FootageConstants.TYPES["COPY"]["key"] == _type
+        
     def copy():
         return FootageConstants.TYPES["COPY"]["key"]
 
@@ -72,3 +52,40 @@ class FootageConstants:
     @staticmethod
     def dissapprove():
         return FootageConstants.TYPES["DISAPPROVAL"]["key"]
+
+    # ------------------------------------------------------------------------
+    PLATFORMS = {
+        "ADMIN_FRONTEND_PORTAL": {
+            "key": "ADMIN_FRONTEND_PORTAL",
+            "name": "Admin Portal",
+        },
+        "USER_FRONTEND_PORTAL": {
+            "key": "USER_FRONTEND_PORTAL",
+            "name": "User Portal",
+        },
+    }
+    TYPES = {
+        "DELETE": {"key": "DELETE", "name": "Delete", "action_word": "deleted"},
+        "UPDATE": {"key": "UPDATE", "name": "Update", "action_word": "updated"},
+        "CREATE": {"key": "CREATE", "name": "Create", "action_word": "created"},
+        "COPY": {"key": "COPY", "name": "Copy", "action_word": "copied"},
+        "MESSAGE": {"key": "MESSAGE", "name": "Message", "action_word": "messaged"},
+        "SIGN_IN": {"key": "SIGN_IN", "name": "Sign In", "action_word": "signed in"},
+        "APPROVAL": {"key": "APPROVAL", "name": "Approval", "action_word": "approved"},
+        "DISAPPROVAL": {
+            "key": "DISAPPROVAL",
+            "name": "Disapproval",
+            "action_word": "dissapproved",
+        },
+    }
+
+    ITEM_TYPES = { 
+        "ACTION":{"key":"ACTION", "json_field":"is_action"},
+        "EVENT":{"key":"EVENT", "json_field":"is_event"},
+        "TEAM":{"key":"TEAM", "json_field":"is_team"},
+        "MESSAGE":{"key":"MESSAGE", "json_field":"is_message"},
+        "AUTH":{"key":"AUTH", "json_field":"is_authentication"},
+        "TESTIMONIAL":{"TESTIMONIAL":"ACTION", "json_field":"is_testimonial"},
+        "MEDIA":{"key":"MEDIA", "json_field":"is_media"},
+        "VENDOR":{"key":"VENDOR", "json_field":"is_vendor"},
+    }

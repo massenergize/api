@@ -3326,9 +3326,10 @@ class Footage(models.Model):
     events = models.ManyToManyField(Event, blank=True)
     images = models.ManyToManyField(Media, blank=True)
     messages = models.ManyToManyField(Message, blank=True)
-    
+    vendors = models.ManyToManyField(Vendor, blank=True)
+    item_type = models.CharField(max_length=SHORT_STR_LEN, null=True, blank=True, default="")
     def __str__(self) -> str:
-        return f"{self.actor.preferred_name} - {self.activity_type}"
+        return f"{self.actor.preferred_name} - {self.activity_type} - {self.item_type}"
     class Meta:
         db_table = "footages"
         ordering = ("-id",)
