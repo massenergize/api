@@ -31,6 +31,10 @@ class FootageConstants:
         return FootageConstants.TYPES["MESSAGE"]["key"]
 
     @staticmethod
+    def forward():
+        return FootageConstants.TYPES["FORWARD"]["key"]
+
+    @staticmethod
     def is_copying(_type):
         return FootageConstants.TYPES["COPY"]["key"] == _type
         
@@ -80,6 +84,7 @@ class FootageConstants:
         "MESSAGE": {"key": "MESSAGE", "name": "Message", "action_word": "messaged"},
         "SIGN_IN": {"key": "SIGN_IN", "name": "Sign In", "action_word": "signed in"},
         "ADD": {"key": "ADD", "name": "Add", "action_word": "added"},
+        "FORWARD": {"key": "FORWARD", "name": "Forward", "action_word": "forwarded"},
         "REMOVE": {"key": "REMOVE", "name": "remove", "action_word": "removed"},
         "APPROVAL": {"key": "APPROVAL", "name": "Approval", "action_word": "approved"},
         "DISAPPROVAL": {
@@ -98,4 +103,5 @@ class FootageConstants:
         "MEDIA":{"key":"MEDIA", "json_field":"is_media"},
         "TEAM":{"key":"TEAM", "json_field":"is_team"},
         "MESSAGE":{"key":"MESSAGE", "json_field":"is_message"},
+        "COMMUNITY":{"key":"COMMUNITY", "json_field":"is_community"},
     }
