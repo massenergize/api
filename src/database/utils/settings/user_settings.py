@@ -22,8 +22,8 @@ common_options = {
 class UserPortalSettings:
 
     Settings = {
-        "general_settings": {
-            "name": "General Settings",
+        "notification_settings": {
+            "name": "Notification Settings",
             "live": True,
             "options": {
                 "update_frequency": {

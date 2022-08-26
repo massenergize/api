@@ -2,7 +2,7 @@
 This is the test file for actions
 """
 from django.test import  TestCase, Client
-from database.models import Action, Community, CommunityAdminGroup
+from database.models import Action, Community, CommunityAdminGroup, UserProfile
 from urllib.parse import urlencode
 from api.tests.common import signinAs, setupCC, createUsers
 
@@ -28,6 +28,11 @@ class ActionHandlerTest(TestCase):
         'accepted_terms_and_conditions': True
       })
 
+      self.USER1 = UserProfile.objects.create(**{
+        'full_name': "Action Tester",
+        'email': 'action@tester.com'
+      })
+
       admin_group_name  = f"{self.COMMUNITY.name}-{self.COMMUNITY.subdomain}-Admin-Group"
       self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
       self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
@@ -37,6 +42,8 @@ class ActionHandlerTest(TestCase):
       self.ACTION3 = Action(title="action3")
       self.ACTION4 = Action(title="action4")
       self.ACTION5 = Action(title="action5")
+
+      self.ACTION1.user = self.USER1
 
       self.ACTION1.save()
       self.ACTION2.save()
@@ -128,8 +135,13 @@ class ActionHandlerTest(TestCase):
       # test update signed as user
       signinAs(self.client, self.USER)
       response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "user_title"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      # test update signed as user who submitted it
+      signinAs(self.client, self.USER1)
+      response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "user_title1"}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response["success"])
-      self.assertEquals(response["data"]["title"], "user_title")
+      self.assertEquals(response["data"]["title"], "user_title1")
 
       # test update as cadmin
       signinAs(self.client, self.CADMIN)
@@ -142,6 +154,16 @@ class ActionHandlerTest(TestCase):
       response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "sadmin_title"}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response["success"])
       self.assertEquals(response["data"]["title"], "sadmin_title")
+
+      # test setting live but not yet approved
+      signinAs(self.client, self.CADMIN)
+      response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertFalse(response["success"])
+
+      # test setting live and approved
+      response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "is_approved": "true", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
+      self.assertTrue(response["success"])
+
 
     # action object has no attribute first?
     def test_delete(self):
