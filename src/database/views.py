@@ -24,8 +24,9 @@ def make_UserMediaUpload_for_Communities():
 
         if logo and UserMediaUpload.objects.filter(media__id = logo).exists():
             media = UserMediaUpload.objects.get(media__id = logo)
+            media_communities = media.communities.all()
             
-            if community not in media.communities:
+            if community not in media_communities:
                 media.communities.add(community)
             media.is_community_image = True
 
