@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
@@ -211,6 +213,10 @@ class TeamStore:
         teamMember.is_admin = True
         teamMember.save()
 
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_action_footage(teams = [team], context = context,  type = FootageConstants.create())
+        # ----------------------------------------------------------------
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -303,13 +309,18 @@ class TeamStore:
           team.logo = media
 
       team.save()
+
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_team_footage(teams = [team], context = context, type = FootageConstants.update())
+        # ----------------------------------------------------------------
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
 
-  def delete_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def delete_team(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       team_id = args["id"]
       teams = Team.objects.filter(id=team_id)
@@ -323,7 +334,11 @@ class TeamStore:
       members.delete()
       team.delete()  # or should that be team.delete()?
 
-      return teams.first(), None
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_team_footage(teams = [], context = context,  type = FootageConstants.delete(), notes=f"Deleted ID({team_id})")
+        # ----------------------------------------------------------------
+      return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -362,7 +377,7 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def add_team_member(self, args) -> Tuple[Team, MassEnergizeAPIError]:
+  def add_team_member(self, args,context) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get("id", None)
       user_id = args.get("user_id", None)
@@ -381,13 +396,15 @@ class TeamStore:
       teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)      
       teamMember.is_admin = is_admin
       teamMember.save()
-      
+      # ----------------------------------------------------------------
+      Spy.create_team_footage(teams = [team], context = context, related_users = [user] if user else [],  type = FootageConstants.add(), notes=f"Added user({user.email})")
+      # ----------------------------------------------------------------
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def remove_team_member(self, args) -> Tuple[Team, MassEnergizeAPIError]:
+  def remove_team_member(self, args,context) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get('id', None)
       user_id = args.get('user_id', None)
@@ -401,6 +418,10 @@ class TeamStore:
       team_member = TeamMember.objects.filter(team__id=team_id, user=user)
       if team_member.count() > 0:
         team_member.delete()
+      
+      # ----------------------------------------------------------------
+      Spy.create_team_footage(teams = [team], context = context, related_users = [user] if user else [], type = FootageConstants.remove(), notes=f"Removed user({user.email})")
+      # ----------------------------------------------------------------
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")

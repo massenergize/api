@@ -42,6 +42,14 @@ class FootageConstants:
         return FootageConstants.TYPES["DELETE"]["key"]
 
     @staticmethod
+    def add():
+        return FootageConstants.TYPES["ADD"]["key"]
+        
+    @staticmethod
+    def remove():
+        return FootageConstants.TYPES["REMOVE"]["key"]
+
+    @staticmethod
     def sign_in():
         return FootageConstants.TYPES["SIGN_IN"]["key"]
 
@@ -71,6 +79,8 @@ class FootageConstants:
         "COPY": {"key": "COPY", "name": "Copy", "action_word": "copied"},
         "MESSAGE": {"key": "MESSAGE", "name": "Message", "action_word": "messaged"},
         "SIGN_IN": {"key": "SIGN_IN", "name": "Sign In", "action_word": "signed in"},
+        "ADD": {"key": "ADD", "name": "Add", "action_word": "added"},
+        "REMOVE": {"key": "REMOVE", "name": "remove", "action_word": "removed"},
         "APPROVAL": {"key": "APPROVAL", "name": "Approval", "action_word": "approved"},
         "DISAPPROVAL": {
             "key": "DISAPPROVAL",

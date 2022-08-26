@@ -134,7 +134,7 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.delete_team(args)
+    team_info, err = self.team.delete_team(args,context)
 
     if err:
       return err
@@ -205,7 +205,7 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.add_member(args)
+    team_info, err = self.team.add_member(args,context)
 
     if err:
       return err
@@ -226,7 +226,7 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.remove_team_member(args)
+    team_info, err = self.team.remove_team_member(args,context)
     if err:
       return err
     return MassenergizeResponse(data=team_info)
