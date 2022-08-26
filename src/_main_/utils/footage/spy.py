@@ -223,7 +223,7 @@ class Spy:
             footage.teams.set(teams)
             return footage
         except Exception as e:
-            Console.log("Could not create team footage...", str(e))
+            Console.log("Could not create messaging footage...", str(e))
 
     @staticmethod
     def create_media_footage(**kwargs):
@@ -249,6 +249,32 @@ class Spy:
             return footage
         except Exception as e:
             Console.log("Could not create media footage...", str(e))
+   
+    @staticmethod
+    def create_community_footage(**kwargs):
+        try:
+            items = kwargs.get("communities")
+            ctx = kwargs.get("context")
+            actor = kwargs.get("actor")
+            users = kwargs.get("related_users",[])
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            notes = kwargs.get("notes", "")
+            footage = Spy.create_footage(
+                actor=actor,
+                notes=notes,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
+                item_type=FootageConstants.ITEM_TYPES["COMMUNITY"]["key"],
+            )
+            footage.communities.set(items)
+            return footage
+        except Exception as e:
+            Console.log("Could not create community footage...", str(e))
 
     @staticmethod
     def create_sign_in_footage(**kwargs):
