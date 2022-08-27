@@ -1,4 +1,5 @@
 from turtle import update
+from _main_.utils.context import Context
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.utils import Console
@@ -249,14 +250,14 @@ class Spy:
             return footage
         except Exception as e:
             Console.log("Could not create media footage...", str(e))
-   
+
     @staticmethod
     def create_community_footage(**kwargs):
         try:
             items = kwargs.get("communities")
             ctx = kwargs.get("context")
             actor = kwargs.get("actor")
-            users = kwargs.get("related_users",[])
+            users = kwargs.get("related_users", [])
             actor = (
                 actor
                 if actor
@@ -322,25 +323,44 @@ class Spy:
         return Footage.objects.filter(query)
 
     @staticmethod
-    def fetch_footages_for_super_admins():
+    def fetch_footages_for_super_admins(**kwargs):
         """
         Fetches list of recent footages for super admins.
         And these will be footages from other super admins
         """
-        return Footage.objects.filter(
-            platform=FootageConstants.on_admin_portal(), by_super_admin=True
-        ).order_by("-id")[:LIMIT]
+        context: Context = kwargs("context")
+        user = UserProfile.objects.get(email=context.user_email)
+        return (
+            Footage.objects.filter(
+                portal=FootageConstants.on_admin_portal(), by_super_admin=True
+            )
+            # .exclude(actor=user)
+            .order_by("-id")[:LIMIT]
+        )
 
     @staticmethod
     def fetch_footages_for_community_admins(**kwargs):
         """
         Fetches list of recent footages for community admins.
-        All footages that involve admins of a given list of communities
+        For any given admin, find all the communities that they manage, and 
+        look for all the other admins that also manage the same communities
+        Retrieve all footages that are related to all those admins, but within 
+        the communities they share
         """
-        communities = kwargs.get("communities")
-
-        if not communities:
-            return None
-        return Footage.objects.filter(
-            platform=FootageConstants.on_admin_portal(), communities__id__in=communities
-        ).order_by("-id")[:LIMIT]
+        try:
+            context: Context = kwargs.get("context", None)
+            email = kwargs.get("email", None)
+            user = UserProfile.objects.get(email=email or context.user_email)
+            actors = []
+            communities = []
+            for g in user.communityadmingroup_set.all(): 
+                members = [m.id for m in g.members.all()]
+                actors = actors + members
+                communities.append(g.community.id)
+            return Footage.objects.filter(
+                portal=FootageConstants.on_admin_portal(),
+                actor__id__in=actors,
+                communities__id__in = communities
+            ).order_by("-id")[:LIMIT]
+        except Exception as e:
+            Console.log("Could not fetch footages for community admin", e)

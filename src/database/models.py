@@ -3328,6 +3328,15 @@ class Footage(models.Model):
     messages = models.ManyToManyField(Message, blank=True)
     vendors = models.ManyToManyField(Vendor, blank=True)
     item_type = models.CharField(max_length=SHORT_STR_LEN, null=True, blank=True, default="")
+
+    def simple_json(self): 
+        data = model_to_dict(self,fields = ["activity_type","notes","portal","item_type","by_super_admin", "created_at"])
+        data = FootageConstants.change_type_to_boolean(data)
+        return data
+
+    def full_json(self): 
+        return self.simple_json()
+
     def __str__(self) -> str:
         return f"{self.actor.preferred_name} - {self.activity_type} - {self.item_type}"
     class Meta:
