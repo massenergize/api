@@ -17,8 +17,6 @@ class SummaryService:
     summary, err = self.store.summary_for_community_admin(context, community_id)
     if err:
       return None, err
-    footages = Spy.fetch_footages_for_community_admins(context = context)
-    summary.append( {"name":"Footages","value":500,"items":serialize_all(footages)})
     return summary, None
 
 

@@ -3308,6 +3308,8 @@ class Footage(models.Model):
         users : other users who are involved in the activity. (E.g an admin makes 3 other admins admin of a community. The "3 other" admins will be found here... )
         communities: The communities that are directly involved in the activity that took place. E.g - A user is Cadmin of 3 communities, and deletes an action. Only the communities that are linked to action will be linked here. 
         by_super_admin: Just a field that lets you easily know the activity is a Sadmin activity
+        item_type: Whether footage is related to an action, event, testimonial, a community, etc.
+        activity_type: Whether its Sign in, deletion, update, creation etc.
     """
     id = models.AutoField(primary_key=True)
     actor = models.ForeignKey(
@@ -3330,8 +3332,11 @@ class Footage(models.Model):
     item_type = models.CharField(max_length=SHORT_STR_LEN, null=True, blank=True, default="")
 
     def simple_json(self): 
-        data = model_to_dict(self,fields = ["activity_type","notes","portal","item_type","by_super_admin", "created_at"])
+        data = model_to_dict(self,fields = ["activity_type","notes","portal","item_type","by_super_admin"])
+        data["actor"] = self.actor.info() if self.actor else None
+        data["created_at"] = self.created_at
         data = FootageConstants.change_type_to_boolean(data)
+
         return data
 
     def full_json(self): 

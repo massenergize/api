@@ -10,16 +10,61 @@ PLATFORMS = {
     },
 }
 TYPES = {
-    "DELETE": {"key": "DELETE", "name": "Delete", "action_word": "deleted"},
-    "UPDATE": {"key": "UPDATE", "name": "Update", "action_word": "updated"},
-    "CREATE": {"key": "CREATE", "name": "Create", "action_word": "created"},
-    "COPY": {"key": "COPY", "name": "Copy", "action_word": "copied"},
-    "MESSAGE": {"key": "MESSAGE", "name": "Message", "action_word": "messaged"},
-    "SIGN_IN": {"key": "SIGN_IN", "name": "Sign In", "action_word": "signed in"},
-    "ADD": {"key": "ADD", "name": "Add", "action_word": "added"},
-    "FORWARD": {"key": "FORWARD", "name": "Forward", "action_word": "forwarded"},
-    "REMOVE": {"key": "REMOVE", "name": "remove", "action_word": "removed"},
-    "APPROVAL": {"key": "APPROVAL", "name": "Approval", "action_word": "approved"},
+    "DELETE": {
+        "key": "DELETE",
+        "name": "Delete",
+        "action_word": "deleted",
+        "color": "#e14d4d",
+    },
+    "UPDATE": {
+        "key": "UPDATE",
+        "name": "Update",
+        "action_word": "updated",
+        "color": "#d48b30",
+    },
+    "CREATE": {
+        "key": "CREATE",
+        "name": "Create",
+        "action_word": "created",
+        "color": "#11b311",
+    },
+    "COPY": {
+        "key": "COPY",
+        "name": "Copy",
+        "action_word": "copied",
+        "color": "#8080e1",
+    },
+    "MESSAGE": {
+        "key": "MESSAGE",
+        "name": "Message",
+        "action_word": "messaged",
+        "color": "#27b9e6",
+    },
+    "SIGN_IN": {
+        "key": "SIGN_IN",
+        "name": "Sign In",
+        "action_word": "signed in",
+        "color": "#81acd2",
+    },
+    "ADD": {"key": "ADD", "name": "Add", "action_word": "added", "color": "#11b311"},
+    "FORWARD": {
+        "key": "FORWARD",
+        "name": "Forward",
+        "action_word": "forwarded",
+        "color": "#00bcd4",
+    },
+    "REMOVE": {
+        "key": "REMOVE",
+        "name": "remove",
+        "action_word": "removed",
+        "color": "#c56868",
+    },
+    "APPROVAL": {
+        "key": "APPROVAL",
+        "name": "Approval",
+        "action_word": "approved",
+        "color": "#48c605",
+    },
     "DISAPPROVAL": {
         "key": "DISAPPROVAL",
         "name": "Disapproval",
@@ -43,6 +88,7 @@ ITEM_TYPES = {
 class FootageConstants:
     TYPES = TYPES
     ITEM_TYPES = ITEM_TYPES
+    PLATFORMS = PLATFORMS
 
     @staticmethod
     def get_type(_type):

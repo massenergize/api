@@ -328,7 +328,7 @@ class Spy:
         Fetches list of recent footages for super admins.
         And these will be footages from other super admins
         """
-        context: Context = kwargs("context")
+        context: Context = kwargs.get("context")
         user = UserProfile.objects.get(email=context.user_email)
         return (
             Footage.objects.filter(
@@ -348,7 +348,9 @@ class Spy:
         the communities they share
         """
         try:
+            
             context: Context = kwargs.get("context", None)
+            return Spy.fetch_footages_for_super_admins(context=context) # REMOVE THIS WHEN TESTING IS DONE
             email = kwargs.get("email", None)
             user = UserProfile.objects.get(email=email or context.user_email)
             actors = []
