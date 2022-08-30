@@ -612,7 +612,7 @@ class CommunityStore:
             favicon = args.pop("favicon", None)
             community = Community.objects.create(**args)
             community.save()
-
+           
             geographic = args.get("is_geographically_focused", False)
             if geographic:
                 geography_type = args.get("geography_type", None)
@@ -716,10 +716,13 @@ class CommunityStore:
 
             owner_email = args.get("owner_email", None)
             if owner_email:
-                owner = UserProfile.objects.filter(email=owner_email).first()
+                owner = UserProfile.objects.filter(email=owner_email) 
+                owner.update(is_community_admin = True)
+                owner = owner.first()
                 if owner:
                     comm_admin.members.add(owner)
                     comm_admin.save()
+                    owner.communities.add(community)
 
             # Also clone all template actions for this community
             # 11/1/20 BHN: Add protection against excessive copying in case of too many actions marked as template
@@ -766,6 +769,9 @@ class CommunityStore:
             if community:
                 # if we did not succeed creating the community we should delete it
                 community.delete()
+                reserved = Subdomain.objects.filter(name = args.get("subdomain")).first()
+                if reserved: 
+                    reserved.delete()
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
@@ -818,6 +824,18 @@ class CommunityStore:
                 cFavicon.save()
                 community.favicon = cFavicon
                 community.save()
+
+            owner_email = args.get("owner_email", None)
+            if owner_email:
+                owner = UserProfile.objects.filter(email=owner_email) 
+                owner.update(is_community_admin = True)
+                owner = owner.first()
+                if owner:
+                    comm_admin = CommunityAdminGroup.objects.get(community=community)
+                    comm_admin.members.add(owner)
+                    comm_admin.save()
+                    owner.communities.add(community)
+
 
             # let's make sure we reserve this subdomain
             if subdomain:
