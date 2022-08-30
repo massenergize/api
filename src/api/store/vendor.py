@@ -110,7 +110,7 @@ class VendorStore:
 
       new_vendor.save()
      # ----------------------------------------------------------------
-      Spy.create_vendor_footage(vendors = [new_vendor], context = context, actor = new_vendor.user, type = FootageConstants.create())
+      Spy.create_vendor_footage(vendors = [new_vendor], context = context, actor = new_vendor.user, type = FootageConstants.create(), notes =f"Vendor ID({new_vendor.id})")
     # ---------------------------------------------------------------- 
       return new_vendor, None
     except Exception as e:
@@ -180,7 +180,7 @@ class VendorStore:
         
       vendor.save()
       # ----------------------------------------------------------------
-      Spy.create_vendor_footage(vendors = [vendor], context = context, type = FootageConstants.update())
+      Spy.create_vendor_footage(vendors = [vendor], context = context, type = FootageConstants.update(), notes =f"Vendor ID({vendor_id})")
       # ---------------------------------------------------------------- 
       return vendor, None
 

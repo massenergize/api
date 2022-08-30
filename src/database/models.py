@@ -631,7 +631,7 @@ class UserProfile(models.Model):
         return self.email
 
     def info(self):
-        return model_to_dict(self, ["id", "email", "full_name"])
+        return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
 
     def summary(self):
         summaryData = model_to_dict(self, ["preferred_name", "is_guest"])

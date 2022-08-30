@@ -303,7 +303,7 @@ class EventStore:
 
       new_event.save()   
       # ----------------------------------------------------------------
-      Spy.create_event_footage(events = [new_event], context = context, actor = new_event.user, type = FootageConstants.create())
+      Spy.create_event_footage(events = [new_event], context = context, actor = new_event.user, type = FootageConstants.create(), notes = f"Event ID({new_event.id})")
       # ----------------------------------------------------------------   
       return new_event, None
     except Exception as e:
@@ -478,7 +478,7 @@ class EventStore:
       event.save()     
       
       # ----------------------------------------------------------------
-      Spy.create_event_footage(events = [event], context = context, type = FootageConstants.update())
+      Spy.create_event_footage(events = [event], context = context, type = FootageConstants.update(), notes = f"Event ID({event_id})")
       # ---------------------------------------------------------------- 
       return event, None
 
@@ -572,7 +572,7 @@ class EventStore:
             start_date = pytz.utc.localize(datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour, start_date.minute))
           event.start_date_and_time = start_date
           event.end_date_and_time = start_date + duration
-          
+        
         event.save()
         exception = RecurringEventException.objects.filter(event=event).first()
         if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(event.start_date_and_time):

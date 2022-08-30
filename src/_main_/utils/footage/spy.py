@@ -41,7 +41,7 @@ class Spy:
             )
             act_type = kwargs.get("type", None)
             notes = kwargs.get("notes", "")
-            communities = []
+            communities = kwargs.get("communities",[])
             if not FootageConstants.is_copying(act_type):
                 for a in actions:
                     if a and a.community:
@@ -72,7 +72,7 @@ class Spy:
             )
             act_type = kwargs.get("type", None)
             notes = kwargs.get("notes", "")
-            communities = []
+            communities = kwargs.get("communities",[])
             if not FootageConstants.is_copying(act_type):
                 for a in events:
                     if a and a.community:
@@ -104,7 +104,7 @@ class Spy:
             )
             act_type = kwargs.get("type", None)
             notes = kwargs.get("notes", "")
-            communities = []
+            communities = kwargs.get("communities",[])
             if not FootageConstants.is_copying(act_type):
                 for a in items:
                     if a and a.communities:
@@ -137,7 +137,7 @@ class Spy:
             )
             act_type = kwargs.get("type", None)
             notes = kwargs.get("notes", "")
-            communities = []
+            communities = kwargs.get("communities",[])
             if not FootageConstants.is_copying(act_type):
                 for a in items:
                     if a and a.community:
@@ -170,7 +170,7 @@ class Spy:
             )
             act_type = kwargs.get("type", None)
             notes = kwargs.get("notes", "")
-            communities = []
+            communities = kwargs.get("communities",[])
             for a in items:
                 if a and a.communities:
                     coms = [a for a in a.communities.all()]
@@ -238,6 +238,7 @@ class Spy:
                 else UserProfile.objects.filter(email=ctx.user_email).first()
             )
             act_type = kwargs.get("type", None)
+            communities = kwargs.get("communities",[])
             notes = kwargs.get("notes", "")
             footage = Spy.create_footage(
                 actor=actor,
@@ -247,6 +248,7 @@ class Spy:
                 item_type=FootageConstants.ITEM_TYPES["MEDIA"]["key"],
             )
             footage.images.set(items)
+            footage.communities.set(communities)
             return footage
         except Exception as e:
             Console.log("Could not create media footage...", str(e))
@@ -257,7 +259,7 @@ class Spy:
             items = kwargs.get("communities")
             ctx = kwargs.get("context")
             actor = kwargs.get("actor")
-            users = kwargs.get("related_users", [])
+            # users = kwargs.get("related_users", [])
             actor = (
                 actor
                 if actor
@@ -294,6 +296,9 @@ class Spy:
                 by_super_admin=ctx.user_is_super_admin,
                 item_type=FootageConstants.ITEM_TYPES["AUTH"]["key"],
             )
+            groups = actor.communityadmingroup_set.all()
+            communities = [g.community for g in groups]
+            footage.communities.set(communities)
             return footage
         except Exception as e:
             Console.log("Could not create sign in footage...", str(e))
@@ -341,27 +346,24 @@ class Spy:
     @staticmethod
     def fetch_footages_for_community_admins(**kwargs):
         """
-        Fetches list of recent footages for community admins.
-        For any given admin, find all the communities that they manage, and 
-        look for all the other admins that also manage the same communities
-        Retrieve all footages that are related to all those admins, but within 
-        the communities they share
+        Fetch list of recent footages that are related to 
+        all the communities a user is in charge of.  
+        And that included footages of super admins making changes to content 
+        related to cadmins communities
         """
         try:
             
             context: Context = kwargs.get("context", None)
-            return Spy.fetch_footages_for_super_admins(context=context) # REMOVE THIS WHEN TESTING IS DONE
             email = kwargs.get("email", None)
             user = UserProfile.objects.get(email=email or context.user_email)
-            actors = []
+            # actors = []
             communities = []
             for g in user.communityadmingroup_set.all(): 
-                members = [m.id for m in g.members.all()]
-                actors = actors + members
+                # members = [m.id for m in g.members.all()]
+                # actors = actors + members
                 communities.append(g.community.id)
             return Footage.objects.filter(
                 portal=FootageConstants.on_admin_portal(),
-                actor__id__in=actors,
                 communities__id__in = communities
             ).order_by("-id")[:LIMIT]
         except Exception as e:

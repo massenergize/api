@@ -154,7 +154,7 @@ class MediaLibraryStore:
             is_universal=is_universal,
         )
         # ----------------------------------------------------------------
-        Spy.create_media_footage(media = [user_media.media], context = context,  type = FootageConstants.create())
+        Spy.create_media_footage(media = [user_media.media], communities = [communities], context = context,  type = FootageConstants.create(), notes=f"Media ID({user_media.media.id})")
         # ----------------------------------------------------------------
         return user_media, None
 

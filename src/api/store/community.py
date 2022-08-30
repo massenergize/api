@@ -759,7 +759,7 @@ class CommunityStore:
                     break
             
             # ----------------------------------------------------------------
-            Spy.create_community_footage(communities = [community], related_users=[owner,user], context = context, type = FootageConstants.create())
+            Spy.create_community_footage(communities = [community], related_users=[owner,user], context = context, type = FootageConstants.create(),notes =f"Community ID({community.id})")
             # ----------------------------------------------------------------
             return community, None
         except Exception as e:
@@ -830,7 +830,7 @@ class CommunityStore:
                     raise Exception("Failed to save custom website: "+str(err))
 
             # ----------------------------------------------------------------
-            Spy.create_community_footage(communities = [community], context = context, type = FootageConstants.update())
+            Spy.create_community_footage(communities = [community], context = context, type = FootageConstants.update(), notes =f"Community ID({community_id})")
             # ----------------------------------------------------------------
             return community, None
 

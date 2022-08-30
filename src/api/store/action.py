@@ -112,7 +112,7 @@ class ActionStore:
 
       new_action.save()
       # ----------------------------------------------------------------
-      Spy.create_action_footage(actions = [new_action], context = context, actor = new_action.user, type = FootageConstants.create())
+      Spy.create_action_footage(actions = [new_action], context = context, actor = new_action.user, type = FootageConstants.create(), notes = f"Action ID({new_action.id})")
       # ----------------------------------------------------------------
       return new_action, None
 
@@ -233,7 +233,7 @@ class ActionStore:
         
       action.save()
       # ----------------------------------------------------------------
-      Spy.create_action_footage(actions = [action], context = context, type = FootageConstants.update())
+      Spy.create_action_footage(actions = [action], context = context, type = FootageConstants.update(), notes =f"Action ID({action_id})")
       # ----------------------------------------------------------------
       return action, None
     except Exception as e:
@@ -270,7 +270,7 @@ class ActionStore:
       action_to_delete.is_deleted = True 
       action_to_delete.save()
       # ----------------------------------------------------------------
-      Spy.create_action_footage(actions = [action_to_delete], context = context,  type = FootageConstants.delete())
+      Spy.create_action_footage(actions = [action_to_delete], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({action_id})")
       # ----------------------------------------------------------------
       return action_to_delete, None
     except Exception as e:

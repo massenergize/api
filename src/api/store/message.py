@@ -216,7 +216,8 @@ class MessageStore:
 
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
-                messages=[message], context=context, type=FootageConstants.delete()
+                messages=[message], context=context, type=FootageConstants.delete(), 
+                notes = f"Deleted ID({message_id})"
             )
             # ----------------------------------------------------------------
             return message, None

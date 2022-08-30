@@ -215,7 +215,7 @@ class TeamStore:
 
       if context.is_admin_site: 
         # ----------------------------------------------------------------
-        Spy.create_action_footage(teams = [team], context = context,  type = FootageConstants.create())
+        Spy.create_team_footage(teams = [team], context = context,  type = FootageConstants.create(), notes = f"Team ID({team.id})")
         # ----------------------------------------------------------------
       return team, None
     except Exception as e:
@@ -312,7 +312,7 @@ class TeamStore:
 
       if context.is_admin_site: 
         # ----------------------------------------------------------------
-        Spy.create_team_footage(teams = [team], context = context, type = FootageConstants.update())
+        Spy.create_team_footage(teams = [team], context = context, type = FootageConstants.update(), notes = f"Team ID({team_id})")
         # ----------------------------------------------------------------
       return team, None
     except Exception as e:
@@ -397,7 +397,7 @@ class TeamStore:
       teamMember.is_admin = is_admin
       teamMember.save()
       # ----------------------------------------------------------------
-      Spy.create_team_footage(teams = [team], context = context, related_users = [user] if user else [],  type = FootageConstants.add(), notes=f"Added user({user.email})")
+      Spy.create_team_footage(teams = [team], context = context, related_users = [user] if user else [],  type = FootageConstants.add(), notes=f"Added user({user.email}) to Team({team_id})")
       # ----------------------------------------------------------------
       return team, None
     except Exception as e:
@@ -420,7 +420,7 @@ class TeamStore:
         team_member.delete()
       
       # ----------------------------------------------------------------
-      Spy.create_team_footage(teams = [team], context = context, related_users = [user] if user else [], type = FootageConstants.remove(), notes=f"Removed user({user.email})")
+      Spy.create_team_footage(teams = [team], context = context, related_users = [user] if user else [], type = FootageConstants.remove(), notes=f"Removed user({user.email}) from team({team_id})")
       # ----------------------------------------------------------------
       return team, None
     except Exception as e:
