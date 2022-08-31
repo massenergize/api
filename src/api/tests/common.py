@@ -1,14 +1,18 @@
 import time
 import jwt
 from http.cookies import SimpleCookie
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
+
+from ..store.utils import unique_media_filename
 from _main_.settings import SECRET_KEY
+from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from database.models import (
     Action,
     Community,
     CommunityAdminGroup,
     Event,
+    FeatureFlag,
     Media,
     Testimonial,
     UserMediaUpload,
@@ -20,9 +24,35 @@ from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 RESET = "reset"
+
+
+def makeFlag(**kwargs):
+    name = kwargs.get("name") or "New Feature Flag"
+    coms = kwargs.pop("communities", [])
+    users = kwargs.pop("users",[])
+    future_expiration = datetime.now(timezone.utc) + timedelta(days=3)
+    flag =  FeatureFlag.objects.create(
+        **{
+            "expires_on": future_expiration,
+            "audience": FeatureFlagConstants.for_everyone(),
+            "key": str(time.time()) + "-feature",
+            **kwargs,
+            "name": name,
+        }
+    )
+
+    if coms : 
+        flag.communities.set(coms) 
+    if users : 
+        flag.users.set(users) 
+
+    return flag 
+
+
 def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
     file = kwargs.get("file") or kwargs.get("image") or createImage()
+    file.name = unique_media_filename(file)
     return Media.objects.create(**{**kwargs, "name": name, "file": file})
 
 
@@ -95,8 +125,8 @@ def makeAdmin(**kwargs):
 
 
 def makeUser(**kwargs):
-    full_name = kwargs.get("full_name") or "user_full_name"
-    email = kwargs.get("email") or "new_user_email@email.com"
+    full_name = kwargs.pop("name", None) or kwargs.get("full_name") or "user_full_name"
+    email = kwargs.get("email") or str(time.time())+"@gmail.com" 
     return UserProfile.objects.create(
         **{**kwargs, "full_name": full_name, "email": email}
     )
@@ -114,7 +144,7 @@ def makeUserUpload(**kwargs):
 
 
 def makeCommunity(**kwargs):
-    subdomain = kwargs.get("subdomain") or "default_subdomain"
+    subdomain = kwargs.get("subdomain") or str(time.time())
     name = kwargs.get("name") or "community_default_name"
     com = Community.objects.create(
         **{
@@ -148,7 +178,8 @@ def setupCC(client):
             },
         )
 
-def makeAuthToken(user): 
+
+def makeAuthToken(user):
     dt = datetime.now()
     dt.microsecond
 
@@ -162,7 +193,8 @@ def makeAuthToken(user):
     }
 
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256").decode("utf-8")
-        
+
+
 def signinAs(client, user):
 
     if user:
