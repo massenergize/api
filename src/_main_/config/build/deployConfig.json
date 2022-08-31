@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.4.18",
+  "BUILD_VERSION": "4.5.16",
   "BUILD_VERSION_NOTES": "May 27: Bug fix release:\n- implement messages to team leaders\n- avoid duplicate Welcome emails\n- new route users.listForPublicView\n- back-end support for guest signins\n\n"
 }

@@ -1,11 +1,7 @@
 from django.test import TestCase, Client
 from django.conf import settings as django_settings
 from urllib.parse import urlencode
-from _main_.settings import BASE_DIR
-from _main_.utils.massenergize_response import MassenergizeResponse
-from database.models import Team, Community, UserProfile, Action, UserActionRel, TeamMember, RealEstateUnit, CommunityAdminGroup, Vendor
-from carbon_calculator.models import Action as CCAction
-from _main_.utils.utils import load_json
+from database.models import Team, Community, UserProfile, CommunityAdminGroup, Vendor
 from api.tests.common import signinAs, setupCC, createUsers
 
 class VendorsTestCase(TestCase):
@@ -31,7 +27,12 @@ class VendorsTestCase(TestCase):
         'owner_name': 'Community Owner',
         'accepted_terms_and_conditions': True
       })
-  
+
+      self.USER1 = UserProfile.objects.create(**{
+        'full_name': "Vendor Tester",
+        'email': 'vendor@tester.com'
+      })
+
       admin_group_name  = f"{self.COMMUNITY.name}-{self.COMMUNITY.subdomain}-Admin-Group"
       self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
       self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
@@ -40,6 +41,9 @@ class VendorsTestCase(TestCase):
       self.VENDOR1.communities.set([self.COMMUNITY])
       self.VENDOR2 = Vendor.objects.create(name="vendor2")
       self.VENDOR2.communities.set([self.COMMUNITY])
+
+      self.VENDOR1.user = self.USER1
+
       self.VENDOR1.save()
       self.VENDOR2.save()
 
@@ -118,18 +122,26 @@ class VendorsTestCase(TestCase):
         self.assertFalse(response["success"])
 
         # test logged as user who submitted a vendor
-        # TODO: make this test work
-        # signinAs(self.client, self.USER)
-        #response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.SUBMITTED_VENDOR_ID, "name": "updated_name1", "community_id":self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
-        #print(response)
-        #self.assertTrue(response["success"])
-        #self.assertEqual(response["data"]["name"], "updated_name1")
+        signinAs(self.client, self.USER1)
+        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name1"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertEqual(response["data"]["name"], "updated_name1")
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
         response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "name": "updated_name2"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "updated_name2")
+
+        # test setting live but not yet approved
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # test setting live and approved
+        response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "is_approved": "true", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
 
     def test_copy(self):
         # test not logged in

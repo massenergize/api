@@ -305,6 +305,14 @@ class EventStore:
   def update_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop('event_id', None)
+      events = Event.objects.filter(id=event_id)
+      if not events:
+        return None, InvalidResourceError()
+
+      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
+      if str(events.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       image = args.pop('image', None)
       tags = args.pop('tags', [])
 
@@ -323,6 +331,7 @@ class EventStore:
       final_date = args.pop('final_date', None)
 
       community_id = args.pop("community_id", None)
+      is_published = args.pop('is_published', None)
 
       if is_recurring:
 
@@ -361,9 +370,6 @@ class EventStore:
           return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
 
 
-      events = Event.objects.filter(id=event_id)
-      if not events:
-        return None, CustomMassenergizeError(f"No event with id: {event_id}")
 
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -465,6 +471,16 @@ class EventStore:
           if rescheduled: 
             rescheduled.rescheduled_event.delete()
             rescheduled.delete()
+
+      if is_published==False:
+        event.is_published = False
+
+      elif is_published and not event.is_published:
+        # only publish event if it has been approved  
+        if event.is_approved:
+          event.is_published = True
+        else:
+          return None, CustomMassenergizeError("Event needs to be approved before it can be made live")
 
       # successful return
       event.save()      
