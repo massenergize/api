@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate_me
 from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
 from django.utils.text import slugify
@@ -307,7 +308,7 @@ class VendorStore:
 
       community = get_community_or_die(context, {'community_id': community_id})
       vendors = community.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
-      return vendors, None
+      return paginate_me(vendors, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -316,7 +317,7 @@ class VendorStore:
   def list_vendors_for_super_admin(self, context: Context):
     try:
       vendors = Vendor.objects.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
-      return vendors, None
+      return paginate_me(vendors, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

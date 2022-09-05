@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate_me
 from _main_.utils.utils import Console, strip_website
 from api.tests.common import RESET
 from database.models import (
@@ -583,7 +584,7 @@ class CommunityStore:
 
             if not communities:
                 return [], None
-            return communities, None
+            return paginate_me(communities, args.get('page', 1)), None
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
@@ -965,7 +966,7 @@ class CommunityStore:
                     actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
                     actions_recorded.append(action_id)
 
-            return actions_completed, None
+            return paginate_me(actions_completed, args.get('page', 1)), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

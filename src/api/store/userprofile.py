@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate_me
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
@@ -693,7 +694,7 @@ class UserStore:
       users = [cm.user for cm in
                CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
-      return users, None
+      return paginate_me(users, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -705,7 +706,7 @@ class UserStore:
       # List all users including guests
       #  users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
       users = UserProfile.objects.filter(is_deleted=False)
-      return users, None
+      return paginate_me(users, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -730,7 +731,7 @@ class UserStore:
       else:
         todo = UserActionRel.objects.filter(status="TODO", user=user)
       
-      return todo, None
+      return paginate_me(todo, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -749,7 +750,7 @@ class UserStore:
       else:
         todo = UserActionRel.objects.filter(status="DONE", user=user)
       
-      return todo, None
+      return paginate_me(todo, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

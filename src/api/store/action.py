@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate_actions, paginate_me
 from _main_.utils.utils import Console
 from api.tests.common import RESET
 from database.models import Action, UserProfile, Community, Media, UserActionRel
@@ -50,8 +51,9 @@ class ActionStore:
       # by default, exclude deleted actions
       #if not context.include_deleted:
       actions = actions.filter(is_deleted=False)
+      new_action = paginate_me(actions, args.get('page', 1))
 
-      return actions, None
+      return new_action, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -297,7 +299,7 @@ class ActionStore:
         return actions, None
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-      return actions, None
+      return paginate_me(actions, args.get('page', 1)), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -306,10 +308,9 @@ class ActionStore:
 
   def list_actions_for_super_admin(self, context: Context):
     try:
-      # if not context.user_is_super_admin:
-      #   return None, CustomMassenergizeError("Insufficient Privileges")
+      page = context.args.get('page', 1)
       actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
-      return actions, None
+      return paginate_actions(actions, page), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

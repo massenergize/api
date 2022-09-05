@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate_me
 from database.models import Message, UserProfile, Media, Community, Team
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -177,7 +178,7 @@ class MessageStore:
       else:
         messages = []
 
-      return messages, None
+      return paginate_me(messages, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -192,7 +193,7 @@ class MessageStore:
       else:
         messages = []
 
-      return messages, None
+      return paginate_me(messages, context.args.get("page",1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

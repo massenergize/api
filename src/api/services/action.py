@@ -122,4 +122,4 @@ class ActionService:
     actions, err = self.store.list_actions_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(actions), None
+    return actions, None

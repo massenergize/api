@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate_me
 from api.tests.common import RESET
 from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
@@ -59,7 +60,7 @@ class TestimonialStore:
         else:
           testimonials = testimonials.filter(is_published=True)
 
-      return testimonials, None
+      return paginate_me(testimonials, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -248,7 +249,7 @@ class TestimonialStore:
         return testimonials, None
 
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
-      return testimonials, None
+      return paginate_me(testimonials, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -258,7 +259,7 @@ class TestimonialStore:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
       testimonials = Testimonial.objects.filter(is_deleted=False).select_related('image', 'community', 'vendor').prefetch_related('tags')
-      return testimonials, None
+      return paginate_me(testimonials, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

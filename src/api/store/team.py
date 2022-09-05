@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate_me
 from _main_.utils.utils import Console
 from api.tests.common import RESET
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
@@ -76,7 +77,7 @@ class TeamStore:
         teams = Team.objects.filter(communities__id=community.id, is_published=True, is_deleted=False)
       elif user:
         teams = user.team_set.all()
-      return teams, None
+      return paginate_me(teams, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -416,7 +417,7 @@ class TeamStore:
         return [], CustomMassenergizeError('Please provide a valid team_id')
 
       members = TeamMember.objects.filter(is_deleted=False, team__id=team_id, user__accepts_terms_and_conditions=True, user__is_deleted=False)
-      return members, None
+      return paginate_me(members, args.get("page", 1)), None
     except Exception:
       return None, InvalidResourceError()
 
@@ -468,7 +469,7 @@ class TeamStore:
         return teams, None
 
       teams = Team.objects.filter(communities__id=community_id, is_deleted=False).select_related('logo', 'primary_community')    
-      return teams, None
+      return paginate_me(teams, args.get("page", 1)), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -477,7 +478,7 @@ class TeamStore:
   def list_teams_for_super_admin(self, context: Context):
     try:
       teams = Team.objects.filter(is_deleted=False).select_related('logo', 'primary_community')
-      return teams, None
+      return paginate_me(teams, context.args.get("page", 1)), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -523,7 +524,7 @@ class TeamStore:
               actions_recorded.append(action_id)
 
       actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
-      return actions_completed, None
+      return paginate_me(actions_completed, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
