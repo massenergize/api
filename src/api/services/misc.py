@@ -31,7 +31,9 @@ class MiscellaneousService:
         footages, error = self.store.fetch_footages(context, args)
         if error:
             return None, error
+        count = footages.count()
         return {
+            "count":count,
             "footages": serialize_all(footages),
             "activityTypes": FootageConstants.TYPES,
             "types": FootageConstants.ITEM_TYPES,

@@ -3363,6 +3363,7 @@ class Footage(models.Model):
         data = model_to_dict(self,fields = ["activity_type","notes","portal","item_type","by_super_admin"])
         data["actor"] = self.actor.info() if self.actor else None
         data["created_at"] = self.created_at
+        data["communities"] = [c.info() for c in self.communities.all()] if self.communities else []
         data = FootageConstants.change_type_to_boolean(data)
 
         return data

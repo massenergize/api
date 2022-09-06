@@ -159,10 +159,10 @@ class Spy:
     @staticmethod
     def create_team_footage(**kwargs):
         try:
-            items = kwargs.get("teams")
+            items = kwargs.get("teams",[])
             ctx = kwargs.get("context")
             actor = kwargs.get("actor")
-            related_users = kwargs.get("related_users")
+            related_users = kwargs.get("related_users",[])
             actor = (
                 actor
                 if actor
