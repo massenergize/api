@@ -11,7 +11,7 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_admin_communities
+from .utils import get_admin_communities, unique_media_filename
 from _main_.utils.context import Context
 from .utils import get_community, get_user
 from sentry_sdk import capture_message
@@ -64,7 +64,7 @@ class MessageStore:
             title = args.pop("title", None)
             email = args.pop("email", None) or context.user_email
             body = args.pop("body", None)
-            uploaded_file = args.pop("uploaded_file", None)
+            file = args.pop("uploaded_file", None)
             parent = args.pop("parent", None)
 
             community, err = get_community(community_id, subdomain)
@@ -85,15 +85,18 @@ class MessageStore:
             if user:
                 new_message.user = user
 
-            if uploaded_file:
-                media = Media.objects.create(
-                    name=f"Messages: {new_message.title} - Uploaded File",
-                    file=uploaded_file,
-                )
-                media.save()
-                new_message.uploaded_file = media
+            if file:
 
-            new_message.save()
+              file.name = unique_media_filename(file)
+
+              media = Media.objects.create(
+                  name=f"Messages: {new_message.title} - Uploaded File",
+                  file=file,
+              )
+              media.save()
+              new_message.uploaded_file = media
+
+              new_message.save()
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
                 messages=[new_message],

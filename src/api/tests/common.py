@@ -3,6 +3,8 @@ import jwt
 from http.cookies import SimpleCookie
 from datetime import datetime, timedelta
 from django.utils import timezone
+
+from ..store.utils import unique_media_filename
 from _main_.settings import SECRET_KEY
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from database.models import (
@@ -51,6 +53,7 @@ def makeFlag(**kwargs):
 def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
     file = kwargs.get("file") or kwargs.get("image") or createImage()
+    file.name = unique_media_filename(file)
     return Media.objects.create(**{**kwargs, "name": name, "file": file})
 
 
