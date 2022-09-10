@@ -89,6 +89,83 @@ class Location(models.Model):
     class Meta:
         db_table = "locations"
 
+class TagCollection(models.Model):
+    """
+    A class used to represent a collection of Tags.
+
+    Attributes
+    ----------
+    name : str
+      name of the Tag Collection
+    """
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    is_global = models.BooleanField(default=False, blank=True)
+    allow_multiple = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False, blank=True)
+    is_published = models.BooleanField(default=False, blank=True)
+    rank = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return self.name
+
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["tags"] = [t.simple_json() for t in self.tag_set.all()]
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        ordering = ("name",)
+        db_table = "tag_collections"
+
+
+class Tag(models.Model):
+    """
+    A class used to represent an Tag.  It is essentially a string that can be
+    used to describe or group items, actions, etc
+
+    Attributes
+    ----------
+    name : str
+      name of the Tag
+    """
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=SHORT_STR_LEN)
+    points = models.PositiveIntegerField(null=True, blank=True)
+    icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    tag_collection = models.ForeignKey(
+        TagCollection, null=True, on_delete=models.CASCADE, blank=True
+    )
+    rank = models.PositiveIntegerField(default=0)
+    is_deleted = models.BooleanField(default=False, blank=True)
+    is_published = models.BooleanField(default=False, blank=True)
+
+    def __str__(self):
+        return "%s - %s" % (self.name, self.tag_collection)
+
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["order"] = self.rank
+        res["tag_collection_name"] = (
+            None if not self.tag_collection else self.tag_collection.name
+        )
+        return res
+
+    def full_json(self):
+        data = self.simple_json()
+        data["tag_collection"] = get_json_if_not_none(self.tag_collection)
+        return data
+
+    class Meta:
+        ordering = ("rank",)
+        db_table = "tags"
+        unique_together = [["rank", "name", "tag_collection"]]
+
 
 class Media(models.Model):
     """
@@ -111,7 +188,8 @@ class Media(models.Model):
     media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
-
+    tags = models.ManyToManyField(Tag, related_name="media_tags", blank=True)
+    
     def __str__(self):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
 
@@ -127,6 +205,7 @@ class Media(models.Model):
             "name": self.name,
             "url": self.file.url,
             "media_type": self.media_type,
+            "tags": [tag.simple_json() for tag in self.tags.all()]
         }
 
     class Meta:
@@ -1326,82 +1405,6 @@ class CarbonEquivalency(models.Model):
         db_table = "carbon_equivalencies"
 
 
-class TagCollection(models.Model):
-    """
-    A class used to represent a collection of Tags.
-
-    Attributes
-    ----------
-    name : str
-      name of the Tag Collection
-    """
-
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    is_global = models.BooleanField(default=False, blank=True)
-    allow_multiple = models.BooleanField(default=False)
-    is_deleted = models.BooleanField(default=False, blank=True)
-    is_published = models.BooleanField(default=False, blank=True)
-    rank = models.PositiveIntegerField(default=0)
-
-    def __str__(self):
-        return self.name
-
-    def simple_json(self):
-        res = model_to_dict(self)
-        res["tags"] = [t.simple_json() for t in self.tag_set.all()]
-        return res
-
-    def full_json(self):
-        return self.simple_json()
-
-    class Meta:
-        ordering = ("name",)
-        db_table = "tag_collections"
-
-
-class Tag(models.Model):
-    """
-    A class used to represent an Tag.  It is essentially a string that can be
-    used to describe or group items, actions, etc
-
-    Attributes
-    ----------
-    name : str
-      name of the Tag
-    """
-
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=SHORT_STR_LEN)
-    points = models.PositiveIntegerField(null=True, blank=True)
-    icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    tag_collection = models.ForeignKey(
-        TagCollection, null=True, on_delete=models.CASCADE, blank=True
-    )
-    rank = models.PositiveIntegerField(default=0)
-    is_deleted = models.BooleanField(default=False, blank=True)
-    is_published = models.BooleanField(default=False, blank=True)
-
-    def __str__(self):
-        return "%s - %s" % (self.name, self.tag_collection)
-
-    def simple_json(self):
-        res = model_to_dict(self)
-        res["order"] = self.rank
-        res["tag_collection_name"] = (
-            None if not self.tag_collection else self.tag_collection.name
-        )
-        return res
-
-    def full_json(self):
-        data = self.simple_json()
-        data["tag_collection"] = get_json_if_not_none(self.tag_collection)
-        return data
-
-    class Meta:
-        ordering = ("rank",)
-        db_table = "tags"
-        unique_together = [["rank", "name", "tag_collection"]]
 
 
 class Vendor(models.Model):

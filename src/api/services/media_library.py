@@ -21,7 +21,7 @@ class MediaLibraryService:
         images, error = self.store.search(args)
         if error:
             return None, error
-        return self.organiseData(data=serialize_all(images), args=args), None
+        return self.organiseData(data=serialize_all(images,True), args=args), None
 
     def organiseData(self, **kwargs):
         data = kwargs.get("data") or []
