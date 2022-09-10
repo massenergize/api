@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate
 from database.models import TagCollection, UserProfile, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -26,7 +27,7 @@ class TagCollectionStore:
   def list_tag_collections(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       tag_collections = TagCollection.objects.filter(is_deleted=False)
-      return tag_collections, None
+      return paginate(tag_collections, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -121,14 +122,15 @@ class TagCollectionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_tag_collections_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    return self.list_tag_collections_for_super_admin()
+  def list_tag_collections_for_community_admin(self, context,community_id) -> Tuple[list, MassEnergizeAPIError]:
+    tag_collections = self.list_tag_collections_for_super_admin()
+    return paginate(tag_collections, context.args.get("page", 1))
 
 
-  def list_tag_collections_for_super_admin(self):
+  def list_tag_collections_for_super_admin(self, context):
     try:
       tag_collections = TagCollection.objects.all()
-      return tag_collections, None
+      return paginate(tag_collections, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

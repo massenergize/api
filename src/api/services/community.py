@@ -43,7 +43,7 @@ class CommunityService:
     communities, err = self.store.list_communities(context, args)
     if err:
       return None, err
-    return serialize_all(communities), None
+    return communities, None
 
 
   def create_community(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -72,14 +72,14 @@ class CommunityService:
     communities, err = self.store.list_communities_for_community_admin(context)
     if err:
       return None, err
-    return serialize_all(communities), None
+    return communities, None
 
 
   def list_communities_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_communities_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(communities), None
+    return communities, None
 
   def add_custom_website(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.add_custom_website(context, args)
@@ -91,7 +91,7 @@ class CommunityService:
     communities, err = self.store.list_communities_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(communities), None
+    return communities, None
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     completed_actions_list, err = self.store.list_actions_completed(context, args)

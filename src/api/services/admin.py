@@ -80,7 +80,7 @@ class AdminService:
         admins, err = self.store.list_community_admin(context, args)
         if err:
             return None, err
-        return serialize(admins), None
+        return  serialize(admins), None
 
     def message_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
       try:
@@ -132,4 +132,4 @@ class AdminService:
         admins, err = self.store.list_admin_messages(context, args)
         if err:
             return None, err
-        return serialize_all(admins), None
+        return admins, None

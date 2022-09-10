@@ -109,11 +109,11 @@ class TestimonialService:
     testimonials, err = self.store.list_testimonials_for_community_admin(context, community_id)
     if err:
       return None, err
-    return serialize_all(testimonials), None
+    return testimonials, None
 
 
   def list_testimonials_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     testimonials, err = self.store.list_testimonials_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(testimonials), None
+    return testimonials, None

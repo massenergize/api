@@ -115,11 +115,11 @@ class MessageService:
     messages, err = self.store.list_community_admin_messages(context, args)
     if err:
       return None, err
-    return serialize_all(messages), None
+    return messages, None
 
 
   def list_team_admin_messages_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     messages, err = self.store.list_team_admin_messages(context)
     if err:
       return None, err
-    return serialize_all(messages), None
+    return messages, None

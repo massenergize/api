@@ -73,7 +73,7 @@ class SubscriberHandler(RouteHandler):
     args: dict = context.args
     community_id = args.pop('community_id', None)
     user_id = args.pop('user_id', None)
-    subscriber_info, err = self.service.list_subscribers(community_id, user_id)
+    subscriber_info, err = self.service.list_subscribers(context,community_id, user_id)
     if err:
       return err
     return MassenergizeResponse(data=subscriber_info)

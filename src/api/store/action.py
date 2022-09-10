@@ -1,7 +1,6 @@
-from _main_.utils.pagination import paginate_actions, paginate_me
-from _main_.utils.utils import Console
+from _main_.utils.pagination import paginate
 from api.tests.common import RESET
-from database.models import Action, UserProfile, Community, Media, UserActionRel
+from database.models import Action, UserProfile, Community, Media
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -51,7 +50,7 @@ class ActionStore:
       # by default, exclude deleted actions
       #if not context.include_deleted:
       actions = actions.filter(is_deleted=False)
-      new_action = paginate_me(actions, args.get('page', 1))
+      new_action = paginate(actions, args.get('page', 1))
 
       return new_action, None
     except Exception as e:
@@ -299,7 +298,7 @@ class ActionStore:
         return actions, None
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-      return paginate_me(actions, args.get('page', 1)), None
+      return paginate(actions, args.get('page', 1)), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -310,7 +309,7 @@ class ActionStore:
     try:
       page = context.args.get('page', 1)
       actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
-      return paginate_actions(actions, page), None
+      return paginate(actions, page), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

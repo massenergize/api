@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate
 from database.models import Subscriber, UserProfile, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -20,11 +21,11 @@ class SubscriberStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_subscribers(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_subscribers(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     subscribers = Subscriber.objects.filter(community__id=community_id)
     if not subscribers:
       return [], None
-    return subscribers, None
+    return paginate(subscribers), None
 
 
   def create_subscriber(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -117,7 +118,7 @@ class SubscriberStore:
 
       community: Community = Community.objects.get(pk=community_id)
       subscribers = community.subscriber_set.all().filter(is_deleted=False)
-      return subscribers, None
+      return paginate(subscribers, context.args.get("page", 1)), None
  
     except Exception as e:
       capture_message(str(e), level="error")
@@ -127,7 +128,7 @@ class SubscriberStore:
   def list_subscribers_for_super_admin(self, context: Context):
     try:
       subscribers = Subscriber.objects.filter(is_deleted=False)
-      return subscribers, None
+      return paginate(subscribers, context.args.get("page",1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

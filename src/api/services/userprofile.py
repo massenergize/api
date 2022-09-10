@@ -135,7 +135,7 @@ class UserService:
     user, err = self.store.list_users(community_id)
     if err:
       return None, err
-    return serialize_all(user), None
+    return user, None
 
 
   def list_publicview(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -149,13 +149,13 @@ class UserService:
     actions_todo, err = self.store.list_todo_actions(context, args)
     if err:
       return None, err
-    return serialize_all(actions_todo), None
+    return actions_todo, None
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     actions_completed, err = self.store.list_completed_actions(context, args)
     if err:
       return None, err
-    return serialize_all(actions_completed), None
+    return actions_completed, None
 
   def remove_user_action(self, context: Context, user_action_id) -> Tuple[list, MassEnergizeAPIError]:
     result, err = self.store.remove_user_action(context, user_action_id)
@@ -167,7 +167,7 @@ class UserService:
     events, err = self.store.list_events_for_user(context, args)
     if err:
       return None, err
-    return serialize_all(events), None
+    return events, None
 
   def check_user_imported(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     imported_info, err = self.store.check_user_imported(context, args)
@@ -239,14 +239,14 @@ class UserService:
     users, err = self.store.list_users_for_community_admin(context, community_id)
     if err:
       return None, err
-    return serialize_all(users), None
+    return users, None
 
 
   def list_users_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     users, err = self.store.list_users_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(users), None
+    return users, None
 
 
   def add_action_todo(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:

@@ -54,7 +54,7 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     community_id = args.pop('community_id', None)
     user_id = args.pop('user_id', None)
-    tag_info, err = self.service.list_tags(community_id, user_id)
+    tag_info, err = self.service.list_tags(context,community_id, user_id)
     if err:
       return err
     return MassenergizeResponse(data=tag_info)
@@ -83,7 +83,7 @@ class TagHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop("community_id", None)
-    tags, err = self.service.list_tags_for_community_admin(community_id)
+    tags, err = self.service.list_tags_for_community_admin(context,community_id)
     if err:
       return err
     return MassenergizeResponse(data=tags)
@@ -92,7 +92,7 @@ class TagHandler(RouteHandler):
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    tags, err = self.service.list_tags_for_super_admin()
+    tags, err = self.service.list_tags_for_super_admin(context)
     if err:
       return err
     return MassenergizeResponse(data=tags)

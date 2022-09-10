@@ -1,4 +1,4 @@
-from _main_.utils.pagination import paginate_me
+from _main_.utils.pagination import paginate
 from _main_.utils.utils import Console, strip_website
 from api.tests.common import RESET
 from database.models import (
@@ -584,7 +584,7 @@ class CommunityStore:
 
             if not communities:
                 return [], None
-            return paginate_me(communities, args.get('page', 1)), None
+            return paginate(communities, args.get('page', 1)), None
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
@@ -880,7 +880,8 @@ class CommunityStore:
             elif context.user_is_community_admin:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
-                return [a.community for a in admin_groups], None
+                communities = [a.community for a in admin_groups]
+                return paginate(communities, context.args.get("page",1)) , None
             else:
                 return [], None
 
@@ -894,7 +895,7 @@ class CommunityStore:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
 
             communities = Community.objects.filter(is_deleted=False)
-            return communities, None
+            return paginate(communities, context.args.get("page", 1)), None
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
@@ -966,7 +967,7 @@ class CommunityStore:
                     actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
                     actions_recorded.append(action_id)
 
-            return paginate_me(actions_completed, args.get('page', 1)), None
+            return paginate(actions_completed, args.get('page', 1)), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

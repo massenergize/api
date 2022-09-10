@@ -85,7 +85,7 @@ class TagCollectionHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop("community_id", None)
-    tag_collections, err = self.service.list_tag_collections_for_community_admin(community_id)
+    tag_collections, err = self.service.list_tag_collections_for_community_admin(context,community_id)
     if err:
       return err
     return MassenergizeResponse(data=tag_collections)
@@ -94,7 +94,7 @@ class TagCollectionHandler(RouteHandler):
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    tag_collections, err = self.service.list_tag_collections_for_super_admin()
+    tag_collections, err = self.service.list_tag_collections_for_super_admin(context)
     if err:
       return err
     return MassenergizeResponse(data=tag_collections)

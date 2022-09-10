@@ -18,11 +18,11 @@ class TagService:
       return None, err
     return serialize(tag), None
 
-  def list_tags(self, tag_id) -> Tuple[list, MassEnergizeAPIError]:
-    tags, err = self.store.list_tags(tag_id)
+  def list_tags(self,context, tag_id) -> Tuple[list, MassEnergizeAPIError]:
+    tags, err = self.store.list_tags(context,tag_id)
     if err:
       return None, err
-    return serialize_all(tags), None
+    return tags, None
 
 
   def create_tag(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -45,15 +45,15 @@ class TagService:
     return serialize(tag), None
 
 
-  def list_tags_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    tags, err = self.store.list_tags_for_community_admin(community_id)
+  def list_tags_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    tags, err = self.store.list_tags_for_community_admin(context,community_id)
     if err:
       return None, err
-    return serialize_all(tags), None
+    return tags, None
 
 
-  def list_tags_for_super_admin(self) -> Tuple[list, MassEnergizeAPIError]:
-    tags, err = self.store.list_tags_for_super_admin()
+  def list_tags_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
+    tags, err = self.store.list_tags_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(tags), None
+    return tags, None

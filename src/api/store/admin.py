@@ -1,4 +1,4 @@
-from _main_.utils.pagination import paginate_me
+from _main_.utils.pagination import paginate
 from database.models import UserProfile, CommunityAdminGroup, Community, Media, UserProfile, Message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -69,7 +69,7 @@ class AdminStore:
   def list_super_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False)
-      return paginate_me(admins, args.get('page', 1)), None
+      return paginate(admins, args.get('page', 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -196,7 +196,7 @@ class AdminStore:
         else:
           return None, CustomMassenergizeError("No community exists with that ID or subdomain")
 
-      return paginate_me(community_admin_group,args.get('page', 1)), None
+      return community_admin_group, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -260,7 +260,7 @@ class AdminStore:
         return [], None
 
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
-      return paginate_me(messages, args.get("page", 1)), None
+      return paginate(messages, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

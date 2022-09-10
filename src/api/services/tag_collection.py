@@ -23,7 +23,7 @@ class TagCollectionService:
     tag_collection, err = self.store.list_tag_collections(context, args)
     if err:
       return None, err
-    return serialize_all(tag_collection), None
+    return tag_collection, None
 
 
   def create_tag_collection(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -46,15 +46,15 @@ class TagCollectionService:
     return serialize(tag_collection), None
 
 
-  def list_tag_collections_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    tag_collections, err = self.store.list_tag_collections_for_community_admin(community_id)
+  def list_tag_collections_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    tag_collections, err = self.store.list_tag_collections_for_community_admin(context,community_id)
     if err:
       return None, err
-    return serialize_all(tag_collections), None
+    return tag_collections, None
 
 
-  def list_tag_collections_for_super_admin(self) -> Tuple[list, MassEnergizeAPIError]:
-    tag_collections, err = self.store.list_tag_collections_for_super_admin()
+  def list_tag_collections_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
+    tag_collections, err = self.store.list_tag_collections_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(tag_collections), None
+    return tag_collections, None

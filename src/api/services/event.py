@@ -39,7 +39,7 @@ class EventService:
     rsvps, err = self.store.get_rsvp_list(context, args)
     if err:
       return None, err
-    return serialize_all(rsvps), None
+    return rsvps, None
 
   def get_rsvp_status(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     event, err = self.store.get_rsvp_status(context, args)
@@ -137,7 +137,7 @@ class EventService:
     events, err = self.store.list_events(context, args)
     if err:
       return None, err
-    return serialize_all(events), None
+    return events, None
 
 
   def create_event(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
@@ -219,11 +219,11 @@ class EventService:
     events, err = self.store.list_events_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(events), None
+    return events, None
 
 
   def list_events_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.list_events_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(events), None
+    return events, None

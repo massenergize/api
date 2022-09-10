@@ -20,11 +20,11 @@ class SubscriberService:
       return None, err
     return serialize(subscriber, full=True), None
 
-  def list_subscribers(self, subscriber_id) -> Tuple[list, MassEnergizeAPIError]:
-    subscriber, err = self.store.list_subscribers(subscriber_id)
+  def list_subscribers(self,context, subscriber_id) -> Tuple[list, MassEnergizeAPIError]:
+    subscriber, err = self.store.list_subscribers(context,subscriber_id)
     if err:
       return None, err
-    return serialize(subscriber), None
+    return subscriber, None
 
 
   def create_subscriber(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -70,11 +70,11 @@ class SubscriberService:
     subscribers, err = self.store.list_subscribers_for_community_admin(context, community_id)
     if err:
       return None, err
-    return serialize_all(subscribers, full=True), None
+    return subscribers, None
 
 
   def list_subscribers_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     subscribers, err = self.store.list_subscribers_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(subscribers, full=True), None
+    return subscribers, None

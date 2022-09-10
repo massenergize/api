@@ -11,7 +11,7 @@ from datetime import timedelta
 import calendar
 import pytz
 from typing import Tuple
-from _main_.utils.pagination import paginate_me
+from _main_.utils.pagination import paginate
 
 def _local_datetime(date_and_time):
   # the local date (in Massachusetts) is different than the UTC date
@@ -178,7 +178,7 @@ class EventStore:
         if e:
           exceptions.append(event.id)
 
-      return paginate_me(exceptions, args.get('page', 1)) , None
+      return paginate(exceptions, args.get('page', 1)) , None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -205,7 +205,7 @@ class EventStore:
     
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
-    return paginate_me(events, args.get("page", 1)), None
+    return paginate(events, args.get("page", 1)), None
 
 
   def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -645,7 +645,7 @@ class EventStore:
         return events, None
 
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True), is_deleted=False).select_related('image', 'community').prefetch_related('tags')
-      return paginate_me(events, args.get("page", 1)), None
+      return paginate(events, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -656,7 +656,7 @@ class EventStore:
       # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
       # not as their own separate events
       events = Event.objects.filter(is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-      return paginate_me(events, context.args.get("page", 1)), None
+      return paginate(events, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -674,7 +674,7 @@ class EventStore:
           return None, InvalidResourceError()
 
         event_attendees = EventAttendee.objects.filter(event=event)
-        return event_attendees, None
+        return paginate(event_attendees, args.get("page", 1)), None
 
       else:
         return None, InvalidResourceError()

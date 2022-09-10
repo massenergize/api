@@ -123,11 +123,11 @@ class VendorService:
     vendors, err = self.store.list_vendors_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(vendors), None
+    return vendors, None
 
 
   def list_vendors_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     vendors, err = self.store.list_vendors_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(vendors), None
+    return vendors, None

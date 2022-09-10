@@ -45,7 +45,7 @@ class GoalService:
     goals, err = self.store.list_goals(community_id, subdomain, team_id, user_id)
     if err:
       return None, err
-    return serialize_all(goals), None
+    return goals, None
 
 
   def create_goal(self, community_id, team_id, user_id, args) -> Tuple[dict, MassEnergizeAPIError]:

@@ -1,3 +1,4 @@
+from _main_.utils.pagination import paginate
 from database.models import Tag, UserProfile
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -16,11 +17,11 @@ class TagStore:
     return tag, None
 
 
-  def list_tags(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_tags(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     tags = Tag.objects.filter(community__id=community_id)
     if not tags:
       return [], None
-    return tags, None
+    return paginate(tags, context.args.get("page", 1)), None
 
 
   def create_tag(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -48,14 +49,16 @@ class TagStore:
     return tags.first()
 
 
-  def list_tags_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    return self.list_tags_for_super_admin()
+  def list_tags_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    tags =  self.list_tags_for_super_admin()
+
+    return paginate(tags, context.args.get("page", 1))
 
 
-  def list_tags_for_super_admin(self):
+  def list_tags_for_super_admin(self, context):
     try:
       tags = Tag.objects.all()
-      return tags, None
+      return paginate(tags,context.args.get("page", 1) ), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

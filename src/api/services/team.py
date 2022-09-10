@@ -30,7 +30,7 @@ class TeamService:
     team, err = self.store.list_teams(context, args)
     if err:
       return None, err
-    return serialize_all(team), None
+    return team, None
 
   def team_stats(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     stats, err = self.store.team_stats(context, args)
@@ -96,7 +96,7 @@ class TeamService:
     members, err = self.store.members(context, args)
     if err:
       return None, err
-    return serialize_all(members), None
+    return members, None
 
   def members_preferred_names(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     preferred_names, err = self.store.members_preferred_names(context, args)
@@ -164,14 +164,14 @@ class TeamService:
     teams, err = self.store.list_teams_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(teams), None
+    return teams, None
 
 
   def list_teams_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     teams, err = self.store.list_teams_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(teams), None
+    return teams, None
 
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:

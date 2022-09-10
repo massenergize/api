@@ -1,3 +1,5 @@
+from _main_.utils import context
+from _main_.utils.pagination import paginate
 from database.models import Goal, UserProfile, Team, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -55,7 +57,7 @@ class GoalStore:
       else:
         return None, CustomMassenergizeError("Provide a community, team or user")
 
-      return goals, None
+      return paginate(goals, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -182,7 +184,7 @@ class GoalStore:
         community: Community = Community.objects.get(pk=community_id)
         goals.extend(self._get_goals_from_community(community))
       
-      return goals, None
+      return paginate(goals,context.args.get("page", 1)), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -194,7 +196,7 @@ class GoalStore:
   def list_goals_for_super_admin(self):
     try:
       goals = Goal.objects.filter(is_deleted=False)
-      return goals, None
+      return paginate(goals), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
