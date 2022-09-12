@@ -1,14 +1,12 @@
-from typing import Tuple
-
 from django.core.exceptions import ValidationError
 from _main_.utils.utils import Console
+from .utils import unique_media_filename
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, Media, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
 
-limit = 30
-
+limit = 32
 
 class MediaLibraryStore:
     def __init__(self):
@@ -28,6 +26,7 @@ class MediaLibraryStore:
                     | Q(user_upload__communities__id__in=com_ids)
                     | Q(user_upload__is_universal=True)
                 )
+                .distinct()
                 .exclude(
                     id__gte=lower_limit, id__lte=upper_limit
                 )  # exclude content that have already been retrieved
@@ -49,7 +48,7 @@ class MediaLibraryStore:
                     user_upload__communities__id__in=com_ids
                 )  # user uploads whose listed communities match the provided communities
                 | Q(user_upload__is_universal=True)
-            ).order_by("-id")[:limit]
+            ).distinct().order_by("-id")[:limit]
 
         return images, None
 
@@ -110,14 +109,13 @@ class MediaLibraryStore:
             query |= qObj
         query |= Q(user_upload__is_universal = True)
         if not upper_limit and not lower_limit:
-            images = Media.objects.filter(query).order_by("-id")[:limit]
+            images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
             images = (
-                Media.objects.filter(query)
+                Media.objects.filter(query).distinct()
                 .exclude(id__gte=lower_limit, id__lte=upper_limit)
                 .order_by("-id")[:limit]
             )
-
         return images, None
 
     def remove(self, args):
@@ -129,7 +127,8 @@ class MediaLibraryStore:
         community_ids = args.get("community_ids")
         user_id = args.get("user_id")
         title = args.get("title") or "Gallery Upload"
-        _file = args.get("file")
+        file = args.get("file")
+
         is_universal = args.get("is_universal", None)
         communities = user = None
         description = args.get("description", None)
@@ -151,7 +150,7 @@ class MediaLibraryStore:
         user_media = self.makeMediaAndSave(
             user=user,
             communities=communities,
-            file=_file,
+            file=file,
             title=title,
             is_universal=is_universal,
             info=info,
@@ -166,6 +165,9 @@ class MediaLibraryStore:
         communities = kwargs.get("communities")
         is_universal = kwargs.get("is_universal")
         is_universal = True if is_universal else False
+
+        file.name = unique_media_filename(file)
+
         media = Media.objects.create(
             name=f" {title} - ({round(time.time() * 1000)})",
             file=file,
@@ -176,6 +178,7 @@ class MediaLibraryStore:
         user_media.save()
         if communities:
             user_media.communities.set(communities)
+            user_media.save()
         return user_media
 
     def getImageInfo(self, args):
