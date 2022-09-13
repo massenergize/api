@@ -5,7 +5,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, Media, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
-
+import json
 limit = 32
 
 
@@ -89,7 +89,7 @@ class MediaLibraryStore:
         context = args.get("context")
         com_ids = args.get("target_communities")
         any_community = args.get("any_community")
-        filters = args.get("filters")
+        filters = args.get("filters",[])
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         images = None
@@ -179,7 +179,7 @@ class MediaLibraryStore:
         file.name = unique_media_filename(file)
 
         media = Media.objects.create(
-            name=f" {title} - ({round(time.time() * 1000)})",
+            name=f"{title}-({round(time.time() * 1000)})",
             file=file,
         )
         user_media = UserMediaUpload.objects.create(
