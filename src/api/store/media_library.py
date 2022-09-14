@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from _main_.utils.utils import Console
 from .utils import unique_media_filename
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from database.models import Community, Media, UserMediaUpload, UserProfile
+from database.models import Community, Media, Tag, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
 import json
@@ -146,7 +146,7 @@ class MediaLibraryStore:
         user_id = args.get("user_id")
         title = args.get("title") or "Gallery Upload"
         file = args.get("file")
-
+        tags = args.get("tags", [])
         is_universal = args.get("is_universal", None)
         communities = user = None
         try:
@@ -165,6 +165,7 @@ class MediaLibraryStore:
             file=file,
             title=title,
             is_universal=is_universal,
+            tags = tags
         )
         return user_media, None
 
@@ -172,10 +173,12 @@ class MediaLibraryStore:
         title = kwargs.get("title")
         file = kwargs.get("file")
         user = kwargs.get("user")
+        tags = kwargs.get("tags")
         communities = kwargs.get("communities")
         is_universal = kwargs.get("is_universal")
         is_universal = True if is_universal else False
 
+        tags = Tag.objects.filter(id__in = tags)
         file.name = unique_media_filename(file)
 
         media = Media.objects.create(
@@ -185,6 +188,9 @@ class MediaLibraryStore:
         user_media = UserMediaUpload.objects.create(
             user=user, media=media, is_universal=is_universal
         )
+        if media: 
+            media.tags.set(tags) 
+
         if communities:
             user_media.communities.set(communities)
             user_media.save()
