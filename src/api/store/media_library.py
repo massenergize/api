@@ -118,13 +118,15 @@ class MediaLibraryStore:
 
         if len(queries) == 0:
             return None, CustomMassenergizeError(
+                
                 "Could not build query with your provided filters, please try again"
+            
             )
-
+       
         query = queries.pop()
         for qObj in queries:
             query |= qObj
-
+        query |= Q(user_upload__is_universal = True)
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
@@ -149,6 +151,12 @@ class MediaLibraryStore:
         tags = args.get("tags", [])
         is_universal = args.get("is_universal", None)
         communities = user = None
+        description = args.get("description", None)
+        info = {
+            "size": args.get("size"),
+            "size_text": args.get("size_text"),
+            "description": description,
+        }
         try:
             if community_ids:
                 communities = Community.objects.filter(id__in=community_ids)
@@ -165,7 +173,8 @@ class MediaLibraryStore:
             file=file,
             title=title,
             is_universal=is_universal,
-            tags = tags
+            tags = tags,
+            info=info,
         )
         return user_media, None
 
@@ -174,6 +183,7 @@ class MediaLibraryStore:
         file = kwargs.get("file")
         user = kwargs.get("user")
         tags = kwargs.get("tags")
+        info = kwargs.get("info")
         communities = kwargs.get("communities")
         is_universal = kwargs.get("is_universal")
         is_universal = True if is_universal else False
@@ -185,8 +195,11 @@ class MediaLibraryStore:
             name=f"{title}-({round(time.time() * 1000)})",
             file=file,
         )
-        user_media = UserMediaUpload.objects.create(
-            user=user, media=media, is_universal=is_universal
+        user_media = UserMediaUpload(
+            
+            user=user, media=media, is_universal=is_universal, info=info
+        )
+        user_media.save(
         )
         if media: 
             media.tags.set(tags) 
@@ -203,7 +216,9 @@ class MediaLibraryStore:
             media = Media.objects.get(pk=media_id)
         except Media.DoesNotExist:
             return None, CustomMassenergizeError(
+                
                 "Media could not be found, provide a valid 'media_id'"
+            
             )
         except:
             return None, CustomMassenergizeError(

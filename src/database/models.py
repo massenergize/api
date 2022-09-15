@@ -196,6 +196,7 @@ class Media(models.Model):
     def simple_json(self):
         return {
             "id": self.id,
+            "name": self.name,
             "url": self.file.url,
         }
 
@@ -928,6 +929,7 @@ class UserMediaUpload(models.Model):
         default=False
     )  # True value here means image is available to EVERYONE, and EVERY COMMUNITY
     settings = models.JSONField(null=True, blank=True)
+    info = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -936,7 +938,7 @@ class UserMediaUpload(models.Model):
 
     def simple_json(self):
         res = model_to_dict(
-            self, ["settings", "media", "created_at", "id", "is_universal"]
+            self, ["settings", "media", "created_at", "id", "is_universal","info"]
         )
         res["user"] = get_summary_info(self.user)
         res["image"] = get_json_if_not_none(self.media)

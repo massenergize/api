@@ -71,8 +71,8 @@ class MediaLibraryService:
         media_json = get_json_if_not_none(media, True)
         return {
             **media_json,
-            "user_info": user_info,
-            "info": {
+            "information": user_info,
+            "relations": {
                 "events": events,
                 "actions": actions,
                 "testimonials": testimonials,

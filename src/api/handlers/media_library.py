@@ -87,7 +87,7 @@ class MediaLibraryHandler(RouteHandler):
             "is_universal", bool
         ).expect(
             "tags", "str_list"
-        )
+        ).expect("size",str).expect("size_text", str).expect("description")
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
