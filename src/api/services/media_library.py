@@ -73,8 +73,8 @@ class MediaLibraryService:
             **media_json,
             "information": user_info,
             "relations": {
-                "events": events,
-                "actions": actions,
-                "testimonials": testimonials,
+                "event": events,
+                "action": actions,
+                "testimonial": testimonials,
             },
         }, None
