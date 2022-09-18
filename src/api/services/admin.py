@@ -46,7 +46,7 @@ class AdminService:
         admins, err = self.store.list_super_admin(context, args)
         if err:
             return None, err
-        return serialize_all(admins), None
+        return admins, None
 
     def add_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
       try:    
