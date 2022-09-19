@@ -3,7 +3,7 @@ from api.tests.common import RESET
 from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
-from .utils import get_community, get_user
+from .utils import get_community, get_user, unique_media_filename
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -97,6 +97,8 @@ class TestimonialStore:
           new_testimonial.image = image
         else:
           # from community portal, image upload
+          images.name = unique_media_filename(images)
+
           image = Media.objects.create(file=images, name=f"ImageFor {args.get('title', '')} Testimonial")
           new_testimonial.image = image
 

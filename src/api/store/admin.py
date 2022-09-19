@@ -2,7 +2,7 @@ from _main_.utils.pagination import paginate
 from database.models import UserProfile, CommunityAdminGroup, Community, Media, UserProfile, Message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.context import Context
-from .utils import get_community, get_user, get_community_or_die
+from .utils import get_community, get_user, get_community_or_die, unique_media_filename
 from api.store.community import CommunityStore
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -213,7 +213,7 @@ class AdminStore:
       title = args.pop("title", None)
       email = args.pop("email", None) or context.user_email
       body = args.pop("body", None)
-      uploaded_file = args.pop("uploaded_file", None)
+      file = args.pop("uploaded_file", None)
       
       new_message = Message.objects.create(user_name=user_name, email=email, title=title, body=body, community=community)
       new_message.save()
@@ -225,8 +225,11 @@ class AdminStore:
         new_message.email = user.email
         new_message.user_name = new_message.user_name or user.preferred_name
 
-      if uploaded_file:
-        media = Media.objects.create(name=f"Messages: {new_message.title} - Uploaded File", file=uploaded_file)
+      if file:
+
+        file.name = unique_media_filename(file)
+      
+        media = Media.objects.create(name=f"Messages: {new_message.title} - Uploaded File", file=file)
         media.save()
         new_message.uploaded_file = media
 

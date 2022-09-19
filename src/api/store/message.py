@@ -4,7 +4,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorized
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q
-from .utils import get_admin_communities
+from .utils import get_admin_communities, unique_media_filename
 from _main_.utils.context import Context
 from .utils import get_community, get_user
 from sentry_sdk import capture_message
@@ -54,14 +54,13 @@ class MessageStore:
       title = args.pop("title", None)
       email = args.pop("email", None) or context.user_email
       body = args.pop("body", None)
-      uploaded_file = args.pop("uploaded_file", None)
+      file = args.pop("uploaded_file", None)
       parent = args.pop("parent", None)
-
 
       community, err = get_community(community_id, subdomain)
       if err:
         return None, err
-      
+
       new_message = Message.objects.create(user_name=user_name, title=title, body=body, community=community,parent=parent)
       new_message.save()
       user, err = get_user(context.user_id, email)
@@ -70,8 +69,11 @@ class MessageStore:
       if user:
         new_message.user = user
 
-      if uploaded_file:
-        media = Media.objects.create(name=f"Messages: {new_message.title} - Uploaded File", file=uploaded_file)
+      if file:
+
+        file.name = unique_media_filename(file)
+
+        media = Media.objects.create(name=f"Messages: {new_message.title} - Uploaded File", file=file)
         media.save()
         new_message.uploaded_file = media
       
