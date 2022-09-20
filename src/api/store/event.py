@@ -7,7 +7,7 @@ from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from .utils import get_user_or_die, get_new_title
 import datetime
-from datetime import date, timedelta
+from datetime import timedelta
 import calendar
 import pytz
 from typing import Tuple
