@@ -335,7 +335,7 @@ class EventStore:
       community_id = args.pop("community_id", None)
       is_published = args.pop('is_published', None)
       if start_date_and_time and end_date_and_time:
-          if end_date_and_time < start_date_and_time and not is_recurring :
+          if end_date_and_time < start_date_and_time :
             return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
       if is_recurring:
 
