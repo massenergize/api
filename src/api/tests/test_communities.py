@@ -172,8 +172,8 @@ class CommunitiesTestCase(TestCase):
     list_response = self.client.post('/api/communities.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
 
     self.assertTrue(list_response["success"])
-    self.assertIs(1, len(list_response['data']))
-    self.assertEqual(self.COMMUNITY.name, list_response['data'][0]['name'])
+    self.assertIs(1, len(list_response.get("data").get("items")))
+    self.assertEqual(self.COMMUNITY.name, list_response.get("data").get("items")[0]['name'])
 
 
 
