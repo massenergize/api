@@ -115,7 +115,8 @@ class AdminStore:
         "name": user.preferred_name,
         "email": user.email,
         "subdomain": community.subdomain,
-        "community_name": community.name
+        "community_name": community.name, 
+        "user":user
       }
 
       return res, None
