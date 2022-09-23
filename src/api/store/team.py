@@ -466,7 +466,7 @@ class TeamStore:
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
         teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False).select_related('logo', 'primary_community')
-        return teams, None
+        return paginate(teams, args.get("page", 1)), None
 
       teams = Team.objects.filter(communities__id=community_id, is_deleted=False).select_related('logo', 'primary_community')    
       return paginate(teams, args.get("page", 1)), None

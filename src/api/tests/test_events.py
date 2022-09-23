@@ -347,11 +347,11 @@ class EventsTestCase(TestCase):
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.rsvp.list', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
-        self.assertEqual(response["data"][0]["status"], "GOING")
+        self.assertEqual(response["data"]["items"][0]["status"], "GOING")
 
         response = self.client.post('/api/events.rsvp.list', urlencode({"event_id": self.EVENT2.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
-        self.assertEqual(response["data"], [])
+        self.assertEqual(response["data"]["items"], [])
 
 
 

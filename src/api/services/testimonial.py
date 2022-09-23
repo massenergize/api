@@ -27,7 +27,7 @@ class TestimonialService:
     if err:
       return None, err
 
-    ret = serialize_all(testimonial)
+    ret = testimonial
     return ret, None
 
 

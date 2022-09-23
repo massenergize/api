@@ -28,7 +28,7 @@ class ActionService:
     actions, err = self.store.list_actions(context, args)
     if err:
       return None, err
-    return serialize_all(actions), None
+    return actions, None
 
 
   def create_action(self, context: Context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:

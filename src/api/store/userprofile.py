@@ -687,7 +687,7 @@ class UserStore:
         # now remove all duplicates
         users = remove_dups(users)
         
-        return users, None
+        return paginate(users, context.args.get("page",1)), None
       elif not community:
         print(err)
         return [], None

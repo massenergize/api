@@ -248,7 +248,7 @@ class TestimonialStore:
         comm_ids = [ag.community.id for ag in admin_groups]
 
         testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
-        return testimonials, None
+        return paginate(testimonials, context.args.get("page", 1)), None
 
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return paginate(testimonials, context.args.get("page", 1)), None
