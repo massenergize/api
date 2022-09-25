@@ -642,7 +642,7 @@ class EventStore:
         # not as their own separate events
         events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
 
-        return events, None
+        return paginate(events, context.args.get("page", 1)), None
 
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True), is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return paginate(events, args.get("page", 1)), None

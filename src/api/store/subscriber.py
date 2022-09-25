@@ -114,7 +114,7 @@ class SubscriberStore:
           else:
             subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False)
 
-        return subscribers, None
+        return paginate(subscribers, context.args.get("page", 1)), None
 
       community: Community = Community.objects.get(pk=community_id)
       subscribers = community.subscriber_set.all().filter(is_deleted=False)

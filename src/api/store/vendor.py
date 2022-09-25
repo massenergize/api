@@ -304,7 +304,7 @@ class VendorStore:
           else:
             vendors = c.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
 
-        return vendors.distinct(), None
+        return paginate(vendors.distinct(),args.get("page",1)), None
 
       community = get_community_or_die(context, {'community_id': community_id})
       vendors = community.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')

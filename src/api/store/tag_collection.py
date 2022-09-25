@@ -123,8 +123,8 @@ class TagCollectionStore:
 
 
   def list_tag_collections_for_community_admin(self, context,community_id) -> Tuple[list, MassEnergizeAPIError]:
-    tag_collections = self.list_tag_collections_for_super_admin()
-    return paginate(tag_collections, context.args.get("page", 1))
+    tag_collections = self.list_tag_collections_for_super_admin(context)
+    return tag_collections
 
 
   def list_tag_collections_for_super_admin(self, context):
