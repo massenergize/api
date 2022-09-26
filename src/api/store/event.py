@@ -225,6 +225,8 @@ class EventStore:
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
       final_date = args.pop('final_date', None)
+      if end_date_and_time < start_date_and_time :
+          return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
 
       if is_recurring:
         if final_date:
@@ -332,7 +334,9 @@ class EventStore:
 
       community_id = args.pop("community_id", None)
       is_published = args.pop('is_published', None)
-
+      if start_date_and_time and end_date_and_time:
+          if end_date_and_time < start_date_and_time :
+            return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
       if is_recurring:
 
         if final_date:
