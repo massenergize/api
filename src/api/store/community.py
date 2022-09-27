@@ -634,7 +634,7 @@ class CommunityStore:
             community.save()
             # do this before all the cloning in case of failure
             reserve_subdomain(subdomain, community)
-            print("How about now?", community) # REMOVE THIS BEFORE PR
+
             # save custom website if specified
             if website:               
                 ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
@@ -646,7 +646,6 @@ class CommunityStore:
             images = homePage.images.all()
             # TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
             if homePage:
-                print("Then we see here as well innit") # REMOVE THIS BEFORE PR
                 homePage.pk = None
                 homePage.title = f"Welcome to Massenergize, {community.name}!"
                 homePage.community = community
@@ -762,7 +761,6 @@ class CommunityStore:
             # ----------------------------------------------------------------
             # Spy.create_community_footage(communities = [community], related_users=[owner,user], context = context, type = FootageConstants.create(),notes =f"Community ID({community.id})")
             # ----------------------------------------------------------------
-            print("Maybe its here") # REMOVE THIS BEFORE PR
             return community, None
         except Exception as e:
             if community:
