@@ -13,7 +13,6 @@ from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
 
 
-
 class MiscellaneousHandler(RouteHandler):
     def __init__(self):
         super().__init__()
@@ -33,12 +32,20 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
         self.add("/settings.list", self.fetch_available_settings)
+        self.add("/what.happened", self.fetch_footages)
 
-    def fetch_available_settings(self, request): 
+    def fetch_footages(self, request):
         context: Context = request.context
-        if context.user_is_admin(): 
-            return MassenergizeResponse(data = AdminPortalSettings.Settings)
-        return MassenergizeResponse(data = UserPortalSettings.Settings) 
+        footages, error = self.service.fetch_footages(context,context.args)
+        if error:
+            return MassenergizeResponse(error=error)
+        return MassenergizeResponse(data=footages)
+
+    def fetch_available_settings(self, request):
+        context: Context = request.context
+        if context.user_is_admin():
+            return MassenergizeResponse(data=AdminPortalSettings.Settings)
+        return MassenergizeResponse(data=UserPortalSettings.Settings)
 
     def remake_navigation_menu(self, request):
         data, err = self.service.remake_navigation_menu()
@@ -135,6 +142,8 @@ class MiscellaneousHandler(RouteHandler):
         if error:
             return MassenergizeResponse(error=str(error), status=error.status)
 
-        response =  MassenergizeResponse(data=token)
-        response.set_cookie("token", value=token, max_age=24*60*60, samesite='Strict')
+        response = MassenergizeResponse(data=token)
+        response.set_cookie(
+            "token", value=token, max_age=24 * 60 * 60, samesite="Strict"
+        )
         return response

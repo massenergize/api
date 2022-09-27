@@ -160,7 +160,7 @@ class TestimonialHandler(RouteHandler):
     if err:
       return err
 
-    testimonial_info, err = self.service.rank_testimonial(args)
+    testimonial_info, err = self.service.rank_testimonial(args,context)
     if err:
       return err
     return MassenergizeResponse(data=testimonial_info)
