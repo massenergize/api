@@ -13,6 +13,7 @@ from database.models import (
     CommunityAdminGroup,
     Event,
     FeatureFlag,
+    HomePageSettings,
     Media,
     Testimonial,
     UserMediaUpload,
@@ -142,6 +143,19 @@ def makeUserUpload(**kwargs):
         up.communities.set(communities)
     return up
 
+
+def makeHomePageSettings(**kwargs):
+    title = kwargs.get("title") or str(time.time())
+    community = kwargs.get("community",makeCommunity(name="Default Community - For Homepage"))
+    home = HomePageSettings.objects.create(
+        **{
+            **kwargs,
+            "community": community,
+            "title": title,
+        }
+    )
+
+    return home
 
 def makeCommunity(**kwargs):
     subdomain = kwargs.get("subdomain") or str(time.time())

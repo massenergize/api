@@ -62,8 +62,8 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def delete_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.delete_team(args)
+  def delete_team(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.delete_team(args,context)
     if err:
       return None, err
     return serialize(team), None
@@ -80,14 +80,14 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def add_member(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.add_team_member(args)
+  def add_member(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.add_team_member(args,context)
     if err:
       return None, err
     return serialize(team), None
 
-  def remove_team_member(self,args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.remove_team_member(args)
+  def remove_team_member(self,args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.remove_team_member(args,context)
     if err:
       return None, err
     return serialize(team), None
