@@ -64,7 +64,7 @@ class MessageHandler(RouteHandler):
     message_id = args.pop('id', None)
     if not message_id:
       return CustomMassenergizeError("Please Provide Message Id")
-    message_info, err = self.service.delete_message(message_id)
+    message_info, err = self.service.delete_message(message_id,context)
     if err:
       return err
     return MassenergizeResponse(data=message_info)

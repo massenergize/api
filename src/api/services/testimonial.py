@@ -92,8 +92,8 @@ class TestimonialService:
       return None, err
     return serialize(testimonial), None
 
-  def rank_testimonial(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    testimonial, err = self.store.rank_testimonial(args)
+  def rank_testimonial(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    testimonial, err = self.store.rank_testimonial(args,context)
     if err:
       return None, err
     return serialize(testimonial), None
