@@ -487,12 +487,13 @@ class EventStore:
       if is_published==False:
         event.is_published = False
 
-      elif is_published and not event.is_published:
-        # only publish event if it has been approved  
-        if event.is_approved:
-          event.is_published = True
-        else:
-          return None, CustomMassenergizeError("Event needs to be approved before it can be made live")
+      # Looks like this feature is ahead of it's time (28/09/22)
+      # elif is_published and not event.is_published:
+      #   # only publish event if it has been approved  
+      #   if event.is_approved:
+      #     event.is_published = True
+      #   else:
+      #     return None, CustomMassenergizeError("Event needs to be approved before it can be made live")
 
       # successful return
       event.save()     
