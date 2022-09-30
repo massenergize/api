@@ -239,6 +239,7 @@ class Spy:
             )
             act_type = kwargs.get("type", None)
             communities = kwargs.get("communities",[])
+            communities = [c for c in communities if c != None] # Get rid of Nulls
             notes = kwargs.get("notes", "")
             footage = Spy.create_footage(
                 actor=actor,

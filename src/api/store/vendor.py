@@ -211,7 +211,7 @@ class VendorStore:
         # ----------------------------------------------------------------
         Spy.create_event_footage(vendors = [vendor], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
         # ----------------------------------------------------------------
-        return vendors, None
+        return vendor, None
       else:
         raise Exception("Rank and ID not provided to vendors.rank")
     except Exception as e:
@@ -228,7 +228,7 @@ class VendorStore:
       # ----------------------------------------------------------------
       Spy.create_vendor_footage(vendors = [vendor], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({vendor_id})")
       # ----------------------------------------------------------------
-      return vendors, None
+      return vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -284,7 +284,7 @@ class VendorStore:
         new_vendor.tags.add(tag)
       new_vendor.save()
       # ----------------------------------------------------------------
-      Spy.create_vendor_footage(vendors = [new_vendor,new_vendor], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({existing_vendor.id}) to ({new_vendor.id})" )
+      Spy.create_vendor_footage(vendors = [new_vendor,new_vendor], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({vendor_id}) to ({new_vendor.id})" )
       # ----------------------------------------------------------------
       return new_vendor, None
     except Exception as e:
