@@ -21,7 +21,6 @@ def old_send_massenergize_email(subject, msg, to):
       [to],
       fail_silently=False,
   )
-
   if not ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
@@ -38,6 +37,7 @@ def send_massenergize_email(subject, msg, to):
     text=msg, 
   )
   response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
+  response.raise_for_status()
 
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")

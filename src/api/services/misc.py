@@ -1,5 +1,6 @@
 from django.test import Client
 import os
+from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     CustomMassenergizeError,
@@ -25,6 +26,19 @@ class MiscellaneousService:
 
     def __init__(self):
         self.store = MiscellaneousStore()
+
+    def fetch_footages(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        footages, error = self.store.fetch_footages(context, args)
+        if error:
+            return None, error
+        count = footages.count()
+        return {
+            "count":count,
+            "footages": serialize_all(footages),
+            "activityTypes": FootageConstants.TYPES,
+            "types": FootageConstants.ITEM_TYPES,
+            "platforms": FootageConstants.PLATFORMS,
+        }, None
 
     def remake_navigation_menu(self) -> Tuple[dict, MassEnergizeAPIError]:
         json = load_json(BASE_DIR + "/database/raw_data/portal/menu.json")
@@ -116,12 +130,12 @@ class MiscellaneousService:
             return None, err
         return serialize(carbon_data), None
 
-    def authenticateFrontendInTestMode(self, args): 
-        passport_key = args.get("passport_key") 
-        if passport_key != TEST_PASSPORT_KEY: 
+    def authenticateFrontendInTestMode(self, args):
+        passport_key = args.get("passport_key")
+        if passport_key != TEST_PASSPORT_KEY:
             return None, CustomMassenergizeError("invalid_passport_key")
-        user, err =  self.store.authenticateFrontendInTestMode(args)
-        if err: return None, CustomMassenergizeError(str(err))
+        user, err = self.store.authenticateFrontendInTestMode(args)
+        if err:
+            return None, CustomMassenergizeError(str(err))
         client = Client()
-        return signinAs(client,user), None
-        
+        return signinAs(client, user), None

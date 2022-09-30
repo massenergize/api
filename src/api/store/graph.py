@@ -4,7 +4,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q, prefetch_related_objects
 from api.store.team import get_team_users
-from .utils import get_community_or_die
+from .utils import get_community_or_die, unique_media_filename
 from sentry_sdk import capture_message
 from typing import Tuple
 from api.services.utils import send_slack_message
@@ -219,6 +219,7 @@ class GraphStore:
           new_graph.user = user
 
       if image:
+        image.name = unique_media_filename(image)
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_graph.image = media
 

@@ -1,5 +1,4 @@
 import csv
-from django.db.models import Count
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
@@ -158,3 +157,10 @@ def generate_and_send_weekly_report(self):
 def send_email(file, file_name, email_list, temp_id, t_model):
     send_massenergize_email_with_attachments(temp_id, t_model, email_list, file, file_name)
 
+
+
+@shared_task(bind=True)
+def deactivate_user(self,email):
+    user = UserProfile.objects.filter(email=email).first()
+    if user:
+        user.delete()
