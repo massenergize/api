@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.fields import BooleanField, related
 from django.db.models.query_utils import select_related_descend
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
+from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
@@ -717,7 +718,7 @@ class UserProfile(models.Model):
         return self.email
 
     def info(self):
-        return model_to_dict(self, ["id", "email", "full_name"])
+        return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
 
     def summary(self):
         summaryData = model_to_dict(self, ["preferred_name", "is_guest"])
@@ -3326,3 +3327,57 @@ class FeatureFlag(models.Model):
     class Meta:
         db_table = "feature_flags"
         ordering = ("-name",)
+
+
+class Footage(models.Model): 
+    """
+        A class that is used to represent a record of an activity that a user has performed on any of of the ME platforms 
+
+
+        actor: Signed in user who performs the activity 
+        type: The kind of activity that was just performed. Check FootageConstants.py(TYPES) for a list of all available activity types 
+        portal: Which platform the activity happens on Check FootageConstants.py(PLATFORMS) for a list of available platforms
+        description: A brief description of what happened in the activity E.g User405 deleted action with id 444
+        users : other users who are involved in the activity. (E.g an admin makes 3 other admins admin of a community. The "3 other" admins will be found here... )
+        communities: The communities that are directly involved in the activity that took place. E.g - A user is Cadmin of 3 communities, and deletes an action. Only the communities that are linked to action will be linked here. 
+        by_super_admin: Just a field that lets you easily know the activity is a Sadmin activity
+        item_type: Whether footage is related to an action, event, testimonial, a community, etc.
+        activity_type: Whether its Sign in, deletion, update, creation etc.
+    """
+    id = models.AutoField(primary_key=True)
+    actor = models.ForeignKey(
+        UserProfile, on_delete=models.DO_NOTHING, null=False, blank=True, related_name="footages"
+    )
+    activity_type = models.CharField(max_length=SHORT_STR_LEN, null=False)
+    portal =  models.CharField(max_length=SHORT_STR_LEN, default=FootageConstants.on_admin_portal())
+    notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
+    related_users = models.ManyToManyField(UserProfile, blank=True, related_name ="appearances")
+    communities = models.ManyToManyField(Community,blank=True)
+    by_super_admin = models.BooleanField(default=False, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    actions = models.ManyToManyField(Action, blank=True)
+    testimonials = models.ManyToManyField(Testimonial, blank=True)
+    teams = models.ManyToManyField(Team, blank=True)
+    events = models.ManyToManyField(Event, blank=True)
+    images = models.ManyToManyField(Media, blank=True)
+    messages = models.ManyToManyField(Message, blank=True)
+    vendors = models.ManyToManyField(Vendor, blank=True)
+    item_type = models.CharField(max_length=SHORT_STR_LEN, null=True, blank=True, default="")
+
+    def simple_json(self): 
+        data = model_to_dict(self,fields = ["activity_type","notes","portal","item_type","by_super_admin"])
+        data["actor"] = self.actor.info() if self.actor else None
+        data["created_at"] = self.created_at
+        data["communities"] = [c.info() for c in self.communities.all()] if self.communities else []
+        data = FootageConstants.change_type_to_boolean(data)
+
+        return data
+
+    def full_json(self): 
+        return self.simple_json()
+
+    def __str__(self) -> str:
+        return f"{self.actor.preferred_name} - {self.activity_type} - {self.item_type}"
+    class Meta:
+        db_table = "footages"
+        ordering = ("-id",)

@@ -174,7 +174,7 @@ class VendorHandler(RouteHandler):
     if err:
       return err
 
-    vendor_info, err = self.service.rank_vendor(args)
+    vendor_info, err = self.service.rank_vendor(args,context)
     if err:
       return err
     return MassenergizeResponse(data=vendor_info)
@@ -187,7 +187,7 @@ class VendorHandler(RouteHandler):
     vendor_id = args.pop('id', None)
     if not vendor_id:
       return CustomMassenergizeError("Please Provide Vendor Id")
-    vendor_info, err = self.service.delete_vendor(vendor_id)
+    vendor_info, err = self.service.delete_vendor(vendor_id,context)
     if err:
       return err
     return MassenergizeResponse(data=vendor_info)

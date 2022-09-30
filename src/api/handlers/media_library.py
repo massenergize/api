@@ -72,7 +72,7 @@ class MediaLibraryHandler(RouteHandler):
         if err:
             return err
 
-        response, error = self.service.remove(args)
+        response, error = self.service.remove(args,context)
         if error:
             return error
         return MassenergizeResponse(data=response)
@@ -91,7 +91,7 @@ class MediaLibraryHandler(RouteHandler):
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
-        image, error = self.service.addToGallery(args)
+        image, error = self.service.addToGallery(args,context)
         if error:
             return error
         return MassenergizeResponse(data=image)

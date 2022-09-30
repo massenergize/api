@@ -44,14 +44,14 @@ class MediaLibraryService:
             "images": data,
         }
 
-    def remove(self, args):
-        response, error = self.store.remove(args)
+    def remove(self, args,context):
+        response, error = self.store.remove(args,context)
         if error:
             return None, error
         return response, None
 
-    def addToGallery(self, args):
-        image, error = self.store.addToGallery(args)
+    def addToGallery(self, args,context):
+        image, error = self.store.addToGallery(args,context)
         if error:
             return None, error
         return image.simple_json(), None
