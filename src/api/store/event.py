@@ -635,7 +635,7 @@ class EventStore:
       events.delete()
       
       # ----------------------------------------------------------------
-      Spy.create_event_footage(events = [event], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({event_id})")
+      Spy.create_event_footage(events = [], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({event_id})")
       # ----------------------------------------------------------------
       return event, None
     except Exception as e:

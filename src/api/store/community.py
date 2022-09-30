@@ -870,7 +870,7 @@ class CommunityStore:
             # communities.update(is_deleted=True)
 
             # ----------------------------------------------------------------
-            Spy.create_community_footage(communities = communities, context = context, type = FootageConstants.deleted(), notes = f"Deleted ID({str(ids)}")
+            Spy.create_community_footage(communities = communities, context = context, type = FootageConstants.delete(), notes = f"Deleted ID({str(ids)}")
             # ----------------------------------------------------------------
             return communities, None
         except Exception as e:

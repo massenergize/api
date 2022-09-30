@@ -732,7 +732,7 @@ class UserProfile(models.Model):
             "user_portal_settings": user_portal_settings,
             "admin_portal_settings": admin_portal_settings,
         }
-
+        res["accepts_terms_and_conditions"] = self.accepts_terms_and_conditions
         return res
 
     def update_visit_log(self, date_time):
@@ -2119,7 +2119,7 @@ class CommunityAdminGroup(models.Model):
     pending_admins = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return str(self.id) + " " + self.name
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["members"])
@@ -2131,7 +2131,7 @@ class CommunityAdminGroup(models.Model):
         return self.simple_json()
 
     class Meta:
-        ordering = ("name",)
+        ordering = ["-id"]
         db_table = "community_admin_group"
 
 
