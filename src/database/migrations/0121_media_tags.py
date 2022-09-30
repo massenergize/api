@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0119_approve_actions_events_vendors'),
+        ('database', '0120_footage'),
     ]
 
     operations = [
