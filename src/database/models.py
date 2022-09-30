@@ -1,13 +1,19 @@
-import dataclasses
 import datetime
 import json
 from django.db import models
 from django.db.models.fields import BooleanField, related
 from django.db.models.query_utils import select_related_descend
+from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
+from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
-from .utils.common import json_loader, get_json_if_not_none, get_summary_info
+from .utils.common import (
+    get_images_in_sequence,
+    json_loader,
+    get_json_if_not_none,
+    get_summary_info,
+)
 from api.utils.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
@@ -356,7 +362,6 @@ class Community(models.Model):
                 "id",
                 "name",
                 "subdomain",
-                "is_approved",
                 "owner_phone_number",
                 "owner_name",
                 "owner_email",
@@ -437,6 +442,18 @@ class Community(models.Model):
                 l = loc.zipcode
             locations += l
 
+        # Feature flags can either enable features for specific communities, or disable them
+        feature_flags = FeatureFlag.objects.all()
+        feature_flags_json = []
+        for f in feature_flags:
+          specified_communities = f.communities.all()
+          enabled = ((f.audience == "EVERYONE") or       # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
+                 (f.audience == "SPECIFIC" and self in specified_communities) or 
+                 (f.audience == "ALL_EXCEPT" and self not in specified_communities))
+          enabled = enabled and (not f.expires_on or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo))
+          if enabled:
+            feature_flags_json.append(f.simple_json())
+
         return {
             "id": self.id,
             "name": self.name,
@@ -460,6 +477,7 @@ class Community(models.Model):
             "admins": admins,
             "geography_type": self.geography_type,
             "locations": locations,
+            'feature_flags': feature_flags_json,
         }
 
     class Meta:
@@ -620,16 +638,16 @@ class UserProfile(models.Model):
         return self.email
 
     def info(self):
-        return model_to_dict(self, ["id", "email", "full_name"])
+        return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
 
     def summary(self):
-        summaryData = model_to_dict(self,["preferred_name", "is_guest"])
+        summaryData = model_to_dict(self, ["preferred_name", "is_guest"])
         summaryData["joined"] = self.created_at.date()
         summaryData["profile_picture"] = get_json_if_not_none(self.profile_picture)
- 
+
         done_actions = UserActionRel.objects.filter(
-                user=self, status="DONE"
-            ).prefetch_related("action__calculator_action")
+            user=self, status="DONE"
+        ).prefetch_related("action__calculator_action")
         done_points = 0
         for actionRel in done_actions:
             if actionRel.action and actionRel.action.calculator_action:
@@ -638,8 +656,8 @@ class UserProfile(models.Model):
                 done_points += actionRel.carbon_impact
 
         todo_actions = UserActionRel.objects.filter(
-                user=self, status="TODO"
-            ).prefetch_related("action__calculator_action")
+            user=self, status="TODO"
+        ).prefetch_related("action__calculator_action")
         todo_points = 0
         for actionRel in todo_actions:
             if actionRel.action and actionRel.action.calculator_action:
@@ -647,11 +665,15 @@ class UserProfile(models.Model):
             else:
                 todo_points += actionRel.carbon_impact
 
-        user_testimonials = Testimonial.objects.filter(is_deleted=False, is_approved=True, user=self)
+        user_testimonials = Testimonial.objects.filter(
+            is_deleted=False, is_approved=True, user=self
+        )
         testimonials_count = user_testimonials.count() if user_testimonials else "0"
 
         teams = Team.objects.filter(is_deleted=False, is_published=True)
-        user_teams = teams.filter(teammember__user=self).values_list("name", "teammember__is_admin")
+        user_teams = teams.filter(teammember__user=self).values_list(
+            "name", "teammember__is_admin"
+        )
 
         teams_count = 0
         teams_led = 0
@@ -659,7 +681,8 @@ class UserProfile(models.Model):
         for team_name, is_admin in user_teams:
             team_names.append((team_name + "(ADMIN)") if is_admin else team_name)
             teams_count += 1
-            if is_admin: teams_led += 1
+            if is_admin:
+                teams_led += 1
 
         summaryData["actions_done"] = done_actions.count()
         summaryData["actions_done_points"] = done_points
@@ -694,15 +717,22 @@ class UserProfile(models.Model):
 
         is_guest = False
         if self.user_info:
-            is_guest = (self.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
+            is_guest = self.user_info.get("user_type", STANDARD_USER) == GUEST_USER
         res["is_guest"] = is_guest
 
         preferences = self.preferences or {}
-        user_portal_settings = preferences.get("user_portal_settings") or UserPortalSettings.Defaults
-        admin_portal_settings = preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
-        res["preferences"] = {**preferences, "user_portal_settings":user_portal_settings, "admin_portal_settings": admin_portal_settings}
-       
-
+        user_portal_settings = (
+            preferences.get("user_portal_settings") or UserPortalSettings.Defaults
+        )
+        admin_portal_settings = (
+            preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
+        )
+        res["preferences"] = {
+            **preferences,
+            "user_portal_settings": user_portal_settings,
+            "admin_portal_settings": admin_portal_settings,
+        }
+        res["accepts_terms_and_conditions"] = self.accepts_terms_and_conditions
         return res
 
     def update_visit_log(self, date_time):
@@ -717,7 +747,7 @@ class UserProfile(models.Model):
                 for day in old.keys():
                     old_format = "%d/%m/%Y"
                     if len(day) < 10:
-                      old_format = "%d/%m/%y"
+                        old_format = "%d/%m/%y"
                     dt_object = datetime.datetime.strptime(day, old_format)
                     day = dt_object.strftime(new_format)
                     new.append(day)
@@ -742,6 +772,18 @@ class UserProfile(models.Model):
         #     for cm in CommunityMember.objects.filter(user=self, is_admin=True)
         # ]
 
+        # Feature flags can either enable features for specific users, or disable them for specific users
+        feature_flags = FeatureFlag.objects.all()
+        feature_flags_json = []
+        for f in feature_flags:
+          specified_users = f.users.all()
+          enabled = ((f.user_audience == "EVERYONE") or       # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
+                 (f.user_audience == "SPECIFIC" and self in specified_users) or 
+                 (f.user_audience == "ALL_EXCEPT" and self not in specified_users))
+          enabled = enabled and (not f.expires_on or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo))
+          if enabled:
+            feature_flags_json.append(f.simple_json())
+
         data = model_to_dict(
             self, exclude=["real_estate_units", "communities", "roles"]
         )
@@ -760,14 +802,22 @@ class UserProfile(models.Model):
 
         is_guest = False
         if self.user_info:
-            is_guest = (self.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
+            is_guest = self.user_info.get("user_type", STANDARD_USER) == GUEST_USER
         data["is_guest"] = is_guest
 
         preferences = self.preferences or {}
-        user_portal_settings = preferences.get("user_portal_settings") or UserPortalSettings.Defaults
-        admin_portal_settings = preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
-        data["preferences"] = {**preferences, "user_portal_settings":user_portal_settings, "admin_portal_settings": admin_portal_settings}
-       
+        user_portal_settings = (
+            preferences.get("user_portal_settings") or UserPortalSettings.Defaults
+        )
+        admin_portal_settings = (
+            preferences.get("admin_portal_settings") or AdminPortalSettings.Defaults
+        )
+        data["preferences"] = {
+            **preferences,
+            "user_portal_settings": user_portal_settings,
+            "admin_portal_settings": admin_portal_settings,
+        }
+        data['feature_flags'] = feature_flags_json
 
         return data
 
@@ -882,7 +932,7 @@ class DeviceProfile(models.Model):
                 for day in old.keys():
                     old_format = "%d/%m/%Y"
                     if len(day) < 10:
-                      old_format = "%d/%m/%y"
+                        old_format = "%d/%m/%y"
                     dt_object = datetime.datetime.strptime(day, old_format)
                     day = dt_object.strftime(new_format)
                     new.append(day)
@@ -1103,14 +1153,15 @@ class Team(models.Model):
         res["is_closed"] = self.is_closed
         res["is_published"] = self.is_published
         res["parent"] = get_json_if_not_none(self.parent)
-        res["admins"] = [a.simple_json() for a in self.teammember_set.all() if a.is_admin]
+        res["admins"] = [
+            a.simple_json() for a in self.teammember_set.all() if a.is_admin
+        ]
         return res
 
     def full_json(self):
         data = self.simple_json()
         # Q: should this be in simple_json?
         data["communities"] = [c.simple_json() for c in self.communities.all()]
-        # data["admins"] = [a.simple_json() for a in self.admins.all()]
         data["members"] = [m.simple_json() for m in self.members.all()]
         data["goal"] = get_json_if_not_none(self.goal)
         data["banner"] = get_json_if_not_none(self.banner)
@@ -1396,6 +1447,9 @@ class Vendor(models.Model):
     created_at: DateTime
       The date and time of the last time any updates were made to the information
       about this Vendor
+    is_approved: boolean
+      after the community admin reviews this, can check the box
+
     """
 
     id = models.AutoField(primary_key=True)
@@ -1445,6 +1499,7 @@ class Vendor(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    is_approved = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name
@@ -1529,6 +1584,9 @@ class Action(models.Model):
     created_at: DateTime
       The date and time of the last time any updates were made to the information
       about this real estate unit
+    is_approved: boolean
+      after the community admin reviews this, can check the box
+
     """
 
     id = models.AutoField(primary_key=True)
@@ -1566,6 +1624,7 @@ class Action(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    is_approved = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.title
@@ -1579,6 +1638,7 @@ class Action(models.Model):
             [
                 "id",
                 "is_published",
+                "is_approved",
                 "is_deleted",
                 "title",
                 "is_global",
@@ -1594,21 +1654,20 @@ class Action(models.Model):
         data["image"] = get_json_if_not_none(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
         data["tags"] = [t.simple_json() for t in self.tags.all()]
-        #data["steps_to_take"] = self.steps_to_take
-        #data["deep_dive"] = self.deep_dive
-        #data["about"] = self.about
         data["community"] = get_summary_info(self.community)
-        #data["vendors"] = [v.info() for v in self.vendors.all()]
+        # if we dont add this, so that vendors will be preselected when creating/updating action.
+        # List of vendors will typically not be that long, so this doesnt pose any problems
+        data["vendors"] = [v.info() for v in self.vendors.all()]
         return data
 
     def full_json(self):
         data = self.simple_json()
         data["is_global"] = self.is_global
-        #data["steps_to_take"] = self.steps_to_take
-        #data["about"] = self.about
+        # data["steps_to_take"] = self.steps_to_take
+        # data["about"] = self.about
         data["geographic_area"] = self.geographic_area
         data["properties"] = [p.simple_json() for p in self.properties.all()]
-        data["vendors"] = [v.simple_json() for v in self.vendors.all()]
+        # data["vendors"] = [v.simple_json() for v in self.vendors.all()]
         if self.user:
             data["user_email"] = self.user.email
         return data
@@ -1649,6 +1708,9 @@ class Event(models.Model):
       and it has a RecurringPattern instance attached to it.
     recurring_details: JSON
       stores information about the recurrence pattern of the event if is_recurring = True
+    is_approved: boolean
+      after the community admin reviews this, can check the box
+
     """
 
     id = models.AutoField(primary_key=True)
@@ -1677,15 +1739,18 @@ class Event(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
     # which user posted this event - may be the responsible party
-    user = models.ForeignKey(UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(
+        UserProfile, related_name="event_user", on_delete=models.SET_NULL, null=True
+    )
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
+    is_approved = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name
 
     def info(self):
-        data = model_to_dict(self, ['id', 'name'])
+        data = model_to_dict(self, ["id", "name"])
         return data
 
     def simple_json(self):
@@ -1890,7 +1955,7 @@ class Testimonial(models.Model):
     body: str (HTML)
       more information for this testimony.
     is_approved: boolean
-      after the community admin reviews this, he can check the box
+      after the community admin reviews this, can check the box
     """
 
     id = models.AutoField(primary_key=True)
@@ -2052,7 +2117,7 @@ class CommunityAdminGroup(models.Model):
     pending_admins = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return str(self.id) + " " + self.name
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["members"])
@@ -2064,7 +2129,7 @@ class CommunityAdminGroup(models.Model):
         return self.simple_json()
 
     class Meta:
-        ordering = ("name",)
+        ordering = ["-id"]
         db_table = "community_admin_group"
 
 
@@ -2664,6 +2729,18 @@ class PageSettings(models.Model):
         abstract = True
 
 
+class ImageSequence(models.Model):
+    """
+    A class used to record the arrangement of images, wherever there is a need.
+    """
+
+    name = models.CharField(max_length=SHORT_STR_LEN)
+    sequence = models.JSONField(blank=True, null=True)
+
+    def __str__(self) -> str:
+        return self.name or super().__str__()
+
+
 class HomePageSettings(models.Model):
     """
     Represents the community's Home page settings.
@@ -2717,6 +2794,9 @@ class HomePageSettings(models.Model):
     sub_title = models.CharField(max_length=LONG_STR_LEN, blank=True)
     description = models.TextField(max_length=LONG_STR_LEN, blank=True)
     images = models.ManyToManyField(Media, related_name="homepage_images", blank=True)
+    image_sequence = models.ForeignKey(
+        ImageSequence, on_delete=models.DO_NOTHING, db_index=True, blank=True, null=True
+    )
 
     featured_video_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
     featured_links = models.JSONField(blank=True, null=True)
@@ -2752,7 +2832,13 @@ class HomePageSettings(models.Model):
 
     def full_json(self):
         res = self.simple_json()
-        res["images"] = [i.simple_json() for i in self.images.all()]
+        images = self.images.all()
+        sequence = self.image_sequence.sequence if self.image_sequence else None
+        res["images"] = (
+            get_images_in_sequence(images, json.loads(sequence))
+            if sequence
+            else [i.simple_json() for i in images]
+        )
         res["community"] = get_json_if_not_none(self.community)
         res["featured_events"] = [i.simple_json() for i in self.featured_events.all()]
         res["featured_stats"] = [i.simple_json() for i in self.featured_stats.all()]
@@ -3097,7 +3183,7 @@ class Message(models.Model):
     archive = models.BooleanField(default=False, blank=True)
     starred = models.BooleanField(default=False, blank=True)
     response = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
-    parent = models.ForeignKey('self', blank=True, null=True, on_delete=models.SET_NULL)
+    parent = models.ForeignKey("self", blank=True, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
@@ -3108,7 +3194,9 @@ class Message(models.Model):
         res["community"] = get_summary_info(self.community)
         res["team"] = get_summary_info(self.team)
         res["user"] = get_summary_info(self.user)
-        res["replies"] = [r.simple_json() for r in Message.objects.filter(parent=self, archive=False)]
+        res["replies"] = [
+            r.simple_json() for r in Message.objects.filter(parent=self, archive=False)
+        ]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
 
@@ -3186,3 +3274,105 @@ class Deployment(models.Model):
     class Meta:
         db_table = "deployments"
         ordering = ("-version",)
+
+
+class FeatureFlag(models.Model):
+    """
+    A class used to represent Feature flags to turn on for
+    communities and users
+
+    owner : str - The name of the user at the time of uploading. 
+    scope : str - Whether this flag is for backend, admin frontend, of user frontend 
+    audience : str - (Communities) Whether the feature is for every community/ Specific Communities / or All, except some communities
+    user_audience : str - (Users) Whether the feature is for every user/ Specific Users / or All, except some users
+    key : str - A unique simple key that can be used to look up the particular feature
+    communities :  Community - All communities involved  with the flag. Depending on the value of "audience" this could be a whitelist, or a blacklist
+    users : User - All users involved with the flag. Depending on the value of "user_audience" this could be a whitelist or a blacklist
+    notes : str - Any extra description worth noting
+    expires_on : DateTime - When the feature should expire. Null value means feature will never expire
+    """
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    owner = models.CharField( max_length=SHORT_STR_LEN)
+    scope = models.CharField(max_length=SHORT_STR_LEN,default=FeatureFlagConstants.for_user_frontend()) # Is Backend/AdminFrontend/Portal Frontend etc.
+    audience = models.CharField(max_length=SHORT_STR_LEN, default=FeatureFlagConstants.for_everyone()) # Community Audience: For Everyone/ Specific Communities / Or Everyone Except
+    user_audience = models.CharField(max_length=SHORT_STR_LEN, default=FeatureFlagConstants.for_everyone()) # User Audience: For Everyone/ Specific Communities / Or Everyone Except
+    key = models.CharField(max_length=SHORT_STR_LEN, unique=True) # Special key that "makes sense", and we can use for easy look-up (will be autogenerated on F.E) Eg. (guest_authentication_feature)
+    communities = models.ManyToManyField(Community, blank=True, related_name="community_feature_flags")
+    users = models.ManyToManyField(UserProfile, blank=True, related_name="user_feature_flags")
+    notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_on = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    def simple_json(self):
+        res= model_to_dict(self, fields=['id', 'name', 'expires_on',"audience", "user_audience","key", "scope","notes"])
+        res["communities"] = [{"id":c.id, "name":c.name} for c in self.communities.all()]
+        return res
+
+    def full_json(self):
+        res = model_to_dict(self, exclude=['communities', 'users'])
+        res["communities"] = [{"id":c.id, "name":c.name} for c in self.communities.all()]
+        res["users"] = [{"id":u.id, "preferred_name":u.preferred_name,"email":u.email} for u in self.users.all()]
+        return res
+
+    class Meta:
+        db_table = "feature_flags"
+        ordering = ("-name",)
+
+
+class Footage(models.Model): 
+    """
+        A class that is used to represent a record of an activity that a user has performed on any of of the ME platforms 
+
+
+        actor: Signed in user who performs the activity 
+        type: The kind of activity that was just performed. Check FootageConstants.py(TYPES) for a list of all available activity types 
+        portal: Which platform the activity happens on Check FootageConstants.py(PLATFORMS) for a list of available platforms
+        description: A brief description of what happened in the activity E.g User405 deleted action with id 444
+        users : other users who are involved in the activity. (E.g an admin makes 3 other admins admin of a community. The "3 other" admins will be found here... )
+        communities: The communities that are directly involved in the activity that took place. E.g - A user is Cadmin of 3 communities, and deletes an action. Only the communities that are linked to action will be linked here. 
+        by_super_admin: Just a field that lets you easily know the activity is a Sadmin activity
+        item_type: Whether footage is related to an action, event, testimonial, a community, etc.
+        activity_type: Whether its Sign in, deletion, update, creation etc.
+    """
+    id = models.AutoField(primary_key=True)
+    actor = models.ForeignKey(
+        UserProfile, on_delete=models.DO_NOTHING, null=False, blank=True, related_name="footages"
+    )
+    activity_type = models.CharField(max_length=SHORT_STR_LEN, null=False)
+    portal =  models.CharField(max_length=SHORT_STR_LEN, default=FootageConstants.on_admin_portal())
+    notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
+    related_users = models.ManyToManyField(UserProfile, blank=True, related_name ="appearances")
+    communities = models.ManyToManyField(Community,blank=True)
+    by_super_admin = models.BooleanField(default=False, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    actions = models.ManyToManyField(Action, blank=True)
+    testimonials = models.ManyToManyField(Testimonial, blank=True)
+    teams = models.ManyToManyField(Team, blank=True)
+    events = models.ManyToManyField(Event, blank=True)
+    images = models.ManyToManyField(Media, blank=True)
+    messages = models.ManyToManyField(Message, blank=True)
+    vendors = models.ManyToManyField(Vendor, blank=True)
+    item_type = models.CharField(max_length=SHORT_STR_LEN, null=True, blank=True, default="")
+
+    def simple_json(self): 
+        data = model_to_dict(self,fields = ["activity_type","notes","portal","item_type","by_super_admin"])
+        data["actor"] = self.actor.info() if self.actor else None
+        data["created_at"] = self.created_at
+        data["communities"] = [c.info() for c in self.communities.all()] if self.communities else []
+        data = FootageConstants.change_type_to_boolean(data)
+
+        return data
+
+    def full_json(self): 
+        return self.simple_json()
+
+    def __str__(self) -> str:
+        return f"{self.actor.preferred_name} - {self.activity_type} - {self.item_type}"
+    class Meta:
+        db_table = "footages"
+        ordering = ("-id",)

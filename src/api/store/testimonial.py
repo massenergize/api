@@ -1,8 +1,10 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
 from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
-from .utils import get_community, get_user
+from .utils import get_community, get_user, unique_media_filename
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -66,7 +68,7 @@ class TestimonialStore:
 
   def create_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      images = args.pop("image", [])
+      images = args.pop("image", None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
@@ -89,9 +91,18 @@ class TestimonialStore:
           new_testimonial.user = user
 
       
-      if images: 
-        image = Media.objects.filter(id = images[0]).first(); 
-        new_testimonial.image = image
+      if images:
+        if type(images) == list:
+          # from admin portal, using media library
+          image = Media.objects.filter(id = images[0]).first(); 
+          new_testimonial.image = image
+        else:
+          # from community portal, image upload
+          images.name = unique_media_filename(images)
+
+          image = Media.objects.create(file=images, name=f"ImageFor {args.get('title', '')} Testimonial")
+          new_testimonial.image = image
+
 
       if action:
         testimonial_action = Action.objects.get(id=action)
@@ -126,13 +137,13 @@ class TestimonialStore:
     try:
       id = args.pop("id", None)
       testimonial = Testimonial.objects.filter(id=id)
-
-
       if not testimonial:
         return None, InvalidResourceError()
+
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
       if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
+
       user_email = args.pop('user_email', None)      
       images = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -140,48 +151,39 @@ class TestimonialStore:
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
       rank = args.pop('rank', None)
-      testimonial.update(**args)
-      new_testimonial = testimonial.first()
+      is_published = args.pop('is_published', None)
 
-      # #checks if testimonial being submitted needs its image to be deleted 
-      # #extracts image ID and deletes image
-      # if bool(type(image) == str):
-      #   if image.find("ImgToDel") == 0:
-      #     ID = int(image.split("---")[1])
-      #     Media.objects.filter(id=ID).delete()
-      #     new_testimonial.image = None
-      # # If no image passed, then we don't delete the existing one
-      # elif image:
-      #     media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-      #     new_testimonial.image = media
+      testimonial.update(**args)
+      testimonial = testimonial.first()
+
       if images: 
         if images[0] == RESET: 
-          new_testimonial.image = None
+          testimonial.image = None
         else:
           image = Media.objects.filter(id = images[0]).first(); 
-          new_testimonial.image = image
+          testimonial.image = image
       
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
-        new_testimonial.action = testimonial_action
+        testimonial.action = testimonial_action
       else:
-        new_testimonial.action = None
+        testimonial.action = None
 
       if vendor:
         testimonial_vendor = Vendor.objects.filter(id=vendor).first()
-        new_testimonial.vendor = testimonial_vendor
+        testimonial.vendor = testimonial_vendor
       else:
-        new_testimonial.vendor = None
+        testimonial.vendor = None
 
       if community:
         testimonial_community = Community.objects.filter(id=community).first()
         if testimonial_community:
-          new_testimonial.community = testimonial_community
+          testimonial.community = testimonial_community
         else:
-          new_testimonial.community = None
+          testimonial.community = None
 
       if rank:
-          new_testimonial.rank = rank
+          testimonial.rank = rank
 
       tags_to_set = []
       for t in tags:
@@ -189,25 +191,46 @@ class TestimonialStore:
         if tag:
           tags_to_set.append(tag)
       if tags_to_set:
-        new_testimonial.tags.set(tags_to_set)
+        testimonial.tags.set(tags_to_set)
 
-      new_testimonial.save()
-      return new_testimonial, None
+      if is_published==False:
+        testimonial.is_published = False
+
+      elif is_published and not testimonial.is_published:
+        # only publish testimonial if it has been approved
+        if testimonial.is_approved:
+          testimonial.is_published = True
+        else:
+          return None, CustomMassenergizeError("Testimonial needs to be approved before it can be made live")
+
+      testimonial.save()
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_testimonial_footage(testimonials = [testimonial], context = context, type = FootageConstants.update(), notes =f"Testimonial ID({id})")
+        # ---------------------------------------------------------------- 
+      return testimonial, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rank_testimonial(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def rank_testimonial(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
-
-      if id and rank:
+      if id:
         testimonials = Testimonial.objects.filter(id=id)
-        testimonials.update(rank=rank)
-        return testimonials.first(), None
+        if type(rank) == int  and int(rank) is not None:
+          testimonials.update(rank=rank)
+          testimonial = testimonials.first()
+
+          # ----------------------------------------------------------------
+          Spy.create_testimonial_footage(testimonials = [testimonial], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+          # ----------------------------------------------------------------
+          return testimonial, None
+        else:
+          return None, CustomMassenergizeError("Testimonial rank not provided to testimonials.rank")
       else:
-        raise Exception("Testimonial Rank and ID not provided to testimonials.rank")
+        raise Exception("Testimonial ID not provided to testimonials.rank")
     except Exception as e:
         capture_message(str(e), level="error")
         return None, CustomMassenergizeError(e)
@@ -216,7 +239,11 @@ class TestimonialStore:
     try:
       testimonials = Testimonial.objects.filter(id=testimonial_id)
       testimonials.update(is_deleted=True, is_published=False)
-      return testimonials.first(), None
+      testimonial = testimonials.first()
+      # ----------------------------------------------------------------
+      Spy.create_testimonial_footage(testimonials = [testimonial], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({testimonial_id})")
+      # ----------------------------------------------------------------
+      return testimonial, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

@@ -178,6 +178,11 @@ class CommunityHandler(RouteHandler):
     if(args.get('is_approved', None)):
       args['is_approved'] = parse_bool(args.pop('is_approved', None))
 
+    # eliminate if accidently provided
+    remove = args.pop('facebook_link', None)
+    remove = args.pop('twitter_link', None)
+    remove = args.pop('instagram_link', None)
+
     args = rename_field(args, 'image', 'logo')
     args = parse_location(args)
 
@@ -199,7 +204,7 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
 
-    community_info, err = self.service.delete_community(args)
+    community_info, err = self.service.delete_community(args,context)
     if err:
       return err
     return MassenergizeResponse(data=community_info)

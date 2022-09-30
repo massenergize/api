@@ -1,5 +1,6 @@
+import json
 from api.store.utils import get_community_or_die
-from database.models import HomePageSettings, UserProfile, Media
+from database.models import HomePageSettings, ImageSequence, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -96,36 +97,21 @@ class HomePageSettingsStore:
         args.pop('featured_links', [])
 
       #images
-      images = args.pop("images")
+      images = args.pop("images", None)
       if images: 
+        new_sequence = json.dumps(images)
         found_images = [ Media.objects.filter(id = img_id).first() for img_id in images ]
         home_page_setting.images.clear() 
         home_page_setting.images.set(found_images)
+        
+        sequence_obj = home_page_setting.image_sequence 
+        if sequence_obj: 
+          ImageSequence.objects.filter(id = sequence_obj.id).update(sequence = new_sequence)
+        else: # First time creating a sequence Obj for homepage images
+          name = f"Homepage settings Id - {home_page_id} - for community({home_page_setting.community.id}, {home_page_setting.community.name}) "
+          image_sequence = ImageSequence.objects.create(name = name, sequence= new_sequence) 
+          home_page_setting.image_sequence = image_sequence
 
-        current_images = home_page_setting.images.all()
-
-      # image_1 = args.pop('image_1', None)
-      # image_2 = args.pop('image_2', None)
-      # image_3 = args.pop('image_3', None)
-      
-      # current_image_1 = current_images[0]
-      # current_image_2 = current_images[1]
-      # current_image_3 = current_images[2]
-
-
-      # if image_1:
-      #   current_image_1 = Media(file=image_1, name=f"FeaturedImage1-{home_page_setting.community.name}", order=1)
-      #   current_image_1.save()
-
-      # if image_2:
-      #   current_image_2 = Media(file=image_2, name=f"FeaturedImage2-{home_page_setting.community.name}", order=2)
-      #   current_image_2.save()
-
-      # if image_3:
-      #   current_image_3 = Media(file=image_3, name=f"FeaturedImage3-{home_page_setting.community.name}", order=3)
-      #   current_image_3.save()
-      
-      # home_page_setting.images.set([current_image_1, current_image_2, current_image_3])
       home_page_setting.save()
 
 

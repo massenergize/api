@@ -224,6 +224,7 @@ class UserProfileTestCase(TestCase):
         signinAs(self.client, user1)
         delete_response = self.client.post('/api/users.delete', urlencode({"user_id": user1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(delete_response["success"])
+        self.assertNotEqual(delete_response["data"]["email"], user1.email)
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
@@ -466,5 +467,22 @@ class UserProfileTestCase(TestCase):
         self.assertTrue(response["success"])
         self.assertTrue(response["data"]["imported"])
         self.assertEqual(response["data"]["firstName"], self.USER2.full_name.split()[0])
+
+    def test_validate_username(self):
+        
+        # test logged as user
+        signinAs(self.client, self.USER2)
+        
+        # valid (unique) username
+        response = self.client.post('/api/users.validate.username', urlencode({'username': "thisUsernameDoesNotExistAlready"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertTrue(response["data"]["valid"])
+        self.assertEqual(response["data"]["suggested_username"], "thisUsernameDoesNotExistAlready")
+
+        # invalid (not unique) username
+        response = self.client.post('/api/users.validate.username', urlencode({'username': self.USER2.preferred_name}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertFalse(response["data"]["valid"])
+        self.assertEqual(response["data"]["suggested_username"], self.USER2.preferred_name+"1")
 
 

@@ -461,8 +461,8 @@ class ActionService:
       return None, err
     return serialize(action), None
 
-  def rank_action(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    action, err = self.store.rank_action(args)
+  def rank_action(self, args, context: Context) -> Tuple[dict, MassEnergizeAPIError]:
+    action, err = self.store.rank_action(args, context)
     if err:
       return None, err
     return serialize(action), None
