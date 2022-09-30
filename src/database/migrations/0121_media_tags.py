@@ -15,4 +15,13 @@ class Migration(migrations.Migration):
             name='tags',
             field=models.ManyToManyField(blank=True, related_name='media_tags', to='database.Tag'),
         ),
+        migrations.AlterModelOptions(
+            name='media',
+            options={'ordering': ('order', '-id')},
+        ),
+        migrations.AddField(
+            model_name='usermediaupload',
+            name='info',
+            field=models.JSONField(blank=True, null=True),
+        ),
     ]
