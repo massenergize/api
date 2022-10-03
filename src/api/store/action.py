@@ -1,8 +1,10 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
 from database.models import Action, UserProfile, Community, Media, UserActionRel
 from carbon_calculator.models import Action as CCAction
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from .utils import get_new_title
 from django.db.models import Q
@@ -109,6 +111,9 @@ class ActionStore:
           new_action.calculator_action = ccAction
 
       new_action.save()
+      # ----------------------------------------------------------------
+      Spy.create_action_footage(actions = [new_action], context = context, actor = new_action.user, type = FootageConstants.create(), notes = f"Action ID({new_action.id})")
+      # ----------------------------------------------------------------
       return new_action, None
 
     except Exception as e:
@@ -167,6 +172,9 @@ class ActionStore:
         new_action.vendors.add(vendor)
         
       new_action.save()
+      # ----------------------------------------------------------------
+      Spy.create_action_footage(actions = [new_action,action_to_copy], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({action_to_copy.id}) to ({new_action.id})" )
+      # ----------------------------------------------------------------
       return new_action, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -181,6 +189,10 @@ class ActionStore:
       if not action:
         return None, InvalidResourceError()
 
+      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
+      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       community_id = args.pop('community_id', None)
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
@@ -188,8 +200,9 @@ class ActionStore:
 
       steps_to_take = args.pop('steps_to_take','')      
       deep_dive = args.pop('deep_dive','')
-
       calculator_action = args.pop('calculator_action', None)
+      is_published = args.pop('is_published', None)
+
       action.update(**args)
       action = action.first()
 
@@ -222,15 +235,29 @@ class ActionStore:
           action.calculator_action = ccAction
         else:
           action.calculator_action = None
+
+      if is_published==False:
+        action.is_published = False
         
+      # only publish action if it has been approved
+      elif is_published and not action.is_published:
+        if action.is_approved:
+          action.is_published = True
+        else:
+          return None, CustomMassenergizeError("Action needs to be approved before it can be made live")
+
+
       action.save()
+      # ----------------------------------------------------------------
+      Spy.create_action_footage(actions = [action], context = context, type = FootageConstants.update(), notes =f"Action ID({action_id})")
+      # ----------------------------------------------------------------
       return action, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def rank_action(self, args) -> Tuple[Action, MassEnergizeAPIError]:
+  def rank_action(self, args, context:Context) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
@@ -238,7 +265,11 @@ class ActionStore:
         actions = Action.objects.filter(id=id)
         if rank is not None:
           actions.update(rank=rank)
-          return actions.first(), None
+          action = actions.first()
+          # ----------------------------------------------------------------
+          Spy.create_action_footage(actions = [action], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+          # ----------------------------------------------------------------
+          return action, None
         else:
           return None, CustomMassenergizeError("Action rank not provided to actions.rank")
       else:
@@ -254,6 +285,9 @@ class ActionStore:
       action_to_delete = Action.objects.get(id=action_id)
       action_to_delete.is_deleted = True 
       action_to_delete.save()
+      # ----------------------------------------------------------------
+      Spy.create_action_footage(actions = [action_to_delete], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({action_id})")
+      # ----------------------------------------------------------------
       return action_to_delete, None
     except Exception as e:
       capture_message(str(e), level="error")

@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
@@ -140,6 +142,9 @@ class EventStore:
         new_event.tags.add(tag)
         new_event.save()
 
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [new_event,event_to_copy], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({event_to_copy.id}) to ({new_event.id})" )
+      # ----------------------------------------------------------------
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -225,6 +230,8 @@ class EventStore:
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
       final_date = args.pop('final_date', None)
+      if end_date_and_time < start_date_and_time :
+          return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
 
       if is_recurring:
         if final_date:
@@ -296,7 +303,10 @@ class EventStore:
           "final_date": str(final_date)
         } 
 
-      new_event.save()      
+      new_event.save()   
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [new_event], context = context, actor = new_event.user, type = FootageConstants.create(), notes = f"Event ID({new_event.id})")
+      # ----------------------------------------------------------------   
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -305,6 +315,14 @@ class EventStore:
   def update_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop('event_id', None)
+      events = Event.objects.filter(id=event_id)
+      if not events:
+        return None, InvalidResourceError()
+
+      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
+      if str(events.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       image = args.pop('image', None)
       tags = args.pop('tags', [])
 
@@ -323,7 +341,10 @@ class EventStore:
       final_date = args.pop('final_date', None)
 
       community_id = args.pop("community_id", None)
-
+      is_published = args.pop('is_published', None)
+      if start_date_and_time and end_date_and_time:
+          if end_date_and_time < start_date_and_time :
+            return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
       if is_recurring:
 
         if final_date:
@@ -361,9 +382,6 @@ class EventStore:
           return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
 
 
-      events = Event.objects.filter(id=event_id)
-      if not events:
-        return None, CustomMassenergizeError(f"No event with id: {event_id}")
 
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -466,8 +484,22 @@ class EventStore:
             rescheduled.rescheduled_event.delete()
             rescheduled.delete()
 
+      if is_published==False:
+        event.is_published = False
+
+      elif is_published and not event.is_published:
+        # only publish event if it has been approved  
+        if event.is_approved:
+          event.is_published = True
+        else:
+          return None, CustomMassenergizeError("Event needs to be approved before it can be made live")
+
       # successful return
-      event.save()      
+      event.save()     
+      
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [event], context = context, type = FootageConstants.update(), notes = f"Event ID({event_id})")
+      # ---------------------------------------------------------------- 
       return event, None
 
     except Exception as e:
@@ -560,7 +592,7 @@ class EventStore:
             start_date = pytz.utc.localize(datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour, start_date.minute))
           event.start_date_and_time = start_date
           event.end_date_and_time = start_date + duration
-          
+        
         event.save()
         exception = RecurringEventException.objects.filter(event=event).first()
         if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(event.start_date_and_time):
@@ -571,7 +603,7 @@ class EventStore:
         return CustomMassenergizeError(e)
     return events, None
 
-  def rank_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def rank_event(self, args, context: Context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get('id', None)
       rank = args.get('rank', None)
@@ -579,6 +611,10 @@ class EventStore:
 
         events = Event.objects.filter(id=id)
         events.update(rank=rank)
+        event = event.first() 
+        # ----------------------------------------------------------------
+        Spy.create_event_footage(actions = [event], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+        # ----------------------------------------------------------------
         return events.first(), None
       else:
         raise Exception("Rank and ID not provided to events.rank")
@@ -595,9 +631,13 @@ class EventStore:
       
       if len(events) > 1:
         return None, CustomMassenergizeError("Deleting multiple events not supported")
-
+      event = events.first()
       events.delete()
-      return events.first(), None
+      
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({event_id})")
+      # ----------------------------------------------------------------
+      return event, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
@@ -59,7 +61,10 @@ class AuthService:
           SECRET_KEY, 
           algorithm='HS256'
         ).decode('utf-8')
-
+        #---------------------------------------------------------
+        if context.is_admin_site:
+          Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
+        #---------------------------------------------------------
         return serialize(user, full=True), str(massenergize_jwt_token), None
 
       else:

@@ -1,7 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.context import Context
-from .utils import get_community
+from .utils import get_community, unique_media_filename
 from sentry_sdk import capture_message
 from database.models import Media
 from typing import Tuple
@@ -68,6 +66,8 @@ class PageSettingsStore:
       if image == "None":
         page_setting.images.clear()
       else:
+
+        image.name = unique_media_filename(image)
         media = Media.objects.create(name="Page-Image", file=image)
         page_setting.images.clear()
         page_setting.images.add(media)

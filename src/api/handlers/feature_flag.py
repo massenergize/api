@@ -29,7 +29,7 @@ class FeatureFlagHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("name", str, is_required=True).expect(
-            "expires_on", str, is_required=True
+            "expires_on", str
         ).expect("community_ids", "str_list").expect("notes", str).expect(
             "user_ids", "str_list"
         ).expect(
