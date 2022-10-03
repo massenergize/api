@@ -120,3 +120,9 @@ class Console:
 
 def is_test_mode():
     return os.environ.get("DJANGO_ENV", "").lower() == 'test'
+
+
+def is_not_null(data):
+    if data == "null" or data == None:
+        return False
+    return True
