@@ -843,6 +843,10 @@ class CommunityStore:
                     comm_admin.save()
                     owner.communities.add(community)
 
+                    if not owner.is_super_admin:
+                        owner.is_community_admin = True
+                    owner.save()
+
 
             # let's make sure we reserve this subdomain
             if subdomain:
