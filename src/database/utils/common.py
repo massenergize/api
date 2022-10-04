@@ -17,8 +17,9 @@ def get_images_in_sequence(images,sequence):
   if not images: return []
   arr = []
   for id in sequence: 
-    img = list(filter(lambda image: str(image.id) == id,images))[0]
-    arr.append(img.simple_json())
+    img = list(filter(lambda image: str(image.id) == id,images))
+    if len(img): 
+      arr.append(img[0].simple_json())
   return arr
 
 

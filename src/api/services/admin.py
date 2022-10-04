@@ -65,6 +65,7 @@ class AdminService:
         }
         send_massenergize_rich_email(
             subject, res["email"], 'new_admin_email.html', content_variables)
+        res["user"] = serialize(res.get("user"))
         return res, None
       except Exception as e:
         capture_message(str(e), level="error")

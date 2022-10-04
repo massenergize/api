@@ -1,3 +1,4 @@
+from _main_.utils.utils import is_not_null
 from database.models import UserProfile, CommunityAdminGroup, Community, Media, UserProfile, Message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -115,7 +116,8 @@ class AdminStore:
         "name": user.preferred_name,
         "email": user.email,
         "subdomain": community.subdomain,
-        "community_name": community.name
+        "community_name": community.name, 
+        "user":user
       }
 
       return res, None
@@ -223,11 +225,8 @@ class AdminStore:
         new_message.user = user
         new_message.email = user.email
         new_message.user_name = new_message.user_name or user.preferred_name
-
-      if file:
-
+      if is_not_null(file):
         file.name = unique_media_filename(file)
-      
         media = Media.objects.create(name=f"Messages: {new_message.title} - Uploaded File", file=file)
         media.save()
         new_message.uploaded_file = media
@@ -266,3 +265,4 @@ class AdminStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
