@@ -341,6 +341,7 @@ class EventStore:
       final_date = args.pop('final_date', None)
 
       community_id = args.pop("community_id", None)
+      is_approved = args.pop('is_approved', None)
       is_published = args.pop('is_published', None)
       if start_date_and_time and end_date_and_time:
           if end_date_and_time < start_date_and_time :
@@ -446,7 +447,7 @@ class EventStore:
               external_link = event.external_link, 
               more_info = event.more_info, 
               is_deleted = event.is_deleted, 
-              is_published = event.is_published, 
+              is_published = event.is_published,
               rank = event.rank, 
               is_recurring = False, 
               recurring_details = None
@@ -483,17 +484,15 @@ class EventStore:
           if rescheduled: 
             rescheduled.rescheduled_event.delete()
             rescheduled.delete()
+      
+      if (is_approved and (is_approved != event.is_approved)) : # If changed
+        event.is_approved = is_approved
 
-      if is_published==False:
-        event.is_published = False
+      if (is_published and (is_published != event.is_published)): # If changed
+        event.is_published = is_published
 
-      # Looks like this feature is ahead of it's time (28/09/22)
-      # elif is_published and not event.is_published:
-      #   # only publish event if it has been approved  
-      #   if event.is_approved:
-      #     event.is_published = True
-      #   else:
-      #     return None, CustomMassenergizeError("Event needs to be approved before it can be made live")
+      if event.is_approved==False and event.is_published==True: # An event can't be published and not approved
+        event.is_approved==True # Approve an event if an admin publishes it
 
       # successful return
       event.save()     
