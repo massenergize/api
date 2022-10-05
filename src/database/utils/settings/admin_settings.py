@@ -6,7 +6,7 @@ class AdminPortalSettings:
             "options": {
                 "notifications": {
                     "live": True,
-                    "text": "I wish to receive notifications",
+                    "text": "How often would you like to receive community reports?",
                     "values": {
                         "immediately": {"name": "Immediately", "value": False},
                         "daily": {"name": "Daily", "value": False},
@@ -14,45 +14,48 @@ class AdminPortalSettings:
                         "monthly": {"name": "Monthly", "value": False},
                     },
                 },
-                "user_updates": {
+                "in_community_preferences": {
                     "live": True,
-                    "text": "Keep me informed about my community's users",
-                    "values": {
-                        "by_email_only": {"name": "Yes, by email  ", "value": False},
-                        "no": {"name": "No", "value": False},
-                    },
-                },
-                "specific_notifications": {
-                    "live": True,  # We flip this when ready for this iteration
                     "type": "checkbox",
-                    "text": "I wish to receive notifications about the following (select all that apply)",
+                    "text": "Within my community; I wish to receive notifications about the following when they happen (select all that apply)",
                     "values": {
                         "new_member_update": {
-                            "name": "New community member",
+                            "name": "New community members",
                             "value": False,
                         },
-                        "new_action_creation_update": {
-                            "name": "New action created",
-                            "value": False,
-                        },
-                        "new_action_taken_update": {
-                            "name": "New action taken",
-                            "value": False,
-                        },
-                        "new_event_creation_update": {
-                            "name": "New event created",
+                        "actions_marked": {
+                            "name": "Actions marked 'done' or 'todo'",
                             "value": False,
                         },
                         "event_RSVP_update": {
-                            "name": "Event RSVP",
+                            "name": "Event RSVPs",
                             "value": False,
                         },
                         "new_testimonial_submission_update": {
                             "name": "New testimonial submitted",
                             "value": False,
                         },
-                        "new_team_submission_update": {
+                        "new_team_created": {
                             "name": "New Team Created",
+                            "value": False,
+                        },
+                        "new_team_member": {
+                            "name": "New Team Member",
+                            "value": False,
+                        },
+                    },
+                },
+                "general_community_peferences": {
+                    "live": True,
+                    "type": "checkbox",
+                    "text": "In all communities; I wish to receive notification about the following when they happen (select all that apply)",
+                    "values": {
+                        "new_actions_created": {
+                            "name": "New Actions Created  ",
+                            "value": False,
+                        },
+                        "new_events_created": {
+                            "name": "New Events Created",
                             "value": False,
                         },
                     },
