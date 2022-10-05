@@ -711,6 +711,11 @@ class CommunityStore:
                     comm_admin.members.add(user)
                     comm_admin.save()
 
+                    if not user.is_super_admin:
+                        user.is_community_admin = True
+                    user.communities.add(community)
+                    user.save()
+
             owner_email = args.get("owner_email", None)
             if owner_email:
                 owner = UserProfile.objects.filter(email=owner_email) 
@@ -720,6 +725,11 @@ class CommunityStore:
                     comm_admin.members.add(owner)
                     comm_admin.save()
                     owner.communities.add(community)
+
+                    if not owner.is_super_admin:
+                        owner.is_community_admin = True
+                    owner.communities.add(community)
+                    owner.save()
 
             # Also clone all template actions for this community
             # 11/1/20 BHN: Add protection against excessive copying in case of too many actions marked as template
@@ -832,6 +842,10 @@ class CommunityStore:
                     comm_admin.members.add(owner)
                     comm_admin.save()
                     owner.communities.add(community)
+
+                    if not owner.is_super_admin:
+                        owner.is_community_admin = True
+                    owner.save()
 
 
             # let's make sure we reserve this subdomain

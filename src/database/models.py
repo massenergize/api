@@ -812,7 +812,7 @@ class UserProfile(models.Model):
             "user_portal_settings": user_portal_settings,
             "admin_portal_settings": admin_portal_settings,
         }
-
+        res["accepts_terms_and_conditions"] = self.accepts_terms_and_conditions
         return res
 
     def update_visit_log(self, date_time):
@@ -1660,7 +1660,9 @@ class Action(models.Model):
         data["calculator_action"] = get_summary_info(self.calculator_action)
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
-        # if we dont add this, so that vendors will be preselected when creating/updating action.
+        data["created_at"] = self.created_at
+        data["updated_at"] = self.updated_at
+        # Adding this so that vendors will be preselected when creating/updating action.
         # List of vendors will typically not be that long, so this doesnt pose any problems
         data["vendors"] = [v.info() for v in self.vendors.all()]
         return data
@@ -2122,7 +2124,7 @@ class CommunityAdminGroup(models.Model):
     pending_admins = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return str(self.id) + " " + self.name
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["members"])
@@ -2134,7 +2136,7 @@ class CommunityAdminGroup(models.Model):
         return self.simple_json()
 
     class Meta:
-        ordering = ("name",)
+        ordering = ["-id"]
         db_table = "community_admin_group"
 
 
