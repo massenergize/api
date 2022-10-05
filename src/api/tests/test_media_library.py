@@ -177,7 +177,6 @@ class TestMediaLibrary(TestCase):
         route = self.routes.get("protected").get("image-info")
         response = self.client.post(route, {"media_id": media.id})
         response = response.json()
-        print(response)
         data = response.get("data").get("relations")
         event_in_response = data.get("event")[0]
         action_in_response = data.get("action")[0]
