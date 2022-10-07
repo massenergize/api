@@ -18,6 +18,10 @@ class ActionService:
   def __init__(self):
     self.store =  ActionStore()
 
+  def read_from(self,context:Context, args):
+    return self.store.read_from(context,args)
+  
+
   def get_action_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     action, err = self.store.get_action_info(context, args)
     if err:

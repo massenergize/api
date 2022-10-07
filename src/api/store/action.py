@@ -15,6 +15,22 @@ class ActionStore:
   def __init__(self):
     self.name = "Action Store/DB"
 
+  def read_from(self,context, args):
+
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+
   def get_action_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       action_id = args.get("id", None)

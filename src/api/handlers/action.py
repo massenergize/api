@@ -29,11 +29,18 @@ class ActionHandler(RouteHandler):
     self.add("/actions.rank", self.rank)
     self.add("/actions.copy", self.copy)
 
+    self.add("/actions.readFromSheet", self.read_from_google_sheet)
+
     #admin routes
     self.add("/actions.listForCommunityAdmin", self.community_admin_list)
     self.add("/actions.listForSuperAdmin", self.super_admin_list)
 
 
+  def read_from(self, request):
+    response, err = self.service.read_from(request)
+    if err:
+      return err
+    return MassenergizeResponse(data=response)
   def info(self, request): 
     context: Context = request.context
     args: dict = context.args
