@@ -1,4 +1,6 @@
 from _main_.utils.pagination import paginate
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
 from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
@@ -203,12 +205,16 @@ class TestimonialStore:
           return None, CustomMassenergizeError("Testimonial needs to be approved before it can be made live")
 
       testimonial.save()
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_testimonial_footage(testimonials = [testimonial], context = context, type = FootageConstants.update(), notes =f"Testimonial ID({id})")
+        # ---------------------------------------------------------------- 
       return testimonial, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rank_testimonial(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def rank_testimonial(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
@@ -216,7 +222,12 @@ class TestimonialStore:
         testimonials = Testimonial.objects.filter(id=id)
         if type(rank) == int  and int(rank) is not None:
           testimonials.update(rank=rank)
-          return testimonials.first(), None
+          testimonial = testimonials.first()
+
+          # ----------------------------------------------------------------
+          Spy.create_testimonial_footage(testimonials = [testimonial], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+          # ----------------------------------------------------------------
+          return testimonial, None
         else:
           return None, CustomMassenergizeError("Testimonial rank not provided to testimonials.rank")
       else:
@@ -229,7 +240,11 @@ class TestimonialStore:
     try:
       testimonials = Testimonial.objects.filter(id=testimonial_id)
       testimonials.update(is_deleted=True, is_published=False)
-      return testimonials.first(), None
+      testimonial = testimonials.first()
+      # ----------------------------------------------------------------
+      Spy.create_testimonial_footage(testimonials = [testimonial], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({testimonial_id})")
+      # ----------------------------------------------------------------
+      return testimonial, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

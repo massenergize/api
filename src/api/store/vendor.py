@@ -1,4 +1,6 @@
 from _main_.utils.pagination import paginate
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
 from django.utils.text import slugify
@@ -108,7 +110,9 @@ class VendorStore:
         new_vendor.tags.set(tags)
 
       new_vendor.save()
-
+     # ----------------------------------------------------------------
+      Spy.create_vendor_footage(vendors = [new_vendor], context = context, actor = new_vendor.user, type = FootageConstants.create(), notes =f"Vendor ID({new_vendor.id})")
+    # ---------------------------------------------------------------- 
       return new_vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -187,13 +191,16 @@ class VendorStore:
           return None, CustomMassenergizeError("Service provider needs to be approved before it can be made live")
         
       vendor.save()
+      # ----------------------------------------------------------------
+      Spy.create_vendor_footage(vendors = [vendor], context = context, type = FootageConstants.update(), notes =f"Vendor ID({vendor_id})")
+      # ---------------------------------------------------------------- 
       return vendor, None
 
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rank_vendor(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def rank_vendor(self, args, context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
@@ -201,7 +208,11 @@ class VendorStore:
       if id and rank:
         vendors = Vendor.objects.filter(id=id)
         vendors.update(rank=rank)
-        return vendors.first(), None
+        vendor = vendors.first()
+        # ----------------------------------------------------------------
+        Spy.create_event_footage(vendors = [vendor], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+        # ----------------------------------------------------------------
+        return vendor, None
       else:
         raise Exception("Rank and ID not provided to vendors.rank")
     except Exception as e:
@@ -209,12 +220,16 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_vendor(self, vendor_id) -> Tuple[dict, MassEnergizeAPIError]:
+  def delete_vendor(self, vendor_id, context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       vendors = Vendor.objects.filter(id=vendor_id)
       vendors.update(is_deleted=True)
       #TODO: also remove it from all places that it was ever set in many to many or foreign key
-      return vendors.first(), None
+      vendor = vendors.first()
+      # ----------------------------------------------------------------
+      Spy.create_vendor_footage(vendors = [vendor], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({vendor_id})")
+      # ----------------------------------------------------------------
+      return vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -269,7 +284,9 @@ class VendorStore:
       for tag in vendor.tags.all():
         new_vendor.tags.add(tag)
       new_vendor.save()
-
+      # ----------------------------------------------------------------
+      Spy.create_vendor_footage(vendors = [new_vendor,new_vendor], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({vendor_id}) to ({new_vendor.id})" )
+      # ----------------------------------------------------------------
       return new_vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
