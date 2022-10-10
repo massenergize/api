@@ -178,7 +178,7 @@ class EventStore:
         if e:
           exceptions.append(event.id)
 
-      return paginate(exceptions, args.get('page', 1)) , None
+      return exceptions, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
