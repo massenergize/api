@@ -11,16 +11,34 @@ from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 
+from googleapiclient.discovery import build
+from google.oauth2 import service_account
+
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SERVICE_ACCOUNT_FILE = 'api/cloud-keys.json' 
+# ID = "15XHUh_JxlipFULI4wfMZoHOn_5o-qYmHR5PVphImTZY" #public
+# ID = "1gYm9ITJ9iR1hdc30LUzBH9CYshS2WDzNlbTmXptWJNs" #main
+ID = "1oM9I86Y74N1356HqVOhYS5HrUHtiQvRf8rhwmzbe8Ew"
 class ActionStore:
   def __init__(self):
     self.name = "Action Store/DB"
 
   def read_from(self,context, args):
+    creds = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    
+    service = build('sheets', 'v4', credentials=creds)
+    sheet = service.spreadsheets()
+    featured_summary = sheet.values().get(spreadsheetId=ID,
+                                    range="Template!A6:H14").execute()
+    steps = sheet.values().get(spreadsheetId=ID,
+                                    range="Template!A16:H22").execute()
 
-    pass
+    # values = result.get("values",[])
 
-
-
+    Console.log("Summary ", featured_summary)
+    Console.log("Steps",steps )
+    
 
 
 

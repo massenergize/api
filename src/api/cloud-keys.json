@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "admin-drive-import-and-export",
+  "private_key_id": "b2779dd758ab8b8fccf13e96627aeedf91a25aba",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCan9hNdslmGMxA\nmqhgiv7WwdMC4uopNHR9KWBCIKNjehxsSguwtk34iEbi+n1JN+cTJox605goPigt\nhh11TLc98ixK/AoA57FAPiCHvll2cRTSd4JmAE9NZ3WjxamImcmVQKXZvYK8qId/\nWlHwXKTQHO8R1TDknwCIwgmpBJ5Hm5MTqdT/IM+zLWLHe2iZsZMAeRiwDjX/W0hz\nmaXIydCs79e445IJ+guZL6Cwg3ocIdiSNV2kJTzHjSYQep6xuww5xwYvXqcow09Q\ndYWmKPd7w4R9B9hc3l4S5J2fpjOK77cu66VZvHeaMnthoXDxInT/v/LCC4ZvZEak\nzf5UnxThAgMBAAECggEAEY+DzlBmUR0R3WhzJPvEM3mx0EsbEvDtJeXUE86HH94X\nakkCiOA7fLVlb5PJNM6PhMJFBBIR3sgoYfswT0kWKofddeqn7DBkFgq4QRJiMKxp\nE/oUqibw2racSqxBM81bcoL0EwWN2oU9Vj5YvfaXlTckA591vRE9y0pWNIbcvv8D\n2drYzwcloP++e5HI0QG+RWJXn3Bx0LvI//rFBp6C0YrqXSE48uin4OE48M8YPspd\n1gZuwRvvPoLE6kR1MMwCKAr2JDPKqVpOZYXpS+vQxdFzank/O3d2b+k8dkEVFjca\nu3UIzp1D97Q7Z2zLleyjySCoFq8lnFRD0yXQxFD6jQKBgQDY6xqMxATrgtSlzB0A\nIL90KOUytRyj7GMc3OWfy957VnjjSDhkHqdCUWM48Q61/HBN0kyW9/Gw8Y9mhlgz\nBhGwPcBF7xnEtBjomKmjeJpTHG2KpRIM/VqUvWvKxpAE45KRpJNQYd+8SZotWAgM\n728Wx9A0SWITGM6sJVE9JKMrDwKBgQC2e5CILM1hRwjJzORuXHKcEaY7AvSN3y9H\noORZCbIV4Kv+p17a0SmfgcAHgqUfjIgkwXtxWucktIZQplNHnbmPkyccLrrlyXvx\nTNpERwoy0EfMGegL8R5Bqw6rLItADBl1qSu2fUbjYr+dQqc3izzI9A97oXIrBix8\n54Jl99OBDwKBgQCuPAHiaZzOExN9bTsqHCPMSQD4vvMXVEu0JlanCRlWlnmZjiwF\nd32/ziHV3gKD+RW33KC6bsQK7azSnDyCF3Dj0GX9hnV7Q3HyepVgAgJrmZz/TWH3\nXxV//bp0cRPDaYwUQk41tbgBxFj77QbiZPwlHzBEn2EQl8+CBKOBaklJzwKBgQCG\nN64fqqxI72FUZEJjtdWKWyTj5JGRQ+XXjkxF/O6iTsTSobIPyaYOrvVZ0Mq4wLlm\nJ3Uu88hs4+airSM12pmgM4ChpvFKj/58haVIcOPcaftU8H0PQ4KYlENOvY2SRxP2\nyb3gFJauKnR7K4ooPV4xA+nbaey6HmlcWT881qIXGwKBgQCfBzQjKu/LUEZj1Asz\nMFxS5NC89Hq5xWjni7IsSL5oSSjItV25OoaV+ldEFxl1AD59EQERA0V+yC3iZIpq\nBFl5Kn6EcZGSNWxg+x+oI6VjEkcxJVzjnyy6mlDO4hHcCfxLVJw7jLNxGY1z/Pgz\n/2GkXZvMtOumPUO9HCZ8B0FnfQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "massenergize-service@admin-drive-import-and-export.iam.gserviceaccount.com",
+  "client_id": "105516157556591472164",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/massenergize-service%40admin-drive-import-and-export.iam.gserviceaccount.com"
+}

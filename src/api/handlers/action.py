@@ -29,7 +29,7 @@ class ActionHandler(RouteHandler):
     self.add("/actions.rank", self.rank)
     self.add("/actions.copy", self.copy)
 
-    self.add("/actions.readFromSheet", self.read_from_google_sheet)
+    self.add("/actions.readFromSheet", self.read_from)
 
     #admin routes
     self.add("/actions.listForCommunityAdmin", self.community_admin_list)
@@ -37,10 +37,13 @@ class ActionHandler(RouteHandler):
 
 
   def read_from(self, request):
-    response, err = self.service.read_from(request)
+    context: Context = request.context
+    args: dict = context.args
+    response, err = self.service.read_from(context,args)
     if err:
       return err
     return MassenergizeResponse(data=response)
+    
   def info(self, request): 
     context: Context = request.context
     args: dict = context.args
