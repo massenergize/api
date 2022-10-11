@@ -4,11 +4,12 @@ from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from .utils import unique_media_filename
 from _main_.utils.massenergize_errors import CustomMassenergizeError
-from database.models import Community, Media, UserMediaUpload, UserProfile
+from database.models import Community, Media, Tag, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
-
+import json
 limit = 32
+
 
 class MediaLibraryStore:
     def __init__(self):
@@ -36,25 +37,32 @@ class MediaLibraryStore:
             )
 
         else:
-            images = Media.objects.filter(
-                Q(
-                    events__community__id__in=com_ids
-                )  # images that are used in events of provided communities
-                | Q(
-                    actions__community__id__in=com_ids
-                )  # images that are used in actions of provided communities
-                | Q(
-                    testimonials__community__id__in=com_ids
-                )  # images that are used in testimonials of provided communities
-                | Q(
-                    user_upload__communities__id__in=com_ids
-                )  # user uploads whose listed communities match the provided communities
-                | Q(user_upload__is_universal=True)
-            ).distinct().order_by("-id")[:limit]
+            images = (
+                Media.objects.filter(
+                    Q(
+                        events__community__id__in=com_ids
+                    )  # images that are used in events of provided communities
+                    | Q(
+                        actions__community__id__in=com_ids
+                    )  # images that are used in actions of provided communities
+                    | Q(
+                        testimonials__community__id__in=com_ids
+                    )  # images that are used in testimonials of provided communities
+                    | Q(
+                        user_upload__communities__id__in=com_ids
+                    )  # user uploads whose listed communities match the provided communities
+                    | Q(user_upload__is_universal=True)
+                )
+                .distinct()
+                .order_by("-id")[:limit]
+            )
 
         return images, None
 
-    def generateQueryWithScope(self, scope, com_ids=None):
+    def generateQueryWithScope(self, **kwargs):
+        scope = kwargs.get("scope")
+        com_ids = kwargs.get("com_ids", None)
+        tags = kwargs.get("tags")
         no_comms_query = {
             "actions": Q(actions__isnull=False),
             "events": Q(events__isnull=False),
@@ -74,17 +82,21 @@ class MediaLibraryStore:
             query_object = no_comms_query
 
         query = query_object.get(scope)
+        if tags: 
+            query &= Q(tags__in = tags) #If tags exist, it means all other filters & provided tags
+
         return query
 
     def search(self, args):
         context = args.get("context")
         com_ids = args.get("target_communities")
         any_community = args.get("any_community")
-        filters = args.get("filters")
+        filters = args.get("filters",[])
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         images = None
         queries = None
+        tags = args.get("tags", None)
 
         """
         Options
@@ -95,24 +107,34 @@ class MediaLibraryStore:
         """
         if any_community == True:
             if context.user_is_community_admin:
-                queries = [self.generateQueryWithScope(f, com_ids) for f in filters]
+                queries = [
+                    self.generateQueryWithScope(scope=f, com_ids=com_ids, tags = tags)
+                    for f in filters
+                ]
             else:
-                queries = [self.generateQueryWithScope(f) for f in filters]
+                queries = [self.generateQueryWithScope(scope=f, tags = tags) for f in filters]
         else:
-            queries = [self.generateQueryWithScope(f, com_ids) for f in filters]
+            queries = [
+                self.generateQueryWithScope(scope=f, com_ids=com_ids, tags = tags) for f in filters
+            ]
 
         if len(queries) == 0:
-            return None, CustomMassenergizeError("Could not build query with your provided filters, please try again")
-
+            return None, CustomMassenergizeError(
+                
+                "Could not build query with your provided filters, please try again"
+            
+            )
+       
         query = queries.pop()
         for qObj in queries:
             query |= qObj
-
+        query |= Q(user_upload__is_universal = True)
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
             images = (
-                Media.objects.filter(query).distinct()
+                Media.objects.filter(query)
+                .distinct()
                 .exclude(id__gte=lower_limit, id__lte=upper_limit)
                 .order_by("-id")[:limit]
             )
@@ -132,9 +154,15 @@ class MediaLibraryStore:
         user_id = args.get("user_id")
         title = args.get("title") or "Gallery Upload"
         file = args.get("file")
-
+        tags = args.get("tags", [])
         is_universal = args.get("is_universal", None)
         communities = user = None
+        description = args.get("description", None)
+        info = {
+            "size": args.get("size"),
+            "size_text": args.get("size_text"),
+            "description": description,
+        }
         try:
             if community_ids:
                 communities = Community.objects.filter(id__in=community_ids)
@@ -151,6 +179,8 @@ class MediaLibraryStore:
             file=file,
             title=title,
             is_universal=is_universal,
+            tags = tags,
+            info=info,
         )
         # ----------------------------------------------------------------
         Spy.create_media_footage(media = [user_media.media], communities = [communities], context = context,  type = FootageConstants.create(), notes=f"Media ID({user_media.media.id})")
@@ -161,17 +191,28 @@ class MediaLibraryStore:
         title = kwargs.get("title")
         file = kwargs.get("file")
         user = kwargs.get("user")
+        tags = kwargs.get("tags")
+        info = kwargs.get("info")
         communities = kwargs.get("communities")
         is_universal = kwargs.get("is_universal")
         is_universal = True if is_universal else False
 
+        tags = Tag.objects.filter(id__in = tags)
         file.name = unique_media_filename(file)
 
         media = Media.objects.create(
-            name=f" {title} - ({round(time.time() * 1000)})",
+            name=f"{title}-({round(time.time() * 1000)})",
             file=file,
         )
-        user_media = UserMediaUpload.objects.create(user=user, media=media, is_universal=is_universal)
+        user_media = UserMediaUpload(
+            
+            user=user, media=media, is_universal=is_universal, info=info
+        )
+        user_media.save(
+        )
+        if media: 
+            media.tags.set(tags) 
+
         if communities:
             user_media.communities.set(communities)
             user_media.save()
@@ -183,8 +224,14 @@ class MediaLibraryStore:
         try:
             media = Media.objects.get(pk=media_id)
         except Media.DoesNotExist:
-            return None, CustomMassenergizeError("Media could not be found, provide a valid 'media_id'")
-        except:
-            return None, CustomMassenergizeError("Sorry, something happened we could not find the media you are looking for")
+            return None, CustomMassenergizeError(
+                
+                "Media could not be found, provide a valid 'media_id'"
             
+            )
+        except:
+            return None, CustomMassenergizeError(
+                "Sorry, something happened we could not find the media you are looking for"
+            )
+
         return media, None

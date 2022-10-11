@@ -177,10 +177,10 @@ class TestMediaLibrary(TestCase):
         route = self.routes.get("protected").get("image-info")
         response = self.client.post(route, {"media_id": media.id})
         response = response.json()
-        data = response.get("data").get("info")
-        event_in_response = data.get("events")[0]
-        action_in_response = data.get("actions")[0]
-        story_in_response = data.get("testimonials")[0]
+        data = response.get("data").get("relations")
+        event_in_response = data.get("event")[0]
+        action_in_response = data.get("action")[0]
+        story_in_response = data.get("testimonial")[0]
         event_is_good = event.name == event_in_response.get("name")
         action_is_good = action.title == action_in_response.get("title")
         story_is_good = story.title == story_in_response.get("title")
