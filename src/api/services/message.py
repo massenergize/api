@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.message import MessageStore
@@ -96,7 +98,7 @@ class MessageService:
           message.have_forwarded = True
           message.save()
 
-
+     
       # attached_file = args.pop('attached_file', None)    
 
       return serialize(message), None
@@ -104,8 +106,8 @@ class MessageService:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def delete_message(self, message_id) -> Tuple[dict, MassEnergizeAPIError]:
-    message, err = self.store.delete_message(message_id)
+  def delete_message(self, message_id,context) -> Tuple[dict, MassEnergizeAPIError]:
+    message, err = self.store.delete_message(message_id,context)
     if err:
       return None, err
     return serialize(message), None

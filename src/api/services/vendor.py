@@ -99,8 +99,8 @@ class VendorService:
       return None, err
     return serialize(vendor), None
 
-  def rank_vendor(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    vendor, err = self.store.rank_vendor(args)
+  def rank_vendor(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    vendor, err = self.store.rank_vendor(args,context)
     if err:
       return None, err
     return serialize(vendor), None
@@ -112,8 +112,8 @@ class VendorService:
       return None, err
     return serialize(vendor), None
 
-  def delete_vendor(self, vendor_id) -> Tuple[dict, MassEnergizeAPIError]:
-    vendor, err = self.store.delete_vendor(vendor_id)
+  def delete_vendor(self, vendor_id,context) -> Tuple[dict, MassEnergizeAPIError]:
+    vendor, err = self.store.delete_vendor(vendor_id,context)
     if err:
       return None, err
     return serialize(vendor), None

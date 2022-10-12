@@ -204,7 +204,7 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
 
-    community_info, err = self.service.delete_community(args)
+    community_info, err = self.service.delete_community(args,context)
     if err:
       return err
     return MassenergizeResponse(data=community_info)

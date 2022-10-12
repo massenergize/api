@@ -6,15 +6,16 @@ PAGINATION_LIMIT = 50
 def paginate(queryset, page):
     try:
         p = Paginator(queryset, PAGINATION_LIMIT)
+        items = []
         pag = p.page(page)
         meta = {
             "next":pag.next_page_number() if pag.has_next() else pag.paginator.num_pages,
             "count":len(queryset)
         }
-        ser = serialize_all(pag.object_list)
+        items = serialize_all(list(pag))
         to_return = {
             'meta':meta,
-            "items": ser
+            "items": items
         }
         
         return to_return
