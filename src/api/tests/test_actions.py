@@ -110,6 +110,7 @@ class ActionHandlerTest(TestCase):
       signinAs(self.client, None)
       response = self.client.post('/api/actions.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response["success"])
+      
 
       # test list logged as user
       signinAs(self.client, self.USER)
