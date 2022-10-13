@@ -485,14 +485,15 @@ class EventStore:
             rescheduled.rescheduled_event.delete()
             rescheduled.delete()
       
-      if (is_approved and (is_approved != event.is_approved)) : # If changed
+      if (is_approved!=None and (is_approved != event.is_approved)) : # If changed
         event.is_approved = is_approved
 
       print(f"1 Old: {event.is_published} New: {is_published}")
-      if (is_published and (is_published != event.is_published)): # If changed
+      if (is_published != None): # If changed
         print(f"2 Old: {event.is_published} New: {is_published}")
-        event.is_published = is_published
-        print(f"3 Old: {event.is_published} New: {is_published}")
+        if (is_published != event.is_published):
+          print(f"3 Old: {event.is_published} New: {is_published}")
+          event.is_published = is_published
 
       if event.is_approved==False and event.is_published==True: # An event can't be published and not approved
         event.is_approved==True # Approve an event if an admin publishes it
