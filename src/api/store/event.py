@@ -485,7 +485,7 @@ class EventStore:
             rescheduled.rescheduled_event.delete()
             rescheduled.delete()
       
-      if (is_approved!=None and 
+      if (is_approved != None and 
           (is_approved != event.is_approved)) : # If changed
         event.is_approved = is_approved
       
