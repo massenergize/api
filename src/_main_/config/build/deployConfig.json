@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.7.10",
+  "BUILD_VERSION": "4.8.0",
   "BUILD_VERSION_NOTES": "Oct 14 22: Community Platform: \nNew features: \nUI feedback when sending a message on the contact us page \nAdmin Interface: \nNew features: \n- Tags can be added to pictures to make them easier to find and to group related images. \n- Changes to admin communication preferences \n- Community is now a required field. It cannot be deselected. \n- Admin activity logging \nIssues fixed: \n- Fix: Allow copied old events to be made live \n- Fix: Entering the admin portal from a link/URL \n- Fix: Sorting list items by live/not-live \nBack-end (“under-the-hood”): \nNew features: \n- Supporting work for admin bug fixes and features \nIssues fixed: \n- Fix: Message emails not getting sent \n- Fix: Canary bug where live event’s can’t be made non-live"
 }
