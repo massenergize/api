@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.fields import BooleanField, related
 from django.db.models.query_utils import select_related_descend
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
+from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
@@ -89,6 +90,83 @@ class Location(models.Model):
     class Meta:
         db_table = "locations"
 
+class TagCollection(models.Model):
+    """
+    A class used to represent a collection of Tags.
+
+    Attributes
+    ----------
+    name : str
+      name of the Tag Collection
+    """
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    is_global = models.BooleanField(default=False, blank=True)
+    allow_multiple = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False, blank=True)
+    is_published = models.BooleanField(default=False, blank=True)
+    rank = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return self.name
+
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["tags"] = [t.simple_json() for t in self.tag_set.all()]
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+    class Meta:
+        ordering = ("name",)
+        db_table = "tag_collections"
+
+
+class Tag(models.Model):
+    """
+    A class used to represent an Tag.  It is essentially a string that can be
+    used to describe or group items, actions, etc
+
+    Attributes
+    ----------
+    name : str
+      name of the Tag
+    """
+
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=SHORT_STR_LEN)
+    points = models.PositiveIntegerField(null=True, blank=True)
+    icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    tag_collection = models.ForeignKey(
+        TagCollection, null=True, on_delete=models.CASCADE, blank=True
+    )
+    rank = models.PositiveIntegerField(default=0)
+    is_deleted = models.BooleanField(default=False, blank=True)
+    is_published = models.BooleanField(default=False, blank=True)
+
+    def __str__(self):
+        return "%s - %s" % (self.name, self.tag_collection)
+
+    def simple_json(self):
+        res = model_to_dict(self)
+        res["order"] = self.rank
+        res["tag_collection_name"] = (
+            None if not self.tag_collection else self.tag_collection.name
+        )
+        return res
+
+    def full_json(self):
+        data = self.simple_json()
+        data["tag_collection"] = get_json_if_not_none(self.tag_collection)
+        return data
+
+    class Meta:
+        ordering = ("rank",)
+        db_table = "tags"
+        unique_together = [["rank", "name", "tag_collection"]]
+
 
 class Media(models.Model):
     """
@@ -111,13 +189,15 @@ class Media(models.Model):
     media_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
-
+    tags = models.ManyToManyField(Tag, related_name="media_tags", blank=True)
+    
     def __str__(self):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
 
     def simple_json(self):
         return {
             "id": self.id,
+            "name": self.name,
             "url": self.file.url,
         }
 
@@ -127,11 +207,12 @@ class Media(models.Model):
             "name": self.name,
             "url": self.file.url,
             "media_type": self.media_type,
+            "tags": [tag.simple_json() for tag in self.tags.all()]
         }
 
     class Meta:
         db_table = "media"
-        ordering = ("order", "name")
+        ordering = ("order", "-id")
 
 
 class Policy(models.Model):
@@ -637,7 +718,7 @@ class UserProfile(models.Model):
         return self.email
 
     def info(self):
-        return model_to_dict(self, ["id", "email", "full_name"])
+        return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
 
     def summary(self):
         summaryData = model_to_dict(self, ["preferred_name", "is_guest"])
@@ -731,7 +812,7 @@ class UserProfile(models.Model):
             "user_portal_settings": user_portal_settings,
             "admin_portal_settings": admin_portal_settings,
         }
-
+        res["accepts_terms_and_conditions"] = self.accepts_terms_and_conditions
         return res
 
     def update_visit_log(self, date_time):
@@ -849,6 +930,7 @@ class UserMediaUpload(models.Model):
         default=False
     )  # True value here means image is available to EVERYONE, and EVERY COMMUNITY
     settings = models.JSONField(null=True, blank=True)
+    info = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -857,7 +939,7 @@ class UserMediaUpload(models.Model):
 
     def simple_json(self):
         res = model_to_dict(
-            self, ["settings", "media", "created_at", "id", "is_universal"]
+            self, ["settings", "media", "created_at", "id", "is_universal","info"]
         )
         res["user"] = get_summary_info(self.user)
         res["image"] = get_json_if_not_none(self.media)
@@ -1326,82 +1408,6 @@ class CarbonEquivalency(models.Model):
         db_table = "carbon_equivalencies"
 
 
-class TagCollection(models.Model):
-    """
-    A class used to represent a collection of Tags.
-
-    Attributes
-    ----------
-    name : str
-      name of the Tag Collection
-    """
-
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    is_global = models.BooleanField(default=False, blank=True)
-    allow_multiple = models.BooleanField(default=False)
-    is_deleted = models.BooleanField(default=False, blank=True)
-    is_published = models.BooleanField(default=False, blank=True)
-    rank = models.PositiveIntegerField(default=0)
-
-    def __str__(self):
-        return self.name
-
-    def simple_json(self):
-        res = model_to_dict(self)
-        res["tags"] = [t.simple_json() for t in self.tag_set.all()]
-        return res
-
-    def full_json(self):
-        return self.simple_json()
-
-    class Meta:
-        ordering = ("name",)
-        db_table = "tag_collections"
-
-
-class Tag(models.Model):
-    """
-    A class used to represent an Tag.  It is essentially a string that can be
-    used to describe or group items, actions, etc
-
-    Attributes
-    ----------
-    name : str
-      name of the Tag
-    """
-
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=SHORT_STR_LEN)
-    points = models.PositiveIntegerField(null=True, blank=True)
-    icon = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    tag_collection = models.ForeignKey(
-        TagCollection, null=True, on_delete=models.CASCADE, blank=True
-    )
-    rank = models.PositiveIntegerField(default=0)
-    is_deleted = models.BooleanField(default=False, blank=True)
-    is_published = models.BooleanField(default=False, blank=True)
-
-    def __str__(self):
-        return "%s - %s" % (self.name, self.tag_collection)
-
-    def simple_json(self):
-        res = model_to_dict(self)
-        res["order"] = self.rank
-        res["tag_collection_name"] = (
-            None if not self.tag_collection else self.tag_collection.name
-        )
-        return res
-
-    def full_json(self):
-        data = self.simple_json()
-        data["tag_collection"] = get_json_if_not_none(self.tag_collection)
-        return data
-
-    class Meta:
-        ordering = ("rank",)
-        db_table = "tags"
-        unique_together = [["rank", "name", "tag_collection"]]
 
 
 class Vendor(models.Model):
@@ -1654,7 +1660,9 @@ class Action(models.Model):
         data["calculator_action"] = get_summary_info(self.calculator_action)
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
-        # if we dont add this, so that vendors will be preselected when creating/updating action.
+        data["created_at"] = self.created_at
+        data["updated_at"] = self.updated_at
+        # Adding this so that vendors will be preselected when creating/updating action.
         # List of vendors will typically not be that long, so this doesnt pose any problems
         data["vendors"] = [v.info() for v in self.vendors.all()]
         return data
@@ -2116,7 +2124,7 @@ class CommunityAdminGroup(models.Model):
     pending_admins = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return str(self.id) + " " + self.name
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["members"])
@@ -2128,7 +2136,7 @@ class CommunityAdminGroup(models.Model):
         return self.simple_json()
 
     class Meta:
-        ordering = ("name",)
+        ordering = ["-id"]
         db_table = "community_admin_group"
 
 
@@ -3321,3 +3329,57 @@ class FeatureFlag(models.Model):
     class Meta:
         db_table = "feature_flags"
         ordering = ("-name",)
+
+
+class Footage(models.Model): 
+    """
+        A class that is used to represent a record of an activity that a user has performed on any of of the ME platforms 
+
+
+        actor: Signed in user who performs the activity 
+        type: The kind of activity that was just performed. Check FootageConstants.py(TYPES) for a list of all available activity types 
+        portal: Which platform the activity happens on Check FootageConstants.py(PLATFORMS) for a list of available platforms
+        description: A brief description of what happened in the activity E.g User405 deleted action with id 444
+        users : other users who are involved in the activity. (E.g an admin makes 3 other admins admin of a community. The "3 other" admins will be found here... )
+        communities: The communities that are directly involved in the activity that took place. E.g - A user is Cadmin of 3 communities, and deletes an action. Only the communities that are linked to action will be linked here. 
+        by_super_admin: Just a field that lets you easily know the activity is a Sadmin activity
+        item_type: Whether footage is related to an action, event, testimonial, a community, etc.
+        activity_type: Whether its Sign in, deletion, update, creation etc.
+    """
+    id = models.AutoField(primary_key=True)
+    actor = models.ForeignKey(
+        UserProfile, on_delete=models.DO_NOTHING, null=False, blank=True, related_name="footages"
+    )
+    activity_type = models.CharField(max_length=SHORT_STR_LEN, null=False)
+    portal =  models.CharField(max_length=SHORT_STR_LEN, default=FootageConstants.on_admin_portal())
+    notes = models.CharField(max_length=LONG_STR_LEN, default="", blank=True)
+    related_users = models.ManyToManyField(UserProfile, blank=True, related_name ="appearances")
+    communities = models.ManyToManyField(Community,blank=True)
+    by_super_admin = models.BooleanField(default=False, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    actions = models.ManyToManyField(Action, blank=True)
+    testimonials = models.ManyToManyField(Testimonial, blank=True)
+    teams = models.ManyToManyField(Team, blank=True)
+    events = models.ManyToManyField(Event, blank=True)
+    images = models.ManyToManyField(Media, blank=True)
+    messages = models.ManyToManyField(Message, blank=True)
+    vendors = models.ManyToManyField(Vendor, blank=True)
+    item_type = models.CharField(max_length=SHORT_STR_LEN, null=True, blank=True, default="")
+
+    def simple_json(self): 
+        data = model_to_dict(self,fields = ["activity_type","notes","portal","item_type","by_super_admin"])
+        data["actor"] = self.actor.info() if self.actor else None
+        data["created_at"] = self.created_at
+        data["communities"] = [c.info() for c in self.communities.all()] if self.communities else []
+        data = FootageConstants.change_type_to_boolean(data)
+
+        return data
+
+    def full_json(self): 
+        return self.simple_json()
+
+    def __str__(self) -> str:
+        return f"{self.actor.preferred_name} - {self.activity_type} - {self.item_type}"
+    class Meta:
+        db_table = "footages"
+        ordering = ("-id",)

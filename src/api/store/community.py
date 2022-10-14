@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console, strip_website
 from api.tests.common import RESET
 from database.models import (
@@ -610,7 +612,6 @@ class CommunityStore:
             favicon = args.pop("favicon", None)
             community = Community.objects.create(**args)
             community.save()
-           
             geographic = args.get("is_geographically_focused", False)
             if geographic:
                 geography_type = args.get("geography_type", None)
@@ -631,7 +632,6 @@ class CommunityStore:
             community_goal = Goal.objects.create(name=f"{community.name}-Goal")
             community.goal = community_goal
             community.save()
-
             # do this before all the cloning in case of failure
             reserve_subdomain(subdomain, community)
 
@@ -646,7 +646,6 @@ class CommunityStore:
             images = homePage.images.all()
             # TODO: make a copy of the images instead, then in the home page, you wont have to create new files everytime
             if homePage:
-
                 homePage.pk = None
                 homePage.title = f"Welcome to Massenergize, {community.name}!"
                 homePage.community = community
@@ -712,6 +711,11 @@ class CommunityStore:
                     comm_admin.members.add(user)
                     comm_admin.save()
 
+                    if not user.is_super_admin:
+                        user.is_community_admin = True
+                    user.communities.add(community)
+                    user.save()
+
             owner_email = args.get("owner_email", None)
             if owner_email:
                 owner = UserProfile.objects.filter(email=owner_email) 
@@ -721,6 +725,11 @@ class CommunityStore:
                     comm_admin.members.add(owner)
                     comm_admin.save()
                     owner.communities.add(community)
+
+                    if not owner.is_super_admin:
+                        owner.is_community_admin = True
+                    owner.communities.add(community)
+                    owner.save()
 
             # Also clone all template actions for this community
             # 11/1/20 BHN: Add protection against excessive copying in case of too many actions marked as template
@@ -758,7 +767,10 @@ class CommunityStore:
                 num_copied += 1
                 if num_copied >= MAX_TEMPLATE_ACTIONS:
                     break
-
+            
+            # ----------------------------------------------------------------
+            # Spy.create_community_footage(communities = [community], related_users=[owner,user], context = context, type = FootageConstants.create(),notes =f"Community ID({community.id})")
+            # ----------------------------------------------------------------
             return community, None
         except Exception as e:
             if community:
@@ -831,6 +843,10 @@ class CommunityStore:
                     comm_admin.save()
                     owner.communities.add(community)
 
+                    if not owner.is_super_admin:
+                        owner.is_community_admin = True
+                    owner.save()
+
 
             # let's make sure we reserve this subdomain
             if subdomain:
@@ -842,13 +858,16 @@ class CommunityStore:
                 if err:
                     raise Exception("Failed to save custom website: "+str(err))
 
+            # ----------------------------------------------------------------
+            Spy.create_community_footage(communities = [community], context = context, type = FootageConstants.update(), notes =f"Community ID({community_id})")
+            # ----------------------------------------------------------------
             return community, None
 
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
-    def delete_community(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    def delete_community(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             communities = Community.objects.filter(**args)
             if len(communities) > 1:
@@ -860,9 +879,13 @@ class CommunityStore:
                     return None, CustomMassenergizeError(
                         "You cannot delete a template community"
                     )
-
+            ids = [c.id for c in communities]
             communities.delete()
             # communities.update(is_deleted=True)
+
+            # ----------------------------------------------------------------
+            Spy.create_community_footage(communities = communities, context = context, type = FootageConstants.delete(), notes = f"Deleted ID({str(ids)}")
+            # ----------------------------------------------------------------
             return communities, None
         except Exception as e:
             capture_exception(e)

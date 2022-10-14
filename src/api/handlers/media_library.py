@@ -49,6 +49,8 @@ class MediaLibraryHandler(RouteHandler):
             "target_communities", list, is_required=True
         ).expect(
             "any_community", bool
+        ).expect(
+            "tags", "str_list"
         )
         args, err = self.validator.verify(args, strict=True)
         if err:
@@ -70,7 +72,7 @@ class MediaLibraryHandler(RouteHandler):
         if err:
             return err
 
-        response, error = self.service.remove(args)
+        response, error = self.service.remove(args,context)
         if error:
             return error
         return MassenergizeResponse(data=response)
@@ -83,11 +85,13 @@ class MediaLibraryHandler(RouteHandler):
             "community_ids", list
         ).expect("title", str).expect("file", "file", is_required=True).expect(
             "is_universal", bool
-        )
+        ).expect(
+            "tags", "str_list"
+        ).expect("size",str).expect("size_text", str).expect("description")
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
-        image, error = self.service.addToGallery(args)
+        image, error = self.service.addToGallery(args,context)
         if error:
             return error
         return MassenergizeResponse(data=image)

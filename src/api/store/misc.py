@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db.models import Q
+from _main_.utils.footage.spy import Spy
 from api.tests.common import createUsers
 from database.models import (
     Action,
@@ -41,6 +42,19 @@ class MiscellaneousStore:
     def __init__(self):
         self.name = "Miscellaneous Store/DB"
         #self.list_commonly_used_icons()
+
+    def fetch_footages(self,context:Context, args): 
+        footages = None 
+        try:
+            if context.user_is_super_admin: 
+                footages = Spy.fetch_footages_for_super_admins(context = context)
+            else: 
+                footages = Spy.fetch_footages_for_community_admins(context = context)
+
+            return footages, None
+        except Exception as e: 
+            return None, str(e)
+
 
     def authenticateFrontendInTestMode(self, args): 
         email = args.get("email"); 
