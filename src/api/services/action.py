@@ -19,7 +19,7 @@ class ActionService:
     self.store =  ActionStore()
 
   def read_from(self,context:Context, args):
-    return self.store.read_from(context,args)
+    return self.store.read_from(context,args), None
   
 
   def get_action_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
