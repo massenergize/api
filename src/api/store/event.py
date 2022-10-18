@@ -7,6 +7,8 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from django.db.models import Q
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
+
+from database.utils.settings.model_constants.events import EventConstants
 from .utils import get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
@@ -641,6 +643,21 @@ class EventStore:
       # ----------------------------------------------------------------
       return event, None
     except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def fetch_other_events_for_cadmin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    """
+        * Look for events that are open to everyone 
+        * Or events that are open to any of the listed communities with ids 
+        * And exclude events that are "closed to " any of the communities listed to 
+    """
+    try: 
+      ids = args.get("community_ids")
+      events =  Event.objects.filter(Q(community__id__in = ids) | Q( publicity = EventConstants.open_to(),communities_under_publicity__id__in = ids)).distinct().order_by("-id")
+      return events, None
+    except Exception as e: 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
