@@ -37,7 +37,7 @@ class EventHandler(RouteHandler):
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list)
-    self.add("/events.others.listForCommunityAdmins", self.fetch_other_events_for_cadmin)
+    self.add("/events.others.listForCommunityAdmin", self.fetch_other_events_for_cadmin)
     self.add("/events.listForSuperAdmin", self.super_admin_list)
 
 
@@ -350,13 +350,15 @@ class EventHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=events)
 
-  @admins_only
+  # @admins_only TODO: UNCOMMENT THIS BEFORE PR
   def fetch_other_events_for_cadmin(self, request):
     context: Context = request.context
     args: dict = context.args
 
     self.validator.expect("community_ids", "str_list", is_required=True)
     args, err = self.validator.verify(args)
+    print("--------------------")
+    print(args)
     if err:
       return err
 
