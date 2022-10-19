@@ -356,6 +356,8 @@ class EventHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_ids", "str_list", is_required=True)
+    self.validator.expect("exclude", bool, is_required=False)
+    
     args, err = self.validator.verify(args)
     print("--------------------")
     print(args)

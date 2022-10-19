@@ -655,7 +655,14 @@ class EventStore:
     """
     try: 
       ids = args.get("community_ids")
-      events =  Event.objects.filter(Q(community__id__in = ids) | Q( publicity = EventConstants.open_to(),communities_under_publicity__id__in = ids)).distinct().order_by("-id")
+      excluded = args.get("exclude", False)
+      events = []
+      if excluded: 
+        # Find all events that are open in any community, but exclude events from the selected communities
+        events = Event.objects.filter(publicity = EventConstants.open()).exclude(community__id__in = ids).order_by("-id") 
+      else: 
+        # Find events that have publicity as open, and belogn to the selected community, OR, find events that have any of the selected communities listed to be available to
+        events =  Event.objects.filter(Q(community__id__in = ids, publicity = EventConstants.open()) | Q( publicity = EventConstants.open_to(),communities_under_publicity__id__in = ids)).distinct().order_by("-id")
       return events, None
     except Exception as e: 
       capture_message(str(e), level="error")
