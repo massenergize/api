@@ -14,7 +14,7 @@ app.autodiscover_tasks()
 
 
 app.conf.beat_schedule = {
-    'send_event_nudge': {
+    'send_weekly_event_nudge': {
         'task': 'task_queue.tasks.send_weekly_events_report',
         'schedule': crontab(hour=8, minute=0, day_of_week=1)
     },
