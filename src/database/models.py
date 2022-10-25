@@ -1793,7 +1793,6 @@ class Event(models.Model):
                 "invited_communities",
                 "user",
                 "communities_under_publicity",
-                "publicity"
             ],
         )
         data["tags"] = [t.simple_json() for t in self.tags.all()]

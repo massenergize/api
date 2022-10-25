@@ -188,6 +188,8 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
+    self.validator.expect("publicity",str)
+    self.validator.expect("publicity_selections",list)
     args, err = self.validator.verify(args)
 
     if err:
@@ -295,6 +297,8 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
+    self.validator.expect("publicity",str)
+    self.validator.expect("publicity_selections",list)
     args, err = self.validator.verify(args)
 
     if err:
@@ -359,7 +363,6 @@ class EventHandler(RouteHandler):
     self.validator.expect("exclude", bool, is_required=False)
     
     args, err = self.validator.verify(args)
-    print("--------------------")
     print(args)
     if err:
       return err

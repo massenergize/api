@@ -232,6 +232,8 @@ class EventStore:
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
       final_date = args.pop('final_date', None)
+      publicity_selections = args.pop("publicity_selections", [])
+
       if end_date_and_time < start_date_and_time :
           return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
 
@@ -285,6 +287,9 @@ class EventStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_event.user = user
+        
+      if publicity_selections:
+        new_event.communities_under_publicity.set(publicity_selections)
 
       if is_recurring:
 
@@ -318,6 +323,8 @@ class EventStore:
     try:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
+      publicity_selections = args.pop("publicity_selections", [])
+      
       if not events:
         return None, InvalidResourceError()
 
@@ -411,6 +418,9 @@ class EventStore:
 
       if tags:
         event.tags.set(tags)
+
+      if publicity_selections:
+        event.communities_under_publicity.set(publicity_selections)
 
       if is_recurring:
 
@@ -652,6 +662,7 @@ class EventStore:
         * Look for events that are open to everyone 
         * Or events that are open to any of the listed communities with ids 
         * And exclude events that are "closed to " any of the communities listed to 
+        * And in all cases, dont return templates
     """
     try: 
       ids = args.get("community_ids")
@@ -659,10 +670,10 @@ class EventStore:
       events = []
       if excluded: 
         # Find all events that are open in any community, but exclude events from the selected communities
-        events = Event.objects.filter(publicity = EventConstants.open()).exclude(community__id__in = ids).order_by("-id") 
+        events = Event.objects.filter(publicity = EventConstants.open(), is_global = False).exclude(community__id__in = ids).order_by("-id") 
       else: 
         # Find events that have publicity as open, and belogn to the selected community, OR, find events that have any of the selected communities listed to be available to
-        events =  Event.objects.filter(Q(community__id__in = ids, publicity = EventConstants.open()) | Q( publicity = EventConstants.open_to(),communities_under_publicity__id__in = ids)).distinct().order_by("-id")
+        events =  Event.objects.filter(Q(community__id__in = ids, publicity = EventConstants.open() , is_global = False) | Q( publicity = EventConstants.open_to(),communities_under_publicity__id__in = ids, is_global = False)).distinct().order_by("-id")
       return events, None
     except Exception as e: 
       capture_message(str(e), level="error")
