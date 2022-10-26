@@ -363,7 +363,6 @@ class EventHandler(RouteHandler):
     self.validator.expect("exclude", bool, is_required=False)
     
     args, err = self.validator.verify(args)
-    print(args)
     if err:
       return err
 
