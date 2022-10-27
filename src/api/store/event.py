@@ -324,6 +324,7 @@ class EventStore:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
       publicity_selections = args.pop("publicity_selections", [])
+      shared_to = args.pop("shared_to", [])
       
       if not events:
         return None, InvalidResourceError()
@@ -421,6 +422,9 @@ class EventStore:
 
       if publicity_selections:
         event.communities_under_publicity.set(publicity_selections)
+
+      if shared_to:
+        event.shared_to.set(shared_to)
 
       if is_recurring:
 

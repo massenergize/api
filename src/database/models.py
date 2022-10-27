@@ -1775,6 +1775,10 @@ class Event(models.Model):
     communities_under_publicity = models.ManyToManyField(
         Community, related_name="event_access_selections", blank=True
     )
+    # Communities that have shared an event to their site will be in this list
+    shared_to = models.ManyToManyField(
+        Community, related_name="events_from_others", blank=True
+    )
 
     def __str__(self):
         return self.name
@@ -1793,6 +1797,7 @@ class Event(models.Model):
                 "invited_communities",
                 "user",
                 "communities_under_publicity",
+                "shared_to"
             ],
         )
         data["tags"] = [t.simple_json() for t in self.tags.all()]
@@ -1817,6 +1822,9 @@ class Event(models.Model):
         if self.user:
             data["user_email"] = self.user.email
 
+        data["shared_to"] =[
+            c.info() for c in self.shared_to.all()
+        ]
         return data
 
     def full_json(self):
