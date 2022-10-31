@@ -193,16 +193,26 @@ class EventStore:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
-    
+    shared = []
     if community_id:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      # Find events that have been shared to this community
+      community = Community.objects.get(pk = community_id)
+      shared = [] 
+      if community: shared = community.events_from_others.filter(is_published=True)
+    
+      
       
     elif subdomain:
       query =  Q(community__subdomain=subdomain)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
-      
+      community = Community.objects.get(subdomain = subdomain)
+      shared = []
+      if community: shared = community.events_from_others.filter(is_published=False) # change this to True before PR
+    
+
     elif user_id:
       events = EventAttendee.objects.filter(user_id=user_id)
       
@@ -212,7 +222,9 @@ class EventStore:
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
 
-    return events, None
+    
+
+    return [*events,*shared], None
 
 
   def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -423,6 +435,7 @@ class EventStore:
       if publicity_selections:
         event.communities_under_publicity.set(publicity_selections)
 
+      print("SHared To HEre", shared_to)
       if shared_to:
         event.shared_to.set(shared_to)
 
