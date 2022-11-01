@@ -17,9 +17,4 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
             preserve_default=False,
         ),
-        migrations.AddField(
-            model_name='event',
-            name='live_at',
-            field=models.DateTimeField(blank=True, null=True),
-        ),
     ]
