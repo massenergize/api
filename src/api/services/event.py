@@ -198,11 +198,6 @@ class EventService:
 
 
   def update_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    if args.get("is_published")==True:
-      args["live_at"] = date.today()
-    if args.get("is_published")==False:
-      args["live_at"]=None
-
     event, err = self.store.update_event(context, args)
     if err:
       return None, err

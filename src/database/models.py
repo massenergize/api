@@ -1753,7 +1753,6 @@ class Event(models.Model):
     recurring_details = models.JSONField(blank=True, null=True)
     is_approved = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    live_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.name
