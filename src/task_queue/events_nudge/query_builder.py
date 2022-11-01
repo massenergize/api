@@ -7,7 +7,7 @@ from _main_.settings import DJANGO_ENV
 
 
 today = datetime.datetime.utcnow().replace(tzinfo=utc)
-one_week_ago = today - timezone.timedelta(days=7)
+in_30_days = today + timezone.timedelta(days=30)
 
 
 def is_viable(item):
@@ -32,26 +32,11 @@ def get_comm_emails_and_pref():
     return admins
 
 
-def get_sadmin_emails_and_pre():
-    sadmins = []
-    admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False).values_list( "preferences","email")
-    for i in list(admins):
-    # push a check to exclude cadmins with no sound pref
-        if is_viable(i):
-            sadmins.append({
-                "pref":i[0],
-                "email":i[1]
-            })
-    return sadmins
-
 
 def remove_admin_duplicates():
-    sadmins = get_sadmin_emails_and_pre()
     cadmins = get_comm_emails_and_pref()
-    all = sadmins+cadmins
-    no_duplicates = list({dictionary['email']: dictionary for dictionary in all }.values())
+    no_duplicates = list({dictionary['email']: dictionary for dictionary in cadmins }.values())
     return no_duplicates
-
 
 def human_readable_date(start, end):
     if all(getattr(start,x) == getattr(end,x) for x in ["year", "month", "day"]):
@@ -87,14 +72,16 @@ def get_email_list(frequency):
 
 
 
-
-
-
 def get_live_events_within_the_week():
-    events_query = Event.objects.filter(live_at__gte=one_week_ago, live_at__lte=today, is_deleted=False) 
+    events_query = Event.objects.filter(
+        start_date_and_time__gte=today,
+        start_date_and_time__lte=in_30_days,
+        is_deleted=False
+        ) 
     events = serialize_all(events_query, full=True)
     data={
         "events":[{
+            "logo": event.get("community",{}).get("logo") if event.get("community") else None,
             "title": event.get("name"),
             "community": event.get("community",{}).get("name") if event.get("community") else "N/A",
             "period":human_readable_date(event.get("start_date_and_time"), event.get("end_date_and_time")),
