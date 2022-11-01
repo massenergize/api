@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='event',
-            name='updated_at',
-            field=models.DateTimeField(auto_now=True),
+            name='live_at',
+            field=models.DateTimeField(blank=True, null=True),
         ),
     ]
