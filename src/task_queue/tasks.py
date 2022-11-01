@@ -28,8 +28,9 @@ def run_some_task(self, task_id):
 
 @shared_task(bind=True)
 def send_weekly_events_report(self):
-    """
-    """
     email_list =  get_email_list(WEEKLY) 
     data = get_live_events_within_the_week()
-    send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, email_list, None, None)
+    if data.get("events"):
+        for name, email in email_list.items():
+            data["name"]= name
+            send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)

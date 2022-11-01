@@ -22,12 +22,13 @@ def get_comm_emails_and_pref():
     communities = Community.objects.all()
     admins = []
     for com in communities:
-        all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email")
+        all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name")
         for i in list(all_community_admins):
             if is_viable(i):
                 admins.append({
                     "pref":i[0],
-                    "email":i[1]
+                    "email":i[1],
+                    "name":i[2]
                 })
     return admins
 
@@ -38,11 +39,8 @@ def remove_admin_duplicates():
     no_duplicates = list({dictionary['email']: dictionary for dictionary in cadmins }.values())
     return no_duplicates
 
-def human_readable_date(start, end):
-    if all(getattr(start,x) == getattr(end,x) for x in ["year", "month", "day"]):
-        return start.strftime("%b %d, %H:%M") +" - "+ end.strftime( "%H:%M")
-    else:
-        return start.strftime("%b %d, %H:%M") +" - "+ end.strftime( "%b %d, %H:%M")
+def human_readable_date(start):
+    return start.strftime("%b %d")
 
 
 
@@ -61,12 +59,12 @@ def generate_redirect_url(id):
 
 def get_email_list(frequency):
     admins = remove_admin_duplicates()
-    email_list = []
+    email_list = {}
     for admin in admins:
         admin_settings = admin.get("pref", {}).get("admin_portal_settings", {}).get("general_settings")
         freq = admin_settings.get("notifications")
         if freq.get(frequency).get("value") ==True:
-            email_list.append(admin.get("email"))
+            email_list[admin.get("name")] = admin.get("email")
 
     return email_list
 
@@ -81,12 +79,13 @@ def get_live_events_within_the_week():
     events = serialize_all(events_query, full=True)
     data={
         "events":[{
-            "logo": event.get("community",{}).get("logo") if event.get("community") else None,
+            "logo": event.get("community",{}).get("logo").get('url') if event.get("community") else None,
             "title": event.get("name"),
             "community": event.get("community",{}).get("name") if event.get("community") else "N/A",
-            "period":human_readable_date(event.get("start_date_and_time"), event.get("end_date_and_time")),
+            "date":human_readable_date(event.get("start_date_and_time")),
             "location":"Online" if event.get("location") else "In person",
-            "link":generate_redirect_url(event.get("id"))
+            "share_link":generate_redirect_url(event.get("id")),
+            "view_link":generate_redirect_url(event.get("id"))
         } for event in events]
     }
     return data
