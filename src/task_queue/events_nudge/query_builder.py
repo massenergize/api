@@ -44,17 +44,17 @@ def human_readable_date(start):
 
 
 
-def generate_redirect_url(id):
-    domain = ''
+def get_domain():
+    if DJANGO_ENV == "local": return 'http://localhost:3001'
+    elif DJANGO_ENV == "canary":return "https://admin-canary.massenergize.org"
+    return "https://admin.massenergize.org"
 
-    if DJANGO_ENV == "local":
-        domain = 'http://localhost:3001/'
-    elif DJANGO_ENV == "canary":
-        domain ="https://admin-canary.massenergize.org/"
-    else:
-        domain = "https://admin.massenergize.org/"
 
-    return domain + f"admin/read/event/{id}/event-view"
+
+def generate_redirect_url(type=None,id=""):
+    domain = get_domain()
+    if type == "SHARING": return f'{domain}/admin/read/event/{id}/event-view?from=others&dialog=open'
+    return f"{domain}/admin/read/event/{id}/event-view?from=main"
 
 
 def get_email_list(frequency):
@@ -77,6 +77,7 @@ def get_live_events_within_the_week():
         is_deleted=False
         ) 
     events = serialize_all(events_query, full=True)
+
     data={
         "events":[{
             "logo": event.get("community",{}).get("logo").get('url') if event.get("community") else None,
@@ -84,8 +85,8 @@ def get_live_events_within_the_week():
             "community": event.get("community",{}).get("name") if event.get("community") else "N/A",
             "date":human_readable_date(event.get("start_date_and_time")),
             "location":"Online" if event.get("location") else "In person",
-            "share_link":generate_redirect_url(event.get("id")),
-            "view_link":generate_redirect_url(event.get("id"))
+            "share_link":generate_redirect_url("SHARING",event.get("id")),
+            "view_link":generate_redirect_url(event.get("id")),
         } for event in events]
     }
     return data

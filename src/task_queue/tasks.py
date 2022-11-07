@@ -1,6 +1,6 @@
 from celery import shared_task
 
-from task_queue.events_nudge.query_builder import get_email_list, get_live_events_within_the_week
+from task_queue.events_nudge.query_builder import get_domain, get_email_list, get_live_events_within_the_week
 from .jobs import FUNCTIONS
 from .models import Task
 
@@ -30,7 +30,9 @@ def run_some_task(self, task_id):
 def send_weekly_events_report(self):
     email_list =  get_email_list(WEEKLY) 
     data = get_live_events_within_the_week()
+    change_preference_link = get_domain()+"/admin/profile/settings"
     if data.get("events"):
         for name, email in email_list.items():
             data["name"]= name
+            data["change_preference_link"] = change_preference_link
             send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
