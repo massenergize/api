@@ -881,7 +881,9 @@ class CommunityStore:
                         "You cannot delete a template community"
                     )
                 
-                if c.goal:
+                # subdomain and custom community website entries will be deleted by virtue of the foreign key CASCADE on deletion
+                # delete the goals, assuming they exist, which doesn't have the same link back to community.
+                if c.goal:            
                     c.goal.delete()
             ids = [c.id for c in communities]
             communities.delete()
