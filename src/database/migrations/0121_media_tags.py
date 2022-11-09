@@ -19,9 +19,9 @@ class Migration(migrations.Migration):
             name='media',
             options={'ordering': ('order', '-id')},
         ),
-        migrations.AddField(
-            model_name='usermediaupload',
-            name='info',
-            field=models.JSONField(blank=True, null=True),
-        ),
+        #migrations.AddField(
+        #    model_name='usermediaupload',
+        #    name='info',
+        #    field=models.JSONField(blank=True, null=True),
+        #),
     ]

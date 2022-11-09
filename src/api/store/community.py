@@ -875,10 +875,14 @@ class CommunityStore:
                     "You cannot delete more than one community at once"
                 )
             for c in communities:
+                # don;t delete the template community: this probably doesn't matter since we don't use template communities for anything
                 if "template" in c.name.lower():
                     return None, CustomMassenergizeError(
                         "You cannot delete a template community"
                     )
+                
+                if c.goal:
+                    c.goal.delete()
             ids = [c.id for c in communities]
             communities.delete()
             # communities.update(is_deleted=True)
