@@ -211,7 +211,7 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
-  # @admins_only TODO: UNCOMMENT THIS BEFORE PR
+  @admins_only 
   def list_other_communities_for_cadmin(self, request):
     context: Context  = request.context
     #args = context.get_request_body()

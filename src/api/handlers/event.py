@@ -355,7 +355,7 @@ class EventHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=events)
 
-  # @admins_only TODO: UNCOMMENT THIS BEFORE PR
+  @admins_only 
   def fetch_other_events_for_cadmin(self, request):
     context: Context = request.context
     args: dict = context.args

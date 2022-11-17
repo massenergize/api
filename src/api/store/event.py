@@ -210,7 +210,7 @@ class EventStore:
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
       community = Community.objects.get(subdomain = subdomain)
       shared = []
-      if community: shared = community.events_from_others.filter(is_published=False) # change this to True before PR
+      if community: shared = community.events_from_others.filter(is_published=True)
     
 
     elif user_id:
@@ -435,7 +435,6 @@ class EventStore:
       if publicity_selections:
         event.communities_under_publicity.set(publicity_selections)
 
-      print("SHared To HEre", shared_to)
       if shared_to:
         event.shared_to.set(shared_to)
 
