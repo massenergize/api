@@ -1,3 +1,4 @@
+import json
 from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -327,8 +328,39 @@ class ActionStore:
   def list_actions_for_super_admin(self, context: Context):
     try:
       page = context.args.get('page', 1)
-      actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
+      if context.args.get("params", None):
+        actions, _ = self.search_and_filter_actions(context.args.get("params"))
+      else:
+        actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
       return paginate(actions, page), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def search_and_filter_actions(self,args):
+    try:
+      args= json.loads(args)
+      query = []
+      actions = Action.objects.filter(is_deleted=False)
+      communities = args.get("community", None)
+      tags= args.get("tags",None)
+      status = None
+
+      if  "Yes" in args.get("live", []):
+        status=True
+      elif "No" in args.get("live",[]):
+        status=False
+      if communities:
+        query.append(Q(community__name__in=communities))
+      if tags:
+       query.append(Q(tags__name__in=tags))
+      if not status == None:
+       query.append(Q(is_published=status))
+
+      if len(query):
+        actions = Action.objects.filter(*query,is_deleted=False)
+      return actions.select_related('image', 'community', 'calculator_action').prefetch_related('tags'), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

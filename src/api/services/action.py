@@ -123,3 +123,10 @@ class ActionService:
     if err:
       return None, err
     return actions, None
+
+    
+  def search_and_filter_actions(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
+    actions, err = self.store.search_and_filter_actions(context)
+    if err:
+      return None, err
+    return actions, None

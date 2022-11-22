@@ -32,6 +32,7 @@ class ActionHandler(RouteHandler):
     #admin routes
     self.add("/actions.listForCommunityAdmin", self.community_admin_list)
     self.add("/actions.listForSuperAdmin", self.super_admin_list)
+    self.add("/actions.searchAndFilter", self.search_and_filter_actions)
 
 
   def info(self, request): 
@@ -226,6 +227,15 @@ class ActionHandler(RouteHandler):
   def super_admin_list(self, request): 
     context: Context = request.context
     actions, err = self.service.list_actions_for_super_admin(context)
+    if err:
+      return err
+    return MassenergizeResponse(data=actions)
+
+
+  @super_admins_only
+  def search_and_filter_actions(self, request): 
+    context: Context = request.context
+    actions, err = self.service.search_and_filter_actions(context)
     if err:
       return err
     return MassenergizeResponse(data=actions)
