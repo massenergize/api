@@ -13,6 +13,34 @@ from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 
+
+  # ----- utility----
+def get_filter_params(params):
+    try:
+      params= json.loads(params)
+      query = []
+      communities = params.get("community", None)
+      tags= params.get("tags",None)
+      status = None
+
+      if  "Yes" in params.get("live", []):
+        status=True
+      elif "No" in params.get("live",[]):
+        status=False
+      if communities:
+        query.append(Q(community__name__in=communities))
+      if tags:
+       query.append(Q(tags__name__in=tags))
+      if not status == None:
+       query.append(Q(is_published=status))
+
+      return query
+    except Exception as e:
+      return []
+
+
+  # ------- 
+
 class ActionStore:
   def __init__(self):
     self.name = "Action Store/DB"
@@ -313,8 +341,12 @@ class ActionStore:
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
+        filter_params = []
+        if context.args.get("params", None):
+          filter_params = get_filter_params(context.args.get("params"))
+
         comm_ids = [ag.community.id for ag in admin_groups]
-        actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return paginate(actions, args.get('page', 1)), None
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
@@ -328,39 +360,13 @@ class ActionStore:
   def list_actions_for_super_admin(self, context: Context):
     try:
       page = context.args.get('page', 1)
+      filter_params = []
       if context.args.get("params", None):
-        actions, _ = self.search_and_filter_actions(context.args.get("params"))
-      else:
-        actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
+        filter_params = get_filter_params(context.args.get("params"))
+      actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
       return paginate(actions, page), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def search_and_filter_actions(self,args):
-    try:
-      args= json.loads(args)
-      query = []
-      actions = Action.objects.filter(is_deleted=False)
-      communities = args.get("community", None)
-      tags= args.get("tags",None)
-      status = None
-
-      if  "Yes" in args.get("live", []):
-        status=True
-      elif "No" in args.get("live",[]):
-        status=False
-      if communities:
-        query.append(Q(community__name__in=communities))
-      if tags:
-       query.append(Q(tags__name__in=tags))
-      if not status == None:
-       query.append(Q(is_published=status))
-
-      if len(query):
-        actions = Action.objects.filter(*query,is_deleted=False)
-      return actions.select_related('image', 'community', 'calculator_action').prefetch_related('tags'), None
-    except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)

@@ -1,3 +1,4 @@
+import json
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
@@ -70,6 +71,46 @@ def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, w
       return True, "Recurring events must only last 1 day. Make sure your starting date and ending date are the same"  
 
   return False, "No problem with recurring dates"
+
+
+
+  # ----- utility----
+def get_filter_params(params):
+    try:
+      params= json.loads(params)
+      print('+++++++++++++++++++++ res +++++++++++++++++')
+      print('')
+      print('')
+      print('')
+      print(params)
+      print('')
+      print('')
+      print('+++++++++++++++++++++ res +++++++++++++++++')
+
+      query = []
+      communities = params.get("community", None)
+      tags= params.get("tags",None)
+      status = None
+
+      if  "Yes" in params.get("live", []):
+        status=True
+      elif "No" in params.get("live",[]):
+        status=False
+      if communities:
+        query.append(Q(community__name__in=communities))
+      if tags:
+       query.append(Q(tags__name__in=tags))
+      if not status == None:
+       query.append(Q(is_published=status))
+
+      print("==== Final ====", query)
+
+      return query
+    except Exception as e:
+      return []
+
+
+  # ------- 
   
 class EventStore:
   def __init__(self):
@@ -677,7 +718,11 @@ class EventStore:
     try:
       # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
       # not as their own separate events
-      events = Event.objects.filter(is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_filter_params(context.args.get("params"))
+      events = Event.objects.filter(*filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
+      print("=====events =====", len(events))
       return paginate(events, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
