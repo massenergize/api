@@ -221,6 +221,12 @@ class EventService:
       return None, err
     return serialize_all(events), None
 
+  def fetch_other_events_for_cadmin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    events, err = self.store.fetch_other_events_for_cadmin(context, args)
+    if err:
+      return None, err
+    return serialize_all(events), None
+
 
   def list_events_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.list_events_for_super_admin(context)
