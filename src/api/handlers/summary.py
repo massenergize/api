@@ -17,10 +17,20 @@ class SummaryHandler(RouteHandler):
     self.registerRoutes()
 
   def registerRoutes(self):
+    self.add("/summary.next.steps.forAdmins", self.community_admin_summary)
     #admin routes
     self.add("/summary.listForCommunityAdmin", self.community_admin_summary)
     self.add("/summary.listForSuperAdmin", self.super_admin_summary)
 
+  # @admins_only # UNCOMMENT THIS BEFORE PR(BPR) 
+  def next_steps_for_admins(self, request): 
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop("community_id", None)
+    content, err = self.service.next_steps_for_admins(context, community_id)
+    if err:
+      return err
+    return MassenergizeResponse(data=content)
   @admins_only
   def community_admin_summary(self, request):
     context: Context = request.context

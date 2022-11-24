@@ -13,6 +13,12 @@ class SummaryService:
   def __init__(self):
     self.store =  SummaryStore()
 
+  def next_steps_for_admins(self, context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    content, err = self.store.next_steps_for_admins(context, community_id)
+    if err:
+      return None, err
+    return content, None
+
   def summary_for_community_admin(self, context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     summary, err = self.store.summary_for_community_admin(context, community_id)
     if err:

@@ -11,6 +11,39 @@ class SummaryStore:
     self.name = "Summary Store/DB"
 
 
+  def next_steps_for_admins(self, context: Context, community_id) -> Tuple[dict, MassEnergizeAPIError]:
+    try : 
+      content = {}
+      if context.user_is_admin: 
+        content = self.next_steps_for_community_admins(context)
+      else: 
+        content = self.next_steps_for_super_admins() 
+      return content, None
+    except Exception as e: 
+      capture_message(str(e), level="error")
+      return {}, CustomMassenergizeError(e)
+
+
+  def next_steps_for_community_admins(context : Context): 
+    """
+      Get all the communities that a cadmin manages 
+      Testimonials 
+      * Look for testimonials that belong to any of the communities that are not approved 
+
+      Messages 
+      * Look for messages that have not been replied to that belong to any of the communities
+
+      Teams 
+      * Look for teams that have not been replied to that belong to any of the communities
+
+    """
+
+
+    pass 
+
+  def next_steps_for_super_admins(context: Context): 
+    pass
+
   def _summarize(self, name, value):
     return {
       "title": name,
