@@ -31,19 +31,23 @@ class SummaryStore:
     def next_steps_for_admins(
         self, context: Context, args
     ) -> Tuple[tuple, MassEnergizeAPIError]:
+        is_community_admin = args.get("is_community_admin", False) or context.user_is_community_admin 
 
         # try:
-            content = {}
-            # if context.user_is_admin: UNCOMMENT ALL BEFORE PR(BPR)
-            #   content = self.next_steps_for_community_admins(context,args)
-            # else:
-            #   content = self.next_steps_for_super_admins(context,args)
+        content = {}
+        err = None
+        if is_community_admin:
+            content, err = self.next_steps_for_community_admins(context, args)
+        else:
+            print("I Just run this thing")
+            content = self.next_steps_for_super_admins(context, args)
 
-            content = self.next_steps_for_community_admins(context, args)
-            return content, None
-        # except Exception as e:
-        #     capture_message(str(e), level="error")
-        #     return {}, CustomMassenergizeError(e)
+        content, err = self.next_steps_for_community_admins(context, args)
+        return content, err
+
+    # except Exception as e:
+    #     capture_message(str(e), level="error")
+    #     return {}, CustomMassenergizeError(e)
 
     def next_steps_for_community_admins(self, context: Context, args):
         """
@@ -59,7 +63,7 @@ class SummaryStore:
         """
         email = context.user_email or args.get(
             "email"
-        )  # Just for Postman Testing, remove before PR
+        )  # Just for Postman Testing, remove before PR(BPR)
         current_user = UserProfile.objects.filter(email=email).first()
 
         if not current_user:
@@ -70,14 +74,16 @@ class SummaryStore:
         groups = current_user.communityadmingroup_set.all()
         communities = [ag.community.id for ag in groups]
 
-        testimonials = Testimonial.objects.filter(
+        testimonials = Testimonial.objects.values_list("id", flat=True).filter(
             community__in=communities, is_approved=False
         )
-        messages = Message.objects.filter(
+        messages = Message.objects.values_list("id", flat=True).filter(
             community__in=communities, have_replied=False
         )
         users = []
-        teams = Team.objects.filter(primary_community__in =communities, is_published = False )
+        teams = Team.objects.values_list("id", flat=True).filter(
+            primary_community__in=communities, is_published=False
+        )
 
         today = datetime.date.today()
 
@@ -91,12 +97,11 @@ class SummaryStore:
             .order_by("-created_at")
             .first()
         )
-        print("Found Last Visit", last_visit, last_visit.created_at)
+        print(
+            "Found Last Visit", last_visit
+        )  # REMOVE BEFORE PR(BPR)
         if last_visit:
-            # users = UserProfile.objects.filter(
-            #     created_at__range=(last_visit, today), communities__in=communities
-            # )
-           users = UserProfile.objects.filter(
+            users = UserProfile.objects.values_list("id", flat=True).filter(
                 created_at__gt=today, communities__in=communities
             )
 
@@ -105,12 +110,55 @@ class SummaryStore:
             "testimonials": testimonials,
             "messages": messages,
             "teams": teams,
-            "last_visit":last_visit
-        }
-
+            "last_visit": last_visit,
+        }, None
 
     def next_steps_for_super_admins(self, context: Context, args):
-        pass
+        email = context.user_email or args.get(
+            "email"
+        )  # Just for Postman Testing, remove before PR(BPR)
+        current_user = UserProfile.objects.filter(email=email).first()
+        if not current_user:
+            return {}, CustomMassenergizeError(
+                "Sorry, could not find information of currently authenticated admin"
+            )
+
+        testimonials = Testimonial.objects.values_list("id", flat=True).filter(
+            is_approved=False
+        )
+        messages = Message.objects.values_list("id", flat=True).filter(
+            have_replied=False
+        )
+        users = []
+        teams = Team.objects.values_list("id", flat=True).filter(is_published=False)
+
+        today = datetime.date.today()
+
+        # get the footage item for admin's last visit that isnt today
+        last_visit = (
+            Footage.objects.filter(
+                created_at__lt=today,
+                actor=current_user,
+                activity_type=FootageConstants.sign_in(),
+            )
+            .order_by("-created_at")
+            .first()
+        )
+        print(
+            "Found Last Visit", last_visit, last_visit.created_at
+        )  # REMOVE BEFORE PR(BPR)
+        if last_visit:
+            users = UserProfile.objects.values_list("id", flat=True).filter(
+                created_at__gt=today
+            )
+
+        return {
+            "users": users,
+            "testimonials": testimonials,
+            "messages": messages,
+            "teams": teams,
+            "last_visit": last_visit,
+        }, None
 
     def _summarize(self, name, value):
         return {"title": name, "value": value, "link": f"/admin/read/{name.lower()}"}

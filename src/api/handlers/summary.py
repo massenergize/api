@@ -27,6 +27,12 @@ class SummaryHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     # community_id = args.pop("community_id", None)
+    self.validator.expect("is_community_admin", bool, is_required=False) # For manual testing
+    self.validator.expect("email", str, is_required=False) # For manual testing
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
     content, err = self.service.next_steps_for_admins(context, args)
     if err:
       return err

@@ -28,19 +28,19 @@ class SummaryService:
         users = content.get("users", [])
         teams = content.get("teams", [])
 
-        testimonials = serialize_all(testimonials)
-        messages = serialize_all(messages)
-        users = serialize_all(users)
-        teams = serialize_all(teams)
+        # testimonials = serialize_all(testimonials)
+        # messages = serialize_all(messages)
+        # users = serialize_all(users)
+        # teams = serialize_all(teams)
 
         content = {
-            "testimonials": {"count": len(testimonials), "data": testimonials},
-            "teams": {"count": len(teams), "data": teams},
-            "messages": {"count": len(messages), "messages": messages},
+            "testimonials": {"count": len(testimonials), "data": list(testimonials)},
+            "teams": {"count": len(teams), "data": list(teams)},
+            "messages": {"count": len(messages), "messages":list(messages)},
             "users": {
                 "count": len(users),
                 "description": f"All new users since last visit - {last_visit.created_at}",
-                "data": users,
+                "data": list(users),
                 "last_visit":serialize(last_visit)
             },
         }
