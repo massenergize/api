@@ -17,7 +17,7 @@ class SummaryHandler(RouteHandler):
     self.registerRoutes()
 
   def registerRoutes(self):
-    self.add("/summary.next.steps.forAdmins", self.community_admin_summary)
+    self.add("/summary.next.steps.forAdmins", self.next_steps_for_admins)
     #admin routes
     self.add("/summary.listForCommunityAdmin", self.community_admin_summary)
     self.add("/summary.listForSuperAdmin", self.super_admin_summary)
@@ -26,8 +26,8 @@ class SummaryHandler(RouteHandler):
   def next_steps_for_admins(self, request): 
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    content, err = self.service.next_steps_for_admins(context, community_id)
+    # community_id = args.pop("community_id", None)
+    content, err = self.service.next_steps_for_admins(context, args)
     if err:
       return err
     return MassenergizeResponse(data=content)
