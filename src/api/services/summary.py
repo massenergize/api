@@ -36,7 +36,7 @@ class SummaryService:
         content = {
             "testimonials": {"count": len(testimonials), "data": list(testimonials)},
             "teams": {"count": len(teams), "data": list(teams)},
-            "messages": {"count": len(messages), "messages":list(messages)},
+            "messages": {"count": len(messages), "data":list(messages)},
             "users": {
                 "count": len(users),
                 "description": f"All new users since last visit - {last_visit.created_at}",

@@ -39,15 +39,10 @@ class SummaryStore:
         if is_community_admin:
             content, err = self.next_steps_for_community_admins(context, args)
         else:
-            print("I Just run this thing")
-            content = self.next_steps_for_super_admins(context, args)
+            content, err = self.next_steps_for_super_admins(context, args)
 
-        content, err = self.next_steps_for_community_admins(context, args)
         return content, err
 
-    # except Exception as e:
-    #     capture_message(str(e), level="error")
-    #     return {}, CustomMassenergizeError(e)
 
     def next_steps_for_community_admins(self, context: Context, args):
         """
@@ -126,6 +121,7 @@ class SummaryStore:
         testimonials = Testimonial.objects.values_list("id", flat=True).filter(
             is_approved=False
         )
+       
         messages = Message.objects.values_list("id", flat=True).filter(
             have_replied=False
         )

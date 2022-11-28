@@ -22,7 +22,7 @@ class SummaryHandler(RouteHandler):
     self.add("/summary.listForCommunityAdmin", self.community_admin_summary)
     self.add("/summary.listForSuperAdmin", self.super_admin_summary)
 
-  # @admins_only # UNCOMMENT THIS BEFORE PR(BPR) 
+  @admins_only
   def next_steps_for_admins(self, request): 
     context: Context = request.context
     args: dict = context.args
