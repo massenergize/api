@@ -229,6 +229,8 @@ class MessageStore:
             return None, CustomMassenergizeError(e)
 
     def list_community_admin_messages(self, context: Context, args):
+        message_ids = args.get("message_ids",[])
+        print("Messages", message_ids)
         try:
             admin_communities, err = get_admin_communities(context)
             if context.user_is_super_admin:
