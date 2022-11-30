@@ -31,7 +31,9 @@ class SummaryStore:
     def next_steps_for_admins(
         self, context: Context, args
     ) -> Tuple[tuple, MassEnergizeAPIError]:
-        is_community_admin = args.get("is_community_admin", False) or context.user_is_community_admin 
+        is_community_admin = (
+            args.get("is_community_admin", False) or context.user_is_community_admin
+        )
 
         # try:
         content = {}
@@ -43,19 +45,8 @@ class SummaryStore:
 
         return content, err
 
-
     def next_steps_for_community_admins(self, context: Context, args):
-        """
-        Get all the communities that a cadmin manages
-        Testimonials
-        * Look for testimonials that belong to any of the communities that are not approved
 
-        Messages
-        * Look for messages that have not been replied to that belong to any of the communities
-
-        Teams
-        * Look for teams that have not been replied to that belong to any of the communities
-        """
         email = context.user_email or args.get(
             "email"
         )  # Just for Postman Testing, remove before PR(BPR)
@@ -70,14 +61,21 @@ class SummaryStore:
         communities = [ag.community.id for ag in groups]
 
         testimonials = Testimonial.objects.values_list("id", flat=True).filter(
-            community__in=communities, is_approved=False
+            community__in=communities, is_approved=False, is_deleted=False
         )
+        team_messages = Message.objects.values_list("id", flat=True).filter(
+            have_replied=False, is_team_admin_message=True, is_deleted=False
+        )
+
         messages = Message.objects.values_list("id", flat=True).filter(
-            community__in=communities, have_replied=False
+            community__in=communities,
+            have_replied=False,
+            is_team_admin_message=False,
+            is_deleted=False,
         )
         users = []
         teams = Team.objects.values_list("id", flat=True).filter(
-            primary_community__in=communities, is_published=False
+            primary_community__in=communities, is_published=False, is_deleted=False
         )
 
         today = datetime.date.today()
@@ -92,18 +90,17 @@ class SummaryStore:
             .order_by("-created_at")
             .first()
         )
-        print(
-            "Found Last Visit", last_visit
-        )  # REMOVE BEFORE PR(BPR)
+        print("Found Last Visit", last_visit)  # REMOVE BEFORE PR(BPR)
         if last_visit:
             users = UserProfile.objects.values_list("id", flat=True).filter(
-                created_at__gt=today, communities__in=communities
+                created_at__gt=today, communities__in=communities, is_deleted=False
             )
 
         return {
             "users": users,
             "testimonials": testimonials,
             "messages": messages,
+            "team_messages": team_messages,
             "teams": teams,
             "last_visit": last_visit,
         }, None
@@ -119,14 +116,19 @@ class SummaryStore:
             )
 
         testimonials = Testimonial.objects.values_list("id", flat=True).filter(
-            is_approved=False
+            is_approved=False, is_deleted=False
         )
-       
+
+        team_messages = Message.objects.values_list("id", flat=True).filter(
+            have_replied=False, is_team_admin_message=True, is_deleted=False
+        )
         messages = Message.objects.values_list("id", flat=True).filter(
-            have_replied=False
+            have_replied=False, is_team_admin_message=False, is_deleted=False
         )
         users = []
-        teams = Team.objects.values_list("id", flat=True).filter(is_published=False)
+        teams = Team.objects.values_list("id", flat=True).filter(
+            is_published=False, is_deleted=False
+        )
 
         today = datetime.date.today()
 
@@ -145,13 +147,14 @@ class SummaryStore:
         )  # REMOVE BEFORE PR(BPR)
         if last_visit:
             users = UserProfile.objects.values_list("id", flat=True).filter(
-                created_at__gt=today
+                created_at__gt=today, is_deleted=False
             )
 
         return {
             "users": users,
             "testimonials": testimonials,
             "messages": messages,
+            "team_messages": team_messages,
             "teams": teams,
             "last_visit": last_visit,
         }, None
