@@ -1,21 +1,44 @@
 class AdminPortalSettings:
-    Settings = {
-        "general_settings": {
+    Preferences = {
+        "communication_prefs": {
             "live": True,
-            "name": "General Settings",
+            "name": "Communication preferences",
             "options": {
-                "notifications": {
+                "reports_frequency": {
                     "live": True,
                     "text": "How often would you like to receive community reports?",
+                    "explanation": "These are automated reports summarizing recent activities in your community.",
+                    "type": "radio",
                     "values": {
-                        "immediately": {"name": "Immediately", "value": False},
-                        "daily": {"name": "Daily", "value": False},
-                        "weekly": {"name": "Weekly", "value": False},
-                        "monthly": {"name": "Monthly", "value": False},
-                    },
+                        #"immediately": {"name": "Immediately", "value": False},
+                        #"daily": {"name": "Daily", "value": False},
+                        "weekly": {"name": "Once a week", "value": False},
+                        "biweekly": {"name": "Every two weeks", "value": False},
+                        "monthly": {"name": "Once a month", "value": False},
+                        "never": {"name": "Never", "value": False},
+                   },
                 },
-                "in_community_preferences": {
+                #   Add a button to send an example report on click
+                #
+                "send_report_now": {
                     "live": True,
+                    "type": "button",
+                    "text": "Send a sample report to your e-mail",
+                    #"action": "summary.send_admin_report",
+                #
+                #   Two options - button could bring up dialog where they could choose the time period (start and end)
+                #   or user would select which report to get from one of the four choices below.
+                #
+                    #"values": {
+                    #    "daily": {"name": "Last 24 hours", "value": False},
+                    #    "weekly": {"name": "This past week", "value": False},
+                    #    "biweekly": {"name": "Every two weeks", "value": False},
+                    #    "monthly": {"name": "This past month", "value": False},
+                    #    "yearly": {"name": "This past year", "value": False},
+                    #},
+                },
+                "in_community_notifications": {
+                    "live": False,
                     "type": "checkbox",
                     "text": "Within my community; I wish to receive notifications about the following when they happen (select all that apply)",
                     "values": {
@@ -46,7 +69,7 @@ class AdminPortalSettings:
                     },
                 },
                 "general_community_peferences": {
-                    "live": True,
+                    "live": False,
                     "type": "checkbox",
                     "text": "In all communities; I wish to receive notification about the following when they happen (select all that apply)",
                     "values": {
@@ -94,8 +117,8 @@ class AdminPortalSettings:
     }
 
     Defaults = {
-        "general_settings": {
-            "notifications": {"weekly": {"value": True}},
+        "communication_prefs": {
+            "reports_frequency": {"weekly": {"value": True}},
             "user_updates": {"by_email_only": {"value": True}},
             "specific_notifications": {
                 "new_member_update": {
@@ -105,7 +128,7 @@ class AdminPortalSettings:
                     "value": True,
                 },
                 "event_RSVP_update": {
-                    "value": True,
+                    "value": False,
                 },
                 "new_event_creation_update": {
                     "value": True,
