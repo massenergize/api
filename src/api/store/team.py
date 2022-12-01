@@ -1,3 +1,4 @@
+import json
 from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -14,6 +15,7 @@ from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
 from typing import Tuple
+from django.db.models import Q
 
 def can_set_parent(parent, this_team=None):
   if parent.parent:
@@ -31,7 +33,36 @@ def get_team_users(team):
     child_teams = Team.objects.filter(parent=team, is_deleted=False, is_published=True)
     child_team_users = [tm.user for tm in
                   TeamMember.objects.filter(team__in=child_teams, is_deleted=False).select_related('user')]
+                  
     return set().union(team_users, child_team_users)
+  
+
+def get_filter_params(params):
+    try:
+      params= json.loads(params)
+      print("==== ======== PARAMS -=======")
+      print(params)
+      query = []
+      communities = params.get("community", None)
+      parents = params.get("parent", None)
+      status = None
+      
+      if  "Yes" in params.get("live", []):
+        status=True
+      elif "No" in params.get("live",[]):
+        status=False
+
+      if communities:
+        query.append(Q(community__name__in=communities))
+      if parents:
+        query.append(Q(parent__name__in=parents))
+      if not status == None:
+       query.append(Q(have_replied=status))
+
+      return query
+    except Exception as e:
+      return []
+
 
 class TeamStore:
   def __init__(self):
@@ -480,16 +511,21 @@ class TeamStore:
       if community_id == 0:
         # return actions from all communities
         return self.list_teams_for_super_admin(context)
+      
+
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_filter_params(context.args.get("params"))
 
 
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
-        teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False).select_related('logo', 'primary_community')
+        teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
         return paginate(teams, args.get("page", 1)), None
 
-      teams = Team.objects.filter(communities__id=community_id, is_deleted=False).select_related('logo', 'primary_community')    
+      teams = Team.objects.filter(communities__id=community_id, is_deleted=False,*filter_params).select_related('logo', 'primary_community')    
       return paginate(teams, args.get("page", 1)), None
 
     except Exception as e:
@@ -498,7 +534,10 @@ class TeamStore:
 
   def list_teams_for_super_admin(self, context: Context):
     try:
-      teams = Team.objects.filter(is_deleted=False).select_related('logo', 'primary_community')
+      filter_params = []
+      if context.args.get("params", None):
+              filter_params = get_filter_params(context.args.get("params"))
+      teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
       return paginate(teams, context.args.get("page", 1)), None
 
     except Exception as e:

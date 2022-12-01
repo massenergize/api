@@ -78,15 +78,6 @@ def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, w
 def get_filter_params(params):
     try:
       params= json.loads(params)
-      print('+++++++++++++++++++++ res +++++++++++++++++')
-      print('')
-      print('')
-      print('')
-      print(params)
-      print('')
-      print('')
-      print('+++++++++++++++++++++ res +++++++++++++++++')
-
       query = []
       communities = params.get("community", None)
       tags= params.get("tags",None)
@@ -102,9 +93,6 @@ def get_filter_params(params):
        query.append(Q(tags__name__in=tags))
       if not status == None:
        query.append(Q(is_published=status))
-
-      print("==== Final ====", query)
-
       return query
     except Exception as e:
       return []
@@ -698,16 +686,19 @@ class EventStore:
         
       # community_id coming from admin portal is 'undefined'
       elif not community_id:
+        filter_params = []
+        if context.args.get("params", None):
+          filter_params = get_filter_params(context.args.get("params"))
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
         # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
         # not as their own separate events
-        events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
+        events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
 
         return paginate(events, context.args.get("page", 1)), None
 
-      events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True), is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+      events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return paginate(events, args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -722,7 +713,6 @@ class EventStore:
       if context.args.get("params", None):
         filter_params = get_filter_params(context.args.get("params"))
       events = Event.objects.filter(*filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-      print("=====events =====", len(events))
       return paginate(events, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
