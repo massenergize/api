@@ -690,6 +690,12 @@ class UserProfile(models.Model):
       The date and time of the last time any updates were made to the information
       about this goal
 
+    notification_dates: dates that certain notifications were dispatched. It will probably look like
+        notification_dates={
+            "events_nudge":["02/10/22","02/11/22",...],
+            ** some other form of notification
+        }
+
     #TODO: roles field: if we have this do we need is_superadmin etc? also why
     #  not just one?  why many to many
     """
@@ -722,6 +728,7 @@ class UserProfile(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     preferences = models.JSONField(default=dict, null=True, blank=True)
     visit_log = models.JSONField(default=list, null=True, blank=True)
+    notification_dates = models.JSONField(default=dict, null=True, blank=True)
 
     def __str__(self):
         return self.email
@@ -1766,7 +1773,6 @@ class Event(models.Model):
     is_recurring = models.BooleanField(default=False, blank=True, null=True)
     recurring_details = models.JSONField(blank=True, null=True)
     is_approved = models.BooleanField(default=False, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
     # Made publicity a string, so we can handle more than two (open/close) states
     publicity = models.CharField(
         max_length=SHORT_STR_LEN, default=EventConstants.open()

@@ -18,8 +18,11 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
+from _main_.nudeger import nudge
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/nudge',nudge),
     path('api/cc/',include('carbon_calculator.urls')),
     path('cc/',include('carbon_calculator.urls')),
     path('auth/', include('authentication.urls')),

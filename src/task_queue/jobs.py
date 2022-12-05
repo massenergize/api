@@ -1,4 +1,5 @@
 
+from task_queue.events_nudge import send_events_report
 from task_queue.views import community_admin_nudge, super_admin_nudge
 
 """
@@ -10,5 +11,6 @@ PLEASE NOTE:
 """
 FUNCTIONS = {
     'Super admin nudge':super_admin_nudge,
-    "Community Admin nudge":community_admin_nudge
+    "Community Admin nudge":community_admin_nudge,
+    "Events Nudge":send_events_report
 }
