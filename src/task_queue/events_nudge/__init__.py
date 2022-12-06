@@ -7,16 +7,22 @@ import datetime
 from django.utils.timezone import utc
 from _main_.settings import DJANGO_ENV
 from django.db.models import Q
+from dateutil.relativedelta import relativedelta
 
 
 WEEKLY= "weekly"
 BI_WEEKLY = "bi-weekly"
 MONTHLY = "monthly"
 
+default_pref={
+    "user_portal_settings": UserPortalSettings.Defaults,
+    "admin_portal_settings": AdminPortalSettings.Defaults,
+}
+
 
 today = datetime.datetime.utcnow().replace(tzinfo=utc)
 in_30_days = today + timezone.timedelta(days=30)
-WEEKLY_EVENT_NUDGE="WEEKLY_EVENT_NUDGE"
+WEEKLY_EVENT_NUDGE="weekly_event_nudge-feature-flag"
 
 def is_viable(item):
     if item[0] is not None and item[1]is not None:
@@ -36,10 +42,11 @@ def generate_event_for_community():
             communities_under_publicity__id= com.id),
             start_date_and_time__gte=today,
             start_date_and_time__lte=in_30_days,
-            is_deleted=False).exclude(community=com, shared_to__id=com.id)
+            is_deleted=False
+            ).exclude(community=com, shared_to__id=com.id)
         data.append({
             "events":prepare_events_email_data(events),
-            "admin":get_comm_admins(com)
+            "admins":get_comm_admins(com)
         })
 
     return data
@@ -49,17 +56,18 @@ def generate_event_for_community():
 def get_comm_admins(com):
     flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
     allowed_communities = list(flag.communities.all())
+
     admins = []
     if com in allowed_communities:
         all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
         for i in list(all_community_admins):
-            if is_viable(i):
-                admins.append({
-                    "pref":i[0],
+            admins.append({
+                    "pref":i[0] if is_viable(i) else default_pref,
                     "email":i[1],
                     "name":i[2],
                     "notification_dates":i[3]
                 })
+
     return admins
 
 
@@ -81,19 +89,43 @@ def generate_redirect_url(type=None,id=""):
     return f"{domain}/admin/read/event/{id}/event-view?from=main"
 
 
-def get_email_list(frequency, admins):
-    '''
-    Have a field on the user models called last_notified.
-    when preparing the email list, check for communication pref and calculated from last_notified till now 
-    if it is equal to the selected communication pref add user
-    
-    '''
+def update_last_notification_dates(email):
+    new_date = str(datetime.date.today())
+    notification_dates = {"events_nudge":new_date}
+    UserProfile.objects.filter(email=email).update(**{"notification_dates":notification_dates })
+
+
+def get_email_list(admins):
     email_list = {}
     for admin in admins:
-        admin_settings = admin.get("pref", {}).get("admin_portal_settings", {}).get("general_settings")
-        freq = admin_settings.get("notifications")
-        if freq.get(frequency).get("value") ==True:
-            email_list[admin.get("name")] = admin.get("email")
+        admin_settings = admin.get("pref", {}).get("admin_portal_settings", {}).get("communication_prefs")
+        freq = admin_settings.get("reports_frequency", {})
+        last_notified = admin.get("notification_dates",{}).get("events_nudge", None)
+        if last_notified:
+            freq_keys = freq.keys()
+
+            if WEEKLY in freq_keys:
+               in_a_week_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(weeks=1)
+               if in_a_week_from_last_nudge.date() == datetime.date.today():
+                 email_list[admin.get("name")] = admin.get("email")
+                 update_last_notification_dates(admin.get("email"))
+
+
+            if BI_WEEKLY in freq_keys:
+               in_two_weeks_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(weeks=2)
+               if in_two_weeks_from_last_nudge.date() == datetime.date.today():
+                 email_list[admin.get("name")] = admin.get("email")
+                 update_last_notification_dates(admin.get("email"))
+
+
+            if MONTHLY in freq_keys:
+               in_a_month_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(months=1)
+               if in_a_month_from_last_nudge.date() == datetime.date.today():
+                  email_list[admin.get("name")] = admin.get("email")
+                  update_last_notification_dates(admin.get("email"))
+        else:
+           email_list[admin.get("name")] = admin.get("email")
+           update_last_notification_dates(admin.get("email"))
 
     return email_list
 
@@ -112,15 +144,14 @@ def prepare_events_email_data(events):
         } for event in events]
     return data
  
- 
-
+#  this is the function called in jobs.py
 def send_events_report():
     data = {}
     change_preference_link = get_domain()+"/admin/profile/settings"
     d = generate_event_for_community()
     for item in d:
         if len(item.get("admins", []))>0:
-            admins = get_email_list(WEEKLY,item.get("admins", []))
+            admins = get_email_list(item.get("admins", []))
             if item.get("events"):
                 for name, email in admins.items():
                     data = {}
