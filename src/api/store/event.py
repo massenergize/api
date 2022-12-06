@@ -688,15 +688,16 @@ class EventStore:
       events = []
       admin_of = []
       user = UserProfile.objects.filter(email=context.user_email).first()
+      today = datetime.datetime.today()
       if user: 
         admin_of =[g.community.id for g in user.communityadmingroup_set.all() ]
     
       if excluded: 
         # Find all events that are open in any community, but exclude events from the selected communities
-        events = Event.objects.filter(Q(publicity = EventConstants.open(), is_global = False) | Q(publicity=EventConstants.open_to(),communities_under_publicity__id__in = admin_of)).exclude(community__id__in = ids).order_by("-id") 
+        events = Event.objects.filter(Q(start_date_and_time__gte=today, is_published = True,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,publicity=EventConstants.open_to(),communities_under_publicity__id__in = admin_of)).exclude(community__id__in = ids).order_by("-id") 
       else: 
         # Find events that have publicity as open, and belong to the selected community, OR, find events that from any of the listed communities that are open to any of the admins communities
-        events =  Event.objects.filter(Q(community__id__in = ids,publicity = EventConstants.open(), is_global = False) | Q(community__id__in = ids, publicity = EventConstants.open_to(),communities_under_publicity__id__in = admin_of, is_global = False)).distinct().order_by("-id")
+        events =  Event.objects.filter(Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids, publicity = EventConstants.open_to(),communities_under_publicity__id__in = admin_of, is_global = False)).distinct().order_by("-id")
       return events, None
     except Exception as e: 
       capture_message(str(e), level="error")
