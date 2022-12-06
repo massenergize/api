@@ -54,9 +54,12 @@ def generate_event_for_community():
 
 
 def get_comm_admins(com):
+    """
+    only get admins whose communities have been allowed in the feature flag to receive events
+    nudge
+    """
     flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
     allowed_communities = list(flag.communities.all())
-
     admins = []
     if com in allowed_communities:
         all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
@@ -108,24 +111,19 @@ def get_email_list(admins):
                in_a_week_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(weeks=1)
                if in_a_week_from_last_nudge.date() == datetime.date.today():
                  email_list[admin.get("name")] = admin.get("email")
-                 update_last_notification_dates(admin.get("email"))
-
 
             if BI_WEEKLY in freq_keys:
                in_two_weeks_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(weeks=2)
                if in_two_weeks_from_last_nudge.date() == datetime.date.today():
                  email_list[admin.get("name")] = admin.get("email")
-                 update_last_notification_dates(admin.get("email"))
-
 
             if MONTHLY in freq_keys:
                in_a_month_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(months=1)
                if in_a_month_from_last_nudge.date() == datetime.date.today():
                   email_list[admin.get("name")] = admin.get("email")
-                  update_last_notification_dates(admin.get("email"))
+                 
         else:
            email_list[admin.get("name")] = admin.get("email")
-           update_last_notification_dates(admin.get("email"))
 
     return email_list
 
@@ -146,16 +144,22 @@ def prepare_events_email_data(events):
  
 #  this is the function called in jobs.py
 def send_events_report():
-    data = {}
-    change_preference_link = get_domain()+"/admin/profile/settings"
-    d = generate_event_for_community()
-    for item in d:
-        if len(item.get("admins", []))>0:
-            admins = get_email_list(item.get("admins", []))
-            if item.get("events"):
-                for name, email in admins.items():
-                    data = {}
-                    data["name"]= name
-                    data["change_preference_link"] = change_preference_link
-                    data["events"] = item.get("events")
-                    send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+    try:
+        data = {}
+        change_preference_link = get_domain()+"/admin/profile/settings"
+        d = generate_event_for_community()
+        for item in d:
+            if len(item.get("admins", []))>0:
+                admins = get_email_list(item.get("admins", []))
+                if len(item.get("events"))>0:
+                    for name, email in admins.items():
+                        data = {}
+                        data["name"]= name
+                        data["change_preference_link"] = change_preference_link
+                        data["events"] = item.get("events")
+                        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+                        update_last_notification_dates(email)
+        return True
+    except:
+        return False
+

@@ -1,9 +1,7 @@
 from celery import shared_task
-
 from .jobs import FUNCTIONS
 from .models import Task
 
-from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 
 WEEKLY= "weekly"
 BI_WEEKLY = "bi-weekly"
@@ -22,4 +20,4 @@ def run_some_task(self, task_id):
         task.status = "FAILED"
 
     task.save()
-
+ 
