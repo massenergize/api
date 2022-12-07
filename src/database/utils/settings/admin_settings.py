@@ -24,7 +24,7 @@ class AdminPortalSettings:
                     "live": True,
                     "type": "button",
                     "text": "Send a sample report to your e-mail",
-                    #"action": "summary.send_admin_report",
+                     "function_key":"sendReportToAdmin"
                 #
                 #   Two options - button could bring up dialog where they could choose the time period (start and end)
                 #   or user would select which report to get from one of the four choices below.
