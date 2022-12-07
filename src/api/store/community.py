@@ -897,7 +897,7 @@ class CommunityStore:
             user = UserProfile.objects.get(pk=context.user_id)
             admin_groups = user.communityadmingroup_set.all()
             ids = [a.community.id for a in admin_groups]
-            communities = Community.objects.filter().exclude(id__in = ids).order_by("name")
+            communities = Community.objects.filter(is_published=True).exclude(id__in = ids).order_by("name")
             return communities, None
 
     def list_communities_for_community_admin(
