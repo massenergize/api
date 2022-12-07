@@ -29,10 +29,8 @@ def is_viable(item):
             return True
     return False
 
-def generate_eventlist_for_community(com):
-
+def generate_event_list_for_community(com):
     open = Q(publicity=EventConstants.open())
-
     events = Event.objects.filter(
             open|Q(publicity=EventConstants.is_open_to("OPEN_TO"), 
             communities_under_publicity__id= com.id),
@@ -72,8 +70,9 @@ def human_readable_date(start):
 
 
 def generate_redirect_url(type=None,id="",community=None):
-
-    if type == "SHARING": return f'{ADMIN_URL_ROOT}/admin/read/event/{id}/event-view?from=others&dialog=open'
+    url = ''
+    if type == "SHARING":
+        url = f'{ADMIN_URL_ROOT}/admin/read/event/{id}/event-view?from=others&dialog=open'
     if community:
         subdomain = community.get("subdomain") 
         url = f"{COMMUNITY_URL_ROOT}/{subdomain}/events/{id}"
@@ -139,28 +138,26 @@ def send_events_nudge():
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         for com in communities:
             if com in allowed_communities:
-
-                d = generate_eventlist_for_community(com)
+                d = generate_event_list_for_community(com)
                 admins = d.get("admins",[])
-                eventlist = d.get("events",[])
-                if len(admins)>0 and len(eventlist)>0:
+                event_list = d.get("events",[])
+                if len(admins)>0 and len(event_list)>0:
                     email_list = get_email_list(admins)
-
                     for name, email in email_list.items():
-                        stat = send_events_report(name, email, eventlist)
+                        stat = send_events_report(name, email, event_list)
                         if not stat:
                             return False
         return True
     except:
         return False
 
-def send_events_report(name, email, eventlist):
+def send_events_report(name, email, event_list):
     try:                            
         change_preference_link = ADMIN_URL_ROOT+"/admin/profile/settings"
         data = {}
         data["name"]= name
         data["change_preference_link"] = change_preference_link
-        data["events"] = eventlist
+        data["events"] = event_list
         send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
         update_last_notification_dates(email)
         return True
