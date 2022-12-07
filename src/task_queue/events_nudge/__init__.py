@@ -1,11 +1,11 @@
 from _main_.utils.common import serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE_ID
 from database.models import *
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
-from _main_.settings import DJANGO_ENV
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 
@@ -19,7 +19,6 @@ default_pref={
     "admin_portal_settings": AdminPortalSettings.Defaults,
 }
 
-
 today = datetime.datetime.utcnow().replace(tzinfo=utc)
 in_30_days = today + timezone.timedelta(days=30)
 WEEKLY_EVENT_NUDGE="weekly_event_nudge-feature-flag"
@@ -30,26 +29,21 @@ def is_viable(item):
             return True
     return False
 
+def generate_eventlist_for_community(com):
 
-
-def generate_event_for_community():
-    data = []
-    communities = Community.objects.filter(is_published=True, is_deleted=False)
     open = Q(publicity=EventConstants.open())
-    for com in communities:
-        events = Event.objects.filter(
+
+    events = Event.objects.filter(
             open|Q(publicity=EventConstants.is_open_to("OPEN_TO"), 
             communities_under_publicity__id= com.id),
             start_date_and_time__gte=today,
             start_date_and_time__lte=in_30_days,
             is_deleted=False
             ).exclude(community=com, shared_to__id=com.id)
-        data.append({
+    return {
             "events":prepare_events_email_data(events),
             "admins":get_comm_admins(com)
-        })
-
-    return data
+            }
 
 
 
@@ -58,18 +52,16 @@ def get_comm_admins(com):
     only get admins whose communities have been allowed in the feature flag to receive events
     nudge
     """
-    flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
-    allowed_communities = list(flag.communities.all())
     admins = []
-    if com in allowed_communities:
-        all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
-        for i in list(all_community_admins):
-            admins.append({
-                    "pref":i[0] if is_viable(i) else default_pref,
-                    "email":i[1],
-                    "name":i[2],
-                    "notification_dates":i[3]
-                })
+
+    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
+    for i in list(all_community_admins):
+        admins.append({
+                "pref":i[0] if is_viable(i) else default_pref,
+                "email":i[1],
+                "name":i[2],
+                "notification_dates":i[3]
+            })
 
     return admins
 
@@ -79,22 +71,18 @@ def human_readable_date(start):
 
 
 
-def get_domain():
-    if DJANGO_ENV == "local": return 'http://localhost:3001'
-    elif DJANGO_ENV == "canary":return "https://admin-canary.massenergize.org"
-    return "https://admin.massenergize.org"
+def generate_redirect_url(type=None,id="",community=None):
 
-
-
-def generate_redirect_url(type=None,id=""):
-    domain = get_domain()
-    if type == "SHARING": return f'{domain}/admin/read/event/{id}/event-view?from=others&dialog=open'
-    return f"{domain}/admin/read/event/{id}/event-view?from=main"
+    if type == "SHARING": return f'{ADMIN_URL_ROOT}/admin/read/event/{id}/event-view?from=others&dialog=open'
+    if community:
+        subdomain = community.get("subdomain") 
+        url = f"{COMMUNITY_URL_ROOT}/{subdomain}/events/{id}"
+    return url
 
 
 def update_last_notification_dates(email):
     new_date = str(datetime.date.today())
-    notification_dates = {"events_nudge":new_date}
+    notification_dates = {"cadmin_nudge":new_date}
     UserProfile.objects.filter(email=email).update(**{"notification_dates":notification_dates })
 
 
@@ -103,7 +91,7 @@ def get_email_list(admins):
     for admin in admins:
         admin_settings = admin.get("pref", {}).get("admin_portal_settings", {}).get("communication_prefs")
         freq = admin_settings.get("reports_frequency", {})
-        last_notified = admin.get("notification_dates",{}).get("events_nudge", None)
+        last_notified = admin.get("notification_dates",{}).get("cadmin_nudge", None)
         if last_notified:
             freq_keys = freq.keys()
 
@@ -138,28 +126,43 @@ def prepare_events_email_data(events):
             "date":human_readable_date(event.get("start_date_and_time")),
             "location":"Online" if event.get("location") else "In person",
             "share_link":generate_redirect_url("SHARING",event.get("id")),
-            "view_link":generate_redirect_url(event.get("id")),
+            "view_link":generate_redirect_url("VIEW", event.get("id"),event.get("community")),
         } for event in events]
     return data
  
 #  this is the function called in jobs.py
-def send_events_report():
+def send_events_nudge():
     try:
-        data = {}
-        change_preference_link = get_domain()+"/admin/profile/settings"
-        d = generate_event_for_community()
-        for item in d:
-            if len(item.get("admins", []))>0:
-                admins = get_email_list(item.get("admins", []))
-                if len(item.get("events"))>0:
-                    for name, email in admins.items():
-                        data = {}
-                        data["name"]= name
-                        data["change_preference_link"] = change_preference_link
-                        data["events"] = item.get("events")
-                        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
-                        update_last_notification_dates(email)
+        flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
+        allowed_communities = list(flag.communities.all())
+
+        communities = Community.objects.filter(is_published=True, is_deleted=False)
+        for com in communities:
+            if com in allowed_communities:
+
+                d = generate_eventlist_for_community(com)
+                admins = d.get("admins",[])
+                eventlist = d.get("events",[])
+                if len(admins)>0 and len(eventlist)>0:
+                    email_list = get_email_list(admins)
+
+                    for name, email in email_list.items():
+                        stat = send_events_report(name, email, eventlist)
+                        if not stat:
+                            return False
         return True
     except:
         return False
 
+def send_events_report(name, email, eventlist):
+    try:                            
+        change_preference_link = ADMIN_URL_ROOT+"/admin/profile/settings"
+        data = {}
+        data["name"]= name
+        data["change_preference_link"] = change_preference_link
+        data["events"] = eventlist
+        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+        update_last_notification_dates(email)
+        return True
+    except:
+        return False

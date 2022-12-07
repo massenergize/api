@@ -2,8 +2,10 @@ import csv
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS
+from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
 from api.store.download import DownloadStore
+from task_queue.events_nudge import generate_eventlist_for_community, send_events_report
+from api.store.utils import get_community, get_user
 from celery import shared_task
 from api.store.download import DownloadStore
 from api.utils.constants import CADMIN_EMAIL_TEMPLATE_ID, DATA_DOWNLOAD_TEMPLATE_ID, SADMIN_EMAIL_TEMPLATE_ID
@@ -31,10 +33,8 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
     return True
 
 
-
-
 def error_notification(download_type, email):
-    msg = f'Sorry an error occurred while generating {download_type} data. Please try again.'
+    msg = f'Sorry, an error occurred while generating {download_type} data. Please try again.'
     send_massenergize_email(f"{download_type.capitalize()} Data",msg, email )
 
 
@@ -47,7 +47,6 @@ def download_data(self, args, download_type):
     context.user_is_logged_in = args.get("user_is_logged_in", False)
 
     email = args.get("email", None)
-
     if download_type == USERS:
         (files, com_name), err = store.users_download(context, community_id=args.get("community_id"), team_id=args.get("team_id"))
         if err:
@@ -87,6 +86,36 @@ def download_data(self, args, download_type):
         else:
             generate_csv_and_email(
                 data=files, download_type=METRICS, community_name=com_name, email=email)
+
+    elif download_type == CADMIN_REPORT:
+
+        user, err = get_user(None, email)
+        community_id = args.get("community_id", None)
+        community_list = []
+        if community_id:
+             com, err = get_community(community_id)
+             community_list[0] = com
+        else:
+            admin_groups = user.communityadmingroup_set.all()
+            for grp in admin_groups:
+                com = grp.community
+                community_list.append(com)
+
+        for com in community_list:
+            events = generate_eventlist_for_community(com)
+            eventlist = events.get("events", [])
+            stat = send_events_report(user.full_name, user.email, eventlist)        
+            if not stat:
+                error_notification(CADMIN_REPORT, email)
+                return
+
+    #elif download_type == SADMIN_REPORT:
+    #    (files, com_name), err = store.sadmin_report(context, args, community_id=args.get("community_id"))
+    #    if err:
+    #        error_notification(METRICS, email)
+    #    else:
+    #        generate_csv_and_email(
+    #            data=files, download_type=SADMIN_REPORT, community_name=com_name, email=email)
 
 
 @shared_task(bind=True)
