@@ -365,6 +365,8 @@ class EventStore:
       community_id = args.pop("community_id", None)
       is_approved = args.pop('is_approved', None)
       is_published = args.pop('is_published', None)
+
+
       if start_date_and_time and end_date_and_time:
           if end_date_and_time < start_date_and_time :
             return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
@@ -403,6 +405,9 @@ class EventStore:
 
         if upcoming_is_cancelled and upcoming_is_rescheduled:
           return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
+
+      if not is_approved and is_published:
+          return None, CustomMassenergizeError("Cannot publish event that is not approved.")
 
 
 
