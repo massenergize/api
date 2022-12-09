@@ -1,4 +1,5 @@
 common_options = {
+    # disable the as_posted until it functions
     "as_posted": {
         "name": "As posted",
         "value": False,
@@ -8,7 +9,7 @@ common_options = {
         "value": False,
     },
     "per_week": {
-        "name": "As summary per week",
+        "name": "A summary per week",
         "value": False,
     },
     "per_month": {
@@ -18,12 +19,12 @@ common_options = {
     "never": {"name": "Never", "value": False},
 }
 
+# this needs work
 
 class UserPortalSettings:
-
-    Settings = {
-        "notification_settings": {
-            "name": "Notification Settings",
+    Preferences = {
+        "communication_prefs": {
+            "name": "Communication Preferences",
             "live": True,
             "options": {
                 "update_frequency": {
@@ -35,7 +36,7 @@ class UserPortalSettings:
                 "news_letter": {
                     "live":True,
                     "type": "radio",
-                    "text": "Send me news  updates in my community",
+                    "text": "Send me news updates in my community",
                     "values": {
                         "as_posted": {"name": "As posted", "value": False},
                         "never": {"name": "Never", "value": False},
@@ -56,8 +57,8 @@ class UserPortalSettings:
                 },
             },
         },
-        "advanced_settings": {
-            "name": "Advanced Settings",
+        "notifications": {
+            "name": "Notifications",
             "live": False,
             "options": {
                 "upcoming_events": {
@@ -95,12 +96,12 @@ class UserPortalSettings:
     }
 
     Defaults = {
-        "general_settings": {
+        "communication_prefs": {
             "update_frequency": {"per_week": {"value": True}},
             "news_letter": {"as_posted": {"value": True}},
             "messaging": {"yes": {"value": True}},
         },
-        "advanced_settings": {
+        "notifications": {
             "upcoming_events": {"never": {"value": True}},
             "upcoming_actions": {"never": {"value": True}},
             "news_teams": {"never": {"value": True}},
