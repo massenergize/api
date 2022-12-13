@@ -236,16 +236,21 @@ class ActionStore:
         else:
           action.calculator_action = None
 
-      if is_published==False:
-        action.is_published = False
-        
-      # only publish action if it has been approved
-      elif is_published and not action.is_published:
-        if action.is_approved:
-          action.is_published = True
-        else:
-          return None, CustomMassenergizeError("Action needs to be approved before it can be made live")
-
+      # temporarily back out this logic until we have user submitted actions
+      ###if is_published==False:
+      ###  action.is_published = False
+      ###  
+      ###
+      #### only publish action if it has been approved
+      ###elif is_published and not action.is_published:
+      ###  if action.is_approved:
+      ###    action.is_published = True
+      ###  else:
+      ###    return None, CustomMassenergizeError("Action needs to be approved before it can be made live")
+      if is_published != None:
+        action.is_published = is_published
+        if action.is_approved==False and is_published:
+          action.is_approved==True # Approve an action if an admin publishes it
 
       action.save()
       # ----------------------------------------------------------------

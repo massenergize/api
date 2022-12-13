@@ -487,7 +487,7 @@ class EventStore:
       
       if (is_approved != None and 
           (is_approved != event.is_approved)) : # If changed
-        event.is_approved = is_approved
+          event.is_approved = is_approved
       
       if (is_published != None and 
           (is_published != event.is_published)): # If changed
