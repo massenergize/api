@@ -406,10 +406,9 @@ class EventStore:
         if upcoming_is_cancelled and upcoming_is_rescheduled:
           return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
 
-      if not is_approved and is_published:
-          return None, CustomMassenergizeError("Cannot publish event that is not approved.")
-
-
+      # BHN - temporarily back out this change until we have user submitted events
+      ### if not is_approved and is_published:
+      ###    return None, CustomMassenergizeError("Cannot publish event that is not approved.")
 
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -520,7 +519,7 @@ class EventStore:
       
       if (is_approved != None and 
           (is_approved != event.is_approved)) : # If changed
-        event.is_approved = is_approved
+          event.is_approved = is_approved
       
       if (is_published != None and 
           (is_published != event.is_published)): # If changed
