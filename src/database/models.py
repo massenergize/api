@@ -1703,7 +1703,8 @@ class Action(models.Model):
     class Meta:
         ordering = ["rank", "title"]
         db_table = "actions"
-        unique_together = [["title", "community"]]
+        # had required this unique, now enforced in code
+        # unique_together = [["title", "community"]]
 
 
 class Event(models.Model):

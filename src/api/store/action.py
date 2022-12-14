@@ -69,7 +69,8 @@ class ActionStore:
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
 
-      actions = Action.objects.filter(title=title, community__id=community_id)
+      # check if there is an existing action with this name and community
+      actions = Action.objects.filter(title=title, community__id=community_id, is_deleted=False)
       if actions:
         # an action with this name and community already exists, return it
         return actions.first(), None
