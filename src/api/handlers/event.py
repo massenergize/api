@@ -183,6 +183,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('archive', bool)
     self.validator.expect('is_published', bool)
     self.validator.expect('is_recurring', bool)
+    self.validator.expect('is_approved', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
