@@ -1,6 +1,2 @@
-May 27: Bug fix release:
-- implement messages to team leaders
-- avoid duplicate Welcome emails
-- new route users.listForPublicView
-- back-end support for guest signins
-
+Dec 13: Bug fix release:
+- fix for making actions live without is_approved
