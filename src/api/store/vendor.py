@@ -179,16 +179,22 @@ class VendorStore:
       if website:
         vendor.more_info = {'website': website}
 
-      if is_published==False:
-        vendor.is_published = False
+      # temporarily back out this logic until we have user submitted vendors
+      ###if is_published==False:
+      ###  vendor.is_published = False
+      ###
+      ###elif is_published and not vendor.is_published:
+      ###  # only publish vendor if it has been approved
+      ###  if vendor.is_approved:
+      ###    vendor.is_published = True
+      ###  else:
+      ###    return None, CustomMassenergizeError("Service provider needs to be approved before it can be made live")
+      if is_published != None:
+        vendor.is_published = is_published
+        if vendor.is_approved==False and is_published:
+          vendor.is_approved==True # Approve an vendor if an admin publishes it
 
-      elif is_published and not vendor.is_published:
-        # only publish vendor if it has been approved
-        if vendor.is_approved:
-          vendor.is_published = True
-        else:
-          return None, CustomMassenergizeError("Service provider needs to be approved before it can be made live")
-        
+
       vendor.save()
       # ----------------------------------------------------------------
       Spy.create_vendor_footage(vendors = [vendor], context = context, type = FootageConstants.update(), notes =f"Vendor ID({vendor_id})")
