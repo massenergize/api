@@ -695,7 +695,6 @@ class EventStore:
         # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
         # not as their own separate events
         events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-
         return paginate(events, context.args.get("page", 1)), None
 
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')

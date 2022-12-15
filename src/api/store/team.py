@@ -53,11 +53,11 @@ def get_filter_params(params):
         status=False
 
       if communities:
-        query.append(Q(community__name__in=communities))
+        query.append(Q(communities__name__in=communities))
       if parents:
         query.append(Q(parent__name__in=parents))
       if not status == None:
-       query.append(Q(have_replied=status))
+       query.append(Q(is_published=status))
 
       return query
     except Exception as e:
@@ -525,7 +525,7 @@ class TeamStore:
         teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
         return paginate(teams, args.get("page", 1)), None
 
-      teams = Team.objects.filter(communities__id=community_id, is_deleted=False,*filter_params).select_related('logo', 'primary_community')    
+      teams = Team.objects.filter(communities__id=community_id, is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
       return paginate(teams, args.get("page", 1)), None
 
     except Exception as e:
@@ -536,7 +536,7 @@ class TeamStore:
     try:
       filter_params = []
       if context.args.get("params", None):
-              filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_filter_params(context.args.get("params"))
       teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
       return paginate(teams, context.args.get("page", 1)), None
 

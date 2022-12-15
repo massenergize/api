@@ -1,3 +1,4 @@
+import json
 from _main_.utils.pagination import paginate
 from database.models import Subscriber, UserProfile, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
@@ -6,6 +7,24 @@ from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
+
+
+  # ----- utility----
+def get_filter_params(params):
+    try:
+      params= json.loads(params)
+      print("==== param ====", params)
+      query = []
+      communities = params.get("community", None)
+      if communities:
+        query.append(Q(community__name__in=communities))
+
+      return query
+    except Exception as e:
+      return []
+
+
+  # ------- 
 
 class SubscriberStore:
   def __init__(self):
@@ -100,6 +119,9 @@ class SubscriberStore:
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
+      filter_params = []
+      if context.args.get("params", None):
+          filter_params = get_filter_params(context.args.get("params"))
 
       # gets pass from admin portal as "null"
       # TODO: Owen clean this up with validator
@@ -107,13 +129,13 @@ class SubscriberStore:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         communities = [ag.community for ag in admin_groups]
+
         subscribers = None
         for ag in admin_groups:
           if not subscribers:
-            subscribers = ag.community.subscriber_set.all().filter(is_deleted=False)
+            subscribers = ag.community.subscriber_set.all().filter(is_deleted=False, *filter_params)
           else:
-            subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False)
-
+            subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False, *filter_params)
         return paginate(subscribers, context.args.get("page", 1)), None
 
       community: Community = Community.objects.get(pk=community_id)
@@ -127,7 +149,10 @@ class SubscriberStore:
 
   def list_subscribers_for_super_admin(self, context: Context):
     try:
-      subscribers = Subscriber.objects.filter(is_deleted=False)
+      filter_params = []
+      if context.args.get("params", None):
+          filter_params = get_filter_params(context.args.get("params"))
+      subscribers = Subscriber.objects.filter(is_deleted=False, *filter_params)
       return paginate(subscribers, context.args.get("page",1)), None
     except Exception as e:
       capture_message(str(e), level="error")

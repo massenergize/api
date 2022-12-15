@@ -1,3 +1,4 @@
+import json
 from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -65,6 +66,7 @@ from .utils import (
     getCarbonScoreFromActionRel,
     is_reu_in_community,
     check_location,
+    remove_dups,
 )
 from database.utils.common import json_loader
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
@@ -94,6 +96,34 @@ def _clone_page_settings(pageSettings, title, community):
     page.save()
 
     return page
+
+
+def get_filter_params(params):
+    try:
+      params= json.loads(params)
+      print("==== ======== PARAMS -=======")
+      print(params)
+      query = []
+      names = params.get("name", None)
+      geographic = params.get("geography", None)
+      
+      if "Verified" in params.get("verification", []):
+        query.append(Q(is_approved=True))
+
+      elif "Not Verified" in params.get("verification",[]):
+          query.append(Q(is_approved=False))
+
+      if names:
+        query.append(Q(name__in=names))
+
+      if geographic:
+        if "Geographically Focused" in geographic:
+            query.append(Q(is_geographically_focused=True))
+        else:
+            query.append(Q(is_geographically_focused=False))
+      return query
+    except Exception as e:
+      return []
 
 
 class CommunityStore:
@@ -901,9 +931,13 @@ class CommunityStore:
             if context.user_is_super_admin:
                 return self.list_communities_for_super_admin(context)
             elif context.user_is_community_admin:
+                filter_params = []
+                if context.args.get("params", None):
+                        filter_params = get_filter_params(context.args.get("params"))
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
+                communities = Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params)
                 return paginate(communities, context.args.get("page",1)) , None
             else:
                 return [], None
@@ -916,8 +950,12 @@ class CommunityStore:
         try:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
+            filter_params = []
+            if context.args.get("params", None):
+                filter_params = get_filter_params(context.args.get("params"))
 
-            communities = Community.objects.filter(is_deleted=False)
+            communities = Community.objects.filter(is_deleted=False, *filter_params)
+            print("==== communities =====", len(communities))
             return paginate(communities, context.args.get("page", 1)), None
         except Exception as e:
             capture_exception(e)

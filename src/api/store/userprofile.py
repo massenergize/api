@@ -17,6 +17,7 @@ from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, STANDARD_USER, INVITED_USER, GUEST_USER
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
+from django.db.models import Q
 
 def _get_or_create_reu_location(args, user=None):
   unit_type = args.pop('unit_type', None)
@@ -128,6 +129,31 @@ def _update_action_data_totals(action, household, delta):
         raise Exception(msg)
 
       d.save()
+
+  # ----- utility----
+def get_filter_params(params):
+    try:
+      params= json.loads(params)
+      print("==== PARAMS ======", params)
+      query = []
+      communities = params.get("community", None)
+
+      if communities:
+        query.append(Q(communities__name__in=communities))
+
+      if  "Community Admin" in params.get("membership", []):
+        query.append(Q(is_community_admin=True))
+      elif "Super Admin" in params.get("membership",[]):
+        query.append(Q(is_super_admin=True))
+      elif "Member" in params.get("membership",[]):
+          query.append(Q(is_super_admin=False,is_community_admin=False) )
+ 
+      return query
+    except Exception as e:
+      return []
+
+
+  # ------- 
 
 class UserStore:
   def __init__(self):
@@ -678,6 +704,9 @@ class UserStore:
         return None, NotAuthorizedError()
       
       community, err = get_community(community_id)
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_filter_params(context.args.get("params"))
       
       if not community and context.user_id:
         communities, err = get_admin_communities(context)
@@ -686,15 +715,17 @@ class UserStore:
         
         # now remove all duplicates
         users = remove_dups(users)
+        users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
         
         return paginate(users, context.args.get("page",1)), None
       elif not community:
         print(err)
         return [], None
       
-      users = [cm.user for cm in
-               CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
+      users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
+      users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
+      print("====== users ===", len(users))
       return paginate(users, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -704,9 +735,12 @@ class UserStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_filter_params(context.args.get("params"))
       # List all users including guests
       #  users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
-      users = UserProfile.objects.filter(is_deleted=False)
+      users = UserProfile.objects.filter(is_deleted=False, *filter_params)
       return paginate(users, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")

@@ -1,3 +1,4 @@
+import json
 from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -10,6 +11,26 @@ from .utils import get_community_or_die, get_admin_communities, get_new_title
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
+
+def get_filter_params(params):
+    try:
+      params= json.loads(params)
+      print("==== PARAMS ======", params)
+      query = []
+      communities = params.get("communities serviced", None)
+      service_area= params.get('service area',None)
+
+      if communities:
+        query.append(Q(community__name__icontains=communities[0]))
+      if service_area:
+       query.append(Q(service_area__in=service_area))
+
+      return query
+    except Exception as e:
+      return []
+
+
+  # ------- 
 
 class VendorStore:
   def __init__(self):
@@ -307,6 +328,11 @@ class VendorStore:
         # return actions from all communities
         return self.list_vendors_for_super_admin(context)
 
+
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_filter_params(context.args.get("params"))
+
       if not community_id:     
         # different code in action.py/event.py
         #user = UserProfile.objects.get(pk=context.user_id)
@@ -317,14 +343,14 @@ class VendorStore:
         vendors = None
         for c in communities:
           if vendors is not None:
-            vendors |= c.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+            vendors |= c.community_vendors.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
           else:
-            vendors = c.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+            vendors = c.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
 
         return paginate(vendors.distinct(),args.get("page",1)), None
 
       community = get_community_or_die(context, {'community_id': community_id})
-      vendors = community.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+      vendors = community.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
       return paginate(vendors, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -333,7 +359,12 @@ class VendorStore:
 
   def list_vendors_for_super_admin(self, context: Context):
     try:
-      vendors = Vendor.objects.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_filter_params(context.args.get("params"))
+
+      vendors = Vendor.objects.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
       return paginate(vendors, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")

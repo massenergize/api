@@ -1,3 +1,4 @@
+import json
 from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
@@ -10,6 +11,38 @@ from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 
+  # ----- utility----
+def get_filter_params(params):
+    try:
+      params= json.loads(params)
+      print("==== PARAMS ======", params)
+      query = []
+      communities = params.get("community", None)
+      action= params.get("action",None)
+      status = None
+      is_approved = None
+
+      if  "Yes" in params.get("live", []):
+        status=True
+      elif "No" in params.get("live",[]):
+        status=False
+      elif "Not Approved" in params.get("live",[]):
+        is_approved=False
+      if communities:
+        query.append(Q(community__name__in=communities))
+      if action:
+       query.append(Q(action__title__icontains=action[0]))
+      if status != None:
+       query.append(Q(is_published=status))
+      if not is_approved == None:
+       query.append(Q(is_approved=is_approved))
+
+      return query
+    except Exception as e:
+      return []
+
+
+  # ------- 
 
 class TestimonialStore:
   def __init__(self):
@@ -257,15 +290,21 @@ class TestimonialStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_filter_params(context.args.get("params"))
+
       if not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
 
-        testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+        testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
+        print("===== TES ===", len(testimonials))
         return paginate(testimonials, context.args.get("page", 1)), None
 
-      testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+      testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
+      print("===== TES ===", len(testimonials))
       return paginate(testimonials, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -275,7 +314,10 @@ class TestimonialStore:
     try:
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      testimonials = Testimonial.objects.filter(is_deleted=False).select_related('image', 'community', 'vendor').prefetch_related('tags')
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_filter_params(context.args.get("params"))
+      testimonials = Testimonial.objects.filter(is_deleted=False,*filter_params).select_related('image', 'community', 'vendor').prefetch_related('tags')
       return paginate(testimonials, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")
