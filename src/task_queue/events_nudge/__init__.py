@@ -167,7 +167,7 @@ def send_events_report(name, email, event_list):
     try:                            
         change_preference_link = ADMIN_URL_ROOT+"/admin/profile/preferences"
         data = {}
-        data["name"]= name
+        data["name"]= name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
         send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
