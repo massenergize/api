@@ -36,6 +36,8 @@ def generate_event_list_for_community(com):
             communities_under_publicity__id= com.id),
             start_date_and_time__gte=today,
             start_date_and_time__lte=in_30_days,
+            community__is_published=True,
+            is_published=True,
             is_deleted=False
             ).exclude(community=com, shared_to__id=com.id)
     return {
@@ -72,7 +74,7 @@ def human_readable_date(start):
 def generate_redirect_url(type=None,id="",community=None):
     url = ''
     if type == "SHARING":
-        url = f'{ADMIN_URL_ROOT}/admin/read/event/{id}/event-view?from=others&dialog=open'
+        url = f'{ADMIN_URL_ROOT}/admin/read/event/{id}/event-view?from=others'
     if community:
         subdomain = community.get("subdomain") 
         url = f"{COMMUNITY_URL_ROOT}/{subdomain}/events/{id}"
@@ -88,7 +90,14 @@ def update_last_notification_dates(email):
 def get_email_list(admins):
     email_list = {}
     for admin in admins:
-        admin_settings = admin.get("pref", {}).get("admin_portal_settings", {}).get("communication_prefs")
+        name = admin.get("name")
+        email = admin.get("email")
+        if not name or not email:
+            print("Missing name or email for admin: "+ str(admin))
+            continue
+
+        # BHN - fixed crash on this next line if communication_prefs didn't exist
+        admin_settings = admin.get("pref", {}).get("admin_portal_settings", {}).get("communication_prefs", {})
         freq = admin_settings.get("reports_frequency", {})
         last_notified = admin.get("notification_dates",{}).get("cadmin_nudge", None)
         if last_notified:
@@ -97,12 +106,12 @@ def get_email_list(admins):
             if WEEKLY in freq_keys:
                in_a_week_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(weeks=1)
                if in_a_week_from_last_nudge.date() == datetime.date.today():
-                 email_list[admin.get("name")] = admin.get("email")
+                 email_list[name] = email
 
             if BI_WEEKLY in freq_keys:
                in_two_weeks_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(weeks=2)
                if in_two_weeks_from_last_nudge.date() == datetime.date.today():
-                 email_list[admin.get("name")] = admin.get("email")
+                 email_list[admin.get("name")] = email
 
             if MONTHLY in freq_keys:
                in_a_month_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(months=1)
@@ -138,6 +147,7 @@ def send_events_nudge():
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         for com in communities:
             if com in allowed_communities:
+                print("Sending nudge to admins from community: "+str(com))
                 d = generate_event_list_for_community(com)
                 admins = d.get("admins",[])
                 event_list = d.get("events",[])
@@ -146,14 +156,16 @@ def send_events_nudge():
                     for name, email in email_list.items():
                         stat = send_events_report(name, email, event_list)
                         if not stat:
+                            print("send_events_report error return")
                             return False
         return True
-    except:
+    except Exception as e: 
+        print("Community admin nudge exception: " + str(e))
         return False
 
 def send_events_report(name, email, event_list):
     try:                            
-        change_preference_link = ADMIN_URL_ROOT+"/admin/profile/settings"
+        change_preference_link = ADMIN_URL_ROOT+"/admin/profile/preferences"
         data = {}
         data["name"]= name
         data["change_preference_link"] = change_preference_link
@@ -161,5 +173,6 @@ def send_events_report(name, email, event_list):
         send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
         update_last_notification_dates(email)
         return True
-    except:
+    except Exception as e:
+        print("send_events_report exception: " + str(e))
         return False
