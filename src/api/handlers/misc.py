@@ -36,6 +36,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
 
+    @admins_only
     def fetch_footages(self, request):
         context: Context = request.context
         footages, error = self.service.fetch_footages(context,context.args)
