@@ -37,6 +37,7 @@ class EventHandler(RouteHandler):
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list)
+    self.add("/events.others.listForCommunityAdmin", self.fetch_other_events_for_cadmin)
     self.add("/events.listForSuperAdmin", self.super_admin_list)
 
 
@@ -182,11 +183,14 @@ class EventHandler(RouteHandler):
     self.validator.expect('archive', bool)
     self.validator.expect('is_published', bool)
     self.validator.expect('is_recurring', bool)
+    self.validator.expect('is_approved', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
+    self.validator.expect("publicity",str)
+    self.validator.expect("publicity_selections",list)
     args, err = self.validator.verify(args)
 
     if err:
@@ -294,6 +298,9 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
+    self.validator.expect("publicity",str)
+    self.validator.expect("publicity_selections",list)
+    self.validator.expect("shared_to",list)
     args, err = self.validator.verify(args)
 
     if err:
@@ -345,6 +352,23 @@ class EventHandler(RouteHandler):
       return err
 
     events, err = self.service.list_events_for_community_admin(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=events)
+
+  @admins_only 
+  def fetch_other_events_for_cadmin(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("community_ids", "str_list", is_required=True)
+    self.validator.expect("exclude", bool, is_required=False)
+    
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    events, err = self.service.fetch_other_events_for_cadmin(context, args)
     if err:
       return err
     return MassenergizeResponse(data=events)

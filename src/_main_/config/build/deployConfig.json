@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.8.2",
-  "BUILD_VERSION_NOTES": "Dec 13: Bug fix release:\n- fix for making actions live without is_approved\n"
+  "BUILD_VERSION": "4.8.8",
+  "BUILD_VERSION_NOTES": "Dec 27: Production release:\n- Event sharing implemented\n- Community Admin Nudge\n- Cadmin Communication Preferences\nDec 13: Bug fix release\n- Fix for making actions live without is_approved\n"
 }

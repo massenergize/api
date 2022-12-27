@@ -3,6 +3,10 @@ from .jobs import FUNCTIONS
 from .models import Task
 
 
+WEEKLY= "weekly"
+BI_WEEKLY = "bi-weekly"
+MONTHLY = "monthly"
+
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 2, 'countdown': 5})
 def run_some_task(self, task_id):
     task = Task.objects.get(id=task_id)
@@ -16,5 +20,4 @@ def run_some_task(self, task_id):
         task.status = "FAILED"
 
     task.save()
-
-
+ 

@@ -1,2 +1,6 @@
-Dec 13: Bug fix release:
-- fix for making actions live without is_approved
+Dec 27: Production release:
+- Event sharing implemented
+- Community Admin Nudge
+- Cadmin Communication Preferences
+Dec 13: Bug fix release
+- Fix for making actions live without is_approved
