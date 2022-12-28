@@ -13,6 +13,7 @@ from database.models import Community, CommunityAdminGroup, CommunityMember, Use
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
+from django.db.models import Count
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None):
