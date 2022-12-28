@@ -2,11 +2,13 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
-from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
+from database.models import CommunityAdminGroup, Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
+
+from database.utils.settings.model_constants.events import EventConstants
 from .utils import get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
@@ -191,16 +193,26 @@ class EventStore:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
-    
+    shared = []
     if community_id:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      # Find events that have been shared to this community
+      community = Community.objects.get(pk = community_id)
+      shared = [] 
+      if community: shared = community.events_from_others.filter(is_published=True)
+    
+      
       
     elif subdomain:
       query =  Q(community__subdomain=subdomain)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
-      
+      community = Community.objects.get(subdomain = subdomain)
+      shared = []
+      if community: shared = community.events_from_others.filter(is_published=True)
+    
+
     elif user_id:
       events = EventAttendee.objects.filter(user_id=user_id)
       
@@ -210,7 +222,9 @@ class EventStore:
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
 
-    return events, None
+    
+
+    return [*events,*shared], None
 
 
   def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -230,6 +244,8 @@ class EventStore:
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
       final_date = args.pop('final_date', None)
+      publicity_selections = args.pop("publicity_selections", [])
+
       if end_date_and_time < start_date_and_time :
           return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
 
@@ -283,6 +299,9 @@ class EventStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_event.user = user
+        
+      if publicity_selections:
+        new_event.communities_under_publicity.set(publicity_selections)
 
       if is_recurring:
 
@@ -316,6 +335,9 @@ class EventStore:
     try:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
+      publicity_selections = args.pop("publicity_selections", [])
+      shared_to = args.pop("shared_to", [])
+      
       if not events:
         return None, InvalidResourceError()
 
@@ -343,6 +365,8 @@ class EventStore:
       community_id = args.pop("community_id", None)
       is_approved = args.pop('is_approved', None)
       is_published = args.pop('is_published', None)
+
+
       if start_date_and_time and end_date_and_time:
           if end_date_and_time < start_date_and_time :
             return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
@@ -382,7 +406,9 @@ class EventStore:
         if upcoming_is_cancelled and upcoming_is_rescheduled:
           return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
 
-
+      # BHN - temporarily back out this change until we have user submitted events
+      ### if not is_approved and is_published:
+      ###    return None, CustomMassenergizeError("Cannot publish event that is not approved.")
 
       have_address = args.pop('have_address', False)
       if not have_address:
@@ -409,6 +435,12 @@ class EventStore:
 
       if tags:
         event.tags.set(tags)
+
+      if publicity_selections:
+        event.communities_under_publicity.set(publicity_selections)
+
+      if shared_to:
+        event.shared_to.set(shared_to)
 
       if is_recurring:
 
@@ -487,7 +519,7 @@ class EventStore:
       
       if (is_approved != None and 
           (is_approved != event.is_approved)) : # If changed
-        event.is_approved = is_approved
+          event.is_approved = is_approved
       
       if (is_published != None and 
           (is_published != event.is_published)): # If changed
@@ -641,6 +673,37 @@ class EventStore:
       # ----------------------------------------------------------------
       return event, None
     except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def fetch_other_events_for_cadmin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    """
+        * Look for events from a given list of communities that are open to everyone,
+        * Or are open to any of the admin's communities 
+        * With the exclude variable set, we list events from every community, excluding ones from the given 
+        * community list  
+        * Or
+        * And in all cases, dont return templates
+    """
+    try: 
+      ids = args.get("community_ids")
+      excluded = args.get("exclude", False)
+      events = []
+      admin_of = []
+      user = UserProfile.objects.filter(email=context.user_email).first()
+      today = datetime.datetime.today()
+      if user: 
+        admin_of =[g.community.id for g in user.communityadmingroup_set.all() ]
+    
+      if excluded: 
+        # Find all events that are open in any community, but exclude events from the selected communities
+        events = Event.objects.filter(Q(start_date_and_time__gte=today, is_published = True,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,publicity=EventConstants.open_to(),communities_under_publicity__id__in = admin_of)).exclude(community__id__in = ids).order_by("-id") 
+      else: 
+        # Find events that have publicity as open, and belong to the selected community, OR, find events that from any of the listed communities that are open to any of the admins communities
+        events =  Event.objects.filter(Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids, publicity = EventConstants.open_to(),communities_under_publicity__id__in = admin_of, is_global = False)).distinct().order_by("-id")
+      return events, None
+    except Exception as e: 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 

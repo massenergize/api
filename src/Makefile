@@ -104,3 +104,8 @@ full-celery-local:
 
 beat-remote:
 	celery -A _main_.celery.app beat -l info
+
+
+migrate:
+	python manage.py makemigrations
+	python manage.py migrate

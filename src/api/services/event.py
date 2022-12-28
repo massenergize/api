@@ -1,3 +1,4 @@
+from datetime import date
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
 from api.store.event import EventStore
@@ -217,6 +218,12 @@ class EventService:
 
   def list_events_for_community_admin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.list_events_for_community_admin(context, args)
+    if err:
+      return None, err
+    return serialize_all(events), None
+
+  def fetch_other_events_for_cadmin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    events, err = self.store.fetch_other_events_for_cadmin(context, args)
     if err:
       return None, err
     return serialize_all(events), None

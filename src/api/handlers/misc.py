@@ -31,9 +31,12 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/home", self.home)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
-        self.add("/settings.list", self.fetch_available_settings)
+        # settings should be called preferences
+        self.add("/preferences.list", self.fetch_available_preferences)
+        self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
 
+    @admins_only
     def fetch_footages(self, request):
         context: Context = request.context
         footages, error = self.service.fetch_footages(context,context.args)
@@ -41,11 +44,11 @@ class MiscellaneousHandler(RouteHandler):
             return MassenergizeResponse(error=error)
         return MassenergizeResponse(data=footages)
 
-    def fetch_available_settings(self, request):
+    def fetch_available_preferences(self, request):
         context: Context = request.context
         if context.user_is_admin():
-            return MassenergizeResponse(data=AdminPortalSettings.Settings)
-        return MassenergizeResponse(data=UserPortalSettings.Settings)
+            return MassenergizeResponse(data=AdminPortalSettings.Preferences)
+        return MassenergizeResponse(data=UserPortalSettings.Preferences)
 
     def remake_navigation_menu(self, request):
         data, err = self.service.remake_navigation_menu()
