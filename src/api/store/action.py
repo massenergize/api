@@ -73,7 +73,8 @@ class ActionStore:
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
 
-      actions = Action.objects.filter(title=title, community__id=community_id)
+      # check if there is an existing action with this name and community
+      actions = Action.objects.filter(title=title, community__id=community_id, is_deleted=False)
       if actions:
         # an action with this name and community already exists, return it
         return actions.first(), None
@@ -240,16 +241,21 @@ class ActionStore:
         else:
           action.calculator_action = None
 
-      if is_published==False:
-        action.is_published = False
-        
-      # only publish action if it has been approved
-      elif is_published and not action.is_published:
-        if action.is_approved:
-          action.is_published = True
-        else:
-          return None, CustomMassenergizeError("Action needs to be approved before it can be made live")
-
+      # temporarily back out this logic until we have user submitted actions
+      ###if is_published==False:
+      ###  action.is_published = False
+      ###  
+      ###
+      #### only publish action if it has been approved
+      ###elif is_published and not action.is_published:
+      ###  if action.is_approved:
+      ###    action.is_published = True
+      ###  else:
+      ###    return None, CustomMassenergizeError("Action needs to be approved before it can be made live")
+      if is_published != None:
+        action.is_published = is_published
+        if action.is_approved==False and is_published:
+          action.is_approved==True # Approve an action if an admin publishes it
 
       action.save()
       # ----------------------------------------------------------------

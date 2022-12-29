@@ -33,6 +33,7 @@ class CommunityHandler(RouteHandler):
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list)
+    self.add("/communities.others.listForCommunityAdmin", self.list_other_communities_for_cadmin)
     self.add("/communities.listForSuperAdmin", self.super_admin_list)
 
 
@@ -192,7 +193,7 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
-  @admins_only
+  @super_admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -209,6 +210,15 @@ class CommunityHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=community_info)
 
+
+  @admins_only 
+  def list_other_communities_for_cadmin(self, request):
+    context: Context  = request.context
+    #args = context.get_request_body()
+    communities, err = self.service.list_other_communities_for_cadmin(context)
+    if err:
+      return err
+    return MassenergizeResponse(data=communities)
 
   @admins_only
   def community_admin_list(self, request):

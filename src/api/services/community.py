@@ -68,6 +68,12 @@ class CommunityService:
     return serialize_all(community), None
 
 
+  def list_other_communities_for_cadmin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
+    communities, err = self.store.list_other_communities_for_cadmin(context)
+    if err:
+      return None, err
+    return serialize_all(communities), None
+
   def list_communities_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_communities_for_community_admin(context)
     if err:
