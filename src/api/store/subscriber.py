@@ -1,5 +1,6 @@
 import json
 from _main_.utils.pagination import paginate
+from api.utils.filter_functions import get_subscribers_filter_params
 from database.models import Subscriber, UserProfile, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -8,23 +9,6 @@ from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 
-
-  # ----- utility----
-def get_filter_params(params):
-    try:
-      params= json.loads(params)
-      print("==== param ====", params)
-      query = []
-      communities = params.get("community", None)
-      if communities:
-        query.append(Q(community__name__in=communities))
-
-      return query
-    except Exception as e:
-      return []
-
-
-  # ------- 
 
 class SubscriberStore:
   def __init__(self):
@@ -121,7 +105,7 @@ class SubscriberStore:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
       filter_params = []
       if context.args.get("params", None):
-          filter_params = get_filter_params(context.args.get("params"))
+          filter_params = get_subscribers_filter_params(context.args.get("params"))
 
       # gets pass from admin portal as "null"
       # TODO: Owen clean this up with validator
@@ -151,7 +135,7 @@ class SubscriberStore:
     try:
       filter_params = []
       if context.args.get("params", None):
-          filter_params = get_filter_params(context.args.get("params"))
+          filter_params = get_subscribers_filter_params(context.args.get("params"))
       subscribers = Subscriber.objects.filter(is_deleted=False, *filter_params)
       return paginate(subscribers, context.args.get("page",1)), None
     except Exception as e:

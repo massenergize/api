@@ -216,3 +216,26 @@ def get_teams_filter_params(params):
       return query
     except Exception as e:
       return []
+
+
+def get_subscribers_filter_params(params):
+    try:
+      params= json.loads(params)
+      query = []
+      search_text = params.get("search_text", None)
+      if search_text:
+        search= reduce(
+        operator.or_, (
+        Q(name__icontains= search_text),
+        Q(community__name__icontains= search_text),
+        Q(email__icontains= search_text),
+        ))
+        query.append(search)
+
+      communities = params.get("community", None)
+      if communities:
+        query.append(Q(community__name__in=communities))
+
+      return query
+    except Exception as e:
+      return []
