@@ -10,18 +10,24 @@ from .utils import get_community, get_user, unique_media_filename
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
+import operator
+from functools import reduce
 
   # ----- utility----
 def get_filter_params(params):
     try:
       params= json.loads(params)
-      print("==== PARAMS ======", params)
+      search_text = params.get("search_text", None)
+      
       query = []
       communities = params.get("community", None)
       action= params.get("action",None)
       status = None
       is_approved = None
 
+      if search_text:
+        search= reduce(operator.or_, (Q(title__icontains= search_text),Q(community__name__icontains= search_text),Q(user__full_name__icontains= search_text),Q(action__title__icontains= search_text),))
+        query.append(search)
       if  "Yes" in params.get("live", []):
         status=True
       elif "No" in params.get("live",[]):
@@ -112,7 +118,6 @@ class TestimonialStore:
       args["title"] = args.get("title", "Thank You")[:100]
 
       new_testimonial: Testimonial = Testimonial.objects.create(**args)
-
       user = None
       if user_email:
         user_email = user_email.strip()
@@ -300,11 +305,9 @@ class TestimonialStore:
         comm_ids = [ag.community.id for ag in admin_groups]
 
         testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
-        print("===== TES ===", len(testimonials))
         return paginate(testimonials, context.args.get("page", 1)), None
 
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
-      print("===== TES ===", len(testimonials))
       return paginate(testimonials, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")

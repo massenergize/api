@@ -73,7 +73,8 @@ from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
 from typing import Tuple
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
-
+import operator
+from functools import reduce
 
 def _clone_page_settings(pageSettings, title, community):
     """
@@ -103,10 +104,19 @@ def get_filter_params(params):
       params= json.loads(params)
       print("==== ======== PARAMS -=======")
       print(params)
+      search_text = params.get("search_text", None)
       query = []
       names = params.get("name", None)
       geographic = params.get("geography", None)
-      
+      if search_text:
+        search= reduce(
+        operator.or_, (
+        Q(name__icontains= search_text),
+        Q(owner_name__icontains= search_text),
+        Q(owner_email__icontains= search_text),
+        ))
+        query.append(search)
+
       if "Verified" in params.get("verification", []):
         query.append(Q(is_approved=True))
 

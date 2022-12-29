@@ -12,16 +12,28 @@ from .utils import get_new_title
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
+import operator
+from functools import reduce
 
 
   # ----- utility----
 def get_filter_params(params):
     try:
       params= json.loads(params)
+      
+      search_text = params.get("search_text", None)
       query = []
       communities = params.get("community", None)
       tags= params.get("tags",None)
       status = None
+
+      if search_text:
+        search= reduce(operator.or_, 
+        (Q(title__icontains= search_text),
+        Q(tags__name__icontains= search_text),
+        Q(community__name__icontains= search_text),
+        ))
+        query.append(search)
 
       if  "Yes" in params.get("live", []):
         status=True
