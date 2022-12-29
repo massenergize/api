@@ -4,6 +4,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console, strip_website
 from api.tests.common import RESET
+from api.utils.filter_functions import get_communities_filter_params
 from database.models import (
     Community,
     CommunityMember,
@@ -73,8 +74,6 @@ from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
 from typing import Tuple
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
-import operator
-from functools import reduce
 
 def _clone_page_settings(pageSettings, title, community):
     """
@@ -99,41 +98,6 @@ def _clone_page_settings(pageSettings, title, community):
     return page
 
 
-def get_filter_params(params):
-    try:
-      params= json.loads(params)
-      print("==== ======== PARAMS -=======")
-      print(params)
-      search_text = params.get("search_text", None)
-      query = []
-      names = params.get("name", None)
-      geographic = params.get("geography", None)
-      if search_text:
-        search= reduce(
-        operator.or_, (
-        Q(name__icontains= search_text),
-        Q(owner_name__icontains= search_text),
-        Q(owner_email__icontains= search_text),
-        ))
-        query.append(search)
-
-      if "Verified" in params.get("verification", []):
-        query.append(Q(is_approved=True))
-
-      elif "Not Verified" in params.get("verification",[]):
-          query.append(Q(is_approved=False))
-
-      if names:
-        query.append(Q(name__in=names))
-
-      if geographic:
-        if "Geographically Focused" in geographic:
-            query.append(Q(is_geographically_focused=True))
-        else:
-            query.append(Q(is_geographically_focused=False))
-      return query
-    except Exception as e:
-      return []
 
 
 class CommunityStore:
@@ -943,7 +907,7 @@ class CommunityStore:
             elif context.user_is_community_admin:
                 filter_params = []
                 if context.args.get("params", None):
-                        filter_params = get_filter_params(context.args.get("params"))
+                        filter_params = get_communities_filter_params(context.args.get("params"))
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
@@ -962,7 +926,7 @@ class CommunityStore:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
             filter_params = []
             if context.args.get("params", None):
-                filter_params = get_filter_params(context.args.get("params"))
+                filter_params = get_communities_filter_params(context.args.get("params"))
 
             communities = Community.objects.filter(is_deleted=False, *filter_params)
             print("==== communities =====", len(communities))

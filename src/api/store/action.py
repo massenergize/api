@@ -4,6 +4,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
+from api.utils.filter_functions import get_actions_filter_params
 from database.models import Action, UserProfile, Community, Media
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
@@ -12,46 +13,6 @@ from .utils import get_new_title
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
-import operator
-from functools import reduce
-
-
-  # ----- utility----
-def get_filter_params(params):
-    try:
-      params= json.loads(params)
-      
-      search_text = params.get("search_text", None)
-      query = []
-      communities = params.get("community", None)
-      tags= params.get("tags",None)
-      status = None
-
-      if search_text:
-        search= reduce(operator.or_, 
-        (Q(title__icontains= search_text),
-        Q(tags__name__icontains= search_text),
-        Q(community__name__icontains= search_text),
-        ))
-        query.append(search)
-
-      if  "Yes" in params.get("live", []):
-        status=True
-      elif "No" in params.get("live",[]):
-        status=False
-      if communities:
-        query.append(Q(community__name__in=communities))
-      if tags:
-       query.append(Q(tags__name__in=tags))
-      if not status == None:
-       query.append(Q(is_published=status))
-
-      return query
-    except Exception as e:
-      return []
-
-
-  # ------- 
 
 class ActionStore:
   def __init__(self):
@@ -355,7 +316,7 @@ class ActionStore:
         admin_groups = user.communityadmingroup_set.all()
         filter_params = []
         if context.args.get("params", None):
-          filter_params = get_filter_params(context.args.get("params"))
+          filter_params = get_actions_filter_params(context.args.get("params"))
 
         comm_ids = [ag.community.id for ag in admin_groups]
         actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
@@ -374,7 +335,7 @@ class ActionStore:
       page = context.args.get('page', 1)
       filter_params = []
       if context.args.get("params", None):
-        filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_actions_filter_params(context.args.get("params"))
       actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
       return paginate(actions, page), None
     except Exception as e:

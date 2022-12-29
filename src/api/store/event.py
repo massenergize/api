@@ -3,6 +3,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
+from api.utils.filter_functions import get_events_filter_params
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
@@ -71,34 +72,6 @@ def _check_recurring_date(start_date_and_time, end_date_and_time, day_of_week, w
       return True, "Recurring events must only last 1 day. Make sure your starting date and ending date are the same"  
 
   return False, "No problem with recurring dates"
-
-
-
-  # ----- utility----
-def get_filter_params(params):
-    try:
-      params= json.loads(params)
-      query = []
-      communities = params.get("community", None)
-      tags= params.get("tags",None)
-      status = None
-
-      if  "Yes" in params.get("live", []):
-        status=True
-      elif "No" in params.get("live",[]):
-        status=False
-      if communities:
-        query.append(Q(community__name__in=communities))
-      if tags:
-       query.append(Q(tags__name__in=tags))
-      if not status == None:
-       query.append(Q(is_published=status))
-      return query
-    except Exception as e:
-      return []
-
-
-  # ------- 
   
 class EventStore:
   def __init__(self):
@@ -688,7 +661,7 @@ class EventStore:
       elif not community_id:
         filter_params = []
         if context.args.get("params", None):
-          filter_params = get_filter_params(context.args.get("params"))
+          filter_params = get_events_filter_params(context.args.get("params"))
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -710,7 +683,7 @@ class EventStore:
       # not as their own separate events
       filter_params = []
       if context.args.get("params", None):
-        filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_events_filter_params(context.args.get("params"))
       events = Event.objects.filter(*filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
       return paginate(events, context.args.get("page", 1)), None
     except Exception as e:
