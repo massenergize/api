@@ -268,3 +268,35 @@ def get_vendor_filter_params(params):
       return query
     except Exception as e:
       return []
+
+
+def get_users_filter_params(params):
+    try:
+      params= json.loads(params)
+      query = []
+      search_text = params.get("search_text", None)
+
+      if search_text:
+        search= reduce(
+        operator.or_, (
+        Q(full_name__icontains= search_text),
+        Q(communities__name__icontains= search_text),
+        Q(email__icontains= search_text),
+        ))
+        query.append(search)
+
+      communities = params.get("community", None)
+
+      if communities:
+        query.append(Q(communities__name__in=communities))
+
+      if  "Community Admin" in params.get("membership", []):
+        query.append(Q(is_community_admin=True))
+      elif "Super Admin" in params.get("membership",[]):
+        query.append(Q(is_super_admin=True))
+      elif "Member" in params.get("membership",[]):
+          query.append(Q(is_super_admin=False,is_community_admin=False) )
+ 
+      return query
+    except Exception as e:
+      return []

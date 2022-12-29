@@ -1,4 +1,5 @@
 from _main_.utils.pagination import paginate
+from api.utils.filter_functions import get_users_filter_params
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
@@ -130,30 +131,6 @@ def _update_action_data_totals(action, household, delta):
 
       d.save()
 
-  # ----- utility----
-def get_filter_params(params):
-    try:
-      params= json.loads(params)
-      print("==== PARAMS ======", params)
-      query = []
-      communities = params.get("community", None)
-
-      if communities:
-        query.append(Q(communities__name__in=communities))
-
-      if  "Community Admin" in params.get("membership", []):
-        query.append(Q(is_community_admin=True))
-      elif "Super Admin" in params.get("membership",[]):
-        query.append(Q(is_super_admin=True))
-      elif "Member" in params.get("membership",[]):
-          query.append(Q(is_super_admin=False,is_community_admin=False) )
- 
-      return query
-    except Exception as e:
-      return []
-
-
-  # ------- 
 
 class UserStore:
   def __init__(self):
@@ -706,7 +683,7 @@ class UserStore:
       community, err = get_community(community_id)
       filter_params = []
       if context.args.get("params", None):
-        filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_users_filter_params(context.args.get("params"))
       
       if not community and context.user_id:
         communities, err = get_admin_communities(context)
@@ -737,7 +714,7 @@ class UserStore:
         return None, NotAuthorizedError()
       filter_params = []
       if context.args.get("params", None):
-        filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_users_filter_params(context.args.get("params"))
       # List all users including guests
       #  users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)
