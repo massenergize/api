@@ -142,13 +142,13 @@ def get_communities_filter_params(params):
 def get_messages_filter_params(params):
     try:
       params= json.loads(params)
-      search_text = params.get("search_text", None)
       query = []
       communities = params.get("community", None)
       teams = params.get("team", None)
       status = None
       forwarded =None
       
+      search_text = params.get("search_text", None)
       if search_text:
         search= reduce(
         operator.or_, (
@@ -177,6 +177,42 @@ def get_messages_filter_params(params):
        query.append(Q(have_replied=status))
       if not forwarded == None:
        query.append(Q(have_forwarded=status))
+      return query
+    except Exception as e:
+      return []
+
+
+def get_teams_filter_params(params):
+    try:
+      params= json.loads(params)
+
+      query = []
+      communities = params.get("community", None)
+      parents = params.get("parent", None)
+      status = None
+
+      search_text = params.get("search_text", None)
+      if search_text:
+        search= reduce(
+        operator.or_, (
+        Q(name__icontains= search_text),
+        Q(primary_community__name__icontains= search_text),
+        Q(parent__name__icontains= search_text),
+        ))
+        query.append(search)
+      
+      if  "Yes" in params.get("live", []):
+        status=True
+      elif "No" in params.get("live",[]):
+        status=False
+
+      if communities:
+        query.append(Q(communities__name__in=communities))
+      if parents:
+        query.append(Q(parent__name__in=parents))
+      if not status == None:
+       query.append(Q(is_published=status))
+
       return query
     except Exception as e:
       return []

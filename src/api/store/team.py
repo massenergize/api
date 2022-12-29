@@ -4,6 +4,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
 from api.tests.common import RESET
+from api.utils.filter_functions import get_teams_filter_params
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from django.utils.text import slugify
@@ -36,33 +37,6 @@ def get_team_users(team):
                   
     return set().union(team_users, child_team_users)
   
-
-def get_filter_params(params):
-    try:
-      params= json.loads(params)
-      print("==== ======== PARAMS -=======")
-      print(params)
-      query = []
-      communities = params.get("community", None)
-      parents = params.get("parent", None)
-      status = None
-      
-      if  "Yes" in params.get("live", []):
-        status=True
-      elif "No" in params.get("live",[]):
-        status=False
-
-      if communities:
-        query.append(Q(communities__name__in=communities))
-      if parents:
-        query.append(Q(parent__name__in=parents))
-      if not status == None:
-       query.append(Q(is_published=status))
-
-      return query
-    except Exception as e:
-      return []
-
 
 class TeamStore:
   def __init__(self):
@@ -515,7 +489,7 @@ class TeamStore:
 
       filter_params = []
       if context.args.get("params", None):
-        filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_teams_filter_params(context.args.get("params"))
 
 
       elif not community_id:
@@ -536,7 +510,7 @@ class TeamStore:
     try:
       filter_params = []
       if context.args.get("params", None):
-        filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_teams_filter_params(context.args.get("params"))
       teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
       return paginate(teams, context.args.get("page", 1)), None
 
