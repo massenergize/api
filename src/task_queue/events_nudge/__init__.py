@@ -132,7 +132,7 @@ def prepare_events_email_data(events):
             "title": event.get("name"),
             "community": event.get("community",{}).get("name") if event.get("community") else "N/A",
             "date":human_readable_date(event.get("start_date_and_time")),
-            "location":"Online" if event.get("location") else "In person",
+            "location":"In person" if event.get("location") else "Online",
             "share_link":generate_redirect_url("SHARING",event.get("id")),
             "view_link":generate_redirect_url("VIEW", event.get("id"),event.get("community")),
         } for event in events]
