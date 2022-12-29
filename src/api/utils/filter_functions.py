@@ -136,3 +136,47 @@ def get_communities_filter_params(params):
       return query
     except Exception as e:
       return []
+
+
+
+def get_messages_filter_params(params):
+    try:
+      params= json.loads(params)
+      search_text = params.get("search_text", None)
+      query = []
+      communities = params.get("community", None)
+      teams = params.get("team", None)
+      status = None
+      forwarded =None
+      
+      if search_text:
+        search= reduce(
+        operator.or_, (
+        Q(title__icontains= search_text),
+        Q(community__name__icontains= search_text),
+        Q(team__name__icontains= search_text),
+        Q(user__full_name__icontains= search_text),
+        Q(user_name__icontains= search_text),
+        ))
+        query.append(search)
+
+      if  "Yes" in params.get("replied?", []):
+        status=True
+      elif "No" in params.get("replied?",[]):
+        status=False
+
+      if "Yes" in params.get("forwarded to team admin?", []):
+        forwarded= True
+      if "No" in params.get("forwarded to team admin?", []):
+        forwarded= False
+      if communities:
+        query.append(Q(community__name__in=communities))
+      if teams:
+        query.append(Q(team__name__in=teams))
+      if not status == None:
+       query.append(Q(have_replied=status))
+      if not forwarded == None:
+       query.append(Q(have_forwarded=status))
+      return query
+    except Exception as e:
+      return []

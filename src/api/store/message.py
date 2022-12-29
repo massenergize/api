@@ -2,6 +2,7 @@ import json
 from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from api.utils.filter_functions import get_messages_filter_params
 from database.models import Message, Media, Team
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
@@ -14,40 +15,8 @@ from _main_.utils.context import Context
 from .utils import get_community, get_user
 from sentry_sdk import capture_message
 from typing import Tuple
-from django.db.models import Q
-
-  # ----- utility----
-def get_filter_params(params):
-    try:
-      params= json.loads(params)
-      query = []
-      communities = params.get("community", None)
-      teams = params.get("team", None)
-      status = None
-      forwarded =None
-      if  "Yes" in params.get("replied?", []):
-        status=True
-      elif "No" in params.get("replied?",[]):
-        status=False
-
-      if "Yes" in params.get("forwarded to team admin?", []):
-        forwarded= True
-      if "No" in params.get("forwarded to team admin?", []):
-        forwarded= False
-      if communities:
-        query.append(Q(community__name__in=communities))
-      if teams:
-        query.append(Q(team__name__in=teams))
-      if not status == None:
-       query.append(Q(have_replied=status))
-      if not forwarded == None:
-       query.append(Q(have_forwarded=status))
-      return query
-    except Exception as e:
-      return []
 
 
-  # ------- 
 class MessageStore:
     def __init__(self):
         self.name = "Message Store/DB"
@@ -262,7 +231,7 @@ class MessageStore:
         try:
             filter_params = []
             if context.args.get("params", None):
-                filter_params = get_filter_params(context.args.get("params"))
+                filter_params = get_messages_filter_params(context.args.get("params"))
             admin_communities, err = get_admin_communities(context)
             if context.user_is_super_admin:
                 messages = Message.objects.filter(is_deleted=False, is_team_admin_message=False,*filter_params)
@@ -280,7 +249,7 @@ class MessageStore:
         try:
             filter_params = []
             if context.args.get("params", None):
-                filter_params = get_filter_params(context.args.get("params"))
+                filter_params = get_messages_filter_params(context.args.get("params"))
             if context.user_is_super_admin:
                 messages = Message.objects.filter(is_deleted=False, is_team_admin_message=True,*filter_params)
             elif context.user_is_community_admin:
