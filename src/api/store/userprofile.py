@@ -702,7 +702,6 @@ class UserStore:
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
       users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
-      print("====== users ===", len(users))
       return paginate(users, context.args.get("page", 1)), None
     except Exception as e:
       capture_message(str(e), level="error")

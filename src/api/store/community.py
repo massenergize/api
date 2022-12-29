@@ -929,7 +929,6 @@ class CommunityStore:
                 filter_params = get_communities_filter_params(context.args.get("params"))
 
             communities = Community.objects.filter(is_deleted=False, *filter_params)
-            print("==== communities =====", len(communities))
             return paginate(communities, context.args.get("page", 1)), None
         except Exception as e:
             capture_exception(e)
