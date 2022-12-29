@@ -2,6 +2,7 @@ import json
 from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from api.utils.filter_functions import get_vendor_filter_params
 from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
 from django.utils.text import slugify
@@ -12,25 +13,6 @@ from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
 
-def get_filter_params(params):
-    try:
-      params= json.loads(params)
-      print("==== PARAMS ======", params)
-      query = []
-      communities = params.get("communities serviced", None)
-      service_area= params.get('service area',None)
-
-      if communities:
-        query.append(Q(community__name__icontains=communities[0]))
-      if service_area:
-       query.append(Q(service_area__in=service_area))
-
-      return query
-    except Exception as e:
-      return []
-
-
-  # ------- 
 
 class VendorStore:
   def __init__(self):
@@ -331,7 +313,7 @@ class VendorStore:
 
       filter_params = []
       if context.args.get("params", None):
-        filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_vendor_filter_params(context.args.get("params"))
 
       if not community_id:     
         # different code in action.py/event.py
@@ -362,7 +344,7 @@ class VendorStore:
 
       filter_params = []
       if context.args.get("params", None):
-        filter_params = get_filter_params(context.args.get("params"))
+        filter_params = get_vendor_filter_params(context.args.get("params"))
 
       vendors = Vendor.objects.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
       return paginate(vendors, context.args.get("page", 1)), None
