@@ -1105,7 +1105,7 @@ class Subdomain(models.Model):
     name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
         Community,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         related_name="subdomain_community",
     )
@@ -1130,10 +1130,12 @@ class Subdomain(models.Model):
 
 class CustomCommunityWebsiteDomain(models.Model):
     id = models.AutoField(primary_key=True)
-    website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    # Sam - do you see any problem with this?  URL field is a text field with validator to be valid URL
+    website = models.URLField(max_length=SHORT_STR_LEN, unique=True)
+    #website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
         Community,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         related_name="community_website",
     )
