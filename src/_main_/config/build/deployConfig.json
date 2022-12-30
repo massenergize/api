@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.8.8",
-  "BUILD_VERSION_NOTES": "Dec 27: Production release:\n- Event sharing implemented\n- Community Admin Nudge\n- Cadmin Communication Preferences\nDec 13: Bug fix release\n- Fix for making actions live without is_approved\n"
+  "BUILD_VERSION": "4.8.9",
+  "BUILD_VERSION_NOTES": "Dec 30: Production bug0f release:\n- fix 3 minor issues from 12/27 release"
 }
