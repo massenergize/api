@@ -103,19 +103,19 @@ def get_email_list(admins):
         if last_notified:
             freq_keys = freq.keys()
 
-            if WEEKLY in freq_keys:
+            if len(freq_keys)==0 or WEEKLY in freq_keys:
                in_a_week_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(weeks=1)
-               if in_a_week_from_last_nudge.date() == datetime.date.today():
+               if in_a_week_from_last_nudge.date() <= datetime.date.today():
                  email_list[name] = email
 
             if BI_WEEKLY in freq_keys:
                in_two_weeks_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(weeks=2)
-               if in_two_weeks_from_last_nudge.date() == datetime.date.today():
+               if in_two_weeks_from_last_nudge.date() <= datetime.date.today():
                  email_list[admin.get("name")] = email
 
             if MONTHLY in freq_keys:
                in_a_month_from_last_nudge =  datetime.datetime.strptime(last_notified, '%Y-%m-%d')+ relativedelta(months=1)
-               if in_a_month_from_last_nudge.date() == datetime.date.today():
+               if in_a_month_from_last_nudge.date() <= datetime.date.today():
                   email_list[admin.get("name")] = admin.get("email")
                  
         else:
@@ -146,7 +146,7 @@ def send_events_nudge():
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         for com in communities:
-            if com in allowed_communities:
+            if flag.audience == "EVERYONE" or com in allowed_communities:
                 print("Sending nudge to admins from community: "+str(com))
                 d = generate_event_list_for_community(com)
                 admins = d.get("admins",[])
