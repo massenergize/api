@@ -5,6 +5,7 @@ from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE_ID
 from database.models import *
 from django.utils import timezone
 import datetime
+import pytz
 from django.utils.timezone import utc
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
@@ -13,6 +14,9 @@ from dateutil.relativedelta import relativedelta
 WEEKLY= "weekly"
 BI_WEEKLY = "bi-weekly"
 MONTHLY = "monthly"
+
+#kludge - current communities are in Massachusetts, so for now all dates shown are eastern us time zone
+eastern_tz  = pytz.timezone("US/Eastern")
 
 default_pref={
     "user_portal_settings": UserPortalSettings.Defaults,
@@ -67,7 +71,7 @@ def get_comm_admins(com):
 
 
 def human_readable_date(start):
-    return start.strftime("%b %d")
+    return start.astimezone(eastern_tz).strftime("%b %d")
 
 
 
