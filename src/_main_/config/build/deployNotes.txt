@@ -1,2 +1,2 @@
-Dec 30: Production bug0f release:
-- fix 3 minor issues from 12/27 release
+Jan 6: Production bugfix release:
+- fix several minor issues from 12/27 release
