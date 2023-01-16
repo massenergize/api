@@ -10,9 +10,9 @@ WEEKLY= "weekly"
 BI_WEEKLY = "bi-weekly"
 MONTHLY = "monthly"
 
-today = datetime.date.today()
-@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 2, 'countdown': 5})
+@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 5})
 def run_some_task(self, task_id):
+    today = datetime.date.today()
     should_run = False
     task = None
     with transaction.atomic():
@@ -21,7 +21,7 @@ def run_some_task(self, task_id):
                 task.last_run = today
                 task.save()
                 should_run = True
-
+                
     if task and should_run:
         func = FUNCTIONS.get(task.job_name)
         if func:
