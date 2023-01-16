@@ -690,6 +690,12 @@ class UserProfile(models.Model):
       The date and time of the last time any updates were made to the information
       about this goal
 
+    notification_dates: dates that certain notifications were dispatched. It will probably look like
+        notification_dates={
+            "cadmin_nudge":["02/10/22","02/11/22",...],
+            ** some other form of notification
+        }
+
     #TODO: roles field: if we have this do we need is_superadmin etc? also why
     #  not just one?  why many to many
     """
@@ -722,6 +728,7 @@ class UserProfile(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     preferences = models.JSONField(default=dict, null=True, blank=True)
     visit_log = models.JSONField(default=list, null=True, blank=True)
+    notification_dates = models.JSONField(default=dict, null=True, blank=True)
 
     def __str__(self):
         return self.email
@@ -1098,7 +1105,7 @@ class Subdomain(models.Model):
     name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
         Community,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         related_name="subdomain_community",
     )
@@ -1123,10 +1130,12 @@ class Subdomain(models.Model):
 
 class CustomCommunityWebsiteDomain(models.Model):
     id = models.AutoField(primary_key=True)
-    website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    # Sam - do you see any problem with this?  URL field is a text field with validator to be valid URL
+    website = models.URLField(max_length=SHORT_STR_LEN, unique=True)
+    #website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
         Community,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         related_name="community_website",
     )
@@ -1696,7 +1705,8 @@ class Action(models.Model):
     class Meta:
         ordering = ["rank", "title"]
         db_table = "actions"
-        unique_together = [["title", "community"]]
+        # had required this unique, now enforced in code
+        # unique_together = [["title", "community"]]
 
 
 class Event(models.Model):

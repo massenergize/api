@@ -875,10 +875,16 @@ class CommunityStore:
                     "You cannot delete more than one community at once"
                 )
             for c in communities:
+                # don;t delete the template community: this probably doesn't matter since we don't use template communities for anything
                 if "template" in c.name.lower():
                     return None, CustomMassenergizeError(
                         "You cannot delete a template community"
                     )
+                
+                # subdomain and custom community website entries will be deleted by virtue of the foreign key CASCADE on deletion
+                # delete the goals, assuming they exist, which doesn't have the same link back to community.
+                if c.goal:            
+                    c.goal.delete()
             ids = [c.id for c in communities]
             communities.delete()
             # communities.update(is_deleted=True)
@@ -895,9 +901,10 @@ class CommunityStore:
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
             user = UserProfile.objects.get(pk=context.user_id)
-            admin_groups = user.communityadmingroup_set.all()
-            ids = [a.community.id for a in admin_groups]
-            communities = Community.objects.filter().exclude(id__in = ids).order_by("name")
+            # admin_groups = user.communityadmingroup_set.all()
+            # ids = [a.community.id for a in admin_groups]
+            # communities = Community.objects.filter(is_published=True).exclude(id__in = ids).order_by("name")
+            communities = Community.objects.filter(is_published=True).order_by("name")
             return communities, None
 
     def list_communities_for_community_admin(

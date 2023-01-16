@@ -193,7 +193,7 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
-  @admins_only
+  @super_admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
