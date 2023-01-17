@@ -87,23 +87,23 @@ class MessageStore:
 
             if file:
 
-              file.name = unique_media_filename(file)
+                file.name = unique_media_filename(file)
 
-              media = Media.objects.create(
-                  name=f"Messages: {new_message.title} - Uploaded File",
-                  file=file,
-              )
-              media.save()
-              new_message.uploaded_file = media
+                media = Media.objects.create(
+                    name=f"Messages: {new_message.title} - Uploaded File",
+                    file=file,
+                )
+                media.save()
+                new_message.uploaded_file = media
 
-              new_message.save()
+                new_message.save()
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
                 messages=[new_message],
                 context=context,
                 type=FootageConstants.update(),
                 notes="Reply from admin",
-                related_users =[new_message.user],
+                related_users=[new_message.user],
             )
             # ----------------------------------------------------------------
             return new_message, None
@@ -219,8 +219,10 @@ class MessageStore:
 
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
-                messages=[message], context=context, type=FootageConstants.delete(), 
-                notes = f"Deleted ID({message_id})"
+                messages=[message],
+                context=context,
+                type=FootageConstants.delete(),
+                notes=f"Deleted ID({message_id})",
             )
             # ----------------------------------------------------------------
             return message, None
@@ -229,21 +231,31 @@ class MessageStore:
             return None, CustomMassenergizeError(e)
 
     def list_community_admin_messages(self, context: Context, args):
-        message_ids = args.get("message_ids",[])
+        message_ids = args.get("message_ids", [])
         print("Messages", message_ids)
         try:
             admin_communities, err = get_admin_communities(context)
+            with_messages = Q()
+            if message_ids:
+                with_messages = Q(id__in=message_ids)
+
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
-                    is_deleted=False,
-                    is_team_admin_message=False,
-                )
+                    Q(
+                        is_deleted=False,
+                        is_team_admin_message=False,
+                    ),
+                    with_messages,
+                ).distinct()
             elif context.user_is_community_admin:
                 messages = Message.objects.filter(
-                    is_deleted=False,
-                    is_team_admin_message=False,
-                    community__id__in=[c.id for c in admin_communities],
-                )
+                    Q(
+                        is_deleted=False,
+                        is_team_admin_message=False,
+                        community__id__in=[c.id for c in admin_communities],
+                    ),
+                    with_messages,
+                ).distinct()
             else:
                 messages = []
 
