@@ -89,7 +89,7 @@ test:
 .PHONY: test
 
 celery:
-	DJANGO_ENV=local celery -A _main_.celery.app worker -l info -B
+	DJANGO_ENV=local celery -A _main_.celery.app worker --loglevel=info --pool=solo -B
 .PHONY: celery 
 
 beat:
