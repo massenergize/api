@@ -91,7 +91,11 @@ class Console:
         """
         print(f"=================={key or'START LOG'}================")
         for c in content:
-            print(c)
+            if isinstance(c,dict) or isinstance(c,list):
+                item = json.dumps(c, indent=4)
+                print(item)
+            else:
+                print(c)
             print("..................................................")
         print(f"==================END LOG================")
 
@@ -119,4 +123,10 @@ class Console:
 
 
 def is_test_mode():
-    return os.environ.get("DJANGO_ENV", "").lower() == 'test'
+    return os.environ.get("DJANGO_ENV", "").lower() == "test"
+
+
+def is_not_null(data):
+    if data == "null" or data == None:
+        return False
+    return True

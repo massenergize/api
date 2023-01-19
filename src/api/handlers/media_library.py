@@ -49,6 +49,8 @@ class MediaLibraryHandler(RouteHandler):
             "target_communities", list, is_required=True
         ).expect(
             "any_community", bool
+        ).expect(
+            "tags", "str_list"
         )
         args, err = self.validator.verify(args, strict=True)
         if err:
@@ -83,7 +85,9 @@ class MediaLibraryHandler(RouteHandler):
             "community_ids", list
         ).expect("title", str).expect("file", "file", is_required=True).expect(
             "is_universal", bool
-        )
+        ).expect(
+            "tags", "str_list"
+        ).expect("size",str).expect("size_text", str).expect("description")
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
