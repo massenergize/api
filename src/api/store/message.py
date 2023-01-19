@@ -266,10 +266,10 @@ class MessageStore:
 
     def list_team_admin_messages(self, context: Context, args):
         message_ids = args.get("message_ids", [])
+        with_ids = Q()
         if message_ids:
             with_ids = Q(id__in=message_ids)
         try:
-            with_ids = Q()
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
                     Q(is_deleted=False, is_team_admin_message=True), with_ids
