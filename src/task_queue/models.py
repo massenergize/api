@@ -54,6 +54,7 @@ class Task(models.Model):
         related_name='task_queue_creator',
         to=UserProfile
     )
+    last_run = models.DateField(blank=True, null=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=['schedule'])

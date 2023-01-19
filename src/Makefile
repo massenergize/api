@@ -89,7 +89,7 @@ test:
 .PHONY: test
 
 celery:
-	DJANGO_ENV=local celery -A _main_.celery.app worker -l info -B
+	DJANGO_ENV=local celery -A _main_.celery.app worker --loglevel=info --pool=solo -B
 .PHONY: celery 
 
 beat:
@@ -104,3 +104,8 @@ full-celery-local:
 
 beat-remote:
 	celery -A _main_.celery.app beat -l info
+
+
+migrate:
+	python manage.py makemigrations
+	python manage.py migrate

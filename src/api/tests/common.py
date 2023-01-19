@@ -30,9 +30,9 @@ RESET = "reset"
 def makeFlag(**kwargs):
     name = kwargs.get("name") or "New Feature Flag"
     coms = kwargs.pop("communities", [])
-    users = kwargs.pop("users",[])
+    users = kwargs.pop("users", [])
     future_expiration = datetime.now(timezone.utc) + timedelta(days=3)
-    flag =  FeatureFlag.objects.create(
+    flag = FeatureFlag.objects.create(
         **{
             "expires_on": future_expiration,
             "audience": FeatureFlagConstants.for_everyone(),
@@ -42,12 +42,12 @@ def makeFlag(**kwargs):
         }
     )
 
-    if coms : 
-        flag.communities.set(coms) 
-    if users : 
-        flag.users.set(users) 
+    if coms:
+        flag.communities.set(coms)
+    if users:
+        flag.users.set(users)
 
-    return flag 
+    return flag
 
 
 def makeMedia(**kwargs):
@@ -66,6 +66,7 @@ def makeTestimonial(**kwargs):
 def makeEvent(**kwargs):
     community = kwargs.get("community")
     name = kwargs.get("name") or "Event default Name"
+    pub_coms = kwargs.pop("communities_under_publicity", [])
     event = Event.objects.create(
         **{
             "is_published": True,
@@ -76,6 +77,10 @@ def makeEvent(**kwargs):
             "name": name,
         }
     )
+
+    if pub_coms:
+        event.communities_under_publicity.set(pub_coms)
+
     return event
 
 
@@ -127,7 +132,7 @@ def makeAdmin(**kwargs):
 
 def makeUser(**kwargs):
     full_name = kwargs.pop("name", None) or kwargs.get("full_name") or "user_full_name"
-    email = kwargs.get("email") or str(time.time())+"@gmail.com" 
+    email = kwargs.get("email") or str(time.time()) + "@gmail.com"
     return UserProfile.objects.create(
         **{**kwargs, "full_name": full_name, "email": email}
     )
@@ -146,7 +151,9 @@ def makeUserUpload(**kwargs):
 
 def makeHomePageSettings(**kwargs):
     title = kwargs.get("title") or str(time.time())
-    community = kwargs.get("community",makeCommunity(name="Default Community - For Homepage"))
+    community = kwargs.get(
+        "community", makeCommunity(name="Default Community - For Homepage")
+    )
     home = HomePageSettings.objects.create(
         **{
             **kwargs,
@@ -156,6 +163,7 @@ def makeHomePageSettings(**kwargs):
     )
 
     return home
+
 
 def makeCommunity(**kwargs):
     subdomain = kwargs.get("subdomain") or str(time.time())
