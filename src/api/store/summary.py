@@ -64,7 +64,10 @@ class SummaryStore:
             community__in=communities, is_approved=False, is_deleted=False
         )
         team_messages = Message.objects.values_list("id", flat=True).filter(
-            have_replied=False, is_team_admin_message=True, is_deleted=False
+            have_replied=False,
+            community__in=communities,
+            is_team_admin_message=True,
+            is_deleted=False,
         )
 
         messages = Message.objects.values_list("id", flat=True).filter(

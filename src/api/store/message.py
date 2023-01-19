@@ -232,12 +232,12 @@ class MessageStore:
 
     def list_community_admin_messages(self, context: Context, args):
         message_ids = args.get("message_ids", [])
-        print("Messages", message_ids)
+
         try:
             admin_communities, err = get_admin_communities(context)
-            with_messages = Q()
+            with_ids = Q()
             if message_ids:
-                with_messages = Q(id__in=message_ids)
+                with_ids = Q(id__in=message_ids)
 
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
@@ -245,7 +245,7 @@ class MessageStore:
                         is_deleted=False,
                         is_team_admin_message=False,
                     ),
-                    with_messages,
+                    with_ids,
                 ).distinct()
             elif context.user_is_community_admin:
                 messages = Message.objects.filter(
@@ -254,7 +254,7 @@ class MessageStore:
                         is_team_admin_message=False,
                         community__id__in=[c.id for c in admin_communities],
                     ),
-                    with_messages,
+                    with_ids,
                 ).distinct()
             else:
                 messages = []
@@ -264,19 +264,26 @@ class MessageStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_team_admin_messages(self, context: Context):
+    def list_team_admin_messages(self, context: Context, args):
+        message_ids = args.get("message_ids", [])
+        if message_ids:
+            with_ids = Q(id__in=message_ids)
         try:
+            with_ids = Q()
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
-                    is_deleted=False, is_team_admin_message=True
-                )
+                    Q(is_deleted=False, is_team_admin_message=True), with_ids
+                ).distinct()
             elif context.user_is_community_admin:
                 admin_communities, err = get_admin_communities(context)
                 messages = Message.objects.filter(
-                    is_deleted=False,
-                    is_team_admin_message=True,
-                    community__id__in=[c.id for c in admin_communities],
-                )
+                    Q(
+                        is_deleted=False,
+                        is_team_admin_message=True,
+                        community__id__in=[c.id for c in admin_communities],
+                    ),
+                    with_ids,
+                ).distinct()
             else:
                 messages = []
 
