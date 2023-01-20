@@ -469,11 +469,17 @@ class TeamStore:
 
   def list_teams_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
+      team_ids = args.get("team_ids", None)
       if context.user_is_super_admin:
-        return self.list_teams_for_super_admin(context)
+        return self.list_teams_for_super_admin(context, team_ids)
 
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
+
+      
+      if team_ids: 
+        teams = Team.objects.filter(id__in = team_ids).select_related('logo', 'primary_community')
+        return teams, None
 
       community_id = args.pop('community_id', None)
       if community_id == 0:
@@ -495,8 +501,12 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_teams_for_super_admin(self, context: Context):
+  def list_teams_for_super_admin(self, context: Context, team_ids):
     try:
+      if team_ids: 
+        teams = Team.objects.filter(id__in = team_ids).select_related('logo', 'primary_community')
+        return teams, None
+
       teams = Team.objects.filter(is_deleted=False).select_related('logo', 'primary_community')
       return teams, None
 

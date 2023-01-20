@@ -285,6 +285,7 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("team_ids", list, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
