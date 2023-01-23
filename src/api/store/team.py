@@ -471,7 +471,7 @@ class TeamStore:
     try:
       team_ids = args.get("team_ids", None)
       if context.user_is_super_admin:
-        return self.list_teams_for_super_admin(context, team_ids)
+        return self.list_teams_for_super_admin(context, args)
 
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
@@ -501,8 +501,9 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_teams_for_super_admin(self, context: Context, team_ids):
+  def list_teams_for_super_admin(self, context: Context, args):
     try:
+      team_ids = args.get("team_ids", None)
       if team_ids: 
         teams = Team.objects.filter(id__in = team_ids).select_related('logo', 'primary_community')
         return teams, None

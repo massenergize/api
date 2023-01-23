@@ -300,7 +300,12 @@ class TeamHandler(RouteHandler):
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    teams, err = self.team.list_teams_for_super_admin(context)
+    self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("team_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    teams, err = self.team.list_teams_for_super_admin(context,args)
     if err:
       return err
     return MassenergizeResponse(data=teams)

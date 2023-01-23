@@ -193,7 +193,12 @@ class TestimonialHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
-    testimonials, err = self.service.list_testimonials_for_super_admin(context)
+    args: dict = context.args
+    self.validator.expect("testimonial_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    testimonials, err = self.service.list_testimonials_for_super_admin(context,args)
     if err:
       return err
     return MassenergizeResponse(data=testimonials)

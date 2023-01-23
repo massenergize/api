@@ -242,8 +242,8 @@ class UserService:
     return serialize_all(users), None
 
 
-  def list_users_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
-    users, err = self.store.list_users_for_super_admin(context)
+  def list_users_for_super_admin(self, context,args) -> Tuple[list, MassEnergizeAPIError]:
+    users, err = self.store.list_users_for_super_admin(context,args)
     if err:
       return None, err
     return serialize_all(users), None

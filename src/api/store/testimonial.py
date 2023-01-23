@@ -253,7 +253,7 @@ class TestimonialStore:
     testimonial_ids = args.get("testimonial_ids")
     try:
       if context.user_is_super_admin:
-        return self.list_testimonials_for_super_admin(context, testimonial_ids)
+        return self.list_testimonials_for_super_admin(context, args)
 
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
@@ -276,8 +276,9 @@ class TestimonialStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_testimonials_for_super_admin(self, context: Context,testimonial_ids):
+  def list_testimonials_for_super_admin(self, context: Context,args):
     try:
+      testimonial_ids = args.get("testimonial_ids")
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
 
