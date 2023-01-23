@@ -251,7 +251,6 @@ class TestimonialStore:
   def list_testimonials_for_community_admin(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     community_id = args.get("community_id") 
     testimonial_ids = args.get("testimonial_ids")
-    print("THese are the IDS", testimonial_ids)
     try:
       if context.user_is_super_admin:
         return self.list_testimonials_for_super_admin(context, testimonial_ids)

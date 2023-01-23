@@ -170,8 +170,11 @@ class UserHandler(RouteHandler):
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    users, err = self.service.list_users_for_community_admin(context, community_id)
+    
+    args, err = self.validator.expect("user_ids","str_list", is_required=False).verify(args) 
+    if err:
+      return err
+    users, err = self.service.list_users_for_community_admin(context, args)
     if err:
       return err
     return MassenergizeResponse(data=users)

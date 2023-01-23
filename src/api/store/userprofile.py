@@ -667,13 +667,20 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def list_users_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_users_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
+      community_id = args.get("community_id",None)
+      user_ids = args.get("user_ids", None)
+
       if context.user_is_super_admin:
         return self.list_users_for_super_admin(context)
       
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
+
+      if user_ids: 
+        users = UserProfile.objects.filter(id__in = user_ids)
+        return users, None
       
       community, err = get_community(community_id)
       
