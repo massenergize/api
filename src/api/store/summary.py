@@ -95,7 +95,7 @@ class SummaryStore:
         )
         print("Found Last Visit", last_visit)  # REMOVE BEFORE PR(BPR)
         if last_visit:
-            users = UserProfile.objects.values_list("id", flat=True).filter(
+            users = UserProfile.objects.values_list("email", flat=True).filter(
                 created_at__gt=last_visit.created_at, communities__in=communities, is_deleted=False
             )
 

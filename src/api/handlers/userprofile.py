@@ -171,7 +171,7 @@ class UserHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     
-    args, err = self.validator.expect("user_ids","str_list", is_required=False).verify(args) 
+    args, err = self.validator.expect("user_emails","str_list", is_required=False).verify(args) 
     if err:
       return err
     users, err = self.service.list_users_for_community_admin(context, args)

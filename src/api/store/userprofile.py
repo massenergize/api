@@ -670,7 +670,7 @@ class UserStore:
   def list_users_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.get("community_id",None)
-      user_ids = args.get("user_ids", None)
+      user_emails = args.get("user_emails", None)
 
       if context.user_is_super_admin:
         return self.list_users_for_super_admin(context)
@@ -678,8 +678,8 @@ class UserStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
-      if user_ids: 
-        users = UserProfile.objects.filter(id__in = user_ids)
+      if user_emails: 
+        users = UserProfile.objects.filter(email__in = user_emails)
         return users, None
       
       community, err = get_community(community_id)
