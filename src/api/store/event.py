@@ -440,7 +440,10 @@ class EventStore:
         event.communities_under_publicity.set(publicity_selections)
 
       if shared_to:
-        event.shared_to.set(shared_to)
+        first = shared_to[0]
+        if first == "reset": 
+          event.shared_to.clear()
+        else: event.shared_to.set(shared_to)
 
       if is_recurring:
 
