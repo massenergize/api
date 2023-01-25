@@ -72,7 +72,10 @@ class MessageHandler(RouteHandler):
   @admins_only
   def team_admin_list(self, request):
     context: Context = request.context
-    messages, err = self.service.list_team_admin_messages_for_community_admin(context)
+    args: dict = context.args
+    self.validator.expect("message_ids",list, is_required=False)
+    args, err = self.validator.verify(args, strict=True)
+    messages, err = self.service.list_team_admin_messages_for_community_admin(context,args)
     if err:
       return err
     return MassenergizeResponse(data=messages)
@@ -81,6 +84,8 @@ class MessageHandler(RouteHandler):
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
+    self.validator.expect("message_ids",list, is_required=False)
+    args, err = self.validator.verify(args, strict=True)
     messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
     if err:
       return err
