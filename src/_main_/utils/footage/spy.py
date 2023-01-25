@@ -291,11 +291,14 @@ class Spy:
                 else UserProfile.objects.filter(email=ctx.user_email).first()
             )
             act_type = kwargs.get("type", None)
+            portal = kwargs.get("portal", None)
+            portal = portal if portal else FootageConstants.on_admin_portal()
             footage = Spy.create_footage(
                 actor=actor,
                 activity_type=act_type,
                 by_super_admin=ctx.user_is_super_admin,
                 item_type=FootageConstants.ITEM_TYPES["AUTH"]["key"],
+                portal = portal
             )
             groups = actor.communityadmingroup_set.all()
             communities = [g.community for g in groups]

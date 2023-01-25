@@ -64,6 +64,8 @@ class AuthService:
         #---------------------------------------------------------
         if context.is_admin_site:
           Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
+        else:
+          Spy.create_sign_in_footage(actor = user ,context = context, portal=FootageConstants.on_user_portal(), type = FootageConstants.sign_in())
         #---------------------------------------------------------
         return serialize(user, full=True), str(massenergize_jwt_token), None
 

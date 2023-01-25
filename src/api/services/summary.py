@@ -29,7 +29,7 @@ class SummaryService:
         users = content.get("users", [])
         teams = content.get("teams", [])
         done_int = content.get("done_interactions", [])
-        todo_int = content.get("todo_interations", [])
+        todo_int = content.get("todo_interactions", [])
 
         content = {
             "testimonials": {"count": len(testimonials), "data": list(testimonials)},

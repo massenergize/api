@@ -1655,7 +1655,7 @@ class Action(models.Model):
     is_approved = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
-        return self.title
+        return f"{str(self.id)} - {self.title}"
 
     def info(self):
         return model_to_dict(self, ["id", "title"])
@@ -1703,7 +1703,7 @@ class Action(models.Model):
         return data
 
     class Meta:
-        ordering = ["rank", "title"]
+        ordering = ["-id","rank", "title"]
         db_table = "actions"
         # had required this unique, now enforced in code
         # unique_together = [["title", "community"]]
@@ -2157,10 +2157,10 @@ class UserActionRel(models.Model):
         return res
 
     def __str__(self):
-        return "%s | %s | (%s)" % (self.user, self.status, self.action)
+        return "%s - %s | %s | (%s)" % (str(self.id), self.user, self.status, self.action)
 
     class Meta:
-        ordering = ("status", "user", "action")
+        ordering = ("-id","status", "user", "action")
         unique_together = [["user", "action", "real_estate_unit"]]
 
 

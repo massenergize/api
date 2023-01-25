@@ -100,11 +100,9 @@ class SummaryStore:
                 created_at__gt=last_visit.created_at, communities__in=communities, is_deleted=False
             )
 
-        print("comms need to be here", communities)
         # Find all interactions users have had with any actions that belong to any of the communities a cadmin manages
-        todo_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status ="TODO" ,action__community__in=communities, updated_at__gte=last_visit, is_deleted=False)
-        done_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status = "DONE", action__community__in=communities, updated_at__gte=last_visit, is_deleted=False)
-
+        todo_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status ="TODO" ,action__community__in=communities, updated_at__gte=last_visit.created_at, is_deleted=False)
+        done_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status = "DONE", action__community__in=communities, updated_at__gte=last_visit.created_at, is_deleted=False)
         return {
             "users": users,
             "testimonials": testimonials,
