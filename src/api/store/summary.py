@@ -9,6 +9,7 @@ from database.models import (
     Testimonial,
     Event,
     Team,
+    UserActionRel,
     UserProfile,
 )
 from _main_.utils.massenergize_errors import (
@@ -99,12 +100,19 @@ class SummaryStore:
                 created_at__gt=last_visit.created_at, communities__in=communities, is_deleted=False
             )
 
+        print("comms need to be here", communities)
+        # Find all interactions users have had with any actions that belong to any of the communities a cadmin manages
+        todo_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status ="TODO" ,action__community__in=communities, updated_at__gte=last_visit, is_deleted=False)
+        done_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status = "DONE", action__community__in=communities, updated_at__gte=last_visit, is_deleted=False)
+
         return {
             "users": users,
             "testimonials": testimonials,
             "messages": messages,
             "team_messages": team_messages,
             "teams": teams,
+            "todo_interactions":todo_interactions, 
+            "done_interactions": done_interactions,
             "last_visit": last_visit,
         }, None
 

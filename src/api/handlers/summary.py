@@ -17,8 +17,8 @@ class SummaryHandler(RouteHandler):
     self.registerRoutes()
 
   def registerRoutes(self):
-    self.add("/summary.next.steps.forAdmins", self.next_steps_for_admins)
     #admin routes
+    self.add("/summary.next.steps.forAdmins", self.next_steps_for_admins)
     self.add("/summary.listForCommunityAdmin", self.community_admin_summary)
     self.add("/summary.listForSuperAdmin", self.super_admin_summary)
 
