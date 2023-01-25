@@ -1,2 +1,2 @@
-Jan 6: Production bugfix release:
-- fix several minor issues from 12/27 release
+Jan 25: Production bugfix release:
+- test version for evaluating admin instructions what to do
