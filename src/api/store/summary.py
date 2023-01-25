@@ -158,6 +158,9 @@ class SummaryStore:
             users = UserProfile.objects.values_list("id", flat=True).filter(
                 created_at__gt=today, is_deleted=False
             )
+        todo_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status ="TODO" ,action__community__in=communities, updated_at__gte=last_visit.created_at, is_deleted=False)
+        done_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status = "DONE", action__community__in=communities, updated_at__gte=last_visit.created_at, is_deleted=False)
+       
 
         return {
             "users": users,
@@ -165,6 +168,8 @@ class SummaryStore:
             "messages": messages,
             "team_messages": team_messages,
             "teams": teams,
+            "todo_interactions":todo_interactions, 
+            "done_interactions": done_interactions,
             "last_visit": last_visit,
         }, None
 
