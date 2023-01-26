@@ -165,6 +165,8 @@ class SummaryStore:
         todo_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status ="TODO" , updated_at__gte=last_visit.created_at, is_deleted=False)
         done_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status = "DONE",  updated_at__gte=last_visit.created_at, is_deleted=False)
        
+        user_sign_ins = Footage.objects.filter( portal = FootageConstants.on_user_portal(), activity_type = FootageConstants.sign_in(),created_at__gte = last_visit.created_at).count()
+       
 
         return {
             "users": users,
@@ -174,6 +176,7 @@ class SummaryStore:
             "teams": teams,
             "todo_interactions":todo_interactions, 
             "done_interactions": done_interactions,
+            "user_sign_ins":user_sign_ins,
             "last_visit": last_visit,
         }, None
 
