@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import get_request_contents
-from database.models import UserProfile
+from database.models import Community, UserProfile
 from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
@@ -62,10 +62,14 @@ class AuthService:
           algorithm='HS256'
         ).decode('utf-8')
         #---------------------------------------------------------
-        if context.is_admin_site:
-          Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
+        its_safe_to_record = Spy.okay_to_record_sign_in_footage(user = user)
+        if context.is_admin_site and its_safe_to_record:
+          if its_safe_to_record:
+            Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
         else:
-          Spy.create_sign_in_footage(actor = user ,context = context, portal=FootageConstants.on_user_portal(), type = FootageConstants.sign_in())
+          if its_safe_to_record:
+            where_user_signed_in_from = Community.objects.filter(subdomain = context.community)
+            Spy.create_sign_in_footage( communities = where_user_signed_in_from, actor = user, context = context, portal=FootageConstants.on_user_portal(), type = FootageConstants.sign_in())
         #---------------------------------------------------------
         return serialize(user, full=True), str(massenergize_jwt_token), None
 

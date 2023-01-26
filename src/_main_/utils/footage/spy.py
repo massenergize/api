@@ -1,3 +1,4 @@
+from datetime import datetime,timezone
 from turtle import update
 from _main_.utils.context import Context
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
@@ -16,6 +17,29 @@ def is_array(item):
 class Spy:
     def __init__(self) -> None:
         pass
+
+    @staticmethod
+    def okay_to_record_sign_in_footage(**kwargs): 
+        # Context: Looks like our portals typically has to hit the auth.login route at least twice during login ( in less than 1 minute interval)
+        # And that results in recording double footage of the same sign in activity... So 
+        # Here, we are going to check the current datetime against the last signin activity that was recorded for a user 
+        # If the time interval is bigger than a minute, then return true ( Meaning: its okay to record the footage)
+        one_minute = 60  
+        now = datetime.now(timezone.utc)
+        user = kwargs.get("user", None) 
+        
+        last_sign_in = Footage.objects.filter(actor = user, activity_type = FootageConstants.sign_in()).order_by("-id").first() 
+        if not last_sign_in: 
+            return True 
+
+        diff = now - last_sign_in.created_at
+        diff = diff.total_seconds()
+        
+        if diff > one_minute : 
+            return True 
+        return False
+
+        
 
     @staticmethod
     def create_footage(**kwargs):
@@ -300,8 +324,13 @@ class Spy:
                 item_type=FootageConstants.ITEM_TYPES["AUTH"]["key"],
                 portal = portal
             )
-            groups = actor.communityadmingroup_set.all()
-            communities = [g.community for g in groups]
+            passed_communities = kwargs.get("communities")
+            communities = [] 
+            if not passed_communities: 
+                groups = actor.communityadmingroup_set.all()
+                communities = [g.community for g in groups]
+            else: communities = passed_communities
+
             footage.communities.set(communities)
             return footage
         except Exception as e:

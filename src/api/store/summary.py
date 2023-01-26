@@ -103,6 +103,9 @@ class SummaryStore:
         # Find all interactions users have had with any actions that belong to any of the communities a cadmin manages
         todo_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status ="TODO" ,action__community__in=communities, updated_at__gte=last_visit.created_at, is_deleted=False)
         done_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status = "DONE", action__community__in=communities, updated_at__gte=last_visit.created_at, is_deleted=False)
+        
+        user_sign_ins = Footage.objects.filter( communities__in = communities, portal = FootageConstants.on_user_portal(), activity_type = FootageConstants.sign_in(),created_at__gte = last_visit.created_at).count()
+        
         return {
             "users": users,
             "testimonials": testimonials,
@@ -111,6 +114,7 @@ class SummaryStore:
             "teams": teams,
             "todo_interactions":todo_interactions, 
             "done_interactions": done_interactions,
+            "user_sign_ins":user_sign_ins,
             "last_visit": last_visit,
         }, None
 
