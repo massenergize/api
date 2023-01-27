@@ -302,12 +302,17 @@ class ActionStore:
   def list_actions_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
+      ids = args.pop("action_ids",[])
 
       if context.user_is_super_admin:
-        return self.list_actions_for_super_admin(context)
+        return self.list_actions_for_super_admin(context,args)
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
+
+      if ids: 
+        actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        return actions, None
 
       if community_id == 0:
         # return actions from all communities
@@ -328,8 +333,12 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_actions_for_super_admin(self, context: Context):
+  def list_actions_for_super_admin(self, context: Context,args):
+    ids = args.pop("action_ids",[])
     try:
+      if ids: 
+        actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        return actions, None
       # if not context.user_is_super_admin:
       #   return None, CustomMassenergizeError("Insufficient Privileges")
       actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')

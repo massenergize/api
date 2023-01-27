@@ -118,8 +118,8 @@ class ActionService:
     return serialize_all(actions), None
 
 
-  def list_actions_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    actions, err = self.store.list_actions_for_super_admin(context)
+  def list_actions_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
+    actions, err = self.store.list_actions_for_super_admin(context,args)
     if err:
       return None, err
     return serialize_all(actions), None

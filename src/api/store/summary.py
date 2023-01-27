@@ -104,7 +104,7 @@ class SummaryStore:
         todo_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status ="TODO" ,action__community__in=communities, updated_at__gte=last_visit.created_at, is_deleted=False)
         done_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status = "DONE", action__community__in=communities, updated_at__gte=last_visit.created_at, is_deleted=False)
         
-        user_sign_ins = Footage.objects.filter( communities__in = communities, portal = FootageConstants.on_user_portal(), activity_type = FootageConstants.sign_in(),created_at__gte = last_visit.created_at).count()
+        user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter( communities__in = communities, portal = FootageConstants.on_user_portal(), activity_type = FootageConstants.sign_in(),created_at__gte = last_visit.created_at)
         
         return {
             "users": users,
@@ -165,7 +165,7 @@ class SummaryStore:
         todo_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status ="TODO" , updated_at__gte=last_visit.created_at, is_deleted=False)
         done_interactions = UserActionRel.objects.values_list("action__id", flat=True).filter(status = "DONE",  updated_at__gte=last_visit.created_at, is_deleted=False)
        
-        user_sign_ins = Footage.objects.filter( portal = FootageConstants.on_user_portal(), activity_type = FootageConstants.sign_in(),created_at__gte = last_visit.created_at).count()
+        user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter( portal = FootageConstants.on_user_portal(), activity_type = FootageConstants.sign_in(),created_at__gte = last_visit.created_at)
        
 
         return {

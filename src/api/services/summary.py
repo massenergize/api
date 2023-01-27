@@ -39,7 +39,7 @@ class SummaryService:
             "team_messages": {"count": len(team_messages), "data": list(team_messages)},
             "done_interactions": {"count": len(done_int), "data": list(done_int)},
             "todo_interactions": {"count": len(todo_int), "data": list(todo_int)},
-            "sign_ins": { "count": sign_ins, "data":[]},
+            "sign_ins": { "count": len(sign_ins), "data":list(sign_ins)},
             "users": {
                 "count": len(users),
                 "description": f"All new users since last visit - {last_visit.created_at}",
