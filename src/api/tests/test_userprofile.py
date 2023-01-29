@@ -27,16 +27,24 @@ class UserProfileTestCase(TestCase):
         admin_group_name  = f"{self.COMMUNITY.name}-{self.COMMUNITY.subdomain}-Admin-Group"
         self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
         self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
+        self.COMMUNITY_ADMIN_GROUP.save()
 
         self.REAL_ESTATE_UNIT = RealEstateUnit.objects.create()
         self.REAL_ESTATE_UNIT.save()
 
         self.USER2 = UserProfile.objects.create(email="user2@email2.com", full_name="test user", preferred_name="user2test2")
+        response = self.client.post('/api/communities.join', urlencode({"user_id": self.USER2.id, "community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded")
+
+        self.CCACTION = CCAction.objects.filter(name='led_lighting').first()
 
         self.ACTION  = Action.objects.create()
+        self.ACTION.calculator_action = self.CCACTION
         self.ACTION2 = Action.objects.create()
+        self.ACTION2.calculator_action = self.CCACTION
         self.ACTION3 = Action.objects.create()
+        self.ACTION3.calculator_action = self.CCACTION
         self.ACTION4 = Action.objects.create()
+        self.ACTION4.calculator_action = self.CCACTION
 
         response = self.client.post('/api/users.actions.completed.add', urlencode({"user_id": self.USER2.id, "action_id": self.ACTION.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.client.post('/api/users.actions.completed.add', urlencode({"user_id": self.USER2.id, "action_id": self.ACTION2.id, "household_id": self.REAL_ESTATE_UNIT.id}), content_type="application/x-www-form-urlencoded")
@@ -56,7 +64,6 @@ class UserProfileTestCase(TestCase):
     @classmethod
     def tearDownClass(self):
         pass
-
 
     def setUp(self):
         # this gets run on every test case
@@ -154,6 +161,30 @@ class UserProfileTestCase(TestCase):
         list_response = self.client.post('/api/users.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(list_response["success"])
 
+    def test_list_publicview(self):
+        # test not logged in, no community specified
+        signinAs(self.client, None)
+        response = self.client.post('/api/users.listForPublicView', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # specify community
+        response = self.client.post('/api/users.listForPublicView', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        user_list = response["data"]["public_user_list"]
+        self.assertGreater(len(user_list), 0)
+        test1 = user_list[0].get("preferred_name", None)
+        self.assertIsNotNone(test1)
+        test2 = user_list[0].get("email", None)
+        self.assertIsNone(test2)
+        
+        # specify community with a high point threshold
+        response = self.client.post('/api/users.listForPublicView', 
+                                    urlencode({"community_id": self.COMMUNITY.id, "min_points":10000}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        user_list = response["data"]["public_user_list"]
+        self.assertEquals(len(user_list), 0)
+        
+
     def test_update(self):
         # test not logged in
         signinAs(self.client, None)
@@ -193,6 +224,7 @@ class UserProfileTestCase(TestCase):
         signinAs(self.client, user1)
         delete_response = self.client.post('/api/users.delete', urlencode({"user_id": user1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(delete_response["success"])
+        self.assertNotEqual(delete_response["data"]["email"], user1.email)
 
         # test logged as admin
         signinAs(self.client, self.SADMIN)
@@ -435,5 +467,22 @@ class UserProfileTestCase(TestCase):
         self.assertTrue(response["success"])
         self.assertTrue(response["data"]["imported"])
         self.assertEqual(response["data"]["firstName"], self.USER2.full_name.split()[0])
+
+    def test_validate_username(self):
+        
+        # test logged as user
+        signinAs(self.client, self.USER2)
+        
+        # valid (unique) username
+        response = self.client.post('/api/users.validate.username', urlencode({'username': "thisUsernameDoesNotExistAlready"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertTrue(response["data"]["valid"])
+        self.assertEqual(response["data"]["suggested_username"], "thisUsernameDoesNotExistAlready")
+
+        # invalid (not unique) username
+        response = self.client.post('/api/users.validate.username', urlencode({'username': self.USER2.preferred_name}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+        self.assertFalse(response["data"]["valid"])
+        self.assertEqual(response["data"]["suggested_username"], self.USER2.preferred_name+"1")
 
 

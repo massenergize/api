@@ -1,3 +1,7 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
+from _main_.utils.utils import Console
+from api.tests.common import RESET
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from django.utils.text import slugify
@@ -184,9 +188,9 @@ class TeamStore:
         else:
           return None, CustomMassenergizeError("Cannot set parent team")
 
-      if logo_file:
-        logo = Media.objects.create(file=logo_file, name=f"{slugify(team.name)}-TeamLogo")
-        logo.save()
+  
+      if logo_file: #now, images will always come as an array of ids 
+        logo = Media.objects.filter(pk = logo_file[0]).first()
         team.logo = logo
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
@@ -209,12 +213,16 @@ class TeamStore:
         teamMember.is_admin = True
         teamMember.save()
 
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_team_footage(teams = [team], context = context,  type = FootageConstants.create(), notes = f"Team ID({team.id})")
+        # ----------------------------------------------------------------
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       if team:
         team.delete()
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def update_team(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -292,26 +300,27 @@ class TeamStore:
       else:  
           if parent_id == 0:
             team.parent = None
-
-      if logo:
-          # if existing logo, the string length is around 300 characters
-          # If a new logo updated, this will be the length of the file, much larger than that       
-          new_logo = len(logo) > 1000
-          if new_logo:
-            logo = Media.objects.create(file=logo, name=f"{slugify(team.name)}-TeamLogo")
-            logo.save()
-            team.logo = logo
-          else: 
-            team.logo = None 
+     
+      if logo: #now, images will always come as an array of ids, or "reset" string 
+        if logo[0] == RESET: #if image is reset, delete the existing image
+          team.image = None
+        else:
+          media = Media.objects.filter(id = logo[0]).first()
+          team.logo = media
 
       team.save()
+
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_team_footage(teams = [team], context = context, type = FootageConstants.update(), notes = f"Team ID({team_id})")
+        # ----------------------------------------------------------------
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
 
-  def delete_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def delete_team(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       team_id = args["id"]
       teams = Team.objects.filter(id=team_id)
@@ -325,7 +334,11 @@ class TeamStore:
       members.delete()
       team.delete()  # or should that be team.delete()?
 
-      return teams.first(), None
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_team_footage(teams = [], context = context,  type = FootageConstants.delete(), notes=f"Deleted ID({team_id})")
+        # ----------------------------------------------------------------
+      return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -345,7 +358,7 @@ class TeamStore:
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def leave_team(self, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
@@ -362,9 +375,9 @@ class TeamStore:
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
-  def add_team_member(self, args) -> Tuple[Team, MassEnergizeAPIError]:
+  def add_team_member(self, args,context) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get("id", None)
       user_id = args.get("user_id", None)
@@ -383,13 +396,15 @@ class TeamStore:
       teamMember, created = TeamMember.objects.get_or_create(team=team, user=user)      
       teamMember.is_admin = is_admin
       teamMember.save()
-      
+      # ----------------------------------------------------------------
+      Spy.create_team_footage(teams = [team], context = context, related_users = [user] if user else [],  type = FootageConstants.add(), notes=f"Added user({user.email}) to Team({team_id})")
+      # ----------------------------------------------------------------
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def remove_team_member(self, args) -> Tuple[Team, MassEnergizeAPIError]:
+  def remove_team_member(self, args,context) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get('id', None)
       user_id = args.get('user_id', None)
@@ -403,6 +418,10 @@ class TeamStore:
       team_member = TeamMember.objects.filter(team__id=team_id, user=user)
       if team_member.count() > 0:
         team_member.delete()
+      
+      # ----------------------------------------------------------------
+      Spy.create_team_footage(teams = [team], context = context, related_users = [user] if user else [], type = FootageConstants.remove(), notes=f"Removed user({user.email}) from team({team_id})")
+      # ----------------------------------------------------------------
       return team, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -450,11 +469,17 @@ class TeamStore:
 
   def list_teams_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
+      team_ids = args.get("team_ids", None)
       if context.user_is_super_admin:
-        return self.list_teams_for_super_admin(context)
+        return self.list_teams_for_super_admin(context, args)
 
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
+
+      
+      if team_ids: 
+        teams = Team.objects.filter(id__in = team_ids).select_related('logo', 'primary_community')
+        return teams, None
 
       community_id = args.pop('community_id', None)
       if community_id == 0:
@@ -476,14 +501,19 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_teams_for_super_admin(self, context: Context):
+  def list_teams_for_super_admin(self, context: Context, args):
     try:
+      team_ids = args.get("team_ids", None)
+      if team_ids: 
+        teams = Team.objects.filter(id__in = team_ids).select_related('logo', 'primary_community')
+        return teams, None
+
       teams = Team.objects.filter(is_deleted=False).select_related('logo', 'primary_community')
       return teams, None
 
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:

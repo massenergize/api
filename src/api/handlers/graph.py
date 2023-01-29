@@ -16,6 +16,8 @@ class GraphHandler(RouteHandler):
     super().__init__()
     self.service = GraphService()
     self.registerRoutes()
+    # understand data problem
+    self.debug_data_fix()
 
   def registerRoutes(self) -> None:
     self.add("/graphs.info", self.info) 
@@ -44,7 +46,7 @@ class GraphHandler(RouteHandler):
     args = rename_field(args, 'graph_id', 'id')
     graph_info, err = self.service.get_graph_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
   @admins_only
@@ -65,7 +67,7 @@ class GraphHandler(RouteHandler):
     
     graph_info, err = self.service.create_graph(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
   @admins_only
@@ -84,7 +86,7 @@ class GraphHandler(RouteHandler):
     
     graph_info, err = self.service.list_graphs(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
   
@@ -103,7 +105,7 @@ class GraphHandler(RouteHandler):
     
     graph_info, err = self.service.graph_actions_completed(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
 
@@ -119,7 +121,7 @@ class GraphHandler(RouteHandler):
 
     graph_info, err = self.service.graph_actions_completed_by_team(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
 
@@ -138,7 +140,7 @@ class GraphHandler(RouteHandler):
     
     graph_info, err = self.service.graph_community_impact(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
   @admins_only
@@ -164,7 +166,7 @@ class GraphHandler(RouteHandler):
 
     graph_info, err = self.service.update_graph(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
   @login_required
@@ -173,7 +175,7 @@ class GraphHandler(RouteHandler):
     args: dict = context.args
     graph_info, err = self.service.update_data(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
 
@@ -186,7 +188,7 @@ class GraphHandler(RouteHandler):
       return MassenergizeResponse(error="invalid_resource")
     graph_info, err = self.service.delete_data(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
 
@@ -197,7 +199,7 @@ class GraphHandler(RouteHandler):
     graph_id = args.pop('graph_id', None)
     graph_info, err = self.service.delete_graph(context, graph_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graph_info)
 
 
@@ -208,7 +210,7 @@ class GraphHandler(RouteHandler):
     community_id = args.pop("community_id", None)
     graphs, err = self.service.list_graphs_for_community_admin(context, community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graphs)
 
 
@@ -218,5 +220,8 @@ class GraphHandler(RouteHandler):
     args: dict = context.args
     graphs, err = self.service.list_graphs_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=graphs)
+
+  def debug_data_fix(self) -> None:
+    self.service.debug_data_fix()

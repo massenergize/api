@@ -1,11 +1,13 @@
 """Handler file for all routes pertaining to users"""
 from functools import wraps
+from _main_.utils import context
 from _main_.utils.route_handler import RouteHandler
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
+
 
 class UserHandler(RouteHandler):
 
@@ -33,7 +35,8 @@ class UserHandler(RouteHandler):
     self.add("/users.households.list", self.list_households)
     self.add("/users.events.list", self.list_events)
     self.add("/users.checkImported", self.check_user_imported)
-    #self.add("/users.completeImported", self.complete_imported_user)
+    self.add("/users.listForPublicView", self.list_publicview)
+    self.add("/users.validate.username", self.validate_username)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
@@ -46,8 +49,17 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     user_info, err = self.service.get_user_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
+  
+  def validate_username(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    data, err = self.service.validate_username(args["username"])
+    if err:
+      return err
+    return MassenergizeResponse(data=data)
 
   def create(self, request):
     context: Context = request.context
@@ -57,7 +69,8 @@ class UserHandler(RouteHandler):
       .expect("email", str, is_required=True)
       .expect("full_name", str, is_required=True)
       .expect("preferred_name", str, is_required=True)
-      .expect("is_vendor", bool, is_required=True)
+      .expect("is_vendor", bool)
+      .expect("is_guest", bool)
       .expect("community_id", int)
       .verify(context.args)
     )
@@ -65,7 +78,7 @@ class UserHandler(RouteHandler):
       return err
     user_info, err = self.service.create_user(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
 
@@ -76,7 +89,23 @@ class UserHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     user_info, err = self.service.list_users(community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+    return MassenergizeResponse(data=user_info)
+
+
+  def list_publicview(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    args, err = (self.validator
+      .expect("community_id", int, is_required=True)
+      .expect("min_points", int, is_required=False)
+      .verify(context.args))
+    if err:
+      return err
+
+    user_info, err = self.service.list_publicview(context, args)
+    if err:
+      return err
     return MassenergizeResponse(data=user_info)
 
 
@@ -86,7 +115,7 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     user_info, err = self.service.list_actions_todo(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -95,7 +124,7 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     user_info, err = self.service.list_actions_completed(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -108,7 +137,7 @@ class UserHandler(RouteHandler):
 
     user_info, err = self.service.remove_user_action(context, user_action_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -123,7 +152,7 @@ class UserHandler(RouteHandler):
     
     user_info, err = self.service.update_user(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -133,7 +162,7 @@ class UserHandler(RouteHandler):
     user_id = args.get("id", None) or args.get("user_id", None)
     user_info, err = self.service.delete_user(context, user_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   # lists users that are in the community for cadmin
@@ -141,19 +170,26 @@ class UserHandler(RouteHandler):
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    users, err = self.service.list_users_for_community_admin(context, community_id)
+    
+    args, err = self.validator.expect("user_emails","str_list", is_required=False).verify(args) 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+    users, err = self.service.list_users_for_community_admin(context, args)
+    if err:
+      return err
     return MassenergizeResponse(data=users)
   
 
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
-    users, err = self.service.list_users_for_super_admin(context)
+    args: dict = context.args
+    args, err = self.validator.expect("user_emails","str_list", is_required=False).verify(args) 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+    users, err = self.service.list_users_for_super_admin(context,args)
+    if err:
+      return err
     return MassenergizeResponse(data=users)
 
   @login_required
@@ -170,7 +206,7 @@ class UserHandler(RouteHandler):
       
     user_info, err = self.service.add_action_todo(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -188,7 +224,7 @@ class UserHandler(RouteHandler):
 
     user_info, err = self.service.add_action_completed(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -197,7 +233,7 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     user_info, err = self.service.get_user_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -207,7 +243,7 @@ class UserHandler(RouteHandler):
 
     user_info, err = self.service.remove_household(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -216,7 +252,7 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     user_info, err = self.service.add_household(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
 
@@ -226,7 +262,7 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     user_info, err = self.service.edit_household(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
 
   @login_required
@@ -235,7 +271,7 @@ class UserHandler(RouteHandler):
     args: dict = context.args
     user_info, err = self.service.list_events_for_user(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=user_info)
   
   # checks whether a user profile has been temporarily set up as a CSV
@@ -252,7 +288,7 @@ class UserHandler(RouteHandler):
 
     imported_info, err = self.service.check_user_imported(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=imported_info)
 
   #@login_required
@@ -261,7 +297,7 @@ class UserHandler(RouteHandler):
   #  args: dict = context.args
   #  imported_info, err = self.service.complete_imported_user(context, args)
   #  if err:
-  #    return MassenergizeResponse(error=str(err), status=err.status)
+  #    return err
   #  return MassenergizeResponse(data=imported_info)
 
   @admins_only
@@ -291,7 +327,7 @@ class UserHandler(RouteHandler):
       return err
     info, err = self.service.import_from_csv(context, args)    
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=info)
     
   # Community or Super Admins can do this
@@ -310,7 +346,7 @@ class UserHandler(RouteHandler):
       return err
     info, err = self.service.import_from_list(context, args)    
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=info)
     
 

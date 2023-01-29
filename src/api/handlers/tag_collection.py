@@ -36,7 +36,7 @@ class TagCollectionHandler(RouteHandler):
     args: dict = context.args
     tag_collection_info, err = self.service.get_tag_collection_info(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_collection_info)
 
   @super_admins_only
@@ -45,7 +45,7 @@ class TagCollectionHandler(RouteHandler):
     args: dict = context.args
     tag_collection_info, err = self.service.create_tag_collection(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_collection_info)
 
 
@@ -54,7 +54,7 @@ class TagCollectionHandler(RouteHandler):
     args: dict = context.args
     tag_collection_info, err = self.service.list_tag_collections(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_collection_info)
 
   @super_admins_only
@@ -66,7 +66,7 @@ class TagCollectionHandler(RouteHandler):
       return MassenergizeResponse(error="Please provide an id")
     tag_collection_info, err = self.service.update_tag_collection(tag_collection_id, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_collection_info)
 
   @super_admins_only
@@ -77,7 +77,7 @@ class TagCollectionHandler(RouteHandler):
     tag_collection_id = args.pop('tag_collection_id', None)
     tag_collection_info, err = self.service.delete_tag_collection(tag_collection_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_collection_info)
 
   @admins_only
@@ -87,7 +87,7 @@ class TagCollectionHandler(RouteHandler):
     community_id = args.pop("community_id", None)
     tag_collections, err = self.service.list_tag_collections_for_community_admin(community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_collections)
 
   @super_admins_only
@@ -96,5 +96,5 @@ class TagCollectionHandler(RouteHandler):
     args: dict = context.args
     tag_collections, err = self.service.list_tag_collections_for_super_admin()
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_collections)

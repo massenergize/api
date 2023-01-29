@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
@@ -36,7 +38,7 @@ class AuthService:
         user_email = decoded_token.get("email")
         
         user = UserProfile.objects.filter(email=user_email).first()
-        if (not user):
+        if (not user or not user.accepts_terms_and_conditions):
           # there is a case where user is authenticated with firebase but
           # does has not completed a massenergize registration form
           # to sign up in our system
@@ -59,7 +61,10 @@ class AuthService:
           SECRET_KEY, 
           algorithm='HS256'
         ).decode('utf-8')
-
+        #---------------------------------------------------------
+        if context.is_admin_site:
+          Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
+        #---------------------------------------------------------
         return serialize(user, full=True), str(massenergize_jwt_token), None
 
       else:
@@ -115,3 +120,48 @@ class AuthService:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+  def guest_login(self, context: Context):
+    # This does the same work as verify
+
+    try:
+      args = context.args or {}
+      user_email = args.get('email', None)
+      if user_email:
+        
+        user = UserProfile.objects.filter(email=user_email).first()
+        if not user:
+          return None, None, CustomMassenergizeError("unknown_user")
+        elif user.accepts_terms_and_conditions:
+          # this should be a case where user has not completed a massenergize registration form
+          return None, None, CustomMassenergizeError("not_a_guest_user")
+
+
+        payload = {
+          "user_id": str(user.id), 
+          "email": user.email,
+          "is_super_admin": False, 
+          "is_community_admin": False,
+          "iat": '0',
+          "exp": '0',
+        }
+
+        massenergize_jwt_token = jwt.encode(
+          payload, 
+          SECRET_KEY, 
+          algorithm='HS256'
+        ).decode('utf-8')
+
+        return serialize(user, full=True), str(massenergize_jwt_token), None
+
+      else:
+        return None, None, CustomMassenergizeError("invalid_auth")
+    #except PermissionError:
+    #  capture_message("not_an_admin", level="error")
+    #  return None, None, CustomMassenergizeError('not_an_admin')
+    except Exception as e:
+      capture_message("Authentication Error", level="error")
+      return None, None, CustomMassenergizeError(e)
+
+
+  

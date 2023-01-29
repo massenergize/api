@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
 from django.utils.text import slugify
@@ -59,7 +61,7 @@ class VendorStore:
     try:
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       website = args.pop('website', None)
       user_email = args.pop('user_email', context.user_email)
       onboarding_contact_email = args.pop('onboarding_contact_email', None)
@@ -75,9 +77,8 @@ class VendorStore:
         args['location'] = None
 
       new_vendor = Vendor.objects.create(**args)
-      if image:
-        logo = Media(name=f"Logo-{slugify(new_vendor.name)}", file=image)
-        logo.save()
+      if images:
+        logo = Media.objects.filter(pk = images[0]).first()
         new_vendor.logo = logo
       
       if onboarding_contact_email:
@@ -108,7 +109,9 @@ class VendorStore:
         new_vendor.tags.set(tags)
 
       new_vendor.save()
-
+     # ----------------------------------------------------------------
+      Spy.create_vendor_footage(vendors = [new_vendor], context = context, actor = new_vendor.user, type = FootageConstants.create(), notes =f"Vendor ID({new_vendor.id})")
+    # ---------------------------------------------------------------- 
       return new_vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -123,8 +126,7 @@ class VendorStore:
         return None, InvalidResourceError()  
 
       # checks if requesting user is the vendor creator, super admin or community admin else throw error
-      test = vendor.first()
-      if (not test.user or test.user.id != context.user_id) and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(vendor.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
       communities = args.pop('communities', [])
@@ -136,11 +138,13 @@ class VendorStore:
         "name": key_contact_name,
         "email": key_contact_email
       }
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       tags = args.pop('tags', [])
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
+      is_published = args.pop('is_published', None)
+
 
       vendor.update(**args)
       vendor = vendor.first()
@@ -157,10 +161,12 @@ class VendorStore:
         else:
           vendor.key_contact = key_contact
 
-      if image:
-        logo = Media(name=f"Logo-{slugify(vendor.name)}", file=image)
-        logo.save()
-        vendor.logo = logo
+      if images: #now, images will always come as an array of ids, or "reset" string 
+        if images[0] == "reset": #if image is reset, delete the existing image
+          vendor.logo = None
+        else:
+          logo = Media.objects.filter(id = images[0]).first()
+          vendor.logo = logo
       
       if onboarding_contact_email:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
@@ -172,15 +178,34 @@ class VendorStore:
 
       if website:
         vendor.more_info = {'website': website}
-        
+
+      # temporarily back out this logic until we have user submitted vendors
+      ###if is_published==False:
+      ###  vendor.is_published = False
+      ###
+      ###elif is_published and not vendor.is_published:
+      ###  # only publish vendor if it has been approved
+      ###  if vendor.is_approved:
+      ###    vendor.is_published = True
+      ###  else:
+      ###    return None, CustomMassenergizeError("Service provider needs to be approved before it can be made live")
+      if is_published != None:
+        vendor.is_published = is_published
+        if vendor.is_approved==False and is_published:
+          vendor.is_approved==True # Approve an vendor if an admin publishes it
+
+
       vendor.save()
+      # ----------------------------------------------------------------
+      Spy.create_vendor_footage(vendors = [vendor], context = context, type = FootageConstants.update(), notes =f"Vendor ID({vendor_id})")
+      # ---------------------------------------------------------------- 
       return vendor, None
 
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def rank_vendor(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def rank_vendor(self, args, context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
@@ -188,7 +213,11 @@ class VendorStore:
       if id and rank:
         vendors = Vendor.objects.filter(id=id)
         vendors.update(rank=rank)
-        return vendors.first(), None
+        vendor = vendors.first()
+        # ----------------------------------------------------------------
+        Spy.create_event_footage(vendors = [vendor], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+        # ----------------------------------------------------------------
+        return vendor, None
       else:
         raise Exception("Rank and ID not provided to vendors.rank")
     except Exception as e:
@@ -196,12 +225,16 @@ class VendorStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_vendor(self, vendor_id) -> Tuple[dict, MassEnergizeAPIError]:
+  def delete_vendor(self, vendor_id, context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       vendors = Vendor.objects.filter(id=vendor_id)
       vendors.update(is_deleted=True)
       #TODO: also remove it from all places that it was ever set in many to many or foreign key
-      return vendors.first(), None
+      vendor = vendors.first()
+      # ----------------------------------------------------------------
+      Spy.create_vendor_footage(vendors = [vendor], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({vendor_id})")
+      # ----------------------------------------------------------------
+      return vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -256,7 +289,9 @@ class VendorStore:
       for tag in vendor.tags.all():
         new_vendor.tags.add(tag)
       new_vendor.save()
-
+      # ----------------------------------------------------------------
+      Spy.create_vendor_footage(vendors = [new_vendor,new_vendor], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({vendor_id}) to ({new_vendor.id})" )
+      # ----------------------------------------------------------------
       return new_vendor, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -307,4 +342,4 @@ class VendorStore:
       return vendors, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)

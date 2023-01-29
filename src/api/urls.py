@@ -14,6 +14,7 @@ from api.handlers.page_settings__donate import DonatePageSettingsHandler
 from api.handlers.page_settings__impact import ImpactPageSettingsHandler
 from api.handlers.download import DownloadHandler
 from api.handlers.event import EventHandler
+from api.handlers.feature_flag import FeatureFlagHandler
 from api.handlers.goal import GoalHandler
 from api.handlers.graph import GraphHandler
 from api.handlers.page_settings__home import HomePageSettingsHandler
@@ -24,6 +25,7 @@ from api.handlers.subscriber import SubscriberHandler
 from api.handlers.summary import SummaryHandler
 from api.handlers.tag import TagHandler
 from api.handlers.tag_collection import TagCollectionHandler
+from api.handlers.task_queue import TaskQueueHandler
 from api.handlers.team import TeamHandler
 from api.handlers.page_settings__teams import TeamsPageSettingsHandler
 from api.handlers.testimonial import TestimonialHandler
@@ -31,7 +33,9 @@ from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
 from api.handlers.page_settings__register import RegisterPageSettingsHandler
 from api.handlers.page_settings__signin import SigninPageSettingsHandler
+from api.handlers.webhook import WebhookHandler
 from django.urls import path, include
+
 
 
 ROUTE_HANDLERS = [
@@ -47,6 +51,7 @@ ROUTE_HANDLERS = [
     DownloadHandler(),
     EventHandler(),
     EventsPageSettingsHandler(),
+    FeatureFlagHandler(),
     GoalHandler(),
     GraphHandler(),
     HomePageSettingsHandler(),
@@ -68,6 +73,8 @@ ROUTE_HANDLERS = [
     MediaLibraryHandler(),
     RegisterPageSettingsHandler(),
     SigninPageSettingsHandler(),
+    TaskQueueHandler(),
+    WebhookHandler()
 ]
 
 urlpatterns = [

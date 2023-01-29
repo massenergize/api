@@ -1,8 +1,14 @@
-from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
+from _main_.utils.utils import Console
+from api.tests.common import RESET
+from database.models import CommunityAdminGroup, Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
+
+from database.utils.settings.model_constants.events import EventConstants
 from .utils import get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
@@ -106,6 +112,8 @@ class EventStore:
         new_event.end_date_and_time = event_to_copy.end_date_and_time
         new_event.description = event_to_copy.description
         new_event.rsvp_enabled = event_to_copy.rsvp_enabled
+        new_event.rsvp_email = event_to_copy.rsvp_email
+        new_event.rsvp_message = event_to_copy.rsvp_message
         new_event.image = event_to_copy.image
         new_event.featured_summary = event_to_copy.featured_summary
         new_event.location = event_to_copy.location
@@ -136,6 +144,9 @@ class EventStore:
         new_event.tags.add(tag)
         new_event.save()
 
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [new_event,event_to_copy], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({event_to_copy.id}) to ({new_event.id})" )
+      # ----------------------------------------------------------------
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -182,16 +193,26 @@ class EventStore:
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
-    
+    shared = []
     if community_id:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+      # Find events that have been shared to this community
+      community = Community.objects.get(pk = community_id)
+      shared = [] 
+      if community: shared = community.events_from_others.filter(is_published=True)
+    
+      
       
     elif subdomain:
       query =  Q(community__subdomain=subdomain)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
-      
+      community = Community.objects.get(subdomain = subdomain)
+      shared = []
+      if community: shared = community.events_from_others.filter(is_published=True)
+    
+
     elif user_id:
       events = EventAttendee.objects.filter(user_id=user_id)
       
@@ -201,7 +222,9 @@ class EventStore:
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
 
-    return events, None
+    
+
+    return [*events,*shared], None
 
 
   def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -220,12 +243,10 @@ class EventStore:
       day_of_week = args.pop('day_of_week', None)
       week_of_month = args.pop("week_of_month", None)
       final_date = args.pop('final_date', None)
+      publicity_selections = args.pop("publicity_selections", [])
 
-      # rsvp_enabled now properly in the model
-      #rsvp_enabled = args.pop('rsvp_enabled', False)
-      #if rsvp_enabled:
-      #  # this boolean is never used, use this - then switch name to rsvp_enabled to migrate DBs in sync
-      #  args['is_external_event'] = True
+      if end_date_and_time < start_date_and_time :
+          return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
 
       if is_recurring:
         if final_date:
@@ -260,8 +281,8 @@ class EventStore:
       if community:
         new_event.community = community
 
-      if image:
-        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
+      if image: #now, images will always come as an array of ids 
+        media = Media.objects.filter(pk = image[0]).first()
         new_event.image = media
 
       if tags:
@@ -277,6 +298,9 @@ class EventStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_event.user = user
+        
+      if publicity_selections:
+        new_event.communities_under_publicity.set(publicity_selections)
 
       if is_recurring:
 
@@ -297,7 +321,10 @@ class EventStore:
           "final_date": str(final_date)
         } 
 
-      new_event.save()      
+      new_event.save()   
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [new_event], context = context, actor = new_event.user, type = FootageConstants.create(), notes = f"Event ID({new_event.id})")
+      # ----------------------------------------------------------------   
       return new_event, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -306,6 +333,17 @@ class EventStore:
   def update_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop('event_id', None)
+      events = Event.objects.filter(id=event_id)
+      publicity_selections = args.pop("publicity_selections", [])
+      shared_to = args.pop("shared_to", [])
+      
+      if not events:
+        return None, InvalidResourceError()
+
+      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
+      if str(events.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       image = args.pop('image', None)
       tags = args.pop('tags', [])
 
@@ -323,10 +361,14 @@ class EventStore:
       upcoming_is_rescheduled = args.pop('upcoming_is_rescheduled', None)
       final_date = args.pop('final_date', None)
 
-      #rsvp_enabled = args.pop('rsvp_enabled', False)
-      # this boolean is never used, use this - then switch name to rsvp_enabled to migrate DBs in sync
-      #args['is_external_event'] = rsvp_enabled
+      community_id = args.pop("community_id", None)
+      is_approved = args.pop('is_approved', None)
+      is_published = args.pop('is_published', None)
 
+
+      if start_date_and_time and end_date_and_time:
+          if end_date_and_time < start_date_and_time :
+            return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
       if is_recurring:
 
         if final_date:
@@ -363,34 +405,44 @@ class EventStore:
         if upcoming_is_cancelled and upcoming_is_rescheduled:
           return None, CustomMassenergizeError("Cannot cancel and reschedule next instance of a recurring event at the same time")
 
-
-      events = Event.objects.filter(id=event_id)
-      if not events:
-        return None, CustomMassenergizeError(f"No event with id: {event_id}")
+      # BHN - temporarily back out this change until we have user submitted events
+      ### if not is_approved and is_published:
+      ###    return None, CustomMassenergizeError("Cannot publish event that is not approved.")
 
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
 
-      community = args.pop("community_id", None)
-      if community:
-        community = Community.objects.filter(pk=community).first()
 
       # update the event instance
       events.update(**args)
       event: Event = events.first()
 
-      if image:
-        media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
-        event.image = media
+      if image: #now, images will always come as an array of ids, or "reset" string 
+        if image[0] == RESET: #if image is reset, delete the existing image
+          event.image = None
+        else:
+          media = Media.objects.filter(id = image[0]).first()
+          event.image = media
       
-      if community:
-        event.community = community
-      else:
-        event.community = None
+      if community_id:
+        community = Community.objects.filter(pk=community_id).first()
+        if community:
+          event.community = community
+        else:
+          event.community = None
 
       if tags:
         event.tags.set(tags)
+
+      if publicity_selections:
+        event.communities_under_publicity.set(publicity_selections)
+
+      if shared_to:
+        first = shared_to[0]
+        if first == "reset": 
+          event.shared_to.clear()
+        else: event.shared_to.set(shared_to)
 
       if is_recurring:
 
@@ -429,7 +481,7 @@ class EventStore:
               external_link = event.external_link, 
               more_info = event.more_info, 
               is_deleted = event.is_deleted, 
-              is_published = event.is_published, 
+              is_published = event.is_published,
               rank = event.rank, 
               is_recurring = False, 
               recurring_details = None
@@ -466,9 +518,24 @@ class EventStore:
           if rescheduled: 
             rescheduled.rescheduled_event.delete()
             rescheduled.delete()
+      
+      if (is_approved != None and 
+          (is_approved != event.is_approved)) : # If changed
+          event.is_approved = is_approved
+      
+      if (is_published != None and 
+          (is_published != event.is_published)): # If changed
+        event.is_published = is_published
+
+      if event.is_approved==False and event.is_published==True: # An event can't be published and not approved
+        event.is_approved==True # Approve an event if an admin publishes it
 
       # successful return
-      event.save()      
+      event.save()     
+      
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [event], context = context, type = FootageConstants.update(), notes = f"Event ID({event_id})")
+      # ---------------------------------------------------------------- 
       return event, None
 
     except Exception as e:
@@ -561,7 +628,7 @@ class EventStore:
             start_date = pytz.utc.localize(datetime.datetime(new_month.year, new_month.month, upcoming_date, start_date.hour, start_date.minute))
           event.start_date_and_time = start_date
           event.end_date_and_time = start_date + duration
-          
+        
         event.save()
         exception = RecurringEventException.objects.filter(event=event).first()
         if exception and pytz.utc.localize(exception.former_time) < pytz.utc.localize(event.start_date_and_time):
@@ -569,10 +636,10 @@ class EventStore:
 
       except Exception as e:
         print(str(e))
-        return CustomMassenergizeError(str(e))
+        return CustomMassenergizeError(e)
     return events, None
 
-  def rank_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def rank_event(self, args, context: Context) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.get('id', None)
       rank = args.get('rank', None)
@@ -580,6 +647,10 @@ class EventStore:
 
         events = Event.objects.filter(id=id)
         events.update(rank=rank)
+        event = event.first() 
+        # ----------------------------------------------------------------
+        Spy.create_event_footage(actions = [event], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+        # ----------------------------------------------------------------
         return events.first(), None
       else:
         raise Exception("Rank and ID not provided to events.rank")
@@ -596,10 +667,45 @@ class EventStore:
       
       if len(events) > 1:
         return None, CustomMassenergizeError("Deleting multiple events not supported")
-
+      event = events.first()
       events.delete()
-      return events.first(), None
+      
+      # ----------------------------------------------------------------
+      Spy.create_event_footage(events = [], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({event_id})")
+      # ----------------------------------------------------------------
+      return event, None
     except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+  def fetch_other_events_for_cadmin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    """
+        * Look for events from a given list of communities that are open to everyone,
+        * Or are open to any of the admin's communities 
+        * With the exclude variable set, we list events from every community, excluding ones from the given 
+        * community list  
+        * Or
+        * And in all cases, dont return templates
+    """
+    try: 
+      ids = args.get("community_ids")
+      excluded = args.get("exclude", False)
+      events = []
+      admin_of = []
+      user = UserProfile.objects.filter(email=context.user_email).first()
+      today = datetime.datetime.today()
+      if user: 
+        admin_of =[g.community.id for g in user.communityadmingroup_set.all() ]
+    
+      if excluded: 
+        # Find all events that are open in any community, but exclude events from the selected communities
+        events = Event.objects.filter(Q(start_date_and_time__gte=today, is_published = True,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,publicity=EventConstants.open_to(),communities_under_publicity__id__in = admin_of)).exclude(community__id__in = ids).order_by("-id") 
+      else: 
+        # Find events that have publicity as open, and belong to the selected community, OR, find events that from any of the listed communities that are open to any of the admins communities
+        events =  Event.objects.filter(Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids, publicity = EventConstants.open_to(),communities_under_publicity__id__in = admin_of, is_global = False)).distinct().order_by("-id")
+      return events, None
+    except Exception as e: 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
@@ -644,7 +750,7 @@ class EventStore:
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def get_rsvp_list(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:

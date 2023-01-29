@@ -4,9 +4,11 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from django.db.models import Q, prefetch_related_objects
 from api.store.team import get_team_users
-from .utils import get_community_or_die
+from .utils import get_community_or_die, unique_media_filename
 from sentry_sdk import capture_message
 from typing import Tuple
+from api.services.utils import send_slack_message
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, RUN_SERVER_LOCALLY
 
 def get_households_engaged(community: Community):
 
@@ -217,6 +219,7 @@ class GraphStore:
           new_graph.user = user
 
       if image:
+        image.name = unique_media_filename(image)
         media = Media.objects.create(file=image, name=f"ImageFor{args.get('name', '')}Event")
         new_graph.image = media
 
@@ -303,11 +306,20 @@ class GraphStore:
 
   def update_data(self, context:Context, args:dict) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+
       value = args.get('value')
       data_id = args.get('data_id')
 
       data = Data.objects.filter(pk=data_id).first()
       if data:
+
+        # check for data corruption: there have been problems with data values getting clobbered
+        oldvalue = data.value
+        if abs(value-oldvalue)>1:
+          # this is only used to increment or decrement values by one.  Something wrong here
+          msg = "data.update corruption? old value %d, new value %d" % (oldvalue, value)
+          raise Exception(msg)
+
         data.value = value
         data.save()
         return data, None
@@ -315,6 +327,7 @@ class GraphStore:
 
       return None, None
     except Exception as e:
+      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
@@ -392,4 +405,45 @@ class GraphStore:
 
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
+
+  def debug_data_fix(self) -> None:
+    try:
+      # attempting to fix the problem with data getting screwed up
+      for community in Community.objects.all().select_related('goal'):
+        if community.goal:
+          action_goal= max(community.goal.target_number_of_actions, 100)
+        else:
+          # communities that don't have goals
+          action_goal = 100
+
+        if community.is_geographically_focused:
+          user_actions = UserActionRel.objects.filter(
+            real_estate_unit__community=community, status="DONE"
+          )
+        else:
+          user_actions = UserActionRel.objects.filter(
+            action__community=community, status="DONE"
+          )
+
+        for d in Data.objects.filter(community=community):
+          if d and d.value>action_goal:
+            oldval = d.value
+            val = 0
+            tag = d.tag
+
+            for user_action in user_actions:
+              if user_action.action and user_action.action.tags.filter(pk=tag.id).exists():
+                val += 1
+
+            if (val != d.value) :
+              d.value = val
+              d.save()
+              if RUN_SERVER_LOCALLY:
+                print("WARNING - data_fix: Community: " + community.name
+                  + ", Category: " + tag.name
+                  + ", Old: "  + str(oldval)
+                  + ", New: "  + str(val))
+    except:
+      pass
+

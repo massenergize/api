@@ -1,4 +1,4 @@
-import json
+import json, os
 import django.db.models.base as Base
 import inspect
 from django.db.models.fields.related import ManyToManyField, ForeignKey
@@ -91,7 +91,11 @@ class Console:
         """
         print(f"=================={key or'START LOG'}================")
         for c in content:
-            print(c)
+            if isinstance(c,dict) or isinstance(c,list):
+                item = json.dumps(c, indent=4)
+                print(item)
+            else:
+                print(c)
             print("..................................................")
         print(f"==================END LOG================")
 
@@ -116,3 +120,13 @@ class Console:
         print(Console.makeLine(len(text)))
         print(text)
         print(Console.makeLine(len(text)))
+
+
+def is_test_mode():
+    return os.environ.get("DJANGO_ENV", "").lower() == "test"
+
+
+def is_not_null(data):
+    if data == "null" or data == None:
+        return False
+    return True

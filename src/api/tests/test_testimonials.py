@@ -32,11 +32,18 @@ class ActionHandlerTest(TestCase):
         'accepted_terms_and_conditions': True
       })
 
+      self.USER1 = UserProfile.objects.create(**{
+            'full_name': "Testimonial Tester",
+            'email': 'testimonial@tester.com'
+      })
+
+
+
       admin_group_name  = f"{self.COMMUNITY.name}-{self.COMMUNITY.subdomain}-Admin-Group"
       self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
       self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
 
-      self.TESTIMONIAL1 = Testimonial.objects.create(title="testimonial1")
+      self.TESTIMONIAL1 = Testimonial.objects.create(title="testimonial1", community=self.COMMUNITY, user=self.USER1)
       self.TESTIMONIAL1.save()
 
     @classmethod
@@ -129,11 +136,28 @@ class ActionHandlerTest(TestCase):
         update_response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(update_response["success"])
 
+        # test logged in as user who submitted it
+        signinAs(self.client, self.USER1)
+        update_response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(update_response["success"])
+
         # test logged in as admin
         signinAs(self.client, self.SADMIN)
         update_response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": True}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(update_response["success"])
         self.assertTrue(update_response["data"]["is_approved"])
+        self.assertEqual(update_response["data"]["community"]["id"], self.COMMUNITY.id)
+
+        # test setting live but not yet approved
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved":"false", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # test setting live and approved
+        response = self.client.post('/api/testimonials.update', urlencode({"testimonial_id": self.TESTIMONIAL1.id, "is_approved": "true", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+
 
     def test_delete(self):
         # create testimonials in method because they will be deleted

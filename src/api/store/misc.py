@@ -1,7 +1,10 @@
-from _main_.utils.utils import Console
+from datetime import datetime
+from django.db.models import Q
+from _main_.utils.footage.spy import Spy
 from api.tests.common import createUsers
 from database.models import (
     Action,
+    FeatureFlag,
     Vendor,
     Subdomain,
     Event,
@@ -20,6 +23,7 @@ from database.models import (
     Data,
     Location,
     Media,
+    HomePageSettings,
 )
 from _main_.utils.massenergize_errors import (
     CustomMassenergizeError,
@@ -37,6 +41,21 @@ from typing import Tuple
 class MiscellaneousStore:
     def __init__(self):
         self.name = "Miscellaneous Store/DB"
+        #self.list_commonly_used_icons()
+
+    def fetch_footages(self,context:Context, args): 
+        footages = None 
+        try:
+            if context.user_is_super_admin: 
+                footages = Spy.fetch_footages_for_super_admins(context = context)
+            else: 
+                footages = Spy.fetch_footages_for_community_admins(context = context)
+
+            return footages, None
+        except Exception as e: 
+            return None, str(e)
+
+
     def authenticateFrontendInTestMode(self, args): 
         email = args.get("email"); 
         user = UserProfile.objects.filter(email = email).first() 
@@ -115,7 +134,8 @@ class MiscellaneousStore:
         self, context: Context, args
     ) -> Tuple[list, MassEnergizeAPIError]:
         try:
-            users = UserProfile.objects.all()
+            #users = UserProfile.objects.all()
+            users = UserProfile.objects.filter(is_deleted=False)
             for user in users:
                 for community in user.communities.all():
                     community_member: CommunityMember = CommunityMember.objects.filter(
@@ -436,3 +456,29 @@ class MiscellaneousStore:
             .select_related("community")
             .values("id", "community__subdomain"),
         }
+
+    # utility routine to list icons from the database
+    def list_commonly_used_icons(self):
+
+        common_icons = {}
+        #action.icon
+        #button.icon
+        #service.icon
+        #card.icon
+        #tag.icon
+        #CarbonEquivalency.icon
+
+        #HomePageSettings.featured_links json
+        all_hps = HomePageSettings.objects.all()
+        for hps in all_hps:
+            if hps.featured_links:
+                for item in hps.featured_links:
+                    icon = item["icon"]
+                    if icon in common_icons.keys():
+                        common_icons[icon] += 1
+                    else:
+                        common_icons[icon] = 1
+
+        sorted_keys = sorted(common_icons, key=common_icons.get, reverse=True)
+        for key in sorted_keys:
+            print(str(key) + ": " + str(common_icons[key]))

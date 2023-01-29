@@ -2,10 +2,12 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassene
 from _main_.utils.common import serialize, serialize_all
 from api.store.vendor import VendorStore
 from _main_.utils.context import Context
-from _main_.utils.constants import ADMIN_URL_ROOT, SLACK_COMMUNITY_ADMINS_WEBHOOK_URL
+from _main_.utils.constants import ADMIN_URL_ROOT
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die, get_community_or_die
+from sentry_sdk import capture_message
 from typing import Tuple
 
 class VendorService:
@@ -30,64 +32,66 @@ class VendorService:
 
 
   def create_vendor(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      if user_submitted:
+        # this should be coming from a community site
+        community = get_community_or_die(context, args)
+        if not community:
+          return None, CustomMassenergizeError('Vendor submission requires a community')
 
+      vendor, err = self.store.create_vendor(context, args)
+      if err:
+        return None, err
 
-    if user_submitted:
-      
-      # this should be coming from a community site
-      community = get_community_or_die(context, args)
-      if not community:
-        return None, CustomMassenergizeError('Vendor submission requires a community')
+      if user_submitted:
 
-    vendor, err = self.store.create_vendor(context, args)
-    if err:
-      return None, err
+        # For now, send e-mail to primary community contact for a site
+        admin_email = community.owner_email
+        admin_name = community.owner_name
+        first_name = admin_name.split(" ")[0]
+        if not first_name or first_name == "":
+          first_name = admin_name
 
-    if user_submitted:
+        community_name = community.name
 
-      user = get_user_or_die(context, args)
-      if user:
-        name = user.full_name
-        email = user.email
-      else:
-        return None, CustomMassenergizeError('Vendor submission incomplete')
+        user = get_user_or_die(context, args)
+        if user:
+          name = user.full_name
+          email = user.email
+        else:
+          return None, CustomMassenergizeError('Vendor submission incomplete')
 
-      # For now, send e-mail to primary community contact for a site
-      admin_email = community.owner_email
-      admin_name = community.owner_name
-      first_name = admin_name.split(" ")[0]
-      if not first_name or first_name == "":
-        first_name = admin_name
+        subject = 'User Service Provider Submitted'
 
-      community_name = community.name
+        content_variables = {
+          'name': first_name,
+          'community_name': community_name,
+          'url': f"{ADMIN_URL_ROOT}/admin/edit/{vendor.id}/vendor",
+          'from_name': name,
+          'email': email,
+          'title': vendor.name,
+          'body': vendor.description,
+        }
+        send_massenergize_rich_email(
+              subject, admin_email, 'vendor_submitted_email.html', content_variables)
 
+        send_slack_message(
+            #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
+            SLACK_SUPER_ADMINS_WEBHOOK_URL, {
+            "content": "User submitted Vendor for "+community_name,
+            "from_name": name,
+            "email": email,
+            "subject": vendor.name,
+            "message": vendor.description,
+            "url": f"{ADMIN_URL_ROOT}/admin/edit/{vendor.id}/vendor",
+            "community": community_name
+        }) 
 
-      subject = 'User Service Provider Submitted'
+      return serialize(vendor), None
 
-      content_variables = {
-        'name': first_name,
-        'community_name': community_name,
-        'url': f"{ADMIN_URL_ROOT}/admin/edit/{vendor.id}/vendor",
-        'from_name': name,
-        'email': email,
-        'title': vendor.name,
-        'body': vendor.description,
-      }
-      send_massenergize_rich_email(
-            subject, admin_email, 'vendor_submitted_email.html', content_variables)
-
-      send_slack_message(
-          SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
-          "from_name": name,
-          "email": email,
-          "subject": vendor.name,
-          "message": vendor.description,
-          "url": f"{ADMIN_URL_ROOT}/admin/edit/{vendor.id}/vendor",
-          "community": community_name
-      }) 
-
-    return serialize(vendor), None
-
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def update_vendor(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     vendor, err = self.store.update_vendor(context, args)
@@ -95,8 +99,8 @@ class VendorService:
       return None, err
     return serialize(vendor), None
 
-  def rank_vendor(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    vendor, err = self.store.rank_vendor(args)
+  def rank_vendor(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    vendor, err = self.store.rank_vendor(args,context)
     if err:
       return None, err
     return serialize(vendor), None
@@ -108,8 +112,8 @@ class VendorService:
       return None, err
     return serialize(vendor), None
 
-  def delete_vendor(self, vendor_id) -> Tuple[dict, MassEnergizeAPIError]:
-    vendor, err = self.store.delete_vendor(vendor_id)
+  def delete_vendor(self, vendor_id,context) -> Tuple[dict, MassEnergizeAPIError]:
+    vendor, err = self.store.delete_vendor(vendor_id,context)
     if err:
       return None, err
     return serialize(vendor), None

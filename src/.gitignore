@@ -9,3 +9,6 @@ prod.env
 .ebextensions/securelistener-clb.config
 prepare-for-deploy.py
 deployment/aws/
+*.sqlite3*
+test_data/
+celerybeat-schedule.db

@@ -37,7 +37,7 @@ class PolicyHandler(RouteHandler):
     policy_id = args.pop('policy_id', None)
     policy_info, err = self.service.get_policy_info(policy_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=policy_info)
 
   @admins_only
@@ -50,7 +50,7 @@ class PolicyHandler(RouteHandler):
       args["is_global"] = parse_bool(is_global)
     policy_info, err = self.service.create_policy(community_id ,args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=policy_info)
 
 
@@ -59,7 +59,7 @@ class PolicyHandler(RouteHandler):
     args: dict = context.args
     policy_info, err = self.service.list_policies(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=policy_info)
 
   @admins_only
@@ -69,7 +69,7 @@ class PolicyHandler(RouteHandler):
     policy_id = args.pop('policy_id', None)
     policy_info, err = self.service.copy_policy(policy_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=policy_info)
 
   @admins_only
@@ -82,7 +82,7 @@ class PolicyHandler(RouteHandler):
       args["is_global"] = parse_bool(is_global)
     policy_info, err = self.service.update_policy(policy_id, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=policy_info)
 
   @admins_only
@@ -92,7 +92,7 @@ class PolicyHandler(RouteHandler):
     policy_id = args.pop('policy_id', None)
     policy_info, err = self.service.delete_policy(policy_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=policy_info)
 
   @admins_only
@@ -102,7 +102,7 @@ class PolicyHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     policies, err = self.service.list_policies_for_community_admin(context, community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=policies)
 
   @super_admins_only
@@ -111,5 +111,5 @@ class PolicyHandler(RouteHandler):
     args: dict = context.args
     policies, err = self.service.list_policies_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=policies)

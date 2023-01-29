@@ -2,11 +2,12 @@
 
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.common import get_request_contents, rename_field, rename_fields, parse_bool, parse_list, check_length, parse_int
+from _main_.utils.utils import Console
 from api.services.page_settings__home import HomePageSettingsService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
+from sentry_sdk import capture_message
 from api.decorators import admins_only, super_admins_only, login_required
 
 class HomePageSettingsHandler(RouteHandler):
@@ -36,7 +37,7 @@ class HomePageSettingsHandler(RouteHandler):
     args = rename_field(args, 'home_page_id', 'id')
     home_page_setting_info, err = self.service.get_home_page_setting_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=home_page_setting_info)
 
   @admins_only
@@ -45,7 +46,7 @@ class HomePageSettingsHandler(RouteHandler):
     args: dict = context.args
     home_page_setting_info, err = self.service.create_home_page_setting(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=home_page_setting_info)
 
 
@@ -54,13 +55,17 @@ class HomePageSettingsHandler(RouteHandler):
     args: dict = context.args
     home_page_setting_info, err = self.service.list_home_page_settings(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=home_page_setting_info)
 
   @admins_only
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
+
+    images = args.get("images", None)
+    if images: 
+      args["images"] = images.split(",")
 
     #featured links
     args['show_featured_links'] = parse_bool(args.pop('show_featured_links', True))
@@ -105,10 +110,10 @@ class HomePageSettingsHandler(RouteHandler):
     # 9/29/21 goals setting moved to graphs.update, to consolidate input from admin portal
 
     home_page_setting_info, err = self.service.update_home_page_setting(args)
-
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=home_page_setting_info)
+
 
   @super_admins_only
   def delete(self, request):
@@ -117,7 +122,7 @@ class HomePageSettingsHandler(RouteHandler):
     home_page_id = args.pop('home_page_id', None)
     home_page_setting_info, err = self.service.delete_home_page_setting(home_page_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=home_page_setting_info)
 
   @admins_only
@@ -127,12 +132,12 @@ class HomePageSettingsHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     home_page_settings, err = self.service.list_home_page_settings_for_community_admin(community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=home_page_settings)
 
   @super_admins_only
   def super_admin_list(self, request):
     home_page_settings, err = self.service.list_home_page_settings_for_super_admin()
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=home_page_settings)

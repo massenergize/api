@@ -3,9 +3,10 @@ from _main_.utils.common import serialize, serialize_all
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.utils.constants import COMMUNITY_URL_ROOT
+from _main_.utils.constants import COMMUNITY_URL_ROOT,  ME_LOGO_PNG
 import os, csv
 import re
+from sentry_sdk import capture_message
 from typing import Tuple
 
 def _parse_import_file(csvfile):
@@ -70,7 +71,7 @@ def _send_invitation_email(user_info, mess):
 
   subject = cadmin_name + " invites you to join the " + community_name + " Community"
 
-  #community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
+  #community_logo =  community.logo.file.url if community and community.logo else ME_LOGO_PNG
   #subdomain =   community.subdomain if community else "global"
   #subject = f'Welcome to {community_name}, a MassEnergize community'
   homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
@@ -95,7 +96,8 @@ def _send_invitation_email(user_info, mess):
     'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
     }
   
-  send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
+  #send_massenergize_rich_email(subject, email, email_template, content_variables, cadmin_email)
+  send_massenergize_rich_email(subject, email, email_template, content_variables)
 
 class UserService:
   """
@@ -136,6 +138,13 @@ class UserService:
     return serialize_all(user), None
 
 
+  def list_publicview(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    publicview, err = self.store.list_publicview(context, args)
+    if err:
+      return None, err
+    return {'public_user_list': publicview}, None
+
+
   def list_actions_todo(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     actions_todo, err = self.store.list_todo_actions(context, args)
     if err:
@@ -154,7 +163,7 @@ class UserService:
       return None, err
     return result, None
 
-  def  list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.list_events_for_user(context, args)
     if err:
       return None, err
@@ -172,33 +181,45 @@ class UserService:
       return None, err
     return imported_info, None
 
-  def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    res, err = self.store.create_user(context, args)
+  def validate_username(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    info, err = self.store.validate_username(args)
     if err:
       return None, err
-    
-    community = res["community"]
-    user = res["user"]
-    community_name =  community.name if community else "Global Massenergize Community"
-    community_logo =  community.logo.file.url if community and community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png'
-    subdomain =   community.subdomain if community else "global"
-    subject = f'Welcome to {community_name}, a MassEnergize community'
-    homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
-    
-    content_variables = {
-      'name': user.preferred_name,
-      'community': community_name,
-      'homelink': homelink,
-      'logo': community_logo,
-      'actionslink':f'{homelink}/actions',
-      'eventslink':f'{homelink}/events',
-      'serviceslink': f'{homelink}/services',
-      'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
-      }
-    
-    send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables)
+    return info, None
 
-    return serialize(user, full=True), None
+  def create_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      res, err = self.store.create_user(context, args)
+      if err:
+        return None, err
+
+      community = res["community"]
+      user = res["user"]
+      send_email = res["new_user_email"]
+      if send_email:   # a complete user profile, not a guest
+        community_name =  community.name if community else "Global Massenergize Community"
+        community_logo =  community.logo.file.url if community and community.logo else ME_LOGO_PNG
+        subdomain =   community.subdomain if community else "global"
+        subject = f'Welcome to {community_name}, a MassEnergize community'
+        homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
+
+        content_variables = {
+          'name': user.preferred_name,
+          'community': community_name,
+          'homelink': homelink,
+          'logo': community_logo,
+          'actionslink':f'{homelink}/actions',
+          'eventslink':f'{homelink}/events',
+          'serviceslink': f'{homelink}/services',
+          'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
+          }
+
+        send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables)
+
+      return serialize(user, full=True), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def update_user(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -214,15 +235,15 @@ class UserService:
     return serialize(user), None
 
 
-  def list_users_for_community_admin(self, context, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    users, err = self.store.list_users_for_community_admin(context, community_id)
+  def list_users_for_community_admin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    users, err = self.store.list_users_for_community_admin(context, args)
     if err:
       return None, err
     return serialize_all(users), None
 
 
-  def list_users_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
-    users, err = self.store.list_users_for_super_admin(context)
+  def list_users_for_super_admin(self, context,args) -> Tuple[list, MassEnergizeAPIError]:
+    users, err = self.store.list_users_for_super_admin(context,args)
     if err:
       return None, err
     return serialize_all(users), None
@@ -241,93 +262,99 @@ class UserService:
     return serialize(user, full=True), None
   
   def import_from_csv(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      first_name_field = args.get('first_name_field', None)
+      last_name_field = args.get('last_name_field', None)
+      email_field = args.get('email_field', None)
 
-    first_name_field = args.get('first_name_field', None)
-    last_name_field = args.get('last_name_field', None)
-    email_field = args.get('email_field', None)
+      custom_message = args.get('message', "")
 
-    custom_message = args.get('message', "")
+      csv_ref = args.get('csv', None)
+      if csv_ref:
+        csv_ref = csv_ref.file
+      else:
+        return None, CustomMassenergizeError("csv file not specified")
 
-    csv_ref = args.get('csv', None)
-    if csv_ref:
-      csv_ref = csv_ref.file
-    else:
-      return None, CustomMassenergizeError("csv file not specified")
+      filecontents, err = _parse_import_file(csv_ref)
+      if err:
+        return None, CustomMassenergizeError(err)
 
-    filecontents, err = _parse_import_file(csv_ref)
-    if err:
-      return None, CustomMassenergizeError(err)
+      invalid_emails = []
+      line = 0
+      for csv_row in filecontents:
+        line += 1
+        column_list = list(csv_row.keys())
+        try:
+          # prevents the first row (headers) from being read in as a user
+          first_name = csv_row[first_name_field].strip()
+          last_name = csv_row[last_name_field]
+          email = csv_row[email_field].lower()
 
-    invalid_emails = []
-    line = 0
-    for csv_row in filecontents:
-      line += 1
-      column_list = list(csv_row.keys())
-      try:
-        # prevents the first row (headers) from being read in as a user
-        first_name = csv_row[first_name_field].strip()
-        last_name = csv_row[last_name_field]
-        email = csv_row[email_field].lower()
-        
-        if first_name == column_list[0]:
-          continue
+          if first_name == column_list[0]:
+            continue
 
-        # verify correctness of email address
-        # improved regex for validating e-mails
-        regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
-        if(re.search(regex,email)):  
-          info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
+          # verify correctness of email address
+          # improved regex for validating e-mails
+          regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+          if(re.search(regex,email)):  
+            info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
 
-          # send invitation e-mail to each new user
-          _send_invitation_email(info, custom_message)
+            # send invitation e-mail to each new user
+            _send_invitation_email(info, custom_message)
 
-        else:
-          if filecontents.index(csv_row) != 0:
-            invalid_emails.append({"line":line, "email":email}) 
+          else:
+            if filecontents.index(csv_row) != 0:
+              invalid_emails.append({"line":line, "email":email}) 
 
-      except Exception as e:
-        print("Error string: " + str(e))
-        return None, CustomMassenergizeError(str(e))
-    if err:
-      return None, err
-    return {'invalidEmails': invalid_emails}, None
+        except Exception as e:
+          print("Error string: " + str(e))
+          return None, CustomMassenergizeError(e)
+      if err:
+        return None, err
+      return {'invalidEmails': invalid_emails}, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def import_from_list(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      names = args.get('names', None)
+      first_names = args.get('first_names', None)
+      last_names = args.get('last_names', None)
+      emails = args.get('emails', None)      
 
-    names = args.get('names', None)
-    first_names = args.get('first_names', None)
-    last_names = args.get('last_names', None)
-    emails = args.get('emails', None)      
+      custom_message = args.get('message', "")
 
-    custom_message = args.get('message', "")
+      invalid_emails = []
+      for ix in range(len(emails)):
+        try:
+          if first_names:
+            first_name = first_names[ix]
+            last_name = last_names[ix]
+          else:
+            name = names[ix]
+            spc = name.find(' ')
+            first_name = name[0:spc-1]
+            last_name = name[spc+1]
+          email = emails[ix].lower()
 
-    invalid_emails = []
-    for ix in range(len(emails)):
-      try:
-        if first_names:
-          first_name = first_names[ix]
-          last_name = last_names[ix]
-        else:
-          name = names[ix]
-          spc = name.find(' ')
-          first_name = name[0:spc-1]
-          last_name = name[spc+1]
-        email = emails[ix].lower()
+          # improved regex for validating e-mails
+          regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
+          if(re.search(regex,email)):  
+            info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
 
-        # improved regex for validating e-mails
-        regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
-        if(re.search(regex,email)):  
-          info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
+            # send invitation e-mail to each new user
+            _send_invitation_email(info, custom_message)
 
-          # send invitation e-mail to each new user
-          _send_invitation_email(info, custom_message)
+          else:
+            invalid_emails.append({"line":ix, "first_name":first_name, "last_name": last_name, "email":email}) 
 
-        else:
-          invalid_emails.append({"line":ix, "first_name":first_name, "last_name": last_name, "email":email}) 
-
-      except Exception as e:
-        print(str(e))
-        return None, CustomMassenergizeError(str(e))
-    if err:
-      return None, err
-    return {'invalidEmails': invalid_emails}, None
+        except Exception as e:
+          print(str(e))
+          return None, CustomMassenergizeError(e)
+      if err:
+        return None, err
+      return {'invalidEmails': invalid_emails}, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
