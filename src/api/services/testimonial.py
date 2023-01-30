@@ -1,6 +1,6 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.constants import ADMIN_URL_ROOT
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from .utils import send_slack_message
@@ -68,7 +68,8 @@ class TestimonialService:
         send_massenergize_rich_email(
               subject, admin_email, 'testimonial_submitted_email.html', content_variables)
 
-        send_slack_message(
+        if IS_PROD or IS_CANARY:
+          send_slack_message(
             #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
             SLACK_SUPER_ADMINS_WEBHOOK_URL, {
             "content": "User submitted Testimonial for "+community_name,
