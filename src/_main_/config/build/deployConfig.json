@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": true,
-  "BUILD_VERSION": "4.8.13",
-  "BUILD_VERSION_NOTES": "Jan 25: Bugfix release:\n- Fix event un-sharing"
+  "BUILD_VERSION": "4.8.14",
+  "BUILD_VERSION_NOTES": "Jan 25: Bugfix release:\n- Fix event un-sharing\n- test version for evaluating admin instructions what to do"
 }
