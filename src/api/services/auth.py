@@ -33,6 +33,7 @@ class AuthService:
     try:
       args = context.args or {}
       firebase_id_token = args.get('idToken', None)
+      noFootage = args.get('noFootage',None)
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
@@ -62,12 +63,10 @@ class AuthService:
           algorithm='HS256'
         ).decode('utf-8')
         #---------------------------------------------------------
-        its_safe_to_record = Spy.okay_to_record_sign_in_footage(user = user)
-        if context.is_admin_site and its_safe_to_record:
-          if its_safe_to_record:
-            Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
-        else:
-          if its_safe_to_record:
+        if  noFootage == "false": 
+          if context.is_admin_site:
+             Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
+          else: 
             where_user_signed_in_from = Community.objects.filter(subdomain = context.community)
             Spy.create_sign_in_footage( communities = where_user_signed_in_from, actor = user, context = context, portal=FootageConstants.on_user_portal(), type = FootageConstants.sign_in())
         #---------------------------------------------------------
