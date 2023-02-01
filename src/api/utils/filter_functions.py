@@ -303,10 +303,6 @@ def get_users_filter_params(params):
 
 
 
-
-
-
-
 def get_tag_collections_filter_params(params):
     try:
       params= json.loads(params)
@@ -317,6 +313,25 @@ def get_tag_collections_filter_params(params):
         operator.or_, (
         Q(name__icontains= search_text),
         ))
+        query.append(search)
+        
+      return query
+    except Exception as e:
+      return []
+
+
+def get_super_admins_filter_params(params):
+    try:
+      params= json.loads(params)
+      query = []
+      search_text = params.get("search_text", None)
+      if search_text:
+        search = reduce(
+            operator.or_, (
+                Q(full_name__icontains=search_text),
+                Q(communities__name__icontains=search_text),
+                Q(email__icontains=search_text),
+            ))
         query.append(search)
         
       return query
