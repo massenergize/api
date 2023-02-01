@@ -69,11 +69,13 @@ class AdminHandler(RouteHandler):
   @super_admins_only
   def list_super_admin(self, request): 
     context: Context  = request.context
-    args = context.get_request_body() 
+    args = context.get_request_body()
     admin_info, err = self.service.list_super_admin(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=admin_info)
+    meta = admin_info.get("meta")
+    data = admin_info.get("items")
+    return MassenergizeResponse(data=data, meta=meta)
 
   @admins_only
   def add_community_admin(self, request): 

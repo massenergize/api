@@ -234,6 +234,7 @@ class MessageStore:
 
         try:
             filter_params = []
+
             if context.args.get("params", None):
                 filter_params = get_messages_filter_params(context.args.get("params"))
             admin_communities, err = get_admin_communities(context)
