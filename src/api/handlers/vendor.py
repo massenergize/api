@@ -215,11 +215,13 @@ class VendorHandler(RouteHandler):
     args, err = self.validator.verify(args)
     if err:
       return err
-
     vendors, err = self.service.list_vendors_for_community_admin(context, args)
+
     if err:
       return err
-    return MassenergizeResponse(data=vendors)
+    meta = vendors.get('meta')
+    data = vendors.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -227,4 +229,6 @@ class VendorHandler(RouteHandler):
     vendors, err = self.service.list_vendors_for_super_admin(context)
     if err:
       return err
-    return MassenergizeResponse(data=vendors)
+    meta = vendors.get('meta')
+    data = vendors.get('items')
+    return MassenergizeResponse(data=data, meta=meta)

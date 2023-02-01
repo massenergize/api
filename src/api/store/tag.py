@@ -21,7 +21,7 @@ class TagStore:
     tags = Tag.objects.filter(community__id=community_id)
     if not tags:
       return [], None
-    return paginate(tags, context.args.get("page", 1)), None
+    return paginate(tags, context.args.get("page", 1), args.get("limit")), None
 
 
   def create_tag(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -52,13 +52,13 @@ class TagStore:
   def list_tags_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     tags =  self.list_tags_for_super_admin()
 
-    return paginate(tags, context.args.get("page", 1))
+    return paginate(tags, context.args.get("page", 1), args.get("limit"))
 
 
   def list_tags_for_super_admin(self, context):
     try:
       tags = Tag.objects.all()
-      return paginate(tags,context.args.get("page", 1) ), None
+      return paginate(tags, context.args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

@@ -590,7 +590,7 @@ class CommunityStore:
 
             if not communities:
                 return [], None
-            return paginate(communities, args.get('page', 1)), None
+            return paginate(communities, args.get('page', 1), args.get("limit")), None
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
@@ -928,7 +928,7 @@ class CommunityStore:
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
                 communities = Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params)
-                return paginate(communities, context.args.get("page",1)) , None
+                return paginate(communities, context.args.get("page", 1), context.args.get("limit")), None
             else:
                 return [], None
 
@@ -945,7 +945,7 @@ class CommunityStore:
                 filter_params = get_communities_filter_params(context.args.get("params"))
 
             communities = Community.objects.filter(is_deleted=False, *filter_params)
-            return paginate(communities, context.args.get("page", 1)), None
+            return paginate(communities, context.args.get("page", 1), context.args.get("limit")), None
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
@@ -1017,7 +1017,7 @@ class CommunityStore:
                     actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
                     actions_recorded.append(action_id)
 
-            return paginate(actions_completed, args.get('page', 1)), None
+            return paginate(actions_completed, args.get('page', 1), args.get("limit")), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

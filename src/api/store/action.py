@@ -55,7 +55,7 @@ class ActionStore:
       # by default, exclude deleted actions
       #if not context.include_deleted:
       actions = actions.filter(is_deleted=False)
-      new_action = paginate(actions, args.get('page', 1))
+      new_action = paginate(actions, args.get('page', 1), args.get("limit"))
 
       return new_action, None
     except Exception as e:
@@ -326,10 +326,10 @@ class ActionStore:
 
         comm_ids = [ag.community.id for ag in admin_groups]
         actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-        return paginate(actions, args.get('page', 1)), None
+        return paginate(actions, args.get('page', 1), args.get("limit")), None
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-      return paginate(actions, args.get('page', 1)), None
+      return paginate(actions, args.get('page', 1), args.get("limit")), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -339,11 +339,12 @@ class ActionStore:
   def list_actions_for_super_admin(self, context: Context):
     try:
       page = context.args.get('page', 1)
+      limit = context.args.get('limit')
       filter_params = []
       if context.args.get("params", None):
         filter_params = get_actions_filter_params(context.args.get("params"))
       actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
-      return paginate(actions, page), None
+      return paginate(actions, page, limit), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

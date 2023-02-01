@@ -354,7 +354,9 @@ class EventHandler(RouteHandler):
     events, err = self.service.list_events_for_community_admin(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=events)
+    meta = events.get('meta')
+    data = events.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
 
   @admins_only 
   def fetch_other_events_for_cadmin(self, request):
@@ -372,7 +374,7 @@ class EventHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=events)
-
+  #  TODO: Paginate this list
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -380,4 +382,6 @@ class EventHandler(RouteHandler):
     events, err = self.service.list_events_for_super_admin(context)
     if err:
       return err
-    return MassenergizeResponse(data=events)
+    meta = events.get('meta')
+    data = events.get('items')
+    return MassenergizeResponse(data=data, meta=meta)

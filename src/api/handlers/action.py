@@ -120,6 +120,7 @@ class ActionHandler(RouteHandler):
       return err
 
     action_info, err = self.service.list_actions(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=action_info)
@@ -219,18 +220,22 @@ class ActionHandler(RouteHandler):
       return err
 
     actions, err = self.service.list_actions_for_community_admin(context, args)
+    meta = actions.get('meta')
+    data = actions.get('items')
     if err:
       return err
-    return MassenergizeResponse(data=actions)
+    return MassenergizeResponse(data=data, meta=meta)
 
 
   @super_admins_only
   def super_admin_list(self, request): 
     context: Context = request.context
     actions, err = self.service.list_actions_for_super_admin(context)
+    meta = actions.get('meta')
+    data = actions.get('items')
     if err:
       return err
-    return MassenergizeResponse(data=actions)
+    return MassenergizeResponse(data=data, meta=meta)
 
 
   @super_admins_only

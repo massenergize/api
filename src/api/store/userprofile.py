@@ -401,7 +401,7 @@ class UserStore:
       if not user:
         return [], None
       attendees = EventAttendee.objects.filter(user=user)
-      return paginate(attendees, args.get("page",1)), None
+      return paginate(attendees, args.get("page",1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -694,7 +694,7 @@ class UserStore:
         users = remove_dups(users)
         users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
         
-        return paginate(users, context.args.get("page",1)), None
+        return paginate(users, context.args.get("page", 1), args.get("limit")), None
       elif not community:
         print(err)
         return [], None
@@ -702,7 +702,7 @@ class UserStore:
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
       users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
-      return paginate(users, context.args.get("page", 1)), None
+      return paginate(users, context.args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -717,7 +717,7 @@ class UserStore:
       # List all users including guests
       #  users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)
-      return paginate(users, context.args.get("page", 1)), None
+      return paginate(users, context.args.get("page", 1), context.args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -742,7 +742,7 @@ class UserStore:
       else:
         todo = UserActionRel.objects.filter(status="TODO", user=user)
       
-      return paginate(todo, args.get("page", 1)), None
+      return paginate(todo, args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -761,7 +761,7 @@ class UserStore:
       else:
         todo = UserActionRel.objects.filter(status="DONE", user=user)
       
-      return paginate(todo, args.get("page", 1)), None
+      return paginate(todo, args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

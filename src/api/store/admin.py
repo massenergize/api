@@ -70,7 +70,7 @@ class AdminStore:
   def list_super_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False)
-      return paginate(admins, args.get('page', 1)), None
+      return paginate(admins, args.get('page', 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -262,7 +262,7 @@ class AdminStore:
         return [], None
 
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
-      return paginate(messages, args.get("page", 1)), None
+      return paginate(messages, args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

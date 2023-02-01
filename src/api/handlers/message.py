@@ -75,13 +75,17 @@ class MessageHandler(RouteHandler):
     messages, err = self.service.list_team_admin_messages_for_community_admin(context)
     if err:
       return err
-    return MassenergizeResponse(data=messages)
+    meta = messages.get('meta')
+    data = messages.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
 
   @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
     messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
+    meta = messages.get('meta')
+    data = messages.get('items')
     if err:
       return err
-    return MassenergizeResponse(data=messages)
+    return MassenergizeResponse(data=data, meta=meta)

@@ -63,7 +63,7 @@ class TestimonialStore:
         else:
           testimonials = testimonials.filter(is_published=True)
 
-      return paginate(testimonials, args.get("page", 1)), None
+      return paginate(testimonials, args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -267,10 +267,10 @@ class TestimonialStore:
         comm_ids = [ag.community.id for ag in admin_groups]
 
         testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
-        return paginate(testimonials, context.args.get("page", 1)), None
+        return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
 
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
-      return paginate(testimonials, context.args.get("page", 1)), None
+      return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -283,7 +283,7 @@ class TestimonialStore:
       if context.args.get("params", None):
         filter_params = get_testimonials_filter_params(context.args.get("params"))
       testimonials = Testimonial.objects.filter(is_deleted=False,*filter_params).select_related('image', 'community', 'vendor').prefetch_related('tags')
-      return paginate(testimonials, context.args.get("page", 1)), None
+      return paginate(testimonials, context.args.get("page", 1), context.args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

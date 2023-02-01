@@ -84,7 +84,7 @@ class TeamStore:
         teams = Team.objects.filter(communities__id=community.id, is_published=True, is_deleted=False)
       elif user:
         teams = user.team_set.all()
-      return paginate(teams, args.get("page", 1)), None
+      return paginate(teams, args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -443,7 +443,7 @@ class TeamStore:
         return [], CustomMassenergizeError('Please provide a valid team_id')
 
       members = TeamMember.objects.filter(is_deleted=False, team__id=team_id, user__accepts_terms_and_conditions=True, user__is_deleted=False)
-      return paginate(members, args.get("page", 1)), None
+      return paginate(members, args.get("page", 1), args.get("limit")), None
     except Exception:
       return None, InvalidResourceError()
 
@@ -497,10 +497,10 @@ class TeamStore:
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
         teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
-        return paginate(teams, args.get("page", 1)), None
+        return paginate(teams, args.get("page", 1), args.get("limit")), None
 
       teams = Team.objects.filter(communities__id=community_id, is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
-      return paginate(teams, args.get("page", 1)), None
+      return paginate(teams, args.get("page", 1), args.get("limit")), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -512,7 +512,7 @@ class TeamStore:
       if context.args.get("params", None):
         filter_params = get_teams_filter_params(context.args.get("params"))
       teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
-      return paginate(teams, context.args.get("page", 1)), None
+      return paginate(teams, context.args.get("page", 1), context.args.get("limit")), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -558,7 +558,7 @@ class TeamStore:
               actions_recorded.append(action_id)
 
       actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
-      return paginate(actions_completed, args.get("page", 1)), None
+      return paginate(actions_completed, args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

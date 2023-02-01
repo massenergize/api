@@ -120,11 +120,11 @@ class SubscriberStore:
             subscribers = ag.community.subscriber_set.all().filter(is_deleted=False, *filter_params)
           else:
             subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False, *filter_params)
-        return paginate(subscribers, context.args.get("page", 1)), None
+        return paginate(subscribers, context.args.get("page", 1), args.get("limit")), None
 
       community: Community = Community.objects.get(pk=community_id)
       subscribers = community.subscriber_set.all().filter(is_deleted=False)
-      return paginate(subscribers, context.args.get("page", 1)), None
+      return paginate(subscribers, context.args.get("page", 1), args.get("limit")), None
  
     except Exception as e:
       capture_message(str(e), level="error")
@@ -137,7 +137,7 @@ class SubscriberStore:
       if context.args.get("params", None):
           filter_params = get_subscribers_filter_params(context.args.get("params"))
       subscribers = Subscriber.objects.filter(is_deleted=False, *filter_params)
-      return paginate(subscribers, context.args.get("page",1)), None
+      return paginate(subscribers, context.args.get("page", 1), context.args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

@@ -335,11 +335,11 @@ class VendorStore:
           else:
             vendors = c.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
 
-        return paginate(vendors.distinct(),args.get("page",1)), None
+        return paginate(vendors.distinct(), args.get("page", 1), args.get("limit")), None
 
       community = get_community_or_die(context, {'community_id': community_id})
       vendors = community.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
-      return paginate(vendors, context.args.get("page", 1)), None
+      return paginate(vendors, context.args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -353,7 +353,7 @@ class VendorStore:
         filter_params = get_vendor_filter_params(context.args.get("params"))
 
       vendors = Vendor.objects.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
-      return paginate(vendors, context.args.get("page", 1)), None
+      return paginate(vendors, context.args.get("page", 1), context.args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

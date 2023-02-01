@@ -224,7 +224,7 @@ class EventStore:
     
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
-    return paginate([*events,*shared], args.get("page", 1)), None
+    return paginate([*events, *shared], args.get("page", 1), args.get("limit")), None
 
 
   def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -733,10 +733,10 @@ class EventStore:
         # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
         # not as their own separate events
         events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-        return paginate(events, context.args.get("page", 1)), None
+        return paginate(events, context.args.get("page", 1), args.get("limit")), None
 
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
-      return paginate(events, args.get("page", 1)), None
+      return paginate(events, args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -750,7 +750,7 @@ class EventStore:
       if context.args.get("params", None):
         filter_params = get_events_filter_params(context.args.get("params"))
       events = Event.objects.filter(*filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-      return paginate(events, context.args.get("page", 1)), None
+      return paginate(events, context.args.get("page", 1), context.args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -768,7 +768,7 @@ class EventStore:
           return None, InvalidResourceError()
 
         event_attendees = EventAttendee.objects.filter(event=event)
-        return paginate(event_attendees, args.get("page", 1)), None
+        return paginate(event_attendees, args.get("page", 1), args.get("limit")), None
 
       else:
         return None, InvalidResourceError()

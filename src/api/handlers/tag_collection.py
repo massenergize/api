@@ -88,7 +88,9 @@ class TagCollectionHandler(RouteHandler):
     tag_collections, err = self.service.list_tag_collections_for_community_admin(context,community_id)
     if err:
       return err
-    return MassenergizeResponse(data=tag_collections)
+    meta = tag_collections.get('meta')
+    data = tag_collections.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -97,4 +99,6 @@ class TagCollectionHandler(RouteHandler):
     tag_collections, err = self.service.list_tag_collections_for_super_admin(context)
     if err:
       return err
-    return MassenergizeResponse(data=tag_collections)
+    meta = tag_collections.get('meta')
+    data = tag_collections.get('items')
+    return MassenergizeResponse(data=data, meta=meta)

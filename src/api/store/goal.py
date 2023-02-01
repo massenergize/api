@@ -57,7 +57,7 @@ class GoalStore:
       else:
         return None, CustomMassenergizeError("Provide a community, team or user")
 
-      return paginate(goals, context.args.get("page", 1)), None
+      return paginate(goals, context.args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -184,7 +184,7 @@ class GoalStore:
         community: Community = Community.objects.get(pk=community_id)
         goals.extend(self._get_goals_from_community(community))
       
-      return paginate(goals,context.args.get("page", 1)), None
+      return paginate(goals, context.args.get("page", 1), args.get("limit")), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -196,7 +196,7 @@ class GoalStore:
   def list_goals_for_super_admin(self):
     try:
       goals = Goal.objects.filter(is_deleted=False)
-      return paginate(goals), None
+      return paginate(goals, limit=args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

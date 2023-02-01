@@ -216,6 +216,7 @@ class CommunityHandler(RouteHandler):
     context: Context  = request.context
     #args = context.get_request_body()
     communities, err = self.service.list_other_communities_for_cadmin(context)
+    # TODO: Paginate this list
     if err:
       return err
     return MassenergizeResponse(data=communities)
@@ -227,7 +228,9 @@ class CommunityHandler(RouteHandler):
     communities, err = self.service.list_communities_for_community_admin(context)
     if err:
       return err
-    return MassenergizeResponse(data=communities)
+    meta = communities.get('meta')
+    data = communities.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
 
 
   @super_admins_only
@@ -237,7 +240,9 @@ class CommunityHandler(RouteHandler):
     communities, err = self.service.list_communities_for_super_admin(context)
     if err:
       return err
-    return MassenergizeResponse(data=communities)
+    meta = communities.get('meta')
+    data = communities.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
 
 
   @admins_only

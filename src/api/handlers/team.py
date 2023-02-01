@@ -290,9 +290,11 @@ class TeamHandler(RouteHandler):
       return err
 
     teams, err = self.team.list_teams_for_community_admin(context, args)
+    meta = teams.get('meta')
+    data = teams.get('items')
     if err:
       return err
-    return MassenergizeResponse(data=teams)
+    return MassenergizeResponse(data=data, meta=meta)
 
 
   @super_admins_only
@@ -302,4 +304,6 @@ class TeamHandler(RouteHandler):
     teams, err = self.team.list_teams_for_super_admin(context)
     if err:
       return err
-    return MassenergizeResponse(data=teams)
+    meta = teams.get('meta')
+    data = teams.get('items')
+    return MassenergizeResponse(data=data, meta=meta)

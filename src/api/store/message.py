@@ -240,13 +240,14 @@ class MessageStore:
             else:
                 messages = []
 
-            return paginate(messages, args.get("page", 1)), None
+            return paginate(messages, args.get("page", 1), args.get("limit")), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
     def list_team_admin_messages(self, context: Context):
         try:
+            limit = context.args.get("limit")
             filter_params = []
             if context.args.get("params", None):
                 filter_params = get_messages_filter_params(context.args.get("params"))
@@ -257,8 +258,7 @@ class MessageStore:
                 messages = Message.objects.filter(is_deleted=False, is_team_admin_message=True, community__id__in=[c.id for c in admin_communities], *filter_params)
             else:
                 messages = []
-
-            return paginate(messages, context.args.get("page",1)), None
+            return paginate(messages, context.args.get("page", 1), limit), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
