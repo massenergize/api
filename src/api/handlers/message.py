@@ -89,8 +89,8 @@ class MessageHandler(RouteHandler):
     self.validator.expect("message_ids",list, is_required=False)
     args, err = self.validator.verify(args, strict=True)
     messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
-    meta = messages.get('meta')
-    data = messages.get('items')
     if err:
       return err
+    meta = messages.get('meta')
+    data = messages.get('items')
     return MassenergizeResponse(data=data, meta=meta)
