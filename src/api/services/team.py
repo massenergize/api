@@ -167,8 +167,8 @@ class TeamService:
     return teams, None
 
 
-  def list_teams_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    teams, err = self.store.list_teams_for_super_admin(context)
+  def list_teams_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
+    teams, err = self.store.list_teams_for_super_admin(context,args)
     if err:
       return None, err
     return teams, None

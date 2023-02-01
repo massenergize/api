@@ -15,7 +15,7 @@ from _main_.utils.context import Context
 from .utils import get_community, get_user
 from sentry_sdk import capture_message
 from typing import Tuple
-
+from django.db.models import Q
 
 class MessageStore:
     def __init__(self):
@@ -86,23 +86,23 @@ class MessageStore:
 
             if file:
 
-              file.name = unique_media_filename(file)
+                file.name = unique_media_filename(file)
 
-              media = Media.objects.create(
-                  name=f"Messages: {new_message.title} - Uploaded File",
-                  file=file,
-              )
-              media.save()
-              new_message.uploaded_file = media
+                media = Media.objects.create(
+                    name=f"Messages: {new_message.title} - Uploaded File",
+                    file=file,
+                )
+                media.save()
+                new_message.uploaded_file = media
 
-              new_message.save()
+                new_message.save()
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
                 messages=[new_message],
                 context=context,
                 type=FootageConstants.update(),
                 notes="Reply from admin",
-                related_users =[new_message.user],
+                related_users=[new_message.user],
             )
             # ----------------------------------------------------------------
             return new_message, None
@@ -218,8 +218,10 @@ class MessageStore:
 
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
-                messages=[message], context=context, type=FootageConstants.delete(), 
-                notes = f"Deleted ID({message_id})"
+                messages=[message],
+                context=context,
+                type=FootageConstants.delete(),
+                notes=f"Deleted ID({message_id})",
             )
             # ----------------------------------------------------------------
             return message, None
@@ -228,15 +230,36 @@ class MessageStore:
             return None, CustomMassenergizeError(e)
 
     def list_community_admin_messages(self, context: Context, args):
+        message_ids = args.get("message_ids", [])
+
         try:
             filter_params = []
             if context.args.get("params", None):
                 filter_params = get_messages_filter_params(context.args.get("params"))
             admin_communities, err = get_admin_communities(context)
+            with_ids = Q()
+            if message_ids:
+                with_ids = Q(id__in=message_ids)
+
             if context.user_is_super_admin:
-                messages = Message.objects.filter(is_deleted=False, is_team_admin_message=False,*filter_params)
+                messages = Message.objects.filter(
+                    Q(
+                        is_deleted=False,
+                        is_team_admin_message=False,
+                    ),
+                    with_ids,
+                    *filter_params
+                ).distinct()
             elif context.user_is_community_admin:
-                messages = Message.objects.filter(is_deleted=False, is_team_admin_message=False, community__id__in=[c.id for c in admin_communities],*filter_params)
+                messages = Message.objects.filter(
+                    Q(
+                        is_deleted=False,
+                        is_team_admin_message=False,
+                        community__id__in=[c.id for c in admin_communities],
+                    ),
+                    with_ids,
+                    *filter_params
+                ).distinct()
             else:
                 messages = []
 
@@ -245,20 +268,35 @@ class MessageStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_team_admin_messages(self, context: Context):
+    def list_team_admin_messages(self, context: Context, args):
+        message_ids = args.get("message_ids", [])
+        with_ids = Q()
+        if message_ids:
+            with_ids = Q(id__in=message_ids)
         try:
             limit = context.args.get("limit")
             filter_params = []
             if context.args.get("params", None):
                 filter_params = get_messages_filter_params(context.args.get("params"))
             if context.user_is_super_admin:
-                messages = Message.objects.filter(is_deleted=False, is_team_admin_message=True,*filter_params)
+                messages = Message.objects.filter(
+                    Q(is_deleted=False,
+                      is_team_admin_message=True), with_ids, *filter_params
+                ).distinct()
             elif context.user_is_community_admin:
                 admin_communities, err = get_admin_communities(context)
-                messages = Message.objects.filter(is_deleted=False, is_team_admin_message=True, community__id__in=[c.id for c in admin_communities], *filter_params)
+                messages = Message.objects.filter(
+                    Q(
+                        is_deleted=False,
+                        is_team_admin_message=True,
+                        community__id__in=[c.id for c in admin_communities],
+                    ),
+                    with_ids,
+                    *filter_params
+                ).distinct()
             else:
                 messages = []
-            return paginate(messages, context.args.get("page", 1), limit), None
+            return paginate(messages, context.args.get("page", 1), args.get("limit")), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

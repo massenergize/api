@@ -72,7 +72,7 @@ class CommunityHandler(RouteHandler):
     if executor_id == args.get("user_id", None) or context.user_is_admin():
       community_info, err = self.service.join_community(context, args)
     else:
-      return CustomMassenergizeError("Executor dosen't have sufficient permissions to use community.join on this user")
+      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.join on this user")
     if err:
       return err
     return MassenergizeResponse(data=community_info)
@@ -96,7 +96,7 @@ class CommunityHandler(RouteHandler):
     if executor_id == args.get("user_id", None):
       community_info, err = self.service.leave_community(context, args)
     else:
-      return CustomMassenergizeError("Executor dosen't have sufficient permissions to use community.leave on this user")
+      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.leave on this user")
 
     if err:
       return err

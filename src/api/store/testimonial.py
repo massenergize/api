@@ -249,10 +249,12 @@ class TestimonialStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_testimonials_for_community_admin(self,  context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_testimonials_for_community_admin(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    community_id = args.get("community_id") 
+    testimonial_ids = args.get("testimonial_ids")
     try:
       if context.user_is_super_admin:
-        return self.list_testimonials_for_super_admin(context)
+        return self.list_testimonials_for_super_admin(context, args)
 
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
@@ -260,6 +262,9 @@ class TestimonialStore:
       filter_params = []
       if context.args.get("params", None):
         filter_params = get_testimonials_filter_params(context.args.get("params"))
+      if testimonial_ids: 
+        testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
+        return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
 
       if not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
@@ -275,15 +280,22 @@ class TestimonialStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_testimonials_for_super_admin(self, context: Context):
+  def list_testimonials_for_super_admin(self, context: Context,args):
     try:
+      testimonial_ids = args.get("testimonial_ids")
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
       filter_params = []
       if context.args.get("params", None):
         filter_params = get_testimonials_filter_params(context.args.get("params"))
+  
+      if testimonial_ids: 
+        testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
+        return paginate(testimonials, context.args.get("page", 1), args.get("limit"))
+
       testimonials = Testimonial.objects.filter(is_deleted=False,*filter_params).select_related('image', 'community', 'vendor').prefetch_related('tags')
-      return paginate(testimonials, context.args.get("page", 1), context.args.get("limit")), None
+      return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
+
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

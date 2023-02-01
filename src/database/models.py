@@ -800,7 +800,7 @@ class UserProfile(models.Model):
                 "preferred_name",
                 "email",
                 "is_super_admin",
-                "is_community_admin",
+                "is_community_admin"
             ],
         )
         res["joined"] = self.created_at.date()

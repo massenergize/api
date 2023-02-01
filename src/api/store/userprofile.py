@@ -672,18 +672,26 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def list_users_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_users_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      if context.user_is_super_admin:
-        return self.list_users_for_super_admin(context)
-      
-      elif not context.user_is_community_admin:
-        return None, NotAuthorizedError()
-      
-      community, err = get_community(community_id)
+      community_id = args.get("community_id",None)
+      user_emails = args.get("user_emails", None)
+
       filter_params = []
       if context.args.get("params", None):
         filter_params = get_users_filter_params(context.args.get("params"))
+
+      if context.user_is_super_admin:
+        return self.list_users_for_super_admin(context, args)
+      
+      elif not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
+      if user_emails: 
+        users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
+        return paginate(users, context.args.get("page", 1), args.get("limit")), None
+      
+      community, err = get_community(community_id)
       
       if not community and context.user_id:
         communities, err = get_admin_communities(context)
@@ -707,8 +715,9 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def list_users_for_super_admin(self, context: Context):
+  def list_users_for_super_admin(self, context: Context, args):
     try:
+      user_emails = args.get("user_emails")
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
       filter_params = []
@@ -716,8 +725,13 @@ class UserStore:
         filter_params = get_users_filter_params(context.args.get("params"))
       # List all users including guests
       #  users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
+
+      if user_emails: 
+        users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
+        return paginate(users, context.args.get("page", 1), args.get("limit")), None
+
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)
-      return paginate(users, context.args.get("page", 1), context.args.get("limit")), None
+      return paginate(users, context.args.get("page", 1), args.get("limit")), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

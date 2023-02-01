@@ -475,11 +475,22 @@ class TeamStore:
 
   def list_teams_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
+      team_ids = args.get("team_ids", None)
+
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_teams_filter_params(context.args.get("params"))
+
       if context.user_is_super_admin:
-        return self.list_teams_for_super_admin(context)
+        return self.list_teams_for_super_admin(context, args)
 
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
+
+      
+      if team_ids: 
+        teams = Team.objects.filter(id__in = team_ids, *filter_params).select_related('logo', 'primary_community')
+        return paginate(teams, args.get("page", 1), args.get("limit")), None
 
       community_id = args.pop('community_id', None)
       if community_id == 0:
@@ -487,9 +498,6 @@ class TeamStore:
         return self.list_teams_for_super_admin(context)
       
 
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_teams_filter_params(context.args.get("params"))
 
 
       elif not community_id:
@@ -506,13 +514,19 @@ class TeamStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_teams_for_super_admin(self, context: Context):
+  def list_teams_for_super_admin(self, context: Context, args):
     try:
       filter_params = []
       if context.args.get("params", None):
         filter_params = get_teams_filter_params(context.args.get("params"))
+  
+      team_ids = args.get("team_ids", None)
+      if team_ids: 
+        teams = Team.objects.filter(id__in = team_ids, *filter_params).select_related('logo', 'primary_community')
+        return paginate(teams, context.args.get("page", 1), args.get("limit")), None
+
       teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
-      return paginate(teams, context.args.get("page", 1), context.args.get("limit")), None
+      return paginate(teams, context.args.get("page", 1),args.get("limit")), None
 
     except Exception as e:
       capture_message(str(e), level="error")

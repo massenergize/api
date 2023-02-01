@@ -235,15 +235,15 @@ class UserService:
     return serialize(user), None
 
 
-  def list_users_for_community_admin(self, context, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    users, err = self.store.list_users_for_community_admin(context, community_id)
+  def list_users_for_community_admin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    users, err = self.store.list_users_for_community_admin(context, args)
     if err:
       return None, err
     return users, None
 
 
-  def list_users_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
-    users, err = self.store.list_users_for_super_admin(context)
+  def list_users_for_super_admin(self, context,args) -> Tuple[list, MassEnergizeAPIError]:
+    users, err = self.store.list_users_for_super_admin(context,args)
     if err:
       return None, err
     return users, None

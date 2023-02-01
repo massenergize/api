@@ -170,8 +170,11 @@ class UserHandler(RouteHandler):
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    users, err = self.service.list_users_for_community_admin(context, community_id)
+    
+    args, err = self.validator.expect("user_emails","str_list", is_required=False).verify(args) 
+    if err:
+      return err
+    users, err = self.service.list_users_for_community_admin(context, args)
     if err:
       return err
     meta = users.get('meta')
@@ -182,7 +185,11 @@ class UserHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
-    users, err = self.service.list_users_for_super_admin(context)
+    args: dict = context.args
+    args, err = self.validator.expect("user_emails","str_list", is_required=False).verify(args) 
+    if err:
+      return err
+    users, err = self.service.list_users_for_super_admin(context,args)
     if err:
       return err
     meta = users.get('meta')
