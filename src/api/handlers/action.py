@@ -114,6 +114,10 @@ class ActionHandler(RouteHandler):
 
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
+    self.validator.expect('limit', int, is_required=False)
+
+
+    print("==== args ====", args)
 
     args, err = self.validator.verify(args)
     if err:
@@ -123,7 +127,11 @@ class ActionHandler(RouteHandler):
 
     if err:
       return err
-    return MassenergizeResponse(data=action_info)
+
+    meta = action_info.get('meta')
+    data = action_info.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
+
 
 
   # @admins_only

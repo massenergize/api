@@ -253,6 +253,7 @@ class EventHandler(RouteHandler):
     self.validator.expect("community_id", is_required=False)
     self.validator.expect("subdomain", is_required=False)
     self.validator.expect("user_id", is_required=False)
+    self.validator.expect("limit", is_required=False)
     args, err = self.validator.verify(args, strict=True)
     
     if err:
@@ -262,8 +263,9 @@ class EventHandler(RouteHandler):
 
     if err:
       return err
-
-    return MassenergizeResponse(data=event_info)
+    data = event_info.get("items", [])
+    meta = event_info.get("meta", {})
+    return MassenergizeResponse(data=data, meta=meta)
 
   
   def update_recurring_date(self, request):

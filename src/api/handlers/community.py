@@ -143,7 +143,9 @@ class CommunityHandler(RouteHandler):
     community_info, err = self.service.list_communities(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=community_info)
+    data = community_info.get("items", [])
+    meta = community_info.get("meta", {})
+    return MassenergizeResponse(data=data,meta=meta)
 
   @admins_only
   def update(self, request):
@@ -268,14 +270,17 @@ class CommunityHandler(RouteHandler):
 
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
+    self.validator.expect('limit', int, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
 
-    action_info, err = self.service.list_actions_completed(context, args)
+    community_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=action_info)
+    meta = community_completed_actions.get('meta')
+    data = community_completed_actions.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
 
 
 

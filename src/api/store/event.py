@@ -224,7 +224,9 @@ class EventStore:
     
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
-    return paginate([*events, *shared], args.get("page", 1), args.get("limit")), None
+    all_events = [*events, *shared]
+    all_events = Event.objects.filter(pk__in=[item.id for item in events])
+    return paginate(all_events, args.get("page", 1), args.get("limit", 50)), None
 
 
   def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:

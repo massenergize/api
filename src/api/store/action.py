@@ -55,6 +55,8 @@ class ActionStore:
       # by default, exclude deleted actions
       #if not context.include_deleted:
       actions = actions.filter(is_deleted=False)
+
+      print("==== ACTIONS ====", len(actions))
       new_action = paginate(actions, args.get('page', 1), args.get("limit"))
 
       return new_action, None

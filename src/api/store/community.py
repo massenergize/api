@@ -993,7 +993,7 @@ class CommunityStore:
             # list actions completed by members of a community or team.  Include any actions which are DONE or TODO (so not really completed)
             # include actions from other communities that users in this community completed on their homes
             community = get_community_or_die(context, args)
-    
+            # TODO: Normal list causing pagination to throw exceptions: will fix this issue
             actions_completed = []
             actions_recorded = []
             completed_actions = UserActionRel.objects.filter(real_estate_unit__community=community, is_deleted=False).select_related('action__calculator_action')
