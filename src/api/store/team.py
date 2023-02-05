@@ -8,7 +8,7 @@ from django.utils.text import slugify
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
 from _main_.utils.common import is_value
-from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel
+from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel, unique_media_filename
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
@@ -189,8 +189,16 @@ class TeamStore:
           return None, CustomMassenergizeError("Cannot set parent team")
 
   
-      if logo_file: #now, images will always come as an array of ids 
-        logo = Media.objects.filter(pk = logo_file[0]).first()
+      if logo_file: #        
+        if type(logo_file) == list:
+          # from admin portal, using media library
+          logo = Media.objects.filter(pk = logo_file[0]).first()
+        else:
+          # from community portal, image upload
+          logo_file.name = unique_media_filename(logo_file)
+
+          logo = Media.objects.create(file=logo_file, name=f"ImageFor {team.name} Team")
+
         team.logo = logo
 
       # TODO: this code does will not make sense when there are multiple communities for the team...
