@@ -215,8 +215,8 @@ class UserService:
           }
 
         send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables)
-
-      return serialize(user, full=True), None
+      user = serialize(user, full=True)
+      return {**user, "is_new":True }, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

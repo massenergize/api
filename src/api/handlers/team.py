@@ -68,12 +68,13 @@ class TeamHandler(RouteHandler):
     self.validator.expect("admin_emails", 'str_list')
     self.validator.expect("communities", 'str_list')
     self.validator.rename("primary_community_id", "community_id")
-    self.validator.expect("logo", "str_list")
+    # logo image depends on whether from user portal or admin portal
+    #self.validator.expect("logo", "str_list")
 
     args, err = self.validator.verify(args)
     if err:
       return err
-
+      
     team_info, err = self.team.create_team(context, args)
     if err:
       return err

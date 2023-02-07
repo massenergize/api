@@ -118,6 +118,7 @@ class TagCollectionStore:
       if not tag_collections:
         return None, InvalidResourceError()
       tag_collections.delete()
+      return {}, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
