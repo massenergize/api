@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.vendor import VendorStore
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
@@ -124,11 +125,11 @@ class VendorService:
     vendors, err = self.store.list_vendors_for_community_admin(context, args)
     if err:
       return None, err
-    return vendors, None
+    return paginate(vendors, args.get("page", 1), args.get("limit")), None
 
 
   def list_vendors_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     vendors, err = self.store.list_vendors_for_super_admin(context)
     if err:
       return None, err
-    return vendors, None
+    return paginate(vendors, context.args.get("page", 1), context.args.get("limit")), None

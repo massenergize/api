@@ -1,13 +1,9 @@
-import json
-from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.utils.filter_functions import get_vendor_filter_params
 from database.models import Vendor, UserProfile, Media, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
-from django.utils.text import slugify
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
-from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities, get_new_title
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
@@ -335,11 +331,11 @@ class VendorStore:
           else:
             vendors = c.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
 
-        return paginate(vendors.distinct(), args.get("page", 1), args.get("limit")), None
+        return vendors.distinct(), None
 
       community = get_community_or_die(context, {'community_id': community_id})
       vendors = community.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
-      return paginate(vendors, context.args.get("page", 1), args.get("limit")), None
+      return vendors, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -353,7 +349,7 @@ class VendorStore:
         filter_params = get_vendor_filter_params(context.args.get("params"))
 
       vendors = Vendor.objects.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
-      return paginate(vendors, context.args.get("page", 1), context.args.get("limit")), None
+      return vendors, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

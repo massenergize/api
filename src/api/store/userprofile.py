@@ -1,24 +1,20 @@
-from _main_.utils.pagination import paginate
 from api.utils.filter_functions import get_users_filter_params
 from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, \
-  CustomMassenergizeError, NotAuthorizedError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from _main_.settings import DEBUG, IS_PROD, IS_CANARY
-from django.db.models import F
 from sentry_sdk import capture_message
-from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
+from .utils import get_community, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
   find_reu_community, split_location_string, check_location
 import json
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
-from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, STANDARD_USER, INVITED_USER, GUEST_USER
-from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
+from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, STANDARD_USER, GUEST_USER
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from datetime import datetime
-from django.db.models import Q
 
 def _get_or_create_reu_location(args, user=None):
   unit_type = args.pop('unit_type', None)
@@ -402,7 +398,7 @@ class UserStore:
       if not user:
         return [], None
       attendees = EventAttendee.objects.filter(user=user)
-      return paginate(attendees, args.get("page",1), args.get("limit")), None
+      return attendees, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -690,7 +686,7 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
-        return paginate(users, context.args.get("page", 1), args.get("limit")), None
+        return users, None
       
       community, err = get_community(community_id)
       
@@ -703,7 +699,7 @@ class UserStore:
         users = remove_dups(users)
         users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
         
-        return paginate(users, context.args.get("page", 1), args.get("limit")), None
+        return users, None
       elif not community:
         print(err)
         return [], None
@@ -711,7 +707,7 @@ class UserStore:
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
       users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
-      return paginate(users, context.args.get("page", 1), args.get("limit")), None
+      return users, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -729,10 +725,10 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
-        return paginate(users, context.args.get("page", 1), args.get("limit")), None
+        return users, None
 
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)
-      return paginate(users, context.args.get("page", 1), args.get("limit")), None
+      return users, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -757,7 +753,7 @@ class UserStore:
       else:
         todo = UserActionRel.objects.filter(status="TODO", user=user)
       
-      return paginate(todo, args.get("page", 1), args.get("limit")), None
+      return todo, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -776,7 +772,7 @@ class UserStore:
       else:
         todo = UserActionRel.objects.filter(status="DONE", user=user)
       
-      return paginate(todo, args.get("page", 1), args.get("limit")), None
+      return todo, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

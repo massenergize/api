@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
-from _main_.utils.common import serialize, serialize_all
+from _main_.utils.common import serialize
+from _main_.utils.pagination import paginate
 from api.store.team import TeamStore
 from api.store.message import MessageStore
 from database.models import TeamMember
@@ -96,7 +97,7 @@ class TeamService:
     members, err = self.store.members(context, args)
     if err:
       return None, err
-    return members, None
+    return paginate(members, args.get("page", 1), args.get("limit")), None
 
   def members_preferred_names(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     preferred_names, err = self.store.members_preferred_names(context, args)
@@ -165,20 +166,20 @@ class TeamService:
     teams, err = self.store.list_teams_for_community_admin(context, args)
     if err:
       return None, err
-    return teams, None
+    return paginate(teams, args.get("page", 1), args.get("limit")), None
 
 
   def list_teams_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
     teams, err = self.store.list_teams_for_super_admin(context,args)
     if err:
       return None, err
-    return teams, None
+    return paginate(teams, args.get("page", 1), args.get("limit")), None
 
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     completed_actions_list, err = self.store.list_actions_completed(context, args)
     if err:
       return None, err
-    return completed_actions_list, None
+    return paginate(completed_actions_list, args.get("page", 1), args.get("limit")), None
 
 

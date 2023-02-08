@@ -228,10 +228,10 @@ class ActionHandler(RouteHandler):
       return err
 
     actions, err = self.service.list_actions_for_community_admin(context, args)
-    meta = actions.get('meta')
-    data = actions.get('items')
     if err:
       return err
+    meta = actions.get('meta')
+    data = actions.get('items')
     return MassenergizeResponse(data=data, meta=meta)
 
 

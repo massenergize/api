@@ -1,8 +1,6 @@
-from _main_.utils.pagination import paginate
 from api.utils.filter_functions import get_tag_collections_filter_params
-from database.models import TagCollection, UserProfile, Tag
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from database.models import TagCollection, Tag
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -28,7 +26,7 @@ class TagCollectionStore:
   def list_tag_collections(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       tag_collections = TagCollection.objects.filter(is_deleted=False)
-      return paginate(tag_collections, args.get("page", 1), args.get("limit")), None
+      return tag_collections, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -134,7 +132,7 @@ class TagCollectionStore:
       filter_params = get_tag_collections_filter_params(
           context.args.get("params"))
       tag_collections = TagCollection.objects.filter(*filter_params,is_deleted=False )
-      return paginate(tag_collections, context.args.get("page", 1), context.args.get("limit")), None
+      return tag_collections, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

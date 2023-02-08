@@ -56,10 +56,7 @@ class ActionStore:
       #if not context.include_deleted:
       actions = actions.filter(is_deleted=False)
 
-      print("==== ACTIONS ====", len(actions))
-      new_action = paginate(actions, args.get('page', 1), args.get("limit"))
-
-      return new_action, None
+      return actions, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -328,10 +325,10 @@ class ActionStore:
 
         comm_ids = [ag.community.id for ag in admin_groups]
         actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-        return paginate(actions, args.get('page', 1), args.get("limit")), None
+        return actions, None
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-      return paginate(actions, args.get('page', 1), args.get("limit")), None
+      return actions, None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -346,7 +343,7 @@ class ActionStore:
       if context.args.get("params", None):
         filter_params = get_actions_filter_params(context.args.get("params"))
       actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
-      return paginate(actions, page, limit), None
+      return actions, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

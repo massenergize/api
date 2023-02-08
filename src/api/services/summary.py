@@ -41,7 +41,7 @@ class SummaryService:
             "team_messages": {"count": len(team_messages), "data": list(team_messages)},
             "users": {
                 "count": len(users),
-                "description": f"All new users since last visit - {last_visit.created_at}",
+                "description": f"All new users since last visit - {last_visit.created_at if last_visit !=None else ''}",
                 "data": list(users),
                 "last_visit": serialize(last_visit),
             },

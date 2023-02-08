@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.subscriber import SubscriberStore
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
@@ -24,7 +25,7 @@ class SubscriberService:
     subscriber, err = self.store.list_subscribers(context,subscriber_id)
     if err:
       return None, err
-    return subscriber, None
+    return paginate(subscriber, context.args.get("page", 1), context.args.get("limit",100)), None
 
 
   def create_subscriber(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -70,11 +71,11 @@ class SubscriberService:
     subscribers, err = self.store.list_subscribers_for_community_admin(context, community_id)
     if err:
       return None, err
-    return subscribers, None
+    return paginate(subscribers, context.args.get("page", 1), context.args.get("limit")), None
 
 
   def list_subscribers_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     subscribers, err = self.store.list_subscribers_for_super_admin(context)
     if err:
       return None, err
-    return subscribers, None
+    return paginate(subscribers, context.args.get("page", 1), context.args.get("limit")), None

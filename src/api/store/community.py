@@ -1,8 +1,6 @@
-import json
-from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console, strip_website
+from _main_.utils.utils import strip_website
 from api.tests.common import RESET
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import (
@@ -34,10 +32,8 @@ from database.models import (
     CommunityMember,
     UserProfile,
     Action,
-    Event,
     Graph,
     Media,
-    ActivityLog,
     AboutUsPageSettings,
     ActionsPageSettings,
     ContactUsPageSettings,
@@ -56,18 +52,14 @@ from _main_.utils.massenergize_errors import (
     InvalidResourceError,
     CustomMassenergizeError,
 )
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from api.store.graph import GraphStore
-from django.db.models import Q
 from .utils import (
     get_community_or_die,
     get_user_or_die,
     get_new_title,
     getCarbonScoreFromActionRel,
     is_reu_in_community,
-    check_location,
-    remove_dups,
 )
 from database.utils.common import json_loader
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
@@ -590,7 +582,7 @@ class CommunityStore:
 
             if not communities:
                 return [], None
-            return paginate(communities, args.get('page', 1), args.get("limit")), None
+            return communities, None
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
@@ -928,7 +920,7 @@ class CommunityStore:
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
                 communities = Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params)
-                return paginate(communities, context.args.get("page", 1), context.args.get("limit")), None
+                return communities, None
             else:
                 return [], None
 
@@ -945,7 +937,7 @@ class CommunityStore:
                 filter_params = get_communities_filter_params(context.args.get("params"))
 
             communities = Community.objects.filter(is_deleted=False, *filter_params)
-            return paginate(communities, context.args.get("page", 1), context.args.get("limit")), None
+            return communities, None
         except Exception as e:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
@@ -1017,7 +1009,7 @@ class CommunityStore:
                     actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
                     actions_recorded.append(action_id)
 
-            return paginate(actions_completed, args.get('page', 1), args.get("limit")), None
+            return actions_completed, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

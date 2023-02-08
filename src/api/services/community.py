@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.pagination import paginate
 from api.store.community import CommunityStore
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
@@ -43,7 +44,7 @@ class CommunityService:
     communities, err = self.store.list_communities(context, args)
     if err:
       return None, err
-    return communities, None
+    return paginate(communities, args.get('page', 1), args.get("limit")), None
 
 
   def create_community(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -78,14 +79,14 @@ class CommunityService:
     communities, err = self.store.list_communities_for_community_admin(context)
     if err:
       return None, err
-    return communities, None
+    return paginate(communities, context.args.get("page", 1), context.args.get("limit")), None
 
 
   def list_communities_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_communities_for_super_admin(context)
     if err:
       return None, err
-    return communities, None
+    return paginate(communities, context.args.get("page", 1), context.args.get("limit")), None
 
   def add_custom_website(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.add_custom_website(context, args)
@@ -103,6 +104,6 @@ class CommunityService:
     completed_actions_list, err = self.store.list_actions_completed(context, args)
     if err:
       return None, err
-    return completed_actions_list, None
+    return paginate(completed_actions_list, args.get('page', 1), args.get("limit")), None
 
 

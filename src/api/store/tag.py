@@ -1,8 +1,5 @@
-from _main_.utils.pagination import paginate
-from database.models import Tag, UserProfile
+from database.models import Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
 
@@ -21,7 +18,7 @@ class TagStore:
     tags = Tag.objects.filter(community__id=community_id)
     if not tags:
       return [], None
-    return paginate(tags, context.args.get("page", 1), args.get("limit")), None
+    return tags, None
 
 
   def create_tag(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -52,13 +49,13 @@ class TagStore:
   def list_tags_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     tags =  self.list_tags_for_super_admin()
 
-    return paginate(tags, context.args.get("page", 1), args.get("limit"))
+    return tags
 
 
   def list_tags_for_super_admin(self, context):
     try:
       tags = Tag.objects.all()
-      return paginate(tags, context.args.get("page", 1), args.get("limit")), None
+      return tags, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

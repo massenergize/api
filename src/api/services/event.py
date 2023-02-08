@@ -1,6 +1,7 @@
 from datetime import date
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.event import EventStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
@@ -40,7 +41,7 @@ class EventService:
     rsvps, err = self.store.get_rsvp_list(context, args)
     if err:
       return None, err
-    return rsvps, None
+    return paginate(rsvps, args.get("page", 1), args.get("limit")), None
 
   def get_rsvp_status(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     event, err = self.store.get_rsvp_status(context, args)
@@ -138,7 +139,7 @@ class EventService:
     events, err = self.store.list_events(context, args)
     if err:
       return None, err
-    return events, None
+    return paginate(events, args.get("page", 1), args.get("limit", 50)), None
 
 
   def create_event(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
@@ -221,7 +222,7 @@ class EventService:
     events, err = self.store.list_events_for_community_admin(context, args)
     if err:
       return None, err
-    return events, None
+    return paginate(events, args.get("page", 1), args.get("limit", 50)), None
 
   def fetch_other_events_for_cadmin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.fetch_other_events_for_cadmin(context, args)
@@ -231,7 +232,8 @@ class EventService:
 
 
   def list_events_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
+    args = context.args
     events, err = self.store.list_events_for_super_admin(context)
     if err:
       return None, err
-    return events, None
+    return paginate(events, args.get("page", 1), args.get("limit", 50)), None

@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.admin import AdminStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
@@ -46,7 +47,7 @@ class AdminService:
         admins, err = self.store.list_super_admin(context, args)
         if err:
             return None, err
-        return admins, None
+        return paginate(admins, args.get('page', 1), args.get("limit")), None
 
     def add_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
       try:    
@@ -131,7 +132,7 @@ class AdminService:
         return None, CustomMassenergizeError(e)
 
     def list_admin_messages(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-        admins, err = self.store.list_admin_messages(context, args)
+        admins_messages, err = self.store.list_admin_messages(context, args)
         if err:
             return None, err
-        return admins, None
+        return paginate(admins_messages, args.get("page", 1), args.get("limit")), None

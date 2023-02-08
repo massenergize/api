@@ -74,7 +74,7 @@ class AdminStore:
       if args.get("params", None):
         filter_params = get_super_admins_filter_params(args.get("params"))
       admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False, *filter_params)
-      return paginate(admins, args.get('page', 1), args.get("limit")), None
+      return admins, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -266,7 +266,7 @@ class AdminStore:
         return [], None
 
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
-      return paginate(messages, args.get("page", 1), args.get("limit")), None
+      return messages, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

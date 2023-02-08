@@ -1,7 +1,7 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from _main_.utils.common import serialize, serialize_all
+from _main_.utils.common import serialize
+from _main_.utils.pagination import paginate
 from api.store.tag import TagStore
-from _main_.utils.context import Context
 from typing import Tuple
 
 class TagService:
@@ -22,7 +22,7 @@ class TagService:
     tags, err = self.store.list_tags(context,tag_id)
     if err:
       return None, err
-    return tags, None
+    return paginate(tags, context.args.get("page", 1), context.args.get("limit")), None
 
 
   def create_tag(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -49,11 +49,11 @@ class TagService:
     tags, err = self.store.list_tags_for_community_admin(context,community_id)
     if err:
       return None, err
-    return tags, None
+    return paginate(tags, context.args.get("page", 1), context.args.get("limit")), None
 
 
   def list_tags_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     tags, err = self.store.list_tags_for_super_admin(context)
     if err:
       return None, err
-    return tags, None
+    return paginate(tags, context.args.get("page", 1), context.args.get("limit")), None

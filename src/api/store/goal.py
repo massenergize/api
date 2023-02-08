@@ -1,10 +1,6 @@
-from _main_.utils import context
-from _main_.utils.pagination import paginate
 from database.models import Goal, UserProfile, Team, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from django.db.models import F
-from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
 
@@ -57,7 +53,7 @@ class GoalStore:
       else:
         return None, CustomMassenergizeError("Provide a community, team or user")
 
-      return paginate(goals, context.args.get("page", 1), args.get("limit")), None
+      return goals, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -184,7 +180,7 @@ class GoalStore:
         community: Community = Community.objects.get(pk=community_id)
         goals.extend(self._get_goals_from_community(community))
       
-      return paginate(goals, context.args.get("page", 1), args.get("limit")), None
+      return goals, None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -196,7 +192,7 @@ class GoalStore:
   def list_goals_for_super_admin(self):
     try:
       goals = Goal.objects.filter(is_deleted=False)
-      return paginate(goals, limit=args.get("limit")), None
+      return goals, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

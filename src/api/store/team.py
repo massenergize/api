@@ -1,22 +1,16 @@
-import json
-from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
 from api.tests.common import RESET
 from api.utils.filter_functions import get_teams_filter_params
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
-from django.utils.text import slugify
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
-from _main_.utils.common import is_value
 from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel, unique_media_filename
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
 from typing import Tuple
-from django.db.models import Q
 
 def can_set_parent(parent, this_team=None):
   if parent.parent:
@@ -84,7 +78,7 @@ class TeamStore:
         teams = Team.objects.filter(communities__id=community.id, is_published=True, is_deleted=False)
       elif user:
         teams = user.team_set.all()
-      return paginate(teams, args.get("page", 1), args.get("limit")), None
+      return teams, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -451,7 +445,7 @@ class TeamStore:
         return [], CustomMassenergizeError('Please provide a valid team_id')
 
       members = TeamMember.objects.filter(is_deleted=False, team__id=team_id, user__accepts_terms_and_conditions=True, user__is_deleted=False)
-      return paginate(members, args.get("page", 1), args.get("limit")), None
+      return members, None
     except Exception:
       return None, InvalidResourceError()
 
@@ -498,7 +492,7 @@ class TeamStore:
       
       if team_ids: 
         teams = Team.objects.filter(id__in = team_ids, *filter_params).select_related('logo', 'primary_community')
-        return paginate(teams, args.get("page", 1), args.get("limit")), None
+        return teams, None
 
       community_id = args.pop('community_id', None)
       if community_id == 0:
@@ -513,10 +507,10 @@ class TeamStore:
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
         teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
-        return paginate(teams, args.get("page", 1), args.get("limit")), None
+        return teams, None
 
       teams = Team.objects.filter(communities__id=community_id, is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
-      return paginate(teams, args.get("page", 1), args.get("limit")), None
+      return teams, None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -531,10 +525,10 @@ class TeamStore:
       team_ids = args.get("team_ids", None)
       if team_ids: 
         teams = Team.objects.filter(id__in = team_ids, *filter_params).select_related('logo', 'primary_community')
-        return paginate(teams, context.args.get("page", 1), args.get("limit")), None
+        return teams, None
 
       teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
-      return paginate(teams, context.args.get("page", 1),args.get("limit")), None
+      return teams, None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -580,7 +574,7 @@ class TeamStore:
               actions_recorded.append(action_id)
 
       actions_completed = sorted(actions_completed, key=lambda d: d['done_count']*-1)
-      return paginate(actions_completed, args.get("page", 1), args.get("limit")), None
+      return actions_completed, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

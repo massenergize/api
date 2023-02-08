@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.action import ActionStore
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
@@ -28,7 +29,7 @@ class ActionService:
     actions, err = self.store.list_actions(context, args)
     if err:
       return None, err
-    return actions, None
+    return paginate(actions, args.get('page', 1), args.get("limit")), None
 
 
   def create_action(self, context: Context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
@@ -116,18 +117,19 @@ class ActionService:
     actions, err = self.store.list_actions_for_community_admin(context, args)
     if err:
       return None, err
-    return actions, None
+    return paginate(actions, args.get('page', 1), args.get("limit")), None
 
 
   def list_actions_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
+    args = context.args
     actions, err = self.store.list_actions_for_super_admin(context)
     if err:
       return None, err
-    return actions, None
+    return paginate(actions, args.get('page', 1), args.get("limit")), None
 
     
   def search_and_filter_actions(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     actions, err = self.store.search_and_filter_actions(context)
     if err:
       return None, err
-    return actions, None
+    return paginate(actions, args.get('page', 1), args.get("limit")), None

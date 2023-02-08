@@ -1,7 +1,5 @@
-import json
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
 from api.tests.common import RESET
 from api.utils.filter_functions import get_events_filter_params
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
@@ -17,7 +15,6 @@ from datetime import timedelta
 import calendar
 import pytz
 from typing import Tuple
-from _main_.utils.pagination import paginate
 
 def _local_datetime(date_and_time):
   # the local date (in Massachusetts) is different than the UTC date
@@ -226,7 +223,7 @@ class EventStore:
       events = events.filter(is_published=True)
     all_events = [*events, *shared]
     all_events = Event.objects.filter(pk__in=[item.id for item in events])
-    return paginate(all_events, args.get("page", 1), args.get("limit", 50)), None
+    return all_events, None
 
 
   def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -738,10 +735,10 @@ class EventStore:
         # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
         # not as their own separate events
         events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-        return paginate(events, context.args.get("page", 1), args.get("limit")), None
+        return events, None
 
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
-      return paginate(events, args.get("page", 1), args.get("limit")), None
+      return events, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -755,7 +752,7 @@ class EventStore:
       if context.args.get("params", None):
         filter_params = get_events_filter_params(context.args.get("params"))
       events = Event.objects.filter(*filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-      return paginate(events, context.args.get("page", 1), context.args.get("limit")), None
+      return events, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -773,7 +770,7 @@ class EventStore:
           return None, InvalidResourceError()
 
         event_attendees = EventAttendee.objects.filter(event=event)
-        return paginate(event_attendees, args.get("page", 1), args.get("limit")), None
+        return event_attendees, None
 
       else:
         return None, InvalidResourceError()

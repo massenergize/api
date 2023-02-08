@@ -1,11 +1,7 @@
-import json
-from _main_.utils.pagination import paginate
 from api.utils.filter_functions import get_subscribers_filter_params
 from database.models import Subscriber, UserProfile, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
-from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 
@@ -28,7 +24,7 @@ class SubscriberStore:
     subscribers = Subscriber.objects.filter(community__id=community_id)
     if not subscribers:
       return [], None
-    return paginate(subscribers), None
+    return subscribers, None
 
 
   def create_subscriber(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -120,11 +116,11 @@ class SubscriberStore:
             subscribers = ag.community.subscriber_set.all().filter(is_deleted=False, *filter_params)
           else:
             subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False, *filter_params)
-        return paginate(subscribers, context.args.get("page", 1), args.get("limit")), None
+        return subscribers or [], None
 
       community: Community = Community.objects.get(pk=community_id)
       subscribers = community.subscriber_set.all().filter(is_deleted=False)
-      return paginate(subscribers, context.args.get("page", 1), args.get("limit")), None
+      return subscribers, None
  
     except Exception as e:
       capture_message(str(e), level="error")
@@ -137,7 +133,7 @@ class SubscriberStore:
       if context.args.get("params", None):
           filter_params = get_subscribers_filter_params(context.args.get("params"))
       subscribers = Subscriber.objects.filter(is_deleted=False, *filter_params)
-      return paginate(subscribers, context.args.get("page", 1), context.args.get("limit")), None
+      return subscribers, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

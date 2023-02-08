@@ -1,8 +1,9 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
-from _main_.utils.common import serialize, serialize_all
+from _main_.utils.common import serialize
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.utils.pagination import paginate
 from .utils import send_slack_message
 from api.store.testimonial import TestimonialStore
 from sentry_sdk import capture_message
@@ -23,12 +24,10 @@ class TestimonialService:
     return serialize(testimonial, full=True), None
 
   def list_testimonials(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
-    testimonial, err = self.store.list_testimonials(context, args)
+    testimonials, err = self.store.list_testimonials(context, args)
     if err:
       return None, err
-
-    ret = testimonial
-    return ret, None
+    return paginate(testimonials, args.get("page", 1), args.get("limit")), None
 
 
   def create_testimonial(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
@@ -110,11 +109,11 @@ class TestimonialService:
     testimonials, err = self.store.list_testimonials_for_community_admin(context, args)
     if err:
       return None, err
-    return testimonials, None
+    return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
 
 
   def list_testimonials_for_super_admin(self, context,args) -> Tuple[list, MassEnergizeAPIError]:
     testimonials, err = self.store.list_testimonials_for_super_admin(context,args)
     if err:
       return None, err
-    return testimonials, None
+    return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None

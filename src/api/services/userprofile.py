@@ -1,5 +1,6 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
@@ -149,13 +150,13 @@ class UserService:
     actions_todo, err = self.store.list_todo_actions(context, args)
     if err:
       return None, err
-    return actions_todo, None
+    return paginate(actions_todo, args.get("page", 1), args.get("limit")), None
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     actions_completed, err = self.store.list_completed_actions(context, args)
     if err:
       return None, err
-    return actions_completed, None
+    return  paginate(actions_completed, args.get("page", 1), args.get("limit")), None
 
   def remove_user_action(self, context: Context, user_action_id) -> Tuple[list, MassEnergizeAPIError]:
     result, err = self.store.remove_user_action(context, user_action_id)
@@ -167,7 +168,7 @@ class UserService:
     events, err = self.store.list_events_for_user(context, args)
     if err:
       return None, err
-    return events, None
+    return paginate(events, args.get("page",1), args.get("limit")), None
 
   def check_user_imported(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     imported_info, err = self.store.check_user_imported(context, args)
@@ -239,14 +240,14 @@ class UserService:
     users, err = self.store.list_users_for_community_admin(context, args)
     if err:
       return None, err
-    return users, None
+    return paginate(users, context.args.get("page", 1), args.get("limit")), None
 
 
   def list_users_for_super_admin(self, context,args) -> Tuple[list, MassEnergizeAPIError]:
     users, err = self.store.list_users_for_super_admin(context,args)
     if err:
       return None, err
-    return users, None
+    return paginate(users, context.args.get("page", 1), args.get("limit")), None
 
 
   def add_action_todo(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:

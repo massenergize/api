@@ -1,5 +1,3 @@
-import json
-from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
@@ -63,7 +61,7 @@ class TestimonialStore:
         else:
           testimonials = testimonials.filter(is_published=True)
 
-      return paginate(testimonials, args.get("page", 1), args.get("limit")), None
+      return  testimonials, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -264,7 +262,7 @@ class TestimonialStore:
         filter_params = get_testimonials_filter_params(context.args.get("params"))
       if testimonial_ids: 
         testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
-        return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
+        return testimonials, None
 
       if not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
@@ -272,10 +270,10 @@ class TestimonialStore:
         comm_ids = [ag.community.id for ag in admin_groups]
 
         testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
-        return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
+        return testimonials, None
 
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
-      return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
+      return testimonials, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -291,10 +289,10 @@ class TestimonialStore:
   
       if testimonial_ids: 
         testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
-        return paginate(testimonials, context.args.get("page", 1), args.get("limit"))
+        return testimonials
 
       testimonials = Testimonial.objects.filter(is_deleted=False,*filter_params).select_related('image', 'community', 'vendor').prefetch_related('tags')
-      return paginate(testimonials, context.args.get("page", 1), args.get("limit")), None
+      return testimonials, None
 
     except Exception as e:
       capture_message(str(e), level="error")

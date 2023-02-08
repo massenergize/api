@@ -264,7 +264,7 @@ class MessageStore:
             else:
                 messages = []
 
-            return paginate(messages, args.get("page", 1), args.get("limit")), None
+            return messages, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -297,7 +297,7 @@ class MessageStore:
                 ).distinct()
             else:
                 messages = []
-            return paginate(messages, context.args.get("page", 1), args.get("limit")), None
+            return messages, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
