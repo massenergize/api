@@ -33,6 +33,7 @@ class SummaryHandler(RouteHandler):
     self.validator.expect("time_range", str, is_required=False) 
     self.validator.expect("start_time", str, is_required=False) 
     self.validator.expect("end_time", str, is_required=False) 
+    self.validator.expect("communities", "str_list", is_required=False) 
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err

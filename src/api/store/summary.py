@@ -80,7 +80,7 @@ class SummaryStore:
             end_time = today
         # ------------------------------------------------------
 
-        print("THIS IS THE DATE", start_time, end_time, communities)
+        print("THIS IS THE DATE", start_time, end_time, communities) # remove before pR (BPR)
         if is_community_admin:
             sign_in_query = Q(
                 communities__in=communities,
