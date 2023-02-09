@@ -1,9 +1,11 @@
 from django.core.paginator import Paginator, EmptyPage
-
 from _main_.utils.common import serialize_all
 
+DEFAULT_LIMIT = 50
 def paginate(queryset, page, limit):
     try:
+        if not limit:
+            limit = DEFAULT_LIMIT
         p = Paginator(queryset, limit)
         items = []
         pag = p.page(page)
