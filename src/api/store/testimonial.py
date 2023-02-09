@@ -26,6 +26,10 @@ class TestimonialStore:
       
   def list_testimonials(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
+      filter_params = []
+      if context.args.get("params", None):
+        filter_params = get_testimonials_filter_params(context.args.get("params"))
+  
       subdomain = args.pop('subdomain', None)
       community_id = args.pop('community_id', None)
       community, _ = get_community(community_id, subdomain)
@@ -38,11 +42,10 @@ class TestimonialStore:
 
       if community:
         testimonials = Testimonial.objects.filter(
-              community=community, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
+            community=community, is_deleted=False, *filter_params).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
 
       elif user:
-        testimonials = Testimonial.objects.filter(
-              user=user, is_deleted=False).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
+        testimonials = Testimonial.objects.filter(user=user, is_deleted=False, *filter_params).prefetch_related('tags__tag_collection', 'action__tags', 'vendor', 'community')
       else:
         # need to specify a community or a user
         return None, InvalidResourceError()

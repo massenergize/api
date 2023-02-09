@@ -117,8 +117,6 @@ class ActionHandler(RouteHandler):
     self.validator.expect('limit', int, is_required=False)
 
 
-    print("==== args ====", args)
-
     args, err = self.validator.verify(args)
     if err:
       return err
