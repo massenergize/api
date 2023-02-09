@@ -35,16 +35,9 @@ class SummaryStore:
     def __init__(self):
         self.name = "Summary Store/DB"
 
-    def fetch_user_engagements_for_admins(
-        self, context: Context, args
-    ) -> Tuple[dict, MassEnergizeAPIError]:
-
-         # values = last-visit, last-week, last-month, custom
-        time_range = args.get(
-            "time_range", None
-        ) 
-
-
+    def fetch_user_engagements_for_admins(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        # values = last-visit, last-week, last-month, custom
+        time_range = args.get("time_range", None) 
         start_time = args.get("start_time", None)
         end_time = args.get("end_time", None)
         communities = args.get("communities", [])
@@ -53,15 +46,15 @@ class SummaryStore:
         is_community_admin = (
             args.get("is_community_admin", False) or context.user_is_community_admin
         )
+        is_super_admin = is_community_admin == "False" or  context.user_is_super_admin
        
         today = pytz.utc.localize(today)
-
         if not time_range:
             return {},CustomMassenergizeError("Please include an appropriate date/time range")
-
         user = UserProfile.objects.filter(email=email).first()
 
-        if not communities:
+        wants_all_communities = "all" in communities
+        if not communities or wants_all_communities:
             groups = user.communityadmingroup_set.all()
             communities = [ag.community.id for ag in groups]
 
@@ -78,29 +71,31 @@ class SummaryStore:
         elif time_range == LAST_MONTH:
             start_time = today - datetime.timedelta(days=31)
             end_time = today
+        # else: # dealing with custom date and time
+        #     start_time = datetime.datetime.strptime(start_time,"%Y-%M-%D %H:%M")
+        #     end_time = datetime.datetime.strptime(end_time,"%Y-%M-%D %H:%M")
+        #     # start_time = pytz.utc.localize(start_time)
+        #     # end_time = pytz.utc.localize(end_time)
         # ------------------------------------------------------
 
         print("THIS IS THE DATE", start_time, end_time, communities) # remove before pR (BPR)
-        if is_community_admin:
+        if is_community_admin or (is_super_admin and not wants_all_communities):
             sign_in_query = Q(
                 communities__in=communities,
                 portal=FootageConstants.on_user_portal(),
                 activity_type=FootageConstants.sign_in(),
                 created_at__range=[start_time,end_time],
-                # created_at__lte=end_time,
             )
             todo_query = Q(
                 status="TODO",
                 action__community__in=communities,
                 updated_at__range=[start_time,end_time],
-                # updated_at__lte=end_time,
                 is_deleted=False,
             )
             done_query = Q(
                 status="DONE",
                 action__community__in=communities,
                 updated_at__range=[start_time,end_time],
-                # updated_at__lte=end_time,
                 is_deleted=False,
             )
         else: # Super Admins
@@ -108,18 +103,15 @@ class SummaryStore:
                 portal=FootageConstants.on_user_portal(),
                 activity_type=FootageConstants.sign_in(),
                 created_at__range=[start_time,end_time],
-                # created_at__lte=end_time,
             )
             todo_query = Q(
                 status="TODO",
                 updated_at__range=[start_time,end_time],
-                # updated_at__lte=end_time,
                 is_deleted=False,
             )
             done_query = Q(
                 status="DONE",
                 updated_at__range=[start_time,end_time],
-                # updated_at__lte=end_time,
                 is_deleted=False,
             )
 
@@ -133,10 +125,7 @@ class SummaryStore:
         done_interactions = UserActionRel.objects.values_list(
             "action__id", flat=True
         ).filter(done_query)
-
-        print("DATES", start_time, end_time)
-        print("THE QUERIES", sign_in_query, done_query, todo_query)
-        print('Result',user_sign_ins,todo_interactions,done_interactions)
+    
         return {
             "done_interactions": done_interactions,
             "todo_interactions": todo_interactions,
@@ -237,30 +226,30 @@ class SummaryStore:
                 is_deleted=False,
             )
 
-        # Find all interactions users have had with any actions that belong to any of the communities a cadmin manages
-        todo_interactions = UserActionRel.objects.values_list(
-            "action__id", flat=True
-        ).filter(
-            status="TODO",
-            action__community__in=communities,
-            updated_at__gte=last_visit.created_at,
-            is_deleted=False,
-        )
-        done_interactions = UserActionRel.objects.values_list(
-            "action__id", flat=True
-        ).filter(
-            status="DONE",
-            action__community__in=communities,
-            updated_at__gte=last_visit.created_at,
-            is_deleted=False,
-        )
+        # # Find all interactions users have had with any actions that belong to any of the communities a cadmin manages
+        # todo_interactions = UserActionRel.objects.values_list(
+        #     "action__id", flat=True
+        # ).filter(
+        #     status="TODO",
+        #     action__community__in=communities,
+        #     updated_at__gte=last_visit.created_at,
+        #     is_deleted=False,
+        # )
+        # done_interactions = UserActionRel.objects.values_list(
+        #     "action__id", flat=True
+        # ).filter(
+        #     status="DONE",
+        #     action__community__in=communities,
+        #     updated_at__gte=last_visit.created_at,
+        #     is_deleted=False,
+        # )
 
-        user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter(
-            communities__in=communities,
-            portal=FootageConstants.on_user_portal(),
-            activity_type=FootageConstants.sign_in(),
-            created_at__gte=last_visit.created_at,
-        )
+        # user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter(
+        #     communities__in=communities,
+        #     portal=FootageConstants.on_user_portal(),
+        #     activity_type=FootageConstants.sign_in(),
+        #     created_at__gte=last_visit.created_at,
+        # )
 
         return {
             "users": users,
@@ -268,9 +257,9 @@ class SummaryStore:
             "messages": messages,
             "team_messages": team_messages,
             "teams": teams,
-            "todo_interactions": todo_interactions,
-            "done_interactions": done_interactions,
-            "user_sign_ins": user_sign_ins,
+            # "todo_interactions": todo_interactions,
+            # "done_interactions": done_interactions,
+            # "user_sign_ins": user_sign_ins,
             "last_visit": last_visit,
         }, None
 
@@ -318,18 +307,18 @@ class SummaryStore:
             users = UserProfile.objects.values_list("id", flat=True).filter(
                 created_at__gt=today, is_deleted=False
             )
-        todo_interactions = UserActionRel.objects.values_list(
-            "action__id", flat=True
-        ).filter(status="TODO", updated_at__gte=last_visit.created_at, is_deleted=False)
-        done_interactions = UserActionRel.objects.values_list(
-            "action__id", flat=True
-        ).filter(status="DONE", updated_at__gte=last_visit.created_at, is_deleted=False)
+        # todo_interactions = UserActionRel.objects.values_list(
+        #     "action__id", flat=True
+        # ).filter(status="TODO", updated_at__gte=last_visit.created_at, is_deleted=False)
+        # done_interactions = UserActionRel.objects.values_list(
+        #     "action__id", flat=True
+        # ).filter(status="DONE", updated_at__gte=last_visit.created_at, is_deleted=False)
 
-        user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter(
-            portal=FootageConstants.on_user_portal(),
-            activity_type=FootageConstants.sign_in(),
-            created_at__gte=last_visit.created_at,
-        )
+        # user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter(
+        #     portal=FootageConstants.on_user_portal(),
+        #     activity_type=FootageConstants.sign_in(),
+        #     created_at__gte=last_visit.created_at,
+        # )
 
         return {
             "users": users,
@@ -337,9 +326,9 @@ class SummaryStore:
             "messages": messages,
             "team_messages": team_messages,
             "teams": teams,
-            "todo_interactions": todo_interactions,
-            "done_interactions": done_interactions,
-            "user_sign_ins": user_sign_ins,
+            # "todo_interactions": todo_interactions,
+            # "done_interactions": done_interactions,
+            # "user_sign_ins": user_sign_ins,
             "last_visit": last_visit,
         }, None
 

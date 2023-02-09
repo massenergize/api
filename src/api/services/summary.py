@@ -27,9 +27,9 @@ class SummaryService:
         sign_ins = content.get("user_sign_ins", [])
 
         content = {
-            "done_interactions": {"count": len(done_int), "data": list(done_int)},
-            "todo_interactions": {"count": len(todo_int), "data": list(todo_int)},
-            "sign_ins": {"count": len(sign_ins), "data": list(sign_ins)},
+            "done_interactions": {"count": len(done_int), "data": list(set(done_int))},
+            "todo_interactions": {"count": len(todo_int), "data": list(set(todo_int))},
+            "sign_ins": {"count": len(sign_ins), "data": list(set(sign_ins))},
         }
         return content, None
 
@@ -47,22 +47,22 @@ class SummaryService:
         team_messages = content.get("team_messages", [])
         users = content.get("users", [])
         teams = content.get("teams", [])
-        done_int = content.get("done_interactions", [])
-        todo_int = content.get("todo_interactions", [])
-        sign_ins = content.get("user_sign_ins", [])
+        # done_int = content.get("done_interactions", [])
+        # todo_int = content.get("todo_interactions", [])
+        # sign_ins = content.get("user_sign_ins", [])
 
         content = {
-            "testimonials": {"count": len(testimonials), "data": list(testimonials)},
-            "teams": {"count": len(teams), "data": list(teams)},
-            "messages": {"count": len(messages), "data": list(messages)},
-            "team_messages": {"count": len(team_messages), "data": list(team_messages)},
-            "done_interactions": {"count": len(done_int), "data": list(done_int)},
-            "todo_interactions": {"count": len(todo_int), "data": list(todo_int)},
-            "sign_ins": {"count": len(sign_ins), "data": list(sign_ins)},
+            "testimonials": {"count": len(testimonials), "data": list(set(testimonials))},
+            "teams": {"count": len(teams), "data": list(set(teams))},
+            "messages": {"count": len(messages), "data": list(set(messages))},
+            "team_messages": {"count": len(team_messages), "data": list(set(team_messages))},
+            # "done_interactions": {"count": len(done_int), "data": list(done_int)},
+            # "todo_interactions": {"count": len(todo_int), "data": list(todo_int)},
+            # "sign_ins": {"count": len(sign_ins), "data": list(sign_ins)},
             "users": {
                 "count": len(users),
                 "description": f"All new users since last visit - {last_visit.created_at}",
-                "data": list(users),
+                "data": list(set(users)),
                 "last_visit": serialize(last_visit),
             },
         }

@@ -33,7 +33,7 @@ class AuthService:
     try:
       args = context.args or {}
       firebase_id_token = args.get('idToken', None)
-      noFootage = args.get('noFootage',None)
+      noFootage = args.get('noFootage',"false") # Why this? Well login is used as verification in more than one scenario, so this is a way to know when user is actually signing in (1st time) -- so we can capture the footage only once.
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
