@@ -337,3 +337,30 @@ def get_super_admins_filter_params(params):
       return query
     except Exception as e:
       return []
+
+
+
+
+def get_sort_params(params):
+  try:
+    params= json.loads(params)
+    sort_params = params.get("sort_params", None)
+    sort =""
+    if sort_params:
+      sort+= sort_params.get("name")
+      if sort_params.get("direction") == "desc":
+        sort = "-"+sort
+        return sort.lower()
+    
+    return "-id"
+
+
+  except Exception as e:
+    return '-id'
+
+
+
+
+def sort_items(queryset, params):
+  sort_params = get_sort_params(params)
+  return queryset.order_by(sort_params)
