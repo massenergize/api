@@ -227,6 +227,7 @@ class ActionHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request): 
     context: Context = request.context
+    args: dict = context.args
     self.validator.expect("community_id", int, is_required=False)
     self.validator.expect("action_ids", list, is_required=False)
     args, err = self.validator.verify(args)
