@@ -88,8 +88,7 @@ class TeamHandler(RouteHandler):
     team_info, err = self.team.list_teams(context, args)
     if err:
       return err
-
-    return MassenergizeResponse(data=team_info)
+    return MassenergizeResponse(data=team_info, meta=meta)
 
 
   def team_stats(self, request):

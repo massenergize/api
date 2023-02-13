@@ -29,10 +29,10 @@ class TeamService:
     return serialize(team, full=True), None
 
   def list_teams(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    team, err = self.store.list_teams(context, args)
+    teams, err = self.store.list_teams(context, args)
     if err:
       return None, err
-    return team, None
+    return paginate(teams, args.get("page", 1), args.get("limit"))
 
   def team_stats(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     stats, err = self.store.team_stats(context, args)
