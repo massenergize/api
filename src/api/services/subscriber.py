@@ -7,6 +7,8 @@ from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from sentry_sdk import capture_message
 from typing import Tuple
 
+from api.utils.filter_functions import sort_items
+
 class SubscriberService:
   """
   Service Layer for all the subscribers
@@ -71,11 +73,13 @@ class SubscriberService:
     subscribers, err = self.store.list_subscribers_for_community_admin(context, community_id)
     if err:
       return None, err
-    return paginate(subscribers, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(subscribers, context.args.get("params"))
+    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
 
 
   def list_subscribers_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     subscribers, err = self.store.list_subscribers_for_super_admin(context)
     if err:
       return None, err
-    return paginate(subscribers, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(subscribers, context.args.get("params"))
+    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None

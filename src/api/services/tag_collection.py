@@ -5,6 +5,8 @@ from api.store.tag_collection import TagCollectionStore
 from _main_.utils.context import Context
 from typing import Tuple
 
+from api.utils.filter_functions import sort_items
+
 class TagCollectionService:
   """
   Service Layer for all the tag_collections
@@ -51,7 +53,8 @@ class TagCollectionService:
     tag_collections, err = self.store.list_tag_collections_for_community_admin(context,community_id)
     if err:
       return None, err
-    return paginate(tag_collections, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(tag_collections, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit")), None
 
 
   def list_tag_collections_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
@@ -59,4 +62,5 @@ class TagCollectionService:
     tag_collections, err = self.store.list_tag_collections_for_super_admin(context)
     if err:
       return None, err
-    return paginate(tag_collections, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(tag_collections, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit")), None

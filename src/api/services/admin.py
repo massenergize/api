@@ -5,6 +5,7 @@ from api.store.admin import AdminStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
+from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -47,7 +48,8 @@ class AdminService:
         admins, err = self.store.list_super_admin(context, args)
         if err:
             return None, err
-        return paginate(admins, args.get('page', 1), args.get("limit")), None
+        sorted = sort_items(admins, context.args.get("params"))
+        return paginate(sorted, args.get('page', 1), args.get("limit")), None
 
     def add_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
       try:    
@@ -135,4 +137,5 @@ class AdminService:
         admins_messages, err = self.store.list_admin_messages(context, args)
         if err:
             return None, err
-        return paginate(admins_messages, args.get("page", 1), args.get("limit")), None
+        sorted = sort_items(admins_messages, context.args.get("params"))
+        return paginate(sorted, args.get("page", 1), args.get("limit")), None

@@ -10,6 +10,8 @@ import re
 from sentry_sdk import capture_message
 from typing import Tuple
 
+from api.utils.filter_functions import sort_items
+
 def _parse_import_file(csvfile):
   """
   Helper function used to parse csv import file 
@@ -240,7 +242,8 @@ class UserService:
     users, err = self.store.list_users_for_community_admin(context, args)
     if err:
       return None, err
-    return paginate(users, context.args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(users, context.args.get("params"))
+    return paginate(sorted, context.args.get("page", 1), args.get("limit")), None
 
 
   def list_users_for_super_admin(self, context,args) -> Tuple[list, MassEnergizeAPIError]:

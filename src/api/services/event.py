@@ -6,6 +6,7 @@ from api.store.event import EventStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
 from typing import Tuple
@@ -222,7 +223,8 @@ class EventService:
     events, err = self.store.list_events_for_community_admin(context, args)
     if err:
       return None, err
-    return paginate(events, args.get("page", 1), args.get("limit", 50)), None
+    sorted = sort_items(events, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit", 50)), None
 
   def fetch_other_events_for_cadmin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     events, err = self.store.fetch_other_events_for_cadmin(context, args)
@@ -236,4 +238,5 @@ class EventService:
     events, err = self.store.list_events_for_super_admin(context)
     if err:
       return None, err
-    return paginate(events, args.get("page", 1), args.get("limit", 50)), None
+    sorted = sort_items(events, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit", 50)), None

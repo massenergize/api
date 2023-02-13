@@ -8,6 +8,8 @@ from _main_.utils.emailer.email_types import COMMUNITY_REGISTRATION_EMAIL
 from _main_.utils.context import Context
 from typing import Tuple
 
+from api.utils.filter_functions import sort_items
+
 class CommunityService:
   """
   Service Layer for all the communities
@@ -44,7 +46,8 @@ class CommunityService:
     communities, err = self.store.list_communities(context, args)
     if err:
       return None, err
-    return paginate(communities, args.get('page', 1), args.get("limit")), None
+    sorted = sort_items(communities, context.args.get("params"))
+    return paginate(sorted, args.get('page', 1), args.get("limit")), None
 
 
   def create_community(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -79,14 +82,16 @@ class CommunityService:
     communities, err = self.store.list_communities_for_community_admin(context)
     if err:
       return None, err
-    return paginate(communities, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(communities, context.args.get("params"))
+    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
 
 
   def list_communities_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_communities_for_super_admin(context)
     if err:
       return None, err
-    return paginate(communities, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(communities, context.args.get("params"))
+    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
 
   def add_custom_website(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.add_custom_website(context, args)

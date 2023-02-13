@@ -3,6 +3,7 @@ from _main_.utils.common import serialize
 from _main_.utils.pagination import paginate
 from api.store.team import TeamStore
 from api.store.message import MessageStore
+from api.utils.filter_functions import sort_items
 from database.models import TeamMember
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
@@ -166,14 +167,16 @@ class TeamService:
     teams, err = self.store.list_teams_for_community_admin(context, args)
     if err:
       return None, err
-    return paginate(teams, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(teams, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit")), None
 
 
   def list_teams_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
     teams, err = self.store.list_teams_for_super_admin(context,args)
     if err:
       return None, err
-    return paginate(teams, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(teams, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit")), None
 
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:

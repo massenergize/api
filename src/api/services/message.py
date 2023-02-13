@@ -10,6 +10,8 @@ from _main_.utils.emailer.send_email import send_massenergize_email
 from sentry_sdk import capture_message
 from typing import Tuple
 
+from api.utils.filter_functions import sort_items
+
 class MessageService:
   """
   Service Layer for all the messages
@@ -118,11 +120,13 @@ class MessageService:
     messages, err = self.store.list_community_admin_messages(context, args)
     if err:
       return None, err
-    return paginate(messages, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(messages, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit")), None
 
 
   def list_team_admin_messages_for_community_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
     messages, err = self.store.list_team_admin_messages(context,args)
     if err:
       return None, err
-    return paginate(messages, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(messages, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit")), None
