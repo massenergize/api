@@ -61,7 +61,6 @@ class SummaryStore:
         # ------------------------------------------------------
         if time_range == LAST_VISIT:
             start_time = self.get_admins_last_visit(email=email)
-            start_time = pytz.utc.localize(start_time)
             end_time = today
 
         elif time_range == LAST_WEEK:
@@ -169,7 +168,7 @@ class SummaryStore:
             .order_by("-created_at")
             .first()
         )
-        return last_visit
+        return last_visit.created_at
 
     def next_steps_for_community_admins(self, context: Context, args):
 
