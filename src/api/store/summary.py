@@ -71,11 +71,13 @@ class SummaryStore:
         elif time_range == LAST_MONTH:
             start_time = today - datetime.timedelta(days=31)
             end_time = today
-        # else: # dealing with custom date and time
-        #     start_time = datetime.datetime.strptime(start_time,"%Y-%M-%D %H:%M")
-        #     end_time = datetime.datetime.strptime(end_time,"%Y-%M-%D %H:%M")
-        #     # start_time = pytz.utc.localize(start_time)
-        #     # end_time = pytz.utc.localize(end_time)
+        else: # dealing with custom date and time
+            _format = "%Y-%m-%dT%H:%M:%SZ"
+            start_time = datetime.datetime.strptime(start_time,_format)
+            end_time = datetime.datetime.strptime(end_time,_format)
+            start_time = pytz.utc.localize(start_time)
+            end_time = pytz.utc.localize(end_time)  
+            
         # ------------------------------------------------------
 
         print("THIS IS THE DATE", start_time, end_time, communities) # remove before pR (BPR)
