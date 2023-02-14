@@ -24,7 +24,7 @@ class SummaryHandler(RouteHandler):
     self.add("/summary.listForSuperAdmin", self.super_admin_summary)
 
 
-  
+  @admins_only 
   def fetch_user_engagements_for_admins(self, request): 
     context: Context = request.context
     args: dict = context.args
@@ -43,7 +43,7 @@ class SummaryHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=content)
 
-  # @admins_only  UNCOMMENT THIS BEFORE PR(BPR)
+  @admins_only  
   def next_steps_for_admins(self, request): 
     context: Context = request.context
     args: dict = context.args

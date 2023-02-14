@@ -80,7 +80,6 @@ class SummaryStore:
             
         # ------------------------------------------------------
 
-        print("THIS IS THE DATE", start_time, end_time, communities) # remove before pR (BPR)
         if is_community_admin or (is_super_admin and not wants_all_communities):
             sign_in_query = Q(
                 communities__in=communities,
@@ -220,48 +219,18 @@ class SummaryStore:
             .order_by("-created_at")
             .first()
         )
-        print("Found Last Visit", last_visit)  # REMOVE BEFORE PR(BPR)
         if last_visit:
             users = UserProfile.objects.values_list("email", flat=True).filter(
                 created_at__gt=last_visit.created_at,
                 communities__in=communities,
                 is_deleted=False,
             )
-
-        # # Find all interactions users have had with any actions that belong to any of the communities a cadmin manages
-        # todo_interactions = UserActionRel.objects.values_list(
-        #     "action__id", flat=True
-        # ).filter(
-        #     status="TODO",
-        #     action__community__in=communities,
-        #     updated_at__gte=last_visit.created_at,
-        #     is_deleted=False,
-        # )
-        # done_interactions = UserActionRel.objects.values_list(
-        #     "action__id", flat=True
-        # ).filter(
-        #     status="DONE",
-        #     action__community__in=communities,
-        #     updated_at__gte=last_visit.created_at,
-        #     is_deleted=False,
-        # )
-
-        # user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter(
-        #     communities__in=communities,
-        #     portal=FootageConstants.on_user_portal(),
-        #     activity_type=FootageConstants.sign_in(),
-        #     created_at__gte=last_visit.created_at,
-        # )
-
         return {
             "users": users,
             "testimonials": testimonials,
             "messages": messages,
             "team_messages": team_messages,
             "teams": teams,
-            # "todo_interactions": todo_interactions,
-            # "done_interactions": done_interactions,
-            # "user_sign_ins": user_sign_ins,
             "last_visit": last_visit,
         }, None
 
@@ -302,25 +271,12 @@ class SummaryStore:
             .order_by("-created_at")
             .first()
         )
-        print(
-            "Found Last Visit", last_visit, last_visit.created_at
-        )  # REMOVE BEFORE PR(BPR)
+       
         if last_visit:
             users = UserProfile.objects.values_list("id", flat=True).filter(
                 created_at__gt=today, is_deleted=False
             )
-        # todo_interactions = UserActionRel.objects.values_list(
-        #     "action__id", flat=True
-        # ).filter(status="TODO", updated_at__gte=last_visit.created_at, is_deleted=False)
-        # done_interactions = UserActionRel.objects.values_list(
-        #     "action__id", flat=True
-        # ).filter(status="DONE", updated_at__gte=last_visit.created_at, is_deleted=False)
-
-        # user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter(
-        #     portal=FootageConstants.on_user_portal(),
-        #     activity_type=FootageConstants.sign_in(),
-        #     created_at__gte=last_visit.created_at,
-        # )
+      
 
         return {
             "users": users,
@@ -328,9 +284,6 @@ class SummaryStore:
             "messages": messages,
             "team_messages": team_messages,
             "teams": teams,
-            # "todo_interactions": todo_interactions,
-            # "done_interactions": done_interactions,
-            # "user_sign_ins": user_sign_ins,
             "last_visit": last_visit,
         }, None
 
