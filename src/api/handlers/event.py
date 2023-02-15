@@ -367,6 +367,9 @@ class EventHandler(RouteHandler):
 
     self.validator.expect("community_ids", "str_list", is_required=True)
     self.validator.expect("exclude", bool, is_required=False)
+    self.validator.expect("limit", int, is_required=False)
+    self.validator.expect("params", str, is_required=False)
+    self.validator.expect("page", int, is_required=False)
     
     args, err = self.validator.verify(args)
     if err:
@@ -375,8 +378,9 @@ class EventHandler(RouteHandler):
     events, err = self.service.fetch_other_events_for_cadmin(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=events)
-  #  TODO: Paginate this list
+    meta = events.get('meta')
+    data = events.get('items')
+    return MassenergizeResponse(data=data, meta=meta)
 
   @super_admins_only
   def super_admin_list(self, request):

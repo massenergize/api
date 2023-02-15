@@ -76,7 +76,8 @@ class CommunityService:
     communities, err = self.store.list_other_communities_for_cadmin(context)
     if err:
       return None, err
-    return serialize_all(communities), None
+    sorted = sort_items(communities, context.args.get("params"))
+    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
 
   def list_communities_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_communities_for_community_admin(context)

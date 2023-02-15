@@ -897,11 +897,14 @@ class CommunityStore:
     def list_other_communities_for_cadmin(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
+            filter_params = []
+            if context.args.get("params", None):
+                filter_params = get_communities_filter_params(context.args.get("params"))
             user = UserProfile.objects.get(pk=context.user_id)
             # admin_groups = user.communityadmingroup_set.all()
             # ids = [a.community.id for a in admin_groups]
             # communities = Community.objects.filter(is_published=True).exclude(id__in = ids).order_by("name")
-            communities = Community.objects.filter(is_published=True).order_by("name")
+            communities = Community.objects.filter(is_published=True, *filter_params).order_by("name")
             return communities, None
 
     def list_communities_for_community_admin(

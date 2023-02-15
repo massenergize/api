@@ -25,9 +25,9 @@ class AdminHandler(RouteHandler):
     self.add("/admins.super.list", self.list_super_admin) 
     self.add("/admins.community.add", self.add_community_admin) 
     self.add("/admins.community.remove", self.remove_community_admin) 
-    self.add("/admins.community.list", self.list_community_admin) 
+    self.add("/admins.community.list", self.list_community_admin)  # Not a list route
     self.add("/admins.messages.add", self.message) 
-    self.add("/admins.messages.list", self.list_messages) 
+    self.add("/admins.messages.list", self.list_messages) # Not in use
 
   @super_admins_only
   def add_super_admin(self, request):
@@ -173,5 +173,8 @@ class AdminHandler(RouteHandler):
     admin_info, err = self.service.list_admin_messages(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=admin_info)
+    print("=== Admins messages ===", admin_info)
+    meta = admin_info.get("meta")
+    data = admin_info.get("items")
+    return MassenergizeResponse(data=data, meta=meta)
 

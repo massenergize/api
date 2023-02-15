@@ -230,7 +230,8 @@ class EventService:
     events, err = self.store.fetch_other_events_for_cadmin(context, args)
     if err:
       return None, err
-    return serialize_all(events), None
+    sorted = sort_items(events, context.args.get("params"))
+    return paginate(sorted, args.get("page", 1), args.get("limit")), None
 
 
   def list_events_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
@@ -239,4 +240,4 @@ class EventService:
     if err:
       return None, err
     sorted = sort_items(events, context.args.get("params"))
-    return paginate(sorted, args.get("page", 1), args.get("limit", 50)), None
+    return paginate(sorted, args.get("page", 1), args.get("limit")), None
