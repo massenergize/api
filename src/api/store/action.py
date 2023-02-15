@@ -344,7 +344,7 @@ class ActionStore:
         filter_params = get_actions_filter_params(context.args.get("params"))
 
       actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
-      return actions, None
+      return actions.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

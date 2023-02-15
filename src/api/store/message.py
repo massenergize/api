@@ -275,7 +275,6 @@ class MessageStore:
         if message_ids:
             with_ids = Q(id__in=message_ids)
         try:
-            limit = context.args.get("limit")
             filter_params = []
             if context.args.get("params", None):
                 filter_params = get_messages_filter_params(context.args.get("params"))
