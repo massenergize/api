@@ -61,7 +61,7 @@ class SummaryService:
             # "sign_ins": {"count": len(sign_ins), "data": list(sign_ins)},
             "users": {
                 "count": len(users),
-                "description": f"All new users since last visit - {last_visit.created_at}",
+                "description": f"All new users since last visit - {last_visit.created_at if last_visit else '...'}",
                 "data": list(set(users)),
                 "last_visit": serialize(last_visit),
             },

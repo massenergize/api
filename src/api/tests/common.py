@@ -11,11 +11,17 @@ from database.models import (
     Action,
     Community,
     CommunityAdminGroup,
+    CommunityMember,
     Event,
     FeatureFlag,
+    Footage,
     HomePageSettings,
     Media,
+    Message,
+    RealEstateUnit,
+    Team,
     Testimonial,
+    UserActionRel,
     UserMediaUpload,
     UserProfile,
 )
@@ -25,6 +31,45 @@ from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 RESET = "reset"
+
+
+def makeFootage(**kwargs):
+    communities = kwargs.pop("communities",None)    
+    f =  Footage.objects.create(**{**kwargs})
+    if communities: 
+        f.communities.set(communities)
+    return f
+
+
+def makeUserActionRel(**kwargs):
+    action = kwargs.get("action")
+    community = kwargs.pop("community", action.community)
+    house = RealEstateUnit.objects.create(
+        **{"name": str(time.time()) + "-house", "community": community}
+    )
+    return UserActionRel.objects.create(**{"real_estate_unit": house, **kwargs})
+
+
+def makeTeam(**kwargs):
+    name = kwargs.get("name", str(time.time()) + "-team")
+    community = kwargs.pop("community", None)
+    communities = kwargs.pop("communities", None)
+    team = Team.objects.create(
+        **{**kwargs, "primary_community": community, "name": name}
+    )
+    if communities:
+        team.set(communities)
+    return team
+
+
+def makeMessage(**kwargs):
+    user = kwargs.get("user")
+    name = kwargs.pop("name", user.full_name)
+    return Message.objects.create(**{**kwargs, "user_name": name})
+
+
+def makeMembership(**kwargs):
+    return CommunityMember.objects.create(**{**kwargs})
 
 
 def makeFlag(**kwargs):
