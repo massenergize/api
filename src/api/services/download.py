@@ -77,7 +77,7 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-        download_data.delay(data, CADMIN_REPORT)
+        download_data.delay(data, CADMIN_REPORT)  #For testing: download_data(data, CADMIN_REPORT)
         return [], None
 
     def send_sadmin_report(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
