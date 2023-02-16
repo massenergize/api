@@ -147,10 +147,12 @@ class TestUserEngagements(TestCase):
         response = client.post(
             "/api/summary.next.steps.forAdmins"
         ).json().get("data",{})
-        Console.log("response again", response)
         testimonials = response.get("testimonials",{}).get("data",[])
         teams = response.get('teams',{}).get("data",[])
         messages = response.get('messages').get("data",[])
+        
         self.assertEquals(len(testimonials),3)
         self.assertEquals(len(teams),3)
         self.assertEquals(len(messages),2)
+
+        print("Items for admins to attend to checkout!")
