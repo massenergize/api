@@ -44,6 +44,7 @@ def generate_event_list_for_community(com):
             is_published=True,
             is_deleted=False
             ).exclude(community=com, shared_to__id=com.id)
+
     return {
             "events":prepare_events_email_data(events),
             "admins":get_comm_admins(com)
@@ -140,6 +141,8 @@ def prepare_events_email_data(events):
             "share_link":generate_redirect_url("SHARING",event.get("id")),
             "view_link":generate_redirect_url("VIEW", event.get("id"),event.get("community")),
         } for event in events]
+    #sort list of events by date
+    data = (sorted(data, key=lambda i: i['date']))
     return data
  
 #  this is the function called in jobs.py
@@ -162,6 +165,7 @@ def send_events_nudge():
                         if not stat:
                             print("send_events_report error return")
                             return False
+
         return True
     except Exception as e: 
         print("Community admin nudge exception: " + str(e))
