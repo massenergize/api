@@ -120,13 +120,13 @@ class MessageService:
     messages, err = self.store.list_community_admin_messages(context, args)
     if err:
       return None, err
-    sorted = sort_items(messages, context.args.get("params"))
-    return paginate(sorted, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(messages, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_team_admin_messages_for_community_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
     messages, err = self.store.list_team_admin_messages(context,args)
     if err:
       return None, err
-    sorted = sort_items(messages, context.args.get("params"))
-    return paginate(sorted, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(messages, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

@@ -181,9 +181,8 @@ class UserHandler(RouteHandler):
     users, err = self.service.list_users_for_community_admin(context, args)
     if err:
       return err
-    meta = users.get('meta')
-    data = users.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+
+    return MassenergizeResponse(data=users)
   
 
   @super_admins_only
@@ -196,9 +195,8 @@ class UserHandler(RouteHandler):
     users, err = self.service.list_users_for_super_admin(context,args)
     if err:
       return err
-    meta = users.get('meta')
-    data = users.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+
+    return MassenergizeResponse(users)
 
   @login_required
   def add_action_todo(self, request):

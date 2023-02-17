@@ -35,9 +35,8 @@ class ActionStore:
 
   def list_actions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_actions_filter_params(context.args.get("params"))
+      
+      filter_params = get_actions_filter_params(context.get_params())
       actions = []
       community_id = args.get('community_id', None)
       subdomain = args.get('subdomain', None)
@@ -319,10 +318,7 @@ class ActionStore:
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
-        filter_params = []
-
-        if context.args.get("params", None):
-          filter_params = get_actions_filter_params(context.args.get("params"))
+        filter_params = get_actions_filter_params(context.get_params())
           
 
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -339,9 +335,7 @@ class ActionStore:
 
   def list_actions_for_super_admin(self, context: Context):
     try:
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_actions_filter_params(context.args.get("params"))
+      filter_params = get_actions_filter_params(context.get_params())
 
       actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
       return actions.distinct(), None

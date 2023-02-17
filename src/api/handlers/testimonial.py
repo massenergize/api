@@ -114,9 +114,7 @@ class TestimonialHandler(RouteHandler):
 
     if err:
       return err
-    meta = testimonial_info.get('meta')
-    data = testimonial_info.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(data=testimonial_info)
 
   # @admins_only
   # changed to @Login_Required so I can edit the testimonial as the creator and admin
@@ -191,9 +189,7 @@ class TestimonialHandler(RouteHandler):
     testimonials, err = self.service.list_testimonials_for_community_admin(context, args)
     if err:
       return err
-    meta = testimonials.get('meta')
-    data = testimonials.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(testimonials)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -206,6 +202,4 @@ class TestimonialHandler(RouteHandler):
     testimonials, err = self.service.list_testimonials_for_super_admin(context,args)
     if err:
       return err
-    meta = testimonials.get('meta')
-    data = testimonials.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(testimonials)

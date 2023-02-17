@@ -1,3 +1,4 @@
+import json
 from _main_.utils.common import get_request_contents, parse_bool
 
 
@@ -66,6 +67,20 @@ class Context:
       "user_is_super_admin": self.user_is_super_admin,
       "user_is_community_admin": self.user_is_community_admin,
     })
+
+
+  def get_params(self):
+      args = self.get_request_body()
+      if args.get("params", None):
+         params =json.loads(args.get('params',None))
+         return params
+
+
+  def get_pagination_data(self):
+    args = self.get_request_body()
+    limit = args.get('limit')
+    next_page = args.get('page', 1)
+    return {"next_page": next_page, "limit": limit}
 
 
 

@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from _main_.utils.common import serialize
+from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
 from api.store.tag_collection import TagCollectionStore
 from _main_.utils.context import Context
@@ -25,7 +25,7 @@ class TagCollectionService:
     tag_collection, err = self.store.list_tag_collections(context, args)
     if err:
       return None, err
-    return paginate(tag_collection, args.get("page", 1), args.get("limit")), None
+    return serialize_all(tag_collection), None
 
 
   def create_tag_collection(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -53,8 +53,8 @@ class TagCollectionService:
     tag_collections, err = self.store.list_tag_collections_for_community_admin(context,community_id)
     if err:
       return None, err
-    sorted = sort_items(tag_collections, context.args.get("params"))
-    return paginate(sorted, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(tag_collections, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_tag_collections_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
@@ -62,5 +62,5 @@ class TagCollectionService:
     tag_collections, err = self.store.list_tag_collections_for_super_admin(context)
     if err:
       return None, err
-    sorted = sort_items(tag_collections, context.args.get("params"))
-    return paginate(sorted, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(tag_collections, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

@@ -113,7 +113,7 @@ class ActionHandler(RouteHandler):
 
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
-    self.validator.expect('limit', int, is_required=False)
+
 
 
     args, err = self.validator.verify(args)
@@ -124,10 +124,7 @@ class ActionHandler(RouteHandler):
 
     if err:
       return err
-
-    meta = action_info.get('meta')
-    data = action_info.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(data=action_info)
 
 
 
@@ -227,9 +224,7 @@ class ActionHandler(RouteHandler):
     actions, err = self.service.list_actions_for_community_admin(context, args)
     if err:
       return err
-    meta = actions.get('meta')
-    data = actions.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(actions)
 
 
   @super_admins_only
@@ -238,6 +233,4 @@ class ActionHandler(RouteHandler):
     actions, err = self.service.list_actions_for_super_admin(context)
     if err:
       return err
-    meta = actions.get('meta')
-    data = actions.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(actions)

@@ -256,7 +256,9 @@ class TeamHandler(RouteHandler):
     team_members_info, err = self.team.members(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=team_members_info)
+    data = team_members_info.get('items', [])
+    meta = team_members_info.get('meta', {})
+    return MassenergizeResponse(data=data, meta=meta)
 
   def members_preferred_names(self, request):
     context: Context = request.context
@@ -294,11 +296,10 @@ class TeamHandler(RouteHandler):
       return err
 
     teams, err = self.team.list_teams_for_community_admin(context, args)
-    meta = teams.get('meta')
-    data = teams.get('items')
+
     if err:
       return err
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(teams)
 
 
   @super_admins_only
@@ -313,6 +314,5 @@ class TeamHandler(RouteHandler):
     teams, err = self.team.list_teams_for_super_admin(context,args)
     if err:
       return err
-    meta = teams.get('meta')
-    data = teams.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+
+    return MassenergizeResponse(teams)

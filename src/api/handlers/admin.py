@@ -73,9 +73,7 @@ class AdminHandler(RouteHandler):
     admin_info, err = self.service.list_super_admin(context, args)
     if err:
       return err
-    meta = admin_info.get("meta")
-    data = admin_info.get("items")
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(admin_info)
 
   @admins_only
   def add_community_admin(self, request): 
@@ -173,8 +171,5 @@ class AdminHandler(RouteHandler):
     admin_info, err = self.service.list_admin_messages(context, args)
     if err:
       return err
-    print("=== Admins messages ===", admin_info)
-    meta = admin_info.get("meta")
-    data = admin_info.get("items")
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(admin_info)
 

@@ -46,8 +46,7 @@ class CommunityService:
     communities, err = self.store.list_communities(context, args)
     if err:
       return None, err
-    sorted = sort_items(communities, context.args.get("params"))
-    return paginate(sorted, args.get('page', 1), args.get("limit")), None
+    return serialize_all(communities), None
 
 
   def create_community(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -76,23 +75,23 @@ class CommunityService:
     communities, err = self.store.list_other_communities_for_cadmin(context)
     if err:
       return None, err
-    sorted = sort_items(communities, context.args.get("params"))
-    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(communities, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
   def list_communities_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_communities_for_community_admin(context)
     if err:
       return None, err
-    sorted = sort_items(communities, context.args.get("params"))
-    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(communities, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_communities_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_communities_for_super_admin(context)
     if err:
       return None, err
-    sorted = sort_items(communities, context.args.get("params"))
-    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(communities, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
   def add_custom_website(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.add_custom_website(context, args)
@@ -110,6 +109,6 @@ class CommunityService:
     completed_actions_list, err = self.store.list_actions_completed(context, args)
     if err:
       return None, err
-    return paginate(completed_actions_list, args.get('page', 1), args.get("limit")), None
+    return serialize_all(completed_actions_list), None
 
 

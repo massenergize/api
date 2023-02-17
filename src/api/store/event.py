@@ -726,9 +726,8 @@ class EventStore:
         
       # community_id coming from admin portal is 'undefined'
       elif not community_id:
-        filter_params = []
-        if context.args.get("params", None):
-          filter_params = get_events_filter_params(context.args.get("params"))
+        filter_params = get_events_filter_params(context.get_params())
+
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
@@ -748,9 +747,8 @@ class EventStore:
     try:
       # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
       # not as their own separate events
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_events_filter_params(context.args.get("params"))
+      filter_params = get_events_filter_params(context.get_params())
+      
       events = Event.objects.filter(*filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:

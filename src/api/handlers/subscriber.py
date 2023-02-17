@@ -122,9 +122,8 @@ class SubscriberHandler(RouteHandler):
     subscribers, err = self.service.list_subscribers_for_community_admin(context, community_id)
     if err:
       return err
-    meta = subscribers.get('meta')
-    data = subscribers.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+
+    return MassenergizeResponse(subscribers)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -133,6 +132,5 @@ class SubscriberHandler(RouteHandler):
     subscribers, err = self.service.list_subscribers_for_super_admin(context)
     if err:
       return err
-    meta = subscribers.get('meta')
-    data = subscribers.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+
+    return MassenergizeResponse(subscribers)

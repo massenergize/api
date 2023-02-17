@@ -313,9 +313,7 @@ class VendorStore:
         return self.list_vendors_for_super_admin(context)
 
 
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_vendor_filter_params(context.args.get("params"))
+      filter_params = get_vendor_filter_params(context.get_params())
 
       if not community_id:     
         # different code in action.py/event.py
@@ -335,7 +333,7 @@ class VendorStore:
 
       community = get_community_or_die(context, {'community_id': community_id})
       vendors = community.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
-      return vendors, None
+      return vendors.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -344,12 +342,10 @@ class VendorStore:
   def list_vendors_for_super_admin(self, context: Context):
     try:
 
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_vendor_filter_params(context.args.get("params"))
+      filter_params = get_vendor_filter_params(context.get_params())
 
       vendors = Vendor.objects.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
-      return vendors, None
+      return vendors.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

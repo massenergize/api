@@ -130,7 +130,7 @@ class TagCollectionStore:
   def list_tag_collections_for_super_admin(self, context):
     try:
       filter_params = get_tag_collections_filter_params(
-          context.args.get("params"))
+          context.get_params())
       tag_collections = TagCollection.objects.filter(*filter_params,is_deleted=False )
       return tag_collections, None
     except Exception as e:

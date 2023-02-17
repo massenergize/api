@@ -26,9 +26,7 @@ class TestimonialStore:
       
   def list_testimonials(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_testimonials_filter_params(context.args.get("params"))
+      filter_params = get_testimonials_filter_params(context.get_params())
   
       subdomain = args.pop('subdomain', None)
       community_id = args.pop('community_id', None)
@@ -260,9 +258,7 @@ class TestimonialStore:
       elif not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_testimonials_filter_params(context.args.get("params"))
+      filter_params = get_testimonials_filter_params(context.get_params())
       if testimonial_ids: 
         testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
@@ -276,7 +272,7 @@ class TestimonialStore:
         return testimonials, None
 
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
-      return testimonials, None
+      return testimonials.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -286,16 +282,15 @@ class TestimonialStore:
       testimonial_ids = args.get("testimonial_ids")
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_testimonials_filter_params(context.args.get("params"))
+        
+      filter_params = get_testimonials_filter_params(context.get_params())
   
       if testimonial_ids: 
         testimonials = Testimonial.objects.filter(id__in=testimonial_ids,*filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials
 
       testimonials = Testimonial.objects.filter(is_deleted=False,*filter_params).select_related('image', 'community', 'vendor').prefetch_related('tags')
-      return testimonials, None
+      return testimonials.distinct(), None
 
     except Exception as e:
       capture_message(str(e), level="error")

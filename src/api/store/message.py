@@ -233,10 +233,9 @@ class MessageStore:
         message_ids = args.get("message_ids", [])
 
         try:
-            filter_params = []
 
-            if context.args.get("params", None):
-                filter_params = get_messages_filter_params(context.args.get("params"))
+            filter_params = get_messages_filter_params(context.get_params())
+
             admin_communities, err = get_admin_communities(context)
             with_ids = Q()
             if message_ids:
@@ -275,9 +274,8 @@ class MessageStore:
         if message_ids:
             with_ids = Q(id__in=message_ids)
         try:
-            filter_params = []
-            if context.args.get("params", None):
-                filter_params = get_messages_filter_params(context.args.get("params"))
+            filter_params = get_messages_filter_params(context.get_params())
+            
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
                     Q(is_deleted=False,

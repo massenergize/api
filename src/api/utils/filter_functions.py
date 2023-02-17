@@ -6,7 +6,6 @@ from django.db.models import Q
 
 def get_events_filter_params(params):
     try:
-      params= json.loads(params)
       search_text = params.get("search_text", None)
 
       query = []
@@ -37,7 +36,6 @@ def get_events_filter_params(params):
 
 def get_testimonials_filter_params(params):
     try:
-      params= json.loads(params)
       search_text = params.get("search_text", None)
       
       query = []
@@ -71,7 +69,6 @@ def get_testimonials_filter_params(params):
 
 def get_actions_filter_params(params):
     try:
-      params= json.loads(params)
       
       search_text = params.get("search_text", None)
       query = []
@@ -105,7 +102,6 @@ def get_actions_filter_params(params):
 
 def get_communities_filter_params(params):
     try:
-      params= json.loads(params)
       search_text = params.get("search_text", None)
       query = []
       names = params.get("name", None)
@@ -141,7 +137,6 @@ def get_communities_filter_params(params):
 
 def get_messages_filter_params(params):
     try:
-      params= json.loads(params)
       query = []
       communities = params.get("community", None)
       teams = params.get("team", None)
@@ -184,7 +179,6 @@ def get_messages_filter_params(params):
 
 def get_teams_filter_params(params):
     try:
-      params= json.loads(params)
 
       query = []
       communities = params.get("community", None)
@@ -218,9 +212,36 @@ def get_teams_filter_params(params):
       return []
 
 
+def get_team_member_filter_params(params):
+    try:
+      query = []
+      member_type = params.get("status", None)
+      is_admin = None
+
+      search_text = params.get("search_text", None)
+      if search_text:
+        search= reduce(
+        operator.or_, (
+        Q(user__full_name__icontains= search_text),
+        Q(user__email__icontains= search_text),
+        ))
+        query.append(search)
+      
+      if  "Admin" in member_type:
+        is_admin = True
+      elif "Member" in member_type:
+        is_admin=False
+
+      if not is_admin == None:
+       query.append(Q(is_admin=is_admin))
+
+      return query
+    except Exception as e:
+      return []
+
+
 def get_subscribers_filter_params(params):
     try:
-      params= json.loads(params)
       query = []
       search_text = params.get("search_text", None)
       if search_text:
@@ -243,7 +264,6 @@ def get_subscribers_filter_params(params):
 
 def get_vendor_filter_params(params):
     try:
-      params= json.loads(params)
       query = []
       search_text = params.get("search_text", None)
 
@@ -272,7 +292,6 @@ def get_vendor_filter_params(params):
 
 def get_users_filter_params(params):
     try:
-      params= json.loads(params)
       query = []
       search_text = params.get("search_text", None)
 
@@ -305,7 +324,6 @@ def get_users_filter_params(params):
 
 def get_tag_collections_filter_params(params):
     try:
-      params= json.loads(params)
       query = []
       search_text = params.get("search_text", None)
       if search_text:
@@ -322,7 +340,6 @@ def get_tag_collections_filter_params(params):
 
 def get_super_admins_filter_params(params):
     try:
-      params= json.loads(params)
       query = []
       search_text = params.get("search_text", None)
       if search_text:
@@ -343,7 +360,6 @@ def get_super_admins_filter_params(params):
 
 def get_sort_params(params):
   try:
-    params= json.loads(params)
     sort_params = params.get("sort_params", None)
     sort =""
     if sort_params:

@@ -110,7 +110,7 @@ def serialize_all(data, full=False):
   if not data:
     return []
 
-  if type(data[0]) == dict:
+  if isinstance(data[0], dict):
     return data
 
   if full:

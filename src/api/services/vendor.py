@@ -126,13 +126,13 @@ class VendorService:
     vendors, err = self.store.list_vendors_for_community_admin(context, args)
     if err:
       return None, err
-    sorted = sort_items(vendors, context.args.get("params"))
-    return paginate(sorted, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(vendors, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_vendors_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     vendors, err = self.store.list_vendors_for_super_admin(context)
     if err:
       return None, err
-    sorted = sort_items(vendors, context.args.get("params"))
-    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(vendors, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

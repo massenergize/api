@@ -75,16 +75,11 @@ class MessageHandler(RouteHandler):
     args: dict = context.args
     self.validator.expect("message_ids",list, is_required=False)
  
-    self.validator.expect("limit",int, is_required=False)
-    self.validator.expect("page",int, is_required=False)
-    self.validator.expect("params",str, is_required=False)
     args, err = self.validator.verify(args, strict=True)
     messages, err = self.service.list_team_admin_messages_for_community_admin(context,args)
     if err:
       return err
-    meta = messages.get('meta')
-    data = messages.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(messages)
 
   @admins_only
   def community_admin_list(self, request):
@@ -92,14 +87,9 @@ class MessageHandler(RouteHandler):
     args: dict = context.args
     self.validator.expect("message_ids",list, is_required=False)
 
-    self.validator.expect("limit",int, is_required=False)
-    self.validator.expect("page",int, is_required=False)
-    self.validator.expect("params",str, is_required=False)
-
     args, err = self.validator.verify(args, strict=True)
     messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
     if err:
       return err
-    meta = messages.get('meta')
-    data = messages.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+
+    return MassenergizeResponse(messages)

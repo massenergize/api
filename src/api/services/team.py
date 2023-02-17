@@ -98,7 +98,7 @@ class TeamService:
     members, err = self.store.members(context, args)
     if err:
       return None, err
-    return paginate(members, args.get("page", 1), args.get("limit")), None
+    return paginate(members, context.get_pagination_data()), None
 
   def members_preferred_names(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     preferred_names, err = self.store.members_preferred_names(context, args)
@@ -167,22 +167,22 @@ class TeamService:
     teams, err = self.store.list_teams_for_community_admin(context, args)
     if err:
       return None, err
-    sorted = sort_items(teams, context.args.get("params"))
-    return paginate(sorted, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(teams, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_teams_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
     teams, err = self.store.list_teams_for_super_admin(context,args)
     if err:
       return None, err
-    sorted = sort_items(teams, context.args.get("params"))
-    return paginate(sorted, args.get("page", 1), args.get("limit")), None
+    sorted = sort_items(teams, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     completed_actions_list, err = self.store.list_actions_completed(context, args)
     if err:
       return None, err
-    return paginate(completed_actions_list, args.get("page", 1), args.get("limit")), None
+    return paginate(completed_actions_list, context.get_pagination_data()), None
 
 

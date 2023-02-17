@@ -73,13 +73,13 @@ class SubscriberService:
     subscribers, err = self.store.list_subscribers_for_community_admin(context, community_id)
     if err:
       return None, err
-    sorted = sort_items(subscribers, context.args.get("params"))
-    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(subscribers, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_subscribers_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     subscribers, err = self.store.list_subscribers_for_super_admin(context)
     if err:
       return None, err
-    sorted = sort_items(subscribers, context.args.get("params"))
-    return paginate(sorted, context.args.get("page", 1), context.args.get("limit")), None
+    sorted = sort_items(subscribers, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

@@ -674,9 +674,7 @@ class UserStore:
       community_id = args.get("community_id",None)
       user_emails = args.get("user_emails", None)
 
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_users_filter_params(context.args.get("params"))
+      filter_params = get_users_filter_params(context.get_params())
 
       if context.user_is_super_admin:
         return self.list_users_for_super_admin(context, args)
@@ -686,7 +684,7 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
-        return users, None
+        return users.distinct(), None
       
       community, err = get_community(community_id)
       
@@ -699,7 +697,7 @@ class UserStore:
         users = remove_dups(users)
         users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
         
-        return users, None
+        return users.distinct(), None
       elif not community:
         print(err)
         return [], None
@@ -707,7 +705,7 @@ class UserStore:
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
       users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
-      return users, None
+      return users.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -717,18 +715,17 @@ class UserStore:
       user_emails = args.get("user_emails")
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      filter_params = []
-      if context.args.get("params", None):
-        filter_params = get_users_filter_params(context.args.get("params"))
+
+      filter_params = get_users_filter_params(context.get_params())
       # List all users including guests
       #  users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True)
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
-        return users, None
+        return users.distinct(), None
 
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)
-      return users, None
+      return users.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

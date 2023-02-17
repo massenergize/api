@@ -99,9 +99,8 @@ class SubscriberStore:
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
-      filter_params = []
-      if context.args.get("params", None):
-          filter_params = get_subscribers_filter_params(context.args.get("params"))
+
+      filter_params = get_subscribers_filter_params(context.get_params())
 
       # gets pass from admin portal as "null"
       # TODO: Owen clean this up with validator
@@ -129,9 +128,7 @@ class SubscriberStore:
 
   def list_subscribers_for_super_admin(self, context: Context):
     try:
-      filter_params = []
-      if context.args.get("params", None):
-          filter_params = get_subscribers_filter_params(context.args.get("params"))
+      filter_params = get_subscribers_filter_params(context.get_params())
       subscribers = Subscriber.objects.filter(is_deleted=False, *filter_params)
       return subscribers, None
     except Exception as e:

@@ -253,7 +253,6 @@ class EventHandler(RouteHandler):
     self.validator.expect("community_id", is_required=False)
     self.validator.expect("subdomain", is_required=False)
     self.validator.expect("user_id", is_required=False)
-    self.validator.expect("limit", is_required=False)
     args, err = self.validator.verify(args, strict=True)
     
     if err:
@@ -263,9 +262,7 @@ class EventHandler(RouteHandler):
 
     if err:
       return err
-    data = event_info.get("items", [])
-    meta = event_info.get("meta", {})
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(data=event_info)
 
   
   def update_recurring_date(self, request):
@@ -356,9 +353,8 @@ class EventHandler(RouteHandler):
     events, err = self.service.list_events_for_community_admin(context, args)
     if err:
       return err
-    meta = events.get('meta')
-    data = events.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+
+    return MassenergizeResponse(events)
 
   @admins_only 
   def fetch_other_events_for_cadmin(self, request):
@@ -367,9 +363,7 @@ class EventHandler(RouteHandler):
 
     self.validator.expect("community_ids", "str_list", is_required=True)
     self.validator.expect("exclude", bool, is_required=False)
-    self.validator.expect("limit", int, is_required=False)
-    self.validator.expect("params", str, is_required=False)
-    self.validator.expect("page", int, is_required=False)
+
     
     args, err = self.validator.verify(args)
     if err:
@@ -378,9 +372,7 @@ class EventHandler(RouteHandler):
     events, err = self.service.fetch_other_events_for_cadmin(context, args)
     if err:
       return err
-    meta = events.get('meta')
-    data = events.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(events)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -388,6 +380,5 @@ class EventHandler(RouteHandler):
     events, err = self.service.list_events_for_super_admin(context)
     if err:
       return err
-    meta = events.get('meta')
-    data = events.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+
+    return MassenergizeResponse(events)

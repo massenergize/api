@@ -897,9 +897,8 @@ class CommunityStore:
     def list_other_communities_for_cadmin(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
-            filter_params = []
-            if context.args.get("params", None):
-                filter_params = get_communities_filter_params(context.args.get("params"))
+            filter_params = get_communities_filter_params(context.get_params())
+
             user = UserProfile.objects.get(pk=context.user_id)
             # admin_groups = user.communityadmingroup_set.all()
             # ids = [a.community.id for a in admin_groups]
@@ -916,9 +915,8 @@ class CommunityStore:
             if context.user_is_super_admin:
                 return self.list_communities_for_super_admin(context)
             elif context.user_is_community_admin:
-                filter_params = []
-                if context.args.get("params", None):
-                        filter_params = get_communities_filter_params(context.args.get("params"))
+                filter_params = get_communities_filter_params(context.get_params())
+
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
@@ -935,9 +933,7 @@ class CommunityStore:
         try:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
-            filter_params = []
-            if context.args.get("params", None):
-                filter_params = get_communities_filter_params(context.args.get("params"))
+            filter_params = get_communities_filter_params(context.get_params())
 
             communities = Community.objects.filter(is_deleted=False, *filter_params)
             return communities, None

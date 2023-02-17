@@ -48,8 +48,8 @@ class AdminService:
         admins, err = self.store.list_super_admin(context, args)
         if err:
             return None, err
-        sorted = sort_items(admins, context.args.get("params"))
-        return paginate(sorted, args.get('page', 1), args.get("limit")), None
+        sorted = sort_items(admins, context.get_params())
+        return paginate(sorted, context.get_pagination_data()), None
 
     def add_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
       try:    
@@ -137,5 +137,5 @@ class AdminService:
         admins_messages, err = self.store.list_admin_messages(context, args)
         if err:
             return None, err
-        sorted = sort_items(admins_messages, context.args.get("params"))
-        return paginate(sorted, args.get("page", 1), args.get("limit")), None
+        sorted = sort_items(admins_messages, context.get_params())
+        return paginate(sorted, context.get_pagination_data()), None

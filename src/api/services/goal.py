@@ -46,7 +46,7 @@ class GoalService:
     goals, err = self.store.list_goals(community_id, subdomain, team_id, user_id)
     if err:
       return None, err
-    return paginate(goals, context.args.get("page", 1), context.args.get("limit")), None
+    return serialize_all(goals), None
 
 
   def create_goal(self, community_id, team_id, user_id, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -84,14 +84,14 @@ class GoalService:
     goals, err = self.store.list_goals_for_community_admin(context, community_id)
     if err:
       return None, err
-    return paginate(goals, context.args.get("page", 1), context.args.get("limit")), None
+    return paginate(goals, context.get_pagination_data()), None
 
 
   def list_goals_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     goals, err = self.store.list_goals_for_super_admin()
     if err:
       return None, err
-    return paginate(goals, context.args.get("page", 1), context.args.get("limit")), None
+    return paginate(goals, context.get_pagination_data()), None
 
   def increase_value(self, goal_id, field_name):
     goal, err = self.store.increase_value(goal_id, field_name)

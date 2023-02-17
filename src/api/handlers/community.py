@@ -143,9 +143,7 @@ class CommunityHandler(RouteHandler):
     community_info, err = self.service.list_communities(context, args)
     if err:
       return err
-    data = community_info.get("items", [])
-    meta = community_info.get("meta", {})
-    return MassenergizeResponse(data=data,meta=meta)
+    return MassenergizeResponse(community_info)
 
   @admins_only
   def update(self, request):
@@ -220,9 +218,7 @@ class CommunityHandler(RouteHandler):
     communities, err = self.service.list_other_communities_for_cadmin(context)
     if err:
       return err
-    meta = communities.get('meta')
-    data = communities.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(communities)
 
   @admins_only
   def community_admin_list(self, request):
@@ -231,9 +227,7 @@ class CommunityHandler(RouteHandler):
     communities, err = self.service.list_communities_for_community_admin(context)
     if err:
       return err
-    meta = communities.get('meta')
-    data = communities.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(communities)
 
 
   @super_admins_only
@@ -243,9 +237,7 @@ class CommunityHandler(RouteHandler):
     communities, err = self.service.list_communities_for_super_admin(context)
     if err:
       return err
-    meta = communities.get('meta')
-    data = communities.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(communities)
 
 
   @admins_only
@@ -271,7 +263,7 @@ class CommunityHandler(RouteHandler):
 
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
-    self.validator.expect('limit', int, is_required=False)
+    
     args, err = self.validator.verify(args)
     if err:
       return err
@@ -279,9 +271,7 @@ class CommunityHandler(RouteHandler):
     community_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    meta = community_completed_actions.get('meta')
-    data = community_completed_actions.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(community_completed_actions)
 
 
 
