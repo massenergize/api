@@ -23,8 +23,6 @@ default_pref={
     "admin_portal_settings": AdminPortalSettings.Defaults,
 }
 
-today = datetime.datetime.utcnow().replace(tzinfo=utc)
-in_30_days = today + timezone.timedelta(days=30)
 WEEKLY_EVENT_NUDGE="weekly_event_nudge-feature-flag"
 
 def is_viable(item):
@@ -34,6 +32,8 @@ def is_viable(item):
     return False
 
 def generate_event_list_for_community(com):
+    today = datetime.datetime.utcnow().replace(tzinfo=utc)
+    in_30_days = today + timezone.timedelta(days=30)
     open = Q(publicity=EventConstants.open())
     events = Event.objects.filter(
             open|Q(publicity=EventConstants.is_open_to("OPEN_TO"), 
