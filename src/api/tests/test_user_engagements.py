@@ -25,6 +25,20 @@ class TestUserEngagements(TestCase):
 
 
     def test_user_engagement_summary(self):
+        """
+            The idea, is to 
+            1. Create a few communities 
+            2. Create users(normal)  
+            3. Make one user an admin of a few of the communities
+            4. Then make some actions that belong to the cadmin's communities 
+            5. After, the remaining normal users should sign in to some communities 
+            6. Complete actions, 
+            7. And add some actions as to do. 
+            Criteria for success 
+            If the engagement route works as it should, it will only retrieve the sign in footages, 
+            actions that have been completed, and ones that have been added todo for only the communiities 
+            that the current admin manages
+        """
         client = Client()
         Console.header("Testing Admin User Engagements")
         users = []
@@ -113,6 +127,19 @@ class TestUserEngagements(TestCase):
         
 
     def test_admin_next_steps(self):
+        """
+            Idea 
+            1. Again, create a few users 
+            2. Create a few communities 
+            3. Make one of the users an admin of a few of the communities 
+            4. Create testimonials for various communities 
+            5. Create actions for various communities 
+            6. Create messages (that look they were sent by users)
+            Criteria for success 
+            if the route works as it should, it will retrieve all unanswered actions, tesitmonials, 
+            messages that are related to any of the communities that the cadmin manages
+
+        """
         client = Client()
         Console.header("Admin Next Steps")
         users = []
