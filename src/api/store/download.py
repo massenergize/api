@@ -80,6 +80,21 @@ class DownloadStore:
             "testimonials_count",
         ]
 
+        #EMMA
+        self.user_info_columns_1 = [
+            "First Name",
+            "Last Name",
+            "Preferred Name", #REMOVED ROLE
+            "Email", 
+        ]
+        #EMMA
+        self.user_info_columns_2 = [
+            "Role",
+            "Created",
+            #"Last sign in", #NEW THING???
+        ]
+
+
         self.team_info_columns = [
             "name",
             "members_count",
@@ -146,6 +161,126 @@ class DownloadStore:
 
             cells[columns.index(key)] = value
         return cells
+
+    """ #EMMA
+    def _get_user_info_cells_1(self, user):
+        user_cells_1 = {}
+
+        if isinstance(user, Subscriber):
+            full_name = user.name
+            space = full_name.find(" ")
+            first_name = full_name[:space]
+            last_name = full_name[space + 1 :]
+            user_cells_1 = {
+                "First Name": first_name,
+                "Last Name": last_name,
+                "Email": user.email,
+            }
+        elif isinstance(user, RealEstateUnit):
+            # for geographic communities, list non-members who have households in the community
+            reu = user
+            user = reu.user_real_estate_units.first()
+            if not user:
+                return None
+
+            full_name = user.full_name
+            space = full_name.find(" ")
+            first_name = full_name[:space]
+            last_name = full_name[space + 1 :]
+
+            user_cells_1 = {
+                "First Name": first_name,
+                "Last Name": last_name,
+                "Preferred Name": user.preferred_name,
+                "Email": user.email,
+            }
+
+        else:
+            full_name = user.full_name
+            space = full_name.find(" ")
+            first_name = full_name[:space]
+            last_name = full_name[space + 1 :]
+
+            user_cells_1 = {
+                "First Name": first_name,
+                "Last Name": last_name,
+                "Preferred Name": user.preferred_name,
+                "Email": user.email,
+            }
+
+        return self._get_cells_from_dict(self.user_info_columns_1, user_cells_1)
+
+    def _get_user_info_cells_2(self, user):
+        user_cells_2 = {}
+
+        if isinstance(user, Subscriber):
+            user_cells_2 = {
+                "Role": "Subscriber",
+                "Created": user.created_at.strftime("%Y-%m-%d"),
+            }
+        elif isinstance(user, RealEstateUnit):
+            # for geographic communities, list non-members who have households in the community
+            reu = user
+            user = reu.user_real_estate_units.first()
+            if not user:
+                return None
+
+            if reu.address and reu.address.city:
+                city = reu.address.city
+            else:
+                city = "somewhere"
+                # return None
+
+            this_community = Community.objects.filter(id=self.community_id).first()
+
+            # community list which user has associated with
+            communities = [
+                cm.community.name
+                for cm in CommunityMember.objects.filter(user=user).select_related(
+                    "community"
+                )
+            ]
+            if this_community.name in communities:
+                return None
+            elif len(communities) < 1:
+                community = "NO COMMUNITY"
+            elif len(communities) == 1:
+                community = communities[0]
+            else:
+                community = str(communities)
+
+            user_cells_2 = {
+                "Role": community + " member, household in " + city,
+                "Created": user.created_at.strftime("%Y-%m-%d"),
+            }
+
+        else:
+            user_households = user.real_estate_units.count()
+            user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
+            testimonials_count = user_testimonials.count() if user_testimonials else "0"
+
+            is_guest = False
+            if user.user_info:
+                is_guest = (user.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
+
+            is_invited = not is_guest and not user.accepts_terms_and_conditions
+
+            user_cells_2 = {
+                "Role": "super admin"
+                if user.is_super_admin
+                else "community admin"
+                if user.is_community_admin
+                else "vendor"
+                if user.is_vendor
+                else "guest"
+                if is_guest
+                else "invited"
+                if is_invited
+                else "community member",
+                "Created": user.created_at.strftime("%Y-%m-%d"),
+            }
+
+        return self._get_cells_from_dict(self.user_info_columns_2, user_cells_2) """
 
     def _get_user_info_cells(self, user):
         user_cells = {}
@@ -843,8 +978,13 @@ class DownloadStore:
     def users_download(
         self, context: Context, community_id, team_id
     ) -> Tuple[list, MassEnergizeAPIError]:
+        #emma
+        print("In users_download")
         try:
             self.community_id = community_id
+            #emma
+            #print("COmmunity admin")
+            #print(community_id)
             if team_id:
                 community_name = Team.objects.get(id=team_id).name
             elif community_id:
@@ -873,6 +1013,8 @@ class DownloadStore:
             else:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
+            #first print is emma
+            print("exception, no try")
             print(str(e))
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
