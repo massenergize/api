@@ -4,7 +4,6 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
   CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from _main_.settings import DEBUG
 from django.db.models import F
 from sentry_sdk import capture_message
 from .utils import get_community, get_user, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
@@ -12,7 +11,8 @@ from .utils import get_community, get_user, get_user_or_die, get_community_or_di
 import json
 from typing import Tuple
 from api.services.utils import send_slack_message
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY, DEBUG
+from _main_.utils.constants import ME_LOGO_PNG
 from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, STANDARD_USER, INVITED_USER, GUEST_USER
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
@@ -825,7 +825,6 @@ class UserStore:
           new_user.communities.add(community)
       else:
         new_user: UserProfile = user
-
       
       team_leader = None
       if team:
@@ -836,12 +835,14 @@ class UserStore:
         new_member, _ = TeamMember.objects.get_or_create(user=new_user, team=team)
         new_member.save()
         team.save()
-        
+
       new_user.save()
+  
+      community_logo =  community.logo.file.url if community and community.logo else ME_LOGO_PNG
       ret = { 'cadmin': cadmin.full_name,
               'cadmin_email': cadmin.email,
               'community': community.name,
-              'community_logo': community.logo.file.url,
+              'community_logo': community_logo,
               'community_info': community.about_community,
               'location': location,
               'subdomain': community.subdomain,
