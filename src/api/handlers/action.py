@@ -237,7 +237,7 @@ class ActionHandler(RouteHandler):
     args, err = self.validator.verify(args)
     if err:
       return err
-    actions, err = self.service.list_actions_for_super_admin(context,args)
+    actions, err = self.service.list_actions_for_super_admin(context)
     if err:
       return err
     return MassenergizeResponse(data=actions)

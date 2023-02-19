@@ -338,8 +338,8 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_actions_for_super_admin(self, context: Context,args):
-    ids = args.pop("action_ids",[])
+  def list_actions_for_super_admin(self, context: Context):
+    ids = context.args.pop("action_ids",[])
     try:
       filter_params = get_actions_filter_params(context.get_params())
       if ids: 
