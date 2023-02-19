@@ -123,7 +123,6 @@ class ActionService:
 
 
   def list_actions_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    args = context.args
     actions, err = self.store.list_actions_for_super_admin(context)
     if err:
       return None, err

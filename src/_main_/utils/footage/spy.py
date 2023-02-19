@@ -1,3 +1,4 @@
+from datetime import datetime,timezone
 from turtle import update
 from _main_.utils.context import Context
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
@@ -16,6 +17,7 @@ def is_array(item):
 class Spy:
     def __init__(self) -> None:
         pass
+
 
     @staticmethod
     def create_footage(**kwargs):
@@ -291,14 +293,22 @@ class Spy:
                 else UserProfile.objects.filter(email=ctx.user_email).first()
             )
             act_type = kwargs.get("type", None)
+            portal = kwargs.get("portal", None)
+            portal = portal if portal else FootageConstants.on_admin_portal()
             footage = Spy.create_footage(
                 actor=actor,
                 activity_type=act_type,
                 by_super_admin=ctx.user_is_super_admin,
                 item_type=FootageConstants.ITEM_TYPES["AUTH"]["key"],
+                portal = portal
             )
-            groups = actor.communityadmingroup_set.all()
-            communities = [g.community for g in groups]
+            passed_communities = kwargs.get("communities")
+            communities = [] 
+            if not passed_communities: 
+                groups = actor.communityadmingroup_set.all()
+                communities = [g.community for g in groups]
+            else: communities = passed_communities
+
             footage.communities.set(communities)
             return footage
         except Exception as e:
@@ -339,7 +349,7 @@ class Spy:
         return (
             Footage.objects.filter(
                 portal=FootageConstants.on_admin_portal(), by_super_admin=True
-            )
+            ).distinct()
             # .exclude(actor=user)
             .order_by("-id")[:LIMIT]
         )
@@ -366,6 +376,6 @@ class Spy:
             return Footage.objects.filter(
                 portal=FootageConstants.on_admin_portal(),
                 communities__id__in = communities
-            ).order_by("-id")[:LIMIT]
+            ).distinct().order_by("-id")[:LIMIT]
         except Exception as e:
             Console.log("Could not fetch footages for community admin", e)
