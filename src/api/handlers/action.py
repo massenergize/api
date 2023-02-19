@@ -213,6 +213,7 @@ class ActionHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("action_ids", list, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
@@ -226,7 +227,13 @@ class ActionHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request): 
     context: Context = request.context
-    actions, err = self.service.list_actions_for_super_admin(context)
+    args: dict = context.args
+    self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("action_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    actions, err = self.service.list_actions_for_super_admin(context,args)
     if err:
       return err
     return MassenergizeResponse(data=actions)

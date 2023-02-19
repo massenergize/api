@@ -221,7 +221,7 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=communities)
 
   @admins_only
-  def community_admin_list(self, request):
+  def community_admin_list(self, request):  
     context: Context  = request.context
     #args = context.get_request_body()
     communities, err = self.service.list_communities_for_community_admin(context)

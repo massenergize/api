@@ -103,7 +103,7 @@ class FootageConstants:
 
     @staticmethod
     def on_user_portal():
-        return PLATFORMS["ADMIN_FRONTEND_PORTAL"]["key"]
+        return PLATFORMS["USER_FRONTEND_PORTAL"]["key"]
 
     @staticmethod
     def create():
