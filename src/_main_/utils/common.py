@@ -107,13 +107,13 @@ def rename_fields(args, pairs):
 
 
 def serialize_all(data, full=False, **kwargs):
-  medium = (kwargs or {}).get("medium", False)
+  #medium = (kwargs or {}).get("medium", False)
   if not data:
     return []
   if full:
     return [d.full_json() for d in data]
-  elif medium: 
-    return [d.medium_json() for d in data]
+  #elif medium: 
+  #  return [d.medium_json() for d in data]
   return [d.simple_json() for d in data]
 
 

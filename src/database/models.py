@@ -478,12 +478,14 @@ class Community(models.Model):
         )
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
-        return res
-
-    def medium_json(self): 
-        res = self.simple_json() 
+        # this will not slow it down measurably
         res["feature_flags"] =  get_enabled_flags(self)
         return res
+
+    #def medium_json(self): 
+    #    res = self.simple_json() 
+    #    res["feature_flags"] =  get_enabled_flags(self)
+    #    return res
 
     def full_json(self):
         admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(
