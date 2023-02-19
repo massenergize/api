@@ -499,9 +499,6 @@ class TeamStore:
         # return actions from all communities
         return self.list_teams_for_super_admin(context)
       
-
-
-
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
@@ -526,7 +523,7 @@ class TeamStore:
         return teams, None
 
       teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
-      return teams, None
+      return teams.distinct(), None
 
     except Exception as e:
       capture_message(str(e), level="error")

@@ -224,7 +224,7 @@ class ActionHandler(RouteHandler):
     actions, err = self.service.list_actions_for_community_admin(context, args)
     if err:
       return err
-    return MassenergizeResponse(actions)
+    return MassenergizeResponse(data=actions)
 
 
   @super_admins_only
@@ -233,4 +233,4 @@ class ActionHandler(RouteHandler):
     actions, err = self.service.list_actions_for_super_admin(context)
     if err:
       return err
-    return MassenergizeResponse(actions)
+    return MassenergizeResponse(data=actions)

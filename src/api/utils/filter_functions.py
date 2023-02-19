@@ -91,7 +91,7 @@ def get_actions_filter_params(params):
       if communities:
         query.append(Q(community__name__in=communities))
       if tags:
-       query.append(Q(tags__name__in=tags))
+       query.append(Q(tags__name__in=tags) or Q(tags__tag_collection__name__in=tags))
       if not status == None:
        query.append(Q(is_published=status))
 
@@ -164,14 +164,18 @@ def get_messages_filter_params(params):
         forwarded= True
       if "No" in params.get("forwarded to team admin?", []):
         forwarded= False
+
       if communities:
         query.append(Q(community__name__in=communities))
       if teams:
         query.append(Q(team__name__in=teams))
       if not status == None:
        query.append(Q(have_replied=status))
+
       if not forwarded == None:
-       query.append(Q(have_forwarded=status))
+       query.append(Q(have_forwarded=forwarded))
+
+
       return query
     except Exception as e:
       return []
