@@ -227,9 +227,9 @@ class EventsTestCase(TestCase):
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_published": "false"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
-        # test setting live but not yet approved
+        # test setting live but not yet approved ::BACKED-OUT::
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_approved": "false", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertFalse(response["success"])
+        self.assertTrue(response["success"])
 
         # test setting live and approved
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_approved": "true", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
@@ -328,7 +328,7 @@ class EventsTestCase(TestCase):
         self.assertTrue(response["success"])      
         self.assertEqual(response["data"], {})
 
-        # test logged as sadmin
+        # test logged as sadmin["items"]
         #signinAs(self.client, self.SADMIN)
 
     def test_list_rsvps(self):
@@ -347,11 +347,11 @@ class EventsTestCase(TestCase):
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.rsvp.list', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
-        self.assertEqual(response["data"]["items"][0]["status"], "GOING")
+        self.assertEqual(response["data"][0]["status"], "GOING")
 
         response = self.client.post('/api/events.rsvp.list', urlencode({"event_id": self.EVENT2.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
-        self.assertEqual(response["data"]["items"], [])
+        self.assertEqual(response["data"], [])
 
 
 

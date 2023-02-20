@@ -1,5 +1,6 @@
 import json
 from _main_.utils.common import get_request_contents, parse_bool
+from _main_.utils.constants import DEFAULT_PAGINATION_LIMIT
 
 
 class Context:
@@ -78,7 +79,7 @@ class Context:
 
   def get_pagination_data(self):
     args = self.get_request_body()
-    limit = args.get('limit')
+    limit = args.get('limit', DEFAULT_PAGINATION_LIMIT)
     next_page = args.get('page', 1)
     return {"next_page": next_page, "limit": limit}
 

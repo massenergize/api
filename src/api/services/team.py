@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
-from _main_.utils.common import serialize
+from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
 from api.store.team import TeamStore
 from api.store.message import MessageStore
@@ -32,7 +32,7 @@ class TeamService:
     team, err = self.store.list_teams(context, args)
     if err:
       return None, err
-    return team, None
+    return serialize_all(team), None
 
   def team_stats(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     stats, err = self.store.team_stats(context, args)

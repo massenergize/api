@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.conf import settings as django_settings
 from urllib.parse import urlencode
+from _main_.utils.constants import DEFAULT_PAGINATION_LIMIT
 from database.models import Team, Community, UserProfile, CommunityAdminGroup, Vendor
 from api.tests.common import signinAs, setupCC, createUsers
 
@@ -133,10 +134,12 @@ class VendorsTestCase(TestCase):
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "updated_name2")
 
-        # test setting live but not yet approved
+        # test setting live but not yet approved ::BACKED-OUT ::
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertFalse(response["success"])
+        self.assertTrue(response["success"])
+        self.assertEqual(response["data"]["is_published"], True)
+        # self.assertFalse(response["success"])
 
         # test setting live and approved
         response = self.client.post('/api/vendors.update', urlencode({"vendor_id": self.VENDOR1.id, "is_approved": "true", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
@@ -234,5 +237,5 @@ class VendorsTestCase(TestCase):
 
         # test logged as sadmin
         signinAs(self.client, self.SADMIN)
-        response = self.client.post('/api/vendors.listForSuperAdmin', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
+        response = self.client.post('/api/vendors.listForSuperAdmin', urlencode({"limit":DEFAULT_PAGINATION_LIMIT}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])

@@ -181,8 +181,8 @@ class TeamsTestCase(TestCase):
 
     # only one team approved
     self.assertTrue(list_response["success"])
-    self.assertIs(1, len(list_response.get("data").get("items")))
-    self.assertEqual(self.TEAM1.name, list_response.get("data").get("items")[0]['name'])
+    self.assertIs(1, len(list_response.get("data")))
+    self.assertEqual(self.TEAM1.name, list_response.get("data")[0]['name'])
 
 
   # TODO: doesn't test households or actions todo
@@ -351,7 +351,7 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, self.SADMIN)
     members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM1.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
-    self.assertTrue(len(members_response.get("data").get("items")) < members_num)
+    self.assertTrue(len(members_response.get("data")) < members_num)
 
   def test_removeMember(self):
 
@@ -373,7 +373,7 @@ class TeamsTestCase(TestCase):
     # check members in team
     members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM2.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
-    members_num = len(members_response.get("data").get("items"))
+    members_num = len(members_response.get("data"))
 
     # test remove member as admin
     remove_response = self.client.post('/api/teams.removeMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
@@ -383,7 +383,7 @@ class TeamsTestCase(TestCase):
     members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
 
     self.assertTrue(members_response["success"])
-    self.assertTrue(len(members_response.get("data").get("items")) < members_num)
+    self.assertTrue(len(members_response.get("data")) < members_num)
 
   def test_join(self): # same as addMember
     
@@ -405,7 +405,7 @@ class TeamsTestCase(TestCase):
     # check that users not in team
     members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
-    members_num = len(members_response.get("data").get("items"))
+    members_num = len(members_response.get("data"))
 
     # test join as same user
     signinAs(self.client, self.USER3)
@@ -416,7 +416,7 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, self.SADMIN)
     members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM3.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
-    self.assertTrue(len(members_response.get("data").get("items")) > members_num)
+    self.assertTrue(len(members_response.get("data")) > members_num)
 
   def test_addMember(self):
     
@@ -434,7 +434,7 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, self.SADMIN)
     members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
-    members_num = len(members_response.get("data").get("items"))
+    members_num = len(members_response.get("data"))
 
     # test add member as admin
     add_response = self.client.post('/api/teams.addMember', urlencode({"team_id": self.TEAM4.id, "user_id": self.USER4.id}), content_type="application/x-www-form-urlencoded").toDict()
@@ -443,7 +443,7 @@ class TeamsTestCase(TestCase):
     # check that users now in team
     members_response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM4.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(members_response["success"])
-    self.assertTrue(len(members_response.get("data").get("items")) > members_num)
+    self.assertTrue(len(members_response.get("data")) > members_num)
 
   def test_message_admin(self): # implement validator
     
@@ -483,8 +483,8 @@ class TeamsTestCase(TestCase):
     signinAs(self.client, self.SADMIN)
     response = self.client.post('/api/teams.members', urlencode({"team_id": self.TEAM5.id}), content_type="application/x-www-form-urlencoded").toDict()
     self.assertTrue(response["success"])
-    self.assertEqual(len(response.get("data").get("items")),1)   # Team has one member who accepted TNC.  Don't include the one who didn't yet accept
-    self.assertEqual(response.get("data").get("items")[0]["user"]["id"], str(self.USER2.id))
+    self.assertEqual(len(response.get("data")),1)   # Team has one member who accepted TNC.  Don't include the one who didn't yet accept
+    self.assertEqual(response.get("data")[0]["user"]["id"], str(self.USER2.id))
 
     # test members no given team
     response = self.client.post('/api/teams.members', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()

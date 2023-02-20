@@ -203,8 +203,6 @@ class EventStore:
       shared = [] 
       if community: shared = community.events_from_others.filter(is_published=True)
     
-      
-      
     elif subdomain:
       query =  Q(community__subdomain=subdomain)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
@@ -695,7 +693,6 @@ class EventStore:
       admin_of = []
       filter_params = get_events_filter_params(context.get_params())
 
-      
       user = UserProfile.objects.filter(email=context.user_email).first()
       today = datetime.datetime.today()
       if user: 

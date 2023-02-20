@@ -307,7 +307,7 @@ class ActionStore:
       ids = args.pop("action_ids",[])
 
       if context.user_is_super_admin:
-        return self.list_actions_for_super_admin(context,args)
+        return self.list_actions_for_super_admin(context)
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")

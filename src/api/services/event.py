@@ -140,7 +140,7 @@ class EventService:
     events, err = self.store.list_events(context, args)
     if err:
       return None, err
-    return paginate(events, args.get("page", 1), args.get("limit", 50)), None
+    return serialize_all(events), None
 
 
   def create_event(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
