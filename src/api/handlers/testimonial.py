@@ -189,7 +189,7 @@ class TestimonialHandler(RouteHandler):
     testimonials, err = self.service.list_testimonials_for_community_admin(context, args)
     if err:
       return err
-    return MassenergizeResponse(testimonials)
+    return MassenergizeResponse(data=testimonials)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -202,4 +202,4 @@ class TestimonialHandler(RouteHandler):
     testimonials, err = self.service.list_testimonials_for_super_admin(context,args)
     if err:
       return err
-    return MassenergizeResponse(testimonials)
+    return MassenergizeResponse(data=testimonials)

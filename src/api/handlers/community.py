@@ -143,7 +143,7 @@ class CommunityHandler(RouteHandler):
     community_info, err = self.service.list_communities(context, args)
     if err:
       return err
-    return MassenergizeResponse(community_info)
+    return MassenergizeResponse(data=community_info)
 
   @admins_only
   def update(self, request):
@@ -218,7 +218,7 @@ class CommunityHandler(RouteHandler):
     communities, err = self.service.list_other_communities_for_cadmin(context)
     if err:
       return err
-    return MassenergizeResponse(communities)
+    return MassenergizeResponse(data=communities)
 
   @admins_only
   def community_admin_list(self, request):  
@@ -227,7 +227,7 @@ class CommunityHandler(RouteHandler):
     communities, err = self.service.list_communities_for_community_admin(context)
     if err:
       return err
-    return MassenergizeResponse(communities)
+    return MassenergizeResponse(data=communities)
 
 
   @super_admins_only
@@ -237,7 +237,7 @@ class CommunityHandler(RouteHandler):
     communities, err = self.service.list_communities_for_super_admin(context)
     if err:
       return err
-    return MassenergizeResponse(communities)
+    return MassenergizeResponse(data=communities)
 
 
   @admins_only
@@ -271,7 +271,7 @@ class CommunityHandler(RouteHandler):
     community_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    return MassenergizeResponse(community_completed_actions)
+    return MassenergizeResponse(data=community_completed_actions)
 
 
 

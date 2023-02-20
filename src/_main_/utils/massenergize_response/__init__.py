@@ -13,7 +13,6 @@ class MassenergizeResponse(JsonResponse):
     cursor = {}
     if data != None and isinstance(data, dict):
       if data.get("items")!= None:
-        print("==== CURSOR ===", data.get("cursor"))
         cursor = data.get("cursor")
         data = data.get("items")
   

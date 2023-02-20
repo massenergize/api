@@ -220,7 +220,7 @@ class VendorHandler(RouteHandler):
 
     if err:
       return err
-    return MassenergizeResponse(vendors)
+    return MassenergizeResponse(data=vendors)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -228,4 +228,4 @@ class VendorHandler(RouteHandler):
     vendors, err = self.service.list_vendors_for_super_admin(context)
     if err:
       return err
-    return MassenergizeResponse(vendors)
+    return MassenergizeResponse(data=vendors)

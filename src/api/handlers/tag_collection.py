@@ -89,7 +89,7 @@ class TagCollectionHandler(RouteHandler):
     if err:
       return err
 
-    return MassenergizeResponse(tag_collections)
+    return MassenergizeResponse(data=tag_collections)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -98,6 +98,4 @@ class TagCollectionHandler(RouteHandler):
     tag_collections, err = self.service.list_tag_collections_for_super_admin(context)
     if err:
       return err
-    meta = tag_collections.get('meta')
-    data = tag_collections.get('items')
-    return MassenergizeResponse(tag_collections)
+    return MassenergizeResponse(data=tag_collections)

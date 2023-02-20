@@ -354,7 +354,7 @@ class EventHandler(RouteHandler):
     if err:
       return err
 
-    return MassenergizeResponse(events)
+    return MassenergizeResponse(data=events)
 
   @admins_only 
   def fetch_other_events_for_cadmin(self, request):
@@ -372,7 +372,7 @@ class EventHandler(RouteHandler):
     events, err = self.service.fetch_other_events_for_cadmin(context, args)
     if err:
       return err
-    return MassenergizeResponse(events)
+    return MassenergizeResponse(data=events)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -381,4 +381,4 @@ class EventHandler(RouteHandler):
     if err:
       return err
 
-    return MassenergizeResponse(events)
+    return MassenergizeResponse(data=events)

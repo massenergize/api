@@ -116,9 +116,7 @@ class UserHandler(RouteHandler):
     user_todo_actions, err = self.service.list_actions_todo(context, args)
     if err:
       return err
-    meta = user_todo_actions.get('meta')
-    data = user_todo_actions.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(data=user_todo_actions)
 
   @login_required
   def list_actions_completed(self, request):
@@ -127,9 +125,7 @@ class UserHandler(RouteHandler):
     user_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    meta = user_completed_actions.get('meta')
-    data = user_completed_actions.get('items')
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(data=user_completed_actions)
 
   @login_required
   def remove_user_action(self, request):
@@ -196,7 +192,7 @@ class UserHandler(RouteHandler):
     if err:
       return err
 
-    return MassenergizeResponse(users)
+    return MassenergizeResponse(data=users)
 
   @login_required
   def add_action_todo(self, request):

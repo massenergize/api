@@ -123,7 +123,7 @@ class SubscriberHandler(RouteHandler):
     if err:
       return err
 
-    return MassenergizeResponse(subscribers)
+    return MassenergizeResponse(data=subscribers)
 
   @super_admins_only
   def super_admin_list(self, request):
@@ -133,4 +133,4 @@ class SubscriberHandler(RouteHandler):
     if err:
       return err
 
-    return MassenergizeResponse(subscribers)
+    return MassenergizeResponse(data=subscribers)

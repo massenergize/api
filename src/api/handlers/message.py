@@ -79,7 +79,7 @@ class MessageHandler(RouteHandler):
     messages, err = self.service.list_team_admin_messages_for_community_admin(context,args)
     if err:
       return err
-    return MassenergizeResponse(messages)
+    return MassenergizeResponse(data=messages)
 
   @admins_only
   def community_admin_list(self, request):
@@ -92,4 +92,4 @@ class MessageHandler(RouteHandler):
     if err:
       return err
 
-    return MassenergizeResponse(messages)
+    return MassenergizeResponse(data=messages)

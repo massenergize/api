@@ -256,9 +256,7 @@ class TeamHandler(RouteHandler):
     team_members_info, err = self.team.members(context, args)
     if err:
       return err
-    data = team_members_info.get('items', [])
-    meta = team_members_info.get('meta', {})
-    return MassenergizeResponse(data=data, meta=meta)
+    return MassenergizeResponse(data=team_members_info)
 
   def members_preferred_names(self, request):
     context: Context = request.context
@@ -299,7 +297,7 @@ class TeamHandler(RouteHandler):
 
     if err:
       return err
-    return MassenergizeResponse(teams)
+    return MassenergizeResponse(data=teams)
 
 
   @super_admins_only
@@ -315,4 +313,4 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    return MassenergizeResponse(teams)
+    return MassenergizeResponse(data=teams)

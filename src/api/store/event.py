@@ -693,6 +693,9 @@ class EventStore:
       excluded = args.get("exclude", False)
       events = []
       admin_of = []
+      filter_params = get_events_filter_params(context.get_params())
+
+      
       user = UserProfile.objects.filter(email=context.user_email).first()
       today = datetime.datetime.today()
       if user: 
@@ -704,7 +707,7 @@ class EventStore:
       else: 
         # Find events that have publicity as open, and belong to the selected community, OR, find events that from any of the listed communities that are open to any of the admins communities
         events =  Event.objects.filter(Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids, publicity = EventConstants.open_to(),communities_under_publicity__id__in = admin_of, is_global = False)).distinct().order_by("-id")
-      return events, None
+      return events.filter(*filter_params).distinct(), None
     except Exception as e: 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
