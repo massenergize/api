@@ -29,6 +29,7 @@ import pytz
 LAST_VISIT = "last-visit"
 LAST_WEEK = "last-week"
 LAST_MONTH = "last-month"
+LAST_YEAR = "last-year"
 
 
 class SummaryStore:
@@ -69,6 +70,9 @@ class SummaryStore:
 
         elif time_range == LAST_MONTH:
             start_time = today - datetime.timedelta(days=31)
+            end_time = today
+        elif time_range == LAST_YEAR:
+            start_time = today - datetime.timedelta(days=365)
             end_time = today
         else: # dealing with custom date and time
             _format = "%Y-%m-%dT%H:%M:%SZ"
