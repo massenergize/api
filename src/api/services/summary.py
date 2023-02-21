@@ -25,11 +25,13 @@ class SummaryService:
         done_int = content.get("done_interactions", [])
         todo_int = content.get("todo_interactions", [])
         sign_ins = content.get("user_sign_ins", [])
+        testimonials = content.get("testimonials", [])
 
         content = {
             "done_interactions": {"count": len(done_int), "data": list(set(done_int))},
             "todo_interactions": {"count": len(todo_int), "data": list(set(todo_int))},
             "sign_ins": {"count": len(sign_ins), "data": list(set(sign_ins))},
+            "testimonials": {"count": len(testimonials), "data": list(set(testimonials))},
         }
         return content, None
 

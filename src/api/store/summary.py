@@ -36,9 +36,11 @@ class SummaryStore:
     def __init__(self):
         self.name = "Summary Store/DB"
 
-    def fetch_user_engagements_for_admins(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    def fetch_user_engagements_for_admins(
+        self, context: Context, args
+    ) -> Tuple[dict, MassEnergizeAPIError]:
         # values = last-visit, last-week, last-month, custom
-        time_range = args.get("time_range", None) 
+        time_range = args.get("time_range", None)
         start_time = args.get("start_time", None)
         end_time = args.get("end_time", None)
         communities = args.get("communities", [])
@@ -47,11 +49,13 @@ class SummaryStore:
         is_community_admin = (
             args.get("is_community_admin", False) or context.user_is_community_admin
         )
-        is_super_admin = is_community_admin == "False" or  context.user_is_super_admin
-       
+        is_super_admin = is_community_admin == "False" or context.user_is_super_admin
+
         today = pytz.utc.localize(today)
         if not time_range:
-            return {},CustomMassenergizeError("Please include an appropriate date/time range")
+            return {}, CustomMassenergizeError(
+                "Please include an appropriate date/time range"
+            )
         user = UserProfile.objects.filter(email=email).first()
 
         wants_all_communities = "all" in communities
@@ -74,66 +78,78 @@ class SummaryStore:
         elif time_range == LAST_YEAR:
             start_time = today - datetime.timedelta(days=365)
             end_time = today
-        else: # dealing with custom date and time
+        else:  # dealing with custom date and time
             _format = "%Y-%m-%dT%H:%M:%SZ"
-            start_time = datetime.datetime.strptime(start_time,_format)
-            end_time = datetime.datetime.strptime(end_time,_format)
+            start_time = datetime.datetime.strptime(start_time, _format)
+            end_time = datetime.datetime.strptime(end_time, _format)
             start_time = pytz.utc.localize(start_time)
-            end_time = pytz.utc.localize(end_time)  
-            
+            end_time = pytz.utc.localize(end_time)
+
         # ------------------------------------------------------
 
         if is_community_admin or (is_super_admin and not wants_all_communities):
+            testimionial_query = Q(
+                is_deleted=False,
+                updated_at__range=[start_time, end_time],
+                community__in =communities
+            )
             sign_in_query = Q(
                 communities__in=communities,
                 portal=FootageConstants.on_user_portal(),
                 activity_type=FootageConstants.sign_in(),
-                created_at__range=[start_time,end_time],
+                created_at__range=[start_time, end_time],
             )
             todo_query = Q(
                 status="TODO",
                 action__community__in=communities,
-                updated_at__range=[start_time,end_time],
+                updated_at__range=[start_time, end_time],
                 is_deleted=False,
             )
             done_query = Q(
                 status="DONE",
                 action__community__in=communities,
-                updated_at__range=[start_time,end_time],
+                updated_at__range=[start_time, end_time],
                 is_deleted=False,
             )
-        else: # Super Admins
+        else:  # Super Admins
             sign_in_query = Q(
                 portal=FootageConstants.on_user_portal(),
                 activity_type=FootageConstants.sign_in(),
-                created_at__range=[start_time,end_time],
+                created_at__range=[start_time, end_time],
             )
             todo_query = Q(
                 status="TODO",
-                updated_at__range=[start_time,end_time],
+                updated_at__range=[start_time, end_time],
                 is_deleted=False,
             )
             done_query = Q(
                 status="DONE",
-                updated_at__range=[start_time,end_time],
+                updated_at__range=[start_time, end_time],
                 is_deleted=False,
+            )
+            testimionial_query = Q(
+                is_deleted=False,
+                updated_at__range=[start_time, end_time]
             )
 
         user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter(
             sign_in_query
         )
-
         todo_interactions = UserActionRel.objects.values_list(
             "action__id", flat=True
         ).filter(todo_query)
         done_interactions = UserActionRel.objects.values_list(
             "action__id", flat=True
         ).filter(done_query)
-    
+        testimonials = Testimonial.objects.values_list(
+            "id", flat=True
+        ).filter(testimionial_query)
+
         return {
             "done_interactions": done_interactions,
             "todo_interactions": todo_interactions,
             "user_sign_ins": user_sign_ins,
+            "testimonial":testimonials
         }, None
 
     def next_steps_for_admins(
@@ -153,7 +169,8 @@ class SummaryStore:
 
         return content, err
 
-    def get_admins_last_visit(self,
+    def get_admins_last_visit(
+        self,
         **kwargs,
     ):  # Use this fxn in nextSteps for sadmin, and cadmin (instead of manual implementation) before PR(BPR)
         user = kwargs.get("user")
@@ -274,12 +291,11 @@ class SummaryStore:
             .order_by("-created_at")
             .first()
         )
-       
+
         if last_visit:
             users = UserProfile.objects.values_list("id", flat=True).filter(
                 created_at__gt=today, is_deleted=False
             )
-      
 
         return {
             "users": users,
