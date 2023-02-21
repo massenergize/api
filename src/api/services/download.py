@@ -20,7 +20,7 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-        download_data.delay(data, USERS)
+        download_data(data, USERS)
         return [], None
 
     def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
