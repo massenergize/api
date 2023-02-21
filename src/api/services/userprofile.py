@@ -250,7 +250,8 @@ class UserService:
     users, err = self.store.list_users_for_super_admin(context,args)
     if err:
       return None, err
-    return paginate(users, context.get_pagination_data()), None
+    sorted = sort_items(users, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def add_action_todo(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:

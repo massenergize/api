@@ -35,8 +35,6 @@ class ActionStore:
 
   def list_actions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      
-      filter_params = get_actions_filter_params(context.get_params())
       actions = []
       community_id = args.get('community_id', None)
       subdomain = args.get('subdomain', None)
@@ -53,7 +51,7 @@ class ActionStore:
 
       # by default, exclude deleted actions
       #if not context.include_deleted:
-      actions = actions.filter(is_deleted=False, *filter_params).distinct()
+      actions = actions.filter(is_deleted=False).distinct()
 
       return actions, None
     except Exception as e:
