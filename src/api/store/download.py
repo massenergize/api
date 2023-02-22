@@ -30,6 +30,10 @@ from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 
+from django.utils import timezone
+import datetime
+from django.utils.timezone import utc
+
 EMPTY_DOWNLOAD = (None, None)
 
 
@@ -56,7 +60,7 @@ class DownloadStore:
           tag_collections = []
           self.action_categories = []
 
-        self.action_info_columns = [
+        """  self.action_info_columns = [
             "title",
             "category",
             "carbon_calculator_action",
@@ -67,6 +71,21 @@ class DownloadStore:
             "impact",
             "cost",
             "is_global",
+        ] """
+        self.action_info_columns_new = [
+            "Action", #rename from title
+            "Done in last 30 days (count)", #new 
+            "Done (count)", #rename
+            "Annual GHG reduced per action (lbs)", #renamed from yearly_lbs_carbon
+            "Total annual GHG reduced (lbs)", #renamed from total_yearly_lbs_carbon
+            "To-do (count)", #new
+            "Testimonials (count)", #rename
+            "Impact",
+            "Cost", #renamed
+            "Category", #renamed
+            "Carbon Calculator Action", #renamed
+            "Live", #NEW 
+            # "Geographically", # NEW
         ]
 
         """ self.user_info_columns = [
@@ -472,7 +491,7 @@ class DownloadStore:
             team_names.append((team_name + "(ADMIN)") if is_admin else team_name)
         return [", ".join(team_names)] """
 
-    def _get_action_info_cells(self, action):
+    """ def _get_action_info_cells(self, action):
         average_carbon_points = (
             action.calculator_action.average_points
             if action.calculator_action
@@ -513,9 +532,77 @@ class DownloadStore:
             "done_count": done_count,
         }
 
-        return self._get_cells_from_dict(self.action_info_columns, action_cells)
+        return self._get_cells_from_dict(self.action_info_columns, action_cells) """
 
-    def _get_reported_data_rows(self, community):
+    def _get_last_30_days_count(self, action):
+        today = datetime.date.today()#datetime.utcnow().replace(tzinfo=utc)
+        thirty_days_ago = today - timezone.timedelta(days = 30)
+        years_ago = today - timezone.timedelta(weeks = 120)
+
+        done_actions_30_days = UserActionRel.objects.filter(
+            is_deleted=False, action=action, status="DONE", date_completed__gte=thirty_days_ago,
+        )
+        #for elem in done_actions:
+        #    print(elem.date_completed)
+        return done_actions_30_days.count()
+    
+    def _get_action_info_cells_new(self, action):
+
+        average_carbon_points = (
+            action.calculator_action.average_points
+            if action.calculator_action
+            else int(action.average_carbon_score)
+            if action.average_carbon_score.isdigit()
+            else 0
+        )
+
+        is_published = "Yes" if action.is_published else "No"
+        #print(action.geographic_area if action.geographic_area else "NO GEO AREA")
+
+        cc_action = action.calculator_action.name if action.calculator_action else ""
+
+        category_obj = action.tags.filter(tag_collection__name="Category").first()
+        category = category_obj.name if category_obj else None
+        cost_obj = action.tags.filter(tag_collection__name="Cost").first()
+        cost = cost_obj.name if cost_obj else None
+        impact_obj = action.tags.filter(tag_collection__name="Impact").first()
+        impact = impact_obj.name if impact_obj else None
+
+        done_count = UserActionRel.objects.filter(
+            is_deleted=False, action=action, status="DONE"
+        ).count()
+        total_carbon_points = average_carbon_points * done_count
+        done_count = done_count
+
+        todo_count = UserActionRel.objects.filter(
+            is_deleted=False, action=action, status="TODO"
+        ).count()
+
+        testimonials_count = str(
+            Testimonial.objects.filter(is_deleted=False, action=action).count()
+        )
+
+        done_in_last_30_days = self._get_last_30_days_count(action)
+        
+        action_cells_new = {
+            "Action": action.title,
+            "Done in last 30 days (count)": done_in_last_30_days,
+            "Done (count)": done_count,
+            "Annual GHG reduced per action (lbs)": average_carbon_points,
+            "Total annual GHG reduced (lbs)": total_carbon_points,
+            "To-do (count)": todo_count,
+            "Testimonials (count)": testimonials_count,
+            "Impact": impact,
+            "Cost": cost,
+            "Category": category,
+            "Carbon Calculator Action": cc_action,
+            "Live": is_published,
+            #"Geographically",
+        }
+
+        return self._get_cells_from_dict(self.action_info_columns_new, action_cells_new)
+
+        """     def _get_reported_data_rows(self, community):
         rows = []
         for action_category in self.action_categories:
             data = Data.objects.filter(tag=action_category, community=community).first()
@@ -528,6 +615,24 @@ class DownloadStore:
                         "title": "STATE-REPORTED",
                         "category": action_category.name,
                         "done_count": str(data.reported_value),
+                    },
+                )
+            )
+        return rows """
+    
+    def _get_reported_data_rows_new(self, community):
+        rows = []
+        for action_category in self.action_categories:
+            data = Data.objects.filter(tag=action_category, community=community).first()
+            if not data:
+                continue
+            rows.append(
+                self._get_cells_from_dict(
+                    self.action_info_columns_new,
+                    {
+                        "Action": "STATE-REPORTED",
+                        "Category": action_category.name,
+                        "Done (count)": str(data.reported_value),
                     },
                 )
             )
@@ -1066,7 +1171,7 @@ class DownloadStore:
 
         # Soon teams could span communities, in which case actions list would be larger.
         # For now, take the primary community that a team is associated with; this may not be correct
-        # TODO: loop over communities team is associated with and sort this all out
+        # TO DO: loop over communities team is associated with and sort this all out
         team = Team.objects.get(id=team_id)
         community_id = team.primary_community.id
         actions = Action.objects.filter(
@@ -1087,7 +1192,7 @@ class DownloadStore:
 
         return data """
 
-    def _all_actions_download(self):
+    """ def _all_actions_download(self):
         actions = (
             Action.objects.select_related("calculator_action", "community")
             .prefetch_related("tags")
@@ -1109,9 +1214,60 @@ class DownloadStore:
         data = sorted(data, key=lambda row: row[0])  # sort by community
         data.insert(0, columns)  # insert the column names
 
+        return data """
+
+    def _all_actions_download_new(self):
+        actions = (
+            Action.objects.select_related("calculator_action", "community")
+            .prefetch_related("tags")
+            .filter(is_deleted=False)
+        )
+
+        columns = ["Community"] + self.action_info_columns_new + ["Is Global"]
+        data = []
+
+        for action in actions:
+            if not action.is_global and action.community:
+                community = action.community.name
+            else:
+                community = ""
+            data.append([community] + self._get_action_info_cells_new(action) + ["True" if action.is_global else "False"])
+
+        #get state reported actions
+        communities = Community.objects.filter(is_deleted=False)
+        for com in communities:
+            community_reported_rows = self._get_reported_data_rows_new(com)
+            for row in community_reported_rows:
+                data.append([com.name]+ row) #add is_global information here
+
+        data = sorted(data, key=lambda row: row[0])  # sort by community
+        data.insert(0, columns)  # insert the column names
+
         return data
 
-    def _community_actions_download(self, community_id):
+    def _community_actions_download_new(self, community_id):
+        actions = (
+            Action.objects.filter(Q(community__id=community_id) | Q(is_global=True))
+            .select_related("calculator_action")
+            .prefetch_related("tags")
+            .filter(is_deleted=False)
+        )
+
+        columns = self.action_info_columns_new
+        data = [columns]
+
+        for action in actions:
+            data.append(self._get_action_info_cells_new(action))
+
+        community = Community.objects.filter(id=community_id).first()
+        community_reported_rows = self._get_reported_data_rows_new(community)
+        for row in community_reported_rows:
+            data.append(row)
+
+        return data
+    
+    
+    """  def _community_actions_download(self, community_id):
         actions = (
             Action.objects.filter(Q(community__id=community_id) | Q(is_global=True))
             .select_related("calculator_action")
@@ -1130,7 +1286,7 @@ class DownloadStore:
         for row in community_reported_rows:
             data.append(row)
 
-        return data
+        return data """
 
     def _all_communities_download(self):
         communities = Community.objects.filter(is_deleted=False)
@@ -1214,7 +1370,8 @@ class DownloadStore:
             print(str(e))
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
-
+    
+    #NEW ONE -- for both "all actions" and "all communities and actions"
     def actions_download(
         self, context: Context, community_id
     ) -> Tuple[list, MassEnergizeAPIError]:
@@ -1223,17 +1380,39 @@ class DownloadStore:
             if community_id:
                 community_name = Community.objects.get(id=community_id).name
 
-            # Allow community admins to do all actions dowload, same as super admins
-            if community_id:
                 return (
-                    self._community_actions_download(community_id),
+                    #could rename to all_actions_download
+                    self._community_actions_download_new(community_id),
                     community_name,
                 ), None
-            else:
-                return (self._all_actions_download(), None), None
+            elif context.user_is_super_admin:
+                #could rename to all_communities_and_actions_download
+                return (self._all_actions_download_new(), None), None
+            # until all (communities and) actions button is removed from community portal, this will give an error
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+
+    """     #old, will replace
+    def actions_download_old(
+        self, context: Context, community_id
+    ) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            self.community_id = community_id
+            if community_id:
+                community_name = Community.objects.get(id=community_id).name
+            # Allow community admins to do all actions dowload, same as super admins
+            if community_id:
+                print("calling right thing")
+                return (
+                    self._community_actions_download_new(community_id),
+                    community_name,
+                ), None
+            else:
+                return (self._all_actions_download_new(), None), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e) """
 
     def communities_download(
         self, context: Context
