@@ -190,7 +190,7 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
   def list_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    community_id = args.pop("community_id", None)
+    community_id = context.args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
     shared = []
@@ -198,10 +198,13 @@ class EventStore:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+
       # Find events that have been shared to this community
       community = Community.objects.get(pk = community_id)
       shared = [] 
-      if community: shared = community.events_from_others.filter(is_published=True)
+      if community: 
+        shared = community.events_from_others.filter(is_published=True)
+
     
     elif subdomain:
       query =  Q(community__subdomain=subdomain)
@@ -220,7 +223,8 @@ class EventStore:
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
     all_events = [*events, *shared]
-    all_events = Event.objects.filter(pk__in=[item.id for item in events])
+
+    all_events = Event.objects.filter(pk__in=[item.id for item in all_events])
     return all_events, None
 
 
@@ -334,7 +338,7 @@ class EventStore:
       events = Event.objects.filter(id=event_id)
       publicity_selections = args.pop("publicity_selections", [])
       shared_to = args.pop("shared_to", [])
-      
+
       if not events:
         return None, InvalidResourceError()
 
@@ -701,6 +705,7 @@ class EventStore:
       if excluded: 
         # Find all events that are open in any community, but exclude events from the selected communities
         events = Event.objects.filter(Q(start_date_and_time__gte=today, is_published = True,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,publicity=EventConstants.open_to(),communities_under_publicity__id__in = admin_of)).exclude(community__id__in = ids).order_by("-id") 
+
       else: 
         # Find events that have publicity as open, and belong to the selected community, OR, find events that from any of the listed communities that are open to any of the admins communities
         events =  Event.objects.filter(Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids, publicity = EventConstants.open_to(),communities_under_publicity__id__in = admin_of, is_global = False)).distinct().order_by("-id")

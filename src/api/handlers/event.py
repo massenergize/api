@@ -298,7 +298,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
-    self.validator.expect("publicity_selections",list)
+    self.validator.expect("publicity_selections","str_list")
     self.validator.expect("shared_to","str_list")
     args, err = self.validator.verify(args)
 
