@@ -146,7 +146,7 @@ def makeAdminGroup(**kwargs):
     key = round(time.time() * 1000)
     name = kwargs.get("name") or f"New Group - {key}"
     members = kwargs.pop("members")
-    group = CommunityAdminGroup.objects.create(**{**kwargs, "name": name})
+    group, exists= CommunityAdminGroup.objects.get_or_create(**{**kwargs, "name": name})
     if members:
         group.members.set(members)
 
