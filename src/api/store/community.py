@@ -1,6 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console, strip_website
+from api.store.common import count_action_completed_and_todos
 from api.tests.common import RESET
 from database.models import (
     Community,
@@ -979,31 +980,17 @@ class CommunityStore:
         try:
             # list actions completed by members of a community or team.  Include any actions which are DONE or TODO (so not really completed)
             # include actions from other communities that users in this community completed on their homes
-            community = get_community_or_die(context, args)
-    
+            
             actions_completed = []
-            actions_recorded = []
-            completed_actions = UserActionRel.objects.filter(real_estate_unit__community=community, is_deleted=False).select_related('action__calculator_action')
-            for completed_action in completed_actions:
-              action_id = completed_action.action.id
-              action_carbon = getCarbonScoreFromActionRel(completed_action)
-              done = 1 if completed_action.status == "DONE" else 0
-              todo = 1 if completed_action.status == "TODO" else 0
-
-              #if action_id in [action["ID"] for action in actions_completed]:
-              ind = next((actions_completed.index(a) for a in actions_completed if a["id"]==action_id), None)
-              if ind:
-                actions_completed[ind]["done_count"] += done
-                actions_completed[ind]["carbon_total"] += action_carbon
-                actions_completed[ind]["todo_count"] += todo
-              else:
-                if action_id not in actions_recorded:
-                    action_name = completed_action.action.title
-                    category_obj = completed_action.action.tags.filter(tag_collection__name='Category').first()
-                    action_category = category_obj.name if category_obj else None
-                    actions_completed.append({"id":action_id, "name":action_name, "category":action_category, "done_count":done, "carbon_total":action_carbon, "todo_count":todo})
-                    actions_recorded.append(action_id)
-
+            if not context.is_admin_site:
+                community = None 
+                community = get_community_or_die(context, args)
+                actions_completed = count_action_completed_and_todos(communities = [community])
+            else: 
+                communities = args.get("communities", []) 
+                actions = args.get("actions",[])
+                actions_completed = count_action_completed_and_todos(communities = communities, actions = actions)
+        
             return actions_completed, None
         except Exception as e:
             capture_message(str(e), level="error")
