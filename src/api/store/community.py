@@ -74,6 +74,7 @@ from sentry_sdk import capture_message, capture_exception
 
 ALL = "all"
 
+
 def _clone_page_settings(pageSettings, title, community):
     """
     Clone page settings for a new community from a template
@@ -1010,8 +1011,6 @@ class CommunityStore:
             start_date = args.get("start_date", "")
             end_date = args.get("end_date", "")
 
-            
-
             actions_completed = []
             if not context.is_admin_site:
                 community = None
@@ -1024,12 +1023,20 @@ class CommunityStore:
                 )
             else:
                 communities = args.get("communities", [])
-                if communities[0] == ALL and context.user_is_community_admin: 
+                if (
+                    len(communities)
+                    and communities[0] == ALL
+                    and context.user_is_community_admin
+                ):
                     user = UserProfile.objects.filter(email=context.user_email).first()
                     groups = user.communityadmingroup_set.all()
                     communities = [ag.community.id for ag in groups]
-                elif communities[0] == ALL and context.user_is_super_admin: 
-                    communities = None 
+                elif (
+                    len(communities)
+                    and communities[0] == ALL
+                    and context.user_is_super_admin
+                ):
+                    communities = None
 
                 actions = args.get("actions", [])
                 actions_completed = count_action_completed_and_todos(
