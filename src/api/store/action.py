@@ -312,7 +312,7 @@ class ActionStore:
 
       if ids: 
         actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-        return actions, None
+        return actions.distinct(), None
 
       if community_id == 0:
         # return actions from all communities
@@ -326,10 +326,10 @@ class ActionStore:
 
         comm_ids = [ag.community.id for ag in admin_groups]
         actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-        return actions, None
+        return actions.distinct(), None
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-      return actions, None
+      return actions.distinct(), None
 
     except Exception as e:
       capture_message(str(e), level="error")
