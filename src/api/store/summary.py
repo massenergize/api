@@ -1,5 +1,6 @@
 import datetime
 from _main_.utils.footage.FootageConstants import FootageConstants
+from api.store.common import make_time_range_from_text
 from database.models import (
     Community,
     CommunityMember,
@@ -26,10 +27,7 @@ from typing import Tuple
 from django.db.models import Q
 import pytz
 
-LAST_VISIT = "last-visit"
-LAST_WEEK = "last-week"
-LAST_MONTH = "last-month"
-LAST_YEAR = "last-year"
+CUSTOM = "custom"
 
 
 class SummaryStore:
@@ -64,27 +62,13 @@ class SummaryStore:
             communities = [ag.community.id for ag in groups]
 
         # ------------------------------------------------------
-        if time_range == LAST_VISIT:
-            start_time = self.get_admins_last_visit(email=email)
-            end_time = today
-
-        elif time_range == LAST_WEEK:
-            start_time = today - datetime.timedelta(days=7)
-            end_time = today
-
-        elif time_range == LAST_MONTH:
-            start_time = today - datetime.timedelta(days=31)
-            end_time = today
-        elif time_range == LAST_YEAR:
-            start_time = today - datetime.timedelta(days=365)
-            end_time = today
-        else:  # dealing with custom date and time
+        if time_range == CUSTOM: 
             _format = "%Y-%m-%dT%H:%M:%SZ"
             start_time = datetime.datetime.strptime(start_time, _format)
             end_time = datetime.datetime.strptime(end_time, _format)
             start_time = pytz.utc.localize(start_time)
             end_time = pytz.utc.localize(end_time)
-
+        else: [start_time, end_time] = make_time_range_from_text(time_range)
         # ------------------------------------------------------
 
         if is_community_admin or (is_super_admin and not wants_all_communities):
