@@ -73,9 +73,6 @@ def count_action_completed_and_todos(**kwargs):
     # add time range specification to the query if available
     if time_range: 
         query &= Q(updated_at__range=time_range)
-    print("here are the ARGS", kwargs)
-    print("THIS IS THE QUERY") 
-    print(query)
 
     completed_actions = UserActionRel.objects.filter(query).select_related(
         "action__calculator_action"
