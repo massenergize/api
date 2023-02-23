@@ -115,7 +115,7 @@ def makeEvent(**kwargs):
     event = Event.objects.create(
         **{
             "is_published": True,
-            "start_date_and_time": timezone.now() + + timezone.timedelta(days=1),
+            "start_date_and_time": timezone.now()+ timezone.timedelta(days=1),
             "end_date_and_time": timezone.now() + timezone.timedelta(days=2),
             **kwargs,
             "community": community,
