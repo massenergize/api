@@ -159,7 +159,9 @@ class CommunityStore:
             return True
 
         # this is a list of zipcodes, towns, cities, counties, states
-        location_list = locations.replace(", ", ",").split(",")  # passed as comma separated list
+        location_list = locations.replace(", ", ",").split(
+            ","
+        )  # passed as comma separated list
         if len(location_list) == community.locations.all().count():
             for loc in community.locations.all():
                 if geography_type == "ZIPCODE" and not loc.zipcode in location_list:
@@ -500,25 +502,25 @@ class CommunityStore:
                     solar_households = 0
 
                     for datum in data:
-                        if datum.get("name", None) == 'Solar':
+                        if datum.get("name", None) == "Solar":
                             solar_households = datum["reported_value"]
                             break
-                    
+
                     goal = community.goal
-                    total = ( 
-                        goal.attained_number_of_households 
-                        + goal.attained_number_of_actions 
+                    total = (
+                        goal.attained_number_of_households
+                        + goal.attained_number_of_actions
                         + goal.attained_carbon_footprint_reduction
                     )
 
-                    # 1/16/22 change from max(category_totals) to solar_households                  
-                    goal.attained_number_of_households = solar_households                    
-                    goal.attained_number_of_actions = sum(category_totals)                   
+                    # 1/16/22 change from max(category_totals) to solar_households
+                    goal.attained_number_of_households = solar_households
+                    goal.attained_number_of_actions = sum(category_totals)
                     goal.attained_carbon_footprint_reduction = 0
-                
-                    newtotal = ( 
-                        goal.attained_number_of_households 
-                        + goal.attained_number_of_actions 
+
+                    newtotal = (
+                        goal.attained_number_of_households
+                        + goal.attained_number_of_actions
                         + goal.attained_carbon_footprint_reduction
                     )
                     if newtotal != total:
@@ -596,9 +598,11 @@ class CommunityStore:
     ) -> Tuple[dict, MassEnergizeAPIError]:
         community = None
         try:
-            subdomain = args.get('subdomain')
+            subdomain = args.get("subdomain")
             if not can_use_this_subdomain(subdomain):
-                raise Exception("Subdomain is already reserved.  Please, choose a different subdomain")
+                raise Exception(
+                    "Subdomain is already reserved.  Please, choose a different subdomain"
+                )
 
             logo = args.pop("logo", None)
 
@@ -620,7 +624,7 @@ class CommunityStore:
                 self._update_real_estate_units_with_community(community)
 
             if logo:
-                cLogo = Media.objects.filter(id = logo).first() 
+                cLogo = Media.objects.filter(id=logo).first()
                 community.logo = cLogo
             if favicon:
                 cFav = Media(
@@ -637,10 +641,12 @@ class CommunityStore:
             reserve_subdomain(subdomain, community)
 
             # save custom website if specified
-            if website:               
-                ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
+            if website:
+                ret, err = self.add_custom_website(
+                    context, {"community_id": community.id, "website": website}
+                )
                 if err:
-                    raise Exception("Failed to save custom website: "+str(err))
+                    raise Exception("Failed to save custom website: " + str(err))
 
             # clone everything for this community
             homePage = HomePageSettings.objects.filter(is_template=True).first()
@@ -691,13 +697,9 @@ class CommunityStore:
                 TestimonialsPageSettings, f"Testimonials", community
             ):
                 raise Exception("Failed to clone settings for Testimonials page")
-            if not _clone_page_settings(
-                RegisterPageSettings, f"Register", community
-            ):
+            if not _clone_page_settings(RegisterPageSettings, f"Register", community):
                 raise Exception("Failed to clone settings for Register page")
-            if not _clone_page_settings(
-                SigninPageSettings, f"Signin", community
-            ):
+            if not _clone_page_settings(SigninPageSettings, f"Signin", community):
                 raise Exception("Failed to clone settings for Signin page")
 
             admin_group_name = f"{community.name}-{community.subdomain}-Admin-Group"
@@ -719,8 +721,8 @@ class CommunityStore:
 
             owner_email = args.get("owner_email", None)
             if owner_email:
-                owner = UserProfile.objects.filter(email=owner_email) 
-                owner.update(is_community_admin = True)
+                owner = UserProfile.objects.filter(email=owner_email)
+                owner.update(is_community_admin=True)
                 owner = owner.first()
                 if owner:
                     comm_admin.members.add(owner)
@@ -768,7 +770,7 @@ class CommunityStore:
                 num_copied += 1
                 if num_copied >= MAX_TEMPLATE_ACTIONS:
                     break
-            
+
             # ----------------------------------------------------------------
             # Spy.create_community_footage(communities = [community], related_users=[owner,user], context = context, type = FootageConstants.create(),notes =f"Community ID({community.id})")
             # ----------------------------------------------------------------
@@ -777,13 +779,15 @@ class CommunityStore:
             if community:
                 # if we did not succeed creating the community we should delete it
                 community.delete()
-                reserved = Subdomain.objects.filter(name = args.get("subdomain")).first()
-                if reserved: 
+                reserved = Subdomain.objects.filter(name=args.get("subdomain")).first()
+                if reserved:
                     reserved.delete()
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
-    def update_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    def update_community(
+        self, context: Context, args
+    ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             community_id = args.pop("community_id", None)
             website = args.pop("website", None)
@@ -801,9 +805,11 @@ class CommunityStore:
                 return None, InvalidResourceError()
 
             # let's make sure we can use this subdomain
-            subdomain = args.get('subdomain', None)
+            subdomain = args.get("subdomain", None)
             if subdomain and not can_use_this_subdomain(subdomain, filter_set.first()):
-                raise Exception("Subdomain is already reserved.  Please, choose a different subdomain")
+                raise Exception(
+                    "Subdomain is already reserved.  Please, choose a different subdomain"
+                )
 
             filter_set.update(**args)
             community = filter_set.first()
@@ -821,7 +827,7 @@ class CommunityStore:
                     community.logo = None
                     community.save()
                 else:
-                    cLogo = Media.objects.filter(id = logo).first();
+                    cLogo = Media.objects.filter(id=logo).first()
                     community.logo = cLogo
                     community.save()
 
@@ -835,8 +841,8 @@ class CommunityStore:
 
             owner_email = args.get("owner_email", None)
             if owner_email:
-                owner = UserProfile.objects.filter(email=owner_email) 
-                owner.update(is_community_admin = True)
+                owner = UserProfile.objects.filter(email=owner_email)
+                owner.update(is_community_admin=True)
                 owner = owner.first()
                 if owner:
                     comm_admin = CommunityAdminGroup.objects.get(community=community)
@@ -848,19 +854,25 @@ class CommunityStore:
                         owner.is_community_admin = True
                     owner.save()
 
-
             # let's make sure we reserve this subdomain
             if subdomain:
                 reserve_subdomain(subdomain, community)
 
             # save custom website if specified
-            if website:               
-                ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
+            if website:
+                ret, err = self.add_custom_website(
+                    context, {"community_id": community.id, "website": website}
+                )
                 if err:
-                    raise Exception("Failed to save custom website: "+str(err))
+                    raise Exception("Failed to save custom website: " + str(err))
 
             # ----------------------------------------------------------------
-            Spy.create_community_footage(communities = [community], context = context, type = FootageConstants.update(), notes =f"Community ID({community_id})")
+            Spy.create_community_footage(
+                communities=[community],
+                context=context,
+                type=FootageConstants.update(),
+                notes=f"Community ID({community_id})",
+            )
             # ----------------------------------------------------------------
             return community, None
 
@@ -868,7 +880,7 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
-    def delete_community(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    def delete_community(self, args, context) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             communities = Community.objects.filter(**args)
             if len(communities) > 1:
@@ -881,17 +893,22 @@ class CommunityStore:
                     return None, CustomMassenergizeError(
                         "You cannot delete a template community"
                     )
-                
+
                 # subdomain and custom community website entries will be deleted by virtue of the foreign key CASCADE on deletion
                 # delete the goals, assuming they exist, which doesn't have the same link back to community.
-                if c.goal:            
+                if c.goal:
                     c.goal.delete()
             ids = [c.id for c in communities]
             communities.delete()
             # communities.update(is_deleted=True)
 
             # ----------------------------------------------------------------
-            Spy.create_community_footage(communities = communities, context = context, type = FootageConstants.delete(), notes = f"Deleted ID({str(ids)}")
+            Spy.create_community_footage(
+                communities=communities,
+                context=context,
+                type=FootageConstants.delete(),
+                notes=f"Deleted ID({str(ids)}",
+            )
             # ----------------------------------------------------------------
             return communities, None
         except Exception as e:
@@ -901,12 +918,12 @@ class CommunityStore:
     def list_other_communities_for_cadmin(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
-            user = UserProfile.objects.get(pk=context.user_id)
-            # admin_groups = user.communityadmingroup_set.all()
-            # ids = [a.community.id for a in admin_groups]
-            # communities = Community.objects.filter(is_published=True).exclude(id__in = ids).order_by("name")
-            communities = Community.objects.filter(is_published=True).order_by("name")
-            return communities, None
+        user = UserProfile.objects.get(pk=context.user_id)
+        # admin_groups = user.communityadmingroup_set.all()
+        # ids = [a.community.id for a in admin_groups]
+        # communities = Community.objects.filter(is_published=True).exclude(id__in = ids).order_by("name")
+        communities = Community.objects.filter(is_published=True).order_by("name")
+        return communities, None
 
     def list_communities_for_community_admin(
         self, context: Context
@@ -941,25 +958,31 @@ class CommunityStore:
     def add_custom_website(self, context, args):
         try:
             community = get_community_or_die(context, args)
-            website = args.get('website', None)
+            website = args.get("website", None)
 
             # give a way to delete the website
-            if website == None or website == '' or website == 'None':
-                CustomCommunityWebsiteDomain.objects.filter(community=community).delete()
+            if website == None or website == "" or website == "None":
+                CustomCommunityWebsiteDomain.objects.filter(
+                    community=community
+                ).delete()
                 return None, None
 
             website = strip_website(website)
 
             # There can be only one custom website domain for a community site
             # if a different community website domain exists, modify it.
-            community_website = CustomCommunityWebsiteDomain.objects.filter(community=community).first()
+            community_website = CustomCommunityWebsiteDomain.objects.filter(
+                community=community
+            ).first()
             if not community_website:
-                community_website = CustomCommunityWebsiteDomain(website=website, community=community)
+                community_website = CustomCommunityWebsiteDomain(
+                    website=website, community=community
+                )
                 community_website.save()
             elif community_website.website != website:
                 community_website.website = website
                 community_website.save()
-                
+
             return community_website, None
         except Exception as e:
             capture_exception(e)
@@ -975,22 +998,38 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
-
-    def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    def list_actions_completed(
+        self, context: Context, args
+    ) -> Tuple[list, MassEnergizeAPIError]:
         try:
             # list actions completed by members of a community or team.  Include any actions which are DONE or TODO (so not really completed)
             # include actions from other communities that users in this community completed on their homes
-            
+
+            time_range = args.get("time_range", "")
+            start_date = args.get("start_date", "")
+            end_date = args.get("end_date", "")
+
             actions_completed = []
             if not context.is_admin_site:
-                community = None 
+                community = None
                 community = get_community_or_die(context, args)
-                actions_completed = count_action_completed_and_todos(communities = [community])
-            else: 
-                communities = args.get("communities", []) 
-                actions = args.get("actions",[])
-                actions_completed = count_action_completed_and_todos(communities = communities, actions = actions)
-        
+                actions_completed = count_action_completed_and_todos(
+                    communities=[community],
+                    time_range=time_range,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+            else:
+                communities = args.get("communities", [])
+                actions = args.get("actions", [])
+                actions_completed = count_action_completed_and_todos(
+                    communities=communities,
+                    actions=actions,
+                    time_range=time_range,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+
             return actions_completed, None
         except Exception as e:
             capture_message(str(e), level="error")
@@ -999,7 +1038,8 @@ class CommunityStore:
 
 ########### Helper functions  ###########
 
-def can_use_this_subdomain(subdomain: str, community: Community=None) -> bool:
+
+def can_use_this_subdomain(subdomain: str, community: Community = None) -> bool:
     subdomain = subdomain.lower()
 
     if subdomain in RESERVED_SUBDOMAIN_LIST:
@@ -1007,37 +1047,43 @@ def can_use_this_subdomain(subdomain: str, community: Community=None) -> bool:
 
     if not Subdomain.objects.filter(name=subdomain).exists():
         return True
-    
+
     # a community should be able to reuse an old domain of theirs
-    if community and Subdomain.objects.filter(name=subdomain, community=community).exists():
+    if (
+        community
+        and Subdomain.objects.filter(name=subdomain, community=community).exists()
+    ):
         return True
 
     return False
 
-def reserve_subdomain(subdomain: str, community: Community=None):
+
+def reserve_subdomain(subdomain: str, community: Community = None):
     if not community:
-        raise Exception('community is required to set a subdomain')
+        raise Exception("community is required to set a subdomain")
 
     # if we are here then the subdomain is available to be used by this community
     # now let's make sure it is all lower case
     subdomain = subdomain.lower()
 
     # if subdomain is in use for this community just return right away
-    if Subdomain.objects.filter(community=community, name__iexact=subdomain, in_use=True):
+    if Subdomain.objects.filter(
+        community=community, name__iexact=subdomain, in_use=True
+    ):
         return
 
-    # first check that we can use this domain 
+    # first check that we can use this domain
     if not can_use_this_subdomain(subdomain, community):
-        raise Exception(f'This community cannot reserve the subdomain: {subdomain}')
+        raise Exception(f"This community cannot reserve the subdomain: {subdomain}")
 
     # mark the old subdomains for this community to un-used
     Subdomain.objects.filter(community=community, in_use=True).update(in_use=False)
-    
-    # let's do a search for this subdomain 
+
+    # let's do a search for this subdomain
     subdomain_search = Subdomain.objects.filter(name__iexact=subdomain)
     if subdomain_search.exists():
         # because we call can_use_this_subdomain() above, we know that:
-        #  if we get here then the community owns this domain already.  
+        #  if we get here then the community owns this domain already.
         # If another community owned this domain we would have raised an exception
         # Hence we can go ahead and update this this subdomain to in-use
         subdomain_search.update(in_use=True)
@@ -1045,6 +1091,3 @@ def reserve_subdomain(subdomain: str, community: Community=None):
         # if subdomain does not exist then we need to create a new one
         new_subdomain = Subdomain(name=subdomain, community=community, in_use=True)
         new_subdomain.save()
-
-
-

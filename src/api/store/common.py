@@ -1,19 +1,59 @@
+import datetime
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
 from database.models import UserActionRel
 from django.db.models import Q
+import pytz
 
+LAST_VISIT = "last-visit"
+LAST_WEEK = "last-week"
+LAST_MONTH = "last-month"
+LAST_YEAR = "last-year"
+
+def js_datetime_to_python(datetext): 
+    _format = "%Y-%m-%dT%H:%M:%SZ"
+    _date = datetime.datetime.strptime(datetext, _format)
+    return pytz.utc.localize(_date)
+
+def make_time_range_from_text(time_range): 
+    today = datetime.datetime.utcnow()
+    if time_range == LAST_WEEK:
+        start_time = today - datetime.timedelta(days=7)
+        end_time = today
+
+    elif time_range == LAST_MONTH:
+        start_time = today - datetime.timedelta(days=31)
+        end_time = today
+    elif time_range == LAST_YEAR:
+        start_time = today - datetime.timedelta(days=365)
+        end_time = today 
+    return [pytz.utc.localize(start_time), pytz.utc.localize(end_time)]
 
 def count_action_completed_and_todos(**kwargs):
-    """This function counts how many times an action has been completed, or added to todolist
-    Returns an array of actions with (completed, todo, carbon_score) appended to each object
-
     """
-
+    ### args: communities(list), actions(list), time_range(str), start_date(str), end_date(str)
+    This function counts how many times an action has been completed, or added to todolist
+    Returns an array of dictionaries with the following: (name,id,done_count, todo_count, carbon_score, category)
+    * Given a list of communities, todo/done will be counted within only those communities. 
+    * When given a list of actions, counts will only be done for only the actions given 
+    * When given both (actions & communities) an AND query will be built before counting
+    * And when a time range is specified, all the query combinations listed above will run within the given time range
+    """
+   
     communities = kwargs.get("communities", [])
     actions = kwargs.get("actions", [])
     action_count_objects = {}
     query = None
+    time_range = kwargs.get("time_range") 
+
+    # ----------------------------------------------------------------------------
+    if time_range == "custom": 
+        start_date = kwargs.get('start_date',"") 
+        end_date = kwargs.get("end_date","") 
+        time_range = [js_datetime_to_python(start_date), js_datetime_to_python(end_date)]
+    else: 
+        time_range = make_time_range_from_text(time_range) if time_range else []
+    # ----------------------------------------------------------------------------
 
     if communities and not actions:
         query = Q(real_estate_unit__community__in=communities, is_deleted=False)
@@ -25,9 +65,17 @@ def count_action_completed_and_todos(**kwargs):
             action__in=actions,
             is_deleted=False,
         )
+     # ----------------------------------------------------------------------------
 
     if not query:
         return []
+
+    # add time range specification to the query if available
+    if time_range: 
+        query &= Q(updated_at__range=time_range)
+    print("here are the ARGS", kwargs)
+    print("THIS IS THE QUERY") 
+    print(query)
 
     completed_actions = UserActionRel.objects.filter(query).select_related(
         "action__calculator_action"
