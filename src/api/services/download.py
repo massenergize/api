@@ -52,7 +52,9 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-        download_data.delay(data, TEAMS)
+        # EMMA 
+        #download_data.delay(data, TEAMS)
+        download_data(data, TEAMS)
         return [], None
 
     def metrics_download(self, context: Context, args, community_id) -> Tuple[list, MassEnergizeAPIError]:

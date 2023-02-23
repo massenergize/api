@@ -120,12 +120,23 @@ class DownloadStore:
             "Teams",
         ]
 
-        self.team_info_columns = [
+        """ self.team_info_columns = [
             "name",
             "members_count",
             "parent",
             "total_yearly_lbs_carbon",
             "testimonials_count",
+        ] """
+
+        self.team_info_columns_new = [
+            "Team Name", #from name
+            "Members (count)", 
+            "Actions done (count)",
+            "To-do (count)",
+            "Trending action",
+            "Testimonials (count)",
+            "Total annual GHG reduced (lbs)", #total_yearly_lbs_carbon
+            "Parent team",
         ]
 
         self.community_info_columns = [
@@ -638,7 +649,7 @@ class DownloadStore:
             )
         return rows
 
-    def _get_team_info_cells(self, team):
+    """ def _get_team_info_cells(self, team):
         members = get_team_users(team)
 
         members_count = str(len(members))
@@ -669,10 +680,55 @@ class DownloadStore:
         }
         if team.parent:
             team_cells["parent"] = team.parent.name
+        
 
-        return self._get_cells_from_dict(self.team_info_columns, team_cells)
+        return self._get_cells_from_dict(self.team_info_columns, team_cells) """
 
-    def _get_team_action_cells(self, team, actions):
+
+    def _get_team_info_cells_new(self, team):
+        members = get_team_users(team)
+
+        members_count = str(len(members))
+
+        total_carbon_points = 0
+        done_actions_count = 0
+        todo_actions_count = 0
+        for user in members:
+            actions = user.useractionrel_set.all()
+            #for elem in actions:
+                #print(elem.date_completed)
+            done_actions = actions.filter(status="DONE")
+            todo_actions_count += actions.filter(status= "TODO").count()
+            done_actions_count += actions.filter(status= "DONE").count()
+            print(todo_actions_count)
+            for done_action in done_actions:
+                if done_action.action and done_action.action.calculator_action:
+                    total_carbon_points += (
+                        done_action.action.calculator_action.average_points
+                    )
+        total_carbon_points = str(total_carbon_points)
+
+        testimonials_count = 0
+        for user in members:
+            testimonials_count += Testimonial.objects.filter(
+                is_deleted=False, user=user
+            ).count()
+        testimonials_count = str(testimonials_count)
+
+        placeholder = "placeholder"
+        team_cells = {
+            "Team Name": team.name,
+            "Members (count)": members_count,
+            "Actions done (count)": done_actions_count,
+            "To-do (count)": todo_actions_count,
+            #"Trending action": placeholder,
+            "Testimonials (count)": testimonials_count,
+            "Total annual GHG reduced (lbs)": total_carbon_points, #total_yearly_lbs_carbon
+            "Parent team": team.parent.name if team.parent else "",
+        }
+        return self._get_cells_from_dict(self.team_info_columns_new, team_cells)
+
+    """ def _get_team_action_cells(self, team, actions):
         cells = []
         team_users = [
             tm.user
@@ -688,7 +744,7 @@ class DownloadStore:
                     ).count()
                 )
             )
-        return cells
+        return cells """
 
     def _get_community_reported_data(self, community):
         community = Community.objects.get(pk=community.id)
@@ -1298,7 +1354,7 @@ class DownloadStore:
 
         return data
 
-    def _community_teams_download(self, community_id):
+    """ def _community_teams_download(self, community_id):
         teams = Team.objects.filter(communities__id=community_id, is_deleted=False)
         actions = Action.objects.filter(
             Q(community__id=community_id) | Q(is_global=True)
@@ -1314,6 +1370,23 @@ class DownloadStore:
             data.append(
                 self._get_team_info_cells(team)
                 + self._get_team_action_cells(team, actions)
+            )
+
+        return data """
+
+    def _community_teams_download_new(self, community_id):
+        teams = Team.objects.filter(communities__id=community_id, is_deleted=False)
+        actions = Action.objects.filter(
+            Q(community__id=community_id) | Q(is_global=True)
+        ).filter(is_deleted=False)
+
+        columns = self.team_info_columns_new
+        print(columns)
+        data = [columns]
+
+        for team in teams:
+            data.append(
+                self._get_team_info_cells_new(team)
             )
 
         return data
@@ -1425,6 +1498,7 @@ class DownloadStore:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
+    #edited to use new method
     def teams_download(
         self, context: Context, community_id
     ) -> Tuple[list, MassEnergizeAPIError]:
@@ -1434,7 +1508,7 @@ class DownloadStore:
                 community = Community.objects.get(id=community_id)
                 if community:
                     return (
-                        self._community_teams_download(community.id),
+                        self._community_teams_download_new(community.id),
                         community.name,
                     ), None
                 else:
