@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
+from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, SINGLE_ACTION #single action addition, untested
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
 from typing import Tuple
@@ -20,7 +20,20 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-        download_data(data, USERS)
+        download_data.delay(data, USERS)
+        return [], None
+
+    # single action addition, untested
+    def single_action_download(self, context: Context, community_id=None, action_id=None) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'community_id': community_id,
+            'action_id': action_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email,
+            'user_is_logged_in': context.user_is_logged_in
+        }
+        download_data.delay(data, SINGLE_ACTION)
         return [], None
 
     def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -52,9 +65,7 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-        # EMMA 
-        #download_data.delay(data, TEAMS)
-        download_data(data, TEAMS)
+        download_data.delay(data, TEAMS)
         return [], None
 
     def metrics_download(self, context: Context, args, community_id) -> Tuple[list, MassEnergizeAPIError]:

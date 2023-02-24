@@ -17,6 +17,7 @@ class DownloadHandler(RouteHandler):
   def registerRoutes(self) -> None:
     self.add("/downloads.users", self.users_download) 
     self.add("/downloads.actions", self.actions_download)
+    self.add("/downloads.single_action", self.single_action_download)
     self.add("/downloads.communities", self.communities_download)
     self.add("/downloads.teams", self.teams_download)
     self.add("/downloads.metrics", self.metrics_download)
@@ -47,6 +48,20 @@ class DownloadHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
 
+
+  #single action addition, untested
+  @admins_only
+  def single_action_download(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    action_id = args.pop('action_id', None)
+
+    users_data, err = self.service.single_action_download(context, community_id=community_id, action_id=action_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+  
 
   @admins_only
   def communities_download(self, request):
