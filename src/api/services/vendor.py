@@ -1,10 +1,12 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.vendor import VendorStore
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die, get_community_or_die
 from sentry_sdk import capture_message
@@ -124,11 +126,13 @@ class VendorService:
     vendors, err = self.store.list_vendors_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(vendors), None
+    sorted = sort_items(vendors, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_vendors_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     vendors, err = self.store.list_vendors_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(vendors), None
+    sorted = sort_items(vendors, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

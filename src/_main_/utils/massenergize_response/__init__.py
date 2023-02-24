@@ -9,8 +9,15 @@ from collections.abc import Iterable
 import json
 
 class MassenergizeResponse(JsonResponse):
-  def __init__(self, data=None, error=None, status=200):    
-    response = {"data": data, "error": error, "success": not error}
+  def __init__(self, data=None, error=None, status=200): 
+    cursor = {}
+    if data != None and isinstance(data, dict):
+      if data.get("items")!= None:
+        cursor = data.get("cursor")
+        data = data.get("items")
+  
+
+    response = {"data": data, "error": error,"success": not error, "cursor": cursor}
     
     super().__init__(
       response, 

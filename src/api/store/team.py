@@ -1,13 +1,11 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
 from api.tests.common import RESET
+from api.utils.filter_functions import get_team_member_filter_params, get_teams_filter_params
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
-from django.utils.text import slugify
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
-from _main_.utils.common import is_value
 from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel, unique_media_filename
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
@@ -30,7 +28,9 @@ def get_team_users(team):
     child_teams = Team.objects.filter(parent=team, is_deleted=False, is_published=True)
     child_team_users = [tm.user for tm in
                   TeamMember.objects.filter(team__in=child_teams, is_deleted=False).select_related('user')]
+                  
     return set().union(team_users, child_team_users)
+  
 
 class TeamStore:
   def __init__(self):
@@ -440,12 +440,14 @@ class TeamStore:
     try:
       if not context.user_is_admin():
         return None, NotAuthorizedError()
+
+      filter_params = get_team_member_filter_params(context.get_params())
       team_id = args.get('team_id', None)
       if not team_id:
         return [], CustomMassenergizeError('Please provide a valid team_id')
 
-      members = TeamMember.objects.filter(is_deleted=False, team__id=team_id, user__accepts_terms_and_conditions=True, user__is_deleted=False)
-      return members, None
+      members = TeamMember.objects.filter(is_deleted=False, team__id=team_id, user__accepts_terms_and_conditions=True, user__is_deleted=False, *filter_params)
+      return members.distinct(), None
     except Exception:
       return None, InvalidResourceError()
 
@@ -478,6 +480,9 @@ class TeamStore:
   def list_teams_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       team_ids = args.get("team_ids", None)
+
+      filter_params = get_teams_filter_params(context.get_params())
+
       if context.user_is_super_admin:
         return self.list_teams_for_super_admin(context, args)
 
@@ -486,24 +491,23 @@ class TeamStore:
 
       
       if team_ids: 
-        teams = Team.objects.filter(id__in = team_ids).select_related('logo', 'primary_community')
+        teams = Team.objects.filter(id__in = team_ids, *filter_params).select_related('logo', 'primary_community')
         return teams, None
 
       community_id = args.pop('community_id', None)
       if community_id == 0:
         # return actions from all communities
         return self.list_teams_for_super_admin(context)
-
-
+      
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
-        teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False).select_related('logo', 'primary_community')
-        return teams, None
+        teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
+        return teams.distinct(), None
 
-      teams = Team.objects.filter(communities__id=community_id, is_deleted=False).select_related('logo', 'primary_community')    
-      return teams, None
+      teams = Team.objects.filter(communities__id=community_id, is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
+      return teams.distinct(), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -511,13 +515,15 @@ class TeamStore:
 
   def list_teams_for_super_admin(self, context: Context, args):
     try:
+      filter_params = get_teams_filter_params(context.get_params())
+  
       team_ids = args.get("team_ids", None)
       if team_ids: 
-        teams = Team.objects.filter(id__in = team_ids).select_related('logo', 'primary_community')
+        teams = Team.objects.filter(id__in = team_ids, *filter_params).select_related('logo', 'primary_community')
         return teams, None
 
-      teams = Team.objects.filter(is_deleted=False).select_related('logo', 'primary_community')
-      return teams, None
+      teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
+      return teams.distinct(), None
 
     except Exception as e:
       capture_message(str(e), level="error")

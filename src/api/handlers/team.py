@@ -84,9 +84,11 @@ class TeamHandler(RouteHandler):
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
+
     team_info, err = self.team.list_teams(context, args)
     if err:
       return err
+
     return MassenergizeResponse(data=team_info)
 
 
@@ -292,6 +294,7 @@ class TeamHandler(RouteHandler):
       return err
 
     teams, err = self.team.list_teams_for_community_admin(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=teams)
@@ -309,4 +312,5 @@ class TeamHandler(RouteHandler):
     teams, err = self.team.list_teams_for_super_admin(context,args)
     if err:
       return err
+
     return MassenergizeResponse(data=teams)

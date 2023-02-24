@@ -1,10 +1,12 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.action import ActionStore
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
 from sentry_sdk import capture_message
@@ -116,11 +118,13 @@ class ActionService:
     actions, err = self.store.list_actions_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(actions), None
+    sorted = sort_items(actions, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
-  def list_actions_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
-    actions, err = self.store.list_actions_for_super_admin(context,args)
+  def list_actions_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
+    actions, err = self.store.list_actions_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(actions), None
+    sorted = sort_items(actions, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

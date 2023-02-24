@@ -212,11 +212,12 @@ class VendorHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+
     args, err = self.validator.verify(args)
     if err:
       return err
-
     vendors, err = self.service.list_vendors_for_community_admin(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=vendors)

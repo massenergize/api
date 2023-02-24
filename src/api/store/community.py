@@ -3,6 +3,7 @@ from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console, strip_website
 from api.store.common import count_action_completed_and_todos
 from api.tests.common import RESET
+from api.utils.filter_functions import get_communities_filter_params
 from database.models import (
     Community,
     CommunityMember,
@@ -32,10 +33,8 @@ from database.models import (
     CommunityMember,
     UserProfile,
     Action,
-    Event,
     Graph,
     Media,
-    ActivityLog,
     AboutUsPageSettings,
     ActionsPageSettings,
     ContactUsPageSettings,
@@ -54,17 +53,14 @@ from _main_.utils.massenergize_errors import (
     InvalidResourceError,
     CustomMassenergizeError,
 )
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from api.store.graph import GraphStore
-from django.db.models import Q
 from .utils import (
     get_community_or_die,
     get_user_or_die,
     get_new_title,
     getCarbonScoreFromActionRel,
     is_reu_in_community,
-    check_location,
 )
 from database.utils.common import json_loader
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
@@ -73,7 +69,6 @@ import zipcodes
 from sentry_sdk import capture_message, capture_exception
 
 ALL = "all"
-
 
 def _clone_page_settings(pageSettings, title, community):
     """
@@ -96,6 +91,8 @@ def _clone_page_settings(pageSettings, title, community):
     page.save()
 
     return page
+
+
 
 
 class CommunityStore:
@@ -920,6 +917,8 @@ class CommunityStore:
     def list_other_communities_for_cadmin(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
+        filter_params = get_communities_filter_params(context.get_params())
+
         user = UserProfile.objects.get(pk=context.user_id)
         # admin_groups = user.communityadmingroup_set.all()
         # ids = [a.community.id for a in admin_groups]
@@ -936,9 +935,13 @@ class CommunityStore:
             if context.user_is_super_admin:
                 return self.list_communities_for_super_admin(context)
             elif context.user_is_community_admin:
+                filter_params = get_communities_filter_params(context.get_params())
+
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
-                return [a.community for a in admin_groups], None
+                communities = [a.community for a in admin_groups]
+                communities = Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params)
+                return communities, None
             else:
                 return [], None
 
@@ -950,8 +953,9 @@ class CommunityStore:
         try:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
+            filter_params = get_communities_filter_params(context.get_params())
 
-            communities = Community.objects.filter(is_deleted=False)
+            communities = Community.objects.filter(is_deleted=False, *filter_params)
             return communities, None
         except Exception as e:
             capture_exception(e)
@@ -1006,6 +1010,9 @@ class CommunityStore:
         try:
             # list actions completed by members of a community or team.  Include any actions which are DONE or TODO (so not really completed)
             # include actions from other communities that users in this community completed on their homes
+
+            community = get_community_or_die(context, args)
+            # TODO: Normal list causing pagination to throw exceptions: will fix this issue
 
             time_range = args.get("time_range", "")
             start_date = args.get("start_date", "")

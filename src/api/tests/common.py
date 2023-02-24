@@ -115,8 +115,8 @@ def makeEvent(**kwargs):
     event = Event.objects.create(
         **{
             "is_published": True,
-            "start_date_and_time": timezone.now(),
-            "end_date_and_time": timezone.now(),
+            "start_date_and_time": timezone.now()+ timezone.timedelta(days=1),
+            "end_date_and_time": timezone.now() + timezone.timedelta(days=2),
             **kwargs,
             "community": community,
             "name": name,
@@ -146,7 +146,7 @@ def makeAdminGroup(**kwargs):
     key = round(time.time() * 1000)
     name = kwargs.get("name") or f"New Group - {key}"
     members = kwargs.pop("members")
-    group = CommunityAdminGroup.objects.create(**{**kwargs, "name": name})
+    group, exists= CommunityAdminGroup.objects.get_or_create(**{**kwargs, "name": name})
     if members:
         group.members.set(members)
 

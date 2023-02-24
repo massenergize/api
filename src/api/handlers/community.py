@@ -214,7 +214,7 @@ class CommunityHandler(RouteHandler):
   @admins_only 
   def list_other_communities_for_cadmin(self, request):
     context: Context  = request.context
-    #args = context.get_request_body()
+  
     communities, err = self.service.list_other_communities_for_cadmin(context)
     if err:
       return err
@@ -272,10 +272,10 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
 
-    action_info, err = self.service.list_actions_completed(context, args)
+    community_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=action_info)
+    return MassenergizeResponse(data=community_completed_actions)
 
 
 

@@ -1,8 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
 from api.tests.common import RESET
-from database.models import Action, UserProfile, Community, Media, UserActionRel
+from api.utils.filter_functions import get_actions_filter_params
+from database.models import Action, UserProfile, Community, Media
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -34,7 +34,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
   def list_actions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    try: 
+    try:
       actions = []
       community_id = args.get('community_id', None)
       subdomain = args.get('subdomain', None)
@@ -51,7 +51,7 @@ class ActionStore:
 
       # by default, exclude deleted actions
       #if not context.include_deleted:
-      actions = actions.filter(is_deleted=False)
+      actions = actions.filter(is_deleted=False).distinct()
 
       return actions, None
     except Exception as e:
@@ -305,14 +305,14 @@ class ActionStore:
       ids = args.pop("action_ids",[])
 
       if context.user_is_super_admin:
-        return self.list_actions_for_super_admin(context,args)
+        return self.list_actions_for_super_admin(context)
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
 
       if ids: 
         actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-        return actions, None
+        return actions.distinct(), None
 
       if community_id == 0:
         # return actions from all communities
@@ -321,28 +321,33 @@ class ActionStore:
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
+        filter_params = get_actions_filter_params(context.get_params())
+          
+
         comm_ids = [ag.community.id for ag in admin_groups]
-        actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-        return actions, None
+        actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        return actions.distinct(), None
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-      return actions, None
+      return actions.distinct(), None
 
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def list_actions_for_super_admin(self, context: Context,args):
-    ids = args.pop("action_ids",[])
+  def list_actions_for_super_admin(self, context: Context):
+    ids = context.args.pop("action_ids",[])
     try:
+      filter_params = get_actions_filter_params(context.get_params())
       if ids: 
-        actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        actions = Action.objects.filter(id__in = ids, *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return actions, None
-      # if not context.user_is_super_admin:
-      #   return None, CustomMassenergizeError("Insufficient Privileges")
-      actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
-      return actions, None
+
+      actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
+      return actions.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+
