@@ -1,2 +1,2 @@
-Feb 24: Admin portal enhancement:
-- new Community Engagement information
+Feb 24: Admin portal pagination:
+- deliver content in small chunks
