@@ -263,7 +263,11 @@ class CommunityHandler(RouteHandler):
 
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
-    
+    self.validator.expect('communities', "str_list", is_required=False)
+    self.validator.expect('actions', "str_list", is_required=False)
+    self.validator.expect('time_range', str, is_required=False)
+    self.validator.expect('end_date', str, is_required=False)
+    self.validator.expect('start_date', str, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
