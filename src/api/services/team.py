@@ -1,7 +1,9 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.team import TeamStore
 from api.store.message import MessageStore
+from api.utils.filter_functions import sort_items
 from database.models import TeamMember
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
@@ -96,7 +98,7 @@ class TeamService:
     members, err = self.store.members(context, args)
     if err:
       return None, err
-    return serialize_all(members), None
+    return paginate(members, context.get_pagination_data()), None
 
   def members_preferred_names(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     preferred_names, err = self.store.members_preferred_names(context, args)
@@ -165,20 +167,22 @@ class TeamService:
     teams, err = self.store.list_teams_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(teams), None
+    sorted = sort_items(teams, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_teams_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
     teams, err = self.store.list_teams_for_super_admin(context,args)
     if err:
       return None, err
-    return serialize_all(teams), None
+    sorted = sort_items(teams, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     completed_actions_list, err = self.store.list_actions_completed(context, args)
     if err:
       return None, err
-    return completed_actions_list, None
+    return paginate(completed_actions_list, context.get_pagination_data()), None
 
 

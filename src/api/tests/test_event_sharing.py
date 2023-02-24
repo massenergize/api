@@ -1,3 +1,4 @@
+from urllib.parse import urlencode
 from django.test import Client, TestCase
 from _main_.utils.utils import Console
 
@@ -33,18 +34,17 @@ class EventSharingTests(TestCase):
         print("Running request to share events to comm2 & comm3")
         response = self.client.post(
             "/api/events.update",
-            data=f"shared_to={community2.id},{community3.id}&event_id={event1.id}",
+            data=f"event_id={event1.id}&shared_to={community2.id},{community3.id}",
             content_type="application/x-www-form-urlencoded",
         ).json()
+
         shared_to = response.get("data", {}).get("shared_to", [])
         shared_to = [c.get("id") for c in shared_to]
+
         # Now run a request to retrieve all events for community2 (which should include shared communities as well)
         print("Fetching event list for comm2 to see if event was shared...")
-        list_response = self.client.post(
-            "/api/events.list",
-            data=f"community_id={community2.id}",
-            content_type="application/x-www-form-urlencoded",
-        ).json()
+        list_response=self.client.post('/api/events.list', urlencode({"community_id": community2.id}), content_type="application/x-www-form-urlencoded").toDict()
+    
         self.assertTrue(len(shared_to) == 2)
         found_events = [ev.get("id") for ev in list_response.get("data", [])]
         self.assertTrue(event1.id in found_events)
@@ -53,9 +53,10 @@ class EventSharingTests(TestCase):
         print("Fetching event list for comm3 to see if event was shared...")
         response = self.client.post(
             "/api/events.list",
-            data=f"community_id={community2.id}",
+            data=f"community_id={community3.id}",
             content_type="application/x-www-form-urlencoded",
         ).json()
+
         found = [ev.get("id") for ev in response.get("data", [])]
         self.assertTrue(event1.id in found)
 

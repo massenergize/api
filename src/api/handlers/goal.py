@@ -68,7 +68,7 @@ class GoalHandler(RouteHandler):
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop('user_id', None)
-    goal_info, err = self.service.list_goals(community_id, subdomain, team_id, user_id)
+    goal_info, err = self.service.list_goals(community_id, subdomain, team_id, user_id, context)
     if err:
       return err
     return MassenergizeResponse(data=goal_info)
@@ -118,7 +118,7 @@ class GoalHandler(RouteHandler):
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    goals, err = self.service.list_goals_for_super_admin()
+    goals, err = self.service.list_goals_for_super_admin(context)
     if err:
       return err
     return MassenergizeResponse(data=goals)

@@ -111,6 +111,7 @@ class TestimonialHandler(RouteHandler):
     context = request.context
     args = context.args
     testimonial_info, err = self.service.list_testimonials(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=testimonial_info)

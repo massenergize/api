@@ -73,7 +73,7 @@ class SubscriberHandler(RouteHandler):
     args: dict = context.args
     community_id = args.pop('community_id', None)
     user_id = args.pop('user_id', None)
-    subscriber_info, err = self.service.list_subscribers(community_id, user_id)
+    subscriber_info, err = self.service.list_subscribers(context,community_id, user_id)
     if err:
       return err
     return MassenergizeResponse(data=subscriber_info)
@@ -122,6 +122,7 @@ class SubscriberHandler(RouteHandler):
     subscribers, err = self.service.list_subscribers_for_community_admin(context, community_id)
     if err:
       return err
+
     return MassenergizeResponse(data=subscribers)
 
   @super_admins_only
@@ -131,4 +132,5 @@ class SubscriberHandler(RouteHandler):
     subscribers, err = self.service.list_subscribers_for_super_admin(context)
     if err:
       return err
+
     return MassenergizeResponse(data=subscribers)

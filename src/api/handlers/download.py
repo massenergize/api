@@ -85,7 +85,6 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-
     report, err = self.service.send_cadmin_report(context, community_id=community_id)
     print(report)
     if err:

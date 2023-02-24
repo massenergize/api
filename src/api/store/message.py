@@ -1,22 +1,21 @@
+import json
+from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from database.models import Message, UserProfile, Media, Community, Team
+from api.utils.filter_functions import get_messages_filter_params
+from database.models import Message, Media, Team
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
-    NotAuthorizedError,
     InvalidResourceError,
-    ServerError,
     CustomMassenergizeError,
 )
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from django.db.models import Q
 from .utils import get_admin_communities, unique_media_filename
 from _main_.utils.context import Context
 from .utils import get_community, get_user
 from sentry_sdk import capture_message
 from typing import Tuple
-
+from django.db.models import Q
 
 class MessageStore:
     def __init__(self):
@@ -234,6 +233,9 @@ class MessageStore:
         message_ids = args.get("message_ids", [])
 
         try:
+
+            filter_params = get_messages_filter_params(context.get_params())
+
             admin_communities, err = get_admin_communities(context)
             with_ids = Q()
             if message_ids:
@@ -246,6 +248,7 @@ class MessageStore:
                         is_team_admin_message=False,
                     ),
                     with_ids,
+                    *filter_params
                 ).distinct()
             elif context.user_is_community_admin:
                 messages = Message.objects.filter(
@@ -255,6 +258,7 @@ class MessageStore:
                         community__id__in=[c.id for c in admin_communities],
                     ),
                     with_ids,
+                    *filter_params
                 ).distinct()
             else:
                 messages = []
@@ -270,9 +274,12 @@ class MessageStore:
         if message_ids:
             with_ids = Q(id__in=message_ids)
         try:
+            filter_params = get_messages_filter_params(context.get_params())
+            
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
-                    Q(is_deleted=False, is_team_admin_message=True), with_ids
+                    Q(is_deleted=False,
+                      is_team_admin_message=True), with_ids, *filter_params
                 ).distinct()
             elif context.user_is_community_admin:
                 admin_communities, err = get_admin_communities(context)
@@ -283,10 +290,10 @@ class MessageStore:
                         community__id__in=[c.id for c in admin_communities],
                     ),
                     with_ids,
+                    *filter_params
                 ).distinct()
             else:
                 messages = []
-
             return messages, None
         except Exception as e:
             capture_message(str(e), level="error")

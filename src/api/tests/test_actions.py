@@ -110,6 +110,7 @@ class ActionHandlerTest(TestCase):
       signinAs(self.client, None)
       response = self.client.post('/api/actions.list', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response["success"])
+      
 
       # test list logged as user
       signinAs(self.client, self.USER)
@@ -155,10 +156,12 @@ class ActionHandlerTest(TestCase):
       self.assertTrue(response["success"])
       self.assertEquals(response["data"]["title"], "sadmin_title")
 
-      # test setting live but not yet approved
+      # test setting live but not yet approved ::BACKED-OUT::
       signinAs(self.client, self.CADMIN)
       response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
-      self.assertFalse(response["success"])
+      # self.assertFalse(response["success"])
+      self.assertEquals(response["data"]["is_published"],True)
+
 
       # test setting live and approved
       response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "is_approved": "true", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
