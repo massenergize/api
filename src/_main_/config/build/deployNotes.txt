@@ -1,2 +1,2 @@
-Jan 25: Production bugfix release:
-- test version for evaluating admin instructions what to do
+Feb 24: Admin portal enhancement:
+- new Community Engagement information
