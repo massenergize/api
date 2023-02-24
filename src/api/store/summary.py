@@ -72,7 +72,7 @@ class SummaryStore:
         # ------------------------------------------------------
 
         if is_community_admin or (is_super_admin and not wants_all_communities):
-            testimionial_query = Q(
+            testimonial_query = Q(
                 is_deleted=False,
                 updated_at__range=[start_time, end_time],
                 community__in =communities
@@ -111,7 +111,7 @@ class SummaryStore:
                 updated_at__range=[start_time, end_time],
                 is_deleted=False,
             )
-            testimionial_query = Q(
+            testimonial_query = Q(
                 is_deleted=False,
                 updated_at__range=[start_time, end_time]
             )
@@ -127,7 +127,7 @@ class SummaryStore:
         ).filter(done_query)
         testimonials = Testimonial.objects.values_list(
             "id", flat=True
-        ).filter(testimionial_query)
+        ).filter(testimonial_query)
 
         return {
             "done_interactions": done_interactions,
