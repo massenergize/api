@@ -1,19 +1,23 @@
 common_options = {
     # disable the as_posted until it functions
-    "as_posted": {
-        "name": "As posted",
-        "value": False,
-    },
+    # "as_posted": {
+    #     "name": "As posted",
+    #     "value": False,
+    # },
     "per_day": {
-        "name": "A summary per day",
+        "name": "Daily",
         "value": False,
     },
     "per_week": {
-        "name": "A summary per week",
+        "name": "Weekly",
+        "value": False,
+    },
+    "biweekly": {
+        "name": "Biweekly",
         "value": False,
     },
     "per_month": {
-        "name": "A summary per month",
+        "name": "Monthly",
         "value": False,
     },
     "never": {"name": "Never", "value": False},
@@ -33,28 +37,28 @@ class UserPortalSettings:
                     "text": "How frequently would you like to receive notifications from us about new events, actions, or financial incentives?",
                     "values": common_options,
                 },
-                "news_letter": {
-                    "live":True,
-                    "type": "radio",
-                    "text": "Send me news updates in my community",
-                    "values": {
-                        "as_posted": {"name": "As posted", "value": False},
-                        "never": {"name": "Never", "value": False},
-                    },
-                },
-                "messaging": {
-                    "live":True,
-                    "type": "radio",
-                    "text": "Would you like to receive messages from other members of the community?",
-                    "values": {
-                        "yes": {"name": "Yes", "value": False},
-                        "from_team": {
-                            "name": "Only from those on my team",
-                            "value": False,
-                        },
-                        "no": {"name": "No", "value": False},
-                    },
-                },
+                # "news_letter": {
+                #     "live":True,
+                #     "type": "radio",
+                #     "text": "Send me news updates in my community",
+                #     "values": {
+                #         "as_posted": {"name": "As posted", "value": False},
+                #         "never": {"name": "Never", "value": False},
+                #     },
+                # },
+                # "messaging": {
+                #     "live":True,
+                #     "type": "radio",
+                #     "text": "Would you like to receive messages from other members of the community?",
+                #     "values": {
+                #         "yes": {"name": "Yes", "value": False},
+                #         "from_team": {
+                #             "name": "Only from those on my team",
+                #             "value": False,
+                #         },
+                #         "no": {"name": "No", "value": False},
+                #     },
+                # },
             },
         },
         "notifications": {
