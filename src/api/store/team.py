@@ -304,18 +304,28 @@ class TeamStore:
           parent = Team.objects.filter(pk=parent_id).first()
           if parent and can_set_parent(parent, this_team=team):
             team.parent = parent
-
       else:  
           if parent_id == 0:
             team.parent = None
-     
-      if logo: #now, images will always come as an array of ids, or "reset" string 
-        if logo[0] == RESET: #if image is reset, delete the existing image
-          team.image = None
-        else:
-          media = Media.objects.filter(id = logo[0]).first()
-          team.logo = media
 
+      if logo:      
+        if type(logo) == list:
+          if logo[0] == RESET: #if image is reset, delete the existing image
+            team.logo = None
+          else:
+            # from admin portal, using media library
+            logo = Media.objects.filter(pk = logo[0]).first()
+            team.logo = logo
+        else:
+          if logo=='null':
+            team.logo = None
+          else:
+          # from community portal, image upload
+            logo.name = unique_media_filename(logo)
+
+            logo = Media.objects.create(file=logo, name=f"ImageFor {team.name} Team")
+            team.logo = logo
+        
       team.save()
 
       if context.is_admin_site: 
