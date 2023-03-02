@@ -46,7 +46,6 @@ def download_data(self, args, download_type):
     context.user_is_community_admin = args.get("user_is_community_admin", False)
     context.user_is_super_admin = args.get("user_is_super_admin", False)
     context.user_is_logged_in = args.get("user_is_logged_in", False)
-
     email = args.get("email", None)
     if download_type == USERS:
         (files, com_name), err = store.users_download(context, community_id=args.get("community_id"), team_id=args.get("team_id"))
@@ -90,7 +89,6 @@ def download_data(self, args, download_type):
                 data=files, download_type=METRICS, community_name=com_name, email=email)
 
     elif download_type == CADMIN_REPORT:
-
         user, err = get_user(None, email)
         community_id = args.get("community_id", None)
         community_list = []

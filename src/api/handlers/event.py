@@ -262,7 +262,6 @@ class EventHandler(RouteHandler):
 
     if err:
       return err
-
     return MassenergizeResponse(data=event_info)
 
   
@@ -299,7 +298,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
-    self.validator.expect("publicity_selections",list)
+    self.validator.expect("publicity_selections","str_list")
     self.validator.expect("shared_to","str_list")
     args, err = self.validator.verify(args)
 
@@ -354,6 +353,7 @@ class EventHandler(RouteHandler):
     events, err = self.service.list_events_for_community_admin(context, args)
     if err:
       return err
+
     return MassenergizeResponse(data=events)
 
   @admins_only 
@@ -363,6 +363,7 @@ class EventHandler(RouteHandler):
 
     self.validator.expect("community_ids", "str_list", is_required=True)
     self.validator.expect("exclude", bool, is_required=False)
+
     
     args, err = self.validator.verify(args)
     if err:
@@ -373,11 +374,11 @@ class EventHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=events)
 
-
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     events, err = self.service.list_events_for_super_admin(context)
     if err:
       return err
+
     return MassenergizeResponse(data=events)

@@ -113,19 +113,19 @@ class UserHandler(RouteHandler):
   def list_actions_todo(self, request):
     context: Context = request.context
     args: dict = context.args
-    user_info, err = self.service.list_actions_todo(context, args)
+    user_todo_actions, err = self.service.list_actions_todo(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=user_info)
+    return MassenergizeResponse(data=user_todo_actions)
 
   @login_required
   def list_actions_completed(self, request):
     context: Context = request.context
     args: dict = context.args
-    user_info, err = self.service.list_actions_completed(context, args)
+    user_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=user_info)
+    return MassenergizeResponse(data=user_completed_actions)
 
   @login_required
   def remove_user_action(self, request):
@@ -177,6 +177,7 @@ class UserHandler(RouteHandler):
     users, err = self.service.list_users_for_community_admin(context, args)
     if err:
       return err
+
     return MassenergizeResponse(data=users)
   
 
@@ -190,6 +191,7 @@ class UserHandler(RouteHandler):
     users, err = self.service.list_users_for_super_admin(context,args)
     if err:
       return err
+
     return MassenergizeResponse(data=users)
 
   @login_required

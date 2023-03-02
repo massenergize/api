@@ -17,16 +17,36 @@ class SummaryHandler(RouteHandler):
     self.registerRoutes()
 
   def registerRoutes(self):
-    self.add("/summary.next.steps.forAdmins", self.next_steps_for_admins)
     #admin routes
+    self.add("/summary.next.steps.forAdmins", self.next_steps_for_admins)
+    self.add("/summary.get.engagements", self.fetch_user_engagements_for_admins)
     self.add("/summary.listForCommunityAdmin", self.community_admin_summary)
     self.add("/summary.listForSuperAdmin", self.super_admin_summary)
 
-  # @admins_only
+
+  @admins_only 
+  def fetch_user_engagements_for_admins(self, request): 
+    context: Context = request.context
+    args: dict = context.args
+    self.validator.expect("is_community_admin", bool, is_required=False) # For manual testing
+    self.validator.expect("email", str, is_required=False) # For manual testing
+    self.validator.expect("time_range", str, is_required=False) 
+    self.validator.expect("start_time", str, is_required=False) 
+    self.validator.expect("end_time", str, is_required=False) 
+    self.validator.expect("communities", "str_list", is_required=False) 
+    args, err = self.validator.verify(args, strict=True)
+    if err:
+      return err
+
+    content, err = self.service.fetch_user_engagements_for_admins(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=content)
+
+  @admins_only  
   def next_steps_for_admins(self, request): 
     context: Context = request.context
     args: dict = context.args
-    # community_id = args.pop("community_id", None)
     self.validator.expect("is_community_admin", bool, is_required=False) # For manual testing
     self.validator.expect("email", str, is_required=False) # For manual testing
     args, err = self.validator.verify(args, strict=True)

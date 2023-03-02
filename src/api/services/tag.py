@@ -1,7 +1,7 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.tag import TagStore
-from _main_.utils.context import Context
 from typing import Tuple
 
 class TagService:
@@ -18,8 +18,8 @@ class TagService:
       return None, err
     return serialize(tag), None
 
-  def list_tags(self, tag_id) -> Tuple[list, MassEnergizeAPIError]:
-    tags, err = self.store.list_tags(tag_id)
+  def list_tags(self,context, tag_id) -> Tuple[list, MassEnergizeAPIError]:
+    tags, err = self.store.list_tags(context,tag_id)
     if err:
       return None, err
     return serialize_all(tags), None
@@ -45,15 +45,15 @@ class TagService:
     return serialize(tag), None
 
 
-  def list_tags_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    tags, err = self.store.list_tags_for_community_admin(community_id)
+  def list_tags_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    tags, err = self.store.list_tags_for_community_admin(context,community_id)
     if err:
       return None, err
-    return serialize_all(tags), None
+    return paginate(tags, context.get_pagination_data()), None
 
 
-  def list_tags_for_super_admin(self) -> Tuple[list, MassEnergizeAPIError]:
-    tags, err = self.store.list_tags_for_super_admin()
+  def list_tags_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
+    tags, err = self.store.list_tags_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(tags), None
+    return paginate(tags, context.get_pagination_data()), None

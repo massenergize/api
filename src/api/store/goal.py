@@ -1,8 +1,6 @@
 from database.models import Goal, UserProfile, Team, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from django.db.models import F
-from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
 

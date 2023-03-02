@@ -1,4 +1,6 @@
+from _main_.utils.pagination import paginate
 from _main_.utils.utils import is_not_null
+from api.utils.filter_functions import get_super_admins_filter_params
 from database.models import UserProfile, CommunityAdminGroup, Community, Media, UserProfile, Message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -68,7 +70,10 @@ class AdminStore:
 
   def list_super_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False)
+      filter_params =[]
+      if args.get("params", None):
+        filter_params = get_super_admins_filter_params(args.get("params"))
+      admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False, *filter_params)
       return admins, None
     except Exception as e:
       capture_message(str(e), level="error")

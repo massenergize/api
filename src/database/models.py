@@ -9,6 +9,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
+
 from .utils.common import (
     get_images_in_sequence,
     json_loader,
@@ -23,7 +24,28 @@ import uuid
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
 
+# -------------------------------------------------------------------------
 
+def get_enabled_flags(_self, users = False): # _self : CommunityObject or UserProfileObject
+    feature_flags = FeatureFlag.objects.all() # We get all available flags
+    feature_flags_json = []
+    for f in feature_flags: # Go over all the flags
+        specified = f.communities.all() if not users else f.users.all() # Then note down which communities each flag is enabled for
+        enabled = (
+            (f.audience == "EVERYONE")
+            or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
+                f.audience == "SPECIFIC" and _self in specified
+            )
+            or (f.audience == "ALL_EXCEPT" and _self not in specified)
+        ) # Check if flag is enabled for the community
+        enabled = enabled and (
+            not f.expires_on
+            or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
+        ) 
+        if enabled:
+            feature_flags_json.append(f.simple_json())  # Then if the flag hasnt expired, note down the flag
+    return feature_flags_json
+# -------------------------------------------------------------------------
 class Location(models.Model):
     """
     A class used to represent a geographical region.  It could be a complete and
@@ -456,7 +478,14 @@ class Community(models.Model):
         )
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
+        # this will not slow it down measurably
+        res["feature_flags"] =  get_enabled_flags(self)
         return res
+
+    #def medium_json(self): 
+    #    res = self.simple_json() 
+    #    res["feature_flags"] =  get_enabled_flags(self)
+    #    return res
 
     def full_json(self):
         admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(
@@ -525,23 +554,23 @@ class Community(models.Model):
             locations += l
 
         # Feature flags can either enable features for specific communities, or disable them
-        feature_flags = FeatureFlag.objects.all()
-        feature_flags_json = []
-        for f in feature_flags:
-            specified_communities = f.communities.all()
-            enabled = (
-                (f.audience == "EVERYONE")
-                or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
-                    f.audience == "SPECIFIC" and self in specified_communities
-                )
-                or (f.audience == "ALL_EXCEPT" and self not in specified_communities)
-            )
-            enabled = enabled and (
-                not f.expires_on
-                or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
-            )
-            if enabled:
-                feature_flags_json.append(f.simple_json())
+        # feature_flags = FeatureFlag.objects.all()
+        # feature_flags_json = []
+        # for f in feature_flags:
+        #     specified_communities = f.communities.all()
+        #     enabled = (
+        #         (f.audience == "EVERYONE")
+        #         or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
+        #             f.audience == "SPECIFIC" and self in specified_communities
+        #         )
+        #         or (f.audience == "ALL_EXCEPT" and self not in specified_communities)
+        #     )
+        #     enabled = enabled and (
+        #         not f.expires_on
+        #         or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
+        #     )
+        #     if enabled:
+        #         feature_flags_json.append(f.simple_json())
 
         return {
             "id": self.id,
@@ -566,7 +595,7 @@ class Community(models.Model):
             "admins": admins,
             "geography_type": self.geography_type,
             "locations": locations,
-            "feature_flags": feature_flags_json,
+            "feature_flags": get_enabled_flags(self),
         }
 
     class Meta:
@@ -868,24 +897,24 @@ class UserProfile(models.Model):
         #     for cm in CommunityMember.objects.filter(user=self, is_admin=True)
         # ]
 
-        # Feature flags can either enable features for specific users, or disable them for specific users
-        feature_flags = FeatureFlag.objects.all()
-        feature_flags_json = []
-        for f in feature_flags:
-            specified_users = f.users.all()
-            enabled = (
-                (f.user_audience == "EVERYONE")
-                or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
-                    f.user_audience == "SPECIFIC" and self in specified_users
-                )
-                or (f.user_audience == "ALL_EXCEPT" and self not in specified_users)
-            )
-            enabled = enabled and (
-                not f.expires_on
-                or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
-            )
-            if enabled:
-                feature_flags_json.append(f.simple_json())
+        # # Feature flags can either enable features for specific users, or disable them for specific users
+        # feature_flags = FeatureFlag.objects.all()
+        # feature_flags_json = []
+        # for f in feature_flags:
+        #     specified_users = f.users.all()
+        #     enabled = (
+        #         (f.user_audience == "EVERYONE")
+        #         or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
+        #             f.user_audience == "SPECIFIC" and self in specified_users
+        #         )
+        #         or (f.user_audience == "ALL_EXCEPT" and self not in specified_users)
+        #     )
+        #     enabled = enabled and (
+        #         not f.expires_on
+        #         or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
+        #     )
+        #     if enabled:
+        #         feature_flags_json.append(f.simple_json())
 
         data = model_to_dict(
             self, exclude=["real_estate_units", "communities", "roles"]
@@ -920,7 +949,7 @@ class UserProfile(models.Model):
             "user_portal_settings": user_portal_settings,
             "admin_portal_settings": admin_portal_settings,
         }
-        data["feature_flags"] = feature_flags_json
+        data["feature_flags"] = get_enabled_flags(self, True)
 
         return data
 
@@ -1655,7 +1684,7 @@ class Action(models.Model):
     is_approved = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
-        return self.title
+        return f"{str(self.id)} - {self.title}"
 
     def info(self):
         return model_to_dict(self, ["id", "title"])
@@ -1703,7 +1732,7 @@ class Action(models.Model):
         return data
 
     class Meta:
-        ordering = ["rank", "title"]
+        ordering = ["-id","rank", "title"]
         db_table = "actions"
         # had required this unique, now enforced in code
         # unique_together = [["title", "community"]]
@@ -2157,10 +2186,10 @@ class UserActionRel(models.Model):
         return res
 
     def __str__(self):
-        return "%s | %s | (%s)" % (self.user, self.status, self.action)
+        return "%s - %s | %s | (%s)" % (str(self.id), self.user, self.status, self.action)
 
     class Meta:
-        ordering = ("status", "user", "action")
+        ordering = ("-id","status", "user", "action")
         unique_together = [["user", "action", "real_estate_unit"]]
 
 

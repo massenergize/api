@@ -8,7 +8,7 @@ from .utils import get_community_or_die, unique_media_filename
 from sentry_sdk import capture_message
 from typing import Tuple
 from api.services.utils import send_slack_message
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, RUN_SERVER_LOCALLY
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, RUN_SERVER_LOCALLY, IS_PROD, IS_CANARY
 
 def get_households_engaged(community: Community):
 
@@ -327,7 +327,8 @@ class GraphStore:
 
       return None, None
     except Exception as e:
-      send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
+      if IS_PROD or IS_CANARY:
+        send_slack_message(SLACK_SUPER_ADMINS_WEBHOOK_URL, {"text": str(e)+str(context)}) 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
