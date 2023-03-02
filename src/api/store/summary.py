@@ -277,7 +277,7 @@ class SummaryStore:
         )
 
         if last_visit:
-            users = UserProfile.objects.values_list("id", flat=True).filter(
+            users = UserProfile.objects.values_list("email", flat=True).filter(
                 created_at__gt=today, is_deleted=False
             )
 
