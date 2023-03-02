@@ -2,7 +2,7 @@ import csv
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, SINGLE_ACTION #single action addition, untested
+from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
 from api.store.download import DownloadStore
 from task_queue.events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
@@ -64,14 +64,6 @@ def download_data(self, args, download_type):
             generate_csv_and_email(
                 data=files, download_type=ACTIONS, community_name=com_name, email=email)
     
-    #single action addition, untested
-    elif download_type == SINGLE_ACTION:
-        (files, com_name), err = store.single_action_download(context, community_id=args.get("community_id"), action_id=args.get("action_id"))
-        if err:
-            error_notification(SINGLE_ACTION, email)
-        else:
-            generate_csv_and_email(
-                data=files, download_type=SINGLE_ACTION, community_name=com_name, email=email)
 
     elif download_type == COMMUNITIES:
         (files, dummy), err = store.communities_download(context)
