@@ -196,7 +196,7 @@ def communities(request):
 
     # sort the list by the display name
     def sortFunc(e):
-        return e['displayName']
+        return e['displayName'].capitalize()
     communityList.sort(key=sortFunc)
 
     args = {
