@@ -721,7 +721,7 @@ class UserProfile(models.Model):
 
     notification_dates: dates that certain notifications were dispatched. It will probably look like
         notification_dates={
-            "cadmin_nudge":["02/10/22","02/11/22",...],
+            "cadmin_nudge":"02/10/22",
             ** some other form of notification
         }
 

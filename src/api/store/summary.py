@@ -249,18 +249,18 @@ class SummaryStore:
             )
 
         testimonials = Testimonial.objects.values_list("id", flat=True).filter(
-            is_approved=False, is_deleted=False
+            is_deleted=False
         )
 
         team_messages = Message.objects.values_list("id", flat=True).filter(
-            have_forwarded=False, is_team_admin_message=True, is_deleted=False
+         is_team_admin_message=True, is_deleted=False
         )
         messages = Message.objects.values_list("id", flat=True).filter(
-            have_replied=False, is_team_admin_message=False, is_deleted=False
+         is_team_admin_message=False, is_deleted=False
         )
         users = []
         teams = Team.objects.values_list("id", flat=True).filter(
-            is_published=False, is_deleted=False
+         is_deleted=False
         )
 
         today = datetime.date.today()
@@ -278,7 +278,7 @@ class SummaryStore:
 
         if last_visit:
             users = UserProfile.objects.values_list("id", flat=True).filter(
-                created_at__gt=today, is_deleted=False
+            is_deleted=False
             )
 
         return {

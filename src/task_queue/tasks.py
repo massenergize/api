@@ -8,6 +8,7 @@ from django.db import transaction
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 1, 'countdown': 5})
 def run_some_task(self, task_id):
+    print("Running task: {}".format(task_id))
     today = datetime.date.today()
     should_run = False
     task = None

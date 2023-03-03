@@ -18,6 +18,8 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
+from _main_.test_nudge import test_user_event_nudge
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/cc/',include('carbon_calculator.urls')),
@@ -26,6 +28,7 @@ urlpatterns = [
     path('authentication/', include('authentication.urls')),
     path('api/', include('api.urls')),
     path('', include('website.urls')),
+    path("test/nudge/", test_user_event_nudge)
     
 ]
 
