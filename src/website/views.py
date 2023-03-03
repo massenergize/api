@@ -182,21 +182,21 @@ def communities(request):
         location = community.get("location", None)
         prefix = ""        
         if location:
-            city = location["city"]
-            state = location["state"]
+            city = location.get("city")
+            state = location.get("state")
             if state:
                 for abbrev, name in STATES.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
                     if state.lower() == name.lower():
                         prefix = abbrev + ' - '
             if city:
                 prefix = city + ", " + prefix
-        displayName = prefix + community["name"]
+        displayName = prefix + community.get("name", "")
         index = communityList.index(community)
         communityList[index]["displayName"] = displayName
 
     # sort the list by the display name
     def sortFunc(e):
-        return e['displayName'].capitalize()
+        return e.get('displayName','').capitalize()
     communityList.sort(key=sortFunc)
 
     args = {
