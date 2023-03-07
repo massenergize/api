@@ -135,9 +135,6 @@ def get_logo(event):
         return event.get("community").get("logo").get("url")
     return ""
     
-
-
-
 def prepare_events_email_data(events):
     events = serialize_all(events, full=True)
 
@@ -163,7 +160,7 @@ def send_events_report_email(name, email, event_list, comm):
         data["change_preference_link"] = change_pref_link
         data["events"] = events
         data["has_more_events"] = {
-            "view_more_link": f'{COMMUNITY_URL_ROOT}/{comm.subdomain}/events?ids={"-".join([str(event.get("id")) for event in event_list[LIMIT]])}',
+            "view_more_link": f'{COMMUNITY_URL_ROOT}/{comm.subdomain}/events?ids={"-".join([str(event.id) for event in event_list[LIMIT:]])}',
         } if has_more_events else None 
         data["community"] = comm.name
         send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
@@ -223,7 +220,7 @@ Note: This function only get email as argument when the
 nudge is requested on demand by a cadmin on user portal.
 '''
 # Entry point
-def prepare_user_events_nudge(email=None):
+def prepare_user_events_nudge(email=None, community_id=None):
     try:
         user = None
 
@@ -231,22 +228,23 @@ def prepare_user_events_nudge(email=None):
         allowed_communities = list(flag.communities.all())
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
-
-        if email:
+        #  process on demand request
+        if email and community_id:
+            all_community_events = get_community_events(community_id)
             user = UserProfile.objects.filter(email=email).first()
-            communities = user.communities.all()
+            community = Community.objects.filter(id=community_id).first()
+            events = get_user_events(user.notification_dates, all_community_events)
+            send_user_requested_nudge(events, user, community)
+
+            return True
 
         for community in communities:
             if flag.audience == "EVERYONE" or community in allowed_communities:
                 events = get_community_events(community.id)
-                if not email:
-                    users = get_community_users(community.id)
-                    for user in users:
-                     events = get_user_events(user.get("notification_dates", {}), events)
-                     send_automated_nudge(events, user, community)
-                else:
-                    events = get_user_events(user.notification_dates, events)
-                    send_user_requested_nudge(events, user, community)
+                users = get_community_users(community.id)
+                for user in users:
+                    events = get_user_events(user.get("notification_dates", {}), events)
+                    send_automated_nudge(events, user, community)
 
         return True   
     except Exception as e:
