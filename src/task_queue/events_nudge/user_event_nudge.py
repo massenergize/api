@@ -1,14 +1,22 @@
 import datetime
 import pytz
 from _main_.utils.common import serialize_all
+from _main_.utils.constants import COMMUNITY_URL_ROOT
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE_ID
 from database.models import Community, Event, UserProfile, FeatureFlag
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 
+from database.utils.settings.model_constants.events import EventConstants
 
-WEEKLY = "weekly"
-BI_WEEKLY = "bi-weekly"
-MONTHLY = "monthly"
+
+WEEKLY = "per_week"
+BI_WEEKLY = "biweekly"
+MONTHLY = "per_month"
+DAILY="per_day"
+
+LIMIT=5
 
 USER_PREFERENCE_DEFAULTS = {
         "communication_prefs": {
@@ -27,58 +35,51 @@ USER_PREFERENCE_DEFAULTS = {
 
 
 
-USER_EVENT_NUDGE_KEY = "user-event-nudge-feature-flag"
-'''
-1. get all communities
-2. get all users of a community and newly created events that are live
-3. prepare events data for postMark
-'''
+USER_EVENT_NUDGE_KEY = "communication-prefs-feature-flag"
 
+def should_user_get_nudged(user):
 
-def get_user_email_list(users):
-    email_list = {}
-    for user in users:
-        name = user.get("name")
-        email = user.get("email")
-        if not name or not email:
-            print("Missing name or email for user: " + str(user))
-            continue
+    user_communication_preferences = user.get("preferences", {}).get("user_portal_settings", {}).get("communication_prefs", {})
+    freq = user_communication_preferences.get("update_frequency", {})
+    last_notified = user.get("notification_dates", {}).get("user_event_nudge", {})
+    if last_notified:
+        freq_keys = freq.keys()
 
-        # BHN - fixed crash on this next line if communication_prefs didn't exist
-        user_communication_preferences = user.get("preferences", {}).get("user_portal_settings", {}).get("communication_prefs", {})
-        freq = user_communication_preferences.get("update_frequency", {})
-        last_notified = user.get("notification_dates", {}).get("user_event_nudge", None)
-        if last_notified:
-            freq_keys = freq.keys()
+        if len(freq_keys) == 0 or WEEKLY in freq_keys:
+            in_a_week_from_last_nudge = datetime.datetime.strptime(last_notified, '%Y-%m-%d') + relativedelta(weeks=1)
+            if in_a_week_from_last_nudge.date() <= datetime.date.today():
+                return True
 
-            if len(freq_keys) == 0 or WEEKLY in freq_keys:
-               in_a_week_from_last_nudge = datetime.datetime.strptime(
-                   last_notified, '%Y-%m-%d') + relativedelta(weeks=1)
-               if in_a_week_from_last_nudge.date() <= datetime.date.today():
-                 email_list[name] = email
+        if BI_WEEKLY in freq_keys:
+            in_two_weeks_from_last_nudge = datetime.datetime.strptime(
+                last_notified, '%Y-%m-%d') + relativedelta(weeks=2)
+            if in_two_weeks_from_last_nudge.date() <= datetime.date.today():
+                return True
 
-            if BI_WEEKLY in freq_keys:
-               in_two_weeks_from_last_nudge = datetime.datetime.strptime(
-                   last_notified, '%Y-%m-%d') + relativedelta(weeks=2)
-               if in_two_weeks_from_last_nudge.date() <= datetime.date.today():
-                 email_list[name] = email
+        if MONTHLY in freq_keys:
+            in_a_month_from_last_nudge = datetime.datetime.strptime(
+                last_notified, '%Y-%m-%d') + relativedelta(months=1)
+            if in_a_month_from_last_nudge.date() <= datetime.date.today():
+                return True
+            
+        if DAILY in freq_keys:
+            in_a_day_from_last_nudge = datetime.datetime.strptime(
+                last_notified, '%Y-%m-%d') + relativedelta(days=1)
+            if in_a_day_from_last_nudge.date() <= datetime.date.today():
+                return True
 
-            if MONTHLY in freq_keys:
-               in_a_month_from_last_nudge = datetime.datetime.strptime(
-                   last_notified, '%Y-%m-%d') + relativedelta(months=1)
-               if in_a_month_from_last_nudge.date() <= datetime.date.today():
-                  email_list[name] = email
-
-        else:
-           email_list[name] = email
-
-    return email_list
+    else:
+        return True
+          
 
 
 def update_last_notification_dates(email):
     new_date = str(datetime.date.today())
     user =  UserProfile.objects.filter(email=email).first()
     # TODO: add id's of events that were sent to this user
+    '''
+    log ids of sent events into object
+    '''
     notification_dates = {**user.notification_dates,"user_event_nudge":new_date}
     UserProfile.objects.filter(email=email).update(**{"notification_dates":notification_dates })
 
@@ -102,11 +103,23 @@ def format_users_list(all_users):
     return users
 
 
-def get_all_users_and_events_for_community(community_id):
-    users = UserProfile.objects.filter(communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
+def get_community_events(community_id):
+    events = Event.objects.filter(
+        Q(community__id=community_id) | # parent community events
+        Q(shared_to__id=community_id) | # events shared to community
+        Q(publicity=EventConstants.open()) | # open events
+        Q(publicity=EventConstants.is_open_to("OPEN_TO"),communities_under_publicity__id=community_id), # events that are opened to community
+        is_published=True, 
+        is_deleted=False, 
+        start_date_and_time__gte=datetime.datetime.now()
+        )
+    
+    return events
 
-    events = Event.objects.filter(Q(community__id=community_id)|Q(shared_to__id=community_id), is_published=True,is_deleted=False)
-    return format_users_list(users), events
+
+def get_community_users(community_id):
+   users = UserProfile.objects.filter(communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
+   return format_users_list(users)
 
 
 eastern_tz = pytz.timezone("US/Eastern")
@@ -114,37 +127,133 @@ def human_readable_date(start):
     return start.astimezone(eastern_tz).strftime("%b %d")
 
 
+def generate_change_pref_url(subdomain):
+    url = f"{COMMUNITY_URL_ROOT}/{subdomain}/profile/settings"
+    return url
 
-def generate_change_pref_url(community_id, user_id):
-    pass
+def get_logo(event):
+    if event.get("image"):
+       return event.get("image").get("url")
+    elif event.get("community", {}).get("logo"):
+        return event.get("community").get("logo").get("url")
+    return ""
+    
+
+
 
 def prepare_events_email_data(events):
     events = serialize_all(events, full=True)
 
     data = [{
-            "logo": event.get("image", {}).get("url", {}) if event.get("image") else "",
+            "logo": get_logo(event),
             "title": event.get("name"),
-            "community": event.get("community", {}).get("name") if event.get("community") else "N/A",
             "date": human_readable_date(event.get("start_date_and_time")),
             "location": "In person" if event.get("location") else "Online",
-            "change_pref_link":"",
+            "view_link": f'{COMMUNITY_URL_ROOT}/{event.get("community", {}).get("subdomain")}/events/{event.get("id")}',
             } for event in events]
     #sort list of events by date
     data = (sorted(data, key=lambda i: i['date']))
     return data
 
 
+def send_events_report_email(name, email, event_list, comm):
+    try:
+        events = prepare_events_email_data(event_list[:LIMIT])
+        has_more_events = len(event_list) > LIMIT
+        change_pref_link = generate_change_pref_url(comm.subdomain)
+        data = {}
+        data["name"] = name.split(" ")[0]
+        data["change_preference_link"] = change_pref_link
+        data["events"] = events
+        data["has_more_events"] = {
+            "view_more_link": f'{COMMUNITY_URL_ROOT}/{comm.subdomain}/events'
+        } if has_more_events else None 
+        data["community"] = comm.name
+        send_massenergize_email_with_attachments(
+            USER_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+        update_last_notification_dates(email)
+        return True
+    except Exception as e:
+        print("send_events_report exception: " + str(e))
+        return False
 
-def send_user_event_nudge():
-    communities = Community.objects.filter(is_published=True,)
-    _users = {}
-    for community in communities:
-        users, events = get_all_users_and_events_for_community(community.id)
-        if len(events) > 0 or len(users) > 0:
-            _users[community.name] = {
-                "users": get_user_email_list(users),
-                "events": prepare_events_email_data(events)
-                }
 
-    return _users
+def send_automated_nudge(events, user, community):
+    if len(events) > 0 and user:
+        name = user.get("name")
+        email = user.get("email")
+        if not name or not email:
+            print("Missing name or email for user: " + str(user))
+            return False
 
+        user_is_ready_for_nudge = should_user_get_nudged(user)
+
+        if user_is_ready_for_nudge:
+    
+            is_sent = send_events_report_email(name, email, events, community)
+            if not is_sent:
+                print(
+                    f"**** Failed to send email to {name} for community {community.name} ****")
+                return False
+    return False
+
+
+def send_user_requested_nudge(events, user, community):
+    if len(events) > 0 and user:
+        name = user.full_name
+        email = user.email
+        is_sent = send_events_report_email(name, email, events, community)
+        if not is_sent:
+            print(
+                f"**** Failed to send email to {name} for community {community.name} ****")
+            return False
+    return False
+        
+
+
+def get_user_events(notification_dates, community_events):
+    today = datetime.datetime.now()
+    a_week_ago = datetime.datetime.now() - relativedelta(weeks=1)
+
+    last_received_at = notification_dates.get("user_event_nudge")
+    #  if user hasn't received a nudge before, get all events that went live within the week
+    # else use the last nudge date
+    last_time = last_received_at if last_received_at else a_week_ago
+
+    return community_events.filter(Q(published_at__range=[last_time, today]))
+
+'''
+Note: This function only get email as argument when the
+nudge is requested on demand by a cadmin on user portal
+'''
+
+def prepare_user_events_nudge(email=None):
+    try:
+        user = None
+
+        flag = FeatureFlag.objects.filter(key=USER_EVENT_NUDGE_KEY).first()
+        allowed_communities = list(flag.communities.all())
+
+        communities = Community.objects.filter(is_published=True, is_deleted=False)
+
+        if email:
+            user = UserProfile.objects.filter(email=email).first()
+            communities = user.communities.all()
+
+        for community in communities:
+            if flag.audience == "EVERYONE" or community in allowed_communities:
+                events = get_community_events(community.id)
+                if not email:
+                    users = get_community_users(community.id)
+                    for user in users:
+                     events = get_user_events(user.get("notification_dates", {}), events)
+                     send_automated_nudge(events, user, community)
+                else:
+                    events = get_user_events(user.notification_dates, events)
+                    send_user_requested_nudge(events, user, community)
+
+        return True   
+    except Exception as e:
+        print("Community member nudge exception: " + str(e))
+        return False
+    

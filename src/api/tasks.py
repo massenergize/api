@@ -2,7 +2,7 @@ import csv
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
+from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
 from api.store.download import DownloadStore
 from task_queue.events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
@@ -14,6 +14,8 @@ from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
 from django.db.models import Count
+
+from task_queue.events_nudge.user_event_nudge import prepare_user_events_nudge
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None):
@@ -107,6 +109,9 @@ def download_data(self, args, download_type):
             if not stat:
                 error_notification(CADMIN_REPORT, email)
                 return
+            
+    elif download_type == SAMPLE_USER_REPORT:
+        prepare_user_events_nudge(email=email)
 
     #elif download_type == SADMIN_REPORT:
     #    (files, com_name), err = store.sadmin_report(context, args, community_id=args.get("community_id"))

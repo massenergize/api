@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from api.constants import ACTIONS, COMMUNITIES, METRICS, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
+from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
 from typing import Tuple
@@ -79,6 +79,13 @@ class DownloadService:
         }
         download_data.delay(data, CADMIN_REPORT)
         return [], None
+    
+    def send_sample_user_report(self, context: Context) -> Tuple[dict, MassEnergizeAPIError]:
+        data = {'email': context.user_email}
+
+        download_data.delay(data, SAMPLE_USER_REPORT)
+        
+        return {}, None
 
     def send_sadmin_report(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
         data = {
