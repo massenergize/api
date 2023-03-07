@@ -76,10 +76,7 @@ def should_user_get_nudged(user):
 def update_last_notification_dates(email):
     new_date = str(datetime.date.today())
     user =  UserProfile.objects.filter(email=email).first()
-    # TODO: add id's of events that were sent to this user
-    '''
-    log ids of sent events into object
-    '''
+
     notification_dates = {**user.notification_dates,"user_event_nudge":new_date}
     UserProfile.objects.filter(email=email).update(**{"notification_dates":notification_dates })
 
@@ -166,11 +163,10 @@ def send_events_report_email(name, email, event_list, comm):
         data["change_preference_link"] = change_pref_link
         data["events"] = events
         data["has_more_events"] = {
-            "view_more_link": f'{COMMUNITY_URL_ROOT}/{comm.subdomain}/events'
+            "view_more_link": f'{COMMUNITY_URL_ROOT}/{comm.subdomain}/events?ids={"-".join([str(event.get("id")) for event in event_list[LIMIT]])}',
         } if has_more_events else None 
         data["community"] = comm.name
-        send_massenergize_email_with_attachments(
-            USER_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
         update_last_notification_dates(email)
         return True
     except Exception as e:
@@ -224,9 +220,9 @@ def get_user_events(notification_dates, community_events):
 
 '''
 Note: This function only get email as argument when the
-nudge is requested on demand by a cadmin on user portal
+nudge is requested on demand by a cadmin on user portal.
 '''
-
+# Entry point
 def prepare_user_events_nudge(email=None):
     try:
         user = None
