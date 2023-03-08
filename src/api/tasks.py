@@ -111,7 +111,7 @@ def download_data(self, args, download_type):
                 return
             
     elif download_type == SAMPLE_USER_REPORT:
-        prepare_user_events_nudge(email=email)
+        prepare_user_events_nudge(email=email, community_id=args.get("community_id"))
 
     #elif download_type == SADMIN_REPORT:
     #    (files, com_name), err = store.sadmin_report(context, args, community_id=args.get("community_id"))

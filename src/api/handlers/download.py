@@ -95,8 +95,8 @@ class DownloadHandler(RouteHandler):
   def send_sample_user_report(self, request):
     context: Context = request.context
     args: dict = context.args
- 
-    report, err = self.service.send_sample_user_report(context)
+    community_id = args.pop('community_id', None)
+    report, err = self.service.send_sample_user_report(context, community_id)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
