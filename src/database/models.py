@@ -690,6 +690,8 @@ class Role(models.Model):
         ordering = ("name",)
         db_table = "roles"
 
+class MOURecordings(models.Model): 
+    pass
 
 class UserProfile(models.Model):
     """
