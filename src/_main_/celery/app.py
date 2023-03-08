@@ -7,15 +7,19 @@ from celery.schedules import crontab
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "_main_.settings")
 app = Celery('massenergize_celeryapp')
-
-app.conf.enable_utc = False
-app.conf.update( timezone= 'US/Eastern')
 celery_config = CeleryConfig().get_config()
 
 app.config_from_object(celery_config)
-
 app.autodiscover_tasks()
-app.conf.beat_schedule = {}
+
+
+app.conf.beat_schedule = {
+    # 'send_weekly_event_nudge': {
+    #     'task': 'task_queue.tasks.send_weekly_events_report',
+    #     'schedule': crontab(hour=9, minute=0, day_of_week=1)
+    # },
+}
+
 
 @shared_task(bind=True)
 def debug_task(self):

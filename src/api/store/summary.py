@@ -247,7 +247,7 @@ class SummaryStore:
             return {}, CustomMassenergizeError(
                 "Sorry, could not find information of currently authenticated admin"
             )
-        
+    
         testimonials = Testimonial.objects.values_list("id", flat=True).filter(
             is_approved=False, is_deleted=False
         )
