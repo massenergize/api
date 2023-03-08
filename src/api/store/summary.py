@@ -247,21 +247,22 @@ class SummaryStore:
             return {}, CustomMassenergizeError(
                 "Sorry, could not find information of currently authenticated admin"
             )
-
+        
         testimonials = Testimonial.objects.values_list("id", flat=True).filter(
-            is_deleted=False
+            is_approved=False, is_deleted=False
         )
 
         team_messages = Message.objects.values_list("id", flat=True).filter(
-         is_team_admin_message=True, is_deleted=False
+            have_forwarded=False, is_team_admin_message=True, is_deleted=False
         )
         messages = Message.objects.values_list("id", flat=True).filter(
-         is_team_admin_message=False, is_deleted=False
+            have_replied=False, is_team_admin_message=False, is_deleted=False
         )
         users = []
         teams = Team.objects.values_list("id", flat=True).filter(
-         is_deleted=False
+            is_published=False, is_deleted=False
         )
+
 
         today = datetime.date.today()
 
