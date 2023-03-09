@@ -1,5 +1,6 @@
 import datetime
 import json
+from _main_.utils.policy.PolicyConstants import PolicyConstants
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
 from django.db.models.fields import BooleanField, related
@@ -26,25 +27,34 @@ ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
 
 # -------------------------------------------------------------------------
 
-def get_enabled_flags(_self, users = False): # _self : CommunityObject or UserProfileObject
-    feature_flags = FeatureFlag.objects.all() # We get all available flags
+
+def get_enabled_flags(
+    _self, users=False
+):  # _self : CommunityObject or UserProfileObject
+    feature_flags = FeatureFlag.objects.all()  # We get all available flags
     feature_flags_json = []
-    for f in feature_flags: # Go over all the flags
-        specified = f.communities.all() if not users else f.users.all() # Then note down which communities each flag is enabled for
+    for f in feature_flags:  # Go over all the flags
+        specified = (
+            f.communities.all() if not users else f.users.all()
+        )  # Then note down which communities each flag is enabled for
         enabled = (
             (f.audience == "EVERYONE")
             or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
                 f.audience == "SPECIFIC" and _self in specified
             )
             or (f.audience == "ALL_EXCEPT" and _self not in specified)
-        ) # Check if flag is enabled for the community
+        )  # Check if flag is enabled for the community
         enabled = enabled and (
             not f.expires_on
             or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
-        ) 
+        )
         if enabled:
-            feature_flags_json.append(f.simple_json())  # Then if the flag hasnt expired, note down the flag
+            feature_flags_json.append(
+                f.simple_json()
+            )  # Then if the flag hasnt expired, note down the flag
     return feature_flags_json
+
+
 # -------------------------------------------------------------------------
 class Location(models.Model):
     """
@@ -479,11 +489,11 @@ class Community(models.Model):
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
         # this will not slow it down measurably
-        res["feature_flags"] =  get_enabled_flags(self)
+        res["feature_flags"] = get_enabled_flags(self)
         return res
 
-    #def medium_json(self): 
-    #    res = self.simple_json() 
+    # def medium_json(self):
+    #    res = self.simple_json()
     #    res["feature_flags"] =  get_enabled_flags(self)
     #    return res
 
@@ -690,8 +700,8 @@ class Role(models.Model):
         ordering = ("name",)
         db_table = "roles"
 
-class MOURecordings(models.Model): 
-    pass
+
+
 
 class UserProfile(models.Model):
     """
@@ -831,7 +841,7 @@ class UserProfile(models.Model):
                 "preferred_name",
                 "email",
                 "is_super_admin",
-                "is_community_admin"
+                "is_community_admin",
             ],
         )
         res["joined"] = self.created_at.date()
@@ -958,6 +968,35 @@ class UserProfile(models.Model):
     class Meta:
         db_table = "user_profiles"
         ordering = ("-created_at",)
+
+class PolicyAcceptanceRecords(models.Model):
+    """
+     This model represents the user's acceptance of policies. It has the following fields:
+    "user": a foreign key to the UserProfile model, which is set to null when the UserProfile is deleted.
+    "signed_at": a DateTimeField that stores the date and time when the user accepted the policy.
+    "last_notified": a JSON field that stores the last notification sent to the user about the policy, if applicable.
+    "type": a CharField that stores the type of policy being accepted, defaulting to "MOU" (Memorandum of Understanding) if not specified. It could be anything depending on any new future scenarios where we need users to sign/accept other things that are not MOUs (So we can still use this table)
+    "created_at": a DateTimeField automatically set to the time the record was created.
+    "updated_at": a DateTimeField automatically updated with the time any changes are made to the record.
+    This model establishes a relationship between the user and the policies they have agreed to, allowing you to track which policies each user has accepted and when they did so.
+    """
+    user = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="accepted_policies",
+    )
+
+    signed_at = models.DateTimeField(null=True, blank=True)
+    last_notified = models.JSONField(null=True, blank=True)
+    type = models.CharField(
+        default=PolicyConstants.mou(),
+        max_length=TINY_STR_LEN,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class UserMediaUpload(models.Model):
@@ -1163,7 +1202,7 @@ class CustomCommunityWebsiteDomain(models.Model):
     id = models.AutoField(primary_key=True)
     # Sam - do you see any problem with this?  URL field is a text field with validator to be valid URL
     website = models.URLField(max_length=SHORT_STR_LEN, unique=True)
-    #website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
+    # website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
         Community,
         on_delete=models.CASCADE,
@@ -1734,7 +1773,7 @@ class Action(models.Model):
         return data
 
     class Meta:
-        ordering = ["-id","rank", "title"]
+        ordering = ["-id", "rank", "title"]
         db_table = "actions"
         # had required this unique, now enforced in code
         # unique_together = [["title", "community"]]
@@ -1838,7 +1877,7 @@ class Event(models.Model):
                 "invited_communities",
                 "user",
                 "communities_under_publicity",
-                "shared_to"
+                "shared_to",
             ],
         )
         data["tags"] = [t.simple_json() for t in self.tags.all()]
@@ -1863,9 +1902,7 @@ class Event(models.Model):
         if self.user:
             data["user_email"] = self.user.email
 
-        data["shared_to"] =[
-            c.info() for c in self.shared_to.all()
-        ]
+        data["shared_to"] = [c.info() for c in self.shared_to.all()]
         return data
 
     def full_json(self):
@@ -2188,10 +2225,15 @@ class UserActionRel(models.Model):
         return res
 
     def __str__(self):
-        return "%s - %s | %s | (%s)" % (str(self.id), self.user, self.status, self.action)
+        return "%s - %s | %s | (%s)" % (
+            str(self.id),
+            self.user,
+            self.status,
+            self.action,
+        )
 
     class Meta:
-        ordering = ("-id","status", "user", "action")
+        ordering = ("-id", "status", "user", "action")
         unique_together = [["user", "action", "real_estate_unit"]]
 
 

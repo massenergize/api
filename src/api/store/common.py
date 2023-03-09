@@ -1,9 +1,14 @@
 import datetime
+from _main_.utils.policy.PolicyConstants import PolicyConstants
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
-from database.models import UserActionRel
+from database.models import PolicyAcceptanceRecords, UserActionRel
 from django.db.models import Q
 import pytz
+from django.utils import timezone 
+
+from datetime import  timezone, timedelta
+
 
 LAST_VISIT = "last-visit"
 LAST_WEEK = "last-week"
@@ -105,3 +110,30 @@ def count_action_completed_and_todos(**kwargs):
             }
 
     return list(action_count_objects.values())
+
+
+def user_is_due_for_mou(user): 
+    """
+    Returns user policy acceptance status
+    
+    Args:
+        user (UserProfile): The User Profile to check for policy
+    
+    Returns:
+        bool: True if user needs to agree to policy, False otherwise
+        last_record (PolicyAcceptanceRecords|None): Latest Policy Acceptance Record or None if there is none
+    """
+    a_year_ago = datetime.datetime.now(timezone.utc) - timedelta(days=365)
+
+    try:
+        last_record = PolicyAcceptanceRecords.objects.filter(user = user, type=PolicyConstants.mou()).latest("signed_at")
+    except PolicyAcceptanceRecords.DoesNotExist:
+        return True, None
+    
+    if last_record.signed_at < a_year_ago: 
+        return True, last_record
+    
+    return False, last_record
+    
+
+

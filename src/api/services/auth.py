@@ -4,6 +4,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.context import Context
+from api.store.common import user_is_due_for_mou
 from database.utils.json_response_wrapper import Json
 from firebase_admin import auth
 from django.middleware.csrf import get_token
@@ -95,7 +96,13 @@ class AuthService:
 
       if user and context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
         raise PermissionError
-
+	
+      if context.is_admin_site: 
+        [needs_to_accept_mou,__] = user_is_due_for_mou(user)
+    
+        ser_user = serialize(user, full=True)
+        return {**ser_user, "needs_to_accept_mou": needs_to_accept_mou}, None 
+  
       return serialize(user, full=True), None
 
     except Exception as e:
