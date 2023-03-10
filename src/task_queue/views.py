@@ -1,7 +1,11 @@
 import csv
 from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from api.utils.constants import CADMIN_EMAIL_TEMPLATE_ID, SADMIN_EMAIL_TEMPLATE_ID
+from api.utils.constants import (
+    CADMIN_EMAIL_TEMPLATE_ID,
+    SADMIN_EMAIL_TEMPLATE_ID,
+    YEARLY_MOU_TEMPLATE_ID,
+)
 from database.models import *
 from django.utils import timezone
 import datetime
@@ -209,9 +213,17 @@ def send_nudge(file, file_name, email_list, temp_id, t_model):
     )
 
 
-def send_mou_email(email):
-    title = "MassEnergize Memorandum of Understanding(MOU)"
-    pass
+def send_mou_email(email, name):
+
+    content_values = {
+        "name": name,
+        "terms_of_service_url": "terms_of_service_url_Value",
+        "privacy_policy_url": "privacy_policy_url_Value",
+        "mou_page_url": "mou_page_url_Value",
+    }
+    return send_massenergize_email_with_attachments(
+        YEARLY_MOU_TEMPLATE_ID, content_values, email, None, None
+    )
 
 
 def update_records(**kwargs):
@@ -243,7 +255,7 @@ def send_admin_mou_notification():
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)
 
     for admin in admins:
-
+        admin_name = f"{admin.first_name} {admin.last_name or ''}"
         try:
             # Get last MOU record signed by the admin
             last_record = admin.accepted_policies.filter(
@@ -267,17 +279,17 @@ def send_admin_mou_notification():
                 if (
                     not last_date_of_notification
                 ):  # If for some reason notification date has never been recorded
-                    send_mou_email(admin.email)
+                    send_mou_email(admin.email, admin_name)
                     update_records(last=last_record, notices=notices)
                 else:  # They have been notified before
                     more_than_a_month = last_date_of_notification <= a_month_ago
                     if more_than_a_month:
-                        send_mou_email(admin.email)
+                        send_mou_email(admin.email, admin_name)
                         update_records(last=last_record, notices=notices)
 
         except ObjectDoesNotExist:
             # If no MOU record exists for the admin, this means the first time they need to sign the MOU
-            send_mou_email(admin.email)
+            send_mou_email(admin.email, admin_name)
 
             # Record the current notification timestamp
             new_notification_time = datetime.datetime.now(timezone.utc)
