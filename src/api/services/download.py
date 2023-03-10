@@ -82,7 +82,6 @@ class DownloadService:
     
     def send_sample_user_report(self, context: Context, community_id) -> Tuple[dict, MassEnergizeAPIError]:
         data = {'email': context.user_email, "community_id": community_id}
-
         download_data.delay(data, SAMPLE_USER_REPORT)
         
         return {}, None

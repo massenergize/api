@@ -46,8 +46,9 @@ class MiscellaneousHandler(RouteHandler):
 
     def fetch_available_preferences(self, request):
         context: Context = request.context
+        args:dict = context.args
         if context.user_is_admin():
-            return MassenergizeResponse(data=AdminPortalSettings.Preferences)
+            return MassenergizeResponse(data=UserPortalSettings.Preferences if args.get("subdomain") else AdminPortalSettings.Preferences)
         return MassenergizeResponse(data=UserPortalSettings.Preferences)
 
     def remake_navigation_menu(self, request):

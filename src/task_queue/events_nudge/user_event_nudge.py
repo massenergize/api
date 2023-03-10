@@ -9,7 +9,7 @@ from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 
 from database.utils.settings.model_constants.events import EventConstants
-
+from django.utils import timezone
 
 WEEKLY = "per_week"
 BI_WEEKLY = "biweekly"
@@ -108,7 +108,7 @@ def get_community_events(community_id):
         Q(publicity=EventConstants.is_open_to("OPEN_TO"),communities_under_publicity__id=community_id), # events that are opened to community
         is_published=True, 
         is_deleted=False, 
-        start_date_and_time__gte=datetime.datetime.now()
+        start_date_and_time__gte=timezone.now(),
         )
     
     return events
@@ -200,18 +200,21 @@ def send_user_requested_nudge(events, user, community):
             print(
                 f"**** Failed to send email to {name} for community {community.name} ****")
             return False
-    return False
+    return True
         
 
 
 def get_user_events(notification_dates, community_events):
-    today = datetime.datetime.now()
-    a_week_ago = datetime.datetime.now() - relativedelta(weeks=1)
+    today = timezone.now()
+    a_week_ago = today - relativedelta(weeks=1)
 
-    last_received_at = notification_dates.get("user_event_nudge")
+    user_event_nudge = notification_dates.get("user_event_nudge")
+    last_received_at = datetime.datetime.strptime(user_event_nudge, '%Y-%m-%d')
+    date_aware = timezone.make_aware(last_received_at, timezone=timezone.get_default_timezone())
+ 
     #  if user hasn't received a nudge before, get all events that went live within the week
     # else use the last nudge date
-    last_time = last_received_at if last_received_at else a_week_ago
+    last_time = date_aware if date_aware else a_week_ago
 
     return community_events.filter(Q(published_at__range=[last_time, today]))
 
