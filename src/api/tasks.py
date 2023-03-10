@@ -62,6 +62,7 @@ def download_data(self, args, download_type):
         else:
             generate_csv_and_email(
                 data=files, download_type=ACTIONS, community_name=com_name, email=email)
+    
 
     elif download_type == COMMUNITIES:
         (files, dummy), err = store.communities_download(context)
