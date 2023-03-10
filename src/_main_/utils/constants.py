@@ -17,7 +17,7 @@ COMMUNITY_URL_ROOT = (
     if IS_PROD
     else "https://community-canary.massenergize.org"
     if IS_CANARY
-    else "community.massenergize.test:3000"
+    else "http://community.massenergize.test:3000"
     if IS_LOCAL
     else "https://community.massenergize.dev"
 )

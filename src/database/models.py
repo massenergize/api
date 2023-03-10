@@ -721,7 +721,7 @@ class UserProfile(models.Model):
 
     notification_dates: dates that certain notifications were dispatched. It will probably look like
         notification_dates={
-            "cadmin_nudge":["02/10/22","02/11/22",...],
+            "cadmin_nudge":"02/10/22",
             ** some other form of notification
         }
 
@@ -1815,9 +1815,10 @@ class Event(models.Model):
         Community, related_name="event_access_selections", blank=True
     )
     # Communities that have shared an event to their site will be in this list
-    shared_to = models.ManyToManyField(
-        Community, related_name="events_from_others", blank=True
-    )
+    shared_to = models.ManyToManyField(Community, related_name="events_from_others", blank=True)
+    # Date and time when the event went live
+    published_at = models.DateTimeField(blank=True, null=True)
+
 
     def __str__(self):
         return self.name

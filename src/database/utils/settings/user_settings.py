@@ -34,7 +34,7 @@ class UserPortalSettings:
                 "update_frequency": {
                     "live":True,
                     "type": "radio",
-                    "text": "How frequently would you like to receive notifications from us about new events, actions, or financial incentives?",
+                    "text": "How often would you like to be notified about new events?",
                     "values": common_options,
                 },
                 # "news_letter": {
