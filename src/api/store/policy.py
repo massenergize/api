@@ -92,7 +92,23 @@ class PolicyStore:
       return None, CustomMassenergizeError(e)
 
 
-  def list_policies_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_policies_for_community_admin(self, context: Context,_) -> Tuple[list, MassEnergizeAPIError]: 
+    """
+      For sadmins it should retrieve all policies as  before, but for community admins, 
+      retrieve specific ones (Because we need TOS, Privacy Policy & MOUS) available even for cadmins
+    """
+    try:
+      if context.user_is_super_admin:
+        return self.list_policies_for_super_admin(context)
+      
+      policies = Policy.objects.filter(Q(name__icontains="Terms of Service") | Q(name__icontains="Privacy Policy") | Q(name__icontains="MOU")).distinct() 
+      return policies, None
+      
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def list_policies_for_community_admin_old(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     try:
       if context.user_is_super_admin:
         return self.list_policies_for_super_admin(context)
