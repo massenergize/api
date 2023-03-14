@@ -281,11 +281,14 @@ class Policy(models.Model):
         return self.name
 
     def simple_json(self):
-        return model_to_dict(self)
+        res = model_to_dict(self)
+        more_info = self.more_info or {}
+        res["key"] = more_info.get("key","")
+        return res
 
     def full_json(self):
         # would this blow up because no community_set?
-        res = model_to_dict(self)
+        res = self.simple_json()
         community = self.community_set.all().first()
         if community:
             res["community"] = get_json_if_not_none(community)
@@ -701,8 +704,6 @@ class Role(models.Model):
         db_table = "roles"
 
 
-
-
 class UserProfile(models.Model):
     """
     A class used to represent a MassEnergize User
@@ -969,6 +970,7 @@ class UserProfile(models.Model):
         db_table = "user_profiles"
         ordering = ("-created_at",)
 
+
 class PolicyAcceptanceRecords(models.Model):
     """
      This model represents the user's acceptance of policies. It has the following fields:
@@ -980,6 +982,7 @@ class PolicyAcceptanceRecords(models.Model):
     "updated_at": a DateTimeField automatically updated with the time any changes are made to the record.
     This model establishes a relationship between the user and the policies they have agreed to, allowing you to track which policies each user has accepted and when they did so.
     """
+
     user = models.ForeignKey(
         UserProfile,
         on_delete=models.SET_NULL,

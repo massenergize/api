@@ -31,7 +31,8 @@ class PolicyStore:
 
   def create_policy(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      new_policy = Policy.objects.create(**args)
+      key = args.pop("key",{})
+      new_policy = Policy.objects.create(**args, more_info ={"key":key})
       new_policy.save()
       if community_id:
         community = Community.objects.get(id=community_id)
@@ -45,13 +46,15 @@ class PolicyStore:
 
   def update_policy(self, policy_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      key = args.pop("key",{})
       community_id = args.pop("community_id", None)
       policy = Policy.objects.filter(id=policy_id)
       if not policy:
         return None, InvalidResourceError()
-
       policy.update(**args)
       policy: Policy = policy.first()
+      policy.more_info = {**(policy.more_info or {}), "key":key}
+      policy.save()
       if policy and community_id:
         community: Community = Community.objects.filter(pk=community_id).first()
         if community:
@@ -101,7 +104,7 @@ class PolicyStore:
       if context.user_is_super_admin:
         return self.list_policies_for_super_admin(context)
       
-      policies = Policy.objects.filter(Q(name__icontains="Terms of Service") | Q(name__icontains="Privacy Policy") | Q(name__icontains="MOU")).distinct() 
+      policies = Policy.objects.filter(Q(key="terms-of-service") | Q(key="privacy-policy") | Q(key="mou")).distinct() 
       return policies, None
       
     except Exception as e:
