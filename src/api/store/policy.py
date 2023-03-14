@@ -104,7 +104,7 @@ class PolicyStore:
       if context.user_is_super_admin:
         return self.list_policies_for_super_admin(context)
       
-      policies = Policy.objects.filter(Q(key="terms-of-service") | Q(key="privacy-policy") | Q(key="mou")).distinct() 
+      policies = Policy.objects.filter(Q(more_info__key="terms-of-service") | Q(more_info__key="privacy-policy") | Q(more_info__key="mou")).distinct() 
       return policies, None
       
     except Exception as e:
