@@ -7,6 +7,7 @@ from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE_ID
 from database.models import Community, Event, UserProfile, FeatureFlag
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
+from database.utils.common import get_json_if_not_none
 
 from database.utils.settings.model_constants.events import EventConstants
 from django.utils import timezone
@@ -41,7 +42,7 @@ def should_user_get_nudged(user):
 
     user_communication_preferences = user.get("preferences", {}).get("user_portal_settings", {}).get("communication_prefs", {})
     freq = user_communication_preferences.get("update_frequency", {})
-    last_notified = user.get("notification_dates", {}).get("user_event_nudge", {})
+    last_notified = user.get("notification_dates", {}).get("user_event_nudge", "")
     if last_notified:
         freq_keys = freq.keys()
 
@@ -134,13 +135,19 @@ def get_logo(event):
     elif event.get("community", {}).get("logo"):
         return event.get("community").get("logo").get("url")
     return ""
+
+
+def truncate_title(title):
+    if len(title) > 50:
+        return title[:50] + "..."
+    return title
     
 def prepare_events_email_data(events):
     events = serialize_all(events, full=True)
 
     data = [{
             "logo": get_logo(event),
-            "title": event.get("name"),
+            "title": truncate_title(event.get("name")),
             "date": human_readable_date(event.get("start_date_and_time")),
             "location": "In person" if event.get("location") else "Online",
             "view_link": f'{COMMUNITY_URL_ROOT}/{event.get("community", {}).get("subdomain")}/events/{event.get("id")}',
@@ -148,6 +155,8 @@ def prepare_events_email_data(events):
     #sort list of events by date
     data = (sorted(data, key=lambda i: i['date']))
     return data
+
+
 
 
 def send_events_report_email(name, email, event_list, comm):
@@ -162,9 +171,11 @@ def send_events_report_email(name, email, event_list, comm):
         data["has_more_events"] = {
             "view_more_link": f'{COMMUNITY_URL_ROOT}/{comm.subdomain}/events?ids={"-".join([str(event.id) for event in event_list[LIMIT:]])}',
         } if has_more_events else None 
+
+        data["community_logo"] = get_json_if_not_none(comm.logo).get("url") if comm.logo else ""
+        data["cadmin_email"]=comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
         send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
-        update_last_notification_dates(email)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))
@@ -188,7 +199,8 @@ def send_automated_nudge(events, user, community):
                 print(
                     f"**** Failed to send email to {name} for community {community.name} ****")
                 return False
-    return False
+            update_last_notification_dates(email)
+    return True
 
 
 def send_user_requested_nudge(events, user, community):
@@ -197,8 +209,7 @@ def send_user_requested_nudge(events, user, community):
         email = user.email
         is_sent = send_events_report_email(name, email, events, community)
         if not is_sent:
-            print(
-                f"**** Failed to send email to {name} for community {community.name} ****")
+            print(f"**** Failed to send email to {name} for community {community.name} ****")
             return False
     return True
         
@@ -207,10 +218,11 @@ def send_user_requested_nudge(events, user, community):
 def get_user_events(notification_dates, community_events):
     today = timezone.now()
     a_week_ago = today - relativedelta(weeks=1)
-
+    date_aware =None
     user_event_nudge = notification_dates.get("user_event_nudge")
-    last_received_at = datetime.datetime.strptime(user_event_nudge, '%Y-%m-%d')
-    date_aware = timezone.make_aware(last_received_at, timezone=timezone.get_default_timezone())
+    if user_event_nudge:
+        last_received_at = datetime.datetime.strptime(user_event_nudge, '%Y-%m-%d')
+        date_aware = timezone.make_aware(last_received_at, timezone=timezone.get_default_timezone())
  
     #  if user hasn't received a nudge before, get all events that went live within the week
     # else use the last nudge date
