@@ -1,4 +1,5 @@
 import datetime
+from datetime import  timezone, timedelta
 import json
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from database.utils.settings.model_constants.events import EventConstants
@@ -54,6 +55,27 @@ def get_enabled_flags(
             )  # Then if the flag hasnt expired, note down the flag
     return feature_flags_json
 
+def user_is_due_for_mou(user): 
+    """
+    Returns user policy acceptance status
+    
+    Args:
+        user (UserProfile): The User Profile to check for policy
+    
+        last_record (PolicyAcceptanceRecords|None): Latest Policy Acceptance Record or None if there is none
+    """
+    a_year_ago = datetime.datetime.now(timezone.utc) - timedelta(days=365)
+
+    try:
+        last_record = PolicyAcceptanceRecords.objects.filter(user = user, type=PolicyConstants.mou()).latest("signed_at")
+    except PolicyAcceptanceRecords.DoesNotExist:
+        return True, None
+    
+    if last_record.signed_at < a_year_ago: 
+        return True, last_record
+    
+    return False, last_record
+    
 
 # -------------------------------------------------------------------------
 class Location(models.Model):
@@ -905,30 +927,6 @@ class UserProfile(models.Model):
         team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
         community_members = CommunityMember.objects.filter(user=self)
         communities = [cm.community.info() for cm in community_members]
-        # admin_at = [ // TODO: Remove -> because we stopped using this, and started using CommunityAdminGroupBelow
-        #     cm.community.info()
-        #     for cm in CommunityMember.objects.filter(user=self, is_admin=True)
-        # ]
-
-        # # Feature flags can either enable features for specific users, or disable them for specific users
-        # feature_flags = FeatureFlag.objects.all()
-        # feature_flags_json = []
-        # for f in feature_flags:
-        #     specified_users = f.users.all()
-        #     enabled = (
-        #         (f.user_audience == "EVERYONE")
-        #         or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
-        #             f.user_audience == "SPECIFIC" and self in specified_users
-        #         )
-        #         or (f.user_audience == "ALL_EXCEPT" and self not in specified_users)
-        #     )
-        #     enabled = enabled and (
-        #         not f.expires_on
-        #         or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
-        #     )
-        #     if enabled:
-        #         feature_flags_json.append(f.simple_json())
-
         data = model_to_dict(
             self, exclude=["real_estate_units", "communities", "roles"]
         )
@@ -963,6 +961,8 @@ class UserProfile(models.Model):
             "admin_portal_settings": admin_portal_settings,
         }
         data["feature_flags"] = get_enabled_flags(self, True)
+        if self.is_community_admin: 
+            data["needs_to_accept_mou"] = user_is_due_for_mou(self)[0]
 
         return data
 
@@ -980,6 +980,7 @@ class PolicyAcceptanceRecords(models.Model):
     "type": a CharField that stores the type of policy being accepted, defaulting to "MOU" (Memorandum of Understanding) if not specified. It could be anything depending on any new future scenarios where we need users to sign/accept other things that are not MOUs (So we can still use this table)
     "created_at": a DateTimeField automatically set to the time the record was created.
     "updated_at": a DateTimeField automatically updated with the time any changes are made to the record.
+    "policy" :  a foreign key to the particular policy that the user accepted. It is set to be removed when the policy is deleted
     This model establishes a relationship between the user and the policies they have agreed to, allowing you to track which policies each user has accepted and when they did so.
     """
 
@@ -990,7 +991,7 @@ class PolicyAcceptanceRecords(models.Model):
         blank=True,
         related_name="accepted_policies",
     )
-
+    policy = models.ForeignKey(Policy, on_delete=models.CASCADE, null=True, blank=True)
     signed_at = models.DateTimeField(null=True, blank=True)
     last_notified = models.JSONField(null=True, blank=True)
     type = models.CharField(

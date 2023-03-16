@@ -1,5 +1,5 @@
 from api.utils.filter_functions import get_users_filter_params
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
+from database.models import Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -17,6 +17,9 @@ from _main_.utils.constants import ME_LOGO_PNG
 from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, STANDARD_USER, INVITED_USER, GUEST_USER
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
+
+
+
 
 def _get_or_create_reu_location(args, user=None):
   unit_type = args.pop('unit_type', None)
@@ -190,6 +193,23 @@ class UserStore:
       return True
     
     return False
+
+
+
+  def accept_mou(self,args, context: Context):
+    try:
+      user = get_user_or_die(context, args)
+      accepted = args.get("accepted", False)
+      key = args.get("policy_key",None)
+      if accepted: 
+        # find the policy object and add it on here
+        policy = Policy.objects.filter(key = key).first()
+        record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = datetime.utcnow())
+        record.save()
+      return user
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def _add_action_rel(self, context: Context, args, status):

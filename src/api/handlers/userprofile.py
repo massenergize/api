@@ -42,7 +42,21 @@ class UserHandler(RouteHandler):
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
     self.add("/users.import", self.import_users)
+    self.add("/users.mou.accept", self.accept_mou)
 
+  @admins_only
+  def accept_mou(self, request): 
+    context: Context = request.context
+    args: dict = context.args
+    args, err = self.validator.expect("accepted", bool, is_required=True).expect("policy_key", str, is_required=True).verify(context.args)
+    if err: 
+      return err
+    response,err = self.service.accept_mou(args,context) 
+    if err: 
+      return err
+    return MassenergizeResponse(data=response)
+  
+  
   @login_required
   def info(self, request):
     context: Context = request.context
