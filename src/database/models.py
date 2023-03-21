@@ -1002,6 +1002,10 @@ class PolicyAcceptanceRecords(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self) -> str:
+        return f"{self.user.full_name} signed - {self.policy.name or '...'} at {self.signed_at}"
+    class Meta:
+        ordering = ("-id",)
 
 class UserMediaUpload(models.Model):
     """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded"""

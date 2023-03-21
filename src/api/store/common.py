@@ -1,5 +1,7 @@
 import datetime
-
+import io
+from django.http import FileResponse
+from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
@@ -113,3 +115,27 @@ def count_action_completed_and_todos(**kwargs):
 
 
 
+
+def create_pdf_from_rich_text(rich_text, filename):
+    # Convert rich text to PDF
+    pdf_buffer = io.BytesIO()
+
+    # Create the PDF object, using the buffer as its "file."
+    pisa.CreatePDF(io.StringIO(rich_text), dest=pdf_buffer)
+
+    # Close the buffer and return the response
+    pdf_buffer.seek(0)
+    response = FileResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename={filename}.pdf'
+    return pdf_buffer.getvalue(), response
+
+
+def sign_mou(mou_rich_text, user, date): 
+    return f"""
+        {mou_rich_text}
+        <div> 
+        <h1>Signed By</h2> 
+        <h2>Name: Mr Akwesi Frimpong</h2> 
+        <h2>Date: {date} </h2>
+        </div>
+    """
