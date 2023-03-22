@@ -256,7 +256,7 @@ def send_admin_mou_notification():
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)
 
     for admin in admins:
-        admin_name = f"{admin.first_name} {admin.last_name or ''}"
+        admin_name = admin.full_name
         try:
             # Get last MOU record signed by the admin
             last_record = admin.accepted_policies.filter(
@@ -270,24 +270,26 @@ def send_admin_mou_notification():
             if more_than_a_year:
                 notices = last_record.last_notified or []
                 last_date_of_notification = notices[len(notices) - 1]
-                more_than_a_month = last_date_of_notification <= a_month_ago
-
+               
                 # Record the current notification timestamp
                 new_notification_time = datetime.datetime.now(timezone.utc)
-                notices.append(new_notification_time)
+                notices.append(new_notification_time.isoformat())
 
                 # Send MOU email to the admin and update their policy record with the new notification timestamp(s)
                 if (
                     not last_date_of_notification
                 ):  # If for some reason notification date has never been recorded
-                    send_mou_email(admin.email, admin_name)
                     update_records(last=last_record, notices=notices)
+                    send_mou_email(admin.email, admin_name)
+                    
                 else:  # They have been notified before
+                    last_date_of_notification =  datetime.datetime.fromisoformat(last_date_of_notification)
                     more_than_a_month = last_date_of_notification <= a_month_ago
-                    if more_than_a_month:
-                        send_mou_email(admin.email, admin_name)
+                    
+                    if more_than_a_month: #only notify if its been more than a month of notifying
                         update_records(last=last_record, notices=notices)
-
+                        send_mou_email(admin.email, admin_name)
+                        
         except ObjectDoesNotExist:
             # If no MOU record exists for the admin, this means the first time they need to sign the MOU
             send_mou_email(admin.email, admin_name)
