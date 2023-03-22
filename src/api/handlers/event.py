@@ -191,6 +191,8 @@ class EventHandler(RouteHandler):
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
     self.validator.expect("publicity_selections",list)
+    self.validator.expect("exclude_from_nudge", bool)
+    self.validator.expect("add_to_home_page", bool)
     args, err = self.validator.verify(args)
 
     if err:
@@ -300,6 +302,7 @@ class EventHandler(RouteHandler):
     self.validator.expect("publicity",str)
     self.validator.expect("publicity_selections","str_list")
     self.validator.expect("shared_to","str_list")
+    self.validator.expect("exclude_from_nudge", bool)
     args, err = self.validator.verify(args)
 
     if err:
