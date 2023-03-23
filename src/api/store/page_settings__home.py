@@ -1,6 +1,6 @@
 import json
 from api.store.utils import get_community_or_die
-from database.models import HomePageSettings, ImageSequence, UserProfile, Media
+from database.models import HomePageSettings, ImageSequence, UserProfile, Media, Event
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -37,6 +37,26 @@ class HomePageSettingsStore:
       return new_home_page_setting, None
     except Exception:
       return None, ServerError()
+    
+  def add_event(self, args) -> Tuple[str, MassEnergizeAPIError]:
+    try:
+      msg = ""
+      community_id = args.get('community_id')
+      event_id = args.get("event_id")
+      event = Event.objects.filter(id=event_id).first()
+      home_page_setting = HomePageSettings.objects.filter(community__id=community_id).first()
+      event_already_exist =  home_page_setting.featured_events.filter(id=event_id).exists()
+      if event_already_exist:
+         home_page_setting.featured_events.remove(event)
+         msg = f"{event.name} has been removed from your home page"
+      else:
+        home_page_setting.featured_events.add(event)
+        msg = f"{event.name} has been added to your home page"
+      home_page_setting.save()
+      return msg, None
+    except Exception:
+      return None, ServerError()
+
 
 
   def update_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
