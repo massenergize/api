@@ -153,7 +153,7 @@ class EventService:
 
   def create_event(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      add_to_home_page = args.pop('add_to_home_page')
+      add_to_home_page = args.pop('add_to_home_page', None)
       event, err = self.store.create_event(context, args)
       if err:
         return None, err
