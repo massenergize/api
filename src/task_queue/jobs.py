@@ -1,6 +1,6 @@
 
 from task_queue.events_nudge import send_events_nudge
-from task_queue.views import community_admin_nudge, super_admin_nudge
+from task_queue.views import community_admin_nudge, send_admin_mou_notification, super_admin_nudge
 
 """
 PLEASE NOTE:
@@ -15,4 +15,5 @@ FUNCTIONS = {
     #"Community Admin nudge":community_admin_nudge,
     #"Events Nudge":send_events_report
     "Community Admin nudge":send_events_nudge
+    ,"Admin MOU Notifier": send_admin_mou_notification,
 }
