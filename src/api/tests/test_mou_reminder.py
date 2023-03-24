@@ -55,7 +55,7 @@ class SendAdminMOUNotificationTests(TestCase):
             user=admin1,
             policy=policy,
             signed_at=now
-            - datetime.timedelta(days=400),  # sets date so that  is more than a year
+            - datetime.timedelta(days=410),  # sets date so that  is more than a year
             last_notified=[
                 (now - datetime.timedelta(days=45)).isoformat()
             ],  # sets date so that last notified is more than a month (meaning should be sent an email later)
@@ -89,6 +89,7 @@ class SendAdminMOUNotificationTests(TestCase):
             call(
                 last=PolicyAcceptanceRecords.objects.get(user=admin1, type=PolicyConstants.mou()),
                 notices=[(now - datetime.timedelta(days=45)).isoformat(), ANY],
+              
             ),
             call(
                 notices=[ANY],

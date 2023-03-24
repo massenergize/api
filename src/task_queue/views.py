@@ -279,17 +279,19 @@ def send_admin_mou_notification():
                 if (
                     not last_date_of_notification
                 ):  # If for some reason notification date has never been recorded
-                    update_records(last=last_record, notices=notices)
                     send_mou_email(admin.email, admin_name)
+                    update_records(last=last_record, notices=notices)
+                    
                     
                 else:  # They have been notified before
                     last_date_of_notification =  datetime.datetime.fromisoformat(last_date_of_notification)
                     more_than_a_month = last_date_of_notification <= a_month_ago
                     
                     if more_than_a_month: #only notify if its been more than a month of notifying
-                        update_records(last=last_record, notices=notices)
                         send_mou_email(admin.email, admin_name)
-            return "success"
+                        update_records(last=last_record, notices=notices)
+                        
+       
                         
         except ObjectDoesNotExist:
             # If no MOU record exists for the admin, this means the first time they need to sign the MOU
@@ -298,5 +300,5 @@ def send_admin_mou_notification():
             # Record the current notification timestamp
             new_notification_time = datetime.datetime.now(timezone.utc)
             update_records(notices=[new_notification_time], user=admin)
-            
-            return "success"
+    
+    return "success"
