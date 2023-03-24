@@ -1829,6 +1829,13 @@ class Event(models.Model):
         data = model_to_dict(self, ["id", "name"])
         return data
 
+    def is_on_homepage(self):
+        is_used = False
+        home_page = HomePageSettings.objects.filter(community=self.community).first()
+        if home_page and home_page.featured_events:
+            is_used = home_page.featured_events.filter(id=self.id).exists()
+        return is_used
+
     def simple_json(self):
         data = model_to_dict(
             self,
@@ -1867,6 +1874,7 @@ class Event(models.Model):
         data["shared_to"] =[
             c.info() for c in self.shared_to.all()
         ]
+        data["is_on_home_page"] = self.is_on_homepage()
         return data
 
     def full_json(self):

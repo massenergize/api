@@ -38,9 +38,9 @@ class HomePageSettingsStore:
     except Exception:
       return None, ServerError()
     
-  def add_event(self, args) -> Tuple[str, MassEnergizeAPIError]:
+  def add_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      msg = ""
+      res = {}
       community_id = args.get('community_id')
       event_id = args.get("event_id")
       event = Event.objects.filter(id=event_id).first()
@@ -48,12 +48,18 @@ class HomePageSettingsStore:
       event_already_exist =  home_page_setting.featured_events.filter(id=event_id).exists()
       if event_already_exist:
          home_page_setting.featured_events.remove(event)
-         msg = f"{event.name} has been removed from your home page"
+         res = {
+           "msg":f"{event.name} has been removed from your home page",
+           "status":False
+         }
       else:
         home_page_setting.featured_events.add(event)
-        msg = f"{event.name} has been added to your home page"
+        res = {
+           "msg":f"{event.name} has been added to your home page",
+           "status":True
+         }
       home_page_setting.save()
-      return msg, None
+      return res, None
     except Exception:
       return None, ServerError()
 
