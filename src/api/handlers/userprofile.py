@@ -44,15 +44,9 @@ class UserHandler(RouteHandler):
         self.add("/users.listForSuperAdmin", self.super_admin_list)
         self.add("/users.import", self.import_users)
         self.add("/users.mou.accept", self.accept_mou)
-        self.add("/users.testing", self.testing)
+ 
 
-    def testing(self, request):  # TODO: remove before PR (BPR)
-        policy = Policy.objects.filter(more_info__key="mou").first()
-        desc = f"""{policy.description} <div><h1> Signed By </h1> <h2>Name: Akwesi Frimpong</h2> <h2>Date: 22nd March 2014</h2></div>"""
-        _, response = create_pdf_from_rich_text(desc, "new_policy_Signed")
-        return response
-
-    # @admins_only TODO: uncomment before PR (BPR)
+    @admins_only
     def accept_mou(self, request):
         context: Context = request.context
         args: dict = context.args

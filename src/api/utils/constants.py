@@ -1,5 +1,6 @@
 from _main_.settings import IS_PROD, IS_LOCAL
 
+ME_SUPPORT_TEAM_EMAIL = "support@me.org"
 # API user types
 
 STANDARD_USER = 'standard_user'

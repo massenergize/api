@@ -135,7 +135,7 @@ def sign_mou(mou_rich_text, user, date):
         {mou_rich_text}
         <div> 
         <h1>Signed By</h2> 
-        <h2>Name: Mr Akwesi Frimpong</h2> 
+        <h2>Name: {user.full_name}</h2> 
         <h2>Date: {date} </h2>
         </div>
     """
