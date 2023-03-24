@@ -30,6 +30,10 @@ from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 
+from django.utils import timezone
+import datetime
+from django.utils.timezone import utc
+
 EMPTY_DOWNLOAD = (None, None)
 
 
@@ -56,75 +60,87 @@ class DownloadStore:
           tag_collections = []
           self.action_categories = []
 
+
         self.action_info_columns = [
-            "title",
-            "category",
-            "carbon_calculator_action",
-            "done_count",
-            "yearly_lbs_carbon",
-            "total_yearly_lbs_carbon",
-            "testimonials_count",
-            "impact",
-            "cost",
-            "is_global",
+            "Live", 
+            "Action", 
+            "Done in last 30 days (count)", 
+            "Done (count)",
+            "Annual GHG reduced per action (lbs)", 
+            "Total annual GHG reduced (lbs)", 
+            "To-do (count)", 
+            "Testimonials (count)", 
+            "Impact",
+            "Cost", 
+            "Category", 
+            "Carbon Calculator Action",
         ]
 
-        self.user_info_columns = [
+        self.user_info_columns_1 = [
             "First Name",
             "Last Name",
-            "Preferred Name",
+            "Preferred Name", 
+            "Email", 
+        ]
+
+        self.user_info_columns_2 = [
+            "Households (count)",
             "Role",
-            "Email",
             "Created",
-            "households_count",
-            "testimonials_count",
+            "Last sign in", 
+        ]
+
+        self.user_info_columns_new = [
+            "Done (count)",
+            "To-do (count)",
+            "Testimonials (count)",
+            "Teams (count)",
+            "Teams",
         ]
 
         self.team_info_columns = [
-            "name",
-            "members_count",
-            "parent",
-            "total_yearly_lbs_carbon",
-            "testimonials_count",
+            "Team Name", 
+            "Members (count)", 
+            "Actions done (count)",
+            "To-do (count)",
+            "Trending action(s)",
+            "Testimonials (count)",
+            "Total annual GHG reduced (lbs)", 
+            "Parent team",
         ]
 
         self.community_info_columns = [
-            "name",
-            "location",
-            "members_count",
-            "teams_count",
-            "testimonials_count",
-            "actions_count",
-            "events_count",
-            "actions_user_reported",
-            "actions_manual_addition",
-            "actions_state/partner_reported",
-            "actions_total",
-            "actions_goal",
-            "actions_goal_fraction",
-            "households_user_reported",
-            "households_manual_addition",
-            "households_state/partner_reported",
-            "households_total",
-            "households_goal",
-            "households_goal_fraction",
-            "carbon_user_reported",
-            "carbon_manual_addition",
-            "carbon_state/partner_reported",
-            "carbon_total",
-            "carbon_goal",
-            "carbon_goal_fraction",
-            "actions_per_member",
-            "most_done_action",
-            "second_most_done_action",
-            "highest_impact_action",
-            "second_highest_impact_action",
+            "Community",
+            "Location",
+            "Geographically Focused", 
+            "Last Cadmin Login",
+            "Members (count)",
+            "Guests (count)", 
+            "Teams (count)",
+            "Testimonials (count)",
+            "Actions (count)",
+            "Events (count)",
+            "Actions: User Reported", 
+            "Actions: Manual Addition", 
+            "Actions: State/Partner Reported",
+            "Actions: Total",
+            "Actions: Goal",
+            "Actions: Goal Fraction",
+            "Households: User Reported",
+            "Households: Manual Addition",
+            "Households: State/Partner Reported",
+            "Households: Total",
+            "Households: Goal",
+            "Households: Goal Fraction",
+            "Carbon: User Reported",
+            "Carbon: Manual addition",
+            "Carbon: State/Partner Reported",
+            "Carbon: Total",
+            "Carbon: Goal",
+            "Carbon: Goal Fraction",
+            "Actions per Member",
         ]
-        for category in self.action_categories:
-            self.community_info_columns += [
-                category.name + " reported",
-                category.name + " state/partner_reported",
-            ]
+
 
         # Fields should include for Actions, Households, Carbon Reduction: user reported, manual addition, goal for this period, (calculated) % of goal.
 
@@ -147,21 +163,21 @@ class DownloadStore:
             cells[columns.index(key)] = value
         return cells
 
-    def _get_user_info_cells(self, user):
-        user_cells = {}
+    #Given user, returns first part of populated row for Users CSV
+    def _get_user_info_cells_1(self, user):
+        user_cells_1 = {}
 
         if isinstance(user, Subscriber):
             full_name = user.name
             space = full_name.find(" ")
             first_name = full_name[:space]
             last_name = full_name[space + 1 :]
-            user_cells = {
+            user_cells_1 = {
                 "First Name": first_name,
                 "Last Name": last_name,
                 "Email": user.email,
-                "Role": "Subscriber",
-                "Created": user.created_at.strftime("%Y-%m-%d"),
             }
+            return self._get_cells_from_dict(self.user_info_columns_1, user_cells_1)
         elif isinstance(user, RealEstateUnit):
             # for geographic communities, list non-members who have households in the community
             reu = user
@@ -169,19 +185,47 @@ class DownloadStore:
             if not user:
                 return None
 
+        full_name = user.full_name
+        space = full_name.find(" ")
+        first_name = full_name[:space]
+        last_name = full_name[space + 1 :]
+
+        user_cells_1 = {
+            "First Name": first_name,
+            "Last Name": last_name,
+            "Preferred Name": user.preferred_name,
+            "Email": user.email,
+        }
+
+        return self._get_cells_from_dict(self.user_info_columns_1, user_cells_1)
+
+    #Given user, returns last part of populated row (for Users CSV)
+    def _get_user_info_cells_2(self, user):
+        user_cells_2 = {}
+        placeholder = ""
+
+        if isinstance(user, Subscriber):
+            user_cells_2 = {
+                "Role": "Subscriber",
+                "Created": user.created_at.strftime("%Y-%m-%d"),
+                "Last sign in": placeholder,
+            }
+
+        elif isinstance(user, RealEstateUnit):
+            # for geographic communities, list non-members who have households in the community
+            reu = user
+            user = reu.user_real_estate_units.first()
+            if not user:
+                return None
+
+            #get city
             if reu.address and reu.address.city:
                 city = reu.address.city
             else:
                 city = "somewhere"
                 # return None
 
-            full_name = user.full_name
-            space = full_name.find(" ")
-            first_name = full_name[:space]
-            last_name = full_name[space + 1 :]
-
             this_community = Community.objects.filter(id=self.community_id).first()
-
             # community list which user has associated with
             communities = [
                 cm.community.name
@@ -189,6 +233,8 @@ class DownloadStore:
                     "community"
                 )
             ]
+
+            #get community
             if this_community.name in communities:
                 return None
             elif len(communities) < 1:
@@ -198,36 +244,28 @@ class DownloadStore:
             else:
                 community = str(communities)
 
-            user_cells = {
-                "First Name": first_name,
-                "Last Name": last_name,
-                "Preferred Name": user.preferred_name,
+
+            sign_in_date = user.visit_log[-1] if len(user.visit_log) >=1 else user.updated_at.strftime("%Y/%m/%d") if user.updated_at else placeholder
+
+            user_cells_2 = {
                 "Role": community + " member, household in " + city,
-                "Email": user.email,
                 "Created": user.created_at.strftime("%Y-%m-%d"),
+                "Last sign in": str(sign_in_date),
             }
 
         else:
-            full_name = user.full_name
-            space = full_name.find(" ")
-            first_name = full_name[:space]
-            last_name = full_name[space + 1 :]
-
-            user_households = user.real_estate_units.count()
-            user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
-            testimonials_count = user_testimonials.count() if user_testimonials else "0"
-
             is_guest = False
             if user.user_info:
                 is_guest = (user.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
 
             is_invited = not is_guest and not user.accepts_terms_and_conditions
+            user_households = user.real_estate_units.count()
 
-            user_cells = {
-                "First Name": first_name,
-                "Last Name": last_name,
-                "Preferred Name": user.preferred_name,
-                "Email": user.email,
+
+            sign_in_date = user.visit_log[-1] if len(user.visit_log) >=1 else user.updated_at.strftime("%Y/%m/%d") if user.updated_at else placeholder
+
+            user_cells_2 = {
+                "Households (count)": user_households,
                 "Role": "super admin"
                 if user.is_super_admin
                 else "community admin"
@@ -240,55 +278,81 @@ class DownloadStore:
                 if is_invited
                 else "community member",
                 "Created": user.created_at.strftime("%Y-%m-%d"),
-                "households_count": user_households,
-                "testimonials_count": testimonials_count,
+                "Last sign in": sign_in_date,
             }
 
-        return self._get_cells_from_dict(self.user_info_columns, user_cells)
+        return self._get_cells_from_dict(self.user_info_columns_2, user_cells_2)
 
-    def _get_user_actions_cells(self, user, actions):
-        if isinstance(user, Subscriber):
-            return ["" for _ in range(len(actions))]
 
-        cells = []
-        # create collections with constant-time lookup. VERY much worth the up-front compute.
-        user_testimonial_action_ids = {
-            testimonial.action.id if testimonial.action else None
-            for testimonial in Testimonial.objects.filter(
-                is_deleted=False, user=user
-            ).select_related("action")
-        }
+    #Given a user and team, returns count and list of teams they are on, for Users CSV 
+    def _get_team_info_for_user(self, user, teams):
+        teams_for_user = teams.filter(teammember__user=user).values_list(
+                "name", "teammember__is_admin"
+            )
+        tfu = []
+        for team_name, is_admin in teams_for_user:
+            tfu.append((team_name + "(ADMIN)") if is_admin else team_name)
+        return teams_for_user.count(), tfu
+
+    # Given a user, returns count of actions they've done and they've marked to-do, for Users CSV 
+    def _get_action_counts_for_user(self, user):
         action_id_to_action_rel = {
-            user_action_rel.action.id: user_action_rel
-            for user_action_rel in UserActionRel.objects.filter(
-                is_deleted=False, user=user
-            ).select_related("action")
-        }
+                user_action_rel.action.id: user_action_rel
+                for user_action_rel in UserActionRel.objects.filter(
+                    is_deleted=False, user=user
+                ).select_related("action")
+            }
 
-        for action in actions:
-            user_action_status = ""
-            if action.id in user_testimonial_action_ids:
-                user_action_status = "TESTIMONIAL"
-            else:
-                user_action_rel = action_id_to_action_rel.get(action.id, None)
-                if user_action_rel:
-                    user_action_status = user_action_rel.status
-            cells.append(user_action_status)
-        return cells
+        todo_count = 0
+        done_count= 0
+        for elem in action_id_to_action_rel.values():
+            if elem.status == "DONE":
+                done_count += 1
+            elif elem.status == "TODO":
+                todo_count +=1
+        return todo_count, done_count
+        
 
-    def _get_user_teams_cells(self, user, teams):
-        if isinstance(user, Subscriber):
-            return [""]
+    #Given information about users, actions and teams in a community, returns middle part of 
+    #populated row (for Users CSV)
+    def _get_user_actions_cells(self, user, actions, teams):
+        user_cells = {}
 
-        user_teams = teams.filter(teammember__user=user).values_list(
-            "name", "teammember__is_admin"
-        )
-        team_names = []
-        for team_name, is_admin in user_teams:
-            team_names.append((team_name + "(ADMIN)") if is_admin else team_name)
-        return [", ".join(team_names)]
+        if isinstance(user, Subscriber) or isinstance(user, RealEstateUnit):
+            #confirm REU has no testimonials, actions or teams (even though linked to a User?)
+            user_cells = {}
 
+        else:
+            user_testimonials = Testimonial.objects.filter(is_deleted=False, user=user)
+            testimonials_count = user_testimonials.count() if user_testimonials else "0"
+
+            todo_count, done_count = self._get_action_counts_for_user(user)
+
+            team_count, users_teams = self._get_team_info_for_user(user, teams)
+
+            user_cells = {
+                "Done (count)":done_count,
+                "To-do (count)":todo_count,
+                "Testimonials (count)": testimonials_count,
+                "Teams (count)": team_count,
+                "Teams": ', '.join(users_teams),
+            }
+        return self._get_cells_from_dict(self.user_info_columns_new, user_cells)
+    
+    # Recieves an action, returns how many times it's been marked as Done in the last 30 days
+    def _get_last_30_days_count(self, action):
+        today = datetime.date.today()
+        thirty_days_ago = today - timezone.timedelta(days = 30)
+
+        done_actions_30_days = UserActionRel.objects.filter(
+            is_deleted=False, action=action, status="DONE", date_completed__gte=thirty_days_ago,
+        ) 
+
+        return done_actions_30_days.count()
+
+    #Gets row information for the All Actions CSV and the All Communities and Actions CSV
     def _get_action_info_cells(self, action):
+
         average_carbon_points = (
             action.calculator_action.average_points
             if action.calculator_action
@@ -296,6 +360,8 @@ class DownloadStore:
             if action.average_carbon_score.isdigit()
             else 0
         )
+
+        is_published = "Yes" if action.is_published else "No"
 
         cc_action = action.calculator_action.name if action.calculator_action else ""
 
@@ -312,58 +378,113 @@ class DownloadStore:
         total_carbon_points = average_carbon_points * done_count
         done_count = done_count
 
+        todo_count = UserActionRel.objects.filter(
+            is_deleted=False, action=action, status="TODO"
+        ).count()
+
         testimonials_count = str(
             Testimonial.objects.filter(is_deleted=False, action=action).count()
         )
 
+        done_in_last_30_days = self._get_last_30_days_count(action)
+        
+
         action_cells = {
-            "title": action.title,
-            "yearly_lbs_carbon": average_carbon_points,
-            "total_yearly_lbs_carbon": total_carbon_points,
-            "carbon_calculator_action": cc_action,
-            "category": category,
-            "impact": impact,
-            "cost": cost,
-            "is_global": action.is_global,
-            "testimonials_count": testimonials_count,
-            "done_count": done_count,
+            "Live": is_published,
+            "Action": action.title,
+            "Done in last 30 days (count)": done_in_last_30_days,
+            "Done (count)": done_count,
+            "Annual GHG reduced per action (lbs)": average_carbon_points,
+            "Total annual GHG reduced (lbs)": total_carbon_points,
+            "To-do (count)": todo_count,
+            "Testimonials (count)": testimonials_count,
+            "Impact": impact,
+            "Cost": cost,
+            "Category": category,
+            "Carbon Calculator Action": cc_action,
         }
 
         return self._get_cells_from_dict(self.action_info_columns, action_cells)
 
+    #Given community, returns populated rows for state reported actions
     def _get_reported_data_rows(self, community):
         rows = []
         for action_category in self.action_categories:
             data = Data.objects.filter(tag=action_category, community=community).first()
             if not data:
                 continue
+            
+            #doesn't include the row if the done count is 0
+            if data.reported_value != 0: 
+                rows.append(
+                    self._get_cells_from_dict(
+                        self.action_info_columns,
+                        {
+                            "Action": "STATE-REPORTED",
+                            "Category": action_category.name,
+                            "Done (count)": str(data.reported_value),
+                        },
+                    )
+                )
+        # if the done count for all STATE REPORTED actions in a community is 0, 
+        # will show one row for that community with 0
+        if len(rows) < 1:
             rows.append(
                 self._get_cells_from_dict(
                     self.action_info_columns,
                     {
-                        "title": "STATE-REPORTED",
-                        "category": action_category.name,
-                        "done_count": str(data.reported_value),
+                        "Action": "STATE-REPORTED",
+                        "Done (count)": str(data.reported_value),
                     },
                 )
             )
+                
         return rows
 
+    #given members of a team, returns list of top 3 actions done the most in last 30 days 
+    def _get_last_30_days_list(self, members):
+        today = datetime.date.today()
+        thirty_days_ago = today - timezone.timedelta(days = 30)
+        top_actions ={}
+
+        #makes dict with events that happened in last 30 days and how many times they happened!
+        for user in members:
+            actions = user.useractionrel_set.all()
+            filtered = actions.filter(status="DONE", date_completed__gte = thirty_days_ago) #.values_list("action")
+            for elem in filtered:
+                top_actions[elem.action.title] = top_actions.get(elem.action.title, 0) + 1
+
+        if len(top_actions) > 3:
+            #sorts by number of times done, returns top three actions
+            sorted_dict = dict(sorted(top_actions.items(), key=lambda item: item[1], reverse = True))
+            return list(sorted_dict.keys())[0:3]
+
+        return list(top_actions.keys())
+
+    #Gets row information for the Teams CSV download
     def _get_team_info_cells(self, team):
         members = get_team_users(team)
 
         members_count = str(len(members))
 
         total_carbon_points = 0
+        done_actions_count = 0
+        todo_actions_count = 0
         for user in members:
             actions = user.useractionrel_set.all()
+            
             done_actions = actions.filter(status="DONE")
+            todo_actions_count += actions.filter(status= "TODO").count()
+            done_actions_count += actions.filter(status= "DONE").count()
+
             for done_action in done_actions:
                 if done_action.action and done_action.action.calculator_action:
                     total_carbon_points += (
                         done_action.action.calculator_action.average_points
                     )
         total_carbon_points = str(total_carbon_points)
+
+        trending_actions = self._get_last_30_days_list(members)
 
         testimonials_count = 0
         for user in members:
@@ -373,63 +494,24 @@ class DownloadStore:
         testimonials_count = str(testimonials_count)
 
         team_cells = {
-            "name": team.name,
-            "members_count": members_count,
-            "total_yearly_lbs_carbon": total_carbon_points,
-            "testimonials_count": testimonials_count,
+            "Team Name": team.name,
+            "Members (count)": members_count,
+            "Actions done (count)": done_actions_count,
+            "To-do (count)": todo_actions_count,
+            "Trending action(s)": ', '.join(trending_actions),
+            "Testimonials (count)": testimonials_count,
+            "Total annual GHG reduced (lbs)": total_carbon_points, 
+            "Parent team": team.parent.name if team.parent else "",
         }
-        if team.parent:
-            team_cells["parent"] = team.parent.name
-
         return self._get_cells_from_dict(self.team_info_columns, team_cells)
 
-    def _get_team_action_cells(self, team, actions):
-        cells = []
-        team_users = [
-            tm.user
-            for tm in TeamMember.objects.filter(
-                is_deleted=False, team=team
-            ).select_related("user")
-        ]
-        for action in actions:
-            cells.append(
-                str(
-                    UserActionRel.objects.filter(
-                        action=action, user__in=team_users, status="DONE"
-                    ).count()
-                )
-            )
-        return cells
-
-    def _get_community_reported_data(self, community):
-        community = Community.objects.get(pk=community.id)
-        if not community:
-            return None
-        ret = {}
-        for action_category in self.action_categories:
-            data = Data.objects.filter(tag=action_category, community=community).first()
-            if not data:
-                continue
-            ret[action_category.name + " reported"] = data.value
-            ret[action_category.name + " state/partner_reported"] = data.reported_value
-        return ret
-
-    def _get_community_info_cells(self, community):
-
-        location_string = ""
-        if community.is_geographically_focused:
-            location_string += "["
-            for loc in community.locations.all():
-                if location_string != "[":
-                    location_string += ","
-                location_string += str(loc)
-            location_string += "]"
-
+    
+    #Receives community, returns information about community to get row information for All Communities Download 
+    def community_info_helper(self, community):
         community_members = CommunityMember.objects.filter(
             is_deleted=False, community=community
         ).select_related("user")
-        users = [cm.user for cm in community_members]
-        members_count = community_members.count()
+
         teams_count = str(
             Team.objects.filter(is_deleted=False, primary_community=community).count()
         )
@@ -449,6 +531,50 @@ class DownloadStore:
             .select_related("calculator_action")
         )
 
+        return community_members, teams_count, events_count, actions_count, testimonials_count, actions
+
+    # Given users in community, returns most recent cadmin login date 
+    def get_cadmin_recent_date(self, users):
+        date_list = []
+        for user in users:
+            if user.is_community_admin:
+                if len(user.visit_log) >=1:
+                    date_list.append(user.visit_log[-1])
+                date_list.append(user.updated_at.strftime("%Y/%m/%d"))
+
+        return sorted(date_list)
+    
+    #Receives community, returns location of community if geographically focused
+    def get_location_string(self, community):
+        location_string = ""
+
+        if community.is_geographically_focused:
+            location_string += "["
+            for loc in community.locations.all():
+                if location_string != "[":
+                    location_string += ","
+                location_string += str(loc)
+            location_string += "]"
+
+            #uses old location value for community if newer one does not work
+            if (location_string == "" or location_string == "[]") and community.location != None:
+                location_string = str(community.location['city']) + ", " + str(community.location['state'])
+
+        return location_string
+    
+    #Given a list of users for a community, returns the number of guests 
+    def _get_guest_count(self, users):
+        guest_count = 0
+        for user in users:
+            is_guest = False
+            if user.user_info:
+                is_guest = (user.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
+                if is_guest:
+                    guest_count +=1
+        return guest_count
+
+    #given information about community and its users, returns information used to populate rows All Communities CSV 
+    def _community_info_helper_2(self, community, users):
         if community.is_geographically_focused:
             # geographic focus - households are real estate units within the community (regardless of community membership)
             # actions are those associated with those households
@@ -468,7 +594,28 @@ class DownloadStore:
                 user__in=users, is_deleted=False, status="DONE"
             ).select_related("action__calculator_action")
             done_action_rels_members = done_action_rels
+        return households_count, done_action_rels, done_action_rels_members
 
+
+    #Gets row information for each community for All Communities CSV
+    def _get_community_info_cells(self, community):
+        
+        location_string = self.get_location_string(community)
+
+        community_members, teams_count, events_count, actions_count, testimonials_count, actions = self.community_info_helper(community)
+        users = [cm.user for cm in community_members]
+
+        date_list = self.get_cadmin_recent_date(users)
+        most_recent_cadmin_login = ""
+        if len(date_list) >= 1:
+            most_recent_cadmin_login = date_list[-1]      
+
+        guest_count = self._get_guest_count(users)
+        
+        members_count = community_members.count()
+        
+        households_count, done_action_rels, done_action_rels_members = self._community_info_helper_2(community, users)
+        
         actions_user_reported = done_action_rels.count()
         actions_of_members = done_action_rels_members.count()
 
@@ -484,39 +631,6 @@ class DownloadStore:
             str(round(actions_of_members / members_count, 2))
             if members_count != 0
             else "0"
-        )
-
-        action_done_count_map = {
-            action.title: done_action_rels.filter(action=action).count()
-            for action in actions
-        }
-        actions_by_done_count = sorted(
-            action_done_count_map.items(), key=lambda item: item[1], reverse=True
-        )
-
-        most_done_action = (
-            actions_by_done_count[0][0]
-            if actions_of_members > 0
-            and (len(actions_by_done_count) > 0 and actions_by_done_count[0][1] != 0)
-            else ""
-        )
-        second_most_done_action = (
-            actions_by_done_count[1][0]
-            if actions_of_members > 0
-            and (len(actions_by_done_count) > 1 and actions_by_done_count[1][1] != 0)
-            else ""
-        )
-
-        actions_by_impact = actions.order_by("calculator_action__average_points")
-        highest_impact_action = (
-            actions_by_impact[0]
-            if actions_of_members > 0 and len(actions_by_impact) > 0
-            else ""
-        )
-        second_highest_impact_action = (
-            actions_by_impact[1]
-            if actions_of_members > 0 and len(actions_by_impact) > 1
-            else ""
         )
 
         if not community.goal:
@@ -550,43 +664,44 @@ class DownloadStore:
             round(carbon_total / carbon_goal, 2) if carbon_goal > 0 else 0.0
         )
 
+        geo_focused = "Yes" if community.is_geographically_focused else "No"
+
         community_cells = {
-            "name": community.name,
-            "location": location_string,
-            "members_count": str(members_count),
-            "teams_count": teams_count,
-            "actions_count": str(actions_count),
-            "testimonials_count": testimonials_count,
-            "events_count": events_count,
-            "actions_user_reported": actions_user_reported,
-            "actions_manual_addition": actions_manual_addition,
-            "actions_state/partner_reported": actions_partner,
-            "actions_total": actions_total,
-            "actions_goal": actions_goal,
-            "actions_goal_fraction": actions_fraction,
-            "households_user_reported": households_count,
-            "households_manual_addition": households_manual_addition,
-            "households_state/partner_reported": households_partner,
-            "households_total": households_total,
-            "households_goal": households_goal,
-            "households_goal_fraction": households_fraction,
-            "carbon_user_reported": carbon_user_reported,
-            "carbon_manual_addition": carbon_manual_addition,
-            "carbon_state/partner_reported": carbon_partner,
-            "carbon_total": carbon_total,
-            "carbon_goal": carbon_goal,
-            "carbon_goal_fraction": carbon_fraction,
-            "actions_per_member": actions_per_member,
-            "most_done_action": most_done_action,
-            "second_most_done_action": second_most_done_action,
-            "highest_impact_action": highest_impact_action,
-            "second_highest_impact_action": second_highest_impact_action,
+            "Community": community.name,
+            "Location": location_string,
+            "Geographically Focused": geo_focused,
+            "Last Cadmin Login": str(most_recent_cadmin_login), 
+            "Members (count)": str(members_count),
+            "Guests (count)": str(guest_count),
+            "Teams (count)": teams_count,
+            "Actions (count)": str(actions_count),
+            "Testimonials (count)": testimonials_count,
+            "Events (count)": events_count,
+            "Actions: User Reported": actions_user_reported,
+            "Actions: Manual Addition": actions_manual_addition,
+            "Actions: State/Partner Reported": actions_partner,
+            "Actions: Total": actions_total,
+            "Actions: Goal": actions_goal,
+            "Actions: Goal Fraction": actions_fraction,
+            "Households: User Reported": households_count,
+            "Households: Manual Addition": households_manual_addition,
+            "Households: State/Partner Reported": households_partner,
+            "Households: Total": households_total,
+            "Households: Goal": households_goal,
+            "Households: Goal Fraction": households_fraction,
+            "Carbon: User Reported": carbon_user_reported,
+            "Carbon: Manual addition": carbon_manual_addition,
+            "Carbon: State/Partner Reported": carbon_partner,
+            "Carbon: Total": carbon_total,
+            "Carbon: Goal": carbon_goal,
+            "Carbon: Goal Fraction": carbon_fraction,
+            "Actions per Member": actions_per_member,
         }
-        reported_actions = self._get_community_reported_data(community)
-        community_cells.update(reported_actions)
 
         return self._get_cells_from_dict(self.community_info_columns, community_cells)
 
+    
+    #Combines populated row and column information for all users overall to create All Users CSV
     def _all_users_download(self):
         users = list(
             UserProfile.objects.filter(
@@ -598,18 +713,12 @@ class DownloadStore:
         teams = Team.objects.filter(is_deleted=False)
 
         columns = (
-            self.user_info_columns
+            self.user_info_columns_1 
             + ["home community", "secondary community"]
-            + ["TEAM"]
-            + [action.title for action in actions]
+            + self.user_info_columns_new 
+            + self.user_info_columns_2
         )
 
-        sub_columns = (
-            ["", ""]
-            + ["" for _ in range(len(self.user_info_columns))]
-            + [""]
-            + ["ACTION" for _ in range(len(actions))]
-        )  # + ["TEAM" for _ in range(len(teams))]
         data = []
         print("downloading " + str(len(users)) + " users")
         for user in users:
@@ -619,7 +728,6 @@ class DownloadStore:
                 else:
                     primary_community, secondary_community = "", ""
             else:
-
                 # community list which user has associated with
                 communities = [
                     cm.community.name
@@ -645,23 +753,22 @@ class DownloadStore:
                         secondary_community += community
                 # print(str(user) + ", " + str(len(communities)) + " communities, home is " + str(reu_community))
 
-            row = (
-                self._get_user_info_cells(user)
+            row = (           
+                self._get_user_info_cells_1(user)
                 + [primary_community, secondary_community]
-                + self._get_user_teams_cells(user, teams)
-                + self._get_user_actions_cells(user, actions)
+                + self._get_user_actions_cells(user, actions, teams)
+                + self._get_user_info_cells_2(user)
             )
-
             data.append(row)
 
         # sort by community
         data = sorted(data, key=lambda row: row[0])
         # insert the columns
-        data.insert(0, sub_columns)
         data.insert(0, columns)
 
         return data
 
+    # Combines populated row and column information for all users in a given community to create All Users CSV
     def _community_users_download(self, community_id):
         users = [
             cm.user
@@ -686,35 +793,34 @@ class DownloadStore:
         teams = Team.objects.filter(communities__id=community_id, is_deleted=False)
 
         columns = (
-            self.user_info_columns + ["TEAM"] + [action.title for action in actions]
+            self.user_info_columns_1 + self.user_info_columns_new + self.user_info_columns_2
         )
-        # + [team.name for team in teams]
-        sub_columns = (
-            ["" for _ in range(len(self.user_info_columns))]
-            + [""]
-            + ["ACTION" for _ in range(len(actions))]
-        )  # + ["TEAM" for _ in range(len(teams))]
-        data = [columns, sub_columns]
+        data = [columns]
 
         for user in users:
-            # BHN 20.1.10 Put teams list in one cell, ahead of actions
             row = (
-                self._get_user_info_cells(user)
-                + self._get_user_teams_cells(user, teams)
-                + self._get_user_actions_cells(user, actions)
+                self._get_user_info_cells_1(user)
+                + self._get_user_actions_cells(user, actions, teams)
+                + self._get_user_info_cells_2(user)
             )
-
             data.append(row)
 
         for household in community_households:
-            row = self._get_user_info_cells(household)
+            if self._get_user_info_cells_2(household) is None:
+                row = None
+            else: 
+                row = (self._get_user_info_cells_1(household)
+                + ["" for _ in range(len(self.user_info_columns_new))]
+                + self._get_user_info_cells_2(household)
+            )
             if row:
                 data.append(row)
 
         return data
 
-    # new 1/11/20 BHN - untested
-    def _team_users_download(self, team_id):
+    # based off of a method described as "new 1/11/20 BHN - untested"
+    # Combines populated row and column information for all users on a given team to create All Users CSV
+    def _team_users_download(self, team_id, community_id):
 
         users = [
             cm.user
@@ -729,26 +835,31 @@ class DownloadStore:
         # Soon teams could span communities, in which case actions list would be larger.
         # For now, take the primary community that a team is associated with; this may not be correct
         # TODO: loop over communities team is associated with and sort this all out
+        
         team = Team.objects.get(id=team_id)
+
+        teams = Team.objects.filter(is_deleted=False)
         community_id = team.primary_community.id
         actions = Action.objects.filter(
             Q(community__id=community_id) | Q(is_global=True)
         ).filter(is_deleted=False)
 
-        columns = self.user_info_columns + [action.title for action in actions]
-        sub_columns = ["" for _ in range(len(self.user_info_columns))] + [
-            "ACTION" for _ in range(len(actions))
-        ]
-        data = [columns, sub_columns]
-        for user in users:
+        columns = (
+            self.user_info_columns_1 + self.user_info_columns_new + self.user_info_columns_2
+        )
 
-            row = self._get_user_info_cells(user) + self._get_user_actions_cells(
-                user, actions
+        data = [columns]
+        for user in users:
+            row = (
+                self._get_user_info_cells_1(user)
+                + self._get_user_actions_cells(user, actions, teams)
+                + self._get_user_info_cells_2(user)
             )
             data.append(row)
 
         return data
 
+    #Combines populated rows and columns to create All Communities an Actions CSV  - action data for all communities
     def _all_actions_download(self):
         actions = (
             Action.objects.select_related("calculator_action", "community")
@@ -756,23 +867,30 @@ class DownloadStore:
             .filter(is_deleted=False)
         )
 
-        columns = ["community"] + self.action_info_columns
+        columns = ["Community"] + ["Geographically Focused"] + self.action_info_columns
         data = []
 
         for action in actions:
-
             if not action.is_global and action.community:
                 community = action.community.name
+                is_focused = "Yes" if action.community.is_geographically_focused else "No"
             else:
                 community = ""
+            data.append([community] + [is_focused] + self._get_action_info_cells(action))
 
-            data.append([community] + self._get_action_info_cells(action))
+        #get state reported actions
+        communities = Community.objects.filter(is_deleted=False)
+        for com in communities:
+            community_reported_rows = self._get_reported_data_rows(com)
+            for row in community_reported_rows:
+                data.append([com.name]+ row)
 
         data = sorted(data, key=lambda row: row[0])  # sort by community
         data.insert(0, columns)  # insert the column names
 
         return data
 
+    #Combines populated rows and columns to create All Actions CSV  - action data for given community
     def _community_actions_download(self, community_id):
         actions = (
             Action.objects.filter(Q(community__id=community_id) | Q(is_global=True))
@@ -793,7 +911,8 @@ class DownloadStore:
             data.append(row)
 
         return data
-
+    
+    #Gets row and columns to create All Communities CSV data 
     def _all_communities_download(self):
         communities = Community.objects.filter(is_deleted=False)
         columns = self.community_info_columns
@@ -804,26 +923,24 @@ class DownloadStore:
 
         return data
 
+    # Combines populated row and columns to create Teams CSV data 
     def _community_teams_download(self, community_id):
         teams = Team.objects.filter(communities__id=community_id, is_deleted=False)
         actions = Action.objects.filter(
             Q(community__id=community_id) | Q(is_global=True)
         ).filter(is_deleted=False)
 
-        columns = self.team_info_columns + [action.title for action in actions]
-        sub_columns = ["" for _ in range(len(self.team_info_columns))] + [
-            "ACTION" for _ in range(len(actions))
-        ]
-        data = [columns, sub_columns]
+        columns = self.team_info_columns
+        data = [columns]
 
         for team in teams:
             data.append(
                 self._get_team_info_cells(team)
-                + self._get_team_action_cells(team, actions)
             )
 
         return data
 
+    # Unused currently, for Metrics CSV
     def _community_metrics_download(self, context, args, community_id):
         community = Community.objects.filter(id=community_id)
         columns = self.metrics_columns
@@ -840,6 +957,7 @@ class DownloadStore:
 
         return data
 
+    # For All Users CSV -- all users for a given team, or all users for a given community, or (for superadmins) all users overall 
     def users_download(
         self, context: Context, community_id, team_id
     ) -> Tuple[list, MassEnergizeAPIError]:
@@ -852,18 +970,23 @@ class DownloadStore:
 
             if context.user_is_super_admin:
                 if team_id:
-                    return (self._team_users_download(team_id), community_name), None
+                    #All Users CSV method for all users in a given team
+                    return (self._team_users_download(team_id, community_id), community_name), None 
                 elif community_id:
+                    #All Users CSV method for all users in a given community
                     return (
                         self._community_users_download(community_id),
                         community_name,
                     ), None
                 else:
+                    #All Users CSV method for all users overall
                     return (self._all_users_download(), None), None
             elif context.user_is_community_admin:
                 if team_id:
-                    return (self._team_users_download(team_id), community_name), None
+                    #All Users CSV method for all users in a given team
+                    return (self._team_users_download(team_id, community_id), community_name), None
                 elif community_id:
+                    #All Users CSV method for all users in a given community
                     return (
                         self._community_users_download(community_id),
                         community_name,
@@ -876,7 +999,8 @@ class DownloadStore:
             print(str(e))
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
-
+    
+    #For All Actions CSV and (for superadmins) the All Communities and Actions CSV
     def actions_download(
         self, context: Context, community_id
     ) -> Tuple[list, MassEnergizeAPIError]:
@@ -884,19 +1008,19 @@ class DownloadStore:
             self.community_id = community_id
             if community_id:
                 community_name = Community.objects.get(id=community_id).name
-
-            # Allow community admins to do all actions dowload, same as super admins
-            if community_id:
                 return (
+                    #All Actions CSV method - action data for one community
                     self._community_actions_download(community_id),
                     community_name,
                 ), None
-            else:
+            elif context.user_is_super_admin:
+                #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
+    #For All Communities CSV - for superadmin, information about each community
     def communities_download(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
@@ -908,6 +1032,7 @@ class DownloadStore:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
+    #For Teams CSV --  information about the Teams in a given community
     def teams_download(
         self, context: Context, community_id
     ) -> Tuple[list, MassEnergizeAPIError]:
@@ -928,6 +1053,7 @@ class DownloadStore:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
+    #Unused currently, for Metrics CSV
     def metrics_download(
         self, context: Context, args, community_id
     ) -> Tuple[list, MassEnergizeAPIError]:
