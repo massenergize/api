@@ -9,6 +9,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
+from django.utils import timezone
 
 from .utils.common import (
     get_images_in_sequence,
@@ -1833,7 +1834,7 @@ class Event(models.Model):
         is_used = False
         home_page = HomePageSettings.objects.filter(community=self.community).first()
         if home_page and home_page.featured_events:
-            is_used = home_page.featured_events.filter(id=self.id).exists()
+            is_used = home_page.featured_events.filter(id=self.id, start_date_and_time__gte=timezone.now()).exists()
         return is_used
 
     def simple_json(self):
