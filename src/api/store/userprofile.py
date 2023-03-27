@@ -211,9 +211,6 @@ class UserStore:
     for group in community_admin_groups:
         group.members.remove(user)
         group.save()
-
-    user.is_community_admin= False 
-    user.is_super_admin = False
     user.save()
     return user
 
