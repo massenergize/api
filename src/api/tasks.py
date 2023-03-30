@@ -4,7 +4,7 @@ from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
 from api.store.download import DownloadStore
-from task_queue.events_nudge import generate_event_list_for_community, send_events_report
+from task_queue.events_nudge.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
 from celery import shared_task
 from api.store.download import DownloadStore
