@@ -59,7 +59,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
@@ -83,7 +83,11 @@ class ActionStore:
         new_action.community = community
       
       if images: #now, images will always come as an array of ids 
-        media = Media.objects.filter(pk = images[0]).first()
+        if user_submitted:
+          name = f'ImageFor {new_action.title} Action'
+          media = Media.objects.create(name=name, file=images)
+        else:
+          media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media
 
       user = None
