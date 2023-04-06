@@ -90,8 +90,8 @@ class ActionService:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    action, err = self.store.update_action(context, args)
+  def update_action(self, context: Context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
+    action, err = self.store.update_action(context, args, user_submitted)
     if err:
       return None, err
     return serialize(action), None

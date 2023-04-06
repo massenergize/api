@@ -1717,6 +1717,8 @@ class Action(models.Model):
         # Adding this so that vendors will be preselected when creating/updating action.
         # List of vendors will typically not be that long, so this doesnt pose any problems
         data["vendors"] = [v.info() for v in self.vendors.all()]
+        if self.user:
+            data["user_email"] = self.user.email
         return data
 
     def full_json(self):

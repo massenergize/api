@@ -221,15 +221,17 @@ class EventStore:
       events = []
     
     if not context.is_sandbox and events:
-      events = events.filter(is_published=True)
+      if context.user_is_logged_in:
+          events = events.filter(Q(user__id=context.user_id) | Q(is_published=True))
+      else:
+         events = events.filter(is_published=True)
     all_events = [*events, *shared]
 
     all_events = Event.objects.filter(pk__in=[item.id for item in all_events])
     return all_events, None
 
+  def create_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
 
-  def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -288,7 +290,11 @@ class EventStore:
         new_event.community = community
 
       if image: #now, images will always come as an array of ids 
-        media = Media.objects.filter(pk = image[0]).first()
+        if user_submitted:
+          name= f'ImageFor {new_event.name} Event'
+          media = Media.objects.create(name=name, file=image)
+        else: 
+          media = Media.objects.filter(pk = image[0]).first()
         new_event.image = media
 
       if tags:
@@ -336,7 +342,7 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
@@ -424,19 +430,23 @@ class EventStore:
       if not have_address:
         args['location'] = None
 
-
-
-
       # update the event instance
       events.update(**args)
       event: Event = events.first()
 
       if image: #now, images will always come as an array of ids, or "reset" string 
-        if image[0] == RESET: #if image is reset, delete the existing image
-          event.image = None
+        if user_submitted:
+          if "ImgToDel" in image:
+            event.image = None
+          else:
+            image= Media.objects.create(file=image, name=f'ImageFor {event.name} Event')
+            event.image = image
         else:
-          media = Media.objects.filter(id = image[0]).first()
-          event.image = media
+          if image[0] == RESET: #if image is reset, delete the existing image
+            event.image = None
+          else:
+            media = Media.objects.filter(id = image[0]).first()
+            event.image = media
       
       if community_id:
         community = Community.objects.filter(pk=community_id).first()

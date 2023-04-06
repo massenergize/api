@@ -41,7 +41,7 @@ class VendorService:
         if not community:
           return None, CustomMassenergizeError('Vendor submission requires a community')
 
-      vendor, err = self.store.create_vendor(context, args)
+      vendor, err = self.store.create_vendor(context, args,user_submitted)
       if err:
         return None, err
 
@@ -96,8 +96,8 @@ class VendorService:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_vendor(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    vendor, err = self.store.update_vendor(context, args)
+  def update_vendor(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
+    vendor, err = self.store.update_vendor(context, args, user_submitted)
     if err:
       return None, err
     return serialize(vendor), None
