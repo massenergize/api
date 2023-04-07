@@ -1,6 +1,10 @@
-from database.models import Action, UserProfile, Community, Media, UserActionRel
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
+from api.tests.common import RESET
+from api.utils.filter_functions import get_actions_filter_params
+from database.models import Action, UserProfile, Community, Media
 from carbon_calculator.models import Action as CCAction
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from .utils import get_new_title
 from django.db.models import Q
@@ -30,7 +34,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
   def list_actions(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    try: 
+    try:
       actions = []
       community_id = args.get('community_id', None)
       subdomain = args.get('subdomain', None)
@@ -47,7 +51,7 @@ class ActionStore:
 
       # by default, exclude deleted actions
       #if not context.include_deleted:
-      actions = actions.filter(is_deleted=False)
+      actions = actions.filter(is_deleted=False).distinct()
 
       return actions, None
     except Exception as e:
@@ -60,12 +64,13 @@ class ActionStore:
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
-      image = args.pop('image', None)
+      images = args.pop('image', None)
       calculator_action = args.pop('calculator_action', None)
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
 
-      actions = Action.objects.filter(title=title, community__id=community_id)
+      # check if there is an existing action with this name and community
+      actions = Action.objects.filter(title=title, community__id=community_id, is_deleted=False)
       if actions:
         # an action with this name and community already exists, return it
         return actions.first(), None
@@ -77,8 +82,8 @@ class ActionStore:
         community = Community.objects.get(id=community_id)
         new_action.community = community
       
-      if image:
-        media = Media.objects.create(name=f"{args['title']}-Action-Image", file=image)
+      if images: #now, images will always come as an array of ids 
+        media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media
 
       user = None
@@ -107,6 +112,9 @@ class ActionStore:
           new_action.calculator_action = ccAction
 
       new_action.save()
+      # ----------------------------------------------------------------
+      Spy.create_action_footage(actions = [new_action], context = context, actor = new_action.user, type = FootageConstants.create(), notes = f"Action ID({new_action.id})")
+      # ----------------------------------------------------------------
       return new_action, None
 
     except Exception as e:
@@ -122,6 +130,8 @@ class ActionStore:
       if not action_to_copy:
         return None, InvalidResourceError()
 
+      tags = action_to_copy.tags.all() 
+      vendors = action_to_copy.vendors.all()
       # the copy will have "-Copy" appended to the name; if that already exists, delete it first
       new_title = get_new_title(None, action_to_copy.title) + "-Copy"
       existing_action = Action.objects.filter(title=new_title, community=None).first()
@@ -156,13 +166,16 @@ class ActionStore:
 
       new_action.save()
 
-      for tag in action_to_copy.tags.all():
+      for tag in tags:
         new_action.tags.add(tag)
 
-      for vendor in action_to_copy.vendors.all():
+      for vendor in vendors:
         new_action.vendors.add(vendor)
         
       new_action.save()
+      # ----------------------------------------------------------------
+      Spy.create_action_footage(actions = [new_action,action_to_copy], context = context, type = FootageConstants.copy(), notes =f"Copied from ID({action_to_copy.id}) to ({new_action.id})" )
+      # ----------------------------------------------------------------
       return new_action, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -177,6 +190,10 @@ class ActionStore:
       if not action:
         return None, InvalidResourceError()
 
+      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
+      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+        return None, NotAuthorizedError()
+
       community_id = args.pop('community_id', None)
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
@@ -184,15 +201,18 @@ class ActionStore:
 
       steps_to_take = args.pop('steps_to_take','')      
       deep_dive = args.pop('deep_dive','')
-
       calculator_action = args.pop('calculator_action', None)
+      is_published = args.pop('is_published', None)
+
       action.update(**args)
       action = action.first()
 
-      # If no image passed, don't delete the existing
-      if image:
-        media = Media.objects.create(name=f"{action.title}-Action-Image", file=image)
-        action.image = media
+      if image: #now, images will always come as an array of ids, or "reset" string 
+        if image[0] == RESET: #if image is reset, delete the existing image
+          action.image = None
+        else:
+          media = Media.objects.filter(id = image[0]).first()
+          action.image = media
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
@@ -216,25 +236,50 @@ class ActionStore:
           action.calculator_action = ccAction
         else:
           action.calculator_action = None
-        
+
+      # temporarily back out this logic until we have user submitted actions
+      ###if is_published==False:
+      ###  action.is_published = False
+      ###  
+      ###
+      #### only publish action if it has been approved
+      ###elif is_published and not action.is_published:
+      ###  if action.is_approved:
+      ###    action.is_published = True
+      ###  else:
+      ###    return None, CustomMassenergizeError("Action needs to be approved before it can be made live")
+      if is_published != None:
+        action.is_published = is_published
+        if action.is_approved==False and is_published:
+          action.is_approved==True # Approve an action if an admin publishes it
+
       action.save()
+      # ----------------------------------------------------------------
+      Spy.create_action_footage(actions = [action], context = context, type = FootageConstants.update(), notes =f"Action ID({action_id})")
+      # ----------------------------------------------------------------
       return action, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def rank_action(self, args) -> Tuple[Action, MassEnergizeAPIError]:
+  def rank_action(self, args, context:Context) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       id = args.get("id", None)
       rank = args.get("rank", None)
-
-      if id and rank:
+      if id:
         actions = Action.objects.filter(id=id)
-        actions.update(rank=rank)
-        return actions.first(), None
+        if rank is not None:
+          actions.update(rank=rank)
+          action = actions.first()
+          # ----------------------------------------------------------------
+          Spy.create_action_footage(actions = [action], context = context, type = FootageConstants.update(), notes=f"Rank updated to - {rank}")
+          # ----------------------------------------------------------------
+          return action, None
+        else:
+          return None, CustomMassenergizeError("Action rank not provided to actions.rank")
       else:
-        raise Exception("Action Rank and ID not provided to actions.rank")
+        raise Exception("Action ID not provided to actions.rank")
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -246,6 +291,9 @@ class ActionStore:
       action_to_delete = Action.objects.get(id=action_id)
       action_to_delete.is_deleted = True 
       action_to_delete.save()
+      # ----------------------------------------------------------------
+      Spy.create_action_footage(actions = [action_to_delete], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({action_id})")
+      # ----------------------------------------------------------------
       return action_to_delete, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -254,12 +302,17 @@ class ActionStore:
   def list_actions_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
+      ids = args.pop("action_ids",[])
 
       if context.user_is_super_admin:
         return self.list_actions_for_super_admin(context)
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
+
+      if ids: 
+        actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        return actions.distinct(), None
 
       if community_id == 0:
         # return actions from all communities
@@ -268,12 +321,15 @@ class ActionStore:
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
+        filter_params = get_actions_filter_params(context.get_params())
+          
+
         comm_ids = [ag.community.id for ag in admin_groups]
-        actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-        return actions, None
+        actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        return actions.distinct(), None
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
-      return actions, None
+      return actions.distinct(), None
 
     except Exception as e:
       capture_message(str(e), level="error")
@@ -281,11 +337,17 @@ class ActionStore:
 
 
   def list_actions_for_super_admin(self, context: Context):
+    ids = context.args.pop("action_ids",[])
     try:
-      # if not context.user_is_super_admin:
-      #   return None, CustomMassenergizeError("Insufficient Privileges")
-      actions = Action.objects.filter(is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
-      return actions, None
+      filter_params = get_actions_filter_params(context.get_params())
+      if ids: 
+        actions = Action.objects.filter(id__in = ids, *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
+        return actions, None
+
+      actions = Action.objects.filter(*filter_params,is_deleted=False).select_related('image', 'community', 'calculator_action').prefetch_related('tags')
+      return actions.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+
+

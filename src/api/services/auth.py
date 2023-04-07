@@ -1,3 +1,5 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
@@ -9,7 +11,7 @@ from django.http import JsonResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import get_request_contents
-from database.models import UserProfile
+from database.models import Community, UserProfile
 from _main_.settings import SECRET_KEY
 import json, jwt
 from sentry_sdk import capture_message
@@ -31,6 +33,7 @@ class AuthService:
     try:
       args = context.args or {}
       firebase_id_token = args.get('idToken', None)
+      noFootage = args.get('noFootage',"false") # Why this? Well login is used as verification in more than one scenario, so this is a way to know when user is actually signing in (1st time) -- so we can capture the footage only once.
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
@@ -59,7 +62,14 @@ class AuthService:
           SECRET_KEY, 
           algorithm='HS256'
         ).decode('utf-8')
-
+        #---------------------------------------------------------
+        if  noFootage == "false": 
+          if context.is_admin_site:
+             Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
+          else: 
+            where_user_signed_in_from = Community.objects.filter(subdomain = context.community)
+            Spy.create_sign_in_footage( communities = where_user_signed_in_from, actor = user, context = context, portal=FootageConstants.on_user_portal(), type = FootageConstants.sign_in())
+        #---------------------------------------------------------
         return serialize(user, full=True), str(massenergize_jwt_token), None
 
       else:

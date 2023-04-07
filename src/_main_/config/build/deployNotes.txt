@@ -1,6 +1,2 @@
-May 27: Bug fix release:
-- implement messages to team leaders
-- avoid duplicate Welcome emails
-- new route users.listForPublicView
-- back-end support for guest signins
-
+Feb 24: Admin portal pagination:
+- deliver content in small chunks

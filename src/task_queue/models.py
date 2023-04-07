@@ -5,7 +5,6 @@ from database.models import UserProfile
 from database.utils.common import get_summary_info
 from database.utils.constants import SHORT_STR_LEN
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
-from task_queue.jobs import FUNCTIONS
 from task_queue.type_constants import ScheduleInterval, TaskStatus, schedules
 
 
@@ -27,7 +26,7 @@ class Task(models.Model):
         default=TaskStatus.CREATED,
     )
 
-    job_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True,choices=[(x, x) for x in FUNCTIONS.keys()])
+    job_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -55,6 +54,7 @@ class Task(models.Model):
         related_name='task_queue_creator',
         to=UserProfile
     )
+    last_run = models.DateField(blank=True, null=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=['schedule'])

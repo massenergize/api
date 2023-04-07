@@ -33,6 +33,7 @@ class CommunityHandler(RouteHandler):
 
     #admin routes
     self.add("/communities.listForCommunityAdmin", self.community_admin_list)
+    self.add("/communities.others.listForCommunityAdmin", self.list_other_communities_for_cadmin)
     self.add("/communities.listForSuperAdmin", self.super_admin_list)
 
 
@@ -71,7 +72,7 @@ class CommunityHandler(RouteHandler):
     if executor_id == args.get("user_id", None) or context.user_is_admin():
       community_info, err = self.service.join_community(context, args)
     else:
-      return CustomMassenergizeError("Executor dosen't have sufficient permissions to use community.join on this user")
+      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.join on this user")
     if err:
       return err
     return MassenergizeResponse(data=community_info)
@@ -95,7 +96,7 @@ class CommunityHandler(RouteHandler):
     if executor_id == args.get("user_id", None):
       community_info, err = self.service.leave_community(context, args)
     else:
-      return CustomMassenergizeError("Executor dosen't have sufficient permissions to use community.leave on this user")
+      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.leave on this user")
 
     if err:
       return err
@@ -178,6 +179,11 @@ class CommunityHandler(RouteHandler):
     if(args.get('is_approved', None)):
       args['is_approved'] = parse_bool(args.pop('is_approved', None))
 
+    # eliminate if accidently provided
+    remove = args.pop('facebook_link', None)
+    remove = args.pop('twitter_link', None)
+    remove = args.pop('instagram_link', None)
+
     args = rename_field(args, 'image', 'logo')
     args = parse_location(args)
 
@@ -187,7 +193,7 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
-  @admins_only
+  @super_admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -199,14 +205,23 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
 
-    community_info, err = self.service.delete_community(args)
+    community_info, err = self.service.delete_community(args,context)
     if err:
       return err
     return MassenergizeResponse(data=community_info)
 
 
+  @admins_only 
+  def list_other_communities_for_cadmin(self, request):
+    context: Context  = request.context
+  
+    communities, err = self.service.list_other_communities_for_cadmin(context)
+    if err:
+      return err
+    return MassenergizeResponse(data=communities)
+
   @admins_only
-  def community_admin_list(self, request):
+  def community_admin_list(self, request):  
     context: Context  = request.context
     #args = context.get_request_body()
     communities, err = self.service.list_communities_for_community_admin(context)
@@ -248,14 +263,19 @@ class CommunityHandler(RouteHandler):
 
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
+    self.validator.expect('communities', "str_list", is_required=False)
+    self.validator.expect('actions', "str_list", is_required=False)
+    self.validator.expect('time_range', str, is_required=False)
+    self.validator.expect('end_date', str, is_required=False)
+    self.validator.expect('start_date', str, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
 
-    action_info, err = self.service.list_actions_completed(context, args)
+    community_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=action_info)
+    return MassenergizeResponse(data=community_completed_actions)
 
 
 

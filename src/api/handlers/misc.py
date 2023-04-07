@@ -9,6 +9,8 @@ from _main_.utils.utils import Console, get_models_and_field_types
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
+from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.user_settings import UserPortalSettings
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -29,6 +31,25 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/home", self.home)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
+        # settings should be called preferences
+        self.add("/preferences.list", self.fetch_available_preferences)
+        self.add("/settings.list", self.fetch_available_preferences)
+        self.add("/what.happened", self.fetch_footages)
+
+    @admins_only
+    def fetch_footages(self, request):
+        context: Context = request.context
+        footages, error = self.service.fetch_footages(context,context.args)
+        if error:
+            return MassenergizeResponse(error=error)
+        return MassenergizeResponse(data=footages)
+
+    def fetch_available_preferences(self, request):
+        context: Context = request.context
+        args:dict = context.args
+        if context.user_is_admin():
+            return MassenergizeResponse(data=UserPortalSettings.Preferences if args.get("subdomain") else AdminPortalSettings.Preferences)
+        return MassenergizeResponse(data=UserPortalSettings.Preferences)
 
     def remake_navigation_menu(self, request):
         data, err = self.service.remake_navigation_menu()
@@ -125,6 +146,8 @@ class MiscellaneousHandler(RouteHandler):
         if error:
             return MassenergizeResponse(error=str(error), status=error.status)
 
-        response =  MassenergizeResponse(data=token)
-        response.set_cookie("token", value=token, max_age=24*60*60, samesite='Strict')
+        response = MassenergizeResponse(data=token)
+        response.set_cookie(
+            "token", value=token, max_age=24 * 60 * 60, samesite="Strict"
+        )
         return response

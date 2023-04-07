@@ -20,7 +20,9 @@ class DownloadHandler(RouteHandler):
     self.add("/downloads.communities", self.communities_download)
     self.add("/downloads.teams", self.teams_download)
     self.add("/downloads.metrics", self.metrics_download)
-    
+    self.add("/downloads.cadmin_report", self.send_cadmin_report)
+    self.add("/downloads.sadmin_report", self.send_sadmin_report)
+    self.add("/downloads.sample.user_report", self.send_sample_user_report)
 
   @admins_only
   def users_download(self, request):
@@ -44,7 +46,7 @@ class DownloadHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
-
+  
 
   @admins_only
   def communities_download(self, request):
@@ -74,6 +76,37 @@ class DownloadHandler(RouteHandler):
     community_id = args.pop('community_id', None)
 
     communities_data, err = self.service.metrics_download(context, args, community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+
+  @admins_only
+  def send_cadmin_report(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    report, err = self.service.send_cadmin_report(context, community_id=community_id)
+    print(report)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+  
+  @admins_only
+  def send_sample_user_report(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    report, err = self.service.send_sample_user_report(context, community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+
+  @admins_only
+  def send_sadmin_report(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    report, err = self.service.send_sadmin_report(context)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)

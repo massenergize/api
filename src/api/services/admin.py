@@ -1,9 +1,11 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.admin import AdminStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
+from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -46,7 +48,8 @@ class AdminService:
         admins, err = self.store.list_super_admin(context, args)
         if err:
             return None, err
-        return serialize_all(admins), None
+        sorted = sort_items(admins, context.get_params())
+        return paginate(sorted, context.get_pagination_data()), None
 
     def add_community_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
       try:    
@@ -65,6 +68,7 @@ class AdminService:
         }
         send_massenergize_rich_email(
             subject, res["email"], 'new_admin_email.html', content_variables)
+        res["user"] = serialize(res.get("user"))
         return res, None
       except Exception as e:
         capture_message(str(e), level="error")
@@ -80,7 +84,7 @@ class AdminService:
         admins, err = self.store.list_community_admin(context, args)
         if err:
             return None, err
-        return serialize(admins), None
+        return  serialize(admins), None
 
     def message_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
       try:
@@ -110,7 +114,8 @@ class AdminService:
         }
         send_massenergize_rich_email(subject=subject, to=admin_email, massenergize_email_type='contact_admin_email.html', content_variables=content_variables, msg_id=message.id)
 
-        send_slack_message(
+        if IS_PROD or IS_CANARY:
+          send_slack_message(
             #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
             SLACK_SUPER_ADMINS_WEBHOOK_URL, {
             "content": "Message to Community Admin for "+message.community.name,
@@ -128,7 +133,8 @@ class AdminService:
         return None, CustomMassenergizeError(e)
 
     def list_admin_messages(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-        admins, err = self.store.list_admin_messages(context, args)
+        admins_messages, err = self.store.list_admin_messages(context, args)
         if err:
             return None, err
-        return serialize_all(admins), None
+        sorted = sort_items(admins_messages, context.get_params())
+        return paginate(sorted, context.get_pagination_data()), None

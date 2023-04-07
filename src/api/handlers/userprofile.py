@@ -1,11 +1,13 @@
 """Handler file for all routes pertaining to users"""
 from functools import wraps
+from _main_.utils import context
 from _main_.utils.route_handler import RouteHandler
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
+
 
 class UserHandler(RouteHandler):
 
@@ -34,6 +36,7 @@ class UserHandler(RouteHandler):
     self.add("/users.events.list", self.list_events)
     self.add("/users.checkImported", self.check_user_imported)
     self.add("/users.listForPublicView", self.list_publicview)
+    self.add("/users.validate.username", self.validate_username)
 
     #admin routes
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
@@ -48,6 +51,15 @@ class UserHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=user_info)
+  
+  def validate_username(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    data, err = self.service.validate_username(args["username"])
+    if err:
+      return err
+    return MassenergizeResponse(data=data)
 
   def create(self, request):
     context: Context = request.context
@@ -101,19 +113,19 @@ class UserHandler(RouteHandler):
   def list_actions_todo(self, request):
     context: Context = request.context
     args: dict = context.args
-    user_info, err = self.service.list_actions_todo(context, args)
+    user_todo_actions, err = self.service.list_actions_todo(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=user_info)
+    return MassenergizeResponse(data=user_todo_actions)
 
   @login_required
   def list_actions_completed(self, request):
     context: Context = request.context
     args: dict = context.args
-    user_info, err = self.service.list_actions_completed(context, args)
+    user_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=user_info)
+    return MassenergizeResponse(data=user_completed_actions)
 
   @login_required
   def remove_user_action(self, request):
@@ -158,19 +170,28 @@ class UserHandler(RouteHandler):
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    users, err = self.service.list_users_for_community_admin(context, community_id)
+    
+    args, err = self.validator.expect("user_emails","str_list", is_required=False).verify(args) 
     if err:
       return err
+    users, err = self.service.list_users_for_community_admin(context, args)
+    if err:
+      return err
+
     return MassenergizeResponse(data=users)
   
 
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
-    users, err = self.service.list_users_for_super_admin(context)
+    args: dict = context.args
+    args, err = self.validator.expect("user_emails","str_list", is_required=False).verify(args) 
     if err:
       return err
+    users, err = self.service.list_users_for_super_admin(context,args)
+    if err:
+      return err
+
     return MassenergizeResponse(data=users)
 
   @login_required

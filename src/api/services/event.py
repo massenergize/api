@@ -1,9 +1,12 @@
+from datetime import date
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.event import EventStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
 from typing import Tuple
@@ -178,7 +181,8 @@ class EventService:
         send_massenergize_rich_email(
               subject, admin_email, 'event_submitted_email.html', content_variables)
 
-        send_slack_message(
+        if IS_PROD or IS_CANARY:
+          send_slack_message(
             #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
             SLACK_SUPER_ADMINS_WEBHOOK_URL, {
             "content": "User submitted Event for "+community_name,
@@ -202,8 +206,8 @@ class EventService:
       return None, err
     return serialize(event), None
 
-  def rank_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    event, err = self.store.rank_event(args)
+  def rank_event(self, args, context) -> Tuple[dict, MassEnergizeAPIError]:
+    event, err = self.store.rank_event(args,context)
     if err:
       return None, err
     return serialize(event), None
@@ -219,11 +223,21 @@ class EventService:
     events, err = self.store.list_events_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(events), None
+    sorted = sort_items(events, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
+
+  def fetch_other_events_for_cadmin(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+    events, err = self.store.fetch_other_events_for_cadmin(context, args)
+    if err:
+      return None, err
+    sorted = sort_items(events, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_events_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
+    args = context.args
     events, err = self.store.list_events_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(events), None
+    sorted = sort_items(events, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

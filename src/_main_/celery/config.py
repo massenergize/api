@@ -13,7 +13,6 @@ class CeleryConfig:
                 "result_serializer": "json",
                 "accept_content": ["json"],
                 'beat_scheduler': 'django_celery_beat.schedulers:DatabaseScheduler',
-
             }
         else:
             sqs_url = os.environ.get("SQS_AWS_ENDPOINT", None)

@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from urllib.parse import urlencode
-from database.models import Event, EventAttendee, Community, CommunityAdminGroup
+from database.models import Event, EventAttendee, Community, CommunityAdminGroup, UserProfile
 from api.tests.common import signinAs, setupCC, createUsers
 from datetime import datetime
 
@@ -26,6 +26,12 @@ class EventsTestCase(TestCase):
           'accepted_terms_and_conditions': True
         })
 
+        self.USER1 = UserProfile.objects.create(**{
+            'full_name': "Event Tester",
+            'email': 'event@tester.com'
+        })
+
+
         admin_group_name  = f"{self.COMMUNITY.name}-{self.COMMUNITY.subdomain}-Admin-Group"
         self.COMMUNITY_ADMIN_GROUP = CommunityAdminGroup.objects.create(name=admin_group_name, community=self.COMMUNITY)
         self.COMMUNITY_ADMIN_GROUP.members.add(self.CADMIN)
@@ -36,6 +42,9 @@ class EventsTestCase(TestCase):
         self.EVENT2 = Event.objects.create(community=self.COMMUNITY, name="event2", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
         self.EVENT3 = Event.objects.create(community=self.COMMUNITY, name="event3", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
         self.EVENT4 = Event.objects.create(community=self.COMMUNITY, name="event4", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+
+        self.EVENT1.user = self.USER1
+
         self.EVENT1.save()
         self.EVENT2.save()
         self.EVENT3.save()
@@ -190,8 +199,13 @@ class EventsTestCase(TestCase):
         # test logged as user
         signinAs(self.client, self.USER)
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
+
+        # test logged as user who submitted it
+        signinAs(self.client, self.USER1)
+        response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "name": "updated_name1"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
-        self.assertEqual(response["data"]["name"], "updated_name")
+        self.assertEqual(response["data"]["name"], "updated_name1")
 
 
         # test logged as cadmin
@@ -207,6 +221,21 @@ class EventsTestCase(TestCase):
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "name": "updated_name2"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "updated_name2")
+
+        # test setting unlive
+        signinAs(self.client, self.CADMIN)
+        response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_published": "false"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+        # test setting live but not yet approved ::BACKED-OUT::
+        response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_approved": "false", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+        # test setting live and approved
+        response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_approved": "true", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertTrue(response["success"])
+
+
 
     def test_delete(self):
         # test not logged
@@ -299,7 +328,7 @@ class EventsTestCase(TestCase):
         self.assertTrue(response["success"])      
         self.assertEqual(response["data"], {})
 
-        # test logged as sadmin
+        # test logged as sadmin["items"]
         #signinAs(self.client, self.SADMIN)
 
     def test_list_rsvps(self):

@@ -1,6 +1,6 @@
-from database.models import TagCollection, UserProfile, Tag
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from api.utils.filter_functions import get_tag_collections_filter_params
+from database.models import TagCollection, Tag
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -116,18 +116,22 @@ class TagCollectionStore:
       if not tag_collections:
         return None, InvalidResourceError()
       tag_collections.delete()
+      return {}, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
 
-  def list_tag_collections_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    return self.list_tag_collections_for_super_admin()
+  def list_tag_collections_for_community_admin(self, context,community_id) -> Tuple[list, MassEnergizeAPIError]:
+    tag_collections = self.list_tag_collections_for_super_admin(context)
+    return tag_collections
 
 
-  def list_tag_collections_for_super_admin(self):
+  def list_tag_collections_for_super_admin(self, context):
     try:
-      tag_collections = TagCollection.objects.all()
+      filter_params = get_tag_collections_filter_params(
+          context.get_params())
+      tag_collections = TagCollection.objects.filter(*filter_params,is_deleted=False )
       return tag_collections, None
     except Exception as e:
       capture_message(str(e), level="error")

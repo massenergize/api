@@ -68,11 +68,13 @@ class TeamHandler(RouteHandler):
     self.validator.expect("admin_emails", 'str_list')
     self.validator.expect("communities", 'str_list')
     self.validator.rename("primary_community_id", "community_id")
+    # logo image depends on whether from user portal or admin portal
+    #self.validator.expect("logo", "str_list")
 
     args, err = self.validator.verify(args)
     if err:
       return err
-
+      
     team_info, err = self.team.create_team(context, args)
     if err:
       return err
@@ -82,9 +84,11 @@ class TeamHandler(RouteHandler):
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
+
     team_info, err = self.team.list_teams(context, args)
     if err:
       return err
+
     return MassenergizeResponse(data=team_info)
 
 
@@ -109,6 +113,8 @@ class TeamHandler(RouteHandler):
     self.validator.rename("team_id", "id")
     self.validator.expect("communities", 'str_list')
     self.validator.rename("primary_community_id", "community_id")
+    # logo image depends on whether from user portal or admin portal
+    # self.validator.expect("logo", "str_list")
 
     args, err = self.validator.verify(args)
     if err:
@@ -132,7 +138,7 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.delete_team(args)
+    team_info, err = self.team.delete_team(args,context)
 
     if err:
       return err
@@ -203,7 +209,7 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.add_member(args)
+    team_info, err = self.team.add_member(args,context)
 
     if err:
       return err
@@ -224,7 +230,7 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.remove_team_member(args)
+    team_info, err = self.team.remove_team_member(args,context)
     if err:
       return err
     return MassenergizeResponse(data=team_info)
@@ -283,11 +289,13 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("team_ids", list, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
 
     teams, err = self.team.list_teams_for_community_admin(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=teams)
@@ -297,7 +305,13 @@ class TeamHandler(RouteHandler):
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    teams, err = self.team.list_teams_for_super_admin(context)
+    self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("team_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
     if err:
       return err
+    teams, err = self.team.list_teams_for_super_admin(context,args)
+    if err:
+      return err
+
     return MassenergizeResponse(data=teams)

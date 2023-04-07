@@ -1,4 +1,4 @@
-from django.core.mail import send_mail, EmailMessage, send_mass_mail, EmailMultiAlternatives
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from sentry_sdk import capture_message
@@ -21,7 +21,6 @@ def old_send_massenergize_email(subject, msg, to):
       [to],
       fail_silently=False,
   )
-
   if not ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
@@ -38,6 +37,7 @@ def send_massenergize_email(subject, msg, to):
     text=msg, 
   )
   response = pystmark.send(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
+  response.raise_for_status()
 
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
@@ -49,13 +49,11 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name)
   if file is not None:
     message.attach_binary(file, filename=file_name)
   response = pystmark.send_with_template(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
-
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True
   
-
 
 def old_send_massenergize_rich_email(subject, to, massenergize_email_type, content_variables, from_email=None):
   if is_test_mode():

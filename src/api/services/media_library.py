@@ -21,7 +21,7 @@ class MediaLibraryService:
         images, error = self.store.search(args)
         if error:
             return None, error
-        return self.organiseData(data=serialize_all(images), args=args), None
+        return self.organiseData(data=serialize_all(images,True), args=args), None
 
     def organiseData(self, **kwargs):
         data = kwargs.get("data") or []
@@ -44,14 +44,14 @@ class MediaLibraryService:
             "images": data,
         }
 
-    def remove(self, args):
-        response, error = self.store.remove(args)
+    def remove(self, args,context):
+        response, error = self.store.remove(args,context)
         if error:
             return None, error
         return response, None
 
-    def addToGallery(self, args):
-        image, error = self.store.addToGallery(args)
+    def addToGallery(self, args,context):
+        image, error = self.store.addToGallery(args,context)
         if error:
             return None, error
         return image.simple_json(), None
@@ -68,13 +68,13 @@ class MediaLibraryService:
         events = serialize_all(media.events.all())
         actions = serialize_all(media.actions.all())
         testimonials = serialize_all(media.testimonials.all())
-        media_json = get_json_if_not_none(media)
+        media_json = get_json_if_not_none(media, True)
         return {
             **media_json,
-            "user_info": user_info,
-            "info": {
-                "events": events,
-                "actions": actions,
-                "testimonials": testimonials,
+            "information": user_info,
+            "relations": {
+                "event": events,
+                "action": actions,
+                "testimonial": testimonials,
             },
         }, None

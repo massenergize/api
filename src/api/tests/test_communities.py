@@ -172,8 +172,8 @@ class CommunitiesTestCase(TestCase):
     list_response = self.client.post('/api/communities.list', urlencode({}), content_type="application/x-www-form-urlencoded").toDict()
 
     self.assertTrue(list_response["success"])
-    self.assertIs(1, len(list_response['data']))
-    self.assertEqual(self.COMMUNITY.name, list_response['data'][0]['name'])
+    self.assertIs(1, len(list_response.get("data")))
+    self.assertEqual(self.COMMUNITY.name, list_response.get("data")[0]['name'])
 
 
 
@@ -224,8 +224,8 @@ class CommunitiesTestCase(TestCase):
       'name': "cadmin_test",
       'accepted_terms_and_conditions': True
     })
-    delete_response = self.client.post('/api/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict()  
-    self.assertTrue(delete_response["success"])
+    delete_response = self.client.post('/api/communities.delete', urlencode({"community_id": community.id}), content_type="application/x-www-form-urlencoded").toDict() 
+    self.assertFalse(delete_response["success"])
 
     # test can user delete community
     signinAs(self.client, self.USER)

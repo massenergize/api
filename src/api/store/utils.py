@@ -3,8 +3,10 @@ from database.models import Community, UserProfile, RealEstateUnit, Location, Cu
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
 from _main_.utils.context import Context
 from django.db.models import Q
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from database.utils.constants import SHORT_STR_LEN
 import zipcodes
+import datetime
 from sentry_sdk import capture_message
 
 
@@ -282,3 +284,15 @@ def check_location(street, unit, city, state, zipcode, county="", country="US"):
   elif country and not state:
     location_type = 'COUNTRY_ONLY'
   return location_type, True
+
+def unique_media_filename(file):
+  if type(file) != InMemoryUploadedFile:
+    raise Exception("Unexpected file type for media image file")
+    
+  unique_datetime = datetime.datetime.now().strftime("-%y%m%d-%H%M%S")
+  dot = file.name.rfind(".")
+  if dot>0:
+    filename = file.name[0:dot] + unique_datetime + file.name[dot:]
+  else:
+    filename = file.name + unique_datetime
+  return filename

@@ -2,7 +2,7 @@
 This file contains Global constants used throughout the codebase.
 """
 
-from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR
+from _main_.settings import IS_PROD, IS_CANARY, IS_LOCAL, BASE_DIR
 from _main_.utils.utils import load_json
 
 
@@ -17,6 +17,8 @@ COMMUNITY_URL_ROOT = (
     if IS_PROD
     else "https://community-canary.massenergize.org"
     if IS_CANARY
+    else "http://community.massenergize.test:3000"
+    if IS_LOCAL
     else "https://community.massenergize.dev"
 )
 
@@ -25,6 +27,8 @@ ADMIN_URL_ROOT = (
     if IS_PROD
     else "https://admin-canary.massenergize.org"
     if IS_CANARY
+    else "localhost:3001"
+    if IS_LOCAL
     else "https://admin.massenergize.dev"
 )
 
@@ -36,3 +40,5 @@ RESERVED_SUBDOMAIN_LIST = load_json(
 STATES = load_json(BASE_DIR + "/database/raw_data/other/states.json")
 
 ME_LOGO_PNG = "https://www.massenergize.org/wp-content/uploads/2021/07/cropped-me-logo-transp.png"
+
+DEFAULT_PAGINATION_LIMIT = 50

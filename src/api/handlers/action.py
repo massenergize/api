@@ -58,11 +58,12 @@ class ActionHandler(RouteHandler):
     (self.validator
       .expect("community_id", int, is_required=False)
       .expect("calculator_action", int, is_required=False)
-      .expect("image", "file", is_required=False, options={"is_logo": True})
+      .expect("image", "str_list", is_required=False, options={"is_logo": True})
       .expect("title", str, is_required=True, options={"min_length": 4, "max_length": 40})
       .expect("rank", int, is_required=False)
       .expect("is_global", bool, is_required=False)
       .expect("is_published", bool, is_required=False)
+      .expect('is_approved', bool)
       .expect("tags", list, is_required=False)
       .expect("vendors", list, is_required=False)
     )
@@ -70,6 +71,9 @@ class ActionHandler(RouteHandler):
     args, err = self.validator.verify(args)
     if err:
       return err
+
+    # not a user submitted action
+    args["is_approved"] = args.pop("is_approved", True)
 
     action_info, err = self.service.create_action(context, args)
     if err:
@@ -87,11 +91,6 @@ class ActionHandler(RouteHandler):
       .expect("community_id", int, is_required=True)
       .expect("image", "file", is_required=False, options={"is_logo": True})
       .expect("vendors", list, is_required=False)
-      #.expect("calculator_action", int, is_required=False)
-      #.expect("rank", int, is_required=False)
-      #.expect("is_global", bool, is_required=False)
-      #.expect("is_published", bool, is_required=False)
-      #.expect("tags", list, is_required=False)
     )
 
     args, err = self.validator.verify(args)
@@ -100,6 +99,8 @@ class ActionHandler(RouteHandler):
 
     # user submitted action, so notify the community admins
     user_submitted = True
+    args["is_approved"] = False
+
     action_info, err = self.service.create_action(context, args, user_submitted)
     if err:
       return err
@@ -113,14 +114,18 @@ class ActionHandler(RouteHandler):
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
 
+
+
     args, err = self.validator.verify(args)
     if err:
       return err
 
     action_info, err = self.service.list_actions(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=action_info)
+
 
 
   # @admins_only
@@ -133,9 +138,10 @@ class ActionHandler(RouteHandler):
       .expect("action_id", int, is_required=True)
       .expect("title", str, is_required=False, options={"min_length": 4, "max_length": 40})
       .expect("calculator_action", int, is_required=False)
-      .expect("image", "file", is_required=False, options={"is_logo": True})
+      .expect("image", "str_list", is_required=False, options={"is_logo": True})
       .expect("rank", int, is_required=False)
       .expect("is_global", bool, is_required=False)
+      .expect("is_approved", bool, is_required=False)
       .expect("is_published", bool, is_required=False)
       .expect("tags", list, is_required=False)
       .expect("vendors", list, is_required=False)
@@ -166,7 +172,7 @@ class ActionHandler(RouteHandler):
     if err:
       return err
     
-    action_info, err = self.service.rank_action(args)
+    action_info, err = self.service.rank_action(args,context)
     if err:
       return err      
       
@@ -211,6 +217,7 @@ class ActionHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("action_ids", list, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
@@ -224,6 +231,12 @@ class ActionHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request): 
     context: Context = request.context
+    args: dict = context.args
+    self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("action_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
     actions, err = self.service.list_actions_for_super_admin(context)
     if err:
       return err

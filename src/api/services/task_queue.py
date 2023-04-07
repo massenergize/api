@@ -4,8 +4,11 @@ from api.store.task_queue import TaskQueueStore
 from _main_.utils.context import Context
 from typing import Tuple
 from task_queue.jobs import FUNCTIONS
+from task_queue.models import Task
 
-
+def task_name_exists(name: str) -> bool:
+    tasks =  Task.objects.filter(name=name)
+    return len(tasks) > 0
 class TaskQueueService:
   """
   Service Layer for all the tasks
@@ -21,7 +24,8 @@ class TaskQueueService:
     return serialize(task, full=True), None
 
   def list_tasks(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    args = {'creator__id': context.user_id}
+    if not context.user_is_super_admin:
+      args = {'creator__id': context.user_id}
     task, err = self.store.list_tasks(context, args)
     if err:
       return None, err 
@@ -33,8 +37,15 @@ class TaskQueueService:
 
 
   def create_task(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+
+    if(task_name_exists(args.get('name', None))):
+      return None, MassEnergizeAPIError('Task with this name already exists')
     if not args.get("job_name", None):
-      return None, MassEnergizeAPIError("Automatic proccess is required")
+      return None, MassEnergizeAPIError("Automatic task name not supplied")
+    
+    if args.get("job_name") not in FUNCTIONS.keys():
+      return None, MassEnergizeAPIError("Automatic process is not valid")
+
     task, err = self.store.create_task(context, args)
     if err:
       return None, err
