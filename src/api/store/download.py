@@ -874,7 +874,7 @@ class DownloadStore:
                 community = action.community.name
                 is_focused = "Yes" if action.community.is_geographically_focused else "No"
             else:
-                community = ""
+                is_focused = community = ""
             data.append([community] + [is_focused] + self._get_action_info_cells(action))
 
         #get state reported actions
