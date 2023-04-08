@@ -32,7 +32,7 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
         'data_type': download_type,
         "name":user.full_name,
     }
-    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE_ID,temp_data,email, response.content, filename)
+    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE_ID,temp_data,[email], response.content, filename)
     return True
 
 
@@ -51,11 +51,10 @@ def download_data(self, args, download_type):
     email = args.get("email", None)
     if download_type == USERS:
         (files, com_name), err = store.users_download(context, community_id=args.get("community_id"), team_id=args.get("team_id"))
-        if err:
+        if  err:
             error_notification(USERS, email)
         else:
-            generate_csv_and_email(
-                data=files, download_type=USERS, community_name=com_name, email=email)
+            generate_csv_and_email(data=files, download_type=USERS, community_name=com_name, email=email)
 
     elif download_type == ACTIONS:
         (files, com_name), err = store.actions_download(context, community_id=args.get("community_id"))
