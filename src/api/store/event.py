@@ -249,6 +249,9 @@ class EventStore:
 
       if end_date_and_time < start_date_and_time :
           return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
+      
+      if args.get('is_published', False):
+        args['published_at'] = datetime.datetime.now()
 
       if is_recurring:
         if final_date:
@@ -278,6 +281,7 @@ class EventStore:
         community = Community.objects.get(pk=community)
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community_id")
+
 
       new_event: Event = Event.objects.create(**args)
       if community:
@@ -367,6 +371,11 @@ class EventStore:
       is_approved = args.pop('is_approved', None)
       is_published = args.pop('is_published', None)
 
+      if is_published:
+        args['published_at'] = datetime.datetime.now()
+      else:
+        args['published_at'] = None
+
 
       if start_date_and_time and end_date_and_time:
           if end_date_and_time < start_date_and_time :
@@ -414,6 +423,8 @@ class EventStore:
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
+
+
 
 
       # update the event instance

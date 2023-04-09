@@ -49,7 +49,6 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name)
   if file is not None:
     message.attach_binary(file, filename=file_name)
   response = pystmark.send_with_template(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
-
   if not response.ok:
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
