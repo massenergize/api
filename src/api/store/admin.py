@@ -1,7 +1,10 @@
+from _main_.utils.pagination import paginate
+from _main_.utils.utils import is_not_null
+from api.utils.filter_functions import get_super_admins_filter_params
 from database.models import UserProfile, CommunityAdminGroup, Community, Media, UserProfile, Message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.context import Context
-from .utils import get_community, get_user, get_community_or_die
+from .utils import get_community, get_user, get_community_or_die, unique_media_filename
 from api.store.community import CommunityStore
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -67,7 +70,10 @@ class AdminStore:
 
   def list_super_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      admins = UserProfile.objects.filter(is_super_admin=True)
+      filter_params =[]
+      if args.get("params", None):
+        filter_params = get_super_admins_filter_params(args.get("params"))
+      admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False, *filter_params)
       return admins, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -115,7 +121,8 @@ class AdminStore:
         "name": user.preferred_name,
         "email": user.email,
         "subdomain": community.subdomain,
-        "community_name": community.name
+        "community_name": community.name, 
+        "user":user
       }
 
       return res, None
@@ -209,11 +216,10 @@ class AdminStore:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
 
       user_name = args.pop("name", None) or args.pop("user_name", None) or "Unknown user"
-      print("user_name is: " + user_name)
       title = args.pop("title", None)
       email = args.pop("email", None) or context.user_email
       body = args.pop("body", None)
-      uploaded_file = args.pop("uploaded_file", None)
+      file = args.pop("uploaded_file", None)
       
       new_message = Message.objects.create(user_name=user_name, email=email, title=title, body=body, community=community)
       new_message.save()
@@ -224,9 +230,9 @@ class AdminStore:
         new_message.user = user
         new_message.email = user.email
         new_message.user_name = new_message.user_name or user.preferred_name
-
-      if uploaded_file:
-        media = Media.objects.create(name=f"Messages: {new_message.title} - Uploaded File", file=uploaded_file)
+      if is_not_null(file):
+        file.name = unique_media_filename(file)
+        media = Media.objects.create(name=f"Messages: {new_message.title} - Uploaded File", file=file)
         media.save()
         new_message.uploaded_file = media
 
@@ -264,3 +270,4 @@ class AdminStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+

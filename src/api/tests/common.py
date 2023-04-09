@@ -1,16 +1,27 @@
 import time
 import jwt
 from http.cookies import SimpleCookie
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
+
+from ..store.utils import unique_media_filename
 from _main_.settings import SECRET_KEY
+from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from database.models import (
     Action,
     Community,
     CommunityAdminGroup,
+    CommunityMember,
     Event,
+    FeatureFlag,
+    Footage,
+    HomePageSettings,
     Media,
+    Message,
+    RealEstateUnit,
+    Team,
     Testimonial,
+    UserActionRel,
     UserMediaUpload,
     UserProfile,
 )
@@ -19,10 +30,75 @@ import requests
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
+RESET = "reset"
+
+
+def makeFootage(**kwargs):
+    communities = kwargs.pop("communities",None)    
+    f =  Footage.objects.create(**{**kwargs})
+    if communities: 
+        f.communities.set(communities)
+    return f
+
+
+def makeUserActionRel(**kwargs):
+    action = kwargs.get("action")
+    community = kwargs.pop("community", action.community)
+    house = RealEstateUnit.objects.create(
+        **{"name": str(time.time()) + "-house", "community": community}
+    )
+    return UserActionRel.objects.create(**{"real_estate_unit": house, **kwargs})
+
+
+def makeTeam(**kwargs):
+    name = kwargs.get("name", str(time.time()) + "-team")
+    community = kwargs.pop("community", None)
+    communities = kwargs.pop("communities", None)
+    team = Team.objects.create(
+        **{**kwargs, "primary_community": community, "name": name}
+    )
+    if communities:
+        team.set(communities)
+    return team
+
+
+def makeMessage(**kwargs):
+    user = kwargs.get("user")
+    name = kwargs.pop("name", user.full_name)
+    return Message.objects.create(**{**kwargs, "user_name": name})
+
+
+def makeMembership(**kwargs):
+    return CommunityMember.objects.create(**{**kwargs})
+
+
+def makeFlag(**kwargs):
+    name = kwargs.get("name") or "New Feature Flag"
+    coms = kwargs.pop("communities", [])
+    users = kwargs.pop("users", [])
+    future_expiration = datetime.now(timezone.utc) + timedelta(days=3)
+    flag = FeatureFlag.objects.create(
+        **{
+            "expires_on": future_expiration,
+            "audience": FeatureFlagConstants.for_everyone(),
+            "key": str(time.time()) + "-feature",
+            **kwargs,
+            "name": name,
+        }
+    )
+
+    if coms:
+        flag.communities.set(coms)
+    if users:
+        flag.users.set(users)
+
+    return flag
+
 
 def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
     file = kwargs.get("file") or kwargs.get("image") or createImage()
+    file.name = unique_media_filename(file)
     return Media.objects.create(**{**kwargs, "name": name, "file": file})
 
 
@@ -35,16 +111,21 @@ def makeTestimonial(**kwargs):
 def makeEvent(**kwargs):
     community = kwargs.get("community")
     name = kwargs.get("name") or "Event default Name"
+    pub_coms = kwargs.pop("communities_under_publicity", [])
     event = Event.objects.create(
         **{
             "is_published": True,
-            "start_date_and_time": timezone.now(),
-            "end_date_and_time": timezone.now(),
+            "start_date_and_time": timezone.now()+ timezone.timedelta(days=1),
+            "end_date_and_time": timezone.now() + timezone.timedelta(days=2),
             **kwargs,
             "community": community,
             "name": name,
         }
     )
+
+    if pub_coms:
+        event.communities_under_publicity.set(pub_coms)
+
     return event
 
 
@@ -65,7 +146,7 @@ def makeAdminGroup(**kwargs):
     key = round(time.time() * 1000)
     name = kwargs.get("name") or f"New Group - {key}"
     members = kwargs.pop("members")
-    group = CommunityAdminGroup.objects.create(**{**kwargs, "name": name})
+    group, exists= CommunityAdminGroup.objects.get_or_create(**{**kwargs, "name": name})
     if members:
         group.members.set(members)
 
@@ -95,8 +176,8 @@ def makeAdmin(**kwargs):
 
 
 def makeUser(**kwargs):
-    full_name = kwargs.get("full_name") or "user_full_name"
-    email = kwargs.get("email") or "new_user_email@email.com"
+    full_name = kwargs.pop("name", None) or kwargs.get("full_name") or "user_full_name"
+    email = kwargs.get("email") or str(time.time()) + "@gmail.com"
     return UserProfile.objects.create(
         **{**kwargs, "full_name": full_name, "email": email}
     )
@@ -113,8 +194,24 @@ def makeUserUpload(**kwargs):
     return up
 
 
+def makeHomePageSettings(**kwargs):
+    title = kwargs.get("title") or str(time.time())
+    community = kwargs.get(
+        "community", makeCommunity(name="Default Community - For Homepage")
+    )
+    home = HomePageSettings.objects.create(
+        **{
+            **kwargs,
+            "community": community,
+            "title": title,
+        }
+    )
+
+    return home
+
+
 def makeCommunity(**kwargs):
-    subdomain = kwargs.get("subdomain") or "default_subdomain"
+    subdomain = kwargs.get("subdomain") or str(time.time())
     name = kwargs.get("name") or "community_default_name"
     com = Community.objects.create(
         **{
@@ -148,7 +245,8 @@ def setupCC(client):
             },
         )
 
-def makeAuthToken(user): 
+
+def makeAuthToken(user):
     dt = datetime.now()
     dt.microsecond
 
@@ -162,7 +260,8 @@ def makeAuthToken(user):
     }
 
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256").decode("utf-8")
-        
+
+
 def signinAs(client, user):
 
     if user:

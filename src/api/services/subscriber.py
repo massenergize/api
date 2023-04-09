@@ -1,9 +1,13 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.subscriber import SubscriberStore
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.utils.constants import COMMUNITY_URL_ROOT
+from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
+from sentry_sdk import capture_message
 from typing import Tuple
+
+from api.utils.filter_functions import sort_items
 
 class SubscriberService:
   """
@@ -19,30 +23,33 @@ class SubscriberService:
       return None, err
     return serialize(subscriber, full=True), None
 
-  def list_subscribers(self, subscriber_id) -> Tuple[list, MassEnergizeAPIError]:
-    subscriber, err = self.store.list_subscribers(subscriber_id)
+  def list_subscribers(self,context, subscriber_id) -> Tuple[list, MassEnergizeAPIError]:
+    subscriber, err = self.store.list_subscribers(context,subscriber_id)
     if err:
       return None, err
-    return serialize(subscriber), None
+    return paginate(subscriber, context.args.get("page", 1), context.args.get("limit",100)), None
 
 
   def create_subscriber(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
-    subscriber, err = self.store.create_subscriber(community_id, args)
-    if err:
-      return None, err
-    
-    subject = 'Thank you for subscribing'
-    content_variables = {
-      'name': subscriber.name,
-      'id': subscriber.id,
-      'logo': subscriber.community.logo.file.url if subscriber.community and subscriber.community.logo else 'https://s3.us-east-2.amazonaws.com/community.massenergize.org/static/media/logo.ee45265d.png',
-      'community': subscriber.community.name if subscriber.community and subscriber.community.name else 'MassEnergize',
-      'homelink': '%s/%s' %(COMMUNITY_URL_ROOT, subscriber.community.subdomain) if subscriber.community else COMMUNITY_URL_ROOT
-    }
-    send_massenergize_rich_email(subject, subscriber.email, 'subscriber_registration_email.html', content_variables)
+    try:
+      subscriber, err = self.store.create_subscriber(community_id, args)
+      if err:
+        return None, err
 
-    return serialize(subscriber), None
+      subject = 'Thank you for subscribing'
+      content_variables = {
+        'name': subscriber.name,
+        'id': subscriber.id,
+        'logo': subscriber.community.logo.file.url if subscriber.community and subscriber.community.logo else ME_LOGO_PNG,
+        'community': subscriber.community.name if subscriber.community and subscriber.community.name else 'MassEnergize',
+        'homelink': '%s/%s' %(COMMUNITY_URL_ROOT, subscriber.community.subdomain) if subscriber.community else COMMUNITY_URL_ROOT
+      }
+      send_massenergize_rich_email(subject, subscriber.email, 'subscriber_registration_email.html', content_variables)
 
+      return serialize(subscriber), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def update_subscriber(self, subscriber_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     subscriber, err = self.store.update_subscriber(subscriber_id, args)
@@ -66,11 +73,13 @@ class SubscriberService:
     subscribers, err = self.store.list_subscribers_for_community_admin(context, community_id)
     if err:
       return None, err
-    return serialize_all(subscribers, full=True), None
+    sorted = sort_items(subscribers, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_subscribers_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     subscribers, err = self.store.list_subscribers_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(subscribers, full=True), None
+    sorted = sort_items(subscribers, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

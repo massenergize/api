@@ -55,7 +55,7 @@ class TeamHandler(RouteHandler):
     team_info, err = self.team.get_team_info(context, args)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -68,23 +68,27 @@ class TeamHandler(RouteHandler):
     self.validator.expect("admin_emails", 'str_list')
     self.validator.expect("communities", 'str_list')
     self.validator.rename("primary_community_id", "community_id")
+    # logo image depends on whether from user portal or admin portal
+    #self.validator.expect("logo", "str_list")
 
     args, err = self.validator.verify(args)
     if err:
       return err
-
+      
     team_info, err = self.team.create_team(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
 
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
+
     team_info, err = self.team.list_teams(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+
     return MassenergizeResponse(data=team_info)
 
 
@@ -94,7 +98,7 @@ class TeamHandler(RouteHandler):
     context: Context = request.context
     team_info, err = self.team.team_stats(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -109,6 +113,8 @@ class TeamHandler(RouteHandler):
     self.validator.rename("team_id", "id")
     self.validator.expect("communities", 'str_list')
     self.validator.rename("primary_community_id", "community_id")
+    # logo image depends on whether from user portal or admin portal
+    # self.validator.expect("logo", "str_list")
 
     args, err = self.validator.verify(args)
     if err:
@@ -117,7 +123,7 @@ class TeamHandler(RouteHandler):
     team_info, err = self.team.update_team(context, args)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @admins_only
@@ -132,10 +138,10 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.delete_team(args)
+    team_info, err = self.team.delete_team(args,context)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -159,7 +165,7 @@ class TeamHandler(RouteHandler):
       err = CustomMassenergizeError("Executor dosen't have sufficient permissions to use teams.leave on this user")
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -184,7 +190,7 @@ class TeamHandler(RouteHandler):
       err = CustomMassenergizeError("Executor dosen't have sufficient permissions to use teams.leave on this user")
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
 
@@ -203,10 +209,10 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.add_member(args)
+    team_info, err = self.team.add_member(args,context)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
 
@@ -224,9 +230,9 @@ class TeamHandler(RouteHandler):
     if err:
       return err
 
-    team_info, err = self.team.remove_team_member(args)
+    team_info, err = self.team.remove_team_member(args,context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)
 
   @login_required
@@ -241,7 +247,7 @@ class TeamHandler(RouteHandler):
 
     team_info, err = self.team.message_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_info)      
 
   @admins_only
@@ -250,7 +256,7 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_members_info, err = self.team.members(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_members_info)
 
   def members_preferred_names(self, request):
@@ -258,7 +264,7 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
     team_members_preferred_names_info, err = self.team.members_preferred_names(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=team_members_preferred_names_info)
 
 
@@ -283,13 +289,15 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("team_ids", list, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
 
     teams, err = self.team.list_teams_for_community_admin(context, args)
+
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=teams)
 
 
@@ -297,7 +305,13 @@ class TeamHandler(RouteHandler):
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    teams, err = self.team.list_teams_for_super_admin(context)
+    self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("team_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+    teams, err = self.team.list_teams_for_super_admin(context,args)
+    if err:
+      return err
+
     return MassenergizeResponse(data=teams)

@@ -35,7 +35,7 @@ class MessageHandler(RouteHandler):
     args = rename_field(args, 'message_id', 'id')
     message_info, err = self.service.get_message_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=message_info)
 
   @admins_only
@@ -44,7 +44,7 @@ class MessageHandler(RouteHandler):
     args = context.get_request_body()
     message_info, err = self.service.forward_to_team_admins(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=message_info)
 
   @admins_only
@@ -53,7 +53,7 @@ class MessageHandler(RouteHandler):
     args = context.get_request_body()
     message_info, err = self.service.reply_from_community_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=message_info)
 
   @admins_only
@@ -64,24 +64,32 @@ class MessageHandler(RouteHandler):
     message_id = args.pop('id', None)
     if not message_id:
       return CustomMassenergizeError("Please Provide Message Id")
-    message_info, err = self.service.delete_message(message_id)
+    message_info, err = self.service.delete_message(message_id,context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=message_info)
 
   @admins_only
   def team_admin_list(self, request):
     context: Context = request.context
-    messages, err = self.service.list_team_admin_messages_for_community_admin(context)
+    args: dict = context.args
+    self.validator.expect("message_ids",list, is_required=False)
+ 
+    args, err = self.validator.verify(args, strict=True)
+    messages, err = self.service.list_team_admin_messages_for_community_admin(context,args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=messages)
 
   @admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
+    self.validator.expect("message_ids",list, is_required=False)
+
+    args, err = self.validator.verify(args, strict=True)
     messages, err = self.service.list_community_admin_messages_for_community_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+
     return MassenergizeResponse(data=messages)

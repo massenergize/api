@@ -36,7 +36,7 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     tag_info, err = self.service.get_tag_info(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
   @super_admins_only
@@ -45,7 +45,7 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     tag_info, err = self.service.create(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
 
@@ -54,9 +54,9 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     community_id = args.pop('community_id', None)
     user_id = args.pop('user_id', None)
-    tag_info, err = self.service.list_tags(community_id, user_id)
+    tag_info, err = self.service.list_tags(context,community_id, user_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
   @super_admins_only
@@ -65,7 +65,7 @@ class TagHandler(RouteHandler):
     args: dict = context.args
     tag_info, err = self.service.update_tag(args.get("id", None), args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
   @super_admins_only
@@ -75,7 +75,7 @@ class TagHandler(RouteHandler):
     tag_id = args.get("id", None)
     tag_info, err = self.service.delete_tag(args.get("id", None))
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tag_info)
 
   @admins_only
@@ -83,16 +83,16 @@ class TagHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop("community_id", None)
-    tags, err = self.service.list_tags_for_community_admin(community_id)
+    tags, err = self.service.list_tags_for_community_admin(context,community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tags)
 
   @admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    tags, err = self.service.list_tags_for_super_admin()
+    tags, err = self.service.list_tags_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=tags)

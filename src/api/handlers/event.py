@@ -37,6 +37,7 @@ class EventHandler(RouteHandler):
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list)
+    self.add("/events.others.listForCommunityAdmin", self.fetch_other_events_for_cadmin)
     self.add("/events.listForSuperAdmin", self.super_admin_list)
 
 
@@ -52,7 +53,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.get_event_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     
     return MassenergizeResponse(data=event_info)
 
@@ -70,7 +71,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.copy_event(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -89,7 +90,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.get_rsvp_list(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -106,7 +107,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.get_rsvp_status(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -124,7 +125,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.rsvp_update(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -142,7 +143,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.rsvp_remove(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   # @login_required
@@ -152,7 +153,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.update_recurring_event_date(context, args)
     if err: 
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   @login_required
@@ -168,7 +169,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.get_event_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   @admins_only
@@ -182,18 +183,25 @@ class EventHandler(RouteHandler):
     self.validator.expect('archive', bool)
     self.validator.expect('is_published', bool)
     self.validator.expect('is_recurring', bool)
+    self.validator.expect('is_approved', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
+    self.validator.expect("image","str_list")
+    self.validator.expect("publicity",str)
+    self.validator.expect("publicity_selections",list)
     args, err = self.validator.verify(args)
 
     if err:
       return err
 
+    # not user submitted
+    args["is_approved"] = args.pop("is_approved", True) 
+
     event_info, err = self.service.create_event(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   
@@ -216,9 +224,11 @@ class EventHandler(RouteHandler):
 
     # user submitted event, so notify the community admins
     user_submitted = True
+    args["is_approved"] = False 
+
     event_info, err = self.service.create_event(context, args, user_submitted)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   
@@ -231,7 +241,7 @@ class EventHandler(RouteHandler):
     
     
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     
     return MassenergizeResponse(data=exceptions)
 
@@ -251,8 +261,7 @@ class EventHandler(RouteHandler):
     event_info, err = self.service.list_events(context, args)
 
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
-
+      return err
     return MassenergizeResponse(data=event_info)
 
   
@@ -262,7 +271,7 @@ class EventHandler(RouteHandler):
     event_info, err = self.service.update_recurring_event_date(context, args)
    
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   # @admins_only
@@ -271,13 +280,15 @@ class EventHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-
+    self.validator.rename('community', 'community_id')
+    self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('event_id', int, is_required=True)
-    self.validator.expect('name', str, is_required=True, options={"min_length":5, "max_length":100})
+    self.validator.expect('name', str, is_required=False, options={"min_length":5, "max_length":100})
     self.validator.expect('tags', list)
     self.validator.expect('is_global', bool)
     self.validator.expect('archive', bool)
     self.validator.expect('is_published', bool)
+    self.validator.expect('is_approved', bool)
     self.validator.expect('have_address', bool)
     self.validator.expect('location', 'location')
     self.validator.expect('is_recurring', bool)
@@ -285,6 +296,10 @@ class EventHandler(RouteHandler):
     self.validator.expect('upcoming_is_rescheduled', bool)
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
+    self.validator.expect("image","str_list")
+    self.validator.expect("publicity",str)
+    self.validator.expect("publicity_selections","str_list")
+    self.validator.expect("shared_to","str_list")
     args, err = self.validator.verify(args)
 
     if err:
@@ -292,7 +307,7 @@ class EventHandler(RouteHandler):
 
     event_info, err = self.service.update_event(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
   @admins_only
@@ -306,11 +321,11 @@ class EventHandler(RouteHandler):
 
     args, err = self.validator.verify(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
 
-    event_info, err = self.service.rank_event(args)
+    event_info, err = self.service.rank_event(args, context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -321,7 +336,7 @@ class EventHandler(RouteHandler):
     event_id = args.get("event_id", None)
     event_info, err = self.service.delete_event(context, event_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=event_info)
 
 
@@ -337,14 +352,33 @@ class EventHandler(RouteHandler):
 
     events, err = self.service.list_events_for_community_admin(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+
     return MassenergizeResponse(data=events)
 
+  @admins_only 
+  def fetch_other_events_for_cadmin(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    self.validator.expect("community_ids", "str_list", is_required=True)
+    self.validator.expect("exclude", bool, is_required=False)
+
+    
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
+    events, err = self.service.fetch_other_events_for_cadmin(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=events)
 
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     events, err = self.service.list_events_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+
     return MassenergizeResponse(data=events)

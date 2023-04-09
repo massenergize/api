@@ -9,6 +9,8 @@ from _main_.utils.utils import Console, get_models_and_field_types
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
+from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.user_settings import UserPortalSettings
 
 
 class MiscellaneousHandler(RouteHandler):
@@ -29,6 +31,25 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/home", self.home)
         self.add("/auth.login.testmode", self.authenticateFrontendInTestMode)
         self.add("", self.home)
+        # settings should be called preferences
+        self.add("/preferences.list", self.fetch_available_preferences)
+        self.add("/settings.list", self.fetch_available_preferences)
+        self.add("/what.happened", self.fetch_footages)
+
+    @admins_only
+    def fetch_footages(self, request):
+        context: Context = request.context
+        footages, error = self.service.fetch_footages(context,context.args)
+        if error:
+            return MassenergizeResponse(error=error)
+        return MassenergizeResponse(data=footages)
+
+    def fetch_available_preferences(self, request):
+        context: Context = request.context
+        args:dict = context.args
+        if context.user_is_admin():
+            return MassenergizeResponse(data=UserPortalSettings.Preferences if args.get("subdomain") else AdminPortalSettings.Preferences)
+        return MassenergizeResponse(data=UserPortalSettings.Preferences)
 
     def remake_navigation_menu(self, request):
         data, err = self.service.remake_navigation_menu()
@@ -41,7 +62,7 @@ class MiscellaneousHandler(RouteHandler):
         args: dict = context.args
         goal_info, err = self.service.navigation_menu_list(context, args)
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=goal_info)
 
     def backfill(self, request):
@@ -49,7 +70,7 @@ class MiscellaneousHandler(RouteHandler):
         args: dict = context.args
         goal_info, err = self.service.backfill(context, args)
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=goal_info)
 
     @super_admins_only
@@ -60,7 +81,7 @@ class MiscellaneousHandler(RouteHandler):
         carbon_info, err = self.service.create_carbon_equivalency(args)
 
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=carbon_info)
 
     @super_admins_only
@@ -76,7 +97,7 @@ class MiscellaneousHandler(RouteHandler):
         carbon_info, err = self.service.update_carbon_equivalency(args)
 
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=carbon_info)
 
     def get_carbon_equivalencies(self, request):
@@ -91,7 +112,7 @@ class MiscellaneousHandler(RouteHandler):
         carbon_info, err = self.service.get_carbon_equivalencies(args)
 
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=carbon_info)
 
     def delete_carbon_equivalency(self, request):
@@ -105,7 +126,7 @@ class MiscellaneousHandler(RouteHandler):
         carbon_info, err = self.service.delete_carbon_equivalency(args)
 
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
         return MassenergizeResponse(data=carbon_info)
 
     def home(self, request):
@@ -119,12 +140,14 @@ class MiscellaneousHandler(RouteHandler):
         self.validator.expect("email", str, is_required=True)
         args, err = self.validator.verify(args)
         if err:
-            return MassenergizeResponse(error=str(err), status=err.status)
+            return err
 
         token, error = self.service.authenticateFrontendInTestMode(args)
         if error:
             return MassenergizeResponse(error=str(error), status=error.status)
 
-        response =  MassenergizeResponse(data=token)
-        response.set_cookie("token", value=token, max_age=24*60*60, samesite='Strict')
+        response = MassenergizeResponse(data=token)
+        response.set_cookie(
+            "token", value=token, max_age=24 * 60 * 60, samesite="Strict"
+        )
         return response

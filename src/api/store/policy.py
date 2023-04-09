@@ -60,7 +60,7 @@ class PolicyStore:
       return policy, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def delete_policy(self, policy_id) -> Tuple[Policy, MassEnergizeAPIError]:
@@ -73,7 +73,7 @@ class PolicyStore:
       return policies_to_delete.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def copy_policy(self, policy_id) -> Tuple[Policy, MassEnergizeAPIError]:
     try:
@@ -89,7 +89,7 @@ class PolicyStore:
       return new_policy, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def list_policies_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -129,4 +129,4 @@ class PolicyStore:
       return policies, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)

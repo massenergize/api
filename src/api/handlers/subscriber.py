@@ -40,7 +40,7 @@ class SubscriberHandler(RouteHandler):
         subscriber_id = parse_int(subscriber_id)
     subscriber_info, err = self.service.get_subscriber_info(subscriber_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=subscriber_info)
 
 
@@ -64,7 +64,7 @@ class SubscriberHandler(RouteHandler):
         community_id = parse_int(community_id)
     subscriber_info, err = self.service.create_subscriber(community_id ,args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=subscriber_info)
 
   @admins_only
@@ -73,9 +73,9 @@ class SubscriberHandler(RouteHandler):
     args: dict = context.args
     community_id = args.pop('community_id', None)
     user_id = args.pop('user_id', None)
-    subscriber_info, err = self.service.list_subscribers(community_id, user_id)
+    subscriber_info, err = self.service.list_subscribers(context,community_id, user_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=subscriber_info)
 
   @admins_only
@@ -85,7 +85,7 @@ class SubscriberHandler(RouteHandler):
     subscriber_id = args.pop('subscriber_id', None)
     subscriber_info, err = self.service.copy_subscriber(subscriber_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=subscriber_info)
 
   @admins_only
@@ -98,7 +98,7 @@ class SubscriberHandler(RouteHandler):
       args["is_global"] = parse_bool(is_global)
     subscriber_info, err = self.service.update_subscriber(subscriber_id, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=subscriber_info)
 
   @admins_only
@@ -111,7 +111,7 @@ class SubscriberHandler(RouteHandler):
         subscriber_id = parse_int(subscriber_id)
     subscriber_info, err = self.service.delete_subscriber(subscriber_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data='Sorry to see you go, you have been unsubscribed from our mailing lists')
 
   @admins_only
@@ -121,7 +121,8 @@ class SubscriberHandler(RouteHandler):
     community_id = args.pop('community_id', None)
     subscribers, err = self.service.list_subscribers_for_community_admin(context, community_id)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+
     return MassenergizeResponse(data=subscribers)
 
   @super_admins_only
@@ -130,5 +131,6 @@ class SubscriberHandler(RouteHandler):
     args: dict = context.args
     subscribers, err = self.service.list_subscribers_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
+
     return MassenergizeResponse(data=subscribers)

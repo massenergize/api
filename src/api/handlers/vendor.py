@@ -43,7 +43,7 @@ class VendorHandler(RouteHandler):
     args = rename_field(args, 'vendor_id', 'id')
     vendor_info, err = self.service.get_vendor_info(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @admins_only
@@ -62,10 +62,11 @@ class VendorHandler(RouteHandler):
       .expect("is_verified", bool)
       .expect("website", str, is_required=False)
       .expect("is_published", bool)
+      .expect('is_approved', bool)
       .expect("communities", list, is_required=False)
       .expect("service_area_states", 'str_list', is_required=False)
       .expect("properties_serviced", 'str_list', is_required=False)
-      .expect("image", "file", is_required=False)
+      .expect("image", "str_list", is_required=False)
       .expect("tags", list, is_required=False)
       .expect("location", "location", is_required=False)
     )
@@ -74,9 +75,12 @@ class VendorHandler(RouteHandler):
     if err:
       return err
 
+    # not user submitted
+    args["is_approved"] = args.pop("is_approved", True) 
+
     vendor_info, err = self.service.create_vendor(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @login_required
@@ -111,7 +115,7 @@ class VendorHandler(RouteHandler):
     user_submitted = True
     vendor_info, err = self.service.create_vendor(context, args, user_submitted)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
 
@@ -120,7 +124,7 @@ class VendorHandler(RouteHandler):
     args = context.get_request_body()      
     vendor_info, err = self.service.list_vendors(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @login_required
@@ -140,11 +144,12 @@ class VendorHandler(RouteHandler):
       .expect("phone_number", str, is_required=False)
       .expect("have_address", bool, is_required=False)
       .expect("is_published", bool, is_required=False)
+      .expect("is_approved", bool, is_required=False)
       .expect("communities", list, is_required=False)
       .expect("service_area_states", 'str_list', is_required=False)
       .expect("properties_serviced", 'str_list', is_required=False)
       .expect("tags", list, is_required=False)
-      .expect("image", "file", is_required=False)
+      .expect("image", "str_list", is_required=False)
       .expect("location", "location", is_required=False)
     )
 
@@ -154,7 +159,7 @@ class VendorHandler(RouteHandler):
 
     vendor_info, err = self.service.update_vendor(context, args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @admins_only
@@ -168,11 +173,11 @@ class VendorHandler(RouteHandler):
 
     args, err = self.validator.verify(args)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
 
-    vendor_info, err = self.service.rank_vendor(args)
+    vendor_info, err = self.service.rank_vendor(args,context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @admins_only
@@ -183,9 +188,9 @@ class VendorHandler(RouteHandler):
     vendor_id = args.pop('id', None)
     if not vendor_id:
       return CustomMassenergizeError("Please Provide Vendor Id")
-    vendor_info, err = self.service.delete_vendor(vendor_id)
+    vendor_info, err = self.service.delete_vendor(vendor_id,context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendor_info)
 
   @admins_only
@@ -207,13 +212,14 @@ class VendorHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+
     args, err = self.validator.verify(args)
     if err:
       return err
-
     vendors, err = self.service.list_vendors_for_community_admin(context, args)
+
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendors)
 
   @super_admins_only
@@ -221,5 +227,5 @@ class VendorHandler(RouteHandler):
     context: Context = request.context
     vendors, err = self.service.list_vendors_for_super_admin(context)
     if err:
-      return MassenergizeResponse(error=str(err), status=err.status)
+      return err
     return MassenergizeResponse(data=vendors)

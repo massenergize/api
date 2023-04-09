@@ -1,10 +1,10 @@
+from api.utils.filter_functions import get_subscribers_filter_params
 from database.models import Subscriber, UserProfile, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
-from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
+
 
 class SubscriberStore:
   def __init__(self):
@@ -20,7 +20,7 @@ class SubscriberStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def list_subscribers(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_subscribers(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     subscribers = Subscriber.objects.filter(community__id=community_id)
     if not subscribers:
       return [], None
@@ -60,7 +60,7 @@ class SubscriberStore:
       return subscriber, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def delete_subscriber(self, subscriber_id) -> Tuple[Subscriber, MassEnergizeAPIError]:
@@ -73,7 +73,7 @@ class SubscriberStore:
       return subscribers_to_delete.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
   def copy_subscriber(self, subscriber_id) -> Tuple[Subscriber, MassEnergizeAPIError]:
     try:
@@ -89,7 +89,7 @@ class SubscriberStore:
       return new_subscriber, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)
 
 
   def list_subscribers_for_community_admin(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -100,20 +100,22 @@ class SubscriberStore:
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
 
+      filter_params = get_subscribers_filter_params(context.get_params())
+
       # gets pass from admin portal as "null"
       # TODO: Owen clean this up with validator
       if not community_id or community_id=="null":
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         communities = [ag.community for ag in admin_groups]
+
         subscribers = None
         for ag in admin_groups:
           if not subscribers:
-            subscribers = ag.community.subscriber_set.all().filter(is_deleted=False)
+            subscribers = ag.community.subscriber_set.all().filter(is_deleted=False, *filter_params)
           else:
-            subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False)
-
-        return subscribers, None
+            subscribers |= ag.community.subscriber_set.all().filter(is_deleted=False, *filter_params)
+        return subscribers or [], None
 
       community: Community = Community.objects.get(pk=community_id)
       subscribers = community.subscriber_set.all().filter(is_deleted=False)
@@ -126,8 +128,9 @@ class SubscriberStore:
 
   def list_subscribers_for_super_admin(self, context: Context):
     try:
-      subscribers = Subscriber.objects.filter(is_deleted=False)
+      filter_params = get_subscribers_filter_params(context.get_params())
+      subscribers = Subscriber.objects.filter(is_deleted=False, *filter_params)
       return subscribers, None
     except Exception as e:
       capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(str(e))
+      return None, CustomMassenergizeError(e)

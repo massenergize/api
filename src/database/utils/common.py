@@ -2,11 +2,27 @@
 This file contains utility functions that come in handy for processing and 
 retrieving data
 """
+from ast import Lambda
 import json
 from django.core import serializers
 from django.forms.models import model_to_dict
 from collections.abc import Iterable
 from sentry_sdk import capture_message
+
+from _main_.utils.utils import Console
+
+
+
+
+def get_images_in_sequence(images,sequence): 
+  if not sequence: return images  
+  if not images: return []
+  arr = []
+  for id in sequence: 
+    img = list(filter(lambda image: str(image.id) == id,images))
+    if len(img): 
+      arr.append(img[0].simple_json())
+  return arr
 
 
 def json_loader(file) -> dict:

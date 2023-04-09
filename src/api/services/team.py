@@ -1,8 +1,16 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.team import TeamStore
 from api.store.message import MessageStore
+from api.utils.filter_functions import sort_items
+from database.models import TeamMember
 from _main_.utils.context import Context
+from _main_.utils.constants import ADMIN_URL_ROOT
+from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
+from .utils import send_slack_message
+from sentry_sdk import capture_message
 from typing import Tuple
 
 class TeamService:
@@ -56,8 +64,8 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def delete_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.delete_team(args)
+  def delete_team(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.delete_team(args,context)
     if err:
       return None, err
     return serialize(team), None
@@ -74,14 +82,14 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def add_member(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.add_team_member(args)
+  def add_member(self, args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.add_team_member(args,context)
     if err:
       return None, err
     return serialize(team), None
 
-  def remove_team_member(self,args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.remove_team_member(args)
+  def remove_team_member(self,args,context) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.remove_team_member(args,context)
     if err:
       return None, err
     return serialize(team), None
@@ -90,7 +98,7 @@ class TeamService:
     members, err = self.store.members(context, args)
     if err:
       return None, err
-    return serialize_all(members), None
+    return paginate(members, context.get_pagination_data()), None
 
   def members_preferred_names(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     preferred_names, err = self.store.members_preferred_names(context, args)
@@ -99,30 +107,82 @@ class TeamService:
     return preferred_names, None
 
   def message_admin(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    message_info, err = self.message_store.message_team_admin(context, args)
-    if err:
-      return None, err
-    return serialize(message_info), None
+    try:
+      message, err = self.message_store.message_team_admin(context, args)
+      if err:
+        return None, err
+
+      # Previously didn't send emails for these messages, which would just show up in the admin site
+      # Now email team leaders directly. Message to Cadmin via Slack
+      # Message stays in the board of messages in admin interface as before
+      # And add that team leaders will directly get messages to them and they are responsible for responding to the welcome team leader email
+      team = message.team
+      community = team.primary_community
+      admin_email = community.owner_email
+      admin_name = community.owner_name
+
+      subject = 'A message was sent to the Team Admin for ' + team.name + ' in ' + community.name
+      team_members = TeamMember.objects.filter(team=team)
+      for member in team_members:
+        if member.is_admin:
+          user = member.user
+          first_name = user.full_name.split(" ")[0]
+          if not first_name or first_name == "":
+            first_name = user.full_name
+
+          content_variables = {
+              'name': first_name,
+              "community_name": community.name,
+              "community_admin_email": admin_email,
+              "community_admin_name": admin_name,
+              "team_name": team.name,
+              "from_name": message.user_name,
+              "email": message.email,
+              "subject": message.title,
+              "message_body": message.body,
+          }
+          send_massenergize_rich_email(
+            subject, user.email, 'contact_team_admin_email.html', content_variables)
+
+      if IS_PROD or IS_CANARY:
+        send_slack_message(
+          SLACK_SUPER_ADMINS_WEBHOOK_URL, {
+          "content": "Message to Team Admin of "+team.name,
+          "from_name": message.user_name,
+          "email": message.email,
+          "subject": message.title,
+          "message": message.body,
+          "url": f"{ADMIN_URL_ROOT}/admin/edit/{message.id}/message",
+          "community": community.name
+      }) 
+
+      return serialize(message), None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def list_teams_for_community_admin(self, context:Context, args) -> Tuple[list, MassEnergizeAPIError]:
     teams, err = self.store.list_teams_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(teams), None
+    sorted = sort_items(teams, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
-  def list_teams_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    teams, err = self.store.list_teams_for_super_admin(context)
+  def list_teams_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
+    teams, err = self.store.list_teams_for_super_admin(context,args)
     if err:
       return None, err
-    return serialize_all(teams), None
+    sorted = sort_items(teams, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     completed_actions_list, err = self.store.list_actions_completed(context, args)
     if err:
       return None, err
-    return completed_actions_list, None
+    return paginate(completed_actions_list, context.get_pagination_data()), None
 
 

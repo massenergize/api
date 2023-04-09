@@ -4,10 +4,14 @@ import django.db.models.base as Base
 import inspect
 from _main_.utils.constants import GLOBAL_SITE_SETTINGS
 from _main_.utils.utils import get_all_models
+from database.views import clean_all_selected_subdomains
 
 #changing the default django site name
 admin.site.site_header = GLOBAL_SITE_SETTINGS["ADMIN_SITE_HEADER"]
 
+class SubdomainAmdin(admin.ModelAdmin):
+    actions = [clean_all_selected_subdomains]
+admin.site.register(module.Subdomain, SubdomainAmdin)
 
 def register_all_models():
   """
