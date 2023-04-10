@@ -1,6 +1,8 @@
+from sentry_sdk import capture_message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.context import Context
 from typing import Tuple
+from api.services.message import MessageService
 from api.tasks import deactivate_user
 from api.utils.constants import GUEST_USER
 
@@ -21,13 +23,14 @@ def extract_email_content(text):
   else:
       subject = None
 
-  message_match = re.search(r"\*(.+?)\*", text, re.DOTALL)
-  if message_match:
-      message = message_match.group(1)
+  email_match = re.search(r"From: (.+)\n", text)
+  if email_match:
+      email = email_match.group(1)
+      email = re.search(r"\(([^)]+)\)", email).group(1)
   else:
-     message = None
+      email = None
 
-  return subject,message
+  return subject, email
 
 
 def extract_msg_id(text):
@@ -52,6 +55,8 @@ class WebhookService:
   """
 
   def __init__(self):
+    self.message_service = MessageService()
+
     pass
 
   def bounce_email_webhook(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -69,28 +74,32 @@ class WebhookService:
     return {"success":True}, None
   
   def process_inbound_webhook(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+        reply = args.get("StrippedTextReply")
+        text_body = args.get("TextBody")
 
-    reply = args.get("StrippedTextReply")
-    text_body = args.get("TextBody")
+        splitted_body = text_body.strip().split("Here is a copy of the message:")
+        user_msg_content = splitted_body[1].strip().split("If possible, please reply through the admin portal rather than")[0].strip()
+        subject,email = extract_email_content(user_msg_content)
 
-    splitted_body = text_body.strip().split("Here is a copy of the message:")
-    user_msg_content = splitted_body[1].strip().split("If possible, please reply through the admin portal rather than")[0].strip()
-    subject, message = extract_email_content(user_msg_content)
+        db_msg_id = extract_msg_id(splitted_body[0])
+        if db_msg_id and email:
+          res, err = self.message_service.reply_from_community_admin(context, {
+            "title": f"Re: {subject}",
+            "body": reply,
+            "to": email, 
+            "message_id": db_msg_id
+          })
 
-    db_msg_id = extract_msg_id(splitted_body[0])
-    # if email and message:
-    #    email= re.search(r"\(([^)]+)\)", email)
-    #    email = email.group(1)
+          if err:
+            return None, str(err)
+          
+          return {"success":True}, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, MassEnergizeAPIError(e)
 
 
-      # save reply to db
-      #  send user a reply to the email
-
-    
-
-
-    return {"success":True}, None 
-    pass
 
 
 
