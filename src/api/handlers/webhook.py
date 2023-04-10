@@ -30,7 +30,6 @@ class WebhookHandler(RouteHandler):
   def process_inbound_webhook(self, request):
       context: Context = request.context
       args: dict = json.loads(request.body)
-      print("==== ARGS =====", args)
       res, err = self.service.process_inbound_webhook(context, args)
 
       if err:

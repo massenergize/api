@@ -27,7 +27,7 @@ ADMIN_URL_ROOT = (
     if IS_PROD
     else "https://admin-canary.massenergize.org"
     if IS_CANARY
-    else "localhost:3001"
+    else "http://localhost:3001"
     if IS_LOCAL
     else "https://admin.massenergize.dev"
 )
