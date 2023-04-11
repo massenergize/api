@@ -42,6 +42,7 @@ class UserHandler(RouteHandler):
     self.add("/users.listForCommunityAdmin", self.community_admin_list)
     self.add("/users.listForSuperAdmin", self.super_admin_list)
     self.add("/users.import", self.import_users)
+    self.add("/users.get.visits", self.fetch_user_visits)
 
   @login_required
   def info(self, request):
@@ -51,6 +52,19 @@ class UserHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=user_info)
+  
+  # @admins_only UNCOMMENT BEFORE PR (BPR) 
+  def fetch_user_visits(self,request): 
+    context: Context = request.context
+    args: dict = context.args
+    args, err = self.validator.expect("id", int, is_required=True).verify(context.args)
+    if err:
+      return err
+    user_info, err = self.service.fetch_user_visits(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=user_info)
+
   
   def validate_username(self, request):
     context: Context = request.context

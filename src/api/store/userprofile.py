@@ -1,5 +1,6 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
 from api.utils.filter_functions import get_users_filter_params
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
+from database.models import Footage, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -134,6 +135,11 @@ class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
   
+  def fetch_user_visits(self,context:Context, args):
+    id = args.get("id")
+    visits = Footage.objects.filter(actor__id = id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).order_by("-id")
+    return visits
+
   def validate_username(self, username):
     # returns [is_valid, suggestion], error
     try:    
