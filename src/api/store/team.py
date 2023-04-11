@@ -188,15 +188,17 @@ class TeamStore:
         else:
           return None, CustomMassenergizeError("Cannot set parent team")
 
-  
+
       if logo_file: #        
+        if type(logo_file) == str:
+          logo_file = [logo_file]
+
         if type(logo_file) == list:
           # from admin portal, using media library
           logo = Media.objects.filter(pk = logo_file[0]).first()
         else:
           # from community portal, image upload
           logo_file.name = unique_media_filename(logo_file)
-
           logo = Media.objects.create(file=logo_file, name=f"ImageFor {team.name} Team")
 
         team.logo = logo
@@ -308,7 +310,9 @@ class TeamStore:
           if parent_id == 0:
             team.parent = None
 
-      if logo:      
+      if logo:
+        if type(logo) == str:
+          logo = [logo]     
         if type(logo) == list:
           if logo[0] == RESET: #if image is reset, delete the existing image
             team.logo = None
