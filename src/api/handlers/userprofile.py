@@ -57,7 +57,7 @@ class UserHandler(RouteHandler):
   def fetch_user_visits(self,request): 
     context: Context = request.context
     args: dict = context.args
-    args, err = self.validator.expect("id", int, is_required=True).verify(context.args)
+    args, err = self.validator.expect("id", str, is_required=True).verify(context.args)
     if err:
       return err
     user_info, err = self.service.fetch_user_visits(context, args)

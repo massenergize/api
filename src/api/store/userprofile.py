@@ -137,8 +137,10 @@ class UserStore:
   
   def fetch_user_visits(self,context:Context, args):
     id = args.get("id")
-    visits = Footage.objects.filter(actor__id = id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).order_by("-id")
-    return visits
+    limit  = 30
+    # Retrieve the most recent 30
+    visits = Footage.objects.filter(actor__id = id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).order_by("-id")[:limit]
+    return visits, None
 
   def validate_username(self, username):
     # returns [is_valid, suggestion], error

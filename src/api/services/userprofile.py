@@ -110,11 +110,11 @@ class UserService:
   def __init__(self):
     self.store =  UserStore()
 
-  def fetch_user_visits(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def fetch_user_visits(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     visits, err = self.store.fetch_user_visits(context, args)
     if err:
       return None, err
-    return serialize(visits), None
+    return serialize_all(visits), None
   
   def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.get_user_info(context, args)
