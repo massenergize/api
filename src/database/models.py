@@ -1780,7 +1780,8 @@ class Action(models.Model):
         return data
 
     class Meta:
-        ordering = ["-id","rank", "title"]
+        #ordering = ["-id","rank", "title"]
+        ordering = ["rank", "title"]
         db_table = "actions"
         # had required this unique, now enforced in code
         # unique_together = [["title", "community"]]
