@@ -72,7 +72,7 @@ class CommunityHandler(RouteHandler):
     if executor_id == args.get("user_id", None) or context.user_is_admin():
       community_info, err = self.service.join_community(context, args)
     else:
-      return CustomMassenergizeError("Executor dosen't have sufficient permissions to use community.join on this user")
+      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.join on this user")
     if err:
       return err
     return MassenergizeResponse(data=community_info)
@@ -96,7 +96,7 @@ class CommunityHandler(RouteHandler):
     if executor_id == args.get("user_id", None):
       community_info, err = self.service.leave_community(context, args)
     else:
-      return CustomMassenergizeError("Executor dosen't have sufficient permissions to use community.leave on this user")
+      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.leave on this user")
 
     if err:
       return err
@@ -214,14 +214,14 @@ class CommunityHandler(RouteHandler):
   @admins_only 
   def list_other_communities_for_cadmin(self, request):
     context: Context  = request.context
-    #args = context.get_request_body()
+  
     communities, err = self.service.list_other_communities_for_cadmin(context)
     if err:
       return err
     return MassenergizeResponse(data=communities)
 
   @admins_only
-  def community_admin_list(self, request):
+  def community_admin_list(self, request):  
     context: Context  = request.context
     #args = context.get_request_body()
     communities, err = self.service.list_communities_for_community_admin(context)
@@ -263,14 +263,19 @@ class CommunityHandler(RouteHandler):
 
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
+    self.validator.expect('communities', "str_list", is_required=False)
+    self.validator.expect('actions', "str_list", is_required=False)
+    self.validator.expect('time_range', str, is_required=False)
+    self.validator.expect('end_date', str, is_required=False)
+    self.validator.expect('start_date', str, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
 
-    action_info, err = self.service.list_actions_completed(context, args)
+    community_completed_actions, err = self.service.list_actions_completed(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=action_info)
+    return MassenergizeResponse(data=community_completed_actions)
 
 
 

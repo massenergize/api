@@ -1,2 +1,4 @@
-Feb 18: Production bugfix release:
-- Remove past events from events nudge
+4/1/2023: Production release
+* Admin portal pagination: deliver content in small chunks
+* Admin portal community engagement summary
+* Improved data downloads

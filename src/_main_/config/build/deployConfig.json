@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.8.13",
-  "BUILD_VERSION_NOTES": "Feb 18: Production bugfix release:\n- Remove past events from events nudge"
+  "BUILD_VERSION": "4.9.3",
+  "BUILD_VERSION_NOTES": "4/1/2023: Production release\n* Admin portal pagination: deliver content in small chunks\n* Admin portal community engagement summary\n* Improved data downloads"
 }

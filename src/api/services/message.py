@@ -2,12 +2,15 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.message import MessageStore
 from api.store.team import TeamStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email
 from sentry_sdk import capture_message
 from typing import Tuple
+
+from api.utils.filter_functions import sort_items
 
 class MessageService:
   """
@@ -117,11 +120,13 @@ class MessageService:
     messages, err = self.store.list_community_admin_messages(context, args)
     if err:
       return None, err
-    return serialize_all(messages), None
+    sorted = sort_items(messages, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
-  def list_team_admin_messages_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    messages, err = self.store.list_team_admin_messages(context)
+  def list_team_admin_messages_for_community_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
+    messages, err = self.store.list_team_admin_messages(context,args)
     if err:
       return None, err
-    return serialize_all(messages), None
+    sorted = sort_items(messages, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

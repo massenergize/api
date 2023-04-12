@@ -114,14 +114,18 @@ class ActionHandler(RouteHandler):
     self.validator.expect('community_id', int, is_required=False)
     self.validator.expect('subdomain', str, is_required=False)
 
+
+
     args, err = self.validator.verify(args)
     if err:
       return err
 
     action_info, err = self.service.list_actions(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=action_info)
+
 
 
   # @admins_only
@@ -213,6 +217,7 @@ class ActionHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("action_ids", list, is_required=False)
     args, err = self.validator.verify(args)
     if err:
       return err
@@ -226,6 +231,12 @@ class ActionHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request): 
     context: Context = request.context
+    args: dict = context.args
+    self.validator.expect("community_id", int, is_required=False)
+    self.validator.expect("action_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
     actions, err = self.service.list_actions_for_super_admin(context)
     if err:
       return err

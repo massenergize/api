@@ -45,11 +45,11 @@ class OpenAndClosedEventTest(TestCase):
         # Retrieve events that are related to community 1, 2 & 3
         response = self.client.post(
             "/api/events.others.listForCommunityAdmin",
-            data="community_ids=1,2,3",
+            data=f"community_ids={community1.id},{community2.id},{community3.id}",
             content_type="application/x-www-form-urlencoded",
         ).json()
         data = response.get("data")
-        truth = [1, 2, 3]
+        truth = [community1.id,community2.id, community3.id]
         ids = [ev.get("community").get("id") for ev in data]
         self.assertTrue(len(data) == 3)
         for id in ids:
@@ -82,7 +82,7 @@ class OpenAndClosedEventTest(TestCase):
         print("Run a request to retrieve events, except ones from community 1 & 2...")
         response = self.client.post(
             "/api/events.others.listForCommunityAdmin",
-            data="community_ids=1,2&exclude=true",
+            data=f"community_ids={community1.id},{community2.id}&exclude=true",
             content_type="application/x-www-form-urlencoded",
         ).json()
         data = response.get("data")
@@ -91,7 +91,7 @@ class OpenAndClosedEventTest(TestCase):
         self.assertTrue(len(ids) == 2)
 
         # Check if only events from communities 3 & 4 have been retrieved
-        truth = [3, 4]
+        truth = [community3.id, community4.id]
         for id in ids:
             self.assertTrue(id in truth)
 
@@ -154,7 +154,7 @@ class OpenAndClosedEventTest(TestCase):
         # Try to retrieve events that belong to community 3 and 4
         response = self.client.post(
             "/api/events.others.listForCommunityAdmin",
-            data="community_ids=3,4",
+            data=f"community_ids={community3.id},{community4.id}",
             content_type="application/x-www-form-urlencoded",
         ).json()
         print("Run a request as cadmin for events from communities 3 & 4...")
@@ -162,6 +162,7 @@ class OpenAndClosedEventTest(TestCase):
         # Events that belong to community 3 and 4 should show up because they are open to community 1 & 2
         self.assertTrue(event1.id in returned_events)
         self.assertTrue(event2.id in returned_events)
+        
         print("Yes, only event 3 wasnt retrieved!")
         self.assertFalse(event3.id in returned_events)
         Console.underline("Event OPEN_TO & CLOSED_TO publicity works well!")

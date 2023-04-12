@@ -1,8 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
 from api.tests.common import RESET
-from database.models import CommunityAdminGroup, Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
+from api.utils.filter_functions import get_events_filter_params
+from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
 from _main_.utils.context import Context
@@ -190,7 +190,7 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
   def list_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    community_id = args.pop("community_id", None)
+    community_id = context.args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
     shared = []
@@ -198,13 +198,14 @@ class EventStore:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+
       # Find events that have been shared to this community
       community = Community.objects.get(pk = community_id)
       shared = [] 
-      if community: shared = community.events_from_others.filter(is_published=True)
+      if community: 
+        shared = community.events_from_others.filter(is_published=True)
+
     
-      
-      
     elif subdomain:
       query =  Q(community__subdomain=subdomain)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
@@ -221,10 +222,10 @@ class EventStore:
     
     if not context.is_sandbox and events:
       events = events.filter(is_published=True)
+    all_events = [*events, *shared]
 
-    
-
-    return [*events,*shared], None
+    all_events = Event.objects.filter(pk__in=[item.id for item in all_events])
+    return all_events, None
 
 
   def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -248,6 +249,9 @@ class EventStore:
 
       if end_date_and_time < start_date_and_time :
           return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
+      
+      if args.get('is_published', False):
+        args['published_at'] = datetime.datetime.now()
 
       if is_recurring:
         if final_date:
@@ -277,6 +281,7 @@ class EventStore:
         community = Community.objects.get(pk=community)
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community_id")
+
 
       new_event: Event = Event.objects.create(**args)
       if community:
@@ -337,7 +342,7 @@ class EventStore:
       events = Event.objects.filter(id=event_id)
       publicity_selections = args.pop("publicity_selections", [])
       shared_to = args.pop("shared_to", [])
-      
+
       if not events:
         return None, InvalidResourceError()
 
@@ -365,6 +370,11 @@ class EventStore:
       community_id = args.pop("community_id", None)
       is_approved = args.pop('is_approved', None)
       is_published = args.pop('is_published', None)
+
+      if is_published:
+        args['published_at'] = datetime.datetime.now()
+      else:
+        args['published_at'] = None
 
 
       if start_date_and_time and end_date_and_time:
@@ -415,6 +425,8 @@ class EventStore:
         args['location'] = None
 
 
+
+
       # update the event instance
       events.update(**args)
       event: Event = events.first()
@@ -440,7 +452,10 @@ class EventStore:
         event.communities_under_publicity.set(publicity_selections)
 
       if shared_to:
-        event.shared_to.set(shared_to)
+        first = shared_to[0]
+        if first == "reset": 
+          event.shared_to.clear()
+        else: event.shared_to.set(shared_to)
 
       if is_recurring:
 
@@ -691,6 +706,8 @@ class EventStore:
       excluded = args.get("exclude", False)
       events = []
       admin_of = []
+      filter_params = get_events_filter_params(context.get_params())
+
       user = UserProfile.objects.filter(email=context.user_email).first()
       today = datetime.datetime.today()
       if user: 
@@ -699,10 +716,11 @@ class EventStore:
       if excluded: 
         # Find all events that are open in any community, but exclude events from the selected communities
         events = Event.objects.filter(Q(start_date_and_time__gte=today, is_published = True,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,publicity=EventConstants.open_to(),communities_under_publicity__id__in = admin_of)).exclude(community__id__in = ids).order_by("-id") 
+
       else: 
         # Find events that have publicity as open, and belong to the selected community, OR, find events that from any of the listed communities that are open to any of the admins communities
         events =  Event.objects.filter(Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids, publicity = EventConstants.open_to(),communities_under_publicity__id__in = admin_of, is_global = False)).distinct().order_by("-id")
-      return events, None
+      return events.filter(*filter_params).distinct(), None
     except Exception as e: 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -724,16 +742,17 @@ class EventStore:
         
       # community_id coming from admin portal is 'undefined'
       elif not community_id:
+        filter_params = get_events_filter_params(context.get_params())
+
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
         # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
         # not as their own separate events
-        events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-
+        events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
         return events, None
 
-      events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True), is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+      events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -744,7 +763,9 @@ class EventStore:
     try:
       # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
       # not as their own separate events
-      events = Event.objects.filter(is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
+      filter_params = get_events_filter_params(context.get_params())
+      
+      events = Event.objects.filter(*filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")

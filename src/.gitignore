@@ -12,3 +12,4 @@ deployment/aws/
 *.sqlite3*
 test_data/
 celerybeat-schedule.db
+*.rdb*

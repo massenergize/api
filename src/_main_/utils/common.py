@@ -5,6 +5,8 @@ import pytz
 from django.utils import timezone
 from datetime import datetime
 #import cv2
+from datetime import datetime
+from dateutil import tz
 from sentry_sdk import capture_message
 
 def get_request_contents(request,**kwargs):
@@ -106,11 +108,18 @@ def rename_fields(args, pairs):
   return args
 
 
-def serialize_all(data, full=False):
+def serialize_all(data, full=False, **kwargs):
+  #medium = (kwargs or {}).get("medium", False)
   if not data:
     return []
+
+  if isinstance(data[0], dict):
+    return data
+
   if full:
     return [d.full_json() for d in data]
+  #elif medium: 
+  #  return [d.medium_json() for d in data]
   return [d.simple_json() for d in data]
 
 
@@ -196,3 +205,11 @@ def set_cookie(response, key, value): # TODO
   MAX_AGE = 31536000
 
   response.set_cookie(key, value, MAX_AGE, samesite='Strict')
+
+
+
+def utc_to_local(iso_str):
+  local_zone = tz.tzlocal()
+  dt_utc = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=pytz.UTC)
+  local_now = dt_utc.astimezone(local_zone)
+  return local_now
