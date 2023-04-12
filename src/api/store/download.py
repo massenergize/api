@@ -21,7 +21,7 @@ from database.models import (
     Data,
     TagCollection,
     Goal,
-    CommunityTimeStamp,
+    CommunitySnapshot,
 )
 from api.store.team import get_team_users
 from api.utils.constants import STANDARD_USER, GUEST_USER
@@ -1006,27 +1006,26 @@ class DownloadStore:
 
     def _community_metrics_download(self, context, args, community_id):
         
-        #metrics_columns = [str(field.name) for field in CommunityTimeStamp._meta.get_fields()]
         columns = self.metrics_columns
         data = [columns]
-        time_stamps = CommunityTimeStamp.objects.filter(community__id = community_id).order_by("date")
+        snapshots = CommunitySnapshot.objects.filter(community__id = community_id).order_by("date")
 
-        for time_stamp in time_stamps:
-            data.append(self._get_metrics_cells(community_id, time_stamp))
+        for snap in snapshots:
+            data.append(self._get_metrics_cells(community_id, snap))
 
         return data
 
     def _all_metrics_download(self, context, args):
         columns = ["Community"] + self.metrics_columns
         data = [columns]
-        communities = Community.objects.filter(is_deleted=False)
+        communities = Community.objects.filter(is_deleted=False, is_demo=False)
 
         for community in communities:
             community_id = community.id
 
-            time_stamps = CommunityTimeStamp.objects.filter(community__id = community_id)
-            for time_stamp in time_stamps:
-                data.append([community.name] + self._get_metrics_cells(community_id, time_stamp))
+            snapshots = CommunitySnapshot.objects.filter(community__id = community_id)
+            for snap in snapshots:
+                data.append([community.name] + self._get_metrics_cells(community_id, snap))
 
         return data
 

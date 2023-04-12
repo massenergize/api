@@ -605,7 +605,7 @@ class Community(models.Model):
         db_table = "communities"
 
 
-class CommunityTimeStamp(models.Model):
+class CommunitySnapshot(models.Model):
 
     id = models.AutoField(primary_key=True)
     community = models.ForeignKey(Community, null =True, on_delete=models.SET_NULL, blank=True )  
@@ -649,7 +649,7 @@ class CommunityTimeStamp(models.Model):
     def __str__(self):
         return " %s | %s " % (self.community, self.date, )
     class Meta:
-        db_table = "community_time_stamps"
+        db_table = "community_snapshots"
 
 class RealEstateUnit(models.Model):
     """

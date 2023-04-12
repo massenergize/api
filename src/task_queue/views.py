@@ -204,14 +204,14 @@ def _create_community_timestamp(community):
     users = [cm.user for cm in community_members]
     guest_count = _get_guest_count(users)
 
-    teams = Team.objects.filter(is_deleted=False, primary_community=community)
+    teams = Team.objects.filter(is_deleted=False, primary_community=community, is_published = True)
     sub_teams = teams.filter( parent__isnull=False)
 
     testimonials_count = str(
-        Testimonial.objects.filter(is_deleted=False, community=community).count()
+        Testimonial.objects.filter(is_deleted=False, community=community, is_published = True).count()
     )
     
-    service_providers_count = Vendor.objects.filter(is_deleted= False, communities = community).count()
+    service_providers_count = Vendor.objects.filter(is_deleted= False, communities = community, is_published = True).count()
     actions_live_count = Action.objects.filter(is_deleted= False, is_published=True).count()
     
     households_manual_addition, households_partner, carbon_manual_addition, carbon_partner, actions_manual_addition, actions_partner = _get_external_reported_info(community)
@@ -225,7 +225,7 @@ def _create_community_timestamp(community):
     events_hosted_current, events_hosted_past, my_events_shared_current, my_events_shared_past, events_borrowed_from_others_current, events_borrowed_from_others_past = _get_event_info(community)
     
     
-    metrics_report = CommunityTimeStamp( 
+    metrics_report = CommunitySnapshot( 
         community = community, 
         is_live = community.is_published,
         households_total = households_total,
@@ -260,9 +260,9 @@ def _create_community_timestamp(community):
     metrics_report.save()
 
 
-def create_time_stamps():
+def create_snapshots():
     try:
-        communities = Community.objects.filter(is_deleted=False, is_demo =False) #is_published? 
+        communities = Community.objects.filter(is_deleted=False) #is_published, is_demo =False
 
         for comm in communities:
             _create_community_timestamp(comm)
@@ -270,5 +270,5 @@ def create_time_stamps():
         return "Success"
 
     except Exception as e: 
-        print("Community time stamp exception: " + str(e))
+        print("Community snapshot exception: " + str(e))
         return "Failure"
