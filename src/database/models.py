@@ -452,6 +452,7 @@ class Community(models.Model):
     more_info = models.JSONField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    is_demo = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return str(self.id) + " - " + self.name
@@ -596,12 +597,59 @@ class Community(models.Model):
             "geography_type": self.geography_type,
             "locations": locations,
             "feature_flags": get_enabled_flags(self),
+            "is_demo": self.is_demo
         }
 
     class Meta:
         verbose_name_plural = "Communities"
         db_table = "communities"
 
+
+class CommunityTimeStamp(models.Model):
+
+    id = models.AutoField(primary_key=True)
+    community = models.ForeignKey(Community, null =True, on_delete=models.SET_NULL, blank=True )  
+    date = models.DateField(auto_now_add=True, db_index=True)
+    is_live = models.BooleanField(default=False, blank=True)
+    households_total = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
+    households_user_reported = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    households_manual_addition = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    households_partner = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    user_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    actions_live_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    actions_total = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    actions_partner = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    actions_user_reported = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    carbon_total = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    carbon_user_reported = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    carbon_manual_addition = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    carbon_partner = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+
+    guest_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    actions_manual_addition = models.CharField(max_length=SHORT_STR_LEN, blank=True)  
+    events_hosted_current = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
+    events_hosted_past = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
+    my_events_shared_current = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
+    my_events_shared_past = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
+    events_borrowed_from_others_current = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
+    events_borrowed_from_others_past = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+
+    teams_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    subteams_count= models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    testimonials_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    service_providers_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+
+    def simple_json(self):
+        res = model_to_dict(self)
+        return res
+
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):
+        return " %s | %s " % (self.community, self.date, )
+    class Meta:
+        db_table = "community_time_stamps"
 
 class RealEstateUnit(models.Model):
     """

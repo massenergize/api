@@ -36,6 +36,8 @@ from database.models import CarbonEquivalency
 from .utils import find_reu_community, split_location_string, check_location
 from sentry_sdk import capture_message
 from typing import Tuple
+from django.utils import timezone
+from api.utils.constants import STANDARD_USER, GUEST_USER
 
 
 class MiscellaneousStore:

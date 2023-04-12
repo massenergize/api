@@ -121,6 +121,7 @@ class CommunityHandler(RouteHandler):
       return err
       
     args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', False))
+    args['is_demo'] = parse_bool(args.pop('is_demo', False))
     args['is_published'] = parse_bool(args.pop('is_published', False))
     args['is_approved'] = parse_bool(args.pop('is_approved', False))
 
@@ -174,6 +175,8 @@ class CommunityHandler(RouteHandler):
     
     if(args.get('is_geographically_focused', False)):
       args['is_geographically_focused'] = parse_bool(args.pop('is_geographically_focused', False))
+    if(args.get('is_demo', False)):
+      args['is_demo'] = parse_bool(args.pop('is_demo', False))
     if(args.get('is_published', None)):
       args['is_published'] = parse_bool(args.pop('is_published', None))
     if(args.get('is_approved', None)):
