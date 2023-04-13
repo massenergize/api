@@ -53,7 +53,7 @@ class UserHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=user_info)
   
-  # @admins_only UNCOMMENT BEFORE PR (BPR) 
+  @admins_only 
   def fetch_user_visits(self,request): 
     context: Context = request.context
     args: dict = context.args
