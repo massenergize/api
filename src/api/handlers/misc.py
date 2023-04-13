@@ -35,6 +35,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/preferences.list", self.fetch_available_preferences)
         self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
+        self.add("/actions.report", self.actions_report)
 
     @admins_only
     def fetch_footages(self, request):
@@ -69,6 +70,15 @@ class MiscellaneousHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         goal_info, err = self.service.backfill(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=goal_info)
+
+    def actions_report(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        print("Got here")
+        goal_info, err = self.service.actions_report(context, args)
         if err:
             return err
         return MassenergizeResponse(data=goal_info)

@@ -21,6 +21,7 @@ from database.models import (
     Data,
     TagCollection,
     Goal,
+    CommunitySnapshot,
 )
 from api.store.team import get_team_users
 from api.utils.constants import STANDARD_USER, GUEST_USER
@@ -141,6 +142,35 @@ class DownloadStore:
             "Actions per Member",
         ]
 
+        self.metrics_columns = [
+            "Date",
+            "Is Live",
+            "Households Total",
+            "Households User Reported",
+            "Households Manual Addition",
+            "Households Partner",
+            "User Count",
+            "Actions Live Count",
+            "Actions Total" ,
+            "Actions Partner",
+            "Actions User Reported",
+            "Carbon Total",
+            "Carbon User Reported" ,
+            "Carbon Manual Addition",
+            "Carbon Partner",
+            "Guest Count",
+            "Actions Manual Addition",
+            "Events Hosted Current",
+            "Events Hosted Past",
+            "My Events Shared Current",
+            "My Events Shared Past",
+            "Events Borrowed From Others Current",
+            "Events Borrowed From Others Past",
+            "Teams Count",
+            "Subteams Count",
+            "Testimonials Count",
+            "Service Providers Count",
+        ]
 
         # Fields should include for Actions, Households, Carbon Reduction: user reported, manual addition, goal for this period, (calculated) % of goal.
 
@@ -148,8 +178,6 @@ class DownloadStore:
 
         self.community_id = None
 
-        self.metrics_columns = ["anonymous_users", "user_profiles"]
-        # self.metrics_columns = ['anonymous_users', 'user_profiles', 'profiles_over_time'] # TODO: Use after profiles over time is working
 
     def _get_cells_from_dict(self, columns, data):
         cells = ["" for _ in range(len(columns))]
@@ -387,7 +415,7 @@ class DownloadStore:
         )
 
         done_in_last_30_days = self._get_last_30_days_count(action)
-        
+
 
         action_cells = {
             "Live": is_published,
@@ -938,21 +966,65 @@ class DownloadStore:
             )
 
         return data
+    
 
-    # Unused currently, for Metrics CSV
+    def _get_metrics_cells(self, community_id, time_stamp):
+        placeholder = ""
+        metrics_cells = {
+            "Date": time_stamp.date,
+            "Is Live": time_stamp.is_live,
+            "Households Total": time_stamp.households_total,
+            "Households User Reported": time_stamp.households_user_reported,
+            "Households Manual Addition": time_stamp.households_manual_addition,
+            "Households Partner": time_stamp.households_partner,
+            "User Count": time_stamp.user_count,
+            "Actions Live Count": time_stamp.actions_live_count,
+            "Actions Total": time_stamp.actions_total,
+            "Actions Partner": time_stamp.actions_partner,
+            "Actions User Reported": time_stamp.actions_user_reported,
+            "Carbon Total": time_stamp.carbon_total,
+            "Carbon User Reported": time_stamp.carbon_user_reported,
+            "Carbon Manual Addition": time_stamp.carbon_manual_addition,
+            "Carbon Partner": time_stamp.carbon_partner,
+            "Guest Count": time_stamp.guest_count,
+            "Actions Manual Addition": time_stamp.actions_manual_addition,
+            "Events Hosted Current": time_stamp.events_hosted_current,
+            "Events Hosted Past": time_stamp.events_hosted_past,
+            "My Events Shared Current": time_stamp.my_events_shared_current,
+            "My Events Shared Past": time_stamp.my_events_shared_past,
+            "Events Borrowed From Others Current": time_stamp.events_borrowed_from_others_current,
+            "Events Borrowed From Others Past": time_stamp.events_borrowed_from_others_past,
+            "Teams Count": time_stamp.teams_count,
+            "Subteams Count": time_stamp.subteams_count,
+            "Testimonials Count": time_stamp.testimonials_count,
+            "Service Providers Count": time_stamp.service_providers_count,
+            }
+
+        return self._get_cells_from_dict(self.metrics_columns, metrics_cells)
+
+
     def _community_metrics_download(self, context, args, community_id):
-        community = Community.objects.filter(id=community_id)
+        
         columns = self.metrics_columns
         data = [columns]
-        device_store = DeviceStore()
+        snapshots = CommunitySnapshot.objects.filter(community__id = community_id).order_by("date")
 
-        anonymous_users, err = device_store.metric_anonymous_community_users(
-            community_id
-        )
-        user_profiles, err = device_store.metric_community_profiles(community_id)
-        data.append([anonymous_users, user_profiles])
-        # profiles_over_time, err = DeviceStore.metric_community_profiles_over_time(context, args, community_id)
-        # TODO: Coming back to this ^^^ after downloads is done
+        for snap in snapshots:
+            data.append(self._get_metrics_cells(community_id, snap))
+
+        return data
+
+    def _all_metrics_download(self, context, args):
+        columns = ["Community"] + self.metrics_columns
+        data = [columns]
+        communities = Community.objects.filter(is_deleted=False, is_demo=False)
+
+        for community in communities:
+            community_id = community.id
+
+            snapshots = CommunitySnapshot.objects.filter(community__id = community_id)
+            for snap in snapshots:
+                data.append([community.name] + self._get_metrics_cells(community_id, snap))
 
         return data
 
@@ -1049,17 +1121,22 @@ class DownloadStore:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
 
-    #Unused currently, for Metrics CSV
+
     def metrics_download(
         self, context: Context, args, community_id
     ) -> Tuple[list, MassEnergizeAPIError]:
         try:
             if not context.user_is_admin():
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
-            return (
-                self._community_metrics_download(context, args, community_id),
-                None,
-            ), None
+            if community_id: 
+                return (
+                    self._community_metrics_download(context, args, community_id),
+                    None,
+                ), None
+            elif context.user_is_super_admin:
+                return (
+                    self._all_metrics_download(context, args), 
+                    None,), None
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
