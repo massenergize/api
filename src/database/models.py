@@ -1819,8 +1819,8 @@ class Event(models.Model):
     shared_to = models.ManyToManyField(Community, related_name="events_from_others", blank=True)
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
-    exclude_from_nudge = models.BooleanField(
-        default=False, blank=True, null=True)
+    # exclude_from_nudge = models.BooleanField(
+    #     default=False, blank=True, null=True)
 
 
     def __str__(self):
