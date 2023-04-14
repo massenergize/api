@@ -46,7 +46,7 @@ class DownloadHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
-
+  
 
   @admins_only
   def communities_download(self, request):

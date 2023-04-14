@@ -4,6 +4,9 @@ from _main_.utils.common import serialize_all
 
 def paginate(queryset, pagination_data):
     try:
+        if not queryset:
+            return {"items":[], "cursor": {"next":0, "count":0 } }
+        
         limit = pagination_data.get('limit')
         page = pagination_data.get('next_page')
         paginator = Paginator(queryset, limit)

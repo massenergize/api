@@ -63,7 +63,6 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-
         download_data.delay(data, METRICS)
         return [], None
 
