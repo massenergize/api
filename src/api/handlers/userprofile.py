@@ -60,10 +60,10 @@ class UserHandler(RouteHandler):
     args, err = self.validator.expect("id", str, is_required=True).verify(context.args)
     if err:
       return err
-    user_info, err = self.service.fetch_user_visits(context, args)
+    visits, err = self.service.fetch_user_visits(context, args)
     if err:
       return err
-    return MassenergizeResponse(data=user_info)
+    return MassenergizeResponse(data=visits)
 
   
   def validate_username(self, request):
