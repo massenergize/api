@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.9.6",
-  "BUILD_VERSION_NOTES": "4/1/2023: Production release\n* Admin portal pagination: deliver content in small chunks\n* Admin portal community engagement summary\n* Improved data downloads"
+  "BUILD_VERSION": "4.9.7",
+  "BUILD_VERSION_NOTES": "4/14/2023: Production bug-fix update\n"
 }

@@ -57,6 +57,11 @@ class MiscellaneousService:
         if err:
             return None, err
         return result, None
+    def actions_report(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        result, err = self.store.actions_report(context, args)
+        if err:
+            return None, err
+        return result, None
 
     def home(self, ctx: Context, request):
         deployments = Deployment.objects.all()[:3]

@@ -1,4 +1,1 @@
-4/1/2023: Production release
-* Admin portal pagination: deliver content in small chunks
-* Admin portal community engagement summary
-* Improved data downloads
+4/14/2023: Production bug-fix update
