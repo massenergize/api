@@ -109,7 +109,6 @@ def get_community_events(community_id):
         Q(publicity=EventConstants.is_open_to("OPEN_TO"),communities_under_publicity__id=community_id), # events that are opened to community
         is_published=True, 
         is_deleted=False, 
-        # exclude_from_nudge=False,
         start_date_and_time__gte=timezone.now(),
         )
     
