@@ -9,6 +9,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
+from django.utils import timezone
 
 from .utils.common import (
     get_images_in_sequence,
@@ -1867,7 +1868,7 @@ class Event(models.Model):
     shared_to = models.ManyToManyField(Community, related_name="events_from_others", blank=True)
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
-
+    
 
     def __str__(self):
         return self.name
@@ -1875,6 +1876,13 @@ class Event(models.Model):
     def info(self):
         data = model_to_dict(self, ["id", "name"])
         return data
+
+    def is_on_homepage(self):
+        is_used = False
+        home_page = HomePageSettings.objects.filter(community=self.community).first()
+        if home_page and home_page.featured_events:
+            is_used = home_page.featured_events.filter(id=self.id, start_date_and_time__gte=timezone.now()).exists()
+        return is_used
 
     def simple_json(self):
         data = model_to_dict(
@@ -1914,6 +1922,7 @@ class Event(models.Model):
         data["shared_to"] =[
             c.info() for c in self.shared_to.all()
         ]
+        data["is_on_home_page"] = self.is_on_homepage()
         return data
 
     def full_json(self):

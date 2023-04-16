@@ -31,6 +31,12 @@ class HomePageSettingsService:
     if err:
       return None, err
     return serialize(home_page_setting), None
+  
+  def add_event(self, args) -> Tuple[str, MassEnergizeAPIError]:
+    msg, err = self.store.add_event(args)
+    if err:
+      return None, err
+    return msg, None
 
 
   def update_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
