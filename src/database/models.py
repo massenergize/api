@@ -3401,7 +3401,7 @@ class Message(models.Model):
         res["team"] = get_summary_info(self.team)
         res["user"] = get_summary_info(self.user)
         res["replies"] = [
-            r.simple_json() for r in Message.objects.filter(parent=self, archive=False)
+            r.simple_json() for r in Message.objects.filter(parent=self, archive=False).order_by("-created_at")
         ]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
