@@ -71,7 +71,8 @@ class PageSettingsHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-
+    self.validator.expect("image", list, is_required=False)
+    args,_ = self.validator.verify(args)
     # special for impact page settings.  these variables won't exist otherwise
     more_info = {}
     for item in ['display_households', 'display_actions', 'display_carbon', 'platform_households', 'state_households', 'manual_households', 
