@@ -91,6 +91,7 @@ class ActionHandler(RouteHandler):
       .expect("community_id", int, is_required=True)
       .expect("image", "file", is_required=False, options={"is_logo": True})
       .expect("vendors", list, is_required=False)
+      .expect("action_id", str, is_required=False)
     )
 
     args, err = self.validator.verify(args)
@@ -99,9 +100,14 @@ class ActionHandler(RouteHandler):
 
     # user submitted action, so notify the community admins
     user_submitted = True
-    args["is_approved"] = False
+  
+    is_edit = args.get("action_id", None)
 
-    action_info, err = self.service.create_action(context, args, user_submitted)
+    if is_edit:
+      action_info, err = self.service.update_action(context, args, user_submitted)
+    else:
+      args["is_approved"] = False
+      action_info, err = self.service.create_action(context, args, user_submitted)
     if err:
       return err
     return MassenergizeResponse(data=action_info)

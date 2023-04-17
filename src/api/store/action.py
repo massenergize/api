@@ -47,7 +47,10 @@ class ActionStore:
         return [], None
 
       if not context.is_sandbox:
-        actions = actions.filter(is_published=True)
+        if context.user_is_logged_in:
+          actions = actions.filter(Q(user__id=context.user_id) | Q(is_published=True))
+        else:
+          actions = actions.filter(is_published=True)
 
       # by default, exclude deleted actions
       #if not context.include_deleted:
@@ -59,7 +62,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
@@ -83,7 +86,11 @@ class ActionStore:
         new_action.community = community
       
       if images: #now, images will always come as an array of ids 
-        media = Media.objects.filter(pk = images[0]).first()
+        if user_submitted:
+          name = f'ImageFor {new_action.title} Action'
+          media = Media.objects.create(name=name, file=images)
+        else:
+          media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media
 
       user = None
@@ -182,8 +189,7 @@ class ActionStore:
     
       return None, CustomMassenergizeError(e)
 
-
-  def update_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       action_id = args.pop('action_id', None)
       action = Action.objects.filter(id=action_id)
@@ -208,11 +214,18 @@ class ActionStore:
       action = action.first()
 
       if image: #now, images will always come as an array of ids, or "reset" string 
-        if image[0] == RESET: #if image is reset, delete the existing image
-          action.image = None
+        if user_submitted:
+          if "ImgToDel" in image:
+            action.image = None
+          else:
+            image= Media.objects.create(file=image, name=f'ImageFor {action.title} Action')
+            action.image = image
         else:
-          media = Media.objects.filter(id = image[0]).first()
-          action.image = media
+          if image[0] == RESET: #if image is reset, delete the existing image
+            action.image = None
+          else:
+            media = Media.objects.filter(id = image[0]).first()
+            action.image = media
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
