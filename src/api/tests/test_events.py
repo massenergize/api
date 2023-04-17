@@ -121,9 +121,9 @@ class EventsTestCase(TestCase):
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.create', urlencode({"community_id": self.COMMUNITY.id,
-                                                                           "name": "test_cadmin", 
-                                                                           "start_date_and_time": self.startTime, 
-                                                                           "end_date_and_time": self.endTime}), content_type="application/x-www-form-urlencoded").toDict()
+                                "name": "test_cadmin", 
+                                "start_date_and_time": self.startTime, 
+                                    "end_date_and_time": self.endTime}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "test_cadmin")
 

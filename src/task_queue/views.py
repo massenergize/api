@@ -12,6 +12,7 @@ from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
 from django.db.models import Count
+from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -213,6 +214,162 @@ def send_nudge(file, file_name, email_list, temp_id, t_model):
         temp_id, t_model, email_list, file, file_name
     )
 
+def send_nudge(file, file_name, email_list, temp_id, t_model):
+    send_massenergize_email_with_attachments(temp_id, t_model, email_list, file, file_name)
+
+
+def _get_external_reported_info(community):
+    if not community.goal:
+        community.goal = Goal()
+
+    goal = community.goal
+    households_manual_addition = int(goal.initial_number_of_households)
+    households_partner = int(goal.attained_number_of_households)
+
+    carbon_manual_addition = int(goal.initial_carbon_footprint_reduction)
+    carbon_partner = int(goal.attained_carbon_footprint_reduction)
+
+    actions_manual_addition = int(goal.initial_number_of_actions)
+    actions_partner = int(goal.attained_number_of_actions)
+
+    return households_manual_addition, households_partner, carbon_manual_addition, carbon_partner, actions_manual_addition, actions_partner
+
+def _get_user_reported_info(community, users):
+
+    if community.is_geographically_focused:
+        households_count = RealEstateUnit.objects.filter(
+            is_deleted=False, community=community
+        ).count()
+        done_action_rels = UserActionRel.objects.filter(
+            real_estate_unit__community=community, is_deleted=False, status="DONE"
+        ).select_related("action__calculator_action")
+    else:
+        households_count = sum([user.real_estate_units.count() for user in users])
+        done_action_rels = UserActionRel.objects.filter(
+            user__in=users, is_deleted=False, status="DONE"
+        ).select_related("action__calculator_action")
+
+    carbon_user_reported = sum(
+        [
+            action_rel.action.calculator_action.average_points
+            if action_rel.action.calculator_action
+            else 0
+            for action_rel in done_action_rels
+        ]
+    )
+    actions_user_reported = done_action_rels.count()
+
+    return carbon_user_reported, actions_user_reported, households_count
+
+def _event_info_helper(events):
+    counter = 0
+    for elem in events:
+        if elem["shared_to"] != None:
+            counter +=1
+
+    return counter
+
+
+def _get_event_info(community):
+
+    all_events = Event.objects.filter(Q(is_deleted=False, community = community) | Q(is_global=True)) #filter out is_demo communities?
+
+    events_hosted_current = all_events.filter( end_date_and_time__gte = today).values("name", "shared_to") #is_published = True?
+    events_hosted_past = all_events.filter( end_date_and_time__lte = today).values("name", "shared_to") #is published?
+    my_events_shared_current = 0 if len(events_hosted_current) == 0 else _event_info_helper(events_hosted_current)
+    my_events_shared_past = 0 if len(events_hosted_past) == 0 else _event_info_helper(events_hosted_past)
+
+
+    events_borrowed_past = community.events_from_others.filter(end_date_and_time__lte = today)
+    events_borrowed_current = community.events_from_others.filter(end_date_and_time__gte = today)
+
+    return events_hosted_current.count(), events_hosted_past.count(), my_events_shared_current, my_events_shared_past, len(events_borrowed_current), len(events_borrowed_past)
+
+
+def _get_guest_count(users):
+    guest_count = 0
+    for user in users:
+        is_guest = False
+        if user.user_info:
+            is_guest = (user.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
+            if is_guest:
+                guest_count +=1
+    return guest_count
+
+def _create_community_timestamp(community):
+
+    community_members = CommunityMember.objects.filter(is_deleted=False, community=community).select_related("user")
+    users = [cm.user for cm in community_members]
+    guest_count = _get_guest_count(users)
+
+    teams = Team.objects.filter(is_deleted=False, primary_community=community, is_published = True)
+    sub_teams = teams.filter( parent__isnull=False)
+
+    testimonials_count = str(
+        Testimonial.objects.filter(is_deleted=False, community=community, is_published = True).count()
+    )
+    
+    service_providers_count = Vendor.objects.filter(is_deleted= False, communities = community, is_published = True).count()
+    actions_live_count = Action.objects.filter(is_deleted= False, is_published=True).count()
+    
+    households_manual_addition, households_partner, carbon_manual_addition, carbon_partner, actions_manual_addition, actions_partner = _get_external_reported_info(community)
+
+    carbon_user_reported, actions_user_reported, households_user_reported = _get_user_reported_info(community, users)
+
+    households_total = households_user_reported + households_manual_addition + households_partner
+    actions_total = actions_user_reported + actions_manual_addition + actions_partner
+    carbon_total = carbon_user_reported + carbon_manual_addition + carbon_partner
+
+    events_hosted_current, events_hosted_past, my_events_shared_current, my_events_shared_past, events_borrowed_from_others_current, events_borrowed_from_others_past = _get_event_info(community)
+    
+    
+    metrics_report = CommunitySnapshot( 
+        community = community, 
+        is_live = community.is_published,
+        households_total = households_total,
+        households_user_reported = households_user_reported,
+        households_manual_addition = households_manual_addition,
+        households_partner = households_partner,
+        user_count = community_members.count(),
+        actions_live_count = actions_live_count,
+        actions_total = actions_total,
+        actions_partner = actions_partner,
+        actions_user_reported = actions_user_reported,
+        carbon_total = carbon_total,
+        carbon_user_reported = carbon_user_reported,
+        carbon_manual_addition = carbon_manual_addition,
+        carbon_partner = carbon_partner,
+        guest_count = guest_count,
+        actions_manual_addition = actions_manual_addition,
+        
+        events_hosted_current = events_hosted_current, 
+        events_hosted_past = events_hosted_past,
+        my_events_shared_current = my_events_shared_current, 
+        my_events_shared_past = my_events_shared_past, 
+        events_borrowed_from_others_current = events_borrowed_from_others_current, 
+        events_borrowed_from_others_past = events_borrowed_from_others_past,
+
+        teams_count = teams.count(),
+        subteams_count= sub_teams.count(),
+        testimonials_count = testimonials_count,
+        service_providers_count = service_providers_count,
+        )
+
+    metrics_report.save()
+
+
+def create_snapshots():
+    try:
+        communities = Community.objects.filter(is_deleted=False) #is_published, is_demo =False
+
+        for comm in communities:
+            _create_community_timestamp(comm)
+        
+        return "Success"
+
+    except Exception as e: 
+        print("Community snapshot exception: " + str(e))
+        return "Failure"
 
 def send_mou_email(email, name):
     host = get_frontend_host()
