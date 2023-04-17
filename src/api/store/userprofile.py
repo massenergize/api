@@ -137,12 +137,18 @@ class UserStore:
   
   def fetch_user_visits(self,context:Context, args):
     id = args.get("id")
+    limit  = 30
     try:
-      user = UserProfile.objects.filter(id=id).first()
-      return user.visit_log, None
+      # # If we want to use visitor logs, we use this
+      # user = UserProfile.objects.filter(id=id).first()
+      # return user.visit_log, None
+      #------------------------------------------------
+      # If we want to use footages, we use t his
+      # Retrieve the most recent 30
+      visits = Footage.objects.filter(actor__id = id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).order_by("-id")[:limit]
+      return visits, None
     except Exception as e:
-      capture_message(str(e), level="error")
-      return None, CustomMassenergizeError(e)
+        return None, CustomMassenergizeError(e)
 
   def validate_username(self, username):
     # returns [is_valid, suggestion], error

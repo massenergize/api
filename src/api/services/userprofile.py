@@ -114,8 +114,9 @@ class UserService:
     visits, err = self.store.fetch_user_visits(context, args)
     if err:
       return None, err
-    # return serialize_all(visits), None
-    return visits, None
+    return serialize_all(visits), None
+    # If we are using logs instead of footages, uncomment this
+    # return visits, None
   
   def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.get_user_info(context, args)
