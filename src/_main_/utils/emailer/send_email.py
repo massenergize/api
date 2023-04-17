@@ -27,7 +27,7 @@ def old_send_massenergize_email(subject, msg, to):
   return True
 
 def send_massenergize_email(subject, msg, to):
-  if is_test_mode():
+  if is_test_mode(): 
     return True
 
   message = pystmark.Message(

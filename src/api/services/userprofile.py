@@ -12,6 +12,8 @@ from typing import Tuple
 
 from api.utils.filter_functions import sort_items
 
+
+
 def _parse_import_file(csvfile):
   """
   Helper function used to parse csv import file 
@@ -110,6 +112,12 @@ class UserService:
   def __init__(self):
     self.store =  UserStore()
 
+  def accept_mou(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    user, err = self.store.accept_mou(context, args)
+    if err:
+      return None, err
+    return serialize(user, full=True), None
+  
   def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.get_user_info(context, args)
     if err:

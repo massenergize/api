@@ -191,6 +191,7 @@ class EventHandler(RouteHandler):
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
     self.validator.expect("publicity_selections",list)
+    self.validator.expect("add_to_home_page", bool, is_required=False)
     args, err = self.validator.verify(args)
 
     if err:

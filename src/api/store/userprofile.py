@@ -1,5 +1,6 @@
+from api.store.common import create_pdf_from_rich_text, sign_mou
 from api.utils.filter_functions import get_users_filter_params
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
+from database.models import CommunityAdminGroup, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -14,9 +15,12 @@ from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY, DEBUG
 from _main_.utils.constants import ME_LOGO_PNG
-from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, STANDARD_USER, INVITED_USER, GUEST_USER
+from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECEIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE, STANDARD_USER, INVITED_USER, GUEST_USER
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
+
+
+
 
 def _get_or_create_reu_location(args, user=None):
   unit_type = args.pop('unit_type', None)
@@ -190,6 +194,67 @@ class UserStore:
       return True
     
     return False
+
+
+
+  def decline_mou(self,user, args): 
+    date = args.get("date")
+    name = user.full_name
+    send_massenergize_email(f"{name} Declined MOU ({date})", f"{name}, declined the MOU. They have chosen to no longer be an admin.",ME_SUPPORT_TEAM_EMAIL)
+
+    user.is_community_admin= False 
+    user.is_super_admin = False
+
+    # Get all CommunityAdminGroup items that have the user_profile as a member
+    community_admin_groups = CommunityAdminGroup.objects.filter(members=user)
+    # Iterate through the CommunityAdminGroup items and remove the user_profile from the members
+    for group in community_admin_groups:
+        group.members.remove(user)
+        group.save()
+    user.save()
+    return user
+
+  def accept_mou(self,args, context: Context):
+    email = args.get("email")
+    try:
+      if email: 
+        user = UserProfile.objects.filter(email=email).first()
+      else: 
+        user = get_user_or_die(context, args)
+
+      accepted = args.get("accept", False)
+      key = args.get("policy_key",None)
+      current_timestamp = datetime.now()
+      current_timestamp_str = current_timestamp.strftime('%Y-%m-%d')
+      current_timestamp_str = current_timestamp_str.split(".")[0]
+      username = user.full_name
+      filename = f"Massenergize MOU - {current_timestamp_str}.pdf"
+
+      if accepted: 
+        # find the policy object and add it here
+        policy = Policy.objects.filter(more_info__key = key).first()
+        rich_text = sign_mou(policy.description, user, current_timestamp_str)
+        pdf,_ = create_pdf_from_rich_text(rich_text,filename)
+        # Notify the user who just signed
+        send_massenergize_email_with_attachments(MOU_SIGNED_ADMIN_RECEIPIENT,{"username":username},user.email,pdf,filename)
+        
+        user_groups = CommunityAdminGroup.objects.filter(members=user)
+        # Concatenate all community names into one string, separated by a comma
+        community_names = ", ".join([group.community.name for group in user_groups])
+        
+        # Notify massenergize support team 
+        send_massenergize_email_with_attachments(MOU_SIGNED_SUPPORT_TEAM_TEMPLATE,{"admin_name":username, "salutation":"Dear Support Team,", "community_name":community_names or "..."},ME_SUPPORT_TEAM_EMAIL,pdf,filename)
+        record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = datetime.utcnow())
+        record.save()
+        user.refresh_from_db()
+        return user, None
+      else: 
+        args["date"] = current_timestamp_str
+        return self.decline_mou( user, args), None
+      
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def _add_action_rel(self, context: Context, args, status):

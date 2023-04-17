@@ -1,7 +1,7 @@
 
-from task_queue.events_nudge import send_events_nudge
+from task_queue.events_nudge.cadmin_events_nudge import send_events_nudge
 from task_queue.events_nudge.user_event_nudge import prepare_user_events_nudge
-from task_queue.views import community_admin_nudge, super_admin_nudge
+from task_queue.views import super_admin_nudge, create_snapshots, send_admin_mou_notification
 
 """
 PLEASE NOTE:
@@ -12,9 +12,9 @@ PLEASE NOTE:
  You can only add new items to the dictionary.
 """
 FUNCTIONS = {
-    'Super admin nudge':super_admin_nudge,
-    #"Community Admin nudge":community_admin_nudge,
-    #"Events Nudge":send_events_report
-    "Community Admin nudge":send_events_nudge,
-    "User Event Nudge":prepare_user_events_nudge,
+    'Super admin nudge': super_admin_nudge,
+    "Community Admin nudge": send_events_nudge,
+    "Admin MOU Notifier": send_admin_mou_notification,
+    "User Event Nudge": prepare_user_events_nudge,
+    "Create Community Snapshots": create_snapshots,
 }
