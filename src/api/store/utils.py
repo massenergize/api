@@ -299,12 +299,12 @@ def unique_media_filename(file):
   return filename
 
 
-def get_frontend_host(): 
-  if IS_PROD: 
-    return "https://admin.massenergize.org/" 
-  elif IS_CANARY: 
-    return "" # Replace wwhen you get the cannary frontend admin URL
-  elif IS_LOCAL: 
-    return "http://localhost:3001/"
-  else: 
-    return "https://admin.massenergize.dev/"
+#def get_frontend_host(): 
+#  if IS_PROD: 
+#    return "https://admin.massenergize.org/" 
+#  elif IS_CANARY: 
+#    return "" # Replace wwhen you get the cannary frontend admin URL
+#  elif IS_LOCAL: 
+#    return "http://localhost:3001/"
+#  else: 
+#    return "https://admin.massenergize.dev/"

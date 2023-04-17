@@ -1,13 +1,14 @@
 import csv
 from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from api.store.utils import get_frontend_host
+from _main_.utils.constants import ADMIN_URL_ROOT
 from api.utils.constants import (
     CADMIN_EMAIL_TEMPLATE_ID,
     SADMIN_EMAIL_TEMPLATE_ID,
     YEARLY_MOU_TEMPLATE_ID,
 )
-from database.models import *
+from api.utils.constants import STANDARD_USER, GUEST_USER
+from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
@@ -372,12 +373,12 @@ def create_snapshots():
         return "Failure"
 
 def send_mou_email(email, name):
-    host = get_frontend_host()
+    #host = get_frontend_host()
     content_values = {
         "name": name,
-        "terms_of_service_url": f"{host}/admin/view/policy/terms-of-service?ct=true",
-        "privacy_policy_url": f"{host}/admin/view/policy/privacy-policy?ct=true",
-        "mou_page_url": f"{host}/admin/view/policy/mou?ct=true",
+        "terms_of_service_url": f"{ADMIN_URL_ROOT}/admin/view/policy/terms-of-service?ct=true",
+        "privacy_policy_url": f"{ADMIN_URL_ROOT}/admin/view/policy/privacy-policy?ct=true",
+        "mou_page_url": f"{ADMIN_URL_ROOT}/admin/view/policy/mou?ct=true",
     }
     return send_massenergize_email_with_attachments(
         YEARLY_MOU_TEMPLATE_ID, content_values, email, None, None
