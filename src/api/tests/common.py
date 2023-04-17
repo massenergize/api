@@ -155,7 +155,7 @@ def makeAdminGroup(**kwargs):
 
 def makeAdmin(**kwargs):
     key = round(time.time() * 1000)
-    communities = kwargs.pop("communities")
+    communities = kwargs.pop("communities",[])
     full_name = kwargs.get("full_name") or f"user_full_name{key}"
     email = kwargs.get("email") or f"mrsadmin{key}@email.com"
     is_super_admin = kwargs.get("super_admin") or kwargs.get("is_super_admin")
