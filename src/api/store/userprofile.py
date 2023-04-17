@@ -133,6 +133,20 @@ def _update_action_data_totals(action, household, delta):
 
       d.save()
 
+def can_be_deleted(user, context):
+  if user.is_super_admin:
+    return False
+  if context.user_is_community_admin and  user.is_community_admin:
+    return False
+  
+  communityMembers = CommunityMember.objects.filter(user=user, is_deleted=False)
+  if len(communityMembers) > 1:
+    return False
+  
+  return True
+  
+
+
 
 class UserStore:
   def __init__(self):
@@ -194,7 +208,7 @@ class UserStore:
       return True
     
     return False
-
+  
 
 
   def decline_mou(self,user, args): 
@@ -666,6 +680,10 @@ class UserStore:
       
       users = UserProfile.objects.filter(id=user_id)
       user = users.first()
+
+      if not can_be_deleted(user,context):
+        return None, CustomMassenergizeError("User can't be deleted")
+      
       # since we do not delete the record from the database but mark it as deleted, and the email needs to be unique,
       # modify the email address in case the person wants to create a profile again with that email. 
       # This allows us to tell exactly what happened in case we need to find out what happened to a users profile.
