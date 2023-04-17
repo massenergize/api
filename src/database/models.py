@@ -1257,9 +1257,7 @@ class Subdomain(models.Model):
 
 class CustomCommunityWebsiteDomain(models.Model):
     id = models.AutoField(primary_key=True)
-    # Sam - do you see any problem with this?  URL field is a text field with validator to be valid URL
     website = models.URLField(max_length=SHORT_STR_LEN, unique=True)
-    # website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
         Community,
         on_delete=models.CASCADE,
@@ -1830,11 +1828,8 @@ class Action(models.Model):
         return data
 
     class Meta:
-        #ordering = ["-id","rank", "title"]
         ordering = ["rank", "title"]
         db_table = "actions"
-        # had required this unique, now enforced in code
-        # unique_together = [["title", "community"]]
 
 
 class Event(models.Model):
