@@ -34,7 +34,7 @@ def extract_email_content(text):
 
 
 def extract_msg_id(text):
-    link = text.strip().split("and respond to message\n")
+    link = text.strip().split("and respond to message")
     link = link[1].strip()
     url_match = re.search(r'<(.*?)>', link)
     url = url_match.group(1)
@@ -78,10 +78,13 @@ class WebhookService:
   
   def process_inbound_webhook(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+        
         reply = args.get("StrippedTextReply")
         text_body = args.get("TextBody")
 
         splitted_body = text_body.strip().split("Here is a copy of the message:")
+        if len(splitted_body) < 2: # will probably be a postmark test
+          return {"success":False},None
         user_msg_content = splitted_body[1].strip().split("If possible, please reply through the admin portal rather than")[0].strip()
         subject,email = extract_email_content(user_msg_content)
 
