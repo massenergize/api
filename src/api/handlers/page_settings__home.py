@@ -25,6 +25,7 @@ class HomePageSettingsHandler(RouteHandler):
     self.add("/home_page_settings.update", self.update)
     self.add("/home_page_settings.delete", self.delete)
     self.add("/home_page_settings.remove", self.delete)
+    self.add("/home_page_settings.addEvent", self.add_event)
 
     #admin routes
     self.add("/home_page_settings.listForCommunityAdmin", self.community_admin_list)
@@ -45,6 +46,15 @@ class HomePageSettingsHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     home_page_setting_info, err = self.service.create_home_page_setting(args)
+    if err:
+      return err
+    return MassenergizeResponse(data=home_page_setting_info)
+  
+  @admins_only
+  def add_event(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    home_page_setting_info, err = self.service.add_event(args)
     if err:
       return err
     return MassenergizeResponse(data=home_page_setting_info)

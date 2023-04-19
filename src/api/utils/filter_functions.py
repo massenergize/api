@@ -382,5 +382,10 @@ def get_sort_params(params):
 
 
 def sort_items(queryset, params):
+  if not queryset:
+    return []
+  if isinstance(queryset, list):
+    return queryset
+
   sort_params = get_sort_params(params)
   return queryset.order_by(sort_params)

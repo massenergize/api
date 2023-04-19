@@ -15,6 +15,7 @@ class WebhookHandler(RouteHandler):
 
   def registerRoutes(self):
     self.add("/email.bounce.webhook", self.bounce_email_webhook)
+    self.add("/webhooks.inbound.get", self.process_inbound_webhook)
 
 
   def bounce_email_webhook(self, request):
@@ -24,3 +25,13 @@ class WebhookHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=res)
+
+
+  def process_inbound_webhook(self, request):
+      context: Context = request.context
+      args: dict = json.loads(request.body)
+      res, err = self.service.process_inbound_webhook(context, args)
+
+      if err:
+        return MassenergizeResponse(error=str(err), status=err.status)
+      return MassenergizeResponse(data=res)
