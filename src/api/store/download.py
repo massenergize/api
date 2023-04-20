@@ -6,6 +6,7 @@ from _main_.utils.massenergize_errors import (
 )
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from collections import Counter
 from database.models import (
     UserProfile,
     CommunityMember,
@@ -115,6 +116,7 @@ class DownloadStore:
             "Location",
             "Geographically Focused", 
             "Last Cadmin Login",
+            "Primary Community Users (count)",
             "Members (count)",
             "Guests (count)", 
             "Teams (count)",
@@ -149,7 +151,8 @@ class DownloadStore:
             "Households User Reported",
             "Households Manual Addition",
             "Households Partner",
-            "User Count",
+            "Primary Community Users",
+            "Member Count",
             "Actions Live Count",
             "Actions Total" ,
             "Actions Partner",
@@ -623,14 +626,39 @@ class DownloadStore:
             ).select_related("action__calculator_action")
             done_action_rels_members = done_action_rels
         return households_count, done_action_rels, done_action_rels_members
+    
+    def _get_primary_community_dict(self):
+        
+        users = UserProfile.objects.filter(is_deleted=False)
 
+        comm_list = []
+        for user in users:
+            if not isinstance(user, Subscriber):
+
+                #Just want users whose PRIMARY community is this one right? 
+                # communities of primary real estate unit associated with the user
+                reu_community = None
+                for reu in user.real_estate_units.all():
+                    if reu.community:
+
+                        comm_list.append(reu.community.name)
+                        break
+        
+        return(Counter(comm_list))
 
     #Gets row information for each community for All Communities CSV
-    def _get_community_info_cells(self, community):
+    def _get_community_info_cells(self, community, prim_comm_dict):
         
         location_string = self.get_location_string(community)
 
         community_members, teams_count, events_count, actions_count, testimonials_count, actions = self.community_info_helper(community)
+        
+        primary_community_user_count = 0
+        if community.name in prim_comm_dict:
+            print(str(community.name) + str(community.is_geographically_focused))
+            primary_community_user_count = prim_comm_dict[community.name]
+        print(primary_community_user_count)
+
         users = [cm.user for cm in community_members]
 
         date_list = self.get_cadmin_recent_date(users)
@@ -700,6 +728,7 @@ class DownloadStore:
             "Geographically Focused": geo_focused,
             "Last Cadmin Login": str(most_recent_cadmin_login), 
             "Members (count)": str(members_count),
+            "Primary Community Users (count)": str(primary_community_user_count), #first reu 
             "Guests (count)": str(guest_count),
             "Teams (count)": teams_count,
             "Actions (count)": str(actions_count),
@@ -946,8 +975,10 @@ class DownloadStore:
         columns = self.community_info_columns
         data = [columns]
 
+        primary_community_dict = self._get_primary_community_dict()
+
         for community in communities:
-            data.append(self._get_community_info_cells(community))
+            data.append(self._get_community_info_cells(community,primary_community_dict))
 
         return data
 
@@ -970,7 +1001,7 @@ class DownloadStore:
     
 
     def _get_metrics_cells(self, community_id, time_stamp):
-        placeholder = ""
+
         metrics_cells = {
             "Date": time_stamp.date,
             "Is Live": time_stamp.is_live,
@@ -978,7 +1009,8 @@ class DownloadStore:
             "Households User Reported": time_stamp.households_user_reported,
             "Households Manual Addition": time_stamp.households_manual_addition,
             "Households Partner": time_stamp.households_partner,
-            "User Count": time_stamp.user_count,
+            "Primary Community Users": time_stamp.primary_community_users_count,
+            "Member Count": time_stamp.member_count,
             "Actions Live Count": time_stamp.actions_live_count,
             "Actions Total": time_stamp.actions_total,
             "Actions Partner": time_stamp.actions_partner,
@@ -1015,17 +1047,87 @@ class DownloadStore:
 
         return data
 
+    def _get_all_metrics_info_cells(self, snapshots, comms):
+        dic = {"is_live": [], "households_total": 0, "households_user_reported": 0, "households_manual_addition":0,
+        "households_partner":0, "primary_community_users_count":0, "member_count":0, "actions_live_count":0,
+        'actions_total':0, 'actions_partner':0, 'actions_user_reported':0,
+        'carbon_total':0, 'carbon_user_reported':0, 'carbon_manual_addition':0,
+        'carbon_partner':0, 'guest_count':0, 'actions_manual_addition':0,
+        'events_hosted_current':0, 'events_hosted_past':0, 'my_events_shared_current':0,
+        'my_events_shared_past':0, 'events_borrowed_from_others_current':0,
+        'events_borrowed_from_others_past':0, 'teams_count':0, 'subteams_count':0,
+        'testimonials_count':0, 'service_providers_count':0,
+        }
+        snapshots_list = [] 
+        comms_list =[]
+        #if more than one timestamp for a given community on certain date, get latest one
+        for elem in comms:
+            stamp = snapshots.filter(community__id = elem[0]).order_by("-date").first()
+            snapshots_list.append(stamp)
+            comms_list.append(stamp.community.name)
+
+        #for each field in CSV, sum value across all relevant snapshots
+        for key in dic.keys():
+            for stamp in snapshots_list:
+                if not getattr(stamp, key): #if value is blank
+                    break
+                field_value = getattr(stamp, key)
+                if key == "is_live":
+                    if field_value == True:
+                        dic[key] = dic[key] + [stamp.community.name]
+                else:
+                    dic[key] = dic[key] + int(field_value)
+
+        metrics_cells = {
+            "Date": snapshots_list[0].date,
+            "Is Live": ', '.join(dic["is_live"]),
+            "Households Total": dic["households_total"],
+            "Households User Reported": dic["households_user_reported"],
+            "Households Manual Addition": dic["households_manual_addition"],
+            "Households Partner": dic["households_partner"],
+            "Primary Community Users": dic["primary_community_users_count"],
+            "Member Count": dic["member_count"],
+            "Actions Live Count": dic["actions_live_count"],
+            "Actions Total": dic["actions_total"],
+            "Actions Partner": dic["actions_partner"],
+            "Actions User Reported": dic["actions_user_reported"],
+            "Carbon Total": dic["carbon_total"],
+            "Carbon User Reported": dic["carbon_user_reported"],
+            "Carbon Manual Addition": dic["carbon_manual_addition"],
+            "Carbon Partner": dic["carbon_partner"],
+            "Guest Count": dic["guest_count"],
+            "Actions Manual Addition": dic["actions_manual_addition"],
+            "Events Hosted Current": dic["events_hosted_current"],
+            "Events Hosted Past": dic["events_hosted_past"],
+            "My Events Shared Current": dic["my_events_shared_current"],
+            "My Events Shared Past": dic["my_events_shared_past"],
+            "Events Borrowed From Others Current": dic["events_borrowed_from_others_current"],
+            "Events Borrowed From Others Past": dic["events_borrowed_from_others_past"],
+            "Teams Count": dic["teams_count"],
+            "Subteams Count": dic["subteams_count"],
+            "Testimonials Count": dic["testimonials_count"],
+            "Service Providers Count": dic["service_providers_count"],
+            }
+        
+        return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list
+
+    
     def _all_metrics_download(self, context, args):
-        columns = ["Community"] + self.metrics_columns
+        columns = ["Community Count"] + self.metrics_columns + ["Communities"]
         data = [columns]
-        communities = Community.objects.filter(is_deleted=False, is_demo=False)
 
-        for community in communities:
-            community_id = community.id
+        community_snapshots = CommunitySnapshot.objects.filter().order_by("date")
+        distinct_dates = community_snapshots.values_list("date").distinct() 
 
-            snapshots = CommunitySnapshot.objects.filter(community__id = community_id)
-            for snap in snapshots:
-                data.append([community.name] + self._get_metrics_cells(community_id, snap))
+        #for every date make a row in the CSV
+        for elem in distinct_dates:
+
+            snapshots_list = community_snapshots.filter(date = elem[0])
+            comm_ids = snapshots_list.values_list("community").distinct()
+
+            most_info, comms_list = self._get_all_metrics_info_cells(snapshots_list, comm_ids)
+
+            data.append([len(comms_list)] + most_info + [', '.join(comms_list)])
 
         return data
 
@@ -1133,9 +1235,10 @@ class DownloadStore:
             if not context.user_is_admin():
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
             if community_id: 
+                community_name = Community.objects.get(id=community_id).name
                 return (
                     self._community_metrics_download(context, args, community_id),
-                    None,
+                    community_name,
                 ), None
             elif context.user_is_super_admin:
                 return (
