@@ -1,12 +1,12 @@
-from api.store.common import create_pdf_from_rich_text, sign_mou
+from _main_.utils.footage.FootageConstants import FootageConstants
 from api.utils.filter_functions import get_users_filter_params
-from database.models import CommunityAdminGroup, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
+from api.store.common import create_pdf_from_rich_text, sign_mou
+from database.models import CommunityAdminGroup, Footage, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from _main_.settings import DEBUG, IS_PROD, IS_CANARY
-from django.db.models import F
 from sentry_sdk import capture_message
 from .utils import get_community, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
   find_reu_community, split_location_string, check_location
@@ -152,6 +152,21 @@ class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
   
+  def fetch_user_visits(self,context:Context, args):
+    id = args.get("id")
+    limit  = 30
+    try:
+      # # If we want to use visitor logs, we use this
+      # user = UserProfile.objects.filter(id=id).first()
+      # return user.visit_log, None
+      #------------------------------------------------
+      # If we want to use footages, we use t his
+      # Retrieve the most recent 30
+      visits = Footage.objects.filter(actor__id = id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).order_by("-id")[:limit]
+      return visits, None
+    except Exception as e:
+        return None, CustomMassenergizeError(e)
+
   def validate_username(self, username):
     # returns [is_valid, suggestion], error
     try:    

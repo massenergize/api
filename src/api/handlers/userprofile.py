@@ -45,6 +45,19 @@ class UserHandler(RouteHandler):
         self.add("/users.import", self.import_users)
         self.add("/users.mou.accept", self.accept_mou)
  
+        self.add("/users.get.visits", self.fetch_user_visits)
+    
+    @admins_only 
+    def fetch_user_visits(self,request): 
+      context: Context = request.context
+      args: dict = context.args
+      args, err = self.validator.expect("id", str, is_required=True).verify(context.args)
+      if err:
+        return err
+      visits, err = self.service.fetch_user_visits(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=visits)
 
     @admins_only
     def accept_mou(self, request):
