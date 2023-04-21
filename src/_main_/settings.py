@@ -40,7 +40,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = False
+IS_LOCAL = True
 
 try:
     if IS_PROD:
@@ -86,6 +86,7 @@ if RUN_SERVER_LOCALLY:
     
 
 INSTALLED_APPS = [
+    'channels',
     'django_hosts',
     'authentication',
     'carbon_calculator',
@@ -101,6 +102,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'socket_notifications'
 ]
 
 MIDDLEWARE = [
@@ -144,7 +146,8 @@ SECURE_HSTS_SECONDS = 3600
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 USE_X_FORWARDED_HOST = True
-WSGI_APPLICATION = '_main_.wsgi.application'
+# WSGI_APPLICATION = '_main_.wsgi.application'
+ASGI_APPLICATION = '_main_.asgi.application'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 CSRF_COOKIE_SECURE = not DEBUG
@@ -293,3 +296,14 @@ else:
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
+
+
+# ASGI_APPLICATION = '_main_.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('localhost', 6379)],
+        },
+    },
+}
