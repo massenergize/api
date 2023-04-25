@@ -1069,13 +1069,15 @@ class DownloadStore:
         #for each field in CSV, sum value across all relevant snapshots
         for key in dic.keys():
             for stamp in snapshots_list:
-                if not getattr(stamp, key): #if value is blank
-                    break
-                field_value = getattr(stamp, key)
+
                 if key == "is_live":
-                    if field_value == True:
+                    if getattr(stamp, key) == True:
                         dic[key] = dic[key] + [stamp.community.name]
+
                 else:
+                    if not getattr(stamp, key):
+                        break
+                    field_value = getattr(stamp, key)
                     dic[key] = dic[key] + int(field_value)
 
         metrics_cells = {
@@ -1108,7 +1110,6 @@ class DownloadStore:
             "Testimonials Count": dic["testimonials_count"],
             "Service Providers Count": dic["service_providers_count"],
             }
-        
         return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list
 
     
@@ -1116,7 +1117,17 @@ class DownloadStore:
         columns = ["Community Count"] + self.metrics_columns + ["Communities"]
         data = [columns]
 
-        community_snapshots = CommunitySnapshot.objects.filter().order_by("date")
+        audience = args["audience"]
+        comm_ids = []
+        if args["community_ids"] is not None:
+            comm_ids = args["community_ids"].split(",")
+        if audience == "SPECIFIC":
+            community_snapshots = CommunitySnapshot.objects.filter(community__id__in = comm_ids).order_by("date")
+        elif audience == "ALL_EXCEPT":
+            community_snapshots = CommunitySnapshot.objects.exclude(community__id__in = comm_ids).order_by("date")
+        else:
+            community_snapshots = CommunitySnapshot.objects.filter().order_by("date")
+
         distinct_dates = community_snapshots.values_list("date").distinct() 
 
         #for every date make a row in the CSV
