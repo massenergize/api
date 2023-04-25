@@ -1,18 +1,9 @@
-from django.urls import path, re_path
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
+from django.urls import re_path
 
-from socket_notifications import Notification
+from socket_notifications.consumers.user_session_tracker_consumer import UserSessionTrackerConsumer
 
 
 websocket_urls = [
-    path('ws/notifications/', Notification.as_asgi()),
+    re_path(r'ws/me-client/connect/', UserSessionTrackerConsumer.as_asgi()),
 ]
 
-# application = ProtocolTypeRouter({
-#     'websocket': AuthMiddlewareStack(
-#         URLRouter(
-#             websocket_urlpatterns
-#         )
-#     ),
-# })
