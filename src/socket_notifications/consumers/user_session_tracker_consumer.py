@@ -7,17 +7,20 @@ class UserSessionTrackerConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept() 
-        # headers = self.scope["headers"]
        
         await self.send(text_data=json.dumps({
-            "type":"le_connection_established", 
-            "message":"The connection is established!"
+            "type":"CONNECTION_ESTABLISHED", 
+            "message":"Its safe, send gift!"
            
         }))
         
 
     async def receive(self, text_data=None, bytes_data=None):
-        return await super().receive(text_data, bytes_data)
+        # return await super().receive(text_data, bytes_data)
+       
+        gift = json.loads(text_data)
+        token = gift.get("token", None)
+        print("TOKEN HERE",token )
        
 
  
