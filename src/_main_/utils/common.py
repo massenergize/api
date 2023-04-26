@@ -3,11 +3,21 @@ from querystring_parser import parser
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 #import cv2
 from datetime import datetime
 from dateutil import tz
 from sentry_sdk import capture_message
+
+
+def get_date_and_time_in_milliseconds(**kwargs): 
+  hours = kwargs.get("hours", None)
+  date = datetime.now(tz=pytz.UTC)
+  if hours: 
+    delta = timedelta(hours = hours) 
+    date = date + delta
+  current_time_in_ms = date.timestamp() * 1000
+  return current_time_in_ms
 
 def get_request_contents(request,**kwargs):
   filter_out = kwargs.get("filter_out")
