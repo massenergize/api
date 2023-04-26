@@ -85,6 +85,7 @@ class DownloadStore:
         ]
 
         self.user_info_columns_2 = [
+            "Zipcode", #emma
             "Households (count)",
             "Role",
             "Created",
@@ -227,6 +228,20 @@ class DownloadStore:
 
         return self._get_cells_from_dict(self.user_info_columns_1, user_cells_1)
 
+    def _get_user_zipcodes(self, reus):
+        zipcodes = ""
+        for elem in reus:
+            if getattr(elem, "address") and getattr(elem.address, "zipcode"):
+                zipcodes += str(elem.address.zipcode)
+            elif getattr(elem, "location"):
+                    location_list = elem.location.replace(", ", ",").split( ",")
+                    zipc = location_list[-1]
+                    if len(zipc) ==5 and zipc.isdigit():
+                        if zipcodes != "": 
+                            zipcodes += ", "
+                        zipcodes+= str(zipc)
+        return zipcodes
+
     #Given user, returns last part of populated row (for Users CSV)
     def _get_user_info_cells_2(self, user):
         user_cells_2 = {}
@@ -287,13 +302,16 @@ class DownloadStore:
                 is_guest = (user.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
 
             is_invited = not is_guest and not user.accepts_terms_and_conditions
-            user_households = user.real_estate_units.count()
 
+            reus = user.real_estate_units.all()
+            zipcodes = self._get_user_zipcodes(reus)
 
             sign_in_date = user.visit_log[-1] if len(user.visit_log) >=1 else user.updated_at.strftime("%Y/%m/%d") if user.updated_at else placeholder
-
+            
+            placeholder: ""
             user_cells_2 = {
-                "Households (count)": user_households,
+                "Zipcode": placeholder,
+                "Households (count)": reus.count(),
                 "Role": "super admin"
                 if user.is_super_admin
                 else "community admin"
