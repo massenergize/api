@@ -85,7 +85,7 @@ class DownloadStore:
         ]
 
         self.user_info_columns_2 = [
-            "Zipcode", #emma
+            "Zipcode", 
             "Households (count)",
             "Role",
             "Created",
@@ -232,14 +232,19 @@ class DownloadStore:
         zipcodes = ""
         for elem in reus:
             if getattr(elem, "address") and getattr(elem.address, "zipcode"):
-                zipcodes += str(elem.address.zipcode)
+                if zipcodes != "": 
+                    zipcodes = zipcodes[:-1] + ", " + str(elem.address.zipcode) + "\""
+                else: 
+                    zipcodes += "=\"" +  str(elem.address.zipcode) + "\""
+
             elif getattr(elem, "location"):
                     location_list = elem.location.replace(", ", ",").split( ",")
                     zipc = location_list[-1]
                     if len(zipc) ==5 and zipc.isdigit():
                         if zipcodes != "": 
-                            zipcodes += ", "
-                        zipcodes+= str(zipc)
+                            zipcodes = zipcodes[:-1] + ", " + str(zipc) + "\""
+                        else: 
+                            zipcodes+= "=\"" +  str(zipc) + "\""
         return zipcodes
 
     #Given user, returns last part of populated row (for Users CSV)
@@ -307,10 +312,8 @@ class DownloadStore:
             zipcodes = self._get_user_zipcodes(reus)
 
             sign_in_date = user.visit_log[-1] if len(user.visit_log) >=1 else user.updated_at.strftime("%Y/%m/%d") if user.updated_at else placeholder
-            
-            placeholder: ""
             user_cells_2 = {
-                "Zipcode": placeholder,
+                "Zipcode": zipcodes,
                 "Households (count)": reus.count(),
                 "Role": "super admin"
                 if user.is_super_admin

@@ -86,50 +86,18 @@ class MiscellaneousStore:
             return None, CustomMassenergizeError(e)
 
     def actions_report(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        
-        has_address_count =0
-        zipcode_count = 0
-        reu_count =0
-        nothing_count = 0
-        users = UserProfile.objects.all()
-        for user in users:
-            reus = user.real_estate_units.all()
-
-            for elem in reus:
-                reu_count +=1
-                #if getattr(elem, "address") and getattr(elem.address, "zipcode"):
-                if getattr(elem, "address"):
-                    has_address_count +=1
-                    if getattr(elem.address, "zipcode"):
-                        zipcode_count +=1
-                elif getattr(elem, "location"):
-                        location_list = elem.location.replace(", ", ",").split( ",")
-                        zipcode = location_list[-1]
-                        if len(zipcode) ==5 and zipcode.isdigit():
-                            print(zipcode)
-                            break
-
-                else:
-                    nothing_count +=1
-        print("NOTHING COUNT: "+ str(nothing_count))
-        print("Users Count: " + str(users.count()))
-        print("User REU count: " + str(reu_count))
-        print("Has address/location object count: " + str(has_address_count))
-        print("Zipcode count: " + str(zipcode_count))
-        
-        
-        # print("Actions report!")
-        # total = 0
-        # total_wo_ccaction = 0
-        # for c in Community.objects.filter(is_published=True):
-        #     print(c)
-        #     actions = Action.objects.filter(community__id=c.id, is_published=True, is_deleted=False)
-        #     total += actions.count()
-        #     for action in actions:
-        #         if action.calculator_action == None:
-        #             total_wo_ccaction += 1
-        #             print(action.title + " has no corresponding CCAction")
-        # print("Total actions = "+str(total) + ", no CCAction ="+str(total_wo_ccaction))
+        print("Actions report!")
+        total = 0
+        total_wo_ccaction = 0
+        for c in Community.objects.filter(is_published=True):
+            print(c)
+            actions = Action.objects.filter(community__id=c.id, is_published=True, is_deleted=False)
+            total += actions.count()
+            for action in actions:
+                if action.calculator_action == None:
+                    total_wo_ccaction += 1
+                    print(action.title + " has no corresponding CCAction")
+        print("Total actions = "+str(total) + ", no CCAction ="+str(total_wo_ccaction))
         return None, None
 
     def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:

@@ -20,8 +20,7 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-        #emma
-        download_data(data, USERS)
+        download_data.delay(data, USERS)
         return [], None
 
     def actions_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
@@ -64,8 +63,7 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-        #emma 
-        download_data(data, METRICS)
+        download_data.delay(data, METRICS)
         return [], None
 
     # these two routines don't do what they should do, which is to send a copy of the nudge report to cadmins or sadmins

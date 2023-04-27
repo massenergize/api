@@ -84,11 +84,8 @@ def download_data(self, args, download_type):
     elif download_type == METRICS:
         (files, com_name), err = store.metrics_download(context, args, community_id=args.get("community_id"))
         if err:
-            print("error")
-            #emma  
-            #error_notification(METRICS, email)
+            error_notification(METRICS, email)
         else:
-            print("success")
             generate_csv_and_email(
                 data=files, download_type=METRICS, community_name=com_name, email=email)
 
