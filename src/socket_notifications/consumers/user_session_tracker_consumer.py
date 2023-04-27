@@ -10,7 +10,6 @@ import pytz
 from api.utils.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 
 USER_SESSION_HAS_EXPIRED = "user_session_expired"
-UKNOWN_EXPIRY_TIME = "uknown_expiry_time"
 CONNECTION_ESTABLISHED = "connection_established"
 
 class UserSessionTrackerConsumer(AsyncWebsocketConsumer):
@@ -37,31 +36,21 @@ class UserSessionTrackerConsumer(AsyncWebsocketConsumer):
         # If there is ever a situation where the expiration time is not sent through by the frontend 
         # Send a message back to send (There on frontend, admins can be forced to sign in again, if the value is really somehow not available)
         if not expiration_in_session: 
-            response = {"type":UKNOWN_EXPIRY_TIME,"message":"Did not receive session expiration time..."}
+            response = {"type":USER_SESSION_HAS_EXPIRED,"message":"Did not receive session expiration time..."}
             await self.send(json.dumps(response))
             return 
         in_seconds = expiration_in_session/1000
         expiration_as_date = datetime.fromtimestamp(in_seconds,tz=pytz.UTC)
 
         # --- FOR TESTING, UNCOMMENT THIS PART FOR A SHORTER WAIT
-        expiration_as_date = datetime.now(tz=pytz.UTC) + timedelta(seconds=15)
+        # expiration_as_date = datetime.now(tz=pytz.UTC) + timedelta(seconds=15)
 
      
 
         while True: 
             current_date_and_time = datetime.now(tz=pytz.UTC)
             if current_date_and_time > expiration_as_date: 
-                print("This shit happehned")
                 await self.send_auth_notification() 
                 break 
             await asyncio.sleep(5) 
-            print("Still counting...") # REMOVE BEFORE PR (BPR)
     
-
-       
-
- 
-
-    # async def disconnect(self, close_code):
-    #     print("this shit disconncted meerhn!!!!!")
-       
