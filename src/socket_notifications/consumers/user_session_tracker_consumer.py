@@ -16,7 +16,6 @@ class UserSessionTrackerConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept() 
-        print("Well, we are connecting here ---- mtseeew ----")
         await self.send(text_data=json.dumps({
             "type":CONNECTION_ESTABLISHED, 
             "message":"Its safe, send gift!"
