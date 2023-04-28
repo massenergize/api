@@ -86,6 +86,7 @@ class DownloadStore:
         ]
 
         self.user_info_columns_2 = [
+            "Zipcode", 
             "Households (count)",
             "Role",
             "Created",
@@ -230,6 +231,25 @@ class DownloadStore:
 
         return self._get_cells_from_dict(self.user_info_columns_1, user_cells_1)
 
+    def _get_user_zipcodes(self, reus):
+        zipcodes = ""
+        for elem in reus:
+            if getattr(elem, "address") and getattr(elem.address, "zipcode"):
+                if zipcodes != "": 
+                    zipcodes = zipcodes[:-1] + ", " + str(elem.address.zipcode) + "\""
+                else: 
+                    zipcodes += "=\"" +  str(elem.address.zipcode) + "\""
+
+            elif getattr(elem, "location"):
+                    location_list = elem.location.replace(", ", ",").split( ",")
+                    zipc = location_list[-1]
+                    if len(zipc) ==5 and zipc.isdigit():
+                        if zipcodes != "": 
+                            zipcodes = zipcodes[:-1] + ", " + str(zipc) + "\""
+                        else: 
+                            zipcodes+= "=\"" +  str(zipc) + "\""
+        return zipcodes
+
     #Given user, returns last part of populated row (for Users CSV)
     def _get_user_info_cells_2(self, user):
         user_cells_2 = {}
@@ -290,13 +310,14 @@ class DownloadStore:
                 is_guest = (user.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
 
             is_invited = not is_guest and not user.accepts_terms_and_conditions
-            user_households = user.real_estate_units.count()
 
+            reus = user.real_estate_units.all()
+            zipcodes = self._get_user_zipcodes(reus)
 
             sign_in_date = user.visit_log[-1] if len(user.visit_log) >=1 else user.updated_at.strftime("%Y/%m/%d") if user.updated_at else placeholder
-
             user_cells_2 = {
-                "Households (count)": user_households,
+                "Zipcode": zipcodes,
+                "Households (count)": reus.count(),
                 "Role": "super admin"
                 if user.is_super_admin
                 else "community admin"
@@ -459,16 +480,18 @@ class DownloadStore:
                 )
         # if the done count for all STATE REPORTED actions in a community is 0, 
         # will show one row for that community with 0
+      
         if len(rows) < 1:
-            rows.append(
-                self._get_cells_from_dict(
-                    self.action_info_columns,
+            rows.append(self._get_cells_from_dict(self.action_info_columns,
                     {
                         "Action": "STATE-REPORTED",
-                        "Done (count)": str(data.reported_value),
+                        "Done (count)": str(0),
                     },
                 )
             )
+
+
+        
                 
         return rows
 
@@ -760,9 +783,7 @@ class DownloadStore:
     
     #Combines populated row and column information for all users overall to create All Users CSV
     def _all_users_download(self):
-        users = list(
-            UserProfile.objects.filter(
-                is_deleted=False, 
+        users = list(UserProfile.objects.filter(is_deleted=False, 
                 #accepts_terms_and_conditions=True
             )
         ) + list(Subscriber.objects.filter(is_deleted=False))
@@ -822,7 +843,6 @@ class DownloadStore:
         data = sorted(data, key=lambda row: row[0])
         # insert the columns
         data.insert(0, columns)
-
         return data
 
     # Combines populated row and column information for all users in a given community to create All Users CSV
@@ -932,7 +952,7 @@ class DownloadStore:
                 community = action.community.name
                 is_focused = "Yes" if action.community.is_geographically_focused else "No"
             else:
-                community = ""
+                is_focused = community = ""
             data.append([community] + [is_focused] + self._get_action_info_cells(action))
 
         #get state reported actions
@@ -942,9 +962,9 @@ class DownloadStore:
             for row in community_reported_rows:
                 data.append([com.name]+ row)
 
+        
         data = sorted(data, key=lambda row: row[0])  # sort by community
         data.insert(0, columns)  # insert the column names
-
         return data
 
     #Combines populated rows and columns to create All Actions CSV  - action data for given community
@@ -1159,10 +1179,7 @@ class DownloadStore:
                     return (self._team_users_download(team_id, community_id), community_name), None 
                 elif community_id:
                     #All Users CSV method for all users in a given community
-                    return (
-                        self._community_users_download(community_id),
-                        community_name,
-                    ), None
+                    return (self._community_users_download(community_id), community_name), None
                 else:
                     #All Users CSV method for all users overall
                     return (self._all_users_download(), None), None

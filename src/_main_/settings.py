@@ -78,7 +78,7 @@ ALLOWED_HOSTS = [
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
     'massenergize.test',
-    'massenergize.test:3000'
+    'massenergize.test:3000',
 ]
 
 if RUN_SERVER_LOCALLY:
@@ -265,7 +265,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True 
 EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 587 

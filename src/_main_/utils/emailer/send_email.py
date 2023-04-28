@@ -27,7 +27,7 @@ def old_send_massenergize_email(subject, msg, to):
   return True
 
 def send_massenergize_email(subject, msg, to):
-  if is_test_mode():
+  if is_test_mode(): 
     return True
 
   message = pystmark.Message(
@@ -50,6 +50,7 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name)
     message.attach_binary(file, filename=file_name)
   response = pystmark.send_with_template(message, api_key=EMAIL_POSTMARK_SERVER_TOKEN)
   if not response.ok:
+    print(response.status_code)
     capture_message(f"Error Occurred in Sending Email to {to}", level="error")
     return False
   return True

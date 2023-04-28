@@ -79,6 +79,7 @@ class MessageStore:
             )
             new_message.save()
             user, err = get_user(context.user_id, email)
+
             if err:
                 return None, err
             if user:
@@ -95,7 +96,7 @@ class MessageStore:
                 media.save()
                 new_message.uploaded_file = media
 
-                new_message.save()
+            new_message.save()
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
                 messages=[new_message],
