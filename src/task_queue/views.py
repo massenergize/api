@@ -297,12 +297,30 @@ def _get_guest_count(users):
                 guest_count +=1
     return guest_count
 
+def _get_primary_community_val(community):
+        
+        users = UserProfile.objects.filter(is_deleted=False)
+        counter = 0
+        for user in users:
+            if not isinstance(user, Subscriber):
+
+                # communities of primary real estate unit associated with the user
+                reu_community = None
+                for reu in user.real_estate_units.all():
+                    if reu.community:
+                        reu_community = reu.community.name
+                        break
+                if reu_community == community:
+                    counter +=1
+        return(counter)
+
 def _create_community_timestamp(community):
 
     community_members = CommunityMember.objects.filter(is_deleted=False, community=community).select_related("user")
     users = [cm.user for cm in community_members]
     guest_count = _get_guest_count(users)
 
+    primary_community_users_count = _get_primary_community_val(community)
     teams = Team.objects.filter(is_deleted=False, primary_community=community, is_published = True)
     sub_teams = teams.filter( parent__isnull=False)
 
@@ -324,14 +342,15 @@ def _create_community_timestamp(community):
     events_hosted_current, events_hosted_past, my_events_shared_current, my_events_shared_past, events_borrowed_from_others_current, events_borrowed_from_others_past = _get_event_info(community)
     
     
-    metrics_report = CommunitySnapshot( 
+    snapshot = CommunitySnapshot( 
         community = community, 
         is_live = community.is_published,
         households_total = households_total,
         households_user_reported = households_user_reported,
         households_manual_addition = households_manual_addition,
         households_partner = households_partner,
-        user_count = community_members.count(),
+        primary_community_users_count = primary_community_users_count, #new
+        member_count = community_members.count(), #RENAMED FROM user_count
         actions_live_count = actions_live_count,
         actions_total = actions_total,
         actions_partner = actions_partner,
@@ -356,7 +375,7 @@ def _create_community_timestamp(community):
         service_providers_count = service_providers_count,
         )
 
-    metrics_report.save()
+    snapshot.save()
 
 
 def create_snapshots():
