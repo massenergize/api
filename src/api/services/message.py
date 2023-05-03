@@ -33,7 +33,6 @@ class MessageService:
       if err:
         return None, err
       
-      print(message.user)
       from_email = message.user.email
       new_args = {
           "parent": message,
