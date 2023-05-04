@@ -2802,6 +2802,7 @@ class Subscriber(models.Model):
     def simple_json(self):
         res = model_to_dict(self)
         res["community"] = None if not self.community else self.community.info()
+        res["subscribed"] = self.created_at.date()
         return res
 
     def full_json(self):

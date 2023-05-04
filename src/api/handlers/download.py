@@ -92,8 +92,7 @@ class DownloadHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
-  
-  @admins_only
+
   def send_sample_user_report(self, request):
     context: Context = request.context
     args: dict = context.args

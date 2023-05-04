@@ -1216,9 +1216,11 @@ class DownloadStore:
                     self._community_actions_download(community_id),
                     community_name,
                 ), None
-            elif context.user_is_super_admin:
+            elif context.user_is_admin():
                 #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
+            else:
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
