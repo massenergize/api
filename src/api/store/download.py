@@ -146,7 +146,6 @@ class DownloadStore:
         ]
 
         self.metrics_columns = [
-            "Date",
             "Is Live",
             "Households Total",
             "Households User Reported",
@@ -675,9 +674,7 @@ class DownloadStore:
         
         primary_community_user_count = 0
         if community.name in prim_comm_dict:
-            print(str(community.name) + str(community.is_geographically_focused))
             primary_community_user_count = prim_comm_dict[community.name]
-        print(primary_community_user_count)
 
         users = [cm.user for cm in community_members]
 
@@ -1020,7 +1017,6 @@ class DownloadStore:
     def _get_metrics_cells(self, community_id, time_stamp):
 
         metrics_cells = {
-            "Date": time_stamp.date,
             "Is Live": time_stamp.is_live,
             "Households Total": time_stamp.households_total,
             "Households User Reported": time_stamp.households_user_reported,
@@ -1055,17 +1051,17 @@ class DownloadStore:
 
     def _community_metrics_download(self, context, args, community_id):
         
-        columns = self.metrics_columns
+        columns = ["Date"] + self.metrics_columns
         data = [columns]
         snapshots = CommunitySnapshot.objects.filter(community__id = community_id).order_by("date")
 
         for snap in snapshots:
-            data.append(self._get_metrics_cells(community_id, snap))
+            data.append([snap.date] + self._get_metrics_cells(community_id, snap))
 
         return data
 
     def _get_all_metrics_info_cells(self, snapshots, comms):
-        dic = {"is_live": [], "households_total": 0, "households_user_reported": 0, "households_manual_addition":0,
+        dic = {"households_total": 0, "households_user_reported": 0, "households_manual_addition":0,
         "households_partner":0, "primary_community_users_count":0, "member_count":0, "actions_live_count":0,
         'actions_total':0, 'actions_partner':0, 'actions_user_reported':0,
         'carbon_total':0.0, 'carbon_user_reported':0.0, 'carbon_manual_addition':0.0,
@@ -1076,6 +1072,7 @@ class DownloadStore:
         'testimonials_count':0, 'service_providers_count':0,
         }
         snapshots_list = [] 
+        is_live = []
         comms_list =[]
         #if more than one timestamp for a given community on certain date, get latest one
         for elem in comms:
@@ -1084,14 +1081,10 @@ class DownloadStore:
             comms_list.append(stamp.community.name)
 
         #for each field in CSV, sum value across all relevant snapshots
-        for key in dic.keys():
-            for stamp in snapshots_list:
-
-                if key == "is_live":
-                    if getattr(stamp, key) == True:
-                        dic[key] = dic[key] + [stamp.community.name]
-
-                else:
+        for stamp in snapshots_list:
+            if stamp.is_live:
+                is_live += [stamp.community.name]
+                for key in dic.keys():
                     if not getattr(stamp, key):
                         continue
                     field_value = getattr(stamp, key)
@@ -1102,8 +1095,7 @@ class DownloadStore:
                         dic[key] = dic[key] + int(field_value)
 
         metrics_cells = {
-            "Date": snapshots_list[0].date,
-            "Is Live": ', '.join(dic["is_live"]),
+            "Is Live": len(is_live),
             "Households Total": dic["households_total"],
             "Households User Reported": dic["households_user_reported"],
             "Households Manual Addition": dic["households_manual_addition"],
@@ -1131,11 +1123,11 @@ class DownloadStore:
             "Testimonials Count": dic["testimonials_count"],
             "Service Providers Count": dic["service_providers_count"],
             }
-        return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list
+        return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list, is_live
 
     
     def _all_metrics_download(self, context, args):
-        columns = ["Community Count"] + self.metrics_columns + ["Communities"]
+        columns = ["Date"] + ["Community Count"] + self.metrics_columns + ["Communities"] + ["Is Live Communities"]
         data = [columns]
 
         audience = args["audience"]
@@ -1157,9 +1149,9 @@ class DownloadStore:
             snapshots_list = community_snapshots.filter(date = elem[0])
             comm_ids = snapshots_list.values_list("community").distinct()
 
-            most_info, comms_list = self._get_all_metrics_info_cells(snapshots_list, comm_ids)
-
-            data.append([len(comms_list)] + most_info + [', '.join(comms_list)])
+            most_info, comms_list, is_live_list = self._get_all_metrics_info_cells(snapshots_list, comm_ids)
+            
+            data.append([elem[0]] + [len(comms_list)] + most_info + [', '.join(comms_list)] + [', '.join(is_live_list)])
 
         return data
 
