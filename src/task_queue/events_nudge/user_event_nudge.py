@@ -44,8 +44,8 @@ USER_EVENT_NUDGE_KEY = "communication-prefs-feature-flag"
 # ---------------------------------------------------------------------------------------------------------------------
 
 def should_user_get_nudged(user):
-    user_preferences = user.preferences
-    portal_preferences = user_preferences.get("user_portal_settings") if user_preferences else USER_PREFERENCE_DEFAULTS
+    user_preferences = user.preferences if user.preferences else {}
+    portal_preferences = user_preferences.get("user_portal_settings", USER_PREFERENCE_DEFAULTS)
 
     user_communication_preferences = portal_preferences.get("communication_prefs", {})
     freq = user_communication_preferences.get("update_frequency", {})
@@ -162,8 +162,6 @@ def prepare_events_email_data(events):
     return data
 
 
-
-
 def send_events_report_email(name, email, event_list, comm):
     try:
         events = prepare_events_email_data(event_list[:LIMIT])
@@ -194,11 +192,9 @@ def send_automated_nudge(events, user, community):
         if not name or not email:
             print("Missing name or email for user: " + str(user))
             return False
-
         user_is_ready_for_nudge = should_user_get_nudged(user)
 
         if user_is_ready_for_nudge:
-    
             is_sent = send_events_report_email(name, email, events, community)
             if not is_sent:
                 print( f"**** Failed to send email to {name} for community {community.name} ****")
@@ -255,12 +251,10 @@ nudge is requested on demand by a cadmin on user portal.
 # Entry point
 def prepare_user_events_nudge(email=None, community_id=None):
     try:
-
         flag = FeatureFlag.objects.filter(key=USER_EVENT_NUDGE_KEY).first()
         allowed_communities = list(flag.communities.all())
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
-
         if email and community_id:
             all_community_events = get_community_events(community_id)
             user = UserProfile.objects.filter(email=email).first()
@@ -269,7 +263,7 @@ def prepare_user_events_nudge(email=None, community_id=None):
             send_user_requested_nudge(events, user, community)
 
             return True
-
+      
         for community in communities:
             if flag.audience == "EVERYONE" or community in allowed_communities:
                 events = get_community_events(community.id)
@@ -277,7 +271,6 @@ def prepare_user_events_nudge(email=None, community_id=None):
                 for user in users:
                     events = get_user_events(user.notification_dates, events)
                     send_automated_nudge(events, user, community)
-
         
         update_user_notification_dates(communities, flag)
         

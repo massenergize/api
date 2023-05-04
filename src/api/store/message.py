@@ -65,6 +65,9 @@ class MessageStore:
             body = args.pop("body", None)
             file = args.pop("uploaded_file", None)
             parent = args.pop("parent", None)
+            from_email = args.get("from")
+            from_user = get_user(from_email)
+            print(from_user)
 
             community, err = get_community(community_id, subdomain)
             if err:
@@ -99,6 +102,7 @@ class MessageStore:
             new_message.save()
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
+                actor=from_user,
                 messages=[new_message],
                 context=context,
                 type=FootageConstants.update(),
