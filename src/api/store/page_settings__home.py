@@ -1,5 +1,6 @@
 import json
 from api.store.utils import get_community_or_die
+from api.tests.common import RESET
 from database.models import HomePageSettings, ImageSequence, UserProfile, Media, Event
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -124,7 +125,7 @@ class HomePageSettingsStore:
 
       #images
       images = args.pop("images", None)
-      if images: 
+      if images and not images == RESET: 
         new_sequence = json.dumps(images)
         found_images = [ Media.objects.filter(id = img_id).first() for img_id in images ]
         home_page_setting.images.clear() 
@@ -137,6 +138,9 @@ class HomePageSettingsStore:
           name = f"Homepage settings Id - {home_page_id} - for community({home_page_setting.community.id}, {home_page_setting.community.name}) "
           image_sequence = ImageSequence.objects.create(name = name, sequence= new_sequence) 
           home_page_setting.image_sequence = image_sequence
+      elif images == RESET: 
+        home_page_setting.images.clear()
+
 
       home_page_setting.save()
 
