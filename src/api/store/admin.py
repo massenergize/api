@@ -155,6 +155,10 @@ class AdminStore:
         user = UserProfile.objects.filter(id=user_id).first()
       else:
         user = None
+      
+      # check if user initiating the deletion is also an admin of the community
+      
+
 
 
       if user and user in admin_group.members.all():

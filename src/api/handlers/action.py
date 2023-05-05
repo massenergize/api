@@ -88,7 +88,7 @@ class ActionHandler(RouteHandler):
     args = context.get_request_body() 
     (self.validator
       .expect("title", str, is_required=True, options={"min_length": 4, "max_length": 40})
-      .expect("community_id", int, is_required=True)
+      .expect("community_id", int, is_required=True) #fromContext
       .expect("image", "file", is_required=False, options={"is_logo": True})
       .expect("vendors", list, is_required=False)
       .expect("action_id", str, is_required=False)

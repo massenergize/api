@@ -47,7 +47,7 @@ def community_admins_only(function):
   @wraps(function)
   def wrap(handler, request, *args, **kwargs):
     context: Context = request.context
-    if context.user_is_logged_in and context.user_is_community_admin():
+    if context.user_is_logged_in and context.user_is_community_admin:
       return function(handler, request, *args, **kwargs)
     else:
       raise PermissionDenied
@@ -71,3 +71,24 @@ def super_admins_only(function):
   wrap.__name__ = function.__name__
   return wrap
 
+
+def user_is_admin_of_community(function):
+  """
+  This decorator enforces that a user is an admin of a community before the view can run
+  """
+  @wraps(function)
+  def wrap(handler, request, *args, **kwargs):
+    context: Context = request.context
+    print('+++++++++++++++++++++ res +++++++++++++++++')
+    print('')
+    print('')
+    print('')
+    print(context)
+    print('')
+    print('')
+    print('+++++++++++++++++++++ res +++++++++++++++++')
+      # check if 
+    return function(handler, request, *args, **kwargs)
+  wrap.__doc__ = function.__doc__
+  wrap.__name__ = function.__name__
+  return wrap
