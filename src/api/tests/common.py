@@ -242,6 +242,8 @@ def setupCC(client):
                 "Organizations": "carbon_calculator/content/Organizations.csv",
                 "Events": "carbon_calculator/content/Events.csv",
                 "Defaults": "carbon_calculator/content/Defaults.csv",
+                "Categories": "carbon_calculator/content/Categories.csv",
+                "Subcategories": "carbon_calculator/content/Subcategories.csv",
             },
         )
 

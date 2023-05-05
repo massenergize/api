@@ -3,7 +3,7 @@
 # Updated April 3
 #imports
 from datetime import date,datetime
-from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia,Org
+from .models import Action,Question,Event,Station,Group,ActionPoints,CarbonCalculatorMedia,Org, Category, Subcategory
 from django.utils import timezone
 
 from io import BytesIO
@@ -203,9 +203,125 @@ class CarbonCalculator:
         else:
             return {"status":False}
 
+    
+    def categories_import_helper(self, inputlist, first, num):
+        for item in inputlist:
+            if first:
+                first = False
+            else:
+                if item[0] == '':
+                    return first, num
+                qs = Category.objects.filter(name=item[0])
+                #don't think we want this!!
+                if qs:
+                    qs[0].delete() # delete past CCactions -- cant do this with past Actions linking to CCs??
+                    
+                if len(item)>=1 and item[0]!='':
+                    category = Category(
+                            name=item[0],
+                            is_deleted = True if item[1]== "True" else False,
+                            description = item[2],
+                            )
+                    category.save()
+                    num+=1
+        return first, num
+    
+    def subcategories_import_helper(self, inputlist, first, num):
+        for item in inputlist:
+            if first:
+                first = False
+            else:
+                if item[0] == '':
+                    return first, num
+
+                qs = Subcategory.objects.filter(name=item[0])
+                #don't think we want this!!
+                if qs:
+                    qs[0].delete() # delete past CCactions -- cant do this with past Actions linking to CCs??
+                
+                if len(item)>=1 and item[0]!='':
+                    #do we only want it for categories where is_deleted=False?
+                    cat = Category.objects.filter(name=item[1]).first()
+                    #or if category is deleted we make this is_deleted too??
+                    if cat:
+                        cat_is_deleted = cat.is_deleted
+                        subcategory = Subcategory(
+                                name=item[0],
+                                is_deleted = True if cat_is_deleted == True else True if item[2]== "True" else False,
+                                description = item[3],
+                                category = cat,
+                                )
+                        subcategory.save()
+                        num+=1
+        return first, num
+    
+    def actions_import_helper(self, inputlist, first, num):
+        for item in inputlist:
+            if first:
+                t = {}
+                for i in range(len(item)):
+                    t[item[i]] = i
+                first = False
+            else:
+                name = item[0]
+                if name == '':
+                    return first, num
+
+                #why does this delete existing objects? should update instead?
+                qs = Action.objects.filter(name=name)
+                if qs:
+                    qs[0].delete()
+
+                picture = None
+                #why len greater than or equal to 4??
+                if len(item)>=4 and name!='':
+                    cat = Category.objects.filter(name=item[t["Category"]]).first()
+                    subcat = Subcategory.objects.filter(name=item[t["Subcategory"]], category = cat).first()
+                    #if either is is_deleted, should it not be added?        
+
+                    if cat and not qs:
+                        picture = SavePic2Media(item[t["Picture"]])
+                        action = Action(name=name,
+                            title = item[t["Title"]],
+                            description=item[t["Description"]],
+                            helptext=item[t["Helptext"]],
+                            old_category=item[t["Old Category"]], 
+                            average_points=int(eval(item[t["Avg points"]])),
+                            questions=item[t["Questions"]].split(","),
+                            picture = picture,
+                            category = cat,
+                            sub_category = subcat,
+                            )
+                        action.save()
+
+                    if name in self.allActions:
+                        self.allActions[name].__init__(name)
+                    num+=1
+        return first, num
+
+    def import_helper(self, inputs, string, status, method):
+        data_file = inputs.get(string, '')
+        if data_file != '':
+            with open(data_file, newline='') as csvfile:
+                inputlist = csv.reader(csvfile)
+                first = True
+                num = 0
+
+                first, num = method(inputlist, first, num)
+
+                msg = "Imported %d Carbon Calculator %s" % (num, string)
+                print(msg)
+                csvfile.close()
+                status = True
+        return status
+
+    
     def Import(self,inputs):
         if inputs.get('Confirm',NO) == YES:
             status = False
+
+            status = self.import_helper(inputs, "Categories", status, self.categories_import_helper)
+            status = self.import_helper(inputs, "Subcategories", status, self.subcategories_import_helper)
 
             questionsFile = inputs.get('Questions','')
             if questionsFile!='':
@@ -259,53 +375,10 @@ class CarbonCalculator:
                     msg = "Imported %d Carbon Calculator Questions" % num
                     print(msg)
                     csvfile.close()
-                    status = True
+                    status = True 
 
-            actionsFile = inputs.get('Actions','')
-            if actionsFile!='':
-                with open(actionsFile, newline='') as csvfile:
-                    inputlist = csv.reader(csvfile)
-                    first = True
-                    num = 0
-                    for item in inputlist:
-                        if first:
-                            t = {}
-                            for i in range(len(item)):
-                                t[item[i]] = i
-                            first = False
-                        else:
-                            name = item[0]
-                            if name == '':
-                                continue
 
-                            qs = Action.objects.filter(name=name)
-                            if qs:
-                                qs[0].delete()
-
-                            #if action[5]!='':
-                            #    import this media filt
-                            #    actionPicture = Media()
-                            picture = None
-                            if len(item)>=4 and name!='':
-                                picture = SavePic2Media(item[t["Picture"]])
-                                action = Action(name=item[0],
-                                    title = item[t["Title"]],
-                                    description=item[t["Description"]],
-                                    helptext=item[t["Helptext"]],
-                                    category=item[t["Category"]],
-                                    average_points=int(eval(item[t["Avg points"]])),
-                                    questions=item[t["Questions"]].split(","),
-                                    picture = picture)
-                                action.save()
-
-                                if name in self.allActions:
-                                    self.allActions[name].__init__(name)
-                                #print('Importing Action ',action.name,': ',action.description)
-                                num+=1
-                    msg = "Imported %d Carbon Calculator Actions" % num
-                    print(msg)
-                    csvfile.close()
-                    status = True
+            status = self.import_helper(inputs, "Actions", status, self.actions_import_helper)
 
             stationsFile = inputs.get('Stations','')
             if stationsFile!='':
