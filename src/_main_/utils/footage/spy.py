@@ -31,6 +31,32 @@ class Spy:
         # more important processes
 
     @staticmethod
+    def create_mou_footage(**kwargs):
+        try:
+            ctx = kwargs.get("context")
+            actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            notes = kwargs.get("notes", "")
+            communities = kwargs.get("communities",[])
+            
+            footage = Spy.create_footage(
+                actor=actor,
+                notes=notes,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
+                item_type=FootageConstants.ITEM_TYPES["MOU"]["key"],
+            )
+            footage.communities.set(communities)
+            return footage
+        except Exception as e:
+            Console.log("Could not create action footage...", str(e))
+
+    @staticmethod
     def create_action_footage(**kwargs):
         try:
             actions = kwargs.get("actions")

@@ -297,30 +297,14 @@ def _get_guest_count(users):
                 guest_count +=1
     return guest_count
 
-def _get_primary_community_val(community):
-        
-        users = UserProfile.objects.filter(is_deleted=False)
-        counter = 0
-        for user in users:
-            if not isinstance(user, Subscriber):
-
-                # communities of primary real estate unit associated with the user
-                reu_community = None
-                for reu in user.real_estate_units.all():
-                    if reu.community:
-                        reu_community = reu.community.name
-                        break
-                if reu_community == community:
-                    counter +=1
-        return(counter)
-
-def _create_community_timestamp(community):
+def _create_community_timestamp(community, prim_dict):
 
     community_members = CommunityMember.objects.filter(is_deleted=False, community=community).select_related("user")
     users = [cm.user for cm in community_members]
     guest_count = _get_guest_count(users)
 
-    primary_community_users_count = _get_primary_community_val(community)
+    primary_community_users_count = prim_dict.get(community, 0)
+
     teams = Team.objects.filter(is_deleted=False, primary_community=community, is_published = True)
     sub_teams = teams.filter( parent__isnull=False)
 
@@ -349,8 +333,8 @@ def _create_community_timestamp(community):
         households_user_reported = households_user_reported,
         households_manual_addition = households_manual_addition,
         households_partner = households_partner,
-        primary_community_users_count = primary_community_users_count, #new
-        member_count = community_members.count(), #RENAMED FROM user_count
+        primary_community_users_count = primary_community_users_count, 
+        member_count = community_members.count(), 
         actions_live_count = actions_live_count,
         actions_total = actions_total,
         actions_partner = actions_partner,
@@ -381,10 +365,16 @@ def _create_community_timestamp(community):
 def create_snapshots():
     try:
         communities = Community.objects.filter(is_deleted=False) #is_published, is_demo =False
+        users = UserProfile.objects.filter(is_deleted=False)
+        primary_reu_dict = dict()
+        for user in users:
+            primary_reu =  user.real_estate_units.first()
+            if primary_reu and primary_reu.community:
+                primary_reu_dict[primary_reu.community] = primary_reu_dict.get(primary_reu.community, 0) + 1
 
         for comm in communities:
-            _create_community_timestamp(comm)
-        
+            _create_community_timestamp(comm, primary_reu_dict)
+
         return "Success"
 
     except Exception as e: 
