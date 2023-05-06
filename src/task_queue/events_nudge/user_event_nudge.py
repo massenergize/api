@@ -104,9 +104,7 @@ def update_last_notification_dates(email):
 def get_community_events(community_id):
     events = Event.objects.filter(
         Q(community__id=community_id) | # parent community events
-        Q(shared_to__id=community_id) | # events shared to community
-        Q(publicity=EventConstants.open()) | # open events
-        Q(publicity=EventConstants.is_open_to("OPEN_TO"),communities_under_publicity__id=community_id), # events that are opened to community
+        Q(shared_to__id=community_id),   # events shared to community
         is_published=True, 
         is_deleted=False, 
         start_date_and_time__gte=timezone.now(),
@@ -195,10 +193,12 @@ def send_automated_nudge(events, user, community):
         user_is_ready_for_nudge = should_user_get_nudged(user)
 
         if user_is_ready_for_nudge:
+            print("sending nudge")
             is_sent = send_events_report_email(name, email, events, community)
             if not is_sent:
                 print( f"**** Failed to send email to {name} for community {community.name} ****")
                 return False
+            update_last_notification_dates(email)
     return True
 
 
@@ -233,16 +233,15 @@ def get_user_events(notification_dates, community_events):
 
     return community_events.filter(Q(published_at__range=[last_time, today]))
 
-
-
-def update_user_notification_dates(communities, flag):
-        allowed_communities = list(flag.communities.all())
-        for community in communities:
-            if flag.audience == "EVERYONE" or community in allowed_communities:
-                users = get_community_users(community.id)
-                emails = get_email_lists(users)
-                for email in emails:
-                    update_last_notification_dates(email)
+# don't update notification date unless a notification was actually sent
+#def update_user_notification_dates(communities, flag):
+#        allowed_communities = list(flag.communities.all())
+#        for community in communities:
+#            if flag.audience == "EVERYONE" or community in allowed_communities:
+#                users = get_community_users(community.id)
+#                emails = get_email_lists(users)
+#                for email in emails:
+#                    update_last_notification_dates(email)
 
 '''
 Note: This function only get email as argument when the
@@ -266,13 +265,17 @@ def prepare_user_events_nudge(email=None, community_id=None):
       
         for community in communities:
             if flag.audience == "EVERYONE" or community in allowed_communities:
+                print(community)
                 events = get_community_events(community.id)
                 users = get_community_users(community.id)
                 for user in users:
+                    print(user)
                     events = get_user_events(user.notification_dates, events)
+                    print(events)
                     send_automated_nudge(events, user, community)
         
-        update_user_notification_dates(communities, flag)
+        # Only update user notification date is an email was actually sent
+        # update_user_notification_dates(communities, flag)
         
         return True   
     except Exception as e:
