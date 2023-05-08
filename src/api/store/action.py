@@ -1,6 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_actions_filter_params
 from database.models import Action, UserProfile, Community, Media
 from carbon_calculator.models import Action as CCAction
@@ -197,8 +198,13 @@ class ActionStore:
         return None, InvalidResourceError()
 
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin:
         return None, NotAuthorizedError()
+      
+      # check if user is community admin and is also an admin of the community that created the action
+      if context.user_is_community_admin:
+        if not is_admin_of_community(context.user_id, action.first().community.id):
+          return None, NotAuthorizedError()
 
       community_id = args.pop('community_id', None)
       tags = args.pop('tags', [])
