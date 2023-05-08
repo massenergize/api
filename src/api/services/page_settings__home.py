@@ -43,7 +43,7 @@ class HomePageSettingsService:
     home_page_setting, err = self.store.update_home_page_setting(args)
     if err:
       return None, err
-    return serialize(home_page_setting), None
+    return serialize(home_page_setting, True), None
 
   def delete_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     home_page_setting, err = self.store.delete_home_page_setting(args)
