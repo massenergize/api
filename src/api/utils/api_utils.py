@@ -12,3 +12,7 @@ def is_admin_of_community(user_id, community_id):
         return False
     is_admin = community_admins.members.filter(id=user_id).exists()
     return is_admin
+
+
+
+
