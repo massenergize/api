@@ -9,6 +9,8 @@ src/*.png
 src/*.jpg
 src/*.jpeg
 
+*.rdb*
+
 \.vscode/
 
 *.env
