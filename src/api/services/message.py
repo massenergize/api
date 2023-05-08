@@ -33,14 +33,13 @@ class MessageService:
       if err:
         return None, err
       
-      from_email = message.user.email
       new_args = {
           "parent": message,
           'community_id': message.community.pk,
           'title': args.get('title'),
           'body': args.get('body'),
           'email': args.get('to'),
-          'from': from_email,
+          'from': args.get('from_email'),
         }
 
       reply, create_err = self.store.message_admin(context, new_args)
