@@ -198,7 +198,7 @@ class ActionStore:
         return None, InvalidResourceError()
 
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin:
+      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
       
       # check if user is community admin and is also an admin of the community that created the action
@@ -308,6 +308,9 @@ class ActionStore:
       action_id = args.get("action_id", None)
       #find the action
       action_to_delete = Action.objects.get(id=action_id)
+      if context.user_is_community_admin:
+        if not is_admin_of_community(context.user_id, action_to_delete.community.id):
+          return None, NotAuthorizedError()
       action_to_delete.is_deleted = True 
       action_to_delete.save()
       # ----------------------------------------------------------------
@@ -328,14 +331,17 @@ class ActionStore:
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
-
+      
+      if not is_admin_of_community(context.user_id, community_id):
+        return None, NotAuthorizedError()
+      
       if ids: 
         actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return actions.distinct(), None
-
-      if community_id == 0:
-        # return actions from all communities
-        return self.list_actions_for_super_admin(context)
+      
+      # if community_id == 0:
+      #   # return actions from all communities
+      #   return self.list_actions_for_super_admin(context)
         
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
