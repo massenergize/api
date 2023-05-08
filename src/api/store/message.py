@@ -65,9 +65,11 @@ class MessageStore:
             body = args.pop("body", None)
             file = args.pop("uploaded_file", None)
             parent = args.pop("parent", None)
-            from_email = args.get("from")
-            from_user = get_user(from_email)
-            print(from_user)
+            sender_email = args.get("from") or context.user_email
+
+            sender, error = get_user(user_id=None,email=sender_email)
+            if error:
+                return None, error
 
             community, err = get_community(community_id, subdomain)
             if err:
@@ -81,7 +83,7 @@ class MessageStore:
                 parent=parent,
             )
             new_message.save()
-            user, err = get_user(context.user_id, email)
+            user, err = get_user(context.user_id, sender_email)
 
             if err:
                 return None, err
@@ -102,7 +104,7 @@ class MessageStore:
             new_message.save()
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
-                actor=from_user,
+                actor=sender,
                 messages=[new_message],
                 context=context,
                 type=FootageConstants.update(),
