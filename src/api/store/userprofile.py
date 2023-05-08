@@ -1,4 +1,5 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
 from api.utils.filter_functions import get_users_filter_params
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from database.models import CommunityAdminGroup, Footage, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
@@ -276,9 +277,17 @@ class UserStore:
         record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = datetime.utcnow())
         record.save()
         user.refresh_from_db()
+        # ----------------------------------------------------------------
+        communities = [ c.community for c in user.communityadmingroup_set.all()]
+        Spy.create_mou_footage( context = context, actor = user, communities = communities, type = FootageConstants.sign())
+        # ----------------------------------------------------------------
         return user, None
       else: 
         args["date"] = current_timestamp_str
+        # ----------------------------------------------------------------
+        communities = [ c.community for c in user.communityadmingroup_set.all()]
+        Spy.create_mou_footage( context = context, actor = user, communities = communities, type = FootageConstants.deny())
+        # ----------------------------------------------------------------
         return self.decline_mou( user, args), None
       
     except Exception as e:

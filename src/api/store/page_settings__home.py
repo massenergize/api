@@ -1,5 +1,6 @@
 import json
 from api.store.utils import get_community_or_die
+from api.tests.common import RESET
 from database.models import HomePageSettings, ImageSequence, UserProfile, Media, Event
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
@@ -125,24 +126,28 @@ class HomePageSettingsStore:
       #images
       images = args.pop("images", None)
       if images: 
-        new_sequence = json.dumps(images)
-        found_images = [ Media.objects.filter(id = img_id).first() for img_id in images ]
-        home_page_setting.images.clear() 
-        home_page_setting.images.set(found_images)
-        
-        sequence_obj = home_page_setting.image_sequence 
-        if sequence_obj: 
-          ImageSequence.objects.filter(id = sequence_obj.id).update(sequence = new_sequence)
-        else: # First time creating a sequence Obj for homepage images
-          name = f"Homepage settings Id - {home_page_id} - for community({home_page_setting.community.id}, {home_page_setting.community.name}) "
-          image_sequence = ImageSequence.objects.create(name = name, sequence= new_sequence) 
-          home_page_setting.image_sequence = image_sequence
+        if images[0] == RESET: 
+          home_page_setting.images.clear()
+        else:
+          new_sequence = json.dumps(images)
+          found_images = [ Media.objects.filter(id = img_id).first() for img_id in images ]
+          home_page_setting.images.clear() 
+          home_page_setting.images.set(found_images)
+          
+          sequence_obj = home_page_setting.image_sequence 
+          if sequence_obj: 
+            ImageSequence.objects.filter(id = sequence_obj.id).update(sequence = new_sequence)
+          else: # First time creating a sequence Obj for homepage images
+            name = f"Homepage settings Id - {home_page_id} - for community({home_page_setting.community.id}, {home_page_setting.community.name}) "
+            image_sequence = ImageSequence.objects.create(name = name, sequence= new_sequence) 
+            home_page_setting.image_sequence = image_sequence
 
       home_page_setting.save()
 
 
       #now, update the other fields in one swing
       HomePageSettings.objects.filter(id=home_page_id).update(**args)
+      home_page_setting.refresh_from_db()
       return home_page_setting, None
     except Exception as e:
       capture_message(str(e), level="error")

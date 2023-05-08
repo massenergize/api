@@ -656,10 +656,7 @@ class DownloadStore:
 
         comm_list = []
         for user in users:
-            if not isinstance(user, Subscriber):
 
-                #Just want users whose PRIMARY community is this one right? 
-                # communities of primary real estate unit associated with the user
                 reu_community = None
                 for reu in user.real_estate_units.all():
                     if reu.community:
@@ -1071,8 +1068,8 @@ class DownloadStore:
         dic = {"is_live": [], "households_total": 0, "households_user_reported": 0, "households_manual_addition":0,
         "households_partner":0, "primary_community_users_count":0, "member_count":0, "actions_live_count":0,
         'actions_total':0, 'actions_partner':0, 'actions_user_reported':0,
-        'carbon_total':0, 'carbon_user_reported':0, 'carbon_manual_addition':0,
-        'carbon_partner':0, 'guest_count':0, 'actions_manual_addition':0,
+        'carbon_total':0.0, 'carbon_user_reported':0.0, 'carbon_manual_addition':0.0,
+        'carbon_partner':0.0, 'guest_count':0, 'actions_manual_addition':0,
         'events_hosted_current':0, 'events_hosted_past':0, 'my_events_shared_current':0,
         'my_events_shared_past':0, 'events_borrowed_from_others_current':0,
         'events_borrowed_from_others_past':0, 'teams_count':0, 'subteams_count':0,
@@ -1096,9 +1093,13 @@ class DownloadStore:
 
                 else:
                     if not getattr(stamp, key):
-                        break
+                        continue
                     field_value = getattr(stamp, key)
-                    dic[key] = dic[key] + int(field_value)
+                    #adds values as floats or ints, depending on category
+                    if key == "carbon_total" or key == "carbon_user_reported" or key == "carbon_manual_addition" or key == "carbon_partner":
+                        dic[key] = dic[key] + float(field_value)
+                    else:
+                        dic[key] = dic[key] + int(field_value)
 
         metrics_cells = {
             "Date": snapshots_list[0].date,
@@ -1215,9 +1216,11 @@ class DownloadStore:
                     self._community_actions_download(community_id),
                     community_name,
                 ), None
-            elif context.user_is_super_admin:
+            elif context.user_is_admin():
                 #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
+            else:
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)

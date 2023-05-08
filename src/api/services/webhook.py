@@ -78,9 +78,9 @@ class WebhookService:
   
   def process_inbound_webhook(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-        
         reply = args.get("StrippedTextReply")
         text_body = args.get("TextBody")
+        from_email = args.get("From")
 
         splitted_body = text_body.strip().split("Here is a copy of the message:")
         if len(splitted_body) < 2: # will probably be a postmark test
@@ -94,7 +94,8 @@ class WebhookService:
             "title": f"Re: {subject}",
             "body": reply,
             "to": email, 
-            "message_id": db_msg_id
+            "message_id": db_msg_id,
+            "from_email": from_email
           })
 
           if err:
