@@ -299,6 +299,17 @@ def unique_media_filename(file):
   return filename
 
 
+
+def get_user_from_context(context):
+  if not context:
+    return None
+  if context.user_id:
+    return UserProfile.objects.filter(id=context.user_id).first()
+  elif context.email:
+    return UserProfile.objects.filter(email=context.email).first()
+  return None
+
+
 #def get_frontend_host(): 
 #  if IS_PROD: 
 #    return "https://admin.massenergize.org/" 
