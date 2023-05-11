@@ -61,8 +61,7 @@ def download_data(self, args, download_type):
         if err:
             error_notification(ACTIONS, email)
         else:
-            generate_csv_and_email(
-                data=files, download_type=ACTIONS, community_name=com_name, email=email)
+            generate_csv_and_email(data=files, download_type=ACTIONS, community_name=com_name, email=email)
     
 
     elif download_type == COMMUNITIES:

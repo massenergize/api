@@ -7,6 +7,7 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from collections import Counter
+from api.utils.api_utils import get_user_community_ids, is_admin_of_community
 from database.models import (
     UserProfile,
     CommunityMember,
@@ -934,12 +935,15 @@ class DownloadStore:
         return data
 
     #Combines populated rows and columns to create All Communities an Actions CSV  - action data for all communities
-    def _all_actions_download(self):
-        actions = (
-            Action.objects.select_related("calculator_action", "community")
-            .prefetch_related("tags")
-            .filter(is_deleted=False)
-        )
+    def _all_actions_download(self,community_ids=None):
+        if community_ids:
+            actions = Action.objects.filter(community__id__in=community_ids,is_deleted=False).select_related("calculator_action", "community").prefetch_related("tags")
+        else:
+            actions = (
+                Action.objects.select_related("calculator_action", "community")
+                .prefetch_related("tags")
+                .filter(is_deleted=False)
+            )
 
         columns = ["Community"] + ["Geographically Focused"] + self.action_info_columns
         data = []
@@ -1185,6 +1189,8 @@ class DownloadStore:
                     #All Users CSV method for all users overall
                     return (self._all_users_download(), None), None
             elif context.user_is_community_admin:
+                if not is_admin_of_community(context.user_id, community_id):
+                    return EMPTY_DOWNLOAD, NotAuthorizedError()
                 if team_id:
                     #All Users CSV method for all users in a given team
                     return (self._team_users_download(team_id, community_id), community_name), None
@@ -1210,15 +1216,22 @@ class DownloadStore:
         try:
             self.community_id = community_id
             if community_id:
+                if context.user_is_community_admin and not is_admin_of_community(context.user_id, community_id):
+                    return EMPTY_DOWNLOAD, NotAuthorizedError()
                 community_name = Community.objects.get(id=community_id).name
                 return (
                     #All Actions CSV method - action data for one community
                     self._community_actions_download(community_id),
                     community_name,
                 ), None
-            elif context.user_is_admin():
+            elif context.user_is_super_admin:
                 #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
+            elif context.user_is_community_admin:
+                print("==== download store=====", context.user_id)
+                ids = get_user_community_ids(context)
+                print("==== ids ===", ids)
+                return (self._all_actions_download(community_ids=ids), None), None
             else:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
