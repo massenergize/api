@@ -216,6 +216,10 @@ class ActionStore:
       calculator_action = args.pop('calculator_action', None)
       is_published = args.pop('is_published', None)
 
+      if not context.user_is_admin():
+        args.pop("is_approved", None)
+        args.pop("is_published", None)
+
       action.update(**args)
       action = action.first()
 

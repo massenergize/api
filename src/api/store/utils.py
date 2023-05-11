@@ -305,8 +305,8 @@ def get_user_from_context(context):
     return None
   if context.user_id:
     return UserProfile.objects.filter(id=context.user_id).first()
-  elif context.email:
-    return UserProfile.objects.filter(email=context.email).first()
+  elif context.user_email:
+    return UserProfile.objects.filter(email=context.user_email).first()
   return None
 
 

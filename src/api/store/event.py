@@ -1,6 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_events_filter_params
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
@@ -9,7 +10,7 @@ from _main_.utils.context import Context
 from sentry_sdk import capture_message
 
 from database.utils.settings.model_constants.events import EventConstants
-from .utils import get_user_or_die, get_new_title
+from .utils import get_user_from_context, get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
 import calendar
@@ -355,6 +356,11 @@ class EventStore:
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
       if str(events.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
+      
+      # check if user is community admin and is also an admin of the community that created the action
+      if context.user_is_community_admin:
+        if not is_admin_of_community(context, events.first().community.id):
+          return None, NotAuthorizedError()
 
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -429,6 +435,11 @@ class EventStore:
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
+       
+      #  preventing the user from approving event if they are not an admin
+      if not context.user_is_admin():
+        args.pop('is_approved', None)
+        args.pop('is_published', None)
 
       # update the event instance
       events.update(**args)
@@ -688,6 +699,9 @@ class EventStore:
       if not events:
         return None, InvalidResourceError()
       
+      if context.user_is_community_admin and not is_admin_of_community(context, events.first().community.id):
+          return None, CustomMassenergizeError('You are not authorized')
+      
       if len(events) > 1:
         return None, CustomMassenergizeError("Deleting multiple events not supported")
       event = events.first()
@@ -761,7 +775,10 @@ class EventStore:
         # not as their own separate events
         events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
         return events, None
-
+      
+      if context.user_is_community_admin and  not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
+      
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
@@ -825,7 +842,7 @@ class EventStore:
     try:
       event_id = args.pop("event_id", None)
       status = args.pop("status", "SAVE")
-      user = get_user_or_die(context, args)      
+      user = get_user_from_context(context) 
       event = Event.objects.filter(pk=event_id).first()
       if not event:
         return None, InvalidResourceError()
@@ -852,7 +869,7 @@ class EventStore:
     try:
       rsvp_id = args.pop("rsvp_id", None)
       event_id = args.pop("event_id", None)
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context, args)
 
       if rsvp_id:
         result = EventAttendee.objects.filter(pk=rsvp_id).delete()
