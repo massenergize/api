@@ -203,7 +203,7 @@ class ActionStore:
       
       # check if user is community admin and is also an admin of the community that created the action
       if context.user_is_community_admin:
-        if not is_admin_of_community(context.user_id, action.first().community.id):
+        if not is_admin_of_community(context, action.first().community.id):
           return None, NotAuthorizedError()
 
       community_id = args.pop('community_id', None)
@@ -309,7 +309,7 @@ class ActionStore:
       #find the action
       action_to_delete = Action.objects.get(id=action_id)
       if context.user_is_community_admin:
-        if not is_admin_of_community(context.user_id, action_to_delete.community.id):
+        if not is_admin_of_community(context, action_to_delete.community.id):
           return None, NotAuthorizedError()
       action_to_delete.is_deleted = True 
       action_to_delete.save()
@@ -332,8 +332,6 @@ class ActionStore:
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
       
-      if not is_admin_of_community(context.user_id, community_id):
-        return None, NotAuthorizedError()
       
       if ids: 
         actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
@@ -352,6 +350,9 @@ class ActionStore:
         comm_ids = [ag.community.id for ag in admin_groups]
         actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return actions.distinct(), None
+      
+      if context.user_is_community_admin and  not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
       return actions.distinct(), None

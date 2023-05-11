@@ -1189,7 +1189,7 @@ class DownloadStore:
                     #All Users CSV method for all users overall
                     return (self._all_users_download(), None), None
             elif context.user_is_community_admin:
-                if not is_admin_of_community(context.user_id, community_id):
+                if not is_admin_of_community(context, community_id):
                     return EMPTY_DOWNLOAD, NotAuthorizedError()
                 if team_id:
                     #All Users CSV method for all users in a given team
@@ -1216,7 +1216,7 @@ class DownloadStore:
         try:
             self.community_id = community_id
             if community_id:
-                if context.user_is_community_admin and not is_admin_of_community(context.user_id, community_id):
+                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
                     return EMPTY_DOWNLOAD, NotAuthorizedError()
                 community_name = Community.objects.get(id=community_id).name
                 return (
@@ -1227,10 +1227,10 @@ class DownloadStore:
             elif context.user_is_super_admin:
                 #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
-            elif context.user_is_community_admin:
-                print("==== download store=====", context.user_id)
+            #  if user is cadmin  and no community id is passed, get actions of communities the user
+            #  an admin of
+            elif context.user_is_community_admin: 
                 ids = get_user_community_ids(context)
-                print("==== ids ===", ids)
                 return (self._all_actions_download(community_ids=ids), None), None
             else:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
@@ -1256,7 +1256,11 @@ class DownloadStore:
     ) -> Tuple[list, MassEnergizeAPIError]:
         self.community_id = community_id
         try:
+# Allow this download only if the user is a community admin and an admin to the community or a superadm
             if context.user_is_community_admin or context.user_is_super_admin:
+                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+                    return EMPTY_DOWNLOAD, NotAuthorizedError()
+
                 community = Community.objects.get(id=community_id)
                 if community:
                     return (
@@ -1279,6 +1283,8 @@ class DownloadStore:
             if not context.user_is_admin():
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
             if community_id: 
+                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+                    return EMPTY_DOWNLOAD, NotAuthorizedError()
                 community_name = Community.objects.get(id=community_id).name
                 return (
                     self._community_metrics_download(context, args, community_id),

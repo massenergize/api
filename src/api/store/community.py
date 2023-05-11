@@ -804,7 +804,7 @@ class CommunityStore:
             logo = args.pop("logo", None)
             # admins shouldn't be able to update data of other communities
             if context.user_is_community_admin:
-                if is_admin_of_community(context.user_id, community_id):
+                if is_admin_of_community(context, community_id):
                     return None, CustomMassenergizeError('You are not authorized')
                 args = remove_cadmin_locked_fields(args)
               

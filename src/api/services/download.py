@@ -31,7 +31,6 @@ class DownloadService:
             'email': context.user_email,
             'user_is_logged_in': context.user_is_logged_in
         }
-        print("==== hey====", data)
         download_data.delay(data, ACTIONS)
         return [], None
 

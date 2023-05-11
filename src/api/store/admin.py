@@ -93,7 +93,7 @@ class AdminStore:
       if not community:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
       
-      if context.user_is_community_admin and not is_admin_of_community(context.user_id, community.id):
+      if context.user_is_community_admin and not is_admin_of_community(context, community.id):
         return None, CustomMassenergizeError("You are not authorized to add another community Admin")
 
       admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community=community).first()
@@ -151,7 +151,7 @@ class AdminStore:
       else:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
       
-      if context.user_is_community_admin and not is_admin_of_community(context.user_id, community_id):
+      if context.user_is_community_admin and not is_admin_of_community(context, community_id):
         return None, CustomMassenergizeError("You are not an admin of this community")
 
       if email:
@@ -269,7 +269,7 @@ class AdminStore:
       elif not community:
         return [], None
       
-      if context.user_is_community_admin and not is_admin_of_community(context.user_id, community.id):
+      if context.user_is_community_admin and not is_admin_of_community(context, community.id):
         return None, CustomMassenergizeError("You are not authorized")
 
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
