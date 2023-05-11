@@ -147,6 +147,7 @@ class HomePageSettingsStore:
 
       #now, update the other fields in one swing
       HomePageSettings.objects.filter(id=home_page_id).update(**args)
+      home_page_setting.refresh_from_db()
       return home_page_setting, None
     except Exception as e:
       capture_message(str(e), level="error")

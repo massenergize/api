@@ -5,9 +5,11 @@ from sentry_sdk import capture_message
 import pystmark
 
 from _main_.settings import POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN
+from _main_.utils.constants import ME_INBOUND_EMAIL_ADDRESS
 from _main_.utils.utils import is_test_mode
 
 FROM_EMAIL = 'no-reply@massenergize.org'
+
 
 def send_massenergize_email(subject, msg, to):
   if is_test_mode(): 
@@ -59,7 +61,8 @@ def send_massenergize_rich_email(subject, to, massenergize_email_type, content_v
     to=to,
     sender=from_email, 
     html=html_content, 
-    text=text_content
+    text=text_content,
+    reply_to=ME_INBOUND_EMAIL_ADDRESS,
   )
   response = pystmark.send(message, api_key=POSTMARK_EMAIL_SERVER_TOKEN)
 

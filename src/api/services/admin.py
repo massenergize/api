@@ -112,8 +112,7 @@ class AdminService:
             "subject": message.title,
             "message_body": message.body,
         }
-        send_massenergize_rich_email(
-          subject, admin_email, 'contact_admin_email.html', content_variables)
+        send_massenergize_rich_email(subject, admin_email, 'contact_admin_email.html', content_variables)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(
