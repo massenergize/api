@@ -76,7 +76,17 @@ def user_is_due_for_mou(user):
         return True, last_record
     
     return False, last_record
+     
+def fetch_few_visits(user): 
+    footages = Footage.objects.filter(actor__id = user.id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).values_list("created_at", flat=True)[:5]
+    if len(footages): 
+        return list(footages)
+
+    visits = user.visit_log or []
+    return visits[-5:]
+
     
+
 
 # -------------------------------------------------------------------------
 class Location(models.Model):
@@ -943,6 +953,8 @@ class UserProfile(models.Model):
             "admin_portal_settings": admin_portal_settings,
         }
         res["accepts_terms_and_conditions"] = self.accepts_terms_and_conditions
+
+        res["user_portal_visits"] = fetch_few_visits(self)
         return res
 
     def update_visit_log(self, date_time):
