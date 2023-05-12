@@ -116,7 +116,7 @@ class UserService:
     visits, err = self.store.fetch_user_visits(context, args)
     if err:
       return None, err
-    return serialize_all(visits), None
+    return list(visits), None
     # If we are using logs instead of footages, uncomment this
     # return visits, None
 

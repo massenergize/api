@@ -163,7 +163,7 @@ class UserStore:
       #------------------------------------------------
       # If we want to use footages, we use t his
       # Retrieve the most recent 30
-      visits = Footage.objects.filter(actor__id = id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).order_by("-id")[:limit]
+      visits = Footage.objects.filter(actor__id = id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).values_list("created_at", flat=True)[:limit]
       return visits, None
     except Exception as e:
         return None, CustomMassenergizeError(e)
