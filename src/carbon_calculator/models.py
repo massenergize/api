@@ -64,7 +64,7 @@ class Category(models.Model):
 
 class Subcategory(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=NAME_STR_LEN,unique=True)
+    name = models.CharField(max_length=NAME_STR_LEN)
     is_deleted = models.BooleanField(default=False, blank=True) #Cascade??
     description = models.CharField(max_length=MED_STR_LEN, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
@@ -76,7 +76,7 @@ class Subcategory(models.Model):
         return self.simple_json()
 
     def __str__(self):      
-        return self.name
+        return str(self.category.name) + ": " + str(self.name)
 
     class Meta:
         db_table = 'subcategories_cc'

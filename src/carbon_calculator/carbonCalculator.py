@@ -25,6 +25,7 @@ from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminate
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
 from .calcUsers import ExportCalcUsers, CalcUserUpdate
+from .generic import EvalGenericCalculatorAction
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -70,6 +71,7 @@ def SavePic2Media(picURL):
 
 class CarbonCalculator:
     def __init__(self) :
+        print("carbon calc init")
         self.allActions = {
                         'energy_fair':EnergyFair,
                         'energy_audit':EnergyAudit,
@@ -125,17 +127,65 @@ class CarbonCalculator:
         else:
             return self.AllActionsList()
 
+    def AllActionsListExtra(self):
+        response = {}
+        actionList = []
+
+        actions = Action.objects.filter() #no is_deleted field?
+        for action in actions:
+            name = action.name
+            title = action.title
+            description = action.description
+            id = action.id
+            points = action.average_points
+
+            if action.category is None:
+                category = ""
+            else:
+                category = action.category.name
+
+            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points, 'category': category,} ) #'category': category,
+        categoryList =[]
+        cats = Category.objects.filter(is_deleted=False)
+
+        for category in cats:
+            categoryList.append({'id': category.id, 'name': category.name})
+        
+        response['actions'] = actionList
+        response['categories'] = categoryList
+        response['status'] = VALID_QUERY
+        return response
+    
     def AllActionsList(self):
         response = {}
         actionList = []
+   
         for action in self.allActions:
             name = self.allActions[action].name
             title = self.allActions[action].title
             description = self.allActions[action].description
             id = self.allActions[action].id
             points = self.allActions[action].average_points
-            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points} )
+
+            if self.allActions[action].category is None:
+                category = ""
+            else:
+
+                #get category name from lookup!
+                category = Category.objects.filter(id=self.allActions[action].category)[0].name
+
+                #category = self.allActions[action].category.name
+            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points, 'category': category,} ) #'category': category,
+        categoryList =[]
+        cats = Category.objects.filter(is_deleted=False)
+        print(cats)
+
+        for category in cats:
+            categoryList.append({'id': category.id, 'name': category.name})
+        print(categoryList)
+        
         response['actions'] = actionList
+        response['categories'] = categoryList
         response['status'] = VALID_QUERY
         return response
 
@@ -204,7 +254,8 @@ class CarbonCalculator:
             return {"status":False}
 
     
-    def categories_import_helper(self, inputlist, first, num):
+    #don't want to import categories anymore
+    """ def categories_import_helper(self, inputlist, first, num):
         for item in inputlist:
             if first:
                 first = False
@@ -212,19 +263,25 @@ class CarbonCalculator:
                 if item[0] == '':
                     return first, num
                 qs = Category.objects.filter(name=item[0])
-                #don't think we want this!!
-                if qs:
-                    qs[0].delete() # delete past CCactions -- cant do this with past Actions linking to CCs??
-                    
+
                 if len(item)>=1 and item[0]!='':
-                    category = Category(
-                            name=item[0],
-                            is_deleted = True if item[1]== "True" else False,
-                            description = item[2],
-                            )
-                    category.save()
-                    num+=1
-        return first, num
+                    if not qs:
+
+                        category = Category(
+                                name=item[0],
+                                is_deleted = True if item[1]== "True" else False,
+                                description = item[2],
+                                )
+                        category.save()
+                        num+=1
+                    else:
+                        qs.update(
+                                is_deleted = True if item[1]== "True" else False,
+                                description = item[2],
+                                )
+                        num+=1
+
+        return first, num """
     
     def subcategories_import_helper(self, inputlist, first, num):
         for item in inputlist:
@@ -233,26 +290,34 @@ class CarbonCalculator:
             else:
                 if item[0] == '':
                     return first, num
-
-                qs = Subcategory.objects.filter(name=item[0])
-                #don't think we want this!!
-                if qs:
-                    qs[0].delete() # delete past CCactions -- cant do this with past Actions linking to CCs??
                 
-                if len(item)>=1 and item[0]!='':
-                    #do we only want it for categories where is_deleted=False?
-                    cat = Category.objects.filter(name=item[1]).first()
-                    #or if category is deleted we make this is_deleted too??
-                    if cat:
-                        cat_is_deleted = cat.is_deleted
-                        subcategory = Subcategory(
-                                name=item[0],
-                                is_deleted = True if cat_is_deleted == True else True if item[2]== "True" else False,
-                                description = item[3],
-                                category = cat,
+                cat = Category.objects.filter(name=item[1]).first()
+                if cat: 
+                    qs = Subcategory.objects.filter(name=item[0], category = cat)
+
+                    if len(item)>=1 and item[0]!='':
+
+                        #do we only want it for categories where is_deleted=False? or set to is_deleted too?
+                        cat = Category.objects.filter(name=item[1]).first()
+                        
+                        if cat:
+                            cat_is_deleted = cat.is_deleted
+                            if not qs: 
+                                subcategory = Subcategory(
+                                        name=item[0],
+                                        is_deleted = True if cat_is_deleted == True else True if item[2]== "True" else False,
+                                        description = item[3],
+                                        category = cat,
+                                        )
+                                subcategory.save()
+                                num+=1
+                            elif qs:
+                                qs.update(
+                                    is_deleted = True if cat_is_deleted == True else True if item[2]== "True" else False,
+                                    description = item[3],
                                 )
-                        subcategory.save()
-                        num+=1
+                if not cat:
+                    print("Did not make subcategory for " + str(item[0]))
         return first, num
     
     def actions_import_helper(self, inputlist, first, num):
@@ -267,17 +332,14 @@ class CarbonCalculator:
                 if name == '':
                     return first, num
 
-                #why does this delete existing objects? should update instead?
                 qs = Action.objects.filter(name=name)
-                if qs:
-                    qs[0].delete()
 
                 picture = None
                 #why len greater than or equal to 4??
                 if len(item)>=4 and name!='':
+                    #filter by is_deleted?
                     cat = Category.objects.filter(name=item[t["Category"]]).first()
-                    subcat = Subcategory.objects.filter(name=item[t["Subcategory"]], category = cat).first()
-                    #if either is is_deleted, should it not be added?        
+                    subcat = Subcategory.objects.filter(name=item[t["Subcategory"]], category = cat).first()      
 
                     if cat and not qs:
                         picture = SavePic2Media(item[t["Picture"]])
@@ -293,10 +355,34 @@ class CarbonCalculator:
                             sub_category = subcat,
                             )
                         action.save()
+                        if name in self.allActions:
+                            self.allActions[name].__init__(name)
+                        # else: 
+                        #     self.allActions[name].__init__(EvalGenericCalculatorAction)
+                        num+=1
+                    
+                    elif cat and qs:
+                        qs.update(
+                            title = item[t["Title"]],
+                            description=item[t["Description"]],
+                            helptext=item[t["Helptext"]],
+                            old_category=item[t["Old Category"]], 
+                            average_points=int(eval(item[t["Avg points"]])),
+                            questions=item[t["Questions"]].split(","),
+                            picture = picture,
+                            category = cat,
+                            sub_category = subcat,
+                            )
+                            
+                        if name in self.allActions:
+                            self.allActions[name].__init__(name)
+                        # else:
+                        #     self.allActions[name].__init__(EvalGenericCalculatorAction)
+                            #num+=1 ?
 
-                    if name in self.allActions:
-                        self.allActions[name].__init__(name)
-                    num+=1
+                    if not cat:
+                        print("Did not make action for " + str(item[0]))
+           
         return first, num
 
     def import_helper(self, inputs, string, status, method):
@@ -320,10 +406,11 @@ class CarbonCalculator:
         if inputs.get('Confirm',NO) == YES:
             status = False
 
-            status = self.import_helper(inputs, "Categories", status, self.categories_import_helper)
             status = self.import_helper(inputs, "Subcategories", status, self.subcategories_import_helper)
+            #status = self.import_helper(inputs, "Categories", status, self.categories_import_helper)
+            status = self.import_helper(inputs, "Actions", status, self.actions_import_helper)
 
-            questionsFile = inputs.get('Questions','')
+            """ questionsFile = inputs.get('Questions','')
             if questionsFile!='':
                 with open(questionsFile, newline='') as csvfile:
                     inputlist = csv.reader(csvfile)
@@ -563,10 +650,10 @@ class CarbonCalculator:
                     msg = "Imported %d CarbonSaver Events" % num
                     print(msg)
                     csvfile.close()
-                    status = True
-            defaultsFile = inputs.get('Defaults','')
-            if defaultsFile!='':
-                status = CCD.importDefaults(CCD,defaultsFile)
+                    status = True """
+            # defaultsFile = inputs.get('Defaults','')
+            # if defaultsFile!='':
+            #     status = CCD.importDefaults(CCD,defaultsFile)
 
             self.__init__()
             return {"status":status}
@@ -587,6 +674,7 @@ class CarbonCalculator:
 
 class CalculatorAction:
     def __init__(self,name):
+
         self.id = None
         self.name = name
         self.initialized = False
@@ -600,8 +688,11 @@ class CalculatorAction:
         self.savings = 0
         self.text = "" # "Explanation for the calculated results."
         self.picture = ""
-#
+        self.category = None
+
         status, actionInfo = QuerySingleAction(self.name)
+
+        #print(actionInfo["category"])
         if status == VALID_QUERY:
             self.id = actionInfo["id"]
             self.title = actionInfo["title"]
@@ -611,8 +702,10 @@ class CalculatorAction:
             self.average_points = actionInfo["average_points"]
             self.picture = actionInfo["picture"]
             self.initialized = True
+            self.category = actionInfo["category"]
 
     def Query(self):
+        print("individual calc action Query")
         status, actionInfo = QuerySingleAction(self.name)
         return {"status":status, "action":actionInfo}
 
@@ -812,4 +905,9 @@ class ElectricMower(CalculatorAction):
 class RakeOrElecBlower(CalculatorAction):
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalRakeOrElecBlower(inputs)
+        return super().Eval(inputs)
+
+class GenericCalculatorAction(CalculatorAction):
+    def Eval(self, inputs):
+        self.points, self.cost, self.savings, self.text = EvalGenericCalculatorAction(inputs)
         return super().Eval(inputs)

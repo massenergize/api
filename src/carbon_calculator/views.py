@@ -21,7 +21,8 @@ def ping(request):
     return Json(None)
 
 def index(request):
-    return MassenergizeResponse(CALC.AllActionsList())
+    return MassenergizeResponse(CALC.AllActionsListExtra())
+    #return MassenergizeResponse(CALC.AllActionsList())
 
 def actioninfo(request, action):
     return MassenergizeResponse(CALC.Query(action))

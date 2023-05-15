@@ -1,5 +1,7 @@
 ﻿Name,category,is_deleted,description,Actions
-emma subcategory,Emma Cat,,this is testing for subcategory!,"energy_fair,prog_thermostats"
-another one,,,no category,
-hm,not deleted cat,,,weatherization
-Subcateogry with is_deleted cat,not deleted cat,False,,renewable_elec
+emma subcategory,Home Energy,F,this is testing for subcategory!,"energy_fair,prog_thermostats"
+emma subcategory,Food,,no category,
+input 1,Home Energy,,,weatherization
+input 2,Home Energy,False,,renewable_elec
+input 3,Home Energy,False,,renewable_elec
+input 3,Food,False,,renewable_elec

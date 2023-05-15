@@ -1782,8 +1782,8 @@ class Action(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
 
-    #category = models.ForeignKey(CCCategory, blank=True, null=True,)
-    #subcategory = models.ForeignKey(CCSubcategory , blank=True, null=True,)
+    category= models.ForeignKey(CCCategory, blank=True, null=True, on_delete=models.SET_NULL, related_name="action_category")
+    subcategory = models.ForeignKey(CCSubcategory , blank=True, null=True, on_delete=models.SET_NULL,related_name="action_subcategory" )
 
     def __str__(self):
         return f"{str(self.id)} - {self.title}"
