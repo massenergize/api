@@ -74,8 +74,10 @@ class DownloadHandler(RouteHandler):
     args: dict = context.args
 
     community_id = args.pop('community_id', None)
+    audience = args.pop('audience', None)
+    report_community_ids = args.pop('community_ids', None)
 
-    communities_data, err = self.service.metrics_download(context, args, community_id)
+    communities_data, err = self.service.metrics_download(context, args, community_id, audience, report_community_ids)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
@@ -90,8 +92,7 @@ class DownloadHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
-  
-  @admins_only
+
   def send_sample_user_report(self, request):
     context: Context = request.context
     args: dict = context.args

@@ -1,4 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from api.tests.common import RESET
 from .utils import get_community, unique_media_filename
 from sentry_sdk import capture_message
 from database.models import Media
@@ -59,19 +60,16 @@ class PageSettingsStore:
     if len(more_info.keys())>0:
       page_setting.more_info = more_info
       page_setting.save()
-    
-    # Page settings models support multiple images, but we currently allow just one.
-    # @TODO handle uploading multiple images for pages that have many images (currently no pages actually use it yet)
-    if image:
-      if image == "None":
-        page_setting.images.clear()
-      else:
-
-        image.name = unique_media_filename(image)
-        media = Media.objects.create(name="Page-Image", file=image)
-        page_setting.images.clear()
-        page_setting.images.add(media)
-      page_setting.save()
+   
+    if image: 
+        if image[0] == RESET: 
+          page_setting.images.clear()
+        else:
+          # It's setup to expect multiple images but we are using one image for now.(Just like it was before Mlibrary)
+          media = Media.objects.filter(id = image[0]).first()
+          page_setting.images.clear() 
+          page_setting.images.add(media)
+    page_setting.save()
     return page_setting, None
   
   def delete_page_setting(self, page_setting_id) -> Tuple[dict, MassEnergizeAPIError]:

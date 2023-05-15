@@ -55,13 +55,15 @@ class DownloadService:
         download_data.delay(data, TEAMS)
         return [], None
 
-    def metrics_download(self, context: Context, args, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    def metrics_download(self, context: Context, args, community_id, audience, report_community_ids) -> Tuple[list, MassEnergizeAPIError]:
         data = {
             'community_id': community_id,
             'user_is_community_admin': context.user_is_community_admin,
             'user_is_super_admin': context.user_is_super_admin,
             'email': context.user_email,
-            'user_is_logged_in': context.user_is_logged_in
+            'user_is_logged_in': context.user_is_logged_in,
+            'audience': audience,
+            'community_ids': report_community_ids,
         }
         download_data.delay(data, METRICS)
         return [], None

@@ -191,6 +191,7 @@ class EventHandler(RouteHandler):
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
     self.validator.expect("publicity_selections",list)
+    self.validator.expect("add_to_home_page", bool, is_required=False)
     args, err = self.validator.verify(args)
 
     if err:
@@ -214,9 +215,10 @@ class EventHandler(RouteHandler):
     self.validator.expect('tags', list)
     self.validator.expect('is_recurring', bool)
     self.validator.expect('have_address', bool)
-    self.validator.expect('location', 'location')
+    self.validator.expect('location', str)
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
+    self.validator.expect('event_id', str)
     args, err = self.validator.verify(args)
 
     if err:
@@ -224,9 +226,14 @@ class EventHandler(RouteHandler):
 
     # user submitted event, so notify the community admins
     user_submitted = True
-    args["is_approved"] = False 
+  
+    is_edit = args.get("event_id", None)
 
-    event_info, err = self.service.create_event(context, args, user_submitted)
+    if is_edit:
+      event_info, err = self.service.update_event(context, args, user_submitted)
+    else:
+      args["is_approved"] = False 
+      event_info, err = self.service.create_event(context, args, user_submitted)
     if err:
       return err
     return MassenergizeResponse(data=event_info)

@@ -12,6 +12,7 @@ from api.store.utils import get_user_or_die
 from typing import Tuple
 from sentry_sdk import capture_message
 from django.utils.safestring import mark_safe
+from database.models import HomePageSettings
 #import datetime
 #from datetime import timedelta
 #
@@ -22,6 +23,13 @@ from django.utils.safestring import mark_safe
 #  dt = datetime.datetime.strptime(str(date_and_time), '%Y-%m-%d %H:%M:%S+00:00')
 #  local_datetime = dt - timedelta(hours=4)
 #  return local_datetime
+
+
+
+def add_event_to_community_home_page(event):
+  homepage = HomePageSettings.objects.filter(community=event.community).first()
+  homepage.featured_events.add(event)
+  homepage.save()
 
 
 class EventService:
@@ -145,9 +153,13 @@ class EventService:
 
   def create_event(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      event, err = self.store.create_event(context, args)
+      add_to_home_page = args.pop('add_to_home_page', None)
+      event, err = self.store.create_event(context, args, user_submitted)
       if err:
         return None, err
+      
+      if add_to_home_page:
+        add_event_to_community_home_page(event)
 
       if user_submitted:
 
@@ -175,7 +187,7 @@ class EventService:
           'url': f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
           'from_name': name,
           'email': email,
-          'title': event.title,
+          'title': event.name,
           'body': event.description,
         }
         send_massenergize_rich_email(
@@ -188,7 +200,7 @@ class EventService:
             "content": "User submitted Event for "+community_name,
             "from_name": name,
             "email": email,
-            "subject": event.title,
+            "subject": event.name,
             "message": event.description,
             "url": f"{ADMIN_URL_ROOT}/admin/edit/{event.id}/event",
             "community": community_name
@@ -200,8 +212,8 @@ class EventService:
       return None, CustomMassenergizeError(e)
 
 
-  def update_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    event, err = self.store.update_event(context, args)
+  def update_event(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
+    event, err = self.store.update_event(context, args, user_submitted)
     if err:
       return None, err
     return serialize(event), None

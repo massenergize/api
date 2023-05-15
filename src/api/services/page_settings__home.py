@@ -31,13 +31,19 @@ class HomePageSettingsService:
     if err:
       return None, err
     return serialize(home_page_setting), None
+  
+  def add_event(self, args) -> Tuple[str, MassEnergizeAPIError]:
+    msg, err = self.store.add_event(args)
+    if err:
+      return None, err
+    return msg, None
 
 
   def update_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     home_page_setting, err = self.store.update_home_page_setting(args)
     if err:
       return None, err
-    return serialize(home_page_setting), None
+    return serialize(home_page_setting, True), None
 
   def delete_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
     home_page_setting, err = self.store.delete_home_page_setting(args)
