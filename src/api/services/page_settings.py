@@ -19,8 +19,8 @@ class PageSettingsService:
       return None, err
     return serialize(page_setting, full=True), None
 
-  def list_page_settings(self, page_setting_id) -> Tuple[list, MassEnergizeAPIError]:
-    page_setting, err = self.store.list_page_settings(page_setting_id)
+  def list_page_settings(self,context, page_setting_id) -> Tuple[list, MassEnergizeAPIError]:
+    page_setting, err = self.store.list_page_settings(context,page_setting_id)
     if err:
       return None, err
     return serialize(page_setting), None
@@ -33,21 +33,21 @@ class PageSettingsService:
     return serialize(page_setting), None
 
 
-  def update_page_setting(self, id, args) -> Tuple[dict, MassEnergizeAPIError]:
-    page_setting, err = self.store.update_page_setting(id, args)
+  def update_page_setting(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    page_setting, err = self.store.update_page_setting(context, args)
     if err:
       return None, err
     return serialize(page_setting), None
 
-  def delete_page_setting(self, id) -> Tuple[dict, MassEnergizeAPIError]:
-    page_setting, err = self.store.delete_page_setting(id)
+  def delete_page_setting(self,context, id) -> Tuple[dict, MassEnergizeAPIError]:
+    page_setting, err = self.store.delete_page_setting(context,id)
     if err:
       return None, err
     return serialize(page_setting), None
 
 
-  def list_page_settings_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    page_settings, err = self.store.list_page_settings_for_community_admin(community_id)
+  def list_page_settings_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    page_settings, err = self.store.list_page_settings_for_community_admin(context,community_id)
     if err:
       return None, err
     return serialize_all(page_settings), None
