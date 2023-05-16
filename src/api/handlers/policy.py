@@ -51,7 +51,7 @@ class PolicyHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=policy_info)
 
-  @super_admins_only
+
   def list(self, request):
     context: Context = request.context
     args: dict = context.args

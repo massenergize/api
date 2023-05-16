@@ -105,7 +105,7 @@ class MiscellaneousHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=carbon_info)
-    @super_admins_only
+    
     def get_carbon_equivalencies(self, request):
         context: Context = request.context
         args: dict = context.args
