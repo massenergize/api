@@ -1,6 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_testimonials_filter_params
 from database.models import Testimonial, UserProfile, Media, Vendor, Action, Community, CommunityAdminGroup, Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
@@ -73,7 +74,7 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
-      user_email = args.pop('user_email', context.user_email)
+      user_email = context.user_email
 
       args["title"] = args.get("title", "Thank You")[:100]
 
@@ -142,6 +143,9 @@ class TestimonialStore:
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
       if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
+      
+      if context.user_is_community_admin and not is_admin_of_community(context, testimonial.first().community.id):
+          return None, CustomMassenergizeError('You are not authorized')
 
       user_email = args.pop('user_email', None)      
       images = args.pop('image', None)
@@ -192,15 +196,16 @@ class TestimonialStore:
       if tags_to_set:
         testimonial.tags.set(tags_to_set)
 
-      if is_published==False:
-        testimonial.is_published = False
+      if context.user_is_super_admin or context.user_is_community_admin:
+        if is_published==False:
+          testimonial.is_published = False
 
-      elif is_published and not testimonial.is_published:
-        # only publish testimonial if it has been approved
-        if testimonial.is_approved:
-          testimonial.is_published = True
-        else:
-          return None, CustomMassenergizeError("Testimonial needs to be approved before it can be made live")
+        elif is_published and not testimonial.is_published:
+          # only publish testimonial if it has been approved
+          if testimonial.is_approved:
+            testimonial.is_published = True
+          else:
+            return None, CustomMassenergizeError("Testimonial needs to be approved before it can be made live")
 
       testimonial.save()
       if context.is_admin_site: 
@@ -218,6 +223,8 @@ class TestimonialStore:
       rank = args.get("rank", None)
       if id:
         testimonials = Testimonial.objects.filter(id=id)
+        if context.user_is_community_admin and not is_admin_of_community(context, testimonials.first().community.id):
+            return None, CustomMassenergizeError('You are not authorized to update this testimonial')
         if type(rank) == int  and int(rank) is not None:
           testimonials.update(rank=rank)
           testimonial = testimonials.first()
@@ -237,6 +244,8 @@ class TestimonialStore:
   def delete_testimonial(self, context: Context, testimonial_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       testimonials = Testimonial.objects.filter(id=testimonial_id)
+      if context.user_is_community_admin and not is_admin_of_community(context, testimonials.first().community.id):
+        return None, CustomMassenergizeError('You are not authorized to delete this testimonial')
       testimonials.update(is_deleted=True, is_published=False)
       testimonial = testimonials.first()
       # ----------------------------------------------------------------
@@ -269,6 +278,9 @@ class TestimonialStore:
 
         testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
+      
+      if context.user_is_community_admin and not is_admin_of_community(context.user_id, community_id):
+          return None, CustomMassenergizeError('You are not authorized to view testimonials for this community')
 
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
       return testimonials.distinct(), None

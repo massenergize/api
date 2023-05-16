@@ -311,6 +311,7 @@ class Policy(models.Model):
 
     def full_json(self):
         # would this blow up because no community_set?
+        # community_policies is a related_name on the community table
         res = self.simple_json()
         community = self.community_policies.all().first()
         if community:

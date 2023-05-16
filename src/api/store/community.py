@@ -1,6 +1,6 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console, strip_website
+from _main_.utils.utils import strip_website
 from api.store.common import count_action_completed_and_todos
 from api.tests.common import RESET
 from api.utils.api_utils import is_admin_of_community
@@ -47,7 +47,6 @@ from database.models import (
     CommunityAdminGroup,
     Location,
     RealEstateUnit,
-    UserActionRel,
 )
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
@@ -59,9 +58,7 @@ from api.store.graph import GraphStore
 from .utils import (
     get_community_or_die,
     get_user_from_context,
-    get_user_or_die,
     get_new_title,
-    getCarbonScoreFromActionRel,
     is_reu_in_community,
 )
 from database.utils.common import json_loader

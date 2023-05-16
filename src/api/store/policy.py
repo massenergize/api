@@ -1,7 +1,6 @@
 from api.utils.api_utils import is_admin_of_community
 from database.models import Policy, UserProfile, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message

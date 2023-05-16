@@ -1,14 +1,9 @@
 """Handler file for all routes pertaining to teams"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, rename_field
 from api.services.team import TeamService
-from _main_.utils.massenergize_errors import CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from _main_.utils.common import parse_str_list, parse_bool, is_value
 from api.decorators import admins_only, super_admins_only, login_required
 
 class TeamHandler(RouteHandler):
@@ -151,18 +146,12 @@ class TeamHandler(RouteHandler):
 
     # verify the body of the incoming request
     self.validator.expect("id", str, is_required=True)
-    self.validator.expect("user_id", str, is_required=True)
+    # self.validator.expect("user_id", str, is_required=True) # get id from context
     self.validator.rename("team_id", "id")
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
-
-    executor_id = context.user_id
-
-    if executor_id == args.get("user_id", None):
-      team_info, err = self.team.join_team(args)
-    else:
-      err = CustomMassenergizeError("Executor dosen't have sufficient permissions to use teams.leave on this user")
+    team_info, err = self.team.join_team(context,args)
 
     if err:
       return err
@@ -174,20 +163,14 @@ class TeamHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    self.validator.expect("user_id", str, is_required=True)
+    # self.validator.expect("user_id", str, is_required=True)
     self.validator.expect("id", str, is_required=True)
     self.validator.rename("team_id", "id")
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
 
-    # test for perms
-    executor_id = context.user_id
-
-    if executor_id == args.get("user_id", None):
-      team_info, err = self.team.leave_team(args)
-    else:
-      err = CustomMassenergizeError("Executor dosen't have sufficient permissions to use teams.leave on this user")
+    team_info, err = self.team.leave_team(context,args)
 
     if err:
       return err

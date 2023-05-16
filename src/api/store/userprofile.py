@@ -1,5 +1,6 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_users_filter_params
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from database.models import CommunityAdminGroup, Footage, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
@@ -9,7 +10,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from _main_.settings import DEBUG, IS_PROD, IS_CANARY
 from sentry_sdk import capture_message
-from .utils import get_community, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
+from .utils import get_community, get_user_from_context, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
   find_reu_community, split_location_string, check_location
 import json
 from typing import Tuple
@@ -21,6 +22,11 @@ from _main_.utils.emailer.send_email import send_massenergize_email, send_massen
 from datetime import datetime
 
 
+def remove_locked_fields(args):
+  field = ["is_super_admin","email","is_community_admin" ]
+  for f in field:
+    args.pop(f, None)
+  return args
 
 
 def _get_or_create_reu_location(args, user=None):
@@ -212,16 +218,16 @@ class UserStore:
     if not context.user_is_logged_in:
       return False
     
-    if context.user_is_admin():
-      # TODO: update this to only super admins.  Do specific checks for 
-      # community admins to make sure user is in their community first
-      return True
+    # if context.user_is_admin():
+    #   # TODO: update this to only super admins.  Do specific checks for 
+    #   # community admins to make sure user is in their community first
+    #   return True
     
-    if user_id and (context.user_id == user_id):
-      return True
+    # if user_id and (context.user_id == user_id):
+    #   return True
     
-    if email and (context.user_email == email):
-      return True
+    # if email and (context.user_email == email):
+    #   return True
     
     return False
   
@@ -245,12 +251,10 @@ class UserStore:
     return user
 
   def accept_mou(self,args, context: Context):
-    email = args.get("email")
     try:
-      if email: 
-        user = UserProfile.objects.filter(email=email).first()
-      else: 
-        user = get_user_or_die(context, args)
+      user =  get_user_from_context(context)
+      if not user:
+        return None, CustomMassenergizeError("Please provide a valid user")
 
       accepted = args.get("accept", False)
       key = args.get("policy_key",None)
@@ -300,7 +304,7 @@ class UserStore:
     Creates a UserActionRel to record the action as completed or to do
     """
     try:
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       if not user:
         return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
 
@@ -379,7 +383,7 @@ class UserStore:
       # if not self._has_access(context, user_id, email):
       #   return None, CustomMassenergizeError("permission_denied")
       
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       return user, None
     
     except Exception as e:
@@ -391,6 +395,12 @@ class UserStore:
       household_id = args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
+      user= get_user_from_context(context)
+      if not user:
+        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
+      
+      if not user.real_estate_units.filter(id=household_id).exists():
+        return None, CustomMassenergizeError("you are not a member of this household")
       
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
     
@@ -400,7 +410,7 @@ class UserStore:
   
   def add_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       name = args.pop('name', None)
       unit_type = args.pop('unit_type', None)
       
@@ -422,7 +432,7 @@ class UserStore:
   
   def edit_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       name = args.pop('name', None)
       unit_type = args.pop('unit_type', None)
       household_id = args.get('household_id', None)
@@ -458,12 +468,15 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def list_users(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_users(self, context,community_id) -> Tuple[list, MassEnergizeAPIError]:
     community, err = get_community(community_id)
     
     if not community:
       print(err)
       return [], None
+    
+    if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+        return None, CustomMassenergizeError('You are not authorized to view users of this community')
     return community.userprofile_set.all(), None
   
   def list_publicview(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -499,7 +512,7 @@ class UserStore:
   
   def list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       if not user:
         return [], None
       attendees = EventAttendee.objects.filter(user=user)
@@ -656,8 +669,8 @@ class UserStore:
   
   def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      user_id = args.get('id', None)
-      email = args.get('email', None)
+      user_id = context.user_id
+      email = context.user_email
       profile_picture = args.pop("profile_picture", None)
       preferences = args.pop("preferences", None)
       
@@ -668,6 +681,8 @@ class UserStore:
         users = UserProfile.objects.filter(id=user_id)
         if not users:
           return None, InvalidResourceError()
+        
+        remove_locked_fields(args)
         
         users.update(**args)
         user = users.first()
@@ -811,6 +826,9 @@ class UserStore:
         print(err)
         return [], None
       
+      if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+          return None, CustomMassenergizeError('You are not authorized to view users of this community')
+      
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
       users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
@@ -851,7 +869,7 @@ class UserStore:
       if not context.user_is_logged_in:
         return [], CustomMassenergizeError("sign_in_required")
       
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       household_id = args.get("household_id", None)
       
       if household_id:
