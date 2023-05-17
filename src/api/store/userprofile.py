@@ -19,6 +19,7 @@ from _main_.utils.constants import ME_LOGO_PNG
 from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECEIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE, STANDARD_USER, INVITED_USER, GUEST_USER
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
+from wordfilter import Wordfilter
 
 
 
@@ -170,10 +171,16 @@ class UserStore:
 
   def validate_username(self, username):
     # returns [is_valid, suggestion], error
+    filter = Wordfilter()
+    filter.addWords(["fuck","pussio"]) # These are not  in the general list that the plugin provides here https://github.com/dariusk/wordfilter/blob/master/lib/badwords.json
     try:    
         if (not username):
             return {'valid': False, 'suggested_username': None}, None
-
+        is_bad_word = filter.blacklisted(username)
+       
+        if is_bad_word: 
+          return None ,"Your username may contain some profanity, please change"
+        
         # checks if username already exists
         if not UserProfile.objects.filter(preferred_name=username).exists():
             return {'valid': True, 'suggested_username': username}, None
