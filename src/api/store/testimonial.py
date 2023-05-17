@@ -128,6 +128,11 @@ class TestimonialStore:
 
       new_testimonial.save()
 
+      if context.is_admin_site: 
+        # ----------------------------------------------------------------
+        Spy.create_testimonial_footage(testimonials = [new_testimonial], context = context, type = FootageConstants.create(), notes =f"Testimonial ID({new_testimonial.id})")
+        # ---------------------------------------------------------------- 
+
       return new_testimonial, None
     except Exception as e:
       capture_message(str(e), level="error")

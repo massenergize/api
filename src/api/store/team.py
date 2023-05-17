@@ -356,7 +356,7 @@ class TeamStore:
       
       team_member = TeamMember.objects.filter(team=teams.first(), user=context.user_id).first()
       
-      if not team_member.is_admin:
+      if (not context.user_is_admin()) and (not team_member or not team_member.is_admin):
         return None, NotAuthorizedError()
 
       # team.members deprecated.  Delete TeamMembers separate step
@@ -378,6 +378,9 @@ class TeamStore:
   def join_team(self,context, args) -> Tuple[Team, MassEnergizeAPIError]:
     try:
       team_id = args.get("id", None)
+      user_id = args.get("user_id", None)
+      if user_id != context.user_id:
+        return None, NotAuthorizedError()
 
       team = Team.objects.get(id=team_id)
       user = UserProfile.objects.get(id=context.user_id)

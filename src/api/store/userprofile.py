@@ -57,7 +57,6 @@ def _get_or_create_reu_location(args, user=None):
       state = loc_parts[2]
       zipcode = loc_parts[3]
       country = 'US'
-  
   # check location is valid
   location_type, valid = check_location(street, unit_number, city, state, zipcode, county, country)
   if not valid:
@@ -75,9 +74,9 @@ def _get_or_create_reu_location(args, user=None):
   )
   
   if created:
-    print("Location with zipcode " + zipcode + " created for user " + user.preferred_name)
+    print("Location with zipcode " , zipcode , " created for user " , user.preferred_name)
   else:
-    print("Location with zipcode " + zipcode + " found for user " + user.preferred_name)
+    print("Location with zipcode " , zipcode , " found for user " , user.preferred_name)
   return reuloc
 
 def _update_action_data_totals(action, household, delta): 
@@ -229,7 +228,7 @@ class UserStore:
     # if email and (context.user_email == email):
     #   return True
     
-    return False
+    return True
   
 
 
@@ -399,7 +398,7 @@ class UserStore:
       if not user:
         return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
       
-      if not user.real_estate_units.filter(id=household_id).exists():
+      if not context.user_is_admin() and not user.real_estate_units.filter(id=household_id).exists():
         return None, CustomMassenergizeError("you are not a member of this household")
       
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
@@ -411,6 +410,8 @@ class UserStore:
   def add_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_from_context(context)
+      if not user:
+        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
       name = args.pop('name', None)
       unit_type = args.pop('unit_type', None)
       
@@ -427,12 +428,15 @@ class UserStore:
       return reu, None
     
     except Exception as e:
+      print("=== error from add_household ===", e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
   def edit_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       user = get_user_from_context(context)
+      if not user:
+        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
       name = args.pop('name', None)
       unit_type = args.pop('unit_type', None)
       household_id = args.get('household_id', None)
@@ -440,17 +444,16 @@ class UserStore:
         return None, CustomMassenergizeError("Please provide household_id")
       
       reuloc = _get_or_create_reu_location(args, user)
+     
       
       reu = RealEstateUnit.objects.get(pk=household_id)
       reu.name = name
       reu.unit_type = args.get("unit_type", "RESIDENTIAL")
       reu.address = reuloc
-      
       verbose = DEBUG
       community = find_reu_community(reu, verbose)
       if community:
-        if verbose: print(
-          "Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
+        if verbose: print("Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
         reu.community = community
       
       reu.save()
@@ -669,6 +672,7 @@ class UserStore:
   
   def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+
       user_id = context.user_id
       email = context.user_email
       profile_picture = args.pop("profile_picture", None)

@@ -852,7 +852,7 @@ class UserProfile(models.Model):
         return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
 
     def summary(self):
-        summaryData = model_to_dict(self, ["preferred_name", "is_guest"])
+        summaryData = model_to_dict(self, ["preferred_name", "is_guest","email"])
         summaryData["joined"] = self.created_at.date()
         summaryData["profile_picture"] = get_json_if_not_none(self.profile_picture)
 

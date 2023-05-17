@@ -146,7 +146,7 @@ class TeamHandler(RouteHandler):
 
     # verify the body of the incoming request
     self.validator.expect("id", str, is_required=True)
-    # self.validator.expect("user_id", str, is_required=True) # get id from context
+    self.validator.expect("user_id", str, is_required=True)
     self.validator.rename("team_id", "id")
     args, err = self.validator.verify(args, strict=True)
     if err:

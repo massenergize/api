@@ -310,11 +310,15 @@ class ActionStore:
   def delete_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       action_id = args.get("action_id", None)
+      if not action_id:
+        return None, InvalidResourceError()
       #find the action
       action_to_delete = Action.objects.get(id=action_id)
+
       if context.user_is_community_admin:
         if not is_admin_of_community(context, action_to_delete.community.id):
           return None, NotAuthorizedError()
+        
       action_to_delete.is_deleted = True 
       action_to_delete.save()
       # ----------------------------------------------------------------

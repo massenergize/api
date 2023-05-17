@@ -869,7 +869,7 @@ class EventStore:
     try:
       rsvp_id = args.pop("rsvp_id", None)
       event_id = args.pop("event_id", None)
-      user = get_user_from_context(context, args)
+      user = get_user_from_context(context)
 
       if rsvp_id:
         result = EventAttendee.objects.filter(pk=rsvp_id).delete()
