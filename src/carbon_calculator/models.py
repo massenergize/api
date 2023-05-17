@@ -68,7 +68,8 @@ class Action(models.Model):
     average_points = models.PositiveIntegerField(default=0)
     questions = models.JSONField(blank=True)    # list of questions by name
     picture = models.ForeignKey(CarbonCalculatorMedia, on_delete=models.SET_NULL, null=True, related_name='cc_action_picture')
-
+    is_deleted = models.BooleanField(default=False)
+    
     def info(self):
         return model_to_dict(self, ['id', 'name', 'title', 'category', 'description', 'average_points'])
 

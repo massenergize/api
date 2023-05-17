@@ -113,6 +113,13 @@ class CarbonCalculator:
                         'electric_mower':ElectricMower,
                         'rake_elec_blower':RakeOrElecBlower,
                         }
+
+        # add any actions in database which don't yet have methods        
+        for action in Action.objects.filter(is_deleted=False):
+            name = action.name
+            if not name in self.allActions.keys():
+                self.allActions[name] = GenericUnspecifiedAction
+
         for name in self.allActions.keys():
             theClass = self.allActions[name]
             theInstance = theClass(name)
@@ -138,6 +145,10 @@ class CarbonCalculator:
         response['actions'] = actionList
         response['status'] = VALID_QUERY
         return response
+
+    def AverageImpact(self, action, locality="default", date=None):
+        averageName = action.name + '_average_points'
+        return getDefault(locality, averageName, date)
 
     def Estimate(self, action, inputs, save=False):
 # inputs is a dictionary of input parameters
@@ -545,6 +556,14 @@ class CalculatorAction:
 
     def Eval(self, inputs):
         return {'status':VALID_QUERY, 'carbon_points':round(self.points,0), 'cost':round(self.cost,0), 'savings':round(self.savings,0), 'explanation':self.text}
+
+class GenericUnspecifiedAction(CalculatorAction):
+    # a trivial bonus points action, part of registering for the energy fair
+    # inputs: attend_fair,own_rent,fuel_assistance,activity_group
+    def Eval(self, inputs):
+        self.points = 0
+        self.text = "This action does not have a calculation implemented."
+        return super().Eval(inputs)
 
 class EnergyFair(CalculatorAction):
     # a trivial bonus points action, part of registering for the energy fair

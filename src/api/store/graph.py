@@ -9,6 +9,7 @@ from sentry_sdk import capture_message
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, RUN_SERVER_LOCALLY, IS_PROD, IS_CANARY
+from carbon_calculator.carbonCalculator import CarbonCalculator
 
 def get_households_engaged(community: Community):
 
@@ -23,7 +24,8 @@ def get_households_engaged(community: Community):
   # loop over actions completed
   for actionRel in done_actions:
     if actionRel.action and actionRel.action.calculator_action :
-      carbon_footprint_reduction += actionRel.action.calculator_action.average_points
+      points = CarbonCalculator.AverageImpact(actionRel.action.calculator_action)
+      carbon_footprint_reduction += points
 
   return {"community": {"id": community.id, "name": community.name}, 
           "actions_completed": actions_completed, "households_engaged": households_engaged, 
