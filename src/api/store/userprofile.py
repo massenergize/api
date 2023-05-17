@@ -179,11 +179,11 @@ class UserStore:
         is_bad_word = filter.blacklisted(username)
        
         if is_bad_word: 
-          return None ,"Your username may contain some profanity, please change"
+          return {'valid': False, 'suggested_username': None, "message":"Your username may contain some profanity, please change..."}, None
         
         # checks if username already exists
         if not UserProfile.objects.filter(preferred_name=username).exists():
-            return {'valid': True, 'suggested_username': username}, None
+            return {'valid': True, 'suggested_username': username, "message":"User already exists..."}, None
 
         # username exists, finds next available closest username
         usernames = list(UserProfile.objects.filter(preferred_name__istartswith=username).order_by('preferred_name').values_list("preferred_name", flat=True))
