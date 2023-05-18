@@ -146,7 +146,7 @@ class CarbonCalculator:
         response['status'] = VALID_QUERY
         return response
 
-    def AverageImpact(self, action, locality="default", date=None):
+    def AverageImpact(self, action, date=None, locality="default"):
         averageName = action.name + '_average_points'
         return getDefault(locality, averageName, date)
 

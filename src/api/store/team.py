@@ -10,6 +10,7 @@ from .utils import get_community_or_die, get_user_or_die, get_admin_communities,
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
+from carbon_calculator.carbonCalculator import CarbonCalculator
 from typing import Tuple
 
 def can_set_parent(parent, this_team=None):
@@ -114,7 +115,7 @@ class TeamStore:
             res["actions_todo"] += actions.filter(status="TODO").count()
             for done_action in done_actions:
               if done_action.action and done_action.action.calculator_action:
-                res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
+                res["carbon_footprint_reduction"] += CarbonCalculator.AverageImpact(done_action.action.calculator_action, done_action.date_completed)
 
         ans.append(res)
 

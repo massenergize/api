@@ -24,7 +24,7 @@ def get_households_engaged(community: Community):
   # loop over actions completed
   for actionRel in done_actions:
     if actionRel.action and actionRel.action.calculator_action :
-      points = CarbonCalculator.AverageImpact(actionRel.action.calculator_action)
+      points = CarbonCalculator.AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
       carbon_footprint_reduction += points
 
   return {"community": {"id": community.id, "name": community.name}, 
@@ -39,7 +39,7 @@ def get_all_households_engaged():
   carbon_footprint_reduction = 0
   for actionRel in done_actions:
     if actionRel.action and actionRel.action.calculator_action :
-      carbon_footprint_reduction += actionRel.action.calculator_action.average_points 
+      carbon_footprint_reduction += CarbonCalculator.AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
 
   return {"community": {"id": 0, "name": 'Other'}, 
           "actions_completed": actions_completed, "households_engaged": households_engaged,

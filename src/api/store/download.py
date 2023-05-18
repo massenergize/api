@@ -407,7 +407,7 @@ class DownloadStore:
     def _get_action_info_cells(self, action):
 
         average_carbon_points = (
-            CarbonCalculator.AverageImpact(action.calculator_action)
+            CarbonCalculator.AverageImpact(action.calculator_action, action.date_completed)
             if action.calculator_action
             else int(action.average_carbon_score)
             if action.average_carbon_score.isdigit()
@@ -535,7 +535,7 @@ class DownloadStore:
             for done_action in done_actions:
                 if done_action.action and done_action.action.calculator_action:
                     total_carbon_points += (
-                        done_action.action.calculator_action.average_points
+                        CarbonCalculator.AverageImpact(done_action.action.calculator_action, done_action.date_completed)
                     )
         total_carbon_points = str(total_carbon_points)
 
