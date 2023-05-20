@@ -29,7 +29,6 @@ class SubscriberStore:
 
   def create_subscriber(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      
       new_subscriber = Subscriber.objects.create(**args)
       if community_id:
         community = Community.objects.get(id=community_id)

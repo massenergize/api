@@ -71,7 +71,7 @@ class TestimonialHandler(RouteHandler):
       return err
 
     # no anonymous option anymore
-    args["anonymous"] = False
+    # args["anonymous"] = False
 
     testimonial_info, err = self.service.create_testimonial(context, args)
     if err:
@@ -98,7 +98,7 @@ class TestimonialHandler(RouteHandler):
       return err
 
     # no anonymous option anymore
-    args["anonymous"] = False
+    # args["anonymous"] = False
 
     # user submitted testimonial, so notify the community admins
     user_submitted = True

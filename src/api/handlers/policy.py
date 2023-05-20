@@ -1,13 +1,11 @@
 """Handler file for all routes pertaining to policies"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, parse_bool
+from _main_.utils.common import parse_bool
 from api.services.policy import PolicyService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, super_admins_only
 
 class PolicyHandler(RouteHandler):
 
@@ -40,7 +38,7 @@ class PolicyHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=policy_info)
 
-  @admins_only
+  @super_admins_only
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -48,7 +46,7 @@ class PolicyHandler(RouteHandler):
     is_global = args.pop('is_global', None)
     if is_global:
       args["is_global"] = parse_bool(is_global)
-    policy_info, err = self.service.create_policy(community_id ,args)
+    policy_info, err = self.service.create_policy(context,community_id ,args)
     if err:
       return err
     return MassenergizeResponse(data=policy_info)
@@ -62,7 +60,7 @@ class PolicyHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=policy_info)
 
-  @admins_only
+  @super_admins_only
   def copy(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -72,7 +70,7 @@ class PolicyHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=policy_info)
 
-  @admins_only
+  @super_admins_only
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -80,17 +78,17 @@ class PolicyHandler(RouteHandler):
     is_global = args.pop('is_global', None)
     if is_global:
       args["is_global"] = parse_bool(is_global)
-    policy_info, err = self.service.update_policy(policy_id, args)
+    policy_info, err = self.service.update_policy(context,policy_id, args)
     if err:
       return err
     return MassenergizeResponse(data=policy_info)
 
-  @admins_only
+  @super_admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
     policy_id = args.pop('policy_id', None)
-    policy_info, err = self.service.delete_policy(policy_id)
+    policy_info, err = self.service.delete_policy(context,policy_id)
     if err:
       return err
     return MassenergizeResponse(data=policy_info)
