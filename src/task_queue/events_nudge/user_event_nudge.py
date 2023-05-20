@@ -8,7 +8,7 @@ from database.models import Community, Event, UserProfile, FeatureFlag
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 from database.utils.common import get_json_if_not_none
-
+from _main_.settings import IS_PROD, RUN_SERVER_LOCALLY
 from database.utils.settings.model_constants.events import EventConstants
 from django.utils import timezone
 
@@ -193,7 +193,9 @@ def send_automated_nudge(events, user, community):
         user_is_ready_for_nudge = should_user_get_nudged(user)
 
         if user_is_ready_for_nudge:
-            print("sending nudge")
+            if not IS_PROD:
+                print(str(user) + ' will be nudged about ' + str(events))
+
             is_sent = send_events_report_email(name, email, events, community)
             if not is_sent:
                 print( f"**** Failed to send email to {name} for community {community.name} ****")
@@ -265,15 +267,21 @@ def prepare_user_events_nudge(email=None, community_id=None):
       
         for community in communities:
             if flag.audience == "EVERYONE" or community in allowed_communities:
-                print(community)
+                if not IS_PROD:
+                    print("Nudging users in "+str(community))
+
                 events = get_community_events(community.id)
                 users = get_community_users(community.id)
                 for user in users:
-                    print(user)
+                    # if not in Prod, only send mail if user marked as being connected with product team
+
                     events = get_user_events(user.notification_dates, events)
-                    print(events)
-                    send_automated_nudge(events, user, community)
-        
+                    if IS_PROD and not RUN_SERVER_LOCALLY or user.is_super_admin or user.other_info and user.other_info.get('sw-team'):
+                        send_automated_nudge(events, user, community)
+                    else:
+                        print(str(user) + ' would be notified about ' + str(events))
+
+
         # Only update user notification date is an email was actually sent
         # update_user_notification_dates(communities, flag)
         
