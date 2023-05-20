@@ -280,9 +280,9 @@ class TeamsTestCase(TestCase):
 
     # test can sadmin delete team
     signinAs(self.client, self.SADMIN)
-    
     team = Team.objects.create(primary_community=self.COMMUNITY, name="sadmin_test_team", is_published=True)
     delete_response = self.client.post('/api/teams.delete', urlencode({"team_id": team.id}), content_type="application/x-www-form-urlencoded").toDict()
+
     self.assertTrue(delete_response["success"])
     #self.assertTrue(delete_response["data"]["is_deleted"])
 

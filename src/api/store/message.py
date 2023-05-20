@@ -1,7 +1,6 @@
-import json
-from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_messages_filter_params
 from database.models import Message, Media, Team
 from _main_.utils.massenergize_errors import (
@@ -28,6 +27,9 @@ class MessageStore:
             if not message_id:
                 return None, InvalidResourceError()
             message = Message.objects.filter(pk=message_id).first()
+
+            if context.user_is_community_admin and not is_admin_of_community(context, message.community.id):
+                return None, CustomMassenergizeError('You are not authorized')
 
             if not message:
                 return None, InvalidResourceError()
@@ -219,6 +221,8 @@ class MessageStore:
     def delete_message(self, message_id, context) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             messages = Message.objects.filter(id=message_id)
+            if context.user_is_community_admin and not is_admin_of_community(context, messages.first().community.id):
+                return None, CustomMassenergizeError('You are not authorized')
             messages.update(is_deleted=True)
             message = messages.first()
             # TODO: also remove it from all places that it was ever set in many to many or foreign key

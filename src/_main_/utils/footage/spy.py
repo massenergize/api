@@ -4,6 +4,7 @@ from _main_.utils.context import Context
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.utils import Console
+from api.store.utils import get_user_from_context
 from database.models import CommunityAdminGroup, Footage, UserProfile
 from django.db.models import Q
 
@@ -391,9 +392,11 @@ class Spy:
         try:
             
             context: Context = kwargs.get("context", None)
-            email = kwargs.get("email", None)
-            user = UserProfile.objects.get(email=email or context.user_email)
+            # email = kwargs.get("email", None)
+            user = get_user_from_context(context)
             # actors = []
+            if not user:
+                return []
             communities = []
             for g in user.communityadmingroup_set.all(): 
                 # members = [m.id for m in g.members.all()]

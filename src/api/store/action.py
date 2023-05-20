@@ -1,6 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_actions_filter_params
 from database.models import Action, UserProfile, Community, Media
 from carbon_calculator.models import Action as CCAction
@@ -199,6 +200,11 @@ class ActionStore:
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
       if str(action.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
+      
+      # check if user is community admin and is also an admin of the community that created the action
+      if context.user_is_community_admin:
+        if not is_admin_of_community(context, action.first().community.id):
+          return None, NotAuthorizedError()
 
       community_id = args.pop('community_id', None)
       tags = args.pop('tags', [])
@@ -209,6 +215,10 @@ class ActionStore:
       deep_dive = args.pop('deep_dive','')
       calculator_action = args.pop('calculator_action', None)
       is_published = args.pop('is_published', None)
+
+      if not context.user_is_admin():
+        args.pop("is_approved", None)
+        args.pop("is_published", None)
 
       action.update(**args)
       action = action.first()
@@ -300,8 +310,15 @@ class ActionStore:
   def delete_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       action_id = args.get("action_id", None)
+      if not action_id:
+        return None, InvalidResourceError()
       #find the action
       action_to_delete = Action.objects.get(id=action_id)
+
+      if context.user_is_community_admin:
+        if not is_admin_of_community(context, action_to_delete.community.id):
+          return None, NotAuthorizedError()
+        
       action_to_delete.is_deleted = True 
       action_to_delete.save()
       # ----------------------------------------------------------------
@@ -322,14 +339,15 @@ class ActionStore:
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
-
+      
+      
       if ids: 
         actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return actions.distinct(), None
-
-      if community_id == 0:
-        # return actions from all communities
-        return self.list_actions_for_super_admin(context)
+      
+      # if community_id == 0:
+      #   # return actions from all communities
+      #   return self.list_actions_for_super_admin(context)
         
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
@@ -340,6 +358,9 @@ class ActionStore:
         comm_ids = [ag.community.id for ag in admin_groups]
         actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return actions.distinct(), None
+      
+      if context.user_is_community_admin and  not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
       return actions.distinct(), None

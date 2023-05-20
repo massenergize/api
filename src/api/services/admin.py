@@ -131,7 +131,7 @@ class AdminService:
       except Exception as e:
         capture_message(str(e), level="error")
         return None, CustomMassenergizeError(e)
-
+   
     def list_admin_messages(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         admins_messages, err = self.store.list_admin_messages(context, args)
         if err:

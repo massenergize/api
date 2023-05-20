@@ -296,6 +296,7 @@ class EventsTestCase(TestCase):
         # test logged as user
         signinAs(self.client, self.USER)
         response = self.client.post('/api/events.rsvp.remove', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
+
         self.assertTrue(response["success"])
 
         # test logged as cadmin

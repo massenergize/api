@@ -2,7 +2,7 @@ from _main_.utils.route_handler import RouteHandler
 from api.services.download import DownloadService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from api.decorators import admins_only
+from api.decorators import admins_only, super_admins_only
 
 # see: https://docs.djangoproject.com/en/3.0/howto/outputting-csv
 
@@ -48,7 +48,7 @@ class DownloadHandler(RouteHandler):
     return MassenergizeResponse(data={}, status=200)
   
 
-  @admins_only
+  @super_admins_only
   def communities_download(self, request):
     context: Context = request.context
     #args: dict = context.args
@@ -102,7 +102,7 @@ class DownloadHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
 
-  @admins_only
+  @super_admins_only
   def send_sadmin_report(self, request):
     context: Context = request.context
     args: dict = context.args

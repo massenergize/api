@@ -1,12 +1,10 @@
 """Handler file for all routes pertaining to actions"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import parse_list, parse_bool, check_length, rename_field
 from api.services.action import ActionService
 from _main_.utils.massenergize_response import MassenergizeResponse
 #from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
 
 
@@ -88,7 +86,7 @@ class ActionHandler(RouteHandler):
     args = context.get_request_body() 
     (self.validator
       .expect("title", str, is_required=True, options={"min_length": 4, "max_length": 40})
-      .expect("community_id", int, is_required=True)
+      .expect("community_id", int, is_required=True) #fromContext
       .expect("image", "file", is_required=False, options={"is_logo": True})
       .expect("vendors", list, is_required=False)
       .expect("action_id", str, is_required=False)

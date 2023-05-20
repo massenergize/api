@@ -69,11 +69,12 @@ class TestFootages(TestCase):
             "__is_admin_site": True,
         }
 
-        testimonial = makeTestimonial(title="Custom Testimonial", community=community)
+        # testimonial = makeTestimonial(title="Custom Testimonial", community=community, user=user)
         testimonial_info = {
-            "testimonial_id": testimonial.id,
             "is_approved": True,
             "__is_admin_site": True,
+            "title":"Custom Testimonial",
+            "community_id": community.id,
         }
 
         # Hit some routes
@@ -81,7 +82,7 @@ class TestFootages(TestCase):
         self.client.post("/api/events.create", event_data)
         self.client.post("/api/vendors.create", vendor_info)
         self.client.post("/api/teams.create", team_info)
-        self.client.post("/api/testimonials.update", testimonial_info)
+        self.client.post("/api/testimonials.create", testimonial_info)
 
         print(
             "Sent requests to create action, event, vendor, team, and to update testimonial. All done!"
@@ -125,5 +126,6 @@ class TestFootages(TestCase):
         response = self.client.post(ROUTE).json().get("data", {}).get("footages", [])
         print(f"Retrieving available footages after ({user})'s activities...")
         # Exactly 7 footages show up 2 for "community2" and 5 for "community"
+
         self.assertEquals(len(response), 7)
         Console.underline(f"Yes, includes footage from 'community' and 'community2'. ({user}) is the cadmin of both!")

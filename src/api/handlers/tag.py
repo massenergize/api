@@ -73,7 +73,7 @@ class TagHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     tag_id = args.get("id", None)
-    tag_info, err = self.service.delete_tag(args.get("id", None))
+    tag_info, err = self.service.delete_tag(tag_id)
     if err:
       return err
     return MassenergizeResponse(data=tag_info)
