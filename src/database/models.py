@@ -323,8 +323,9 @@ class Policy(models.Model):
 
     def full_json(self):
         # would this blow up because no community_set?
+        # community_policies is a related_name on the community table
         res = self.simple_json()
-        community = self.community_set.all().first()
+        community = self.community_policies.all().first()
         if community:
             res["community"] = get_json_if_not_none(community)
         return res
@@ -492,7 +493,7 @@ class Community(models.Model):
     # locations defines the range for geographic communities
     locations = models.ManyToManyField(Location, blank=True)
 
-    policies = models.ManyToManyField(Policy, blank=True)
+    policies = models.ManyToManyField(Policy, blank=True, related_name="community_policies")
     is_approved = models.BooleanField(default=False, blank=True)
     accepted_terms_and_conditions = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -863,7 +864,7 @@ class UserProfile(models.Model):
         return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
 
     def summary(self):
-        summaryData = model_to_dict(self, ["preferred_name", "is_guest"])
+        summaryData = model_to_dict(self, ["preferred_name", "is_guest","email"])
         summaryData["joined"] = self.created_at.date()
         summaryData["profile_picture"] = get_json_if_not_none(self.profile_picture)
 

@@ -36,7 +36,7 @@ class UserHandler(RouteHandler):
         self.add("/users.households.list", self.list_households)
         self.add("/users.events.list", self.list_events)
         self.add("/users.checkImported", self.check_user_imported)
-        self.add("/users.listForPublicView", self.list_publicview)
+        self.add("/users.listForPublicView", self.list_publicview) # NOT USED
         self.add("/users.validate.username", self.validate_username)
 
         # admin routes
@@ -65,7 +65,7 @@ class UserHandler(RouteHandler):
         args: dict = context.args
         args, err = (
             self.validator.expect("accept", bool, is_required=True)
-            .expect("email", str) # For postman tests
+            # .expect("email", str) # For postman tests
             .expect("policy_key", str, is_required=True)
             .verify(context.args)
         )
@@ -121,7 +121,7 @@ class UserHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         community_id = args.pop("community_id", None)
-        user_info, err = self.service.list_users(community_id)
+        user_info, err = self.service.list_users(context,community_id)
         if err:
             return err
         return MassenergizeResponse(data=user_info)
@@ -177,13 +177,14 @@ class UserHandler(RouteHandler):
     def update(self, request):
         context: Context = request.context
         args: dict = context.args
-        args, err = (
-            self.validator.rename("user_id", "id")
-            .expect("id", str, is_required=True)
-            .verify(context.args)
-        )
-        if err:
-            return err
+        # user info is now taken from context
+        # args, err = (
+        #     self.validator.rename("user_id", "id")
+        #     .expect("id", str, is_required=False)
+        #     .verify(context.args)
+        # )
+        # if err:
+        #     return err
 
         user_info, err = self.service.update_user(context, args)
         if err:

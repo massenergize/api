@@ -48,7 +48,6 @@ class TagStore:
 
   def list_tags_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     tags =  self.list_tags_for_super_admin()
-
     return tags
 
 

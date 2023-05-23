@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
-from _main_.utils.common import serialize, serialize_all
+from _main_.utils.common import serialize
 from _main_.utils.pagination import paginate
 from api.store.subscriber import SubscriberStore
 from _main_.utils.emailer.send_email import send_massenergize_rich_email

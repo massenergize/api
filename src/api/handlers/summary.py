@@ -1,12 +1,9 @@
 """Handler file for all routes pertaining to summaries"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents
 from api.services.summary import SummaryService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only
 
 class SummaryHandler(RouteHandler):
@@ -28,8 +25,11 @@ class SummaryHandler(RouteHandler):
   def fetch_user_engagements_for_admins(self, request): 
     context: Context = request.context
     args: dict = context.args
-    self.validator.expect("is_community_admin", bool, is_required=False) # For manual testing
+   
+    self.validator.expect("is_community_admin", bool, is_required=False) # For manual testing 
     self.validator.expect("email", str, is_required=False) # For manual testing
+     # from 15/05/2023: the variables above are no longer used for security reasons
+
     self.validator.expect("time_range", str, is_required=False) 
     self.validator.expect("start_time", str, is_required=False) 
     self.validator.expect("end_time", str, is_required=False) 

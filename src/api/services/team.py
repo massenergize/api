@@ -70,14 +70,14 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def join_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.join_team(args)
+  def join_team(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.join_team(context,args)
     if err:
       return None, err
     return serialize(team), None
 
-  def leave_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.leave_team(args)
+  def leave_team(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.leave_team(context,args)
     if err:
       return None, err
     return serialize(team), None
