@@ -587,11 +587,11 @@ class CommunityStore:
             if context.is_sandbox:
                 communities = Community.objects.filter(
                     is_deleted=False, is_approved=True
-                ).exclude(subdomain="template")
+                ).exclude(subdomain="template").order_by('name')
             else:
                 communities = Community.objects.filter(
                     is_deleted=False, is_approved=True, is_published=True
-                ).exclude(subdomain="template")
+                ).exclude(subdomain="template").order_by('name')
 
             if not communities:
                 return [], None
@@ -953,7 +953,7 @@ class CommunityStore:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
-                communities = Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params)
+                communities = Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params).order_by('name')
                 return communities, None
             else:
                 return [], None
@@ -968,7 +968,7 @@ class CommunityStore:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
             filter_params = get_communities_filter_params(context.get_params())
 
-            communities = Community.objects.filter(is_deleted=False, *filter_params)
+            communities = Community.objects.filter(is_deleted=False, *filter_params).order_by('name')
             return communities, None
         except Exception as e:
             capture_exception(e)
