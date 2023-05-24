@@ -953,7 +953,7 @@ class CommunityStore:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
-                communities = Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params).order_by('name')
+                communities = list(Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params).order_by('name'))
                 return communities, None
             else:
                 return [], None
@@ -967,8 +967,8 @@ class CommunityStore:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
             filter_params = get_communities_filter_params(context.get_params())
-
-            communities = Community.objects.filter(is_deleted=False, *filter_params).order_by('name')
+            # the order_by didn't work properly until I added list(), due to "lazy evaluation"
+            communities = list(Community.objects.filter(is_deleted=False, *filter_params).order_by('name'))
             return communities, None
         except Exception as e:
             capture_exception(e)
