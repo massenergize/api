@@ -31,10 +31,10 @@ class CCD():
 
     DefaultsByLocality = {"default":{}} # the class variable
     try:
+        # everyone is tired of this message
+        print("Initializing Carbon Calculator values")
+
         cq = CalcDefault.objects.all()
-        num = cq.count()
-        msg = "Initializing %d Carbon Calc defaults from db" % num
-        print(msg)
         for c in cq:
             # valid date is 0 if not specified
             date = '2000-01-01'

@@ -39,7 +39,8 @@ def SavePic2Media(picURL):
         resp = requests.get(picURL)
         if resp.status_code != requests.codes.ok:
             # Error handling here3
-            print("ERROR: Unable to import action photo from "+picURL)
+            # As of 2022, attachment URLs in AirTable expire after a couple of hour, so this will always fail until we figure out another solution
+            # sprint("ERROR: Unable to import action photo from "+picURL)
             return None
         else:
             image = resp.content

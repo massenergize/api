@@ -313,7 +313,7 @@ def createImage(picURL=None):
     resp = requests.get(picURL)
     if resp.status_code != requests.codes.ok:
         # Error handling here3
-        print("ERROR: Unable to import action photo from " + picURL)
+        print("ERROR: Unable to import image file from " + picURL)
         image_file = None
     else:
         image = resp.content
