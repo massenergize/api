@@ -195,6 +195,7 @@ class CommunitiesTestCase(TestCase):
     signinAs(self.client, self.CADMIN)
     new_name = "Arlingtonians"
     update_response = self.client.post('/api/communities.update', urlencode({"id": self.COMMUNITY.id, "name": new_name}), content_type="application/x-www-form-urlencoded").toDict()
+
     self.assertTrue(update_response["success"])
     self.assertEqual(new_name, update_response["data"]["name"])
 
@@ -281,9 +282,12 @@ class CommunitiesTestCase(TestCase):
     self.assertFalse(join_response["success"])
 
     # test community as different user
-    signinAs(self.client, self.USER)
-    join_response = self.client.post('/api/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
-    self.assertFalse(join_response["success"])
+    #  from 17/05/2023, this test will pass because we no longer use the user_id in request data but the one in context
+    # this test is no more needed
+    # signinAs(self.client, self.USER) 
+    # join_response = self.client.post('/api/communities.join', urlencode({"community_id": self.COMMUNITY.id, "user_id": self.USER3.id}), content_type="application/x-www-form-urlencoded").toDict()
+
+    # self.assertFalse(join_response["success"])
 
     # test community as different admin user
     signinAs(self.client, self.SADMIN)

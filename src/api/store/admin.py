@@ -1,7 +1,7 @@
-from _main_.utils.pagination import paginate
 from _main_.utils.utils import is_not_null
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_super_admins_filter_params
-from database.models import UserProfile, CommunityAdminGroup, Community, Media, UserProfile, Message
+from database.models import UserProfile, CommunityAdminGroup, Media, UserProfile, Message
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.context import Context
 from .utils import get_community, get_user, get_community_or_die, unique_media_filename
@@ -92,6 +92,9 @@ class AdminStore:
 
       if not community:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
+      
+      if context.user_is_community_admin and not is_admin_of_community(context, community.id):
+        return None, CustomMassenergizeError("You are not authorized to add another community Admin")
 
       admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community=community).first()
 
@@ -102,10 +105,9 @@ class AdminStore:
       else:
         user: UserProfile = None
 
-      
       if user:
         admin_group.members.add(user)
-        if not user.is_super_admin and not user.is_super_admin:
+        if not user.is_super_admin and not user.is_community_admin:
           user.is_community_admin = True
           user.save()
       else:
@@ -148,6 +150,9 @@ class AdminStore:
         admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community__subdomain=subdomain).first()
       else:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
+      
+      if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+        return None, CustomMassenergizeError("You are not an admin of this community")
 
       if email:
         user = UserProfile.objects.filter(email=email).first()
@@ -155,7 +160,6 @@ class AdminStore:
         user = UserProfile.objects.filter(id=user_id).first()
       else:
         user = None
-
 
       if user and user in admin_group.members.all():
         admin_group.members.remove(user)
@@ -264,10 +268,12 @@ class AdminStore:
 
       elif not community:
         return [], None
+      
+      if context.user_is_community_admin and not is_admin_of_community(context, community.id):
+        return None, CustomMassenergizeError("You are not authorized")
 
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
       return messages, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-

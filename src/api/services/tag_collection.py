@@ -49,7 +49,6 @@ class TagCollectionService:
 
 
   def list_tag_collections_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    args = context.args
     tag_collections, err = self.store.list_tag_collections_for_community_admin(context,community_id)
     if err:
       return None, err
@@ -58,7 +57,6 @@ class TagCollectionService:
 
 
   def list_tag_collections_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
-    args = context.args
     tag_collections, err = self.store.list_tag_collections_for_super_admin(context)
     if err:
       return None, err

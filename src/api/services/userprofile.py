@@ -1,6 +1,7 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
+from api.decorators import login_required
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
@@ -151,8 +152,8 @@ class UserService:
       return None, err
     return household, None
 
-  def list_users(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    user, err = self.store.list_users(community_id)
+  def list_users(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    user, err = self.store.list_users(context,community_id)
     if err:
       return None, err
     return user, None
@@ -163,7 +164,6 @@ class UserService:
     if err:
       return None, err
     return {'public_user_list': publicview}, None
-
 
   def list_actions_todo(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     actions_todo, err = self.store.list_todo_actions(context, args)

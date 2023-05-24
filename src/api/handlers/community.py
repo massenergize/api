@@ -60,19 +60,19 @@ class CommunityHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    self.validator.expect("user_id", str, is_required=True)
+    # self.validator.expect("user_id", str, is_required=True) # the API already knows the user through the context
     self.validator.expect("community_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
 
     # test for perms
-    executor_id = context.user_id
+    # executor_id = context.user_id
 
-    if executor_id == args.get("user_id", None) or context.user_is_admin():
-      community_info, err = self.service.join_community(context, args)
-    else:
-      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.join on this user")
+    # if executor_id == args.get("user_id", None) or context.user_is_admin():
+    community_info, err = self.service.join_community(context, args)
+    # else:
+    #   return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.join on this user")
     if err:
       return err
     return MassenergizeResponse(data=community_info)
@@ -84,19 +84,19 @@ class CommunityHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    self.validator.expect("user_id", str, is_required=True)
+    # self.validator.expect("user_id", str, is_required=True)
     self.validator.expect("community_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
 
     # test for perms
-    executor_id = context.user_id
+    # executor_id = context.user_id
 
-    if executor_id == args.get("user_id", None):
-      community_info, err = self.service.leave_community(context, args)
-    else:
-      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.leave on this user")
+    # if executor_id == args.get("user_id", None):
+    community_info, err = self.service.leave_community(context, args)
+    # else:
+    #   return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.leave on this user")
 
     if err:
       return err

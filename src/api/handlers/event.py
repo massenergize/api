@@ -146,7 +146,7 @@ class EventHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=event_info)
 
-  # @login_required
+  @admins_only
   def update_recurring_date(self, request):
     context: Context = request.context
     args: dict = context.args
