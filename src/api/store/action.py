@@ -93,7 +93,6 @@ class ActionStore:
 
   def create_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      print("in store!")
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
       vendors = args.pop('vendors', [])
@@ -135,7 +134,6 @@ class ActionStore:
         if user:
           new_action.user = user
 
-      #save so you set an id
       new_action.save()
 
       if tags:
@@ -154,10 +152,7 @@ class ActionStore:
 
           if ccAction.category:
             self.add_tags(new_action, ccAction, tags)
-            
-
-
-          
+             
 
       new_action.save()
       # ----------------------------------------------------------------

@@ -25,7 +25,6 @@ from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminate
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
 from .calcUsers import ExportCalcUsers, CalcUserUpdate
-from .generic import EvalGenericCalculatorAction
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -165,7 +164,12 @@ class CarbonCalculator:
             else:
                 category = action.category.name
 
-            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points, 'category': category,} ) #'category': category,
+            if action.sub_category is None:
+                subcategory = ""
+            else:
+                subcategory = action.sub_category.name
+
+            actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points, 'category': category, 'subcategory': subcategory} ) #'category': category,
         categoryList =[]
         cats = Category.objects.filter(is_deleted=False)
         subcatList = []
@@ -354,8 +358,6 @@ class CarbonCalculator:
                     
                         if name in self.allActions:
                             self.allActions[name].__init__(name)
-                        # else: 
-                        #     self.allActions[name].__init__(EvalGenericCalculatorAction)
                         import_num+=1
                     
                     elif cat and qs:
@@ -372,9 +374,6 @@ class CarbonCalculator:
                         update_num +=1
                         if name in self.allActions:
                             self.allActions[name].__init__(name)
-                        # else:
-                        #     self.allActions[name].__init__(EvalGenericCalculatorAction)
-                            #num+=1 ?
 
                     if not cat:
                         print("Did not make action for " + str(item[0]))
@@ -899,9 +898,4 @@ class ElectricMower(CalculatorAction):
 class RakeOrElecBlower(CalculatorAction):
     def Eval(self, inputs):
         self.points, self.cost, self.savings, self.text = EvalRakeOrElecBlower(inputs)
-        return super().Eval(inputs)
-
-class GenericCalculatorAction(CalculatorAction):
-    def Eval(self, inputs):
-        self.points, self.cost, self.savings, self.text = EvalGenericCalculatorAction(inputs)
         return super().Eval(inputs)
