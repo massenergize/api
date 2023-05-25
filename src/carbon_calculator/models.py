@@ -111,7 +111,7 @@ class Action(models.Model):
 
 
     def info(self):
-        return model_to_dict(self, ['id', 'name', 'title', 'old_category', 'description', 'average_points'])
+        return model_to_dict(self, ['id', 'name', 'title', 'category', 'description', 'average_points'])
 
     def simple_json(self):
         return model_to_dict(self)
@@ -121,7 +121,7 @@ class Action(models.Model):
 
     def __str__(self): 
         if self.category is None:
-            s = self.old_category + ':' + self.name 
+            s = self.name 
         else:
             s = self.category.name + ':' + self.name 
         return s

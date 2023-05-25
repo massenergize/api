@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('carbon_calculator', '0010_auto_20230515_1714'),
-        ('database', '0133_auto_20230501_1719'),
+        ('database', '0134_auto_20230515_1126'),
     ]
 
     operations = [
