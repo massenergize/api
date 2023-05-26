@@ -1,6 +1,7 @@
 import csv
 from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.settings import IS_PROD
 from _main_.utils.constants import ADMIN_URL_ROOT
 from api.utils.constants import (
     CADMIN_EMAIL_TEMPLATE_ID,
@@ -418,6 +419,8 @@ def send_admin_mou_notification():
     # Calculate one year and one month ago for comparison
     a_year_ago = now - datetime.timedelta(days=365)
     a_month_ago = now - datetime.timedelta(days=31)
+    a_day_ago = now - datetime.timedelta(days=1)
+    long_enough_ago = a_month_ago if IS_PROD else a_day_ago
 
     # Filter all active community admins in the user profile
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)
@@ -430,11 +433,16 @@ def send_admin_mou_notification():
                 type=PolicyConstants.mou()
             ).latest("signed_at")
 
-            # Check if it's been more than a year since they last signed
-            more_than_a_year = last_record.signed_at <= a_year_ago
+            if last_record:
+                # Check if it's been more than a year since they last signed
+                if not IS_PROD:
+                    print(admin_name, " last signed MOU at", last_record)
+                more_than_a_year = last_record.signed_at <= a_year_ago
+            else:
+                print(admin_name, " has no MOU acceptance records")
 
             # If it's time to notify the admin again, then add a new notification timestamp to their policy record
-            if more_than_a_year:
+            if not last_record or more_than_a_year:
                 notices = last_record.last_notified or []
                 last_date_of_notification = notices[len(notices) - 1]
                
@@ -446,15 +454,19 @@ def send_admin_mou_notification():
                 if (
                     not last_date_of_notification
                 ):  # If for some reason notification date has never been recorded
+                    if not IS_PROD:
+                        print("Sending first MOU notification")
                     send_mou_email(admin.email, admin_name)
                     update_records(last=last_record, notices=notices)
                     
                     
                 else:  # They have been notified before
                     last_date_of_notification =  datetime.datetime.fromisoformat(last_date_of_notification)
-                    more_than_a_month = last_date_of_notification <= a_month_ago
+                    not_notified_recently = last_date_of_notification <= long_enough_ago
                     
-                    if more_than_a_month: #only notify if its been more than a month of notifying
+                    if not_notified_recently: #only notify if its been more than a month of notifying
+                        if not IS_PROD:
+                            print("Sending another notification")
                         send_mou_email(admin.email, admin_name)
                         update_records(last=last_record, notices=notices)
                         
