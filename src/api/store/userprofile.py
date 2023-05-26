@@ -235,7 +235,9 @@ class UserStore:
   def decline_mou(self,user, args): 
     date = args.get("date")
     name = user.full_name
-    send_massenergize_email(f"{name} Declined MOU ({date})", f"{name}, declined the MOU. They have chosen to no longer be an admin.",ME_SUPPORT_TEAM_EMAIL)
+    send_massenergize_email(f"{name} Declined MOU ({date})", 
+                            f"{name}, declined the MOU. They have chosen to no longer be an admin.",
+                            ME_SUPPORT_TEAM_EMAIL)
 
     user.is_community_admin= False 
     user.is_super_admin = False
@@ -276,7 +278,11 @@ class UserStore:
         community_names = ", ".join([group.community.name for group in user_groups])
         
         # Notify massenergize support team 
-        send_massenergize_email_with_attachments(MOU_SIGNED_SUPPORT_TEAM_TEMPLATE,{"admin_name":username, "salutation":"Dear Support Team,", "community_name":community_names or "..."},ME_SUPPORT_TEAM_EMAIL,pdf,filename)
+        send_massenergize_email_with_attachments(MOU_SIGNED_SUPPORT_TEAM_TEMPLATE,
+                                                 {"admin_name":username, 
+                                                  "salutation":"Dear Support Team,", 
+                                                  "community_name":community_names or "..."},
+                                                  ME_SUPPORT_TEAM_EMAIL,pdf,filename)
         record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = datetime.utcnow())
         record.save()
         user.refresh_from_db()
