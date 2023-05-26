@@ -11,6 +11,7 @@ from api.utils.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 
 ONE_YEAR = 365*24*60*60
 ONE_DAY = 24*60*60
+# ONE_DAY = 2*60 # FOR TESTING UNCOMMENT THIS (2 Minutes instead of 24hrs)
 
 class AuthHandler(RouteHandler):
 
@@ -27,8 +28,7 @@ class AuthHandler(RouteHandler):
     self.add("/auth.test", self.whoami)
     self.add("/auth.verifyCaptcha", self.verify_captcha)
     self.add("/auth.signinasguest", self.guest_login) 
-  
-  
+
   def login(self, request): 
     context: Context = request.context
     user_info, token, err = self.service.login(context)
@@ -45,8 +45,8 @@ class AuthHandler(RouteHandler):
     # if the signin is from an admin site then set it to 24 hrs
     if(context.is_admin_site):
       MAX_AGE = ONE_DAY
-      expiration_time = get_date_and_time_in_milliseconds(hours=24)
-      print("LETS SEEE EXPIRATION TIME", expiration_time)
+      expiration_time = get_date_and_time_in_milliseconds(hours=24) # UNDO BEFORE PR , BPR
+      # expiration_time = get_date_and_time_in_milliseconds(hours=0.033) # FOR TESTING, UNCOMMENT THIS
       request.session[WHEN_USER_AUTHENTICATED_SESSION_EXPIRES] = expiration_time
 
     if RUN_SERVER_LOCALLY:

@@ -12,6 +12,7 @@ from api.utils.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 USER_SESSION_HAS_EXPIRED = "user_session_expired"
 CONNECTION_ESTABLISHED = "connection_established"
 WAIT_TIME = 600 # 10 Minutes
+# WAIT_TIME = 5 # FOR TESTING UNCOMMENT (5 Seconds)
 
 class UserSessionTrackerConsumer(AsyncWebsocketConsumer):
 
@@ -41,6 +42,7 @@ class UserSessionTrackerConsumer(AsyncWebsocketConsumer):
 
         in_seconds = expiration_in_session / 1000
         expiration_as_date = datetime.fromtimestamp(in_seconds, tz=pytz.UTC)
+       
 
         # --- FOR TESTING, UNCOMMENT THIS PART FOR A SHORTER WAIT
         # expiration_as_date = datetime.now(tz=pytz.UTC) + timedelta(seconds=15)
