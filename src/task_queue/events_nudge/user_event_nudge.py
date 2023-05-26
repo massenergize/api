@@ -38,7 +38,7 @@ USER_PREFERENCE_DEFAULTS = {
 
 
 
-USER_EVENT_NUDGE_KEY = "communication-prefs-feature-flag"
+USER_EVENT_NUDGE_KEY = "user-event-nudge-feature-flag"
 
 
 # ---------------------------------------------------------------------------------------------------------------------

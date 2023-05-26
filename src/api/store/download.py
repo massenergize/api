@@ -147,7 +147,6 @@ class DownloadStore:
         ]
 
         self.metrics_columns = [
-            "Date",
             "Is Live",
             "Households Total",
             "Households User Reported",
@@ -1024,7 +1023,6 @@ class DownloadStore:
     def _get_metrics_cells(self, community_id, time_stamp):
 
         metrics_cells = {
-            "Date": time_stamp.date,
             "Is Live": time_stamp.is_live,
             "Households Total": time_stamp.households_total,
             "Households User Reported": time_stamp.households_user_reported,
@@ -1059,12 +1057,12 @@ class DownloadStore:
 
     def _community_metrics_download(self, context, args, community_id):
         
-        columns = self.metrics_columns
+        columns = ["Date"] + self.metrics_columns
         data = [columns]
         snapshots = CommunitySnapshot.objects.filter(community__id = community_id).order_by("date")
 
         for snap in snapshots:
-            data.append(self._get_metrics_cells(community_id, snap))
+            data.append([snap.date] + self._get_metrics_cells(community_id, snap))
 
         return data
 
@@ -1105,8 +1103,8 @@ class DownloadStore:
                     else:
                         dic[key] = dic[key] + int(field_value)
 
+        dic["is_live"].sort()
         metrics_cells = {
-            "Date": snapshots_list[0].date,
             "Is Live": ', '.join(dic["is_live"]),
             "Households Total": dic["households_total"],
             "Households User Reported": dic["households_user_reported"],
@@ -1135,11 +1133,11 @@ class DownloadStore:
             "Testimonials Count": dic["testimonials_count"],
             "Service Providers Count": dic["service_providers_count"],
             }
-        return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list
+        return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list, len(dic["is_live"])
 
     
     def _all_metrics_download(self, context, args):
-        columns = ["Community Count"] + self.metrics_columns + ["Communities"]
+        columns = ["Date", " # Communities", "# Live"] + self.metrics_columns + ["Communities"]
         data = [columns]
 
         audience = args["audience"]
@@ -1161,9 +1159,10 @@ class DownloadStore:
             snapshots_list = community_snapshots.filter(date = elem[0])
             comm_ids = snapshots_list.values_list("community").distinct()
 
-            most_info, comms_list = self._get_all_metrics_info_cells(snapshots_list, comm_ids)
+            most_info, comms_list, live_num = self._get_all_metrics_info_cells(snapshots_list, comm_ids)
 
-            data.append([len(comms_list)] + most_info + [', '.join(comms_list)])
+            comms_list.sort()
+            data.append([elem[0]] + [len(comms_list)] + [live_num] + most_info + [', '.join(comms_list)])
 
         return data
 
