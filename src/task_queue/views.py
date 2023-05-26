@@ -400,7 +400,7 @@ def update_records(**kwargs):
     notices = kwargs.get("notices", [])
     user = kwargs.get("user", None)
     if not last:
-        record = PolicyAcceptanceRecords(user=user, notices=notices)
+        record = PolicyAcceptanceRecords.objects.create(user=user, type=PolicyConstants.mou(), last_notified=notices)
         record.save()
     elif last:
         last.last_notified = notices
@@ -424,9 +424,9 @@ def send_admin_mou_notification():
 
     # Filter all active community admins in the user profile
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)
-
     for admin in admins:
         admin_name = admin.full_name
+        print(admin_name)
         try:
             # Get last MOU record signed by the admin
             last_record = admin.accepted_policies.filter(
@@ -477,7 +477,7 @@ def send_admin_mou_notification():
             send_mou_email(admin.email, admin_name)
 
             # Record the current notification timestamp
-            new_notification_time = datetime.datetime.now(timezone.utc)
+            new_notification_time = datetime.datetime.now(timezone.utc).isoformat()
             update_records(notices=[new_notification_time], user=admin)
     
     return "success"
