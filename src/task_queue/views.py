@@ -436,10 +436,11 @@ def send_admin_mou_notification():
             if last_record:
                 # Check if it's been more than a year since they last signed
                 if not IS_PROD:
-                    print(admin_name, " last signed MOU at", last_record)
+                    print(last_record)
                 more_than_a_year = last_record.signed_at <= a_year_ago
             else:
-                print(admin_name, " has no MOU acceptance records")
+                if not IS_PROD:
+                    print(admin_name + " has no MOU acceptance records")
 
             # If it's time to notify the admin again, then add a new notification timestamp to their policy record
             if not last_record or more_than_a_year:
@@ -447,8 +448,8 @@ def send_admin_mou_notification():
                 last_date_of_notification = notices[len(notices) - 1]
                
                 # Record the current notification timestamp
-                new_notification_time = datetime.datetime.now(timezone.utc)
-                notices.append(new_notification_time.isoformat())
+                new_notification_time = datetime.datetime.now(timezone.utc).isoformat()
+                notices.append(new_notification_time)
 
                 # Send MOU email to the admin and update their policy record with the new notification timestamp(s)
                 if (
@@ -474,6 +475,8 @@ def send_admin_mou_notification():
                         
         except ObjectDoesNotExist:
             # If no MOU record exists for the admin, this means the first time they need to sign the MOU
+            if not IS_PROD:
+                print("Sending first admin MOU notificaiton to " + admin_name)
             send_mou_email(admin.email, admin_name)
 
             # Record the current notification timestamp
