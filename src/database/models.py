@@ -1066,7 +1066,10 @@ class PolicyAcceptanceRecords(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"{self.user.full_name} signed - {self.policy.name or '...'} at {self.signed_at}"
+        if self.policy and self.signed_at:
+            return f"{self.user.full_name} signed - {self.policy.name or '...'} at {self.signed_at}"
+        return f"{self.user.full_name} has not yet signed policy"
+        
     class Meta:
         ordering = ("-id",)
 
