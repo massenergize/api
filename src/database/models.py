@@ -72,10 +72,11 @@ def user_is_due_for_mou(user):
     except PolicyAcceptanceRecords.DoesNotExist:
         return True, None
     
-    if last_record.signed_at < a_year_ago: 
-        return True, last_record
+    # ok if user signed MOU after the date one year ago
+    if last_record.signed_at and last_record.signed_at > a_year_ago: 
+        return False, last_record
     
-    return False, last_record
+    return True, last_record
      
 def fetch_few_visits(user): 
     footages = Footage.objects.filter(actor__id = user.id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).values_list("created_at", flat=True)[:5]
