@@ -25,6 +25,13 @@ class UserSessionTrackerConsumer(AsyncWebsocketConsumer):
 
         await self.track()
 
+    async def get_expiration_as_date(self): 
+        session = self.scope.get("session")
+        expiration_in_session = session.get(WHEN_USER_AUTHENTICATED_SESSION_EXPIRES)
+        in_seconds = expiration_in_session / 1000
+        expiration_as_date = datetime.fromtimestamp(in_seconds, tz=pytz.UTC)
+        return expiration_as_date
+    
     async def send_auth_notification(self):
         response = {"type": USER_SESSION_HAS_EXPIRED, "message": "User needs to sign in again..."}
         await self.send(json.dumps(response))
@@ -36,25 +43,26 @@ class UserSessionTrackerConsumer(AsyncWebsocketConsumer):
 
     
     async def count_down_to_expiration(self): 
-        ten_minutes_expiration = datetime.now(tz=pytz.UTC) + timedelta(minutes=10)
+        # ten_minutes_expiration = datetime.now(tz=pytz.UTC) + timedelta(minutes=10)
+        ten_minutes_expiration = await self.get_expiration_as_date()
         # --- FOR TESTING, UNCOMMENT THIS ----
         # ten_minutes_expiration = datetime.now(tz=pytz.UTC) + timedelta(minutes=1) # COMMENT OUT BEFORE PR (BPR)
         self.expiry_task = asyncio.create_task(self.check_expiry(ten_minutes_expiration, self.send_auth_notification,60))
 
-
     async def track(self):
-        session = self.scope.get("session")
-        expiration_in_session = session.get(WHEN_USER_AUTHENTICATED_SESSION_EXPIRES)
+        # session = self.scope.get("session")
+        # expiration_in_session = session.get(WHEN_USER_AUTHENTICATED_SESSION_EXPIRES)
 
-        # If there is ever a situation where the expiration time is not sent through by the frontend 
-        # Send a message back to send (There on frontend, admins can be forced to sign in again, if the value is really somehow not available)
-        if not expiration_in_session:
-            response = {"type": USER_SESSION_HAS_EXPIRED, "message": "Did not receive session expiration time..."}
-            await self.send(json.dumps(response))
-            return
+        # # If there is ever a situation where the expiration time is not sent through by the frontend 
+        # # Send a message back to send (There on frontend, admins can be forced to sign in again, if the value is really somehow not available)
+        # if not expiration_in_session:
+        #     response = {"type": USER_SESSION_HAS_EXPIRED, "message": "Did not receive session expiration time..."}
+        #     await self.send(json.dumps(response))
+        #     return
 
-        in_seconds = expiration_in_session / 1000
-        expiration_as_date = datetime.fromtimestamp(in_seconds, tz=pytz.UTC)
+        # in_seconds = expiration_in_session / 1000
+        # expiration_as_date = datetime.fromtimestamp(in_seconds, tz=pytz.UTC)
+        expiration_as_date = await self.get_expiration_as_date()
         expiration_as_date = expiration_as_date - timedelta(minutes=10)
         self.expiry_task = asyncio.create_task(self.check_expiry(expiration_as_date, self.almost_expired))
 
