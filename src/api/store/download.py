@@ -7,6 +7,7 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from collections import Counter
+from api.store.utils import get_human_readable_date
 from api.utils.api_utils import get_user_community_ids, is_admin_of_community
 from database.models import (
     UserProfile,
@@ -1019,6 +1020,28 @@ class DownloadStore:
 
         return data
     
+    def _action_users_download(self, action):
+        user_action_rel = UserActionRel.objects.filter(action=action, is_deleted=False)
+        columns = ["Recorded At","User", "Email", "Unit Name", "Unit Type", "Carbon Impact", "Status"]
+        data = [columns]
+        if len(user_action_rel) > 0:
+            for user_action_rel in user_action_rel:
+                cell  = self._get_cells_from_dict(columns,{
+                    "Recorded At": get_human_readable_date(user_action_rel.created_at),
+                    "User": user_action_rel.user.full_name,
+                    "Email": user_action_rel.user.email,
+                    "Unit Name": user_action_rel.real_estate_unit.name,
+                    "Unit Type": user_action_rel.real_estate_unit.unit_type,
+                    "Carbon Impact": user_action_rel.carbon_impact,
+                    "Status": user_action_rel.status,
+                })
+                data.append(cell)
+            return data
+        else:
+            return []
+        
+    
+    
 
     def _get_metrics_cells(self, community_id, time_stamp):
 
@@ -1207,7 +1230,10 @@ class DownloadStore:
             print(str(e))
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
-    
+        
+
+
+ 
     #For All Actions CSV and (for superadmins) the All Communities and Actions CSV
     def actions_download(
         self, context: Context, community_id
@@ -1293,6 +1319,28 @@ class DownloadStore:
                 return (
                     self._all_metrics_download(context, args), 
                     None,), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+    def action_users(self, context: Context, action_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            action = Action.objects.filter(id=action_id, is_deleted=False).first()
+            if not action:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+
+            action_users_data = self._action_users_download(action)
+            if len(action_users_data) == 0:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (action_users_data, action.title), None
+            
+            
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)

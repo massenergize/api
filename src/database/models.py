@@ -1,5 +1,5 @@
 import datetime
-from datetime import  timezone, timedelta
+from datetime import timezone, timedelta
 import json
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from database.utils.settings.model_constants.events import EventConstants
@@ -56,36 +56,42 @@ def get_enabled_flags(
             )  # Then if the flag hasnt expired, note down the flag
     return feature_flags_json
 
-def user_is_due_for_mou(user): 
+
+def user_is_due_for_mou(user):
     """
     Returns user policy acceptance status
-    
+
     Args:
         user (UserProfile): The User Profile to check for policy
-    
+
         last_record (PolicyAcceptanceRecords|None): Latest Policy Acceptance Record or None if there is none
     """
     a_year_ago = datetime.datetime.now(timezone.utc) - timedelta(days=365)
 
     try:
-        last_record = PolicyAcceptanceRecords.objects.filter(user = user, type=PolicyConstants.mou()).latest("signed_at")
+        last_record = PolicyAcceptanceRecords.objects.filter(
+            user=user, type=PolicyConstants.mou()
+        ).latest("signed_at")
     except PolicyAcceptanceRecords.DoesNotExist:
         return True, None
-    
-    if last_record.signed_at < a_year_ago: 
+
+    if last_record.signed_at < a_year_ago:
         return True, last_record
-    
+
     return False, last_record
-     
-def fetch_few_visits(user): 
-    footages = Footage.objects.filter(actor__id = user.id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).values_list("created_at", flat=True)[:5]
-    if len(footages): 
+
+
+def fetch_few_visits(user):
+    footages = Footage.objects.filter(
+        actor__id=user.id,
+        activity_type=FootageConstants.sign_in(),
+        portal=FootageConstants.on_user_portal(),
+    ).values_list("created_at", flat=True)[:5]
+    if len(footages):
         return list(footages)
 
     visits = user.visit_log or []
     return visits[-5:]
-
-    
 
 
 # -------------------------------------------------------------------------
@@ -316,7 +322,7 @@ class Policy(models.Model):
     def simple_json(self):
         res = model_to_dict(self)
         more_info = self.more_info or {}
-        res["key"] = more_info.get("key","")
+        res["key"] = more_info.get("key", "")
         return res
 
     def full_json(self):
@@ -491,7 +497,9 @@ class Community(models.Model):
     # locations defines the range for geographic communities
     locations = models.ManyToManyField(Location, blank=True)
 
-    policies = models.ManyToManyField(Policy, blank=True, related_name="community_policies")
+    policies = models.ManyToManyField(
+        Policy, blank=True, related_name="community_policies"
+    )
     is_approved = models.BooleanField(default=False, blank=True)
     accepted_terms_and_conditions = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -556,7 +564,6 @@ class Community(models.Model):
 
         # goal defined consistently; not differently in two places
         if self.is_geographically_focused:
-
             goal[
                 "organic_attained_number_of_households"
             ] = RealEstateUnit.objects.filter(is_deleted=False, community=self).count()
@@ -644,7 +651,7 @@ class Community(models.Model):
             "geography_type": self.geography_type,
             "locations": locations,
             "feature_flags": get_enabled_flags(self),
-            "is_demo": self.is_demo
+            "is_demo": self.is_demo,
         }
 
     class Meta:
@@ -653,9 +660,10 @@ class Community(models.Model):
 
 
 class CommunitySnapshot(models.Model):
-
     id = models.AutoField(primary_key=True)
-    community = models.ForeignKey(Community, null =True, on_delete=models.SET_NULL, blank=True )  
+    community = models.ForeignKey(
+        Community, null=True, on_delete=models.SET_NULL, blank=True
+    )
     date = models.DateField(auto_now_add=True, db_index=True)
     is_live = models.BooleanField(default=False, blank=True)
     households_total = models.PositiveIntegerField(default=0, blank=True)
@@ -675,15 +683,19 @@ class CommunitySnapshot(models.Model):
 
     guest_count = models.PositiveIntegerField(default=0, blank=True)
     actions_manual_addition = models.PositiveIntegerField(default=0, blank=True)
-    events_hosted_current = models.PositiveIntegerField(default=0, blank=True) 
-    events_hosted_past = models.PositiveIntegerField(default=0, blank=True) 
+    events_hosted_current = models.PositiveIntegerField(default=0, blank=True)
+    events_hosted_past = models.PositiveIntegerField(default=0, blank=True)
     my_events_shared_current = models.PositiveIntegerField(default=0, blank=True)
     my_events_shared_past = models.PositiveIntegerField(default=0, blank=True)
-    events_borrowed_from_others_current = models.PositiveIntegerField(default=0, blank=True)
-    events_borrowed_from_others_past = models.PositiveIntegerField(default=0, blank=True)
+    events_borrowed_from_others_current = models.PositiveIntegerField(
+        default=0, blank=True
+    )
+    events_borrowed_from_others_past = models.PositiveIntegerField(
+        default=0, blank=True
+    )
 
     teams_count = models.PositiveIntegerField(default=0, blank=True)
-    subteams_count= models.PositiveIntegerField(default=0, blank=True)
+    subteams_count = models.PositiveIntegerField(default=0, blank=True)
     testimonials_count = models.PositiveIntegerField(default=0, blank=True)
     service_providers_count = models.PositiveIntegerField(default=0, blank=True)
 
@@ -695,9 +707,14 @@ class CommunitySnapshot(models.Model):
         return self.simple_json()
 
     def __str__(self):
-        return " %s | %s " % (self.community, self.date, )
+        return " %s | %s " % (
+            self.community,
+            self.date,
+        )
+
     class Meta:
         db_table = "community_snapshots"
+
 
 class RealEstateUnit(models.Model):
     """
@@ -862,7 +879,7 @@ class UserProfile(models.Model):
         return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
 
     def summary(self):
-        summaryData = model_to_dict(self, ["preferred_name", "is_guest","email"])
+        summaryData = model_to_dict(self, ["preferred_name", "is_guest", "email"])
         summaryData["joined"] = self.created_at.date()
         summaryData["profile_picture"] = get_json_if_not_none(self.profile_picture)
 
@@ -1024,7 +1041,7 @@ class UserProfile(models.Model):
             "admin_portal_settings": admin_portal_settings,
         }
         data["feature_flags"] = get_enabled_flags(self, True)
-        if self.is_community_admin: 
+        if self.is_community_admin:
             data["needs_to_accept_mou"] = user_is_due_for_mou(self)[0]
 
         return data
@@ -1069,9 +1086,10 @@ class PolicyAcceptanceRecords(models.Model):
         if self.policy and self.signed_at:
             return f"{self.user.full_name} signed - {self.policy.name or '...'} at {self.signed_at}"
         return f"{self.user.full_name} has not yet signed policy"
-        
+
     class Meta:
         ordering = ("-id",)
+
 
 class UserMediaUpload(models.Model):
     """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded"""
@@ -1830,6 +1848,20 @@ class Action(models.Model):
         # Adding this so that vendors will be preselected when creating/updating action.
         # List of vendors will typically not be that long, so this doesnt pose any problems
         data["vendors"] = [v.info() for v in self.vendors.all()]
+        data["action_users"] = [
+            {
+                "id": u.id,
+                "status": u.status,
+                "email": u.user.email,
+                "full_name": u.user.full_name,
+                "real_estate_unit": get_json_if_not_none(u.real_estate_unit),
+                "date_completed": u.date_completed,
+                "carbon_impact": u.carbon_impact,
+                "created_at": u.created_at,
+            }
+            for u in UserActionRel.objects.filter(action=self, is_deleted=False)
+        ] or []
+        
         if self.user:
             data["user_email"] = self.user.email
         return data
@@ -1928,10 +1960,11 @@ class Event(models.Model):
         Community, related_name="event_access_selections", blank=True
     )
     # Communities that have shared an event to their site will be in this list
-    shared_to = models.ManyToManyField(Community, related_name="events_from_others", blank=True)
+    shared_to = models.ManyToManyField(
+        Community, related_name="events_from_others", blank=True
+    )
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
-    
 
     def __str__(self):
         return self.name
@@ -1944,7 +1977,9 @@ class Event(models.Model):
         is_used = False
         home_page = HomePageSettings.objects.filter(community=self.community).first()
         if home_page and home_page.featured_events:
-            is_used = home_page.featured_events.filter(id=self.id, start_date_and_time__gte=timezone.now()).exists()
+            is_used = home_page.featured_events.filter(
+                id=self.id, start_date_and_time__gte=timezone.now()
+            ).exists()
         return is_used
 
     def simple_json(self):
@@ -3419,7 +3454,10 @@ class Message(models.Model):
         res["team"] = get_summary_info(self.team)
         res["user"] = get_summary_info(self.user)
         res["replies"] = [
-            r.simple_json() for r in Message.objects.filter(parent=self, archive=False).order_by("-created_at")
+            r.simple_json()
+            for r in Message.objects.filter(parent=self, archive=False).order_by(
+                "-created_at"
+            )
         ]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res
