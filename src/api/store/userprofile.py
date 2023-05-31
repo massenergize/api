@@ -850,6 +850,7 @@ class UserStore:
   def list_users_for_super_admin(self, context: Context, args):
     try:
       user_emails = args.get("user_emails")
+      community_ids = args.get("community_ids",None)
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
 
@@ -859,6 +860,10 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
+        return users.distinct(), None
+      
+      if community_ids:
+        users = UserProfile.objects.filter(communities__in=community_ids,is_deleted=False, *filter_params)
         return users.distinct(), None
 
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)
