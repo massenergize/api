@@ -433,17 +433,18 @@ def send_admin_mou_notification():
                 type=PolicyConstants.mou()
             ).latest("signed_at")
 
-            if last_record:
+            if last_record.signed_at:
                 # Check if it's been more than a year since they last signed
                 if not IS_PROD:
                     print(last_record)
-                more_than_a_year = last_record.signed_at <= a_year_ago
+                needs_to_sign_mou = last_record.signed_at <= a_year_ago
             else:
                 if not IS_PROD:
-                    print(admin_name + " has no MOU acceptance records")
+                    print(admin_name + " has no MOU acceptance recorded")
+                needs_to_sign_mou = True
 
             # If it's time to notify the admin again, then add a new notification timestamp to their policy record
-            if not last_record or more_than_a_year:
+            if needs_to_sign_mou:
                 notices = last_record.last_notified or []
                 last_date_of_notification = notices[len(notices) - 1]
                
