@@ -1844,19 +1844,7 @@ class Action(models.Model):
         # Adding this so that vendors will be preselected when creating/updating action.
         # List of vendors will typically not be that long, so this doesnt pose any problems
         data["vendors"] = [v.info() for v in self.vendors.all()]
-        data["action_users"] = [
-            {
-                "id": u.id,
-                "status": u.status,
-                "email": u.user.email,
-                "full_name": u.user.full_name,
-                "real_estate_unit": get_json_if_not_none(u.real_estate_unit),
-                "date_completed": u.date_completed,
-                "carbon_impact": u.carbon_impact,
-                "created_at": u.created_at,
-            }
-            for u in UserActionRel.objects.filter(action=self, is_deleted=False)
-        ] or []
+        data["action_users"] =len( UserActionRel.objects.filter(action=self, is_deleted=False)) or 0
         
         if self.user:
             data["user_email"] = self.user.email
@@ -1869,6 +1857,19 @@ class Action(models.Model):
         # data["about"] = self.about
         data["geographic_area"] = self.geographic_area
         data["properties"] = [p.simple_json() for p in self.properties.all()]
+        data["action_users"] = [
+            {
+                "id": u.id,
+                "status": u.status,
+                "email": u.user.email,
+                "full_name": u.user.full_name,
+                "real_estate_unit": get_json_if_not_none(u.real_estate_unit),
+                "date_completed": u.date_completed,
+                "carbon_impact": u.carbon_impact,
+                "recorded_at": u.updated_at,
+            }
+            for u in UserActionRel.objects.filter(action=self, is_deleted=False)
+        ] or []
         # data["vendors"] = [v.simple_json() for v in self.vendors.all()]
         if self.user:
             data["user_email"] = self.user.email
