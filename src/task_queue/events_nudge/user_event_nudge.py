@@ -114,7 +114,7 @@ def get_community_events(community_id):
 
 
 def get_community_users(community_id):
-   users = UserProfile.objects.filter(communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
+   users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True, communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
    return users
 
 def generate_change_pref_url(subdomain):
