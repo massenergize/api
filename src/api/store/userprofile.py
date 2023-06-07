@@ -175,24 +175,21 @@ class UserStore:
     filter.addWords(["fuck","pussio"]) # These are not  in the general list that the plugin provides here https://github.com/dariusk/wordfilter/blob/master/lib/badwords.json
     try:    
         if (not username):
-            return {'valid': False, 'suggested_username': None}, None
+            return {'valid': False, "code":401, 'suggested_username': None}, None
         is_bad_word = filter.blacklisted(username)
        
         if is_bad_word: 
-          return {'valid': False, 'suggested_username': None, "message":"Your username may contain some profanity, please change..."}, None
+          return {'valid': False, 'suggested_username': None, "code":911, "message":"Your username may contain some profanity, please change..."}, None
         
-        # checks if username already exists
-        if not UserProfile.objects.filter(preferred_name=username).exists():
-            return {'valid': True, 'suggested_username': username, "message":"User already exists..."}, None
-
-        # username exists, finds next available closest username
-        usernames = list(UserProfile.objects.filter(preferred_name__istartswith=username).order_by('preferred_name').values_list("preferred_name", flat=True))
-
+        # (TODO: When there is time, this part downwards could be implemented better)
+        usernames = list(UserProfile.objects.filter(preferred_name__iexact=username).order_by('preferred_name').values_list("preferred_name", flat=True))
         if len(usernames) == 1:
             suggestion = username + "1"
-            return {'valid': False, 'suggested_username': suggestion}, None
-
-        # more than one username starting with the test username
+            return {'valid': False, "code":202,'suggested_username': suggestion}, None
+        elif len(usernames) == 0:  # The value is actually unique here so just return valid
+          return {'valid': True, "code":200,'suggested_username': username}, None
+       
+        # more than one username starting with the test username 
         suggestion = None
         for i in range(1, 999):
           test_username = username + str(i)
@@ -203,7 +200,7 @@ class UserStore:
         if not suggestion:
           return None, CustomMassenergizeError("No further usernames to suggest")
         else:
-          return {'valid': False, 'suggested_username': suggestion}, None
+          return {'valid': False, "code":202, 'suggested_username': suggestion}, None
         
     except Exception as e:
         return None, CustomMassenergizeError(e)
