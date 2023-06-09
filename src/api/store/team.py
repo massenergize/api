@@ -12,7 +12,7 @@ from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email
 from typing import Tuple
-
+from django.db.models import Q
 def can_set_parent(parent, this_team=None):
   if parent.parent:
     return False
@@ -546,7 +546,7 @@ class TeamStore:
       
       if context.user_is_community_admin and not is_admin_of_community(context, community_id):
           return None, CustomMassenergizeError('You are not authorized to view members of this team')
-      teams = Team.objects.filter(communities__id=community_id, is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
+      teams = Team.objects.filter(Q(primary_community__id=community_id,is_published=True)|Q(communities__id=community_id), is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
       return teams.distinct(), None
 
     except Exception as e:
@@ -558,9 +558,14 @@ class TeamStore:
       filter_params = get_teams_filter_params(context.get_params())
   
       team_ids = args.get("team_ids", None)
+      community_id = args.get("community_id")
       if team_ids: 
         teams = Team.objects.filter(id__in = team_ids, *filter_params).select_related('logo', 'primary_community')
         return teams, None
+      
+      if community_id:
+        teams = Team.objects.filter(primary_community__id=community_id, is_published=True, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
+        return teams.distinct(), None
 
       teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
       return teams.distinct(), None
