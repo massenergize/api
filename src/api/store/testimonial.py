@@ -141,15 +141,18 @@ class TestimonialStore:
   def update_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       id = args.pop("id", None)
-      testimonial = Testimonial.objects.filter(id=id)
-      if not testimonial:
+      testimonials = Testimonial.objects.filter(id=id)
+      if not testimonials:
         return None, InvalidResourceError()
+      testimonial = testimonials.first()
 
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(testimonial.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(testimonial.user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
       
-      if context.user_is_community_admin and not is_admin_of_community(context, testimonial.first().community.id):
+      if context.user_is_community_admin:
+        community = testimonial.community
+        if community and  not is_admin_of_community(context, community.id):
           return None, CustomMassenergizeError('You are not authorized')
 
       user_email = args.pop('user_email', None)      
@@ -161,8 +164,7 @@ class TestimonialStore:
       rank = args.pop('rank', None)
       is_published = args.pop('is_published', None)
 
-      testimonial.update(**args)
-      testimonial = testimonial.first()
+      testimonials.update(**args)
 
       if images: 
         if images[0] == RESET: 

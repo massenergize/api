@@ -347,19 +347,23 @@ class EventStore:
     try:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
+
       publicity_selections = args.pop("publicity_selections", [])
       shared_to = args.pop("shared_to", [])
 
       if not events:
         return None, InvalidResourceError()
+      event = events.first()
 
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(events.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(event.user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
       
-      # check if user is community admin and is also an admin of the community that created the action
+      # if no community selected previously (which happens when copying event), that is ok.
+      # Otherwise check if user is community admin and is also an admin of the community that created the action
       if context.user_is_community_admin:
-        if not is_admin_of_community(context, events.first().community.id):
+        community = event.community
+        if community and not is_admin_of_community(context, community.id):
           return None, NotAuthorizedError()
 
       image = args.pop('image', None)
