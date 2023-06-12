@@ -125,7 +125,7 @@ def download_data(self, args, download_type):
 def generate_and_send_weekly_report(self):
     today = datetime.datetime.utcnow().replace(tzinfo=utc)
     one_week_ago = today - timezone.timedelta(days=7)
-    super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
+    super_admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False).values_list("email", flat=True)
 
     communities = Community.objects.all().order_by('is_approved')
     communities_total_signups = CommunityMember.objects.filter(community__is_approved=True).values('community__name').annotate(signups=Count("community")).order_by('community')
