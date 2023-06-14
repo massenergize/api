@@ -74,9 +74,9 @@ def user_is_due_for_mou(user):
     
     # ok if user signed MOU after the date one year ago
     if last_record.signed_at and last_record.signed_at > a_year_ago: 
-        return False, last_record
+        return False, last_record.simple_json()
     
-    return True, last_record
+    return True, last_record.simple_json()
      
 def fetch_few_visits(user): 
     footages = Footage.objects.filter(actor__id = user.id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).values_list("created_at", flat=True)[:5]
@@ -1026,7 +1026,9 @@ class UserProfile(models.Model):
         }
         data["feature_flags"] = get_enabled_flags(self, True)
         if self.is_community_admin: 
-            data["needs_to_accept_mou"] = user_is_due_for_mou(self)[0]
+            mou_details = user_is_due_for_mou(self)
+            data["needs_to_accept_mou"] = mou_details[0]
+            data["mou_details"] =  mou_details[1]
 
         return data
 
@@ -1065,6 +1067,17 @@ class PolicyAcceptanceRecords(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def simple_json(self): 
+        res = model_to_dict(
+            self, [ "signed_at", "id"]
+        )
+        if self.policy: 
+            res["policy"] = self.policy.simple_json()
+        return res
+
+    def full_json(self): 
+        return self.simple_json()
 
     def __str__(self) -> str:
         if self.policy and self.signed_at:
