@@ -165,6 +165,7 @@ class TestimonialStore:
       is_published = args.pop('is_published', None)
 
       testimonials.update(**args)
+      testimonial = testimonials.first() # refresh after update
 
       if images: 
         if images[0] == RESET: 

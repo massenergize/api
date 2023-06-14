@@ -223,6 +223,7 @@ class ActionStore:
         args.pop("is_published", None)
 
       actions.update(**args)
+      action = actions.first()  # refresh after update
 
       if image: #now, images will always come as an array of ids, or "reset" string 
         if user_submitted:
