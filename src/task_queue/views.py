@@ -419,8 +419,8 @@ def send_admin_mou_notification():
     # Calculate one year and one month ago for comparison
     a_year_ago = now - datetime.timedelta(days=365)
     a_month_ago = now - datetime.timedelta(days=31)
-    a_day_ago = now - datetime.timedelta(days=1)
-    long_enough_ago = a_month_ago if IS_PROD else a_day_ago
+    a_week_ago = now - datetime.timedelta(days=7)
+    long_enough_ago = a_month_ago if IS_PROD else a_week_ago
 
     # Filter all active community admins in the user profile
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)
@@ -477,7 +477,7 @@ def send_admin_mou_notification():
         except ObjectDoesNotExist:
             # If no MOU record exists for the admin, this means the first time they need to sign the MOU
             if not IS_PROD:
-                print("Sending first admin MOU notificaiton to " + admin_name)
+                print("Sending first admin MOU notification to " + admin_name)
             send_mou_email(admin.email, admin_name)
 
             # Record the current notification timestamp
