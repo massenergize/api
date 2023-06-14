@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.9.31",
+  "BUILD_VERSION": "4.9.32",
   "BUILD_VERSION_NOTES": "Feb 24: Admin portal pagination:\n- deliver content in small chunks"
 }
