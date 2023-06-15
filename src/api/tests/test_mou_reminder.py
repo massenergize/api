@@ -19,6 +19,7 @@ class SendAdminMOUNotificationTests(TestCase):
         self, mock_update_records, mock_send_mou_email
     ):
         Console.header("Testing MOU Reminder")
+        UserProfile.objects.all().delete() # We dont want any admin objects to from other tests to still be in
         policy = Policy.objects.create(
             name="Test MOU Policy", description="Just a test policy", is_deleted=False
         )
