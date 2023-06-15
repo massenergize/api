@@ -30,7 +30,6 @@ class MOUAcceptanceTestCase(TestCase):
         response = self.client.post(url, data)
         # Check that the response status code is 200
         self.assertEqual(response.status_code, 200)
-        Console.log("RESPONSE", response.json()) # Want to see whats making it fail when it runs on GH
         content = response.json().get("data")
         needs_to_accept_mou = content.get("needs_to_accept_mou")
         self.assertFalse(needs_to_accept_mou)  # Means accepting MOU worked
@@ -42,7 +41,6 @@ class MOUAcceptanceTestCase(TestCase):
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 200)
         content = response.json().get("data")
-        Console.log("RESPONSE", response.json()) # Want to see whats making it fail when it runs on GH
         needs_to_accept_mou = content.get("needs_to_accept_mou")
       
         self.assertIsNone(needs_to_accept_mou)  # Means declining MOU worked

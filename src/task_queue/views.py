@@ -435,8 +435,8 @@ def send_admin_mou_notification():
 
             if last_record.signed_at:
                 # Check if it's been more than a year since they last signed
-                if not IS_PROD:
-                    print(last_record)
+                # if not IS_PROD:
+                #     print(last_record)
                 needs_to_sign_mou = last_record.signed_at <= a_year_ago
             else:
                 if not IS_PROD:
@@ -468,7 +468,7 @@ def send_admin_mou_notification():
                     
                     if not_notified_recently: #only notify if its been more than a month of notifying
                         if not IS_PROD:
-                            print("Sending another notification")
+                            print("Overdue: Sending another notification")
                         send_mou_email(admin.email, admin_name)
                         update_records(last=last_record, notices=notices)
                         
@@ -477,7 +477,7 @@ def send_admin_mou_notification():
         except ObjectDoesNotExist:
             # If no MOU record exists for the admin, this means the first time they need to sign the MOU
             if not IS_PROD:
-                print("Sending first admin MOU notificaiton to " + admin_name)
+                print("Except: Sending first admin MOU notificaiton to " + admin_name)
             send_mou_email(admin.email, admin_name)
 
             # Record the current notification timestamp
