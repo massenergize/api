@@ -123,7 +123,7 @@ def download_data(self, args, download_type):
        else:
            generate_csv_and_email(data=files, download_type=ACTION_USERS, community_name=action_name, email=email)
 
-     elif download_type == DOWNLOAD_POLICY:
+    elif download_type == DOWNLOAD_POLICY:
         policy = Policy.objects.filter(id=args.get("policy_id")).first()
         rich_text = sign_mou(policy.description)
         pdf,_ = create_pdf_from_rich_text(rich_text,args.get("title"))
