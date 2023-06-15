@@ -4,6 +4,10 @@ from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from api.constants import ACTION_USERS, ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
 from api.store.download import DownloadStore
+from api.constants import DOWNLOAD_POLICY
+from api.store.common import create_pdf_from_rich_text, sign_mou
+from api.store.utils import get_user_from_context
+from database.models import Policy
 from task_queue.events_nudge.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
 from celery import shared_task
@@ -119,12 +123,23 @@ def download_data(self, args, download_type):
        else:
            generate_csv_and_email(data=files, download_type=ACTION_USERS, community_name=action_name, email=email)
 
+     elif download_type == DOWNLOAD_POLICY:
+        policy = Policy.objects.filter(id=args.get("policy_id")).first()
+        rich_text = sign_mou(policy.description)
+        pdf,_ = create_pdf_from_rich_text(rich_text,args.get("title"))
+        user = get_user_from_context(context)
+        temp_data = {
+        'data_type': "Policy Document",
+        "name":user.full_name,
+    }
+        send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE_ID,temp_data,[user.email], pdf,f'{args.get("title")}.pdf')
+
 
 @shared_task(bind=True)
 def generate_and_send_weekly_report(self):
     today = datetime.datetime.utcnow().replace(tzinfo=utc)
     one_week_ago = today - timezone.timedelta(days=7)
-    super_admins = UserProfile.objects.filter(is_super_admin=True).values_list("email", flat=True)
+    super_admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False).values_list("email", flat=True)
 
     communities = Community.objects.all().order_by('is_approved')
     communities_total_signups = CommunityMember.objects.filter(community__is_approved=True).values('community__name').annotate(signups=Count("community")).order_by('community')

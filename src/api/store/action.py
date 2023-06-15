@@ -193,17 +193,19 @@ class ActionStore:
   def update_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       action_id = args.pop('action_id', None)
-      action = Action.objects.filter(id=action_id)
-      if not action:
+      actions = Action.objects.filter(id=action_id)
+      if not actions:
         return None, InvalidResourceError()
+      action = actions.first()
 
       # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(action.user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
       
       # check if user is community admin and is also an admin of the community that created the action
       if context.user_is_community_admin:
-        if not is_admin_of_community(context, action.first().community.id):
+        community = action.community
+        if community and not is_admin_of_community(context, community.id):
           return None, NotAuthorizedError()
 
       community_id = args.pop('community_id', None)
@@ -220,8 +222,8 @@ class ActionStore:
         args.pop("is_approved", None)
         args.pop("is_published", None)
 
-      action.update(**args)
-      action = action.first()
+      actions.update(**args)
+      action = actions.first()  # refresh after update
 
       if image: #now, images will always come as an array of ids, or "reset" string 
         if user_submitted:

@@ -4,6 +4,7 @@ from api.store.download import DownloadStore
 from _main_.utils.context import Context
 from typing import Tuple
 from api.tasks import download_data
+from api.constants import DOWNLOAD_POLICY
 
 
 class DownloadService:
@@ -106,5 +107,17 @@ class DownloadService:
             'user_is_logged_in': context.user_is_logged_in
         }
         download_data.delay(data, ACTION_USERS)
+        return [], None
+
+    def policy_download(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email,
+            'user_is_logged_in': context.user_is_logged_in,
+            'policy_id': args.get("policy_id"),
+            "title": args.get("title"),
+        }
+        download_data.delay(data, DOWNLOAD_POLICY)
         return [], None
 
