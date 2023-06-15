@@ -2,8 +2,12 @@ import csv
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
+from api.constants import ACTION_USERS, ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
 from api.store.download import DownloadStore
+from api.constants import DOWNLOAD_POLICY
+from api.store.common import create_pdf_from_rich_text, sign_mou
+from api.store.utils import get_user_from_context
+from database.models import Policy
 from task_queue.events_nudge.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
 from celery import shared_task
@@ -112,13 +116,23 @@ def download_data(self, args, download_type):
     elif download_type == SAMPLE_USER_REPORT:
         prepare_user_events_nudge(email=email, community_id=args.get("community_id"))
 
-    #elif download_type == SADMIN_REPORT:
-    #    (files, com_name), err = store.sadmin_report(context, args, community_id=args.get("community_id"))
-    #    if err:
-    #        error_notification(METRICS, email)
-    #    else:
-    #        generate_csv_and_email(
-    #            data=files, download_type=SADMIN_REPORT, community_name=com_name, email=email)
+    elif download_type == ACTION_USERS:
+       (files, action_name), err = store.action_users(context,action_id=args.get("action_id"))
+       if err:
+           error_notification(ACTION_USERS, email)
+       else:
+           generate_csv_and_email(data=files, download_type=ACTION_USERS, community_name=action_name, email=email)
+
+    elif download_type == DOWNLOAD_POLICY:
+        policy = Policy.objects.filter(id=args.get("policy_id")).first()
+        rich_text = sign_mou(policy.description)
+        pdf,_ = create_pdf_from_rich_text(rich_text,args.get("title"))
+        user = get_user_from_context(context)
+        temp_data = {
+        'data_type': "Policy Document",
+        "name":user.full_name,
+    }
+        send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE_ID,temp_data,[user.email], pdf,f'{args.get("title")}.pdf')
 
 
 @shared_task(bind=True)

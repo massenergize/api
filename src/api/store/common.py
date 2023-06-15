@@ -130,7 +130,7 @@ def create_pdf_from_rich_text(rich_text, filename):
     return pdf_buffer.getvalue(), response
 
 
-def sign_mou(mou_rich_text, user, date): 
+def sign_mou(mou_rich_text, user=None, date=None): 
     return f"""
         {mou_rich_text}
         <div> 
@@ -138,4 +138,4 @@ def sign_mou(mou_rich_text, user, date):
         <h2>Name: {user.full_name}</h2> 
         <h2>Date: {date} </h2>
         </div>
-    """
+    """ if (user and date) else mou_rich_text
