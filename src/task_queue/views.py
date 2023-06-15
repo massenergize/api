@@ -419,8 +419,8 @@ def send_admin_mou_notification():
     # Calculate one year and one month ago for comparison
     a_year_ago = now - datetime.timedelta(days=365)
     a_month_ago = now - datetime.timedelta(days=31)
-    a_day_ago = now - datetime.timedelta(days=1)
-    long_enough_ago = a_month_ago if IS_PROD else a_day_ago
+    a_week_ago = now - datetime.timedelta(days=7)
+    long_enough_ago = a_month_ago if IS_PROD else a_week_ago
 
     # Filter all active community admins in the user profile
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)

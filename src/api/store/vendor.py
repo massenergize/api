@@ -155,6 +155,7 @@ class VendorStore:
       is_published = args.pop('is_published', None)
 
       vendors.update(**args)
+      vendor = vendors.first()  # refresh after update
       
       if communities:
         vendor.communities.set(communities)

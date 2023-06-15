@@ -87,8 +87,6 @@ class SendAdminMOUNotificationTests(TestCase):
         mock_send_mou_email.assert_any_call(admin3.email, admin3.full_name)
 
         # Check that send_mou_email is called only twice (for admin1 and admin3)
-        # self.assertEqual(mock_send_mou_email.call_count, 2)
-        # The assertion now needs to be 3 instead of 2, because of the introduction of "long_enough_ago" 
         self.assertEqual(mock_send_mou_email.call_count, 2)
 
         # Check if update_records is called for admin1 & admin3 with the correct arguments
