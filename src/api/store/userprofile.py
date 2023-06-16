@@ -484,8 +484,8 @@ class UserStore:
       print(err)
       return [], None
     
-    if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-        return None, CustomMassenergizeError('You are not authorized to view users of this community')
+    if not is_admin_of_community(context, community_id):
+        return None, NotAuthorizedError()
     return community.userprofile_set.all(), None
   
   def list_publicview(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -836,8 +836,8 @@ class UserStore:
         print(err)
         return [], None
       
-      if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-          return None, CustomMassenergizeError('You are not authorized to view users of this community')
+      if not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
       
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)

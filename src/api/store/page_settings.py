@@ -1,4 +1,4 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
 from api.tests.common import RESET
 from api.utils.api_utils import is_admin_of_community
 from .utils import get_community
@@ -34,8 +34,8 @@ class PageSettingsStore:
       return None, CustomMassenergizeError(e)
   
   def list_page_settings(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-        return None, CustomMassenergizeError('You are not authorized')
+    if not is_admin_of_community(context, community_id):
+        return None, NotAuthorizedError()
     page_settings = self.pageSettingsModel.objects.filter(community__id=community_id)
     if not page_settings:
       return [], None
@@ -54,8 +54,8 @@ class PageSettingsStore:
     page_setting = self.pageSettingsModel.objects.filter(id=page_setting_id)
     if not page_setting:
       return None, InvalidResourceError()
-    if context.user_is_community_admin and not is_admin_of_community(context, page_setting.first().community.id):
-        return None, CustomMassenergizeError('You are not authorized')
+    if not is_admin_of_community(context, page_setting.first().community.id):
+        return None, NotAuthorizedError()
     
 
     args['is_published'] = args.pop('is_published', '').lower() == 'true'
@@ -85,15 +85,15 @@ class PageSettingsStore:
     if not page_settings:
       return None, InvalidResourceError()
     
-    if context.user_is_community_admin and not is_admin_of_community(context, page_settings.first().community.id):
-        return None, CustomMassenergizeError('You are not authorized')
+    if not is_admin_of_community(context, page_settings.first().community.id):
+        return None, NotAuthorizedError()
     
     page_settings.update(**{'is_deleted': True})
     return page_settings.first(), None
   
   def list_page_settings_for_community_admin(self, context, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-        return None, CustomMassenergizeError('You are not authorized')
+    if not is_admin_of_community(context, community_id):
+        return None, NotAuthorizedError()
     page_settings = self.pageSettingsModel.objects.filter(community__id=community_id)
     return page_settings, None
   
