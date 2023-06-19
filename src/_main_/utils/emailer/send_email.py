@@ -31,7 +31,8 @@ def send_massenergize_email(subject, msg, to):
   return True
 
 def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name):
-
+  if is_test_mode():
+    return True
   message = pystmark.Message(sender=FROM_EMAIL, to=to, template_id=temp, template_model=t_model)
   # postmark server can be Production, Development or Testing (for local testing)
   postmark_server = POSTMARK_EMAIL_SERVER_TOKEN
