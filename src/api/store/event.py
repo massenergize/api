@@ -355,16 +355,23 @@ class EventStore:
         return None, InvalidResourceError()
       event = events.first()
 
-      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(event.user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
-        return None, NotAuthorizedError()
-      
-      # if no community selected previously (which happens when copying event), that is ok.
-      # Otherwise check if user is community admin and is also an admin of the community that created the action
-      if context.user_is_community_admin:
-        community = event.community
-        if community and not is_admin_of_community(context, community.id):
+      # check if requesting user is the action creator, super admin or community admin else throw error
+      creator = str(event.user_id)
+      community = event.community
+      if context.user_id == creator:
+        # action creators can't currently modify once published
+        if event.is_published and not context.user_is_admin():
+          # ideally this would submit changes to the community admin to publish
+          return None, CustomMassenergizeError("Unable to modify event once published.  Please contact Community Admin to do this")
+      else:
+        # otherwise you must be an administrator
+        if not context.user_is_admin():
           return None, NotAuthorizedError()
+
+        # check if user is community admin and is also an admin of the community that created the event
+        if community:
+          if not is_admin_of_community(context, community.id):
+            return None, NotAuthorizedError()
 
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -703,8 +710,8 @@ class EventStore:
       if not events:
         return None, InvalidResourceError()
       
-      if context.user_is_community_admin and not is_admin_of_community(context, events.first().community.id):
-          return None, CustomMassenergizeError('You are not authorized')
+      if not is_admin_of_community(context, events.first().community.id):
+          return None, NotAuthorizedError()
       
       if len(events) > 1:
         return None, CustomMassenergizeError("Deleting multiple events not supported")
@@ -780,7 +787,7 @@ class EventStore:
         events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
         return events, None
       
-      if context.user_is_community_admin and  not is_admin_of_community(context, community_id):
+      if not is_admin_of_community(context, community_id):
           return None, NotAuthorizedError()
       
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')

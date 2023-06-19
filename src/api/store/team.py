@@ -351,7 +351,7 @@ class TeamStore:
         return None, InvalidResourceError()
       
       #  is context user an admin of the primary community?
-      if context.user_is_community_admin and not is_admin_of_community(context, teams.first().primary_community.id):
+      if not is_admin_of_community(context, teams.first().primary_community.id):
         return None, NotAuthorizedError()
       
       team_member = TeamMember.objects.filter(team=teams.first(), user=context.user_id).first()
@@ -419,8 +419,8 @@ class TeamStore:
 
       team = Team.objects.get(id=team_id)
 
-      if context.user_is_community_admin and not is_admin_of_community(context, team.primary_community.id):
-          return None, CustomMassenergizeError('You are not authorized to add members to this team')
+      if not is_admin_of_community(context, team.primary_community.id):
+          return None, NotAuthorizedError()
 
       if user_id:
         user = UserProfile.objects.get(id=user_id)
@@ -451,8 +451,8 @@ class TeamStore:
       elif email:
         user = UserProfile.objects.get(email=email)
 
-      if context.user_is_community_admin and not is_admin_of_community(context, team.primary_community.id):
-          return None, CustomMassenergizeError('You are not authorized to remove members from this team')
+      if not is_admin_of_community(context, team.primary_community.id):
+          return None, NotAuthorizedError()
 
       team_member = TeamMember.objects.filter(team__id=team_id, user=user)
       if team_member.count() > 0:
@@ -479,8 +479,8 @@ class TeamStore:
       
       team = Team.objects.filter(id=team_id).first()
       # for cadmins, allow only if admin of teams parent community
-      if context.user_is_community_admin and not is_admin_of_community(context, team.primary_community.id):
-          return None, CustomMassenergizeError('You are not authorized to view members of this team')
+      if not is_admin_of_community(context, team.primary_community.id):
+          return None, NotAuthorizedError()
 
       members = TeamMember.objects.filter(is_deleted=False, team__id=team_id, user__accepts_terms_and_conditions=True, user__is_deleted=False, *filter_params)
       return members.distinct(), None
@@ -544,7 +544,7 @@ class TeamStore:
         teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
         return teams.distinct(), None
       
-      if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+      if not is_admin_of_community(context, community_id):
           return None, CustomMassenergizeError('You are not authorized to view members of this team')
       teams = Team.objects.filter(Q(primary_community__id=community_id,is_published=True)|Q(communities__id=community_id), is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
       return teams.distinct(), None

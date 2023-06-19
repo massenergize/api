@@ -52,6 +52,7 @@ from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
     CustomMassenergizeError,
+    NotAuthorizedError,
 )
 from _main_.utils.context import Context
 from api.store.graph import GraphStore
@@ -799,10 +800,12 @@ class CommunityStore:
             community_id = args.pop("community_id", None)
             website = args.pop("website", None)
             logo = args.pop("logo", None)
+
             # admins shouldn't be able to update data of other communities
-            if context.user_is_community_admin:
-                if not is_admin_of_community(context, community_id):
-                    return None, CustomMassenergizeError('You are not authorized')
+            if not is_admin_of_community(context, community_id):
+                return None, NotAuthorizedError()
+            
+            if not context.user_is_super_admin:
                 args = remove_cadmin_locked_fields(args)
               
 

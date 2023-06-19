@@ -1,6 +1,6 @@
 from api.utils.api_utils import is_admin_of_community
 from database.models import Policy, UserProfile, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message
@@ -36,8 +36,8 @@ class PolicyStore:
       new_policy.save()
       if community_id:
         # if community admin check if is admin of the community_admin
-        if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-          return None, CustomMassenergizeError('You are not authorized to add a policy to this community')
+        if not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
         community = Community.objects.get(id=community_id)
         community.policies.add(new_policy)
         community.save()
@@ -57,8 +57,8 @@ class PolicyStore:
       
       # if community is passed, check if is admin of the community
       if community_id:
-        if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-            return None, CustomMassenergizeError('You are not authorized to update this policy')
+        if not is_admin_of_community(context, community_id):
+            return None, NotAuthorizedError()
       policy.update(**args)
       policy: Policy = policy.first()
       policy.more_info = {**(policy.more_info or {}), "key":key}
@@ -83,8 +83,8 @@ class PolicyStore:
       # this is only necessary if cadmins can perform CRUD operations on policies
       if not policies_to_delete.first().is_global:
         community = policies_to_delete.first().community_policies.all().first()
-        if context.user_is_community_admin and not is_admin_of_community(context,community.id):
-            return None, CustomMassenergizeError('You are not authorized')
+        if not is_admin_of_community(context,community.id):
+            return None, NotAuthorizedError()
         
       policies_to_delete.update(is_deleted=True)
       return policies_to_delete.first(), None

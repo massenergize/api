@@ -1241,7 +1241,7 @@ class DownloadStore:
         try:
             self.community_id = community_id
             if community_id:
-                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+                if not is_admin_of_community(context, community_id):
                     return EMPTY_DOWNLOAD, NotAuthorizedError()
                 community_name = Community.objects.get(id=community_id).name
                 return (
@@ -1281,21 +1281,18 @@ class DownloadStore:
     ) -> Tuple[list, MassEnergizeAPIError]:
         self.community_id = community_id
         try:
-# Allow this download only if the user is a community admin and an admin to the community or a superadm
-            if context.user_is_community_admin or context.user_is_super_admin:
-                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-                    return EMPTY_DOWNLOAD, NotAuthorizedError()
-
-                community = Community.objects.get(id=community_id)
-                if community:
-                    return (
-                        self._community_teams_download(community.id),
-                        community.name,
-                    ), None
-                else:
-                    return EMPTY_DOWNLOAD, InvalidResourceError()
-            else:
+            # Allow this download only if the user is a community admin and an admin to the community or a superadm
+            if not is_admin_of_community(context, community_id):
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
+
+            community = Community.objects.get(id=community_id)
+            if community:
+                return (
+                    self._community_teams_download(community.id),
+                    community.name,
+                ), None
+            else:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
@@ -1308,7 +1305,7 @@ class DownloadStore:
             if not context.user_is_admin():
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
             if community_id: 
-                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+                if not is_admin_of_community(context, community_id):
                     return EMPTY_DOWNLOAD, NotAuthorizedError()
                 community_name = Community.objects.get(id=community_id).name
                 return (

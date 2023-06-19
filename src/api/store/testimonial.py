@@ -146,15 +146,24 @@ class TestimonialStore:
         return None, InvalidResourceError()
       testimonial = testimonials.first()
 
-      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(testimonial.user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
-        return None, NotAuthorizedError()
-      
-      if context.user_is_community_admin:
-        community = testimonial.community
-        if community and  not is_admin_of_community(context, community.id):
-          return None, CustomMassenergizeError('You are not authorized')
+      # check if requesting user is the action creator, super admin or community admin else throw error
+      creator = str(testimonial.user_id)
+      community = testimonial.community
+      if context.user_id == creator:
+        # testimonial creators can't currently modify once published
+        if testimonial.is_published and not context.user_is_admin():
+          # ideally this would submit changes to the community admin to publish
+          return None, CustomMassenergizeError("Unable to modify testimonial once published.  Please contact Community Admin to do this")
+      else:
+        # otherwise you must be an administrator
+        if not context.user_is_admin():
+          return None, NotAuthorizedError()
 
+        # check if user is community admin and is also an admin of the community that created the action
+        if community:
+          if not is_admin_of_community(context, community.id):
+            return None, NotAuthorizedError()
+      
       user_email = args.pop('user_email', None)      
       images = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -231,8 +240,9 @@ class TestimonialStore:
       rank = args.get("rank", None)
       if id:
         testimonials = Testimonial.objects.filter(id=id)
-        if context.user_is_community_admin and not is_admin_of_community(context, testimonials.first().community.id):
-            return None, CustomMassenergizeError('You are not authorized to update this testimonial')
+        community = testimonials.first().community
+        if community and not is_admin_of_community(context, community.id):
+            return None, NotAuthorizedError()
         if type(rank) == int  and int(rank) is not None:
           testimonials.update(rank=rank)
           testimonial = testimonials.first()
@@ -252,8 +262,10 @@ class TestimonialStore:
   def delete_testimonial(self, context: Context, testimonial_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       testimonials = Testimonial.objects.filter(id=testimonial_id)
-      if context.user_is_community_admin and not is_admin_of_community(context, testimonials.first().community.id):
-        return None, CustomMassenergizeError('You are not authorized to delete this testimonial')
+      community = testimonials.first().community
+
+      if community and not is_admin_of_community(context, community.id):
+        return None, NotAuthorizedError()
       testimonials.update(is_deleted=True, is_published=False)
       testimonial = testimonials.first()
       # ----------------------------------------------------------------
@@ -287,8 +299,8 @@ class TestimonialStore:
         testimonials = Testimonial.objects.filter(community__id__in=comm_ids, is_deleted=False, *filter_params).select_related('image', 'community').prefetch_related('tags')
         return testimonials, None
       
-      if context.user_is_community_admin and not is_admin_of_community(context.user_id, community_id):
-          return None, CustomMassenergizeError('You are not authorized to view testimonials for this community')
+      if not is_admin_of_community(context.user_id, community_id):
+          return None, NotAuthorizedError()
 
       testimonials = Testimonial.objects.filter(community__id=community_id, is_deleted=False,*filter_params).select_related('image', 'community').prefetch_related('tags')
       return testimonials.distinct(), None
