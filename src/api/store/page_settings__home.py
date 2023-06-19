@@ -38,6 +38,32 @@ class HomePageSettingsStore:
       return new_home_page_setting, None
     except Exception:
       return None, ServerError()
+    
+  def add_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      res = {}
+      community_id = args.get('community_id')
+      event_id = args.get("event_id")
+      event = Event.objects.filter(id=event_id).first()
+      home_page_setting = HomePageSettings.objects.filter(community__id=community_id).first()
+      event_already_exist =  home_page_setting.featured_events.filter(id=event_id).exists()
+      if event_already_exist:
+         home_page_setting.featured_events.remove(event)
+         res = {
+           "msg":f"{event.name} has been removed from your home page",
+           "status":False
+         }
+      else:
+        home_page_setting.featured_events.add(event)
+        res = {
+           "msg":f"{event.name} has been added to your home page",
+           "status":True
+         }
+      home_page_setting.save()
+      return res, None
+    except Exception:
+      return None, ServerError()
+
 
 
   def update_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -121,6 +147,7 @@ class HomePageSettingsStore:
 
       #now, update the other fields in one swing
       HomePageSettings.objects.filter(id=home_page_id).update(**args)
+      home_page_setting.refresh_from_db()
       return home_page_setting, None
     except Exception as e:
       capture_message(str(e), level="error")

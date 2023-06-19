@@ -145,6 +145,8 @@ class FeatureFlagStore:
                 ff |= user.user_feature_flags.filter(
                     expires_on__gt=current_date_and_time, scope=scope
                 )
+
+            print("== ff ===",ff)
             return ff, None
         except Exception as e:
             capture_message(str(e), level="error")

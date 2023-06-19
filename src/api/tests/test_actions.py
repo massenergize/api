@@ -44,7 +44,8 @@ class ActionHandlerTest(TestCase):
       self.ACTION5 = Action(title="action5")
 
       self.ACTION1.user = self.USER1
-
+      self.ACTION4.community  = self.COMMUNITY # needed for delete cos only admins of community can delete or users create the actions
+      self.ACTION1.community = self.COMMUNITY
       self.ACTION1.save()
       self.ACTION2.save()
       self.ACTION3.save()
@@ -142,11 +143,13 @@ class ActionHandlerTest(TestCase):
       signinAs(self.client, self.USER1)
       response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "user_title1"}), content_type="application/x-www-form-urlencoded").toDict()
       self.assertTrue(response["success"])
+      print(response["data"])
       self.assertEquals(response["data"]["title"], "user_title1")
 
       # test update as cadmin
       signinAs(self.client, self.CADMIN)
       response = self.client.post('/api/actions.update', urlencode({"action_id": self.ACTION1.id, "title": "cadmin_title"}), content_type="application/x-www-form-urlencoded").toDict()
+
       self.assertTrue(response["success"])
       self.assertEquals(response["data"]["title"], "cadmin_title")
 
@@ -183,6 +186,7 @@ class ActionHandlerTest(TestCase):
       # test as cadmin
       signinAs(self.client, self.CADMIN)
       response = self.client.post('/api/actions.delete', urlencode({"action_id": self.ACTION4.id}), content_type="application/x-www-form-urlencoded").toDict()
+
       self.assertTrue(response["success"])
       self.assertTrue(response["data"]["is_deleted"])
 

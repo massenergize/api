@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.9.8",
-  "BUILD_VERSION_NOTES": "5/7/2023: Production bug-fix update - home page images\n"
+  "BUILD_VERSION": "4.9.35",
+  "BUILD_VERSION_NOTES": "Feb 24: Admin portal pagination:\n- deliver content in small chunks"
 }

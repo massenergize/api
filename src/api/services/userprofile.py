@@ -1,6 +1,7 @@
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
+from api.decorators import login_required
 from api.store.userprofile import UserStore
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
@@ -11,6 +12,8 @@ from sentry_sdk import capture_message
 from typing import Tuple
 
 from api.utils.filter_functions import sort_items
+
+
 
 def _parse_import_file(csvfile):
   """
@@ -110,6 +113,21 @@ class UserService:
   def __init__(self):
     self.store =  UserStore()
 
+  def fetch_user_visits(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    visits, err = self.store.fetch_user_visits(context, args)
+    if err:
+      return None, err
+    return list(visits), None
+    # If we are using logs instead of footages, uncomment this
+    # return visits, None
+
+    
+  def accept_mou(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    user, err = self.store.accept_mou(context, args)
+    if err:
+      return None, err
+    return serialize(user, full=True), None
+  
   def get_user_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     user, err = self.store.get_user_info(context, args)
     if err:
@@ -134,8 +152,8 @@ class UserService:
       return None, err
     return household, None
 
-  def list_users(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    user, err = self.store.list_users(community_id)
+  def list_users(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    user, err = self.store.list_users(context,community_id)
     if err:
       return None, err
     return user, None
@@ -146,7 +164,6 @@ class UserService:
     if err:
       return None, err
     return {'public_user_list': publicview}, None
-
 
   def list_actions_todo(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     actions_todo, err = self.store.list_todo_actions(context, args)

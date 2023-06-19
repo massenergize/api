@@ -1,15 +1,13 @@
 """Handler file for all routes pertaining to auths"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import parse_list, parse_bool, check_length, rename_field
+from _main_.utils.common import get_date_and_time_in_milliseconds
 from api.services.auth import AuthService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError
-from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
 from _main_.settings import RUN_SERVER_LOCALLY
+from api.utils.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 
 ONE_YEAR = 365*24*60*60
 ONE_DAY = 24*60*60
@@ -47,6 +45,9 @@ class AuthHandler(RouteHandler):
     # if the signin is from an admin site then set it to 24 hrs
     if(context.is_admin_site):
       MAX_AGE = ONE_DAY
+      expiration_time = get_date_and_time_in_milliseconds(hours=24)
+      print("LETS SEEE EXPIRATION TIME", expiration_time)
+      request.session[WHEN_USER_AUTHENTICATED_SESSION_EXPIRES] = expiration_time
 
     if RUN_SERVER_LOCALLY:
       response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')

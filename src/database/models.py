@@ -1,5 +1,7 @@
 import datetime
+from datetime import timezone, timedelta
 import json
+from _main_.utils.policy.PolicyConstants import PolicyConstants
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
 from django.db.models.fields import BooleanField, related
@@ -9,6 +11,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
+from django.utils import timezone
 
 from .utils.common import (
     get_images_in_sequence,
@@ -26,25 +29,67 @@ ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
 
 # -------------------------------------------------------------------------
 
-def get_enabled_flags(_self, users = False): # _self : CommunityObject or UserProfileObject
-    feature_flags = FeatureFlag.objects.all() # We get all available flags
+
+def get_enabled_flags(
+    _self, users=False
+):  # _self : CommunityObject or UserProfileObject
+    feature_flags = FeatureFlag.objects.all()  # We get all available flags
     feature_flags_json = []
-    for f in feature_flags: # Go over all the flags
-        specified = f.communities.all() if not users else f.users.all() # Then note down which communities each flag is enabled for
+    for f in feature_flags:  # Go over all the flags
+        specified = (
+            f.communities.all() if not users else f.users.all()
+        )  # Then note down which communities each flag is enabled for
         enabled = (
             (f.audience == "EVERYONE")
             or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
                 f.audience == "SPECIFIC" and _self in specified
             )
             or (f.audience == "ALL_EXCEPT" and _self not in specified)
-        ) # Check if flag is enabled for the community
+        )  # Check if flag is enabled for the community
         enabled = enabled and (
             not f.expires_on
             or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
-        ) 
+        )
         if enabled:
-            feature_flags_json.append(f.simple_json())  # Then if the flag hasnt expired, note down the flag
+            feature_flags_json.append(
+                f.simple_json()
+            )  # Then if the flag hasnt expired, note down the flag
     return feature_flags_json
+
+
+def user_is_due_for_mou(user):
+    """
+    Returns user policy acceptance status
+
+    Args:
+        user (UserProfile): The User Profile to check for policy
+
+        last_record (PolicyAcceptanceRecords|None): Latest Policy Acceptance Record or None if there is none
+    """
+    a_year_ago = datetime.datetime.now(timezone.utc) - timedelta(days=365)
+
+    try:
+        last_record = PolicyAcceptanceRecords.objects.filter(
+            user=user, type=PolicyConstants.mou()
+        ).latest("signed_at")
+    except PolicyAcceptanceRecords.DoesNotExist:
+        return True, None
+    
+    # ok if user signed MOU after the date one year ago
+    if last_record.signed_at and last_record.signed_at > a_year_ago: 
+        return False, last_record.simple_json()
+    
+    return True, last_record.simple_json()
+     
+def fetch_few_visits(user): 
+    footages = Footage.objects.filter(actor__id = user.id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).values_list("created_at", flat=True)[:5]
+    if len(footages): 
+        return list(footages)
+
+    visits = user.visit_log or []
+    return visits[-5:]
+
+
 # -------------------------------------------------------------------------
 class Location(models.Model):
     """
@@ -271,12 +316,16 @@ class Policy(models.Model):
         return self.name
 
     def simple_json(self):
-        return model_to_dict(self)
+        res = model_to_dict(self)
+        more_info = self.more_info or {}
+        res["key"] = more_info.get("key", "")
+        return res
 
     def full_json(self):
         # would this blow up because no community_set?
-        res = model_to_dict(self)
-        community = self.community_set.all().first()
+        # community_policies is a related_name on the community table
+        res = self.simple_json()
+        community = self.community_policies.all().first()
         if community:
             res["community"] = get_json_if_not_none(community)
         return res
@@ -444,7 +493,9 @@ class Community(models.Model):
     # locations defines the range for geographic communities
     locations = models.ManyToManyField(Location, blank=True)
 
-    policies = models.ManyToManyField(Policy, blank=True)
+    policies = models.ManyToManyField(
+        Policy, blank=True, related_name="community_policies"
+    )
     is_approved = models.BooleanField(default=False, blank=True)
     accepted_terms_and_conditions = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -480,11 +531,11 @@ class Community(models.Model):
         res["logo"] = get_json_if_not_none(self.logo)
         res["favicon"] = get_json_if_not_none(self.favicon)
         # this will not slow it down measurably
-        res["feature_flags"] =  get_enabled_flags(self)
+        res["feature_flags"] = get_enabled_flags(self)
         return res
 
-    #def medium_json(self): 
-    #    res = self.simple_json() 
+    # def medium_json(self):
+    #    res = self.simple_json()
     #    res["feature_flags"] =  get_enabled_flags(self)
     #    return res
 
@@ -509,7 +560,6 @@ class Community(models.Model):
 
         # goal defined consistently; not differently in two places
         if self.is_geographically_focused:
-
             goal[
                 "organic_attained_number_of_households"
             ] = RealEstateUnit.objects.filter(is_deleted=False, community=self).count()
@@ -597,7 +647,7 @@ class Community(models.Model):
             "geography_type": self.geography_type,
             "locations": locations,
             "feature_flags": get_enabled_flags(self),
-            "is_demo": self.is_demo
+            "is_demo": self.is_demo,
         }
 
     class Meta:
@@ -606,38 +656,44 @@ class Community(models.Model):
 
 
 class CommunitySnapshot(models.Model):
-
     id = models.AutoField(primary_key=True)
-    community = models.ForeignKey(Community, null =True, on_delete=models.SET_NULL, blank=True )  
+    community = models.ForeignKey(
+        Community, null=True, on_delete=models.SET_NULL, blank=True
+    )
     date = models.DateField(auto_now_add=True, db_index=True)
     is_live = models.BooleanField(default=False, blank=True)
-    households_total = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
-    households_user_reported = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    households_manual_addition = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    households_partner = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    user_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    actions_live_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    actions_total = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    actions_partner = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    actions_user_reported = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    carbon_total = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    carbon_user_reported = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    carbon_manual_addition = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    carbon_partner = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    households_total = models.PositiveIntegerField(default=0, blank=True)
+    households_user_reported = models.PositiveIntegerField(default=0, blank=True)
+    households_manual_addition = models.PositiveIntegerField(default=0, blank=True)
+    households_partner = models.PositiveIntegerField(default=0, blank=True)
+    primary_community_users_count = models.PositiveIntegerField(default=0, blank=True)
+    member_count = models.PositiveIntegerField(default=0, blank=True)
+    actions_live_count = models.PositiveIntegerField(default=0, blank=True)
+    actions_total = models.PositiveIntegerField(default=0, blank=True)
+    actions_partner = models.PositiveIntegerField(default=0, blank=True)
+    actions_user_reported = models.PositiveIntegerField(default=0, blank=True)
+    carbon_total = models.FloatField(default=0, blank=True)
+    carbon_user_reported = models.FloatField(default=0, blank=True)
+    carbon_manual_addition = models.FloatField(default=0, blank=True)
+    carbon_partner = models.FloatField(default=0, blank=True)
 
-    guest_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    actions_manual_addition = models.CharField(max_length=SHORT_STR_LEN, blank=True)  
-    events_hosted_current = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
-    events_hosted_past = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
-    my_events_shared_current = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
-    my_events_shared_past = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
-    events_borrowed_from_others_current = models.CharField(max_length=SHORT_STR_LEN, blank=True) 
-    events_borrowed_from_others_past = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    guest_count = models.PositiveIntegerField(default=0, blank=True)
+    actions_manual_addition = models.PositiveIntegerField(default=0, blank=True)
+    events_hosted_current = models.PositiveIntegerField(default=0, blank=True)
+    events_hosted_past = models.PositiveIntegerField(default=0, blank=True)
+    my_events_shared_current = models.PositiveIntegerField(default=0, blank=True)
+    my_events_shared_past = models.PositiveIntegerField(default=0, blank=True)
+    events_borrowed_from_others_current = models.PositiveIntegerField(
+        default=0, blank=True
+    )
+    events_borrowed_from_others_past = models.PositiveIntegerField(
+        default=0, blank=True
+    )
 
-    teams_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    subteams_count= models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    testimonials_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
-    service_providers_count = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    teams_count = models.PositiveIntegerField(default=0, blank=True)
+    subteams_count = models.PositiveIntegerField(default=0, blank=True)
+    testimonials_count = models.PositiveIntegerField(default=0, blank=True)
+    service_providers_count = models.PositiveIntegerField(default=0, blank=True)
 
     def simple_json(self):
         res = model_to_dict(self)
@@ -647,9 +703,14 @@ class CommunitySnapshot(models.Model):
         return self.simple_json()
 
     def __str__(self):
-        return " %s | %s " % (self.community, self.date, )
+        return " %s | %s " % (
+            self.community,
+            self.date,
+        )
+
     class Meta:
         db_table = "community_snapshots"
+
 
 class RealEstateUnit(models.Model):
     """
@@ -814,7 +875,7 @@ class UserProfile(models.Model):
         return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
 
     def summary(self):
-        summaryData = model_to_dict(self, ["preferred_name", "is_guest"])
+        summaryData = model_to_dict(self, ["preferred_name", "is_guest", "email"])
         summaryData["joined"] = self.created_at.date()
         summaryData["profile_picture"] = get_json_if_not_none(self.profile_picture)
 
@@ -877,7 +938,7 @@ class UserProfile(models.Model):
                 "preferred_name",
                 "email",
                 "is_super_admin",
-                "is_community_admin"
+                "is_community_admin",
             ],
         )
         res["joined"] = self.created_at.date()
@@ -906,6 +967,8 @@ class UserProfile(models.Model):
             "admin_portal_settings": admin_portal_settings,
         }
         res["accepts_terms_and_conditions"] = self.accepts_terms_and_conditions
+
+        res["user_portal_visits"] = fetch_few_visits(self)
         return res
 
     def update_visit_log(self, date_time):
@@ -940,30 +1003,6 @@ class UserProfile(models.Model):
         team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
         community_members = CommunityMember.objects.filter(user=self)
         communities = [cm.community.info() for cm in community_members]
-        # admin_at = [ // TODO: Remove -> because we stopped using this, and started using CommunityAdminGroupBelow
-        #     cm.community.info()
-        #     for cm in CommunityMember.objects.filter(user=self, is_admin=True)
-        # ]
-
-        # # Feature flags can either enable features for specific users, or disable them for specific users
-        # feature_flags = FeatureFlag.objects.all()
-        # feature_flags_json = []
-        # for f in feature_flags:
-        #     specified_users = f.users.all()
-        #     enabled = (
-        #         (f.user_audience == "EVERYONE")
-        #         or (  # FeatureFlagConstants.AUDIENCE["EVERYONE"]["key"]
-        #             f.user_audience == "SPECIFIC" and self in specified_users
-        #         )
-        #         or (f.user_audience == "ALL_EXCEPT" and self not in specified_users)
-        #     )
-        #     enabled = enabled and (
-        #         not f.expires_on
-        #         or f.expires_on > datetime.datetime.now(f.expires_on.tzinfo)
-        #     )
-        #     if enabled:
-        #         feature_flags_json.append(f.simple_json())
-
         data = model_to_dict(
             self, exclude=["real_estate_units", "communities", "roles"]
         )
@@ -998,12 +1037,67 @@ class UserProfile(models.Model):
             "admin_portal_settings": admin_portal_settings,
         }
         data["feature_flags"] = get_enabled_flags(self, True)
+        if self.is_community_admin: 
+            mou_details = user_is_due_for_mou(self)
+            data["needs_to_accept_mou"] = mou_details[0]
+            data["mou_details"] =  mou_details[1]
 
         return data
 
     class Meta:
         db_table = "user_profiles"
         ordering = ("-created_at",)
+
+
+class PolicyAcceptanceRecords(models.Model):
+    """
+     This model represents the user's acceptance of policies. It has the following fields:
+    "user": a foreign key to the UserProfile model, which is set to null when the UserProfile is deleted.
+    "signed_at": a DateTimeField that stores the date and time when the user accepted the policy.
+    "last_notified": a JSON field that stores the last notification sent to the user about the policy, if applicable.
+    "type": a CharField that stores the type of policy being accepted, defaulting to "MOU" (Memorandum of Understanding) if not specified. It could be anything depending on any new future scenarios where we need users to sign/accept other things that are not MOUs (So we can still use this table)
+    "created_at": a DateTimeField automatically set to the time the record was created.
+    "updated_at": a DateTimeField automatically updated with the time any changes are made to the record.
+    "policy" :  a foreign key to the particular policy that the user accepted. It is set to be removed when the policy is deleted
+    This model establishes a relationship between the user and the policies they have agreed to, allowing you to track which policies each user has accepted and when they did so.
+    """
+
+    user = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="accepted_policies",
+    )
+    policy = models.ForeignKey(Policy, on_delete=models.CASCADE, null=True, blank=True)
+    signed_at = models.DateTimeField(null=True, blank=True)
+    last_notified = models.JSONField(null=True, blank=True)
+    type = models.CharField(
+        default=PolicyConstants.mou(),
+        max_length=TINY_STR_LEN,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def simple_json(self): 
+        res = model_to_dict(
+            self, [ "signed_at", "id"]
+        )
+        if self.policy: 
+            res["policy"] = self.policy.simple_json()
+        return res
+
+    def full_json(self): 
+        return self.simple_json()
+
+    def __str__(self) -> str:
+        if self.policy and self.signed_at:
+            return f"{self.user.full_name} signed - {self.policy.name or '...'} at {self.signed_at}"
+        return f"{self.user.full_name} has not yet signed policy"
+
+    class Meta:
+        ordering = ("-id",)
 
 
 class UserMediaUpload(models.Model):
@@ -1207,9 +1301,7 @@ class Subdomain(models.Model):
 
 class CustomCommunityWebsiteDomain(models.Model):
     id = models.AutoField(primary_key=True)
-    # Sam - do you see any problem with this?  URL field is a text field with validator to be valid URL
     website = models.URLField(max_length=SHORT_STR_LEN, unique=True)
-    #website = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     community = models.ForeignKey(
         Community,
         on_delete=models.CASCADE,
@@ -1765,6 +1857,10 @@ class Action(models.Model):
         # Adding this so that vendors will be preselected when creating/updating action.
         # List of vendors will typically not be that long, so this doesnt pose any problems
         data["vendors"] = [v.info() for v in self.vendors.all()]
+        data["action_users"] =len( UserActionRel.objects.filter(action=self, is_deleted=False)) or 0
+        
+        if self.user:
+            data["user_email"] = self.user.email
         return data
 
     def full_json(self):
@@ -1774,17 +1870,27 @@ class Action(models.Model):
         # data["about"] = self.about
         data["geographic_area"] = self.geographic_area
         data["properties"] = [p.simple_json() for p in self.properties.all()]
+        data["action_users"] = [
+            {
+                "id": u.id,
+                "status": u.status,
+                "email": u.user.email,
+                "full_name": u.user.full_name,
+                "real_estate_unit": get_json_if_not_none(u.real_estate_unit),
+                "date_completed": u.date_completed,
+                "carbon_impact": u.carbon_impact,
+                "recorded_at": u.updated_at,
+            }
+            for u in UserActionRel.objects.filter(action=self, is_deleted=False)
+        ] or []
         # data["vendors"] = [v.simple_json() for v in self.vendors.all()]
         if self.user:
             data["user_email"] = self.user.email
         return data
 
     class Meta:
-        #ordering = ["-id","rank", "title"]
         ordering = ["rank", "title"]
         db_table = "actions"
-        # had required this unique, now enforced in code
-        # unique_together = [["title", "community"]]
 
 
 class Event(models.Model):
@@ -1864,10 +1970,11 @@ class Event(models.Model):
         Community, related_name="event_access_selections", blank=True
     )
     # Communities that have shared an event to their site will be in this list
-    shared_to = models.ManyToManyField(Community, related_name="events_from_others", blank=True)
+    shared_to = models.ManyToManyField(
+        Community, related_name="events_from_others", blank=True
+    )
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
-
 
     def __str__(self):
         return self.name
@@ -1875,6 +1982,15 @@ class Event(models.Model):
     def info(self):
         data = model_to_dict(self, ["id", "name"])
         return data
+
+    def is_on_homepage(self):
+        is_used = False
+        home_page = HomePageSettings.objects.filter(community=self.community).first()
+        if home_page and home_page.featured_events:
+            is_used = home_page.featured_events.filter(
+                id=self.id, start_date_and_time__gte=timezone.now()
+            ).exists()
+        return is_used
 
     def simple_json(self):
         data = model_to_dict(
@@ -1886,7 +2002,7 @@ class Event(models.Model):
                 "invited_communities",
                 "user",
                 "communities_under_publicity",
-                "shared_to"
+                "shared_to",
             ],
         )
         data["tags"] = [t.simple_json() for t in self.tags.all()]
@@ -1911,9 +2027,8 @@ class Event(models.Model):
         if self.user:
             data["user_email"] = self.user.email
 
-        data["shared_to"] =[
-            c.info() for c in self.shared_to.all()
-        ]
+        data["shared_to"] = [c.info() for c in self.shared_to.all()]
+        data["is_on_home_page"] = self.is_on_homepage()
         return data
 
     def full_json(self):
@@ -2236,10 +2351,15 @@ class UserActionRel(models.Model):
         return res
 
     def __str__(self):
-        return "%s - %s | %s | (%s)" % (str(self.id), self.user, self.status, self.action)
+        return "%s - %s | %s | (%s)" % (
+            str(self.id),
+            self.user,
+            self.status,
+            self.action,
+        )
 
     class Meta:
-        ordering = ("-id","status", "user", "action")
+        ordering = ("-id", "status", "user", "action")
         unique_together = [["user", "action", "real_estate_unit"]]
 
 
@@ -2743,6 +2863,7 @@ class Subscriber(models.Model):
     def simple_json(self):
         res = model_to_dict(self)
         res["community"] = None if not self.community else self.community.info()
+        res["subscribed"] = self.created_at.date()
         return res
 
     def full_json(self):
@@ -3343,7 +3464,10 @@ class Message(models.Model):
         res["team"] = get_summary_info(self.team)
         res["user"] = get_summary_info(self.user)
         res["replies"] = [
-            r.simple_json() for r in Message.objects.filter(parent=self, archive=False)
+            r.simple_json()
+            for r in Message.objects.filter(parent=self, archive=False).order_by(
+                "-created_at"
+            )
         ]
         res["created_at"] = self.created_at.strftime("%Y-%m-%d %H:%M")
         return res

@@ -6,6 +6,9 @@ from _main_.utils.massenergize_errors import (
 )
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
+from collections import Counter
+from api.store.utils import get_human_readable_date
+from api.utils.api_utils import get_user_community_ids, is_admin_of_community
 from database.models import (
     UserProfile,
     CommunityMember,
@@ -85,6 +88,7 @@ class DownloadStore:
         ]
 
         self.user_info_columns_2 = [
+            "Zipcode", 
             "Households (count)",
             "Role",
             "Created",
@@ -115,6 +119,7 @@ class DownloadStore:
             "Location",
             "Geographically Focused", 
             "Last Cadmin Login",
+            "Primary Community Users (count)",
             "Members (count)",
             "Guests (count)", 
             "Teams (count)",
@@ -143,13 +148,13 @@ class DownloadStore:
         ]
 
         self.metrics_columns = [
-            "Date",
             "Is Live",
             "Households Total",
             "Households User Reported",
             "Households Manual Addition",
             "Households Partner",
-            "User Count",
+            "Primary Community Users",
+            "Member Count",
             "Actions Live Count",
             "Actions Total" ,
             "Actions Partner",
@@ -227,6 +232,25 @@ class DownloadStore:
 
         return self._get_cells_from_dict(self.user_info_columns_1, user_cells_1)
 
+    def _get_user_zipcodes(self, reus):
+        zipcodes = ""
+        for elem in reus:
+            if getattr(elem, "address") and getattr(elem.address, "zipcode"):
+                if zipcodes != "": 
+                    zipcodes = zipcodes[:-1] + ", " + str(elem.address.zipcode) + "\""
+                else: 
+                    zipcodes += "=\"" +  str(elem.address.zipcode) + "\""
+
+            elif getattr(elem, "location"):
+                    location_list = elem.location.replace(", ", ",").split( ",")
+                    zipc = location_list[-1]
+                    if len(zipc) ==5 and zipc.isdigit():
+                        if zipcodes != "": 
+                            zipcodes = zipcodes[:-1] + ", " + str(zipc) + "\""
+                        else: 
+                            zipcodes+= "=\"" +  str(zipc) + "\""
+        return zipcodes
+
     #Given user, returns last part of populated row (for Users CSV)
     def _get_user_info_cells_2(self, user):
         user_cells_2 = {}
@@ -287,13 +311,14 @@ class DownloadStore:
                 is_guest = (user.user_info.get("user_type", STANDARD_USER) == GUEST_USER)
 
             is_invited = not is_guest and not user.accepts_terms_and_conditions
-            user_households = user.real_estate_units.count()
 
+            reus = user.real_estate_units.all()
+            zipcodes = self._get_user_zipcodes(reus)
 
             sign_in_date = user.visit_log[-1] if len(user.visit_log) >=1 else user.updated_at.strftime("%Y/%m/%d") if user.updated_at else placeholder
-
             user_cells_2 = {
-                "Households (count)": user_households,
+                "Zipcode": zipcodes,
+                "Households (count)": reus.count(),
                 "Role": "super admin"
                 if user.is_super_admin
                 else "community admin"
@@ -625,14 +650,36 @@ class DownloadStore:
             ).select_related("action__calculator_action")
             done_action_rels_members = done_action_rels
         return households_count, done_action_rels, done_action_rels_members
+    
+    def _get_primary_community_dict(self):
+        
+        users = UserProfile.objects.filter(is_deleted=False)
 
+        comm_list = []
+        for user in users:
+
+                reu_community = None
+                for reu in user.real_estate_units.all():
+                    if reu.community:
+
+                        comm_list.append(reu.community.name)
+                        break
+        
+        return(Counter(comm_list))
 
     #Gets row information for each community for All Communities CSV
-    def _get_community_info_cells(self, community):
+    def _get_community_info_cells(self, community, prim_comm_dict):
         
         location_string = self.get_location_string(community)
 
         community_members, teams_count, events_count, actions_count, testimonials_count, actions = self.community_info_helper(community)
+        
+        primary_community_user_count = 0
+        if community.name in prim_comm_dict:
+            print(str(community.name) + str(community.is_geographically_focused))
+            primary_community_user_count = prim_comm_dict[community.name]
+        print(primary_community_user_count)
+
         users = [cm.user for cm in community_members]
 
         date_list = self.get_cadmin_recent_date(users)
@@ -702,6 +749,7 @@ class DownloadStore:
             "Geographically Focused": geo_focused,
             "Last Cadmin Login": str(most_recent_cadmin_login), 
             "Members (count)": str(members_count),
+            "Primary Community Users (count)": str(primary_community_user_count), #first reu 
             "Guests (count)": str(guest_count),
             "Teams (count)": teams_count,
             "Actions (count)": str(actions_count),
@@ -887,12 +935,15 @@ class DownloadStore:
         return data
 
     #Combines populated rows and columns to create All Communities an Actions CSV  - action data for all communities
-    def _all_actions_download(self):
-        actions = (
-            Action.objects.select_related("calculator_action", "community")
-            .prefetch_related("tags")
-            .filter(is_deleted=False)
-        )
+    def _all_actions_download(self,community_ids=None):
+        if community_ids:
+            actions = Action.objects.filter(community__id__in=community_ids,is_deleted=False).select_related("calculator_action", "community").prefetch_related("tags")
+        else:
+            actions = (
+                Action.objects.select_related("calculator_action", "community")
+                .prefetch_related("tags")
+                .filter(is_deleted=False)
+            )
 
         columns = ["Community"] + ["Geographically Focused"] + self.action_info_columns
         data = []
@@ -945,8 +996,10 @@ class DownloadStore:
         columns = self.community_info_columns
         data = [columns]
 
+        primary_community_dict = self._get_primary_community_dict()
+
         for community in communities:
-            data.append(self._get_community_info_cells(community))
+            data.append(self._get_community_info_cells(community,primary_community_dict))
 
         return data
 
@@ -967,17 +1020,39 @@ class DownloadStore:
 
         return data
     
+    def _action_users_download(self, action):
+        user_action_rel = UserActionRel.objects.filter(action=action, is_deleted=False)
+        columns = ["Recorded At","User", "Email", "Unit Name", "Unit Type", "Carbon Impact", "Status"]
+        data = [columns]
+        if len(user_action_rel) > 0:
+            for user_action_rel in user_action_rel:
+                cell  = self._get_cells_from_dict(columns,{
+                    "Recorded At": get_human_readable_date(user_action_rel.created_at),
+                    "User": user_action_rel.user.full_name,
+                    "Email": user_action_rel.user.email,
+                    "Unit Name": user_action_rel.real_estate_unit.name,
+                    "Unit Type": user_action_rel.real_estate_unit.unit_type,
+                    "Carbon Impact": user_action_rel.carbon_impact,
+                    "Status": user_action_rel.status,
+                })
+                data.append(cell)
+            return data
+        else:
+            return []
+        
+    
+    
 
     def _get_metrics_cells(self, community_id, time_stamp):
-        placeholder = ""
+
         metrics_cells = {
-            "Date": time_stamp.date,
             "Is Live": time_stamp.is_live,
             "Households Total": time_stamp.households_total,
             "Households User Reported": time_stamp.households_user_reported,
             "Households Manual Addition": time_stamp.households_manual_addition,
             "Households Partner": time_stamp.households_partner,
-            "User Count": time_stamp.user_count,
+            "Primary Community Users": time_stamp.primary_community_users_count,
+            "Member Count": time_stamp.member_count,
             "Actions Live Count": time_stamp.actions_live_count,
             "Actions Total": time_stamp.actions_total,
             "Actions Partner": time_stamp.actions_partner,
@@ -1005,26 +1080,112 @@ class DownloadStore:
 
     def _community_metrics_download(self, context, args, community_id):
         
-        columns = self.metrics_columns
+        columns = ["Date"] + self.metrics_columns
         data = [columns]
         snapshots = CommunitySnapshot.objects.filter(community__id = community_id).order_by("date")
 
         for snap in snapshots:
-            data.append(self._get_metrics_cells(community_id, snap))
+            data.append([snap.date] + self._get_metrics_cells(community_id, snap))
 
         return data
 
+    def _get_all_metrics_info_cells(self, snapshots, comms):
+        dic = {"is_live": [], "households_total": 0, "households_user_reported": 0, "households_manual_addition":0,
+        "households_partner":0, "primary_community_users_count":0, "member_count":0, "actions_live_count":0,
+        'actions_total':0, 'actions_partner':0, 'actions_user_reported':0,
+        'carbon_total':0.0, 'carbon_user_reported':0.0, 'carbon_manual_addition':0.0,
+        'carbon_partner':0.0, 'guest_count':0, 'actions_manual_addition':0,
+        'events_hosted_current':0, 'events_hosted_past':0, 'my_events_shared_current':0,
+        'my_events_shared_past':0, 'events_borrowed_from_others_current':0,
+        'events_borrowed_from_others_past':0, 'teams_count':0, 'subteams_count':0,
+        'testimonials_count':0, 'service_providers_count':0,
+        }
+        snapshots_list = [] 
+        comms_list =[]
+        #if more than one timestamp for a given community on certain date, get latest one
+        for elem in comms:
+            stamp = snapshots.filter(community__id = elem[0]).order_by("-date").first()
+            snapshots_list.append(stamp)
+            comms_list.append(stamp.community.name)
+
+        #for each field in CSV, sum value across all relevant snapshots
+        for key in dic.keys():
+            for stamp in snapshots_list:
+
+                if key == "is_live":
+                    if getattr(stamp, key) == True:
+                        dic[key] = dic[key] + [stamp.community.name]
+
+                else:
+                    if not getattr(stamp, key):
+                        continue
+                    field_value = getattr(stamp, key)
+                    #adds values as floats or ints, depending on category
+                    if key == "carbon_total" or key == "carbon_user_reported" or key == "carbon_manual_addition" or key == "carbon_partner":
+                        dic[key] = dic[key] + float(field_value)
+                    else:
+                        dic[key] = dic[key] + int(field_value)
+
+        dic["is_live"].sort()
+        metrics_cells = {
+            "Is Live": ', '.join(dic["is_live"]),
+            "Households Total": dic["households_total"],
+            "Households User Reported": dic["households_user_reported"],
+            "Households Manual Addition": dic["households_manual_addition"],
+            "Households Partner": dic["households_partner"],
+            "Primary Community Users": dic["primary_community_users_count"],
+            "Member Count": dic["member_count"],
+            "Actions Live Count": dic["actions_live_count"],
+            "Actions Total": dic["actions_total"],
+            "Actions Partner": dic["actions_partner"],
+            "Actions User Reported": dic["actions_user_reported"],
+            "Carbon Total": dic["carbon_total"],
+            "Carbon User Reported": dic["carbon_user_reported"],
+            "Carbon Manual Addition": dic["carbon_manual_addition"],
+            "Carbon Partner": dic["carbon_partner"],
+            "Guest Count": dic["guest_count"],
+            "Actions Manual Addition": dic["actions_manual_addition"],
+            "Events Hosted Current": dic["events_hosted_current"],
+            "Events Hosted Past": dic["events_hosted_past"],
+            "My Events Shared Current": dic["my_events_shared_current"],
+            "My Events Shared Past": dic["my_events_shared_past"],
+            "Events Borrowed From Others Current": dic["events_borrowed_from_others_current"],
+            "Events Borrowed From Others Past": dic["events_borrowed_from_others_past"],
+            "Teams Count": dic["teams_count"],
+            "Subteams Count": dic["subteams_count"],
+            "Testimonials Count": dic["testimonials_count"],
+            "Service Providers Count": dic["service_providers_count"],
+            }
+        return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list, len(dic["is_live"])
+
+    
     def _all_metrics_download(self, context, args):
-        columns = ["Community"] + self.metrics_columns
+        columns = ["Date", " # Communities", "# Live"] + self.metrics_columns + ["Communities"]
         data = [columns]
-        communities = Community.objects.filter(is_deleted=False, is_demo=False)
 
-        for community in communities:
-            community_id = community.id
+        audience = args["audience"]
+        comm_ids = []
+        if args["community_ids"] is not None:
+            comm_ids = args["community_ids"].split(",")
+        if audience == "SPECIFIC":
+            community_snapshots = CommunitySnapshot.objects.filter(community__id__in = comm_ids).order_by("date")
+        elif audience == "ALL_EXCEPT":
+            community_snapshots = CommunitySnapshot.objects.exclude(community__id__in = comm_ids).order_by("date")
+        else:
+            community_snapshots = CommunitySnapshot.objects.filter().order_by("date")
 
-            snapshots = CommunitySnapshot.objects.filter(community__id = community_id)
-            for snap in snapshots:
-                data.append([community.name] + self._get_metrics_cells(community_id, snap))
+        distinct_dates = community_snapshots.values_list("date").distinct() 
+
+        #for every date make a row in the CSV
+        for elem in distinct_dates:
+
+            snapshots_list = community_snapshots.filter(date = elem[0])
+            comm_ids = snapshots_list.values_list("community").distinct()
+
+            most_info, comms_list, live_num = self._get_all_metrics_info_cells(snapshots_list, comm_ids)
+
+            comms_list.sort()
+            data.append([elem[0]] + [len(comms_list)] + [live_num] + most_info + [', '.join(comms_list)])
 
         return data
 
@@ -1050,6 +1211,8 @@ class DownloadStore:
                     #All Users CSV method for all users overall
                     return (self._all_users_download(), None), None
             elif context.user_is_community_admin:
+                if not is_admin_of_community(context, community_id):
+                    return EMPTY_DOWNLOAD, NotAuthorizedError()
                 if team_id:
                     #All Users CSV method for all users in a given team
                     return (self._team_users_download(team_id, community_id), community_name), None
@@ -1067,7 +1230,10 @@ class DownloadStore:
             print(str(e))
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
-    
+        
+
+
+ 
     #For All Actions CSV and (for superadmins) the All Communities and Actions CSV
     def actions_download(
         self, context: Context, community_id
@@ -1075,6 +1241,8 @@ class DownloadStore:
         try:
             self.community_id = community_id
             if community_id:
+                if not is_admin_of_community(context, community_id):
+                    return EMPTY_DOWNLOAD, NotAuthorizedError()
                 community_name = Community.objects.get(id=community_id).name
                 return (
                     #All Actions CSV method - action data for one community
@@ -1084,6 +1252,13 @@ class DownloadStore:
             elif context.user_is_super_admin:
                 #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
+            #  if user is cadmin  and no community id is passed, get actions of communities the user
+            #  an admin of
+            elif context.user_is_community_admin: 
+                ids = get_user_community_ids(context)
+                return (self._all_actions_download(community_ids=ids), None), None
+            else:
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
@@ -1106,17 +1281,18 @@ class DownloadStore:
     ) -> Tuple[list, MassEnergizeAPIError]:
         self.community_id = community_id
         try:
-            if context.user_is_community_admin or context.user_is_super_admin:
-                community = Community.objects.get(id=community_id)
-                if community:
-                    return (
-                        self._community_teams_download(community.id),
-                        community.name,
-                    ), None
-                else:
-                    return EMPTY_DOWNLOAD, InvalidResourceError()
-            else:
+            # Allow this download only if the user is a community admin and an admin to the community or a superadm
+            if not is_admin_of_community(context, community_id):
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
+
+            community = Community.objects.get(id=community_id)
+            if community:
+                return (
+                    self._community_teams_download(community.id),
+                    community.name,
+                ), None
+            else:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
@@ -1129,14 +1305,39 @@ class DownloadStore:
             if not context.user_is_admin():
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
             if community_id: 
+                if not is_admin_of_community(context, community_id):
+                    return EMPTY_DOWNLOAD, NotAuthorizedError()
+                community_name = Community.objects.get(id=community_id).name
                 return (
                     self._community_metrics_download(context, args, community_id),
-                    None,
+                    community_name,
                 ), None
             elif context.user_is_super_admin:
                 return (
                     self._all_metrics_download(context, args), 
                     None,), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+    def action_users(self, context: Context, action_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            action = Action.objects.filter(id=action_id, is_deleted=False).first()
+            if not action:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+
+            action_users_data = self._action_users_download(action)
+            if len(action_users_data) == 0:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (action_users_data, action.title), None
+            
+            
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)

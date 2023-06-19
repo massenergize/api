@@ -69,6 +69,19 @@ TYPES = {
         "key": "DISAPPROVAL",
         "name": "Disapproval",
         "action_word": "dissapproved",
+        "color": "#c56868",
+    },
+    "SIGNING": {
+        "key": "SIGNING",
+        "name": "Signing",
+        "action_word": "signed",
+        "color": "#11b311"
+    },
+    "DENIAL": {
+        "key": "DENIAL",
+        "name": "DENIAL",
+        "action_word": "denied",
+        "color": "#c56868",
     },
 }
 
@@ -82,6 +95,7 @@ ITEM_TYPES = {
     "TEAM": {"key": "TEAM", "json_field": "is_team"},
     "MESSAGE": {"key": "MESSAGE", "json_field": "is_message"},
     "COMMUNITY": {"key": "COMMUNITY", "json_field": "is_community"},
+    "MOU": {"key": "MOU", "json_field": "is_mou"},
 }
 
 
@@ -105,6 +119,14 @@ class FootageConstants:
     def on_user_portal():
         return PLATFORMS["USER_FRONTEND_PORTAL"]["key"]
 
+    @staticmethod
+    def sign():
+        return TYPES["SIGNING"]["key"]
+    
+    @staticmethod
+    def deny():
+        return TYPES["DENIAL"]["key"]
+    
     @staticmethod
     def create():
         return TYPES["CREATE"]["key"]

@@ -1,9 +1,14 @@
 import datetime
+import io
+from django.http import FileResponse
+from xhtml2pdf import pisa
+import pytz
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
-from database.models import UserActionRel
+from database.models import  UserActionRel
 from django.db.models import Q
-import pytz
+from django.utils import timezone 
+
 
 LAST_VISIT = "last-visit"
 LAST_WEEK = "last-week"
@@ -105,3 +110,32 @@ def count_action_completed_and_todos(**kwargs):
             }
 
     return list(action_count_objects.values())
+
+
+
+
+
+
+def create_pdf_from_rich_text(rich_text, filename):
+    # Convert rich text to PDF
+    pdf_buffer = io.BytesIO()
+
+    # Create the PDF object, using the buffer as its "file."
+    pisa.CreatePDF(io.StringIO(rich_text), dest=pdf_buffer)
+
+    # Close the buffer and return the response
+    pdf_buffer.seek(0)
+    response = FileResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename={filename}.pdf'
+    return pdf_buffer.getvalue(), response
+
+
+def sign_mou(mou_rich_text, user=None, date=None): 
+    return f"""
+        {mou_rich_text}
+        <div> 
+        <h1>Signed By</h2> 
+        <h2>Name: {user.full_name}</h2> 
+        <h2>Date: {date} </h2>
+        </div>
+    """ if (user and date) else mou_rich_text

@@ -1,3 +1,4 @@
+from _main_.settings import IS_LOCAL, IS_PROD, IS_CANARY
 from _main_.utils.utils import strip_website
 from database.models import Community, UserProfile, RealEstateUnit, Location, CustomCommunityWebsiteDomain
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError
@@ -296,3 +297,33 @@ def unique_media_filename(file):
   else:
     filename = file.name + unique_datetime
   return filename
+
+
+
+def get_user_from_context(context):
+  if not context:
+    return None
+  if context.user_id:
+    return UserProfile.objects.filter(id=context.user_id).first()
+  elif context.user_email:
+    return UserProfile.objects.filter(email=context.user_email).first()
+  return None
+
+
+#def get_frontend_host(): 
+#  if IS_PROD: 
+#    return "https://admin.massenergize.org/" 
+#  elif IS_CANARY: 
+#    return "" # Replace wwhen you get the cannary frontend admin URL
+#  elif IS_LOCAL: 
+#    return "http://localhost:3001/"
+#  else: 
+#    return "https://admin.massenergize.dev/"
+
+
+def get_human_readable_date(date):
+  formatted_datetime = date.strftime("%d %B %Y, %I:%M %p")
+  day_suffix = "th" if 11 <= date.day <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(date.day % 10, "th")
+  formatted_datetime = formatted_datetime.replace("{:02d}".format(date.day), "{:d}{}".format(date.day, day_suffix))
+  return formatted_datetime
+

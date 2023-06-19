@@ -78,7 +78,7 @@ ALLOWED_HOSTS = [
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
     'massenergize.test',
-    'massenergize.test:3000'
+    'massenergize.test:3000',
 ]
 
 if RUN_SERVER_LOCALLY:
@@ -86,6 +86,7 @@ if RUN_SERVER_LOCALLY:
     
 
 INSTALLED_APPS = [
+    'channels',
     'django_hosts',
     'authentication',
     'carbon_calculator',
@@ -101,6 +102,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'socket_notifications'
 ]
 
 MIDDLEWARE = [
@@ -144,7 +146,8 @@ SECURE_HSTS_SECONDS = 3600
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 USE_X_FORWARDED_HOST = True
-WSGI_APPLICATION = '_main_.wsgi.application'
+# WSGI_APPLICATION = '_main_.wsgi.application'
+ASGI_APPLICATION = '_main_.asgi.application'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 CSRF_COOKIE_SECURE = not DEBUG
@@ -265,14 +268,15 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True 
 EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 587 
 EMAIL_HOST_USER = os.environ.get('EMAIL')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
-EMAIL_POSTMARK_SERVER_TOKEN = os.environ.get('EMAIL_POSTMARK_SERVER_TOKEN')
+POSTMARK_EMAIL_SERVER_TOKEN = os.environ.get('POSTMARK_EMAIL_SERVER_TOKEN')
+POSTMARK_DOWNLOAD_SERVER_TOKEN = os.environ.get('POSTMARK_DOWNLOAD_SERVER_TOKEN')
 SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_COMMUNITY_ADMINS_WEBHOOK_URL')
 SLACK_SUPER_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_SUPER_ADMINS_WEBHOOK_URL')
 
@@ -293,3 +297,13 @@ else:
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
+
+
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [('localhost', 6379)],
+#         },
+#     },
+# }

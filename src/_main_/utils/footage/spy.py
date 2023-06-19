@@ -4,6 +4,7 @@ from _main_.utils.context import Context
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.utils import Console
+from api.store.utils import get_user_from_context
 from database.models import CommunityAdminGroup, Footage, UserProfile
 from django.db.models import Q
 
@@ -29,6 +30,32 @@ class Spy:
             Console.log("Could not create footage...", str(e), kwargs)
         # Dont do anything else, errors while saving footage should not hinder more
         # more important processes
+
+    @staticmethod
+    def create_mou_footage(**kwargs):
+        try:
+            ctx = kwargs.get("context")
+            actor = kwargs.get("actor")
+            actor = (
+                actor
+                if actor
+                else UserProfile.objects.filter(email=ctx.user_email).first()
+            )
+            act_type = kwargs.get("type", None)
+            notes = kwargs.get("notes", "")
+            communities = kwargs.get("communities",[])
+            
+            footage = Spy.create_footage(
+                actor=actor,
+                notes=notes,
+                activity_type=act_type,
+                by_super_admin=ctx.user_is_super_admin,
+                item_type=FootageConstants.ITEM_TYPES["MOU"]["key"],
+            )
+            footage.communities.set(communities)
+            return footage
+        except Exception as e:
+            Console.log("Could not create action footage...", str(e))
 
     @staticmethod
     def create_action_footage(**kwargs):
@@ -365,9 +392,11 @@ class Spy:
         try:
             
             context: Context = kwargs.get("context", None)
-            email = kwargs.get("email", None)
-            user = UserProfile.objects.get(email=email or context.user_email)
+            # email = kwargs.get("email", None)
+            user = get_user_from_context(context)
             # actors = []
+            if not user:
+                return []
             communities = []
             for g in user.communityadmingroup_set.all(): 
                 # members = [m.id for m in g.members.all()]

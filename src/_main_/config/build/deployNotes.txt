@@ -1,1 +1,9 @@
-5/7/2023: Production bug-fix update - home page images
+6/19/2023: Production release, including several new features:
+  * MOU Policy signing
+  * User submitted content (actions, events, vendors)
+  * User communication preferences
+  * User event events_nudge
+  * Community Metrics snapshots
+  * Admin portal improvements
+  * Channel based communication (with admin portal)
+

@@ -1,22 +1,33 @@
+from _main_.utils.footage.FootageConstants import FootageConstants
+from _main_.utils.footage.spy import Spy
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_users_filter_params
-from database.models import UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
+from api.store.common import create_pdf_from_rich_text, sign_mou
+from database.models import CommunityAdminGroup, Footage, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from _main_.settings import DEBUG, IS_PROD, IS_CANARY
-from django.db.models import F
 from sentry_sdk import capture_message
-from .utils import get_community, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
+from .utils import get_community, get_user_from_context, get_user_or_die, get_community_or_die, get_admin_communities, remove_dups, \
   find_reu_community, split_location_string, check_location
 import json
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY, DEBUG
 from _main_.utils.constants import ME_LOGO_PNG
-from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, STANDARD_USER, INVITED_USER, GUEST_USER
+from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECEIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE, STANDARD_USER, INVITED_USER, GUEST_USER
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
+
+
+def remove_locked_fields(args):
+  field = ["is_super_admin","email","is_community_admin" ]
+  for f in field:
+    args.pop(f, None)
+  return args
+
 
 def _get_or_create_reu_location(args, user=None):
   unit_type = args.pop('unit_type', None)
@@ -46,7 +57,6 @@ def _get_or_create_reu_location(args, user=None):
       state = loc_parts[2]
       zipcode = loc_parts[3]
       country = 'US'
-  
   # check location is valid
   location_type, valid = check_location(street, unit_number, city, state, zipcode, county, country)
   if not valid:
@@ -64,9 +74,9 @@ def _get_or_create_reu_location(args, user=None):
   )
   
   if created:
-    print("Location with zipcode " + zipcode + " created for user " + user.preferred_name)
+    print("Location with zipcode " , zipcode , " created for user " , user.preferred_name)
   else:
-    print("Location with zipcode " + zipcode + " found for user " + user.preferred_name)
+    print("Location with zipcode " , zipcode , " found for user " , user.preferred_name)
   return reuloc
 
 def _update_action_data_totals(action, household, delta): 
@@ -129,11 +139,40 @@ def _update_action_data_totals(action, household, delta):
 
       d.save()
 
+def can_be_deleted(user, context):
+  if user.is_super_admin:
+    return False
+  if context.user_is_community_admin and  user.is_community_admin:
+    return False
+  
+  communityMembers = CommunityMember.objects.filter(user=user, is_deleted=False)
+  if len(communityMembers) > 1:
+    return False
+  
+  return True
+  
+
+
 
 class UserStore:
   def __init__(self):
     self.name = "UserProfile Store/DB"
   
+  def fetch_user_visits(self,context:Context, args):
+    id = args.get("id")
+    limit  = 30
+    try:
+      # # If we want to use visitor logs, we use this
+      # user = UserProfile.objects.filter(id=id).first()
+      # return user.visit_log, None
+      #------------------------------------------------
+      # If we want to use footages, we use t his
+      # Retrieve the most recent 30
+      visits = Footage.objects.filter(actor__id = id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).values_list("created_at", flat=True)[:limit]
+      return visits, None
+    except Exception as e:
+        return None, CustomMassenergizeError(e)
+
   def validate_username(self, username):
     # returns [is_valid, suggestion], error
     try:    
@@ -178,18 +217,91 @@ class UserStore:
     if not context.user_is_logged_in:
       return False
     
-    if context.user_is_admin():
-      # TODO: update this to only super admins.  Do specific checks for 
-      # community admins to make sure user is in their community first
-      return True
+    # if context.user_is_admin():
+    #   # TODO: update this to only super admins.  Do specific checks for 
+    #   # community admins to make sure user is in their community first
+    #   return True
     
-    if user_id and (context.user_id == user_id):
-      return True
+    # if user_id and (context.user_id == user_id):
+    #   return True
     
-    if email and (context.user_email == email):
-      return True
+    # if email and (context.user_email == email):
+    #   return True
     
-    return False
+    return True
+  
+
+
+  def decline_mou(self,user, args): 
+    date = args.get("date")
+    name = user.full_name
+    send_massenergize_email(f"{name} Declined MOU ({date})", 
+                            f"{name}, declined the MOU. They have chosen to no longer be an admin.",
+                            ME_SUPPORT_TEAM_EMAIL)
+
+    user.is_community_admin= False 
+    user.is_super_admin = False
+
+    # Get all CommunityAdminGroup items that have the user_profile as a member
+    community_admin_groups = CommunityAdminGroup.objects.filter(members=user)
+    # Iterate through the CommunityAdminGroup items and remove the user_profile from the members
+    for group in community_admin_groups:
+        group.members.remove(user)
+        group.save()
+    user.save()
+    return user
+
+  def accept_mou(self,args, context: Context):
+    try:
+      user =  get_user_from_context(context)
+      if not user:
+        return None, CustomMassenergizeError("Please provide a valid user")
+
+      accepted = args.get("accept", False)
+      key = args.get("policy_key",None)
+      current_timestamp = datetime.now()
+      current_timestamp_str = current_timestamp.strftime('%Y-%m-%d')
+      current_timestamp_str = current_timestamp_str.split(".")[0]
+      username = user.full_name
+      filename = f"Massenergize MOU - {current_timestamp_str}.pdf"
+
+      if accepted: 
+        # find the policy object and add it here
+        policy = Policy.objects.filter(more_info__key = key).first()
+        rich_text = sign_mou(policy.description, user, current_timestamp_str)
+        pdf,_ = create_pdf_from_rich_text(rich_text,filename)
+        # Notify the user who just signed
+        send_massenergize_email_with_attachments(MOU_SIGNED_ADMIN_RECEIPIENT,{"username":username},user.email,pdf,filename)
+        
+        user_groups = CommunityAdminGroup.objects.filter(members=user)
+        # Concatenate all community names into one string, separated by a comma
+        community_names = ", ".join([group.community.name for group in user_groups])
+        
+        # Notify massenergize support team 
+        send_massenergize_email_with_attachments(MOU_SIGNED_SUPPORT_TEAM_TEMPLATE,
+                                                 {"admin_name":username, 
+                                                  "salutation":"Dear Support Team,", 
+                                                  "community_name":community_names or "..."},
+                                                  ME_SUPPORT_TEAM_EMAIL,pdf,filename)
+        record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = datetime.utcnow())
+        record.save()
+        user.refresh_from_db()
+        # ----------------------------------------------------------------
+        communities = [ c.community for c in user.communityadmingroup_set.all()]
+        Spy.create_mou_footage( context = context, actor = user, communities = communities, type = FootageConstants.sign())
+        # ----------------------------------------------------------------
+        return user, None
+      else: 
+        args["date"] = current_timestamp_str
+        # ----------------------------------------------------------------
+        communities = [ c.community for c in user.communityadmingroup_set.all()]
+        Spy.create_mou_footage( context = context, actor = user, communities = communities, type = FootageConstants.deny())
+        # ----------------------------------------------------------------
+        return self.decline_mou( user, args), None
+      
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
 
   def _add_action_rel(self, context: Context, args, status):
@@ -197,7 +309,7 @@ class UserStore:
     Creates a UserActionRel to record the action as completed or to do
     """
     try:
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       if not user:
         return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
 
@@ -276,7 +388,7 @@ class UserStore:
       # if not self._has_access(context, user_id, email):
       #   return None, CustomMassenergizeError("permission_denied")
       
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       return user, None
     
     except Exception as e:
@@ -288,6 +400,12 @@ class UserStore:
       household_id = args.get('household_id', None)
       if not household_id:
         return None, CustomMassenergizeError("Please provide household_id")
+      user= get_user_from_context(context)
+      if not user:
+        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
+      
+      if not context.user_is_admin() and not user.real_estate_units.filter(id=household_id).exists():
+        return None, CustomMassenergizeError("you are not a member of this household")
       
       return RealEstateUnit.objects.get(pk=household_id).delete(), None
     
@@ -297,7 +415,9 @@ class UserStore:
   
   def add_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
+      if not user:
+        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
       name = args.pop('name', None)
       unit_type = args.pop('unit_type', None)
       
@@ -314,12 +434,15 @@ class UserStore:
       return reu, None
     
     except Exception as e:
+      print("=== error from add_household ===", e)
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
   def edit_household(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
+      if not user:
+        return None, CustomMassenergizeError("sign_in_required / provide user_id or user_email")
       name = args.pop('name', None)
       unit_type = args.pop('unit_type', None)
       household_id = args.get('household_id', None)
@@ -327,17 +450,16 @@ class UserStore:
         return None, CustomMassenergizeError("Please provide household_id")
       
       reuloc = _get_or_create_reu_location(args, user)
+     
       
       reu = RealEstateUnit.objects.get(pk=household_id)
       reu.name = name
       reu.unit_type = args.get("unit_type", "RESIDENTIAL")
       reu.address = reuloc
-      
       verbose = DEBUG
       community = find_reu_community(reu, verbose)
       if community:
-        if verbose: print(
-          "Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
+        if verbose: print("Updating the REU with zipcode " + reu.address.zipcode + " to the community " + community.name)
         reu.community = community
       
       reu.save()
@@ -355,12 +477,15 @@ class UserStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def list_users(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_users(self, context,community_id) -> Tuple[list, MassEnergizeAPIError]:
     community, err = get_community(community_id)
     
     if not community:
       print(err)
       return [], None
+    
+    if not is_admin_of_community(context, community_id):
+        return None, NotAuthorizedError()
     return community.userprofile_set.all(), None
   
   def list_publicview(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -396,7 +521,7 @@ class UserStore:
   
   def list_events_for_user(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       if not user:
         return [], None
       attendees = EventAttendee.objects.filter(user=user)
@@ -553,8 +678,9 @@ class UserStore:
   
   def update_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      user_id = args.get('id', None)
-      email = args.get('email', None)
+
+      user_id = context.user_id
+      email = context.user_email
       profile_picture = args.pop("profile_picture", None)
       preferences = args.pop("preferences", None)
       
@@ -565,6 +691,8 @@ class UserStore:
         users = UserProfile.objects.filter(id=user_id)
         if not users:
           return None, InvalidResourceError()
+        
+        remove_locked_fields(args)
         
         users.update(**args)
         user = users.first()
@@ -601,6 +729,10 @@ class UserStore:
       
       users = UserProfile.objects.filter(id=user_id)
       user = users.first()
+
+      if not can_be_deleted(user,context):
+        return None, CustomMassenergizeError("User can't be deleted")
+      
       # since we do not delete the record from the database but mark it as deleted, and the email needs to be unique,
       # modify the email address in case the person wants to create a profile again with that email. 
       # This allows us to tell exactly what happened in case we need to find out what happened to a users profile.
@@ -704,6 +836,9 @@ class UserStore:
         print(err)
         return [], None
       
+      if not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
+      
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
       users = UserProfile.objects.filter(id__in={user.id for user in users}).filter(*filter_params)
@@ -715,6 +850,7 @@ class UserStore:
   def list_users_for_super_admin(self, context: Context, args):
     try:
       user_emails = args.get("user_emails")
+      community_ids = args.get("community_ids",None)
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
 
@@ -724,6 +860,10 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
+        return users.distinct(), None
+      
+      if community_ids:
+        users = UserProfile.objects.filter(communities__in=community_ids,is_deleted=False, *filter_params)
         return users.distinct(), None
 
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)
@@ -744,7 +884,7 @@ class UserStore:
       if not context.user_is_logged_in:
         return [], CustomMassenergizeError("sign_in_required")
       
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
       household_id = args.get("household_id", None)
       
       if household_id:

@@ -1,6 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_actions_filter_params
 from database.models import Action, UserProfile, Community, Media
 from carbon_calculator.models import Action as CCAction
@@ -47,7 +48,10 @@ class ActionStore:
         return [], None
 
       if not context.is_sandbox:
-        actions = actions.filter(is_published=True)
+        if context.user_is_logged_in:
+          actions = actions.filter(Q(user__id=context.user_id) | Q(is_published=True))
+        else:
+          actions = actions.filter(is_published=True)
 
       # by default, exclude deleted actions
       #if not context.include_deleted:
@@ -59,7 +63,7 @@ class ActionStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       community_id = args.pop("community_id", None)
       tags = args.pop('tags', [])
@@ -83,7 +87,11 @@ class ActionStore:
         new_action.community = community
       
       if images: #now, images will always come as an array of ids 
-        media = Media.objects.filter(pk = images[0]).first()
+        if user_submitted:
+          name = f'ImageFor {new_action.title} Action'
+          media = Media.objects.create(name=name, file=images)
+        else:
+          media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media
 
       user = None
@@ -182,17 +190,31 @@ class ActionStore:
     
       return None, CustomMassenergizeError(e)
 
-
-  def update_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       action_id = args.pop('action_id', None)
-      action = Action.objects.filter(id=action_id)
-      if not action:
+      actions = Action.objects.filter(id=action_id)
+      if not actions:
         return None, InvalidResourceError()
+      action = actions.first()
 
-      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
-        return None, NotAuthorizedError()
+      # check if requesting user is the action creator, super admin or community admin else throw error
+      creator = str(action.user_id)
+      community = action.community
+      if context.user_id == creator:
+        # action creators can't currently modify once published
+        if action.is_published and not context.user_is_admin():
+          # ideally this would submit changes to the community admin to publish
+          return None, CustomMassenergizeError("Unable to modify action once published.  Please contact Community Admin to do this")
+      else:
+        # otherwise you must be an administrator
+        if not context.user_is_admin():
+          return None, NotAuthorizedError()
+
+        # check if user is community admin and is also an admin of the community that created the action
+        if community:
+          if not is_admin_of_community(context, community.id):
+            return None, NotAuthorizedError()
 
       community_id = args.pop('community_id', None)
       tags = args.pop('tags', [])
@@ -204,15 +226,26 @@ class ActionStore:
       calculator_action = args.pop('calculator_action', None)
       is_published = args.pop('is_published', None)
 
-      action.update(**args)
-      action = action.first()
+      if not context.user_is_admin():
+        args.pop("is_approved", None)
+        args.pop("is_published", None)
+
+      actions.update(**args)
+      action = actions.first()  # refresh after update
 
       if image: #now, images will always come as an array of ids, or "reset" string 
-        if image[0] == RESET: #if image is reset, delete the existing image
-          action.image = None
+        if user_submitted:
+          if "ImgToDel" in image:
+            action.image = None
+          else:
+            image= Media.objects.create(file=image, name=f'ImageFor {action.title} Action')
+            action.image = image
         else:
-          media = Media.objects.filter(id = image[0]).first()
-          action.image = media
+          if image[0] == RESET: #if image is reset, delete the existing image
+            action.image = None
+          else:
+            media = Media.objects.filter(id = image[0]).first()
+            action.image = media
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
@@ -287,8 +320,16 @@ class ActionStore:
   def delete_action(self, context: Context, args) -> Tuple[Action, MassEnergizeAPIError]:
     try:
       action_id = args.get("action_id", None)
+      if not action_id:
+        return None, InvalidResourceError()
       #find the action
       action_to_delete = Action.objects.get(id=action_id)
+
+      # TODO: could allow content creator to delete until it is published
+      # otherwise you need to be a super admin or admin of that community
+      if not is_admin_of_community(context, action_to_delete.community.id):
+        return None, NotAuthorizedError()
+        
       action_to_delete.is_deleted = True 
       action_to_delete.save()
       # ----------------------------------------------------------------
@@ -309,14 +350,15 @@ class ActionStore:
 
       elif not context.user_is_community_admin:
         return None, CustomMassenergizeError("Sign in as a valid community admin")
-
+      
+      
       if ids: 
         actions = Action.objects.filter(id__in = ids).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return actions.distinct(), None
-
-      if community_id == 0:
-        # return actions from all communities
-        return self.list_actions_for_super_admin(context)
+      
+      # if community_id == 0:
+      #   # return actions from all communities
+      #   return self.list_actions_for_super_admin(context)
         
       elif not community_id:
         user = UserProfile.objects.get(pk=context.user_id)
@@ -327,6 +369,9 @@ class ActionStore:
         comm_ids = [ag.community.id for ag in admin_groups]
         actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return actions.distinct(), None
+      
+      if not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
       return actions.distinct(), None

@@ -1,13 +1,13 @@
-import json
-from _main_.utils.pagination import paginate
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_messages_filter_params
 from database.models import Message, Media, Team
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
     CustomMassenergizeError,
+    NotAuthorizedError,
 )
 from _main_.utils.context import Context
 from .utils import get_admin_communities, unique_media_filename
@@ -28,6 +28,9 @@ class MessageStore:
             if not message_id:
                 return None, InvalidResourceError()
             message = Message.objects.filter(pk=message_id).first()
+
+            if not is_admin_of_community(context, message.community.id):
+                return None, NotAuthorizedError()
 
             if not message:
                 return None, InvalidResourceError()
@@ -65,6 +68,11 @@ class MessageStore:
             body = args.pop("body", None)
             file = args.pop("uploaded_file", None)
             parent = args.pop("parent", None)
+            sender_email = args.get("from") or context.user_email
+
+            sender, error = get_user(user_id=None,email=sender_email)
+            if error:
+                return None, error
 
             community, err = get_community(community_id, subdomain)
             if err:
@@ -78,7 +86,8 @@ class MessageStore:
                 parent=parent,
             )
             new_message.save()
-            user, err = get_user(context.user_id, email)
+            user, err = get_user(context.user_id, sender_email)
+
             if err:
                 return None, err
             if user:
@@ -95,9 +104,10 @@ class MessageStore:
                 media.save()
                 new_message.uploaded_file = media
 
-                new_message.save()
+            new_message.save()
             # ----------------------------------------------------------------
             Spy.create_messaging_footage(
+                actor=sender,
                 messages=[new_message],
                 context=context,
                 type=FootageConstants.update(),
@@ -212,6 +222,8 @@ class MessageStore:
     def delete_message(self, message_id, context) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             messages = Message.objects.filter(id=message_id)
+            if not is_admin_of_community(context, messages.first().community.id):
+                return None, NotAuthorizedError()
             messages.update(is_deleted=True)
             message = messages.first()
             # TODO: also remove it from all places that it was ever set in many to many or foreign key
