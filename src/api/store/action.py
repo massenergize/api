@@ -327,8 +327,9 @@ class ActionStore:
 
       # TODO: could allow content creator to delete until it is published
       # otherwise you need to be a super admin or admin of that community
-      if not is_admin_of_community(context, action_to_delete.community.id):
-        return None, NotAuthorizedError()
+      if action_to_delete.community:
+        if not is_admin_of_community(context, action_to_delete.community.id):
+          return None, NotAuthorizedError()
         
       action_to_delete.is_deleted = True 
       action_to_delete.save()
