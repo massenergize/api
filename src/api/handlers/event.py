@@ -34,6 +34,7 @@ class EventHandler(RouteHandler):
     self.add("/events.todo", self.save_for_later)
     self.add("/events.exceptions.list", self.list_exceptions)
     self.add("/events.date.update", self.update_recurring_date)
+    self.add("/events.share", self.share_event)
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list)
@@ -389,3 +390,21 @@ class EventHandler(RouteHandler):
       return err
 
     return MassenergizeResponse(data=events)
+
+
+  @admins_only
+  def share_event(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    self.validator.expect("event_id", int, is_required=True)
+    self.validator.expect("shared_to","str_list", is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.share_event(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=event_info)

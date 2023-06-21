@@ -896,3 +896,23 @@ class EventStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+
+
+  def share_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      event_id = args.pop("event_id", None)
+      event = Event.objects.filter(id=event_id).first()
+      shared_to = args.pop("shared_to", None)
+      if shared_to:
+        first = shared_to[0]
+        if first == "reset": 
+          event.shared_to.clear()
+        else: event.shared_to.set(shared_to)
+      event.save()
+
+
+      return event, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
