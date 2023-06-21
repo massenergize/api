@@ -395,13 +395,19 @@ class EventsTestCase(TestCase):
 
 
     def test_events_sharing(self):
-        # test share event to community
+        # test share event to community as cadmin
         signinAs(self.client, self.CADMIN)
-        response =self.client.post(
-            '/api/events.share',
-            data=f"event_id={self.EVENT1.id}&shared_to={self.COMMUNITY.id}",
-            content_type="application/x-www-form-urlencoded",
-        ).json()
+        response =self.client.post('/api/events.share',data=f"event_id={self.EVENT1.id}&shared_to={self.COMMUNITY.id}",content_type="application/x-www-form-urlencoded" ).json()
         self.assertTrue(response["success"])
+
+        # test share event to community as normal user
+        signinAs(self.client, self.USER)
+        response =self.client.post('/api/events.share',data=f"event_id={self.EVENT1.id}&shared_to={self.COMMUNITY.id}",content_type="application/x-www-form-urlencoded" ).json()
+        self.assertFalse(response["success"])
+
+        # test share event to community with improper args 
+        signinAs(self.client, self.USER)
+        response =self.client.post('/api/events.share',data=f"event_id={self.EVENT1.id}",content_type="application/x-www-form-urlencoded" ).json()
+        self.assertFalse(response["success"])
 
         
