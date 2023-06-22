@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.10.1",
-  "BUILD_VERSION_NOTES": "6/19/2023: Production release, including several new features:\n  * MOU Policy signing\n  * User submitted content (actions, events, vendors)\n  * User communication preferences\n  * User event events_nudge\n  * Community Metrics snapshots\n  * Admin portal improvements\n  * Channel based communication (with admin portal)\n\n"
+  "BUILD_VERSION": "4.10.2",
+  "BUILD_VERSION_NOTES": "6/22/2023: Production bug-fix release:\n  * Eliminate sadmin footages for cadmins\n  * event sharing through events.share route\n"
 }
