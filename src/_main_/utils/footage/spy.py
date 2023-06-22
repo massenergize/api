@@ -405,6 +405,6 @@ class Spy:
             return Footage.objects.filter(
                 portal=FootageConstants.on_admin_portal(),
                 communities__id__in = communities
-            ).distinct().order_by("-id")[:LIMIT]
+            ).exclude(actor__is_super_admin=True).distinct().order_by("-id")[:LIMIT]
         except Exception as e:
             Console.log("Could not fetch footages for community admin", e)
