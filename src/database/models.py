@@ -1876,10 +1876,15 @@ class Action(models.Model):
                 "status": u.status,
                 "email": u.user.email,
                 "full_name": u.user.full_name,
-                "real_estate_unit": get_json_if_not_none(u.real_estate_unit),
+                "real_estate_unit": {
+                    "zipcode":u.real_estate_unit.address.zipcode if u.real_estate_unit and u.real_estate_unit.address else None,
+                    "name": u.real_estate_unit.name if u.real_estate_unit else None,
+                },
                 "date_completed": u.date_completed,
-                "carbon_impact": u.carbon_impact,
+                "carbon_impact": u.action.calculator_action.average_points if u.action.calculator_action else None,
                 "recorded_at": u.updated_at,
+                "vendor":u.vendor.name if u.vendor else None,
+            
             }
             for u in UserActionRel.objects.filter(action=self, is_deleted=False)
         ] or []
