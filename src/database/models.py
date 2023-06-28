@@ -1883,7 +1883,6 @@ class Action(models.Model):
                 "date_completed": u.date_completed,
                 "carbon_impact": u.action.calculator_action.average_points if u.action.calculator_action else None,
                 "recorded_at": u.updated_at,
-                "vendor":u.vendor.name if u.vendor else None,
             
             }
             for u in UserActionRel.objects.filter(action=self, is_deleted=False)
