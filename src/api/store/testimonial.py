@@ -74,6 +74,8 @@ class TestimonialStore:
       action = args.pop('action', None)
       vendor = args.pop('vendor', None)
       community = args.pop('community', None)
+      # create(**args) will fail if user_email not removed
+      # TODO - check context.user_email exists and use that unless from admin submission on behalf of user
       user_email = args.pop('user_email', None) or context.user_email
 
       args["title"] = args.get("title", "Thank You")[:100]
@@ -164,7 +166,7 @@ class TestimonialStore:
           if not is_admin_of_community(context, community.id):
             return None, NotAuthorizedError()
       
-      user_email = args.pop('user_email', None)      
+      user_email = args.pop('user_email', None)      # important: remove user_email from args if present
       images = args.pop('image', None)
       tags = args.pop('tags', [])
       action = args.pop('action', None)
