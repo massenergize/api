@@ -89,9 +89,9 @@ class UserHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        data, err = self.service.validate_username(args["username"])
+        data, err = self.service.validate_username(args.get("username"))
         if err:
-            return err
+            return MassenergizeResponse(error=err)
         return MassenergizeResponse(data=data)
 
     def create(self, request):
