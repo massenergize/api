@@ -148,7 +148,7 @@ class MediaLibraryStore:
         return True, None
 
     def addToGallery(self, args,context):
-        community_ids = args.get("community_ids")
+        community_ids = args.get("community_ids", [])
         user_id = args.get("user_id")
         title = args.get("title") or "Gallery Upload"
         file = args.get("file")
