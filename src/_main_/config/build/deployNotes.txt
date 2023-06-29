@@ -1,3 +1,2 @@
-6/22/2023: Production bug-fix release:
-  * Eliminate sadmin footages for cadmins
-  * event sharing through events.share route
+6/28/2023: Production bug-fix release:
+  * fix testimonial creation
