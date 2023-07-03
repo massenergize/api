@@ -49,7 +49,7 @@ class ActionStore:
 
       if not context.is_sandbox:
         if context.user_is_logged_in:
-          actions = actions.filter(Q(user__id=context.user_id) | Q(is_published=True))
+          actions = actions.filter(Q(user__id=context.user_id, is_user_submitted=True) | Q(is_published=True))
         else:
           actions = actions.filter(is_published=True)
 

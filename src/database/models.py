@@ -1697,6 +1697,7 @@ class Vendor(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
+    is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -1822,6 +1823,7 @@ class Action(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
+    is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return f"{str(self.id)} - {self.title}"
@@ -1846,6 +1848,7 @@ class Action(models.Model):
                 "steps_to_take",
                 "deep_dive",
                 "about",
+                "is_user_submitted",
             ],
         )
         data["image"] = get_json_if_not_none(self.image)
@@ -1979,6 +1982,7 @@ class Event(models.Model):
     )
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
+    is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -2257,6 +2261,7 @@ class Testimonial(models.Model):
     anonymous = models.BooleanField(default=False, blank=True)
     preferred_name = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     other_vendor = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return self.title

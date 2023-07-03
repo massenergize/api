@@ -109,6 +109,7 @@ class TestimonialHandler(RouteHandler):
     if is_edit:
       testimonial_info, err = self.service.update_testimonial(context, args)
     else:
+      args["is_user_submitted"]=True
       testimonial_info, err = self.service.create_testimonial(context, args, user_submitted)
     if err:
       return err

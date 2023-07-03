@@ -52,7 +52,7 @@ class VendorStore:
 
       if not context.is_sandbox:
         if context.user_is_logged_in:
-          vendors = vendors.filter(Q(user__id=context.user_id) | Q(is_published=True))
+          vendors = vendors.filter(Q(user__id=context.user_id, is_user_submitted=True) | Q(is_published=True))
         else:
           vendors = vendors.filter(is_published=True)
 
