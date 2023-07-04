@@ -51,7 +51,7 @@ class VendorStore:
       vendors = community.community_vendors.filter(is_deleted=False)
 
       if not context.is_sandbox:
-        if context.user_is_logged_in:
+        if context.user_is_logged_in and not context.user_is_admin():
           vendors = vendors.filter(Q(user__id=context.user_id) | Q(is_published=True))
         else:
           vendors = vendors.filter(is_published=True)
