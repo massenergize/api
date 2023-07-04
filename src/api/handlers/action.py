@@ -105,7 +105,6 @@ class ActionHandler(RouteHandler):
       action_info, err = self.service.update_action(context, args, user_submitted)
     else:
       args["is_approved"] = False
-      args["is_user_submitted"]=True
       action_info, err = self.service.create_action(context, args, user_submitted)
     if err:
       return err

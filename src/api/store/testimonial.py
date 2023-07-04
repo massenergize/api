@@ -58,7 +58,7 @@ class TestimonialStore:
 
       if not context.is_sandbox and not is_community_admin:
         if context.user_is_logged_in:
-          testimonials = testimonials.filter(Q(user__id=context.user_id, is_user_submitted=True) | Q(is_published=True))
+          testimonials = testimonials.filter(Q(user__id=context.user_id) | Q(is_published=True))
         else:
           testimonials = testimonials.filter(is_published=True)
 

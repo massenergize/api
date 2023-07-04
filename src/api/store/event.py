@@ -223,7 +223,7 @@ class EventStore:
     
     if not context.is_sandbox and events:
       if context.user_is_logged_in:
-          events = events.filter(Q(user__id=context.user_id, is_user_submitted=True) | Q(is_published=True))
+          events = events.filter(Q(user__id=context.user_id) | Q(is_published=True))
       else:
          events = events.filter(is_published=True)
     all_events = [*events, *shared]

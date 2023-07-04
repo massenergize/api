@@ -120,7 +120,6 @@ class VendorHandler(RouteHandler):
     if is_edit:
       vendor_info, err = self.service.update_vendor(context, args, user_submitted)
     else:
-      args["is_user_submitted"]=True
       vendor_info, err = self.service.create_vendor(context, args, user_submitted)
     if err:
       return err

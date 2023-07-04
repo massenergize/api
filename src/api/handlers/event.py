@@ -234,7 +234,6 @@ class EventHandler(RouteHandler):
       event_info, err = self.service.update_event(context, args, user_submitted)
     else:
       args["is_approved"] = False 
-      args["is_user_submitted"]=True
       event_info, err = self.service.create_event(context, args, user_submitted)
     if err:
       return err
