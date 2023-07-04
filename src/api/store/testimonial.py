@@ -57,7 +57,7 @@ class TestimonialStore:
         is_community_admin = user in cadmins
 
       if not context.is_sandbox and not is_community_admin:
-        if context.user_is_logged_in:
+        if context.user_is_logged_in and not context.user_is_admin():
           testimonials = testimonials.filter(Q(user__id=context.user_id) | Q(is_published=True))
         else:
           testimonials = testimonials.filter(is_published=True)
