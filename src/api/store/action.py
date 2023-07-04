@@ -48,7 +48,7 @@ class ActionStore:
         return [], None
 
       if not context.is_sandbox:
-        if context.user_is_logged_in:
+        if context.user_is_logged_in and not context.user_is_admin():
           actions = actions.filter(Q(user__id=context.user_id) | Q(is_published=True))
         else:
           actions = actions.filter(is_published=True)

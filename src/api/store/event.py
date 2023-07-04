@@ -222,7 +222,7 @@ class EventStore:
       events = []
     
     if not context.is_sandbox and events:
-      if context.user_is_logged_in:
+      if context.user_is_logged_in and not context.user_is_admin():
           events = events.filter(Q(user__id=context.user_id) | Q(is_published=True))
       else:
          events = events.filter(is_published=True)
