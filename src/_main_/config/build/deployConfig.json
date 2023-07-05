@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.10.4",
+  "BUILD_VERSION": "4.10.6",
   "BUILD_VERSION_NOTES": "6/28/2023: Production bug-fix release:\n  * fix testimonial creation\n"
 }
