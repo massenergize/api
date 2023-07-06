@@ -61,8 +61,8 @@ class DeviceHandler(RouteHandler):
     if err:
       return err
 
-    if RUN_SERVER_LOCALLY or context.is_admin_site:
-      return MassenergizeResponse(data=None)
+    # if RUN_SERVER_LOCALLY or context.is_admin_site:
+    #   return MassenergizeResponse(data=None)
 
     ip_address = self.ipLocator.getIP(request)
     if not ip_address or ip_address in ['127.0.0.1']:

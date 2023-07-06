@@ -57,6 +57,7 @@ class DeviceStore:
       return None, CustomMassenergizeError(e)
   
   def log_device(self, context: Context, args, location) -> Tuple[dict, MassEnergizeAPIError]:
+    print("=== ARGS ===", args)
     date_time = datetime.now()
     device = None
     try:
