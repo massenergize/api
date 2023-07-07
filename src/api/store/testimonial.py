@@ -178,12 +178,19 @@ class TestimonialStore:
       testimonials.update(**args)
       testimonial = testimonials.first() # refresh after update
 
-      if images: 
-        if images[0] == RESET: 
-          testimonial.image = None
-        else:
-          image = Media.objects.filter(id = images[0]).first(); 
-          testimonial.image = image
+      if images:
+            if type(images) == list:
+                if images[0] == RESET: 
+                    testimonial.image = None
+                else:
+                    image = Media.objects.filter(id = images[0]).first(); 
+                    testimonial.image = image
+            else:
+                if images == RESET:
+                    testimonial.image = None
+                else:
+                    image = Media.objects.create(file=images, name=f"ImageFor {testimonial.title} Testimonial")
+                    testimonial.image = image
       
       if action:
         testimonial_action = Action.objects.filter(id=action).first()
