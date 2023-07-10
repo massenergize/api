@@ -56,6 +56,7 @@ class DeviceHandler(RouteHandler):
     self.validator.rename("device_profile_id", "id")
     self.validator.expect("id", str)
     self.validator.expect("community_id", int)
+    self.validator.expect("has_accepted_cookies", bool)
     args, err = self.validator.verify(args)
 
     if err:
