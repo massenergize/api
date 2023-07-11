@@ -272,3 +272,35 @@ class DeviceStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+  def get_device_summary(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      devices = DeviceProfile.objects.all()
+      if not devices:
+        return None, InvalidResourceError()
+      
+      devices_list = []
+      for device in devices:
+        found = False
+        device_type = device.device_type.split(',')[0]
+        for device_entry in devices_list:
+          if device_type == device_entry['device_type'] and \
+              device.operating_system == device_entry['operating_system'] and \
+              device.browser == device_entry['browser'] :
+              device_entry['number'] += 1
+              found = True
+              continue
+        
+        if not found:
+          devices_list.append({'device_type': device_type, 'operating_system':device.operating_system, 'browser': device.browser, 'number':1})
+
+
+      for entry in devices_list:
+        print(entry['device_type'] + ',' + entry['operating_system'] + ',' + entry['browser'] + ',' + str(entry['number']))
+
+      return {'devices': devices_list}, None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+  

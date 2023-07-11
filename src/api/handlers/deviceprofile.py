@@ -30,6 +30,7 @@ class DeviceHandler(RouteHandler):
     self.add("/device.update", self.update)
     self.add("/device.delete", self.delete)
     self.add("/device.remove", self.delete)
+    self.add("/device.summary", self.summary)
 
   def info(self, request):
     context: Context = request.context
@@ -192,6 +193,15 @@ class DeviceHandler(RouteHandler):
       return err
 
     device_info, err = self.service.delete_device(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=device_info)
+
+  def summary(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    device_info, err = self.service.get_device_summary(context, args)
     if err:
       return err
     return MassenergizeResponse(data=device_info)

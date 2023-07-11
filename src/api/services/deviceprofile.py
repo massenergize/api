@@ -72,3 +72,9 @@ class DeviceService:
     if err:
       return None, err
     return serialize(device), None
+
+  def get_device_summary(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    device, err = self.store.get_device_summary(context, args)
+    if err:
+      return None, err
+    return device, None
