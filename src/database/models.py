@@ -1152,9 +1152,9 @@ class DeviceProfile(models.Model):
     ----------
     user_profiles : JSON
       A JSON object containing all user ids (as foreign keys) for any users
-      asociated with this device.
+      associated with this device.
     IP_address: Char
-      The asociated IP address with this device.
+      The associated IP address with this device.
     device_type: Char
       The type of device we see from the HTTP request.
     operating_system:
@@ -1165,6 +1165,10 @@ class DeviceProfile(models.Model):
       A JSON object containing a history of dates. Activity will only be
       logged here if there is a user attached to the device and they are
       logged in.
+
+    has_accepted_cookies:
+      Boolean indicating whether or not the user has accepted cookies on this device.
+
 
     #TODO:
     """
@@ -1178,6 +1182,7 @@ class DeviceProfile(models.Model):
     operating_system = models.CharField(max_length=SHORT_STR_LEN, null=True)
     browser = models.CharField(max_length=SHORT_STR_LEN, null=True)
     visit_log = models.JSONField(default=list, null=True, blank=True)
+    has_accepted_cookies = models.BooleanField(default=False, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
 
     def get_user_profiles(self):
@@ -1235,6 +1240,7 @@ class DeviceProfile(models.Model):
                 "browser",
                 "visit_log",
                 "is_deleted",
+                "has_accepted_cookies",
             ],
         )
         res["user_profiles"] = [u.simple_json() for u in self.user_profiles.all()]

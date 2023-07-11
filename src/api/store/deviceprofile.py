@@ -144,6 +144,7 @@ class DeviceStore:
         device.update_device_location(new_location)
 
       device.save()
+
       return device, None
 
     except Exception as e:
