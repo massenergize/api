@@ -1,3 +1,4 @@
+from _main_.utils.common import serialize
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.utils.api_utils import is_admin_of_community
@@ -16,7 +17,7 @@ import json
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY, DEBUG
-from _main_.utils.constants import ME_LOGO_PNG
+from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECEIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE, STANDARD_USER, INVITED_USER, GUEST_USER
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
@@ -594,7 +595,13 @@ class UserStore:
       existing_user = UserProfile.objects.filter(email=email).first()
       if not existing_user:
         if is_guest:
-          send_massenergize_email_with_attachments(GUEST_USER_EMAIL_TEMPLATE_ID,{"community":community.name}, email, None, None)
+          ok = send_massenergize_email_with_attachments(
+            GUEST_USER_EMAIL_TEMPLATE_ID,
+            {"community_name":community.name,
+             "community_logo":serialize(community.logo).get("url") if community.logo else None,
+             "register_link":f'{COMMUNITY_URL_ROOT}/{community.subdomain}/signup'
+             },
+            email, None, None)
         user: UserProfile = UserProfile.objects.create(
           full_name=full_name,
           preferred_name=preferred_name,
