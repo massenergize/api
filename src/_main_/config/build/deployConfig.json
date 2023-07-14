@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.10.6",
-  "BUILD_VERSION_NOTES": "7/4/2023: Production bug-fix release:\n  * prevent Admins from seeing their unpublished content except in sandbox\n"
+  "BUILD_VERSION": "4.10.8",
+  "BUILD_VERSION_NOTES": "7/14/2023: Production bug-fix release:\n  * fixes for cookie acceptance, testimonial images\n"
 }

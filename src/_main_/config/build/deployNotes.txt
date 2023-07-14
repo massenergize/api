@@ -1,2 +1,2 @@
-7/4/2023: Production bug-fix release:
-  * prevent Admins from seeing their unpublished content except in sandbox
+7/14/2023: Production bug-fix release:
+  * fixes for cookie acceptance, testimonial images
