@@ -32,7 +32,7 @@ def is_viable(item):
     return False
 
 
-def generate_event_list_for_community(com):
+def generate_event_list_for_community(com, flag):
     today = timezone.now()
     in_30_days = today + timezone.timedelta(days=30)
     open = Q(publicity=EventConstants.open())
@@ -48,19 +48,20 @@ def generate_event_list_for_community(com):
     
     return {
         "events": prepare_events_email_data(events),
-        "admins": get_comm_admins(com)
+        "admins": get_comm_admins(com,flag)
     }
 
 
-def get_comm_admins(com):
+def get_comm_admins(com, flag):
     """
     only get admins whose communities have been allowed in the feature flag to receive events
     nudge
     """
     admins = []
+    user_list = []
 
-    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list(
-        'members__preferences', "members__email", "members__full_name", "members__notification_dates")
+    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
+
     for i in list(all_community_admins):
         admins.append({
             "pref": i[0] if is_viable(i) else default_pref,
@@ -68,6 +69,13 @@ def get_comm_admins(com):
             "name": i[2],
             "notification_dates": i[3]
         })
+
+    if flag.user_audience == "SPECIFIC":
+       user_list = [str(u.email) for u in flag.users.all()]
+       admins = list(filter(lambda admin: admin.get("email") in user_list,admins ))
+    elif flag.user_audience == "ALL_EXCEPT":
+        user_list = [str(u.email) for u in flag.users.all()]
+        admins = list(filter(lambda admin: admin.get("email") not in user_list,admins ))
 
     return admins
 
@@ -166,22 +174,27 @@ def send_events_nudge():
     try:
         admins_emailed=[]
         flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
-        allowed_communities = list(flag.communities.all())
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
+
+        if flag.audience == "SPECIFIC":
+            communities = communities.filter(id__in=[str(u.id) for u in flag.communities.all()])
+        elif flag.audience == "ALL_EXCEPT":
+            communities = communities.exclude(id__in=[str(u.id) for u in flag.communities.all()])
+
         for com in communities:
-            if flag.audience == "EVERYONE" or com in allowed_communities:
-                d = generate_event_list_for_community(com)
-                admins = d.get("admins", [])
-                event_list = d.get("events", [])
-                if len(admins) > 0 and len(event_list) > 0:
-                    email_list = get_email_list(admins)
-                    for name, email in email_list.items():
-                        admins_emailed.append(email)
-                        stat = send_events_report(name, email, event_list)
-                        if not stat:
-                            print("send_events_report error return")
-                            return False
+            d = generate_event_list_for_community(com,flag)
+            admins = d.get("admins", [])
+            event_list = d.get("events", [])
+
+            if len(admins) > 0 and len(event_list) > 0:
+                email_list = get_email_list(admins)
+                for name, email in email_list.items():
+                    stat = send_events_report(name, email, event_list)
+                    if not stat:
+                        print("send_events_report error return")
+                        return False
+                    admins_emailed.append(email)
         update_last_notification_dates(admins_emailed)
         return True
     except Exception as e:
