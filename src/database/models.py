@@ -1958,7 +1958,7 @@ class Event(models.Model):
     )
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
-    external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     rsvp_enabled = models.BooleanField(default=False, blank=True)
     rsvp_email = models.BooleanField(default=False, blank=True)
     rsvp_message = models.TextField(max_length=LONG_STR_LEN, blank=True)
@@ -1988,7 +1988,7 @@ class Event(models.Model):
     )
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
+    event_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
 
     def __str__(self):
         return self.name

@@ -120,6 +120,7 @@ class EventStore:
         new_event.location = event_to_copy.location
         new_event.more_info = event_to_copy.more_info
         new_event.external_link = event_to_copy.external_link
+        new_event.event_type = event_to_copy.event_type
         if not (event_to_copy.is_recurring == None):
           new_event.is_recurring = event_to_copy.is_recurring
           new_event.recurring_details = event_to_copy.recurring_details
@@ -249,6 +250,7 @@ class EventStore:
       week_of_month = args.pop("week_of_month", None)
       final_date = args.pop('final_date', None)
       publicity_selections = args.pop("publicity_selections", [])
+      has_link  = args.pop('has_link', False)
 
       if end_date_and_time < start_date_and_time :
           return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
@@ -279,6 +281,10 @@ class EventStore:
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
+
+      if not has_link:
+        args['external_link'] = None
+
 
       if community:
         community = Community.objects.get(pk=community)
@@ -346,6 +352,7 @@ class EventStore:
   def update_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop('event_id', None)
+      has_link = args.pop('has_link', None)
       events = Event.objects.filter(id=event_id)
 
       publicity_selections = args.pop("publicity_selections", [])
@@ -446,6 +453,10 @@ class EventStore:
       have_address = args.pop('have_address', False)
       if not have_address:
         args['location'] = None
+
+
+      if not has_link:
+        args['external_link'] = None
        
       #  preventing the user from approving event if they are not an admin
       if not context.user_is_admin():
