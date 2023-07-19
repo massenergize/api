@@ -217,7 +217,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('tags', list)
     self.validator.expect('is_recurring', bool)
     self.validator.expect('have_address', bool)
-    self.validator.expect('location', str)
+    self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
     self.validator.expect('event_id', str)
