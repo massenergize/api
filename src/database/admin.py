@@ -13,6 +13,9 @@ class SubdomainAmdin(admin.ModelAdmin):
     actions = [clean_all_selected_subdomains]
 admin.site.register(module.Subdomain, SubdomainAmdin)
 
+sample = ["title", "name", "email", "full_name", "id" ]
+sample_filter = ["created_at", "is_published", "is_deleted", "is_approved", "is_global"]
+
 def register_all_models():
   """
   This function handles the registration of all the models inside of 
@@ -26,7 +29,14 @@ def register_all_models():
   for model in all_database_models:
     try:
       if not model._meta.abstract:    # can't register abstract models (namely PageSettings)
-        admin.site.register(model)
+        fields = [field.name for field in model._meta.get_fields()]
+        viable_search = [ i for i in fields if i  in sample]
+        viable_filter = [ i for i in fields if i  in sample_filter]
+        class AdminSetup(admin.ModelAdmin):
+          list_display = viable_search
+          search_fields =viable_search
+          list_filter = viable_filter
+        admin.site.register(model, AdminSetup)
     except admin.sites.AlreadyRegistered:
       success = False
   return success
