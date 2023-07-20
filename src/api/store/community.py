@@ -676,6 +676,9 @@ class CommunityStore:
 
                                 if distance_between_zipcodes <= max_distance:
                                     if community.id not in added_communities:
+                                        community.location[
+                                            "distance"
+                                        ] = distance_between_zipcodes
                                         filtered_communities.append(community)
                                         added_communities.append(community.id)
                         else:
