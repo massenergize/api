@@ -64,26 +64,17 @@ from .utils import (
 )
 from database.utils.common import json_loader
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
-from typing import Tuple
 import math
+from typing import Tuple
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
 
 ALL = "all"
 
-cadmin_locked_fields = [
-    "subdomain",
-    "is_geographically_focused",
-    "locations",
-    "Is_approved",
-    "is_demo",
-]
-
+cadmin_locked_fields=["subdomain", "is_geographically_focused", "locations", "Is_approved", "is_demo"]
 
 def remove_cadmin_locked_fields(args):
-    return {
-        key: value for key, value in args.items() if key not in cadmin_locked_fields
-    }
+    return {key: value for key, value in args.items() if key not in cadmin_locked_fields}
 
 
 def _clone_page_settings(pageSettings, title, community):
@@ -107,6 +98,8 @@ def _clone_page_settings(pageSettings, title, community):
     page.save()
 
     return page
+
+
 
 
 class CommunityStore:
@@ -428,34 +421,6 @@ class CommunityStore:
             # should be a five character string
             community.locations.add(loc)
 
-    def _haversince_distance(self, lat1: int, lon1: int, lat2: int, lon2: int):
-        """
-        Calculate the great circle distance between two points.
-        """
-        # convert decimal degrees to radians
-        lat1 = math.radians(lat1)
-        lon1 = math.radians(lon1)
-        lat2 = math.radians(lat2)
-        lon2 = math.radians(lon2)
-
-        earth_radius = 6371  # km
-
-        # haversine formula
-        dlon = lon2 - lon1
-        dlat = lat2 - lat1
-        a = (
-            math.sin(dlat / 2) ** 2
-            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
-        )
-        c = 2 * math.asin(math.sqrt(a))
-
-        # calculate the distance in kilometers
-        distance = earth_radius * c
-        # convert to miles
-        distance = distance * 0.621371
-
-        return distance
-
     def _update_real_estate_units_with_community(self, community):
         """
         Utility function used when Community added or updated
@@ -514,6 +479,34 @@ class CommunityStore:
                         )
                         reu.community = None
                         reu.save()
+
+    def _haversince_distance(self, lat1: int, lon1: int, lat2: int, lon2: int):
+        """
+        Calculate the great circle distance between two points.
+        """
+        # convert decimal degrees to radians
+        lat1 = math.radians(lat1)
+        lon1 = math.radians(lon1)
+        lat2 = math.radians(lat2)
+        lon2 = math.radians(lon2)
+
+        earth_radius = 6371  # km
+
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
+        c = 2 * math.asin(math.sqrt(a))
+
+        # calculate the distance in kilometers
+        distance = earth_radius * c
+        # convert to miles
+        distance = distance * 0.621371
+
+        return distance
 
     def get_community_info(
         self, context: Context, args
@@ -587,9 +580,7 @@ class CommunityStore:
                 community=community, user=user
             ).first()
             if not community_member:
-                community_member = CommunityMember.objects.create(
-                    community=community, user=user, is_admin=False
-                )
+                community_member = CommunityMember.objects.create(community=community, user=user, is_admin=False)
 
             return user, None
         except Exception as e:
@@ -640,6 +631,7 @@ class CommunityStore:
 
             if not communities:
                 return [], None
+
             # check for zipcode:
             if zipcode := args.get("zipcode", None):
 
@@ -895,9 +887,10 @@ class CommunityStore:
             # admins shouldn't be able to update data of other communities
             if not is_admin_of_community(context, community_id):
                 return None, NotAuthorizedError()
-
+            
             if not context.user_is_super_admin:
                 args = remove_cadmin_locked_fields(args)
+              
 
             # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
             # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
@@ -1046,11 +1039,7 @@ class CommunityStore:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
-                communities = list(
-                    Community.objects.filter(id__in={com.id for com in communities})
-                    .filter(*filter_params)
-                    .order_by("name")
-                )
+                communities = list(Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params).order_by('name'))
                 return communities, None
             else:
                 return [], None
@@ -1065,11 +1054,7 @@ class CommunityStore:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
             filter_params = get_communities_filter_params(context.get_params())
             # the order_by didn't work properly until I added list(), due to "lazy evaluation"
-            communities = list(
-                Community.objects.filter(is_deleted=False, *filter_params).order_by(
-                    "name"
-                )
-            )
+            communities = list(Community.objects.filter(is_deleted=False, *filter_params).order_by('name'))
             return communities, None
         except Exception as e:
             capture_exception(e)
@@ -1133,7 +1118,7 @@ class CommunityStore:
 
             actions_completed = []
             if not context.is_admin_site:
-                community = get_community_or_die(context, args)
+                community = get_community_or_die(context, args)                
                 actions_completed = count_action_completed_and_todos(
                     communities=[community],
                     time_range=time_range,
