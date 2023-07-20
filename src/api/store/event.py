@@ -280,7 +280,7 @@ class EventStore:
       if recurring_type != "month":
         week_of_month = None
 
-      event_type = args.pop('event_type', None)
+      event_type = args.get('event_type', None)
       if event_type == "in-person":
         args['external_link'] = None
       elif event_type == "online":
