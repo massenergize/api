@@ -1,5 +1,6 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from _main_.utils.utils import is_url_valid
 from api.tests.common import RESET
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_events_filter_params
@@ -16,6 +17,7 @@ from datetime import timedelta
 import calendar
 import pytz
 from typing import Tuple
+
 
 def _local_datetime(date_and_time):
   # the local date (in Massachusetts) is different than the UTC date
@@ -120,6 +122,7 @@ class EventStore:
         new_event.location = event_to_copy.location
         new_event.more_info = event_to_copy.more_info
         new_event.external_link = event_to_copy.external_link
+        new_event.external_link_type = event_to_copy.external_link_type
         new_event.event_type = event_to_copy.event_type
         if not (event_to_copy.is_recurring == None):
           new_event.is_recurring = event_to_copy.is_recurring
@@ -233,7 +236,7 @@ class EventStore:
     return all_events, None
 
   def create_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
-    
+
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -282,6 +285,11 @@ class EventStore:
         args['external_link'] = None
       elif event_type == "online":
         args['location'] = None
+
+      if args.get('external_link', None):
+        is_link_valid = is_url_valid(args.get("external_link"))
+        if not is_link_valid:
+          return None, CustomMassenergizeError("Please provide a valid link for the event.") 
 
 
       if community:
@@ -349,15 +357,6 @@ class EventStore:
 
   def update_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-
-      print('+++++++++++++++++++++ res +++++++++++++++++')
-      print('')
-      print('')
-      print('')
-      print(args)
-      print('')
-      print('')
-      print('+++++++++++++++++++++ res +++++++++++++++++')
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
 
@@ -456,11 +455,17 @@ class EventStore:
       ### if not is_approved and is_published:
       ###    return None, CustomMassenergizeError("Cannot publish event that is not approved.")
 
-      event_type = args.pop('event_type', None)
+      event_type = args.get('event_type', None)
       if event_type == "in-person":
         args['external_link'] = None
       elif event_type == "online":
         args['location'] = None
+
+
+      if args.get('external_link', None):
+        is_link_valid = is_url_valid(args.get("external_link"))
+        if not is_link_valid:
+          return None, CustomMassenergizeError("Please provide a valid link for the event.") 
 
        
       #  preventing the user from approving event if they are not an admin
@@ -540,6 +545,7 @@ class EventStore:
               archive = event.archive, 
               is_global = event.is_global, 
               external_link = event.external_link, 
+              external_link_type = event.external_link_type, 
               more_info = event.more_info, 
               is_deleted = event.is_deleted, 
               is_published = event.is_published,

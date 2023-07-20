@@ -1989,6 +1989,7 @@ class Event(models.Model):
     # Date and time when the event went live
     published_at = models.DateTimeField(blank=True, null=True)
     event_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    external_link_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
 
     def __str__(self):
         return self.name
