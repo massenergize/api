@@ -131,7 +131,7 @@ class SummaryStore:
             "done_interactions": done_interactions,
             "todo_interactions": todo_interactions,
             "user_sign_ins": user_sign_ins,
-            "testimonial":testimonials
+            "testimonials":testimonials
         }, None
 
     def next_steps_for_admins(

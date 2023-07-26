@@ -23,7 +23,7 @@ class SummaryService:
         done_int = content.get("done_interactions", [])
         todo_int = content.get("todo_interactions", [])
         sign_ins = content.get("user_sign_ins", [])
-        testimonials = content.get("testimonial", [])
+        testimonials = content.get("testimonials", [])
 
         content = {
             "done_interactions": {"count": len(done_int), "data": list(set(done_int))},
