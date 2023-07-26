@@ -68,7 +68,27 @@ class SummaryStore:
         else: [start_time, end_time] = make_time_range_from_text(time_range)
         # ------------------------------------------------------
 
-        if is_community_admin or (is_super_admin and not wants_all_communities):
+        if is_super_admin:  # Super Admins
+            sign_in_query = Q(
+                portal=FootageConstants.on_user_portal(),
+                activity_type=FootageConstants.sign_in(),
+                created_at__range=[start_time, end_time],
+            )
+            todo_query = Q(
+                status="TODO",
+                updated_at__range=[start_time, end_time],
+                is_deleted=False,
+            )
+            done_query = Q(
+                status="DONE",
+                updated_at__range=[start_time, end_time],
+                is_deleted=False,
+            )
+            testimonial_query = Q(
+                is_deleted=False,
+                updated_at__range=[start_time, end_time]
+            )
+        elif is_community_admin or (is_super_admin and not wants_all_communities):
             testimonial_query = Q(
                 is_deleted=False,
                 updated_at__range=[start_time, end_time],
@@ -92,26 +112,7 @@ class SummaryStore:
                 updated_at__range=[start_time, end_time],
                 is_deleted=False,
             )
-        else:  # Super Admins
-            sign_in_query = Q(
-                portal=FootageConstants.on_user_portal(),
-                activity_type=FootageConstants.sign_in(),
-                created_at__range=[start_time, end_time],
-            )
-            todo_query = Q(
-                status="TODO",
-                updated_at__range=[start_time, end_time],
-                is_deleted=False,
-            )
-            done_query = Q(
-                status="DONE",
-                updated_at__range=[start_time, end_time],
-                is_deleted=False,
-            )
-            testimonial_query = Q(
-                is_deleted=False,
-                updated_at__range=[start_time, end_time]
-            )
+
 
         user_sign_ins = Footage.objects.values_list("actor__email", flat=True).filter(
             sign_in_query
