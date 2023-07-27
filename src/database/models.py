@@ -19,7 +19,7 @@ from .utils.common import (
     get_json_if_not_none,
     get_summary_info,
 )
-from api.utils.constants import STANDARD_USER, GUEST_USER
+from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 import uuid
@@ -3720,6 +3720,7 @@ class PostmarkTemplate(models.Model):
     name = models.CharField(max_length=SHORT_STR_LEN)
     template_id = models.CharField(max_length=SHORT_STR_LEN)
     is_deleted = models.BooleanField(default=False, blank=True)
+    key = models.CharField(max_length=SHORT_STR_LEN, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -3734,8 +3735,9 @@ class PostmarkTemplate(models.Model):
             "template_id": self.template_id,
             "is_deleted": self.is_deleted,
             "created_at": self.created_at,
-            "updated_at": self.updated_at
-            
+            "updated_at": self.updated_at,
+            "key": self.key,
+
         }
     
     def full_json(self):

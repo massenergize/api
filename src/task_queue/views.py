@@ -8,7 +8,7 @@ from api.utils.constants import (
     SADMIN_EMAIL_TEMPLATE_ID,
     YEARLY_MOU_TEMPLATE_ID,
 )
-from api.utils.constants import STANDARD_USER, GUEST_USER
+from api.constants import STANDARD_USER, GUEST_USER
 from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
 from django.utils import timezone
 import datetime

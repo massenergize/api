@@ -10,11 +10,11 @@ from _main_.utils.utils import is_test_mode
 
 FROM_EMAIL = 'no-reply@massenergize.org'
 
-def is_prod_env():
+def is_dev_env():
   if IS_PROD:
-    return True
-  else:
     return False
+  else:
+    return True
 
 
 def send_massenergize_email(subject, msg, to):
@@ -39,7 +39,7 @@ def send_massenergize_email(subject, msg, to):
 def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name):
   if is_test_mode():
     return True
-  t_model = {**t_model, "is_prod":is_prod_env()}
+  t_model = {**t_model, "is_dev":is_dev_env()}
   
   message = pystmark.Message(sender=FROM_EMAIL, to=to, template_id=temp, template_model=t_model)
   # postmark server can be Production, Development or Testing (for local testing)

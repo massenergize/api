@@ -27,7 +27,7 @@ from database.models import (
     CommunitySnapshot,
 )
 from api.store.team import get_team_users
-from api.utils.constants import STANDARD_USER, GUEST_USER
+from api.constants import STANDARD_USER, GUEST_USER
 from api.store.tag_collection import TagCollectionStore
 from api.store.deviceprofile import DeviceStore
 from django.db.models import Q

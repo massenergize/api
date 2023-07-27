@@ -42,8 +42,9 @@ class EmailTemplatesHandler(RouteHandler):
     context: Context = request.context
     args = context.get_request_body() 
     (self.validator
-      .expect("name", str, is_required=False)
-      .expect("template_id", str, is_required=False)
+      .expect("name", str, is_required=True)
+      .expect("template_id", str, is_required=True)
+      .expect("key", str, is_required=True)
     )
 
     args, err = self.validator.verify(args)

@@ -7,7 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError
 from _main_.utils.context import Context
 from _main_.settings import RUN_SERVER_LOCALLY
-from api.utils.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
+from api.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 
 ONE_YEAR = 365*24*60*60
 ONE_DAY = 24*60*60

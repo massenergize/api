@@ -7,7 +7,7 @@ import time
 from threading import Timer
 import pytz
 
-from api.utils.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
+from api.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 
 USER_SESSION_RENEWED = "user_session_renewed"
 USER_SESSION_ALMOST_EXPIRED = "user_session_almost_expired"
