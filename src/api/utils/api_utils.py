@@ -1,6 +1,7 @@
 
 
 
+from _main_.utils.utils import is_test_mode
 from database.models import CommunityAdminGroup, PostmarkTemplate, UserProfile
 
 
@@ -42,6 +43,8 @@ def get_key(name):
     return "-".join(arr)+"-template-id"
 
 def get_postmark_template(name):
+    if is_test_mode():
+        return
     if not name:
         return None
     template = PostmarkTemplate.objects.filter(key=get_key(name), is_deleted=False).order_by('-created_at').first()
