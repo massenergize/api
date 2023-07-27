@@ -47,9 +47,12 @@ def get_postmark_template(name):
         return
     if not name:
         return None
-    template = PostmarkTemplate.objects.filter(key=get_key(name), is_deleted=False).order_by('-created_at').first()
-    if template:
-        return template.template_id
+    try:
+        template = PostmarkTemplate.objects.filter(key=get_key(name), is_deleted=False).order_by('-created_at').first()
+        if template:
+            return template.template_id
+    except:
+        print("Postmark template model not accessable")
     return None
  
 
