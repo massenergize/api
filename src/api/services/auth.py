@@ -1,9 +1,11 @@
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.context import Context
+from api.utils.constants import USER_EMAIL_SIGN_IN_VERIFICATION_TEMPLATE_ID
 from database.utils.json_response_wrapper import Json
 from firebase_admin import auth
 from django.middleware.csrf import get_token
@@ -37,6 +39,7 @@ class AuthService:
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
+
         
         user = UserProfile.objects.filter(email=user_email).first()
         if (not user or not user.accepts_terms_and_conditions):
@@ -168,6 +171,42 @@ class AuthService:
     except Exception as e:
       capture_message("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
+
+
+  
+  def email_verification(self, context: Context, args):
+    try:
+     email = args.get('email')
+     community_id = args.get('community_id')
+     url = args.get('url')
+
+     community = Community.objects.filter(id = community_id).first()
+     if not community:
+       return None, CustomMassenergizeError("Community not found")
+     
+     action_code_settings = auth.ActionCodeSettings(
+        url=url,
+        handle_code_in_app=True,
+    )
+     
+     link = auth.generate_sign_in_with_email_link(email,action_code_settings)
+     temp_data = {
+       "email": email,
+       "url": link,
+       "community": community.name,
+       "image": community.logo.file.url if community.logo.file else None
+     }
+     
+     ok = send_massenergize_email_with_attachments(USER_EMAIL_SIGN_IN_VERIFICATION_TEMPLATE_ID,temp_data,[email], None, None)
+     if not ok:
+       return None, CustomMassenergizeError("email_not_sent")
+     
+     return {}, None
+     
+
+    except Exception as e:
+      capture_message("Authentication Error", level="error")
+      return None, CustomMassenergizeError(e)
 
 
   
