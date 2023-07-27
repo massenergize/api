@@ -32,7 +32,7 @@ def is_viable(item):
     return False
 
 
-def generate_event_list_for_community(com, flag):
+def generate_event_list_for_community(com):
     today = timezone.now()
     in_30_days = today + timezone.timedelta(days=30)
     open = Q(publicity=EventConstants.open())
@@ -48,15 +48,16 @@ def generate_event_list_for_community(com, flag):
     
     return {
         "events": prepare_events_email_data(events),
-        "admins": get_comm_admins(com,flag)
+        "admins": get_comm_admins(com)
     }
 
 
-def get_comm_admins(com, flag):
+def get_comm_admins(com):
     """
     only get admins whose communities have been allowed in the feature flag to receive events
     nudge
     """
+    flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
     admins = []
     user_list = []
 

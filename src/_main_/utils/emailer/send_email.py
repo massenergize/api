@@ -4,11 +4,17 @@ from django.utils.html import strip_tags
 from sentry_sdk import capture_message
 import pystmark
 
-from _main_.settings import POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
+from _main_.settings import IS_CANARY, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
 from _main_.utils.constants import ME_INBOUND_EMAIL_ADDRESS
 from _main_.utils.utils import is_test_mode
 
 FROM_EMAIL = 'no-reply@massenergize.org'
+
+def is_dev_env():
+  if IS_PROD:
+    return False
+  else:
+    return True
 
 
 def send_massenergize_email(subject, msg, to):
@@ -33,6 +39,8 @@ def send_massenergize_email(subject, msg, to):
 def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name):
   if is_test_mode():
     return True
+  t_model = {**t_model, "is_dev":is_dev_env()}
+  
   message = pystmark.Message(sender=FROM_EMAIL, to=to, template_id=temp, template_model=t_model)
   # postmark server can be Production, Development or Testing (for local testing)
   postmark_server = POSTMARK_EMAIL_SERVER_TOKEN

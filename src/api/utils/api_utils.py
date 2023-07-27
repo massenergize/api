@@ -1,7 +1,8 @@
 
 
 
-from database.models import CommunityAdminGroup, UserProfile
+from _main_.utils.utils import is_test_mode
+from database.models import CommunityAdminGroup, PostmarkTemplate, UserProfile
 
 
 def is_admin_of_community(context, community_id):
@@ -34,4 +35,25 @@ def get_user_community_ids(context):
         return None
     ids =  user.communityadmingroup_set.all().values_list("community__id", flat=True)
     return list(ids)
+
+
+
+def get_key(name):
+    arr =  name.lower().split(" ")
+    return "-".join(arr)+"-template-id"
+
+def get_postmark_template(name):
+    if is_test_mode():
+        return
+    if not name:
+        return None
+    try:
+        template = PostmarkTemplate.objects.filter(key=get_key(name), is_deleted=False).order_by('-created_at').first()
+        if template:
+            return template.template_id
+    except:
+        print("Postmark template model not accessable")
+    return None
+ 
+
     

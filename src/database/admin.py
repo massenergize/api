@@ -13,7 +13,7 @@ class SubdomainAmdin(admin.ModelAdmin):
     actions = [clean_all_selected_subdomains]
 admin.site.register(module.Subdomain, SubdomainAmdin)
 
-sample = ["title", "name", "email", "full_name", "id" ]
+sample = ["title", "name", "email", "full_name", "id", 'updated_at', "template_id" ]
 sample_filter = ["created_at", "is_published", "is_deleted", "is_approved", "is_global"]
 
 def register_all_models():
