@@ -3,7 +3,7 @@ import pytz
 from _main_.utils.common import serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE_ID
+from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
 from database.models import Community, Event, UserProfile, FeatureFlag
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
@@ -183,7 +183,7 @@ def send_events_report_email(name, email, event_list, comm):
         data["community_logo"] = get_json_if_not_none(comm.logo).get("url") if comm.logo else ""
         data["cadmin_email"]=comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
-        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))

@@ -4,9 +4,9 @@ from _main_.utils.emailer.send_email import send_massenergize_email_with_attachm
 from _main_.settings import IS_PROD
 from _main_.utils.constants import ADMIN_URL_ROOT
 from api.utils.constants import (
-    CADMIN_EMAIL_TEMPLATE_ID,
-    SADMIN_EMAIL_TEMPLATE_ID,
-    YEARLY_MOU_TEMPLATE_ID,
+    CADMIN_EMAIL_TEMPLATE,
+    SADMIN_EMAIL_TEMPLATE,
+    YEARLY_MOU_TEMPLATE,
 )
 from api.constants import STANDARD_USER, GUEST_USER
 from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
@@ -158,7 +158,7 @@ def super_admin_nudge():
         response.content,
         f"Weekly Report({one_week_ago.date()} to {today.date()}).csv",
         list(super_admins),
-        SADMIN_EMAIL_TEMPLATE_ID,
+        SADMIN_EMAIL_TEMPLATE,
         temp_data,
     )
     return "success"
@@ -207,7 +207,7 @@ def community_admin_nudge():
             "end": str(today.date()),
         }
 
-        send_nudge(None, None, cadmin_email_list, CADMIN_EMAIL_TEMPLATE_ID, temp_data)
+        send_nudge(None, None, cadmin_email_list, CADMIN_EMAIL_TEMPLATE, temp_data)
     return "Success"
 
 
@@ -391,7 +391,7 @@ def send_mou_email(email, name):
         "mou_page_url": f"{ADMIN_URL_ROOT}/admin/view/policy/mou?ct=true",
     }
     return send_massenergize_email_with_attachments(
-        YEARLY_MOU_TEMPLATE_ID, content_values, email, None, None
+        YEARLY_MOU_TEMPLATE, content_values, email, None, None
     )
 
 

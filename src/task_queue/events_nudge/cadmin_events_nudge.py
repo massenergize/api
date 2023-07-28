@@ -1,7 +1,7 @@
 from _main_.utils.common import serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
-from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE_ID
+from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
 from database.models import *
 from django.utils import timezone
 import datetime
@@ -210,7 +210,7 @@ def send_events_report(name, email, event_list):
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))

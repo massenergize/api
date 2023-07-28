@@ -19,7 +19,7 @@ from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY, DEBUG
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
-from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE
+from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
 from wordfilter import Wordfilter
@@ -597,7 +597,7 @@ class UserStore:
       if not existing_user:
         if is_guest:
           ok = send_massenergize_email_with_attachments(
-            GUEST_USER_EMAIL_TEMPLATE_ID,
+            GUEST_USER_EMAIL_TEMPLATE,
             {"community_name":community.name,
              "community_logo":serialize(community.logo).get("url") if community.logo else None,
              "register_link":f'{COMMUNITY_URL_ROOT}/{community.subdomain}/signup'
