@@ -43,8 +43,6 @@ def get_key(name):
     return "-".join(arr)+"-template-id"
 
 def get_postmark_template(name):
-    if is_test_mode():
-        return
     if not name:
         return None
     try:
