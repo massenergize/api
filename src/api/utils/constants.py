@@ -1,4 +1,3 @@
-from api.utils.api_utils import get_postmark_template
 ME_SUPPORT_TEAM_EMAIL = "support@massenergize.org"
 # API user types  
 
