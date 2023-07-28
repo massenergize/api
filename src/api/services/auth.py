@@ -3,8 +3,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.common import serialize
 from _main_.utils.context import Context
-from api.utils.api_utils import get_postmark_template
-from api.utils.constants import USER_EMAIL_VERIFICATION
+from api.utils.constants import USER_EMAIL_VERIFICATION_TEMPLATE
 from firebase_admin import auth
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, UserProfile
@@ -191,7 +190,7 @@ class AuthService:
        "image": community.logo.file.url if community.logo.file else None
      }
      
-     ok = send_massenergize_email_with_attachments(get_postmark_template(USER_EMAIL_VERIFICATION),temp_data,[email], None, None)
+     ok = send_massenergize_email_with_attachments(USER_EMAIL_VERIFICATION_TEMPLATE,temp_data,[email], None, None)
      if not ok:
        return None, CustomMassenergizeError("email_not_sent")
      
