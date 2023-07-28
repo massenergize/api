@@ -41,7 +41,7 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name)
     return True
   t_model = {**t_model, "is_dev":is_dev_env()}
   
-  message = pystmark.Message(sender=FROM_EMAIL, to=to, template_id=temp, template_model=t_model)
+  message = pystmark.Message(sender=FROM_EMAIL, to=to, template_alias=temp, template_model=t_model)
   # postmark server can be Production, Development or Testing (for local testing)
   postmark_server = POSTMARK_EMAIL_SERVER_TOKEN
   if file is not None:
@@ -50,7 +50,7 @@ def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name)
     if POSTMARK_DOWNLOAD_SERVER_TOKEN:
       postmark_server = POSTMARK_DOWNLOAD_SERVER_TOKEN
   response = pystmark.send_with_template(message, api_key=postmark_server)
-
+  print("=== res ==", response.raise_for_status())
   if not response.ok:
     #if IS_PROD:
     #  capture_message(f"Error Occurred in Sending Email to {to}", level="error")
