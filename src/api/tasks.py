@@ -7,12 +7,13 @@ from api.store.download import DownloadStore
 from api.constants import DOWNLOAD_POLICY
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from api.store.utils import get_user_from_context
+from api.utils.api_utils import get_postmark_template
 from database.models import Policy
 from task_queue.events_nudge.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
 from celery import shared_task
 from api.store.download import DownloadStore
-from api.utils.constants import CADMIN_EMAIL_TEMPLATE_ID, DATA_DOWNLOAD_TEMPLATE_ID, SADMIN_EMAIL_TEMPLATE_ID
+from api.utils.constants import CADMIN_EMAIL, DATA_DOWNLOAD, SADMIN_EMAIL
 from database.models import Community, CommunityAdminGroup, CommunityMember, UserActionRel, UserProfile
 from django.utils import timezone
 import datetime
@@ -36,7 +37,7 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None)
         'data_type': download_type,
         "name":user.full_name,
     }
-    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE_ID,temp_data,[email], response.content, filename)
+    send_massenergize_email_with_attachments(get_postmark_template(DATA_DOWNLOAD),temp_data,[email], response.content, filename)
     return True
 
 
@@ -132,7 +133,7 @@ def download_data(self, args, download_type):
         'data_type': "Policy Document",
         "name":user.full_name,
     }
-        send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE_ID,temp_data,[user.email], pdf,f'{args.get("title")}.pdf')
+        send_massenergize_email_with_attachments(get_postmark_template(DATA_DOWNLOAD),temp_data,[user.email], pdf,f'{args.get("title")}.pdf')
 
 
 @shared_task(bind=True)
@@ -185,7 +186,7 @@ def generate_and_send_weekly_report(self):
         }
         
 
-        send_email(None, None,all_community_admins, CADMIN_EMAIL_TEMPLATE_ID,cadmin_temp_data)
+        send_email(None, None,all_community_admins, get_postmark_template(CADMIN_EMAIL),cadmin_temp_data)
 
         writer.writerow([community_name, community_total_signup,community_weekly_signup, community_actions_taken, community_weekly_done_actions, community_weekly_todo_actions])
     
@@ -195,7 +196,7 @@ def generate_and_send_weekly_report(self):
             'end': str(today.date()),
         }
 
-    send_email(response.content, f'Weekly Report({one_week_ago.date()} to {today.date()}).csv',list(super_admins), SADMIN_EMAIL_TEMPLATE_ID, sadmin_temp_data )
+    send_email(response.content, f'Weekly Report({one_week_ago.date()} to {today.date()}).csv',list(super_admins), get_postmark_template(SADMIN_EMAIL), sadmin_temp_data )
     return "success"
 
 
