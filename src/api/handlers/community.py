@@ -142,8 +142,8 @@ class CommunityHandler(RouteHandler):
     args: dict = context.args
 
     # self.validator.expect("zipcode", str, is_required=False)
+    self.validator.expect("zipcode", str, is_required=False)
     self.validator.expect("max_distance", int, is_required=False)
-
     args, err = self.validator.verify(args)
     if err:
         return err
