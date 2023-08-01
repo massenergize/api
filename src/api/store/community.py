@@ -634,7 +634,6 @@ class CommunityStore:
 
             # check for zipcode:
             if zipcode := args.get("zipcode", None):
-
                 if zipcodes.is_real(zipcode):
                     # filter communities by coordinates
                     filtered_communities = []
@@ -647,10 +646,12 @@ class CommunityStore:
                     max_distance = args.get("max_distance", 25)
 
                     added_communities = []
-
                     for community in communities:
                         if community.is_geographically_focused:
                             for location in community.locations.all():
+                                # skip locations that don't include zipcode (bogus data in dev)
+                                if not location.zipcode:
+                                    continue
                                 community_zipcode_info = zipcodes.matching(
                                     location.zipcode
                                 )
