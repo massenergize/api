@@ -147,6 +147,22 @@ class MediaLibraryStore:
         media.delete()
         return True, None
 
+
+    def proccess_tags (self,list_of_string_tags): 
+        if not list_of_string_tags: return []
+        created_tags = []
+
+        for tag_name in list_of_string_tags:
+            existing_tag = Tag.objects.filter(name__iexact=tag_name).first()
+            if existing_tag:
+                created_tags.append(existing_tag)
+            else:
+                tag = Tag(name=tag_name)
+                tag.save()
+                created_tags.append(tag)
+
+        return created_tags
+    
     def addToGallery(self, args,context):
         community_ids = args.get("community_ids", [])
         user_id = args.get("user_id")
@@ -156,11 +172,24 @@ class MediaLibraryStore:
         is_universal = args.get("is_universal", None)
         communities = user = None
         description = args.get("description", None)
+        # ---------------------------------------------
+        copyright_permission = args.get("copyright", "")
+        under_age = args.get("underAge", "")
+        guardian_info = args.get("guardian_info")
+        copyright_att = args.get("copyright_att")
+
+        tags = self.proccess_tags(tags)
+
         info = {
             "size": args.get("size"),
             "size_text": args.get("size_text"),
             "description": description,
+            "has_children": under_age, 
+            "has_copyright_permission": copyright_permission, 
+            "guardian_info" : guardian_info, 
+            "copyright_att": copyright_att
         }
+
         try:
             if community_ids:
                 communities = Community.objects.filter(id__in=community_ids)
