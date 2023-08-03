@@ -155,11 +155,11 @@ class MediaLibraryStore:
         for tag_name in list_of_string_tags:
             existing_tag = Tag.objects.filter(name__iexact=tag_name).first()
             if existing_tag:
-                created_tags.append(existing_tag)
+                created_tags.append(existing_tag.id)
             else:
                 tag = Tag(name=tag_name)
                 tag.save()
-                created_tags.append(tag)
+                created_tags.append(tag.id)
 
         return created_tags
     
