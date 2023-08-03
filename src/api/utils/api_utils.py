@@ -1,6 +1,7 @@
 
 
 
+from _main_.utils.utils import is_test_mode
 from database.models import CommunityAdminGroup, UserProfile
 
 
@@ -34,4 +35,11 @@ def get_user_community_ids(context):
         return None
     ids =  user.communityadmingroup_set.all().values_list("community__id", flat=True)
     return list(ids)
+
+
+
+def get_key(name):
+    arr =  name.lower().split(" ")
+    return "-".join(arr)+"-template-id"
+
     

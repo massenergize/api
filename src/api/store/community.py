@@ -64,6 +64,7 @@ from .utils import (
 )
 from database.utils.common import json_loader
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
+import math
 from typing import Tuple
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
@@ -479,6 +480,34 @@ class CommunityStore:
                         reu.community = None
                         reu.save()
 
+    def _haversince_distance(self, lat1: int, lon1: int, lat2: int, lon2: int):
+        """
+        Calculate the great circle distance between two points.
+        """
+        # convert decimal degrees to radians
+        lat1 = math.radians(lat1)
+        lon1 = math.radians(lon1)
+        lat2 = math.radians(lat2)
+        lon2 = math.radians(lon2)
+
+        earth_radius = 6371  # km
+
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
+        c = 2 * math.asin(math.sqrt(a))
+
+        # calculate the distance in kilometers
+        distance = earth_radius * c
+        # convert to miles
+        distance = distance * 0.621371
+
+        return distance
+
     def get_community_info(
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
@@ -586,16 +615,70 @@ class CommunityStore:
     ) -> Tuple[list, MassEnergizeAPIError]:
         try:
             if context.is_sandbox:
-                communities = Community.objects.filter(
-                    is_deleted=False, is_approved=True
-                ).exclude(subdomain="template").order_by('name')
+                communities = (
+                    Community.objects.filter(is_deleted=False, is_approved=True)
+                    .exclude(subdomain="template")
+                    .order_by("name")
+                )
             else:
-                communities = Community.objects.filter(
-                    is_deleted=False, is_approved=True, is_published=True
-                ).exclude(subdomain="template").order_by('name')
+                communities = (
+                    Community.objects.filter(
+                        is_deleted=False, is_approved=True, is_published=True
+                    )
+                    .exclude(subdomain="template")
+                    .order_by("name")
+                )
 
             if not communities:
                 return [], None
+
+            # check for zipcode:
+            if zipcode := args.get("zipcode", None):
+
+                if zipcodes.is_real(zipcode):
+                    # filter communities by coordinates
+                    filtered_communities = []
+
+                    # get coordinates of the zipcode
+                    zipcode_info = zipcodes.matching(zipcode)
+                    zipcode_lat = zipcode_info[0]["lat"]
+                    zipcode_long = zipcode_info[0]["long"]
+
+                    max_distance = args.get("max_distance", 25)
+
+                    added_communities = []
+
+                    for community in communities:
+                        if community.is_geographically_focused:
+                            for location in community.locations.all():
+                                community_zipcode_info = zipcodes.matching(
+                                    location.zipcode
+                                )
+                                community_zipcode_lat = community_zipcode_info[0]["lat"]
+                                community_zipcode_long = community_zipcode_info[0][
+                                    "long"
+                                ]
+
+                                distance_between_zipcodes = self._haversince_distance(
+                                    float(zipcode_lat),
+                                    float(zipcode_long),
+                                    float(community_zipcode_lat),
+                                    float(community_zipcode_long),
+                                )
+
+                                if distance_between_zipcodes <= max_distance:
+                                    if community.id not in added_communities:
+                                        community.location[
+                                            "distance"
+                                        ] = distance_between_zipcodes
+                                        filtered_communities.append(community)
+                                        added_communities.append(community.id)
+                        else:
+                            filtered_communities.append(community)
+                    return filtered_communities, None
+                else:
+                    return [], CustomMassenergizeError("Invalid Zipcode")
+
             return communities, None
         except Exception as e:
             capture_exception(e)

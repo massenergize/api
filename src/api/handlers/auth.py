@@ -7,7 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError
 from _main_.utils.context import Context
 from _main_.settings import RUN_SERVER_LOCALLY
-from api.utils.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
+from api.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 
 ONE_YEAR = 365*24*60*60
 ONE_DAY = 24*60*60
@@ -28,6 +28,7 @@ class AuthHandler(RouteHandler):
     self.add("/auth.test", self.whoami)
     self.add("/auth.verifyCaptcha", self.verify_captcha)
     self.add("/auth.signinasguest", self.guest_login) 
+    self.add("/auth.email.verification", self.email_verification) 
 
   def login(self, request): 
     context: Context = request.context
@@ -73,6 +74,7 @@ class AuthHandler(RouteHandler):
     return MassenergizeResponse(data=user_info)
 
 
+
   def verify_captcha(self, request): 
     context: Context = request.context
     captcha_string = context.args.get('captchaString', None)
@@ -108,3 +110,19 @@ class AuthHandler(RouteHandler):
   
 
 
+  def email_verification(self, request): 
+    context: Context = request.context
+    args: dict = context.args
+    self.validator.expect('email', str, is_required=True)
+    self.validator.expect("url",str, is_required=True)
+    self.validator.expect("community_id",str, is_required=True)
+
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+    
+    res, err = self.service.email_verification(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=res)

@@ -175,6 +175,28 @@ class CommunitiesTestCase(TestCase):
     self.assertIs(1, len(list_response.get("data")))
     self.assertEqual(self.COMMUNITY.name, list_response.get("data")[0]['name'])
 
+    # try to list communities by zipcode when signed in as a user
+    signinAs(self.client, self.USER)
+    list_response = self.client.post('/api/communities.list', urlencode({"zipcode": '02148'}), content_type="application/x-www-form-urlencoded").toDict()
+
+    self.assertTrue(list_response["success"])
+    self.assertIs(1, len(list_response.get("data")))
+    self.assertEqual(self.COMMUNITY.name, list_response.get("data")[0]['name'])
+
+    # try to list communities with invalid zipcode
+    list_response = self.client.post('/api/communities.list', urlencode({"zipcode": '021'}), content_type="application/x-www-form-urlencoded").toDict()
+
+    self.assertFalse(list_response["success"])
+    self.assertIsNone(list_response.get("data"))
+    self.assertEqual("Invalid Zipcode", list_response.get("error"))
+
+    # try to list communities with invalid format zipcode
+    list_response = self.client.post('/api/communities.list', urlencode({"zipcode": '0214a'}), content_type="application/x-www-form-urlencoded").toDict()
+
+
+    self.assertFalse(list_response["success"])
+    self.assertIsNone(list_response.get("data"))
+
 
 
   def test_update(self):
