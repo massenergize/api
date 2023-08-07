@@ -281,7 +281,6 @@ class TeamStore:
         if team.primary_community:
           subdomain = team.primary_community.subdomain
 
-      # TODO: create a rich email template for this?
       # TODO: only allow a cadmin or super admin to change this particular field?
       if is_published and not team.is_published and subdomain:
 
@@ -289,12 +288,12 @@ class TeamStore:
         team_link = ("%s/%s/teams/%i") % (COMMUNITY_URL_ROOT, subdomain, team.id)
         community = team.primary_community
         message_data = {"community_name":community.name,
-                  "community_logo":community.logo.file.url if community.logo.file else None,
+                  "community_logo":community.logo.file.url if community.logo and community.logo.file else None,
                   "team_name":team.name,
-                  "team_logo":team.logo.file.url if team.logo.file else None,
-                  "team_link":team_link, 
-                  },
-
+                  "team_logo":team.logo.file.url if team.logo and team.logo.file else None,
+                  "team_link":team_link 
+                  }
+        
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
         for team_admin in team_admins:
           send_massenergize_email_with_attachments(TEAM_APPROVAL_EMAIL_TEMPLATE, message_data,
@@ -350,6 +349,7 @@ class TeamStore:
         # ----------------------------------------------------------------
       return team, None
     except Exception as e:
+      print(str(e))
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
