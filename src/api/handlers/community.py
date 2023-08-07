@@ -140,14 +140,6 @@ class CommunityHandler(RouteHandler):
   def list(self, request):
     context: Context = request.context
     args: dict = context.args
-    print('+++++++++++++++++++++ context +++++++++++++++++')
-    print('')
-    print('')
-    print('')
-    print(context)
-    print('')
-    print('')
-    print('+++++++++++++++++++++ context +++++++++++++++++')
 
     self.validator.expect("zipcode", str, is_required=False)
     self.validator.expect("max_distance", int, is_required=False)
