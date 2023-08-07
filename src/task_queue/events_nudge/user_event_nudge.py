@@ -108,7 +108,7 @@ def get_community_events(community_id):
         is_published=True, 
         is_deleted=False, 
         start_date_and_time__gte=timezone.now(),
-        )
+        ).distinct()
     
     return events
 
