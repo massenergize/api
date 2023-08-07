@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
 
 from _main_.utils.utils import is_test_mode
 
@@ -251,8 +252,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # Sentry Logging Initialization
 sentry_sdk.init(
     dsn=os.environ.get('SENTRY_DSN'),
-    integrations=[DjangoIntegration()],
+    integrations=[DjangoIntegration(
+            transaction_style='url',
+            middleware_spans=True,
+        ),
+           CeleryIntegration(),
+],
     traces_sample_rate=1.0,
+
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
