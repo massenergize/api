@@ -3,6 +3,7 @@ from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_team_member_filter_params, get_teams_filter_params
+from api.utils.constants import TEAM_APPROVAL_EMAIL_TEMPLATE
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
@@ -10,7 +11,7 @@ from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
 from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel, unique_media_filename
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
-from _main_.utils.emailer.send_email import send_massenergize_email
+from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from typing import Tuple
 from django.db.models import Q
 def can_set_parent(parent, this_team=None):
@@ -239,11 +240,10 @@ class TeamStore:
     try:
       team_id = args.get('id', None)
       community_id = args.pop('community_id', None)
+      subdomain = None
       if community_id:
         community = Community.objects.filter(pk=community_id).first()
         subdomain = community.subdomain
-      else:
-        subdomain = "your_community"
 
       community_ids = args.pop('communities', None)   # in case of a team spanning multiple communities
 
@@ -277,16 +277,27 @@ class TeamStore:
       team.update(**args)
       team = team.first()
 
-      # TODO: create a rich email template for this?
+      if not subdomain:
+        if team.primary_community:
+          subdomain = team.primary_community.subdomain
+
       # TODO: only allow a cadmin or super admin to change this particular field?
-      if is_published and not team.is_published:
+      if is_published and not team.is_published and subdomain:
+
         team.is_published = True
+        team_link = ("%s/%s/teams/%i") % (COMMUNITY_URL_ROOT, subdomain, team.id)
+        community = team.primary_community
+        message_data = {"community_name":community.name,
+                  "community_logo":community.logo.file.url if community.logo and community.logo.file else None,
+                  "team_name":team.name,
+                  "team_logo":team.logo.file.url if team.logo and team.logo.file else None,
+                  "team_link":team_link 
+                  }
+        
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
-        # fix the broken URL in this message, needs to have community nam
-        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % (COMMUNITY_URL_ROOT, subdomain, team.id))
         for team_admin in team_admins:
-          send_massenergize_email(subject="Your team has been approved",
-                                msg=message, to=team_admin.user.email)
+          send_massenergize_email_with_attachments(TEAM_APPROVAL_EMAIL_TEMPLATE, message_data,
+                                                  team_admin.user.email, None, None)
       else:
         # this is how teams can get be made not live
         team.is_published = is_published
@@ -338,6 +349,7 @@ class TeamStore:
         # ----------------------------------------------------------------
       return team, None
     except Exception as e:
+      print(str(e))
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
