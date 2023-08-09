@@ -169,33 +169,36 @@ class AuthService:
   
   def email_verification(self, context: Context, args):
     try:
-     email = args.get('email')
-     community_id = args.get('community_id')
-     url = args.get('url')
+      email = args.get('email')
+      community_id = args.get('community_id')
+      url = args.get('url')
+      type = args.get('type', None)
 
-     community = Community.objects.filter(id = community_id).first()
-     if not community:
-       return None, CustomMassenergizeError("Community not found")
-     
-     action_code_settings = auth.ActionCodeSettings(
-        url=url,
-        handle_code_in_app=True,
-    )
-     
-     link = auth.generate_sign_in_with_email_link(email,action_code_settings)
-     temp_data = {
-       "email": email,
-       "url": link,
-       "community": community.name,
-       "image": community.logo.file.url if community.logo.file else None
-     }
-     
-     ok = send_massenergize_email_with_attachments(USER_EMAIL_VERIFICATION_TEMPLATE,temp_data,[email], None, None)
-     if not ok:
-       return None, CustomMassenergizeError("email_not_sent")
-     
-     return {}, None
-     
+      community = Community.objects.filter(id = community_id).first()
+      if not community:
+        return None, CustomMassenergizeError("Community not found")
+      
+      action_code_settings = auth.ActionCodeSettings(
+          url=url,
+          handle_code_in_app=True,
+        )
+      if type == "EMAIL_PASSWORD_VERIFICATION":
+        link = auth.generate_email_verification_link(email, action_code_settings)
+      else:
+        link = auth.generate_sign_in_with_email_link(email,action_code_settings)
+      temp_data = {
+        "email": email,
+        "url": link,
+        "community": community.name,
+        "image": community.logo.file.url if community.logo.file else None
+      }
+      
+      ok = send_massenergize_email_with_attachments(USER_EMAIL_VERIFICATION_TEMPLATE,temp_data,[email], None, None)
+      if not ok:
+        return None, CustomMassenergizeError("email_not_sent")
+      
+      return {}, None
+      
 
     except Exception as e:
       capture_message("Authentication Error", level="error")
