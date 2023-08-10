@@ -27,7 +27,7 @@ from database.models import (
     CommunitySnapshot,
 )
 from api.store.team import get_team_users
-from api.utils.constants import STANDARD_USER, GUEST_USER
+from api.constants import STANDARD_USER, GUEST_USER
 from api.store.tag_collection import TagCollectionStore
 from api.store.deviceprofile import DeviceStore
 from django.db.models import Q
@@ -676,9 +676,7 @@ class DownloadStore:
         
         primary_community_user_count = 0
         if community.name in prim_comm_dict:
-            print(str(community.name) + str(community.is_geographically_focused))
             primary_community_user_count = prim_comm_dict[community.name]
-        print(primary_community_user_count)
 
         users = [cm.user for cm in community_members]
 
@@ -961,7 +959,8 @@ class DownloadStore:
         for com in communities:
             community_reported_rows = self._get_reported_data_rows(com)
             for row in community_reported_rows:
-                data.append([com.name]+ row)
+                is_focused = "Yes" if com.is_geographically_focused else "No"
+                data.append([com.name] + [is_focused] + row)
 
         
         data = sorted(data, key=lambda row: row[0])  # sort by community
@@ -1104,6 +1103,9 @@ class DownloadStore:
         comms_list =[]
         #if more than one timestamp for a given community on certain date, get latest one
         for elem in comms:
+            # in dev database avoid some bad data
+            if not elem[0]:
+                continue
             stamp = snapshots.filter(community__id = elem[0]).order_by("-date").first()
             snapshots_list.append(stamp)
             comms_list.append(stamp.community.name)
@@ -1156,13 +1158,13 @@ class DownloadStore:
             "Testimonials Count": dic["testimonials_count"],
             "Service Providers Count": dic["service_providers_count"],
             }
+
         return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list, len(dic["is_live"])
 
     
     def _all_metrics_download(self, context, args):
         columns = ["Date", " # Communities", "# Live"] + self.metrics_columns + ["Communities"]
         data = [columns]
-
         audience = args["audience"]
         comm_ids = []
         if args["community_ids"] is not None:
@@ -1178,12 +1180,9 @@ class DownloadStore:
 
         #for every date make a row in the CSV
         for elem in distinct_dates:
-
             snapshots_list = community_snapshots.filter(date = elem[0])
             comm_ids = snapshots_list.values_list("community").distinct()
-
             most_info, comms_list, live_num = self._get_all_metrics_info_cells(snapshots_list, comm_ids)
-
             comms_list.sort()
             data.append([elem[0]] + [len(comms_list)] + [live_num] + most_info + [', '.join(comms_list)])
 

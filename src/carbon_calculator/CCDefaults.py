@@ -35,6 +35,7 @@ class CCD():
         num = cq.count()
         msg = "Initializing %d Carbon Calc defaults from db" % num
         print(msg)
+        
         for c in cq:
             # valid date is 0 if not specified
             date = '2000-01-01'

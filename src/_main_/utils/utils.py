@@ -2,6 +2,8 @@ import json, os
 import django.db.models.base as Base
 import inspect
 from django.db.models.fields.related import ManyToManyField, ForeignKey
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 
 def load_json(path):
@@ -130,3 +132,13 @@ def is_not_null(data):
     if data == "null" or data == None:
         return False
     return True
+
+
+def is_url_valid(url):
+    validate = URLValidator()
+    try:
+        validate(url)
+    except ValidationError:
+        return False
+    return True
+

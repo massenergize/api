@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
 
 from _main_.utils.utils import is_test_mode
 
@@ -86,7 +87,7 @@ if RUN_SERVER_LOCALLY:
     
 
 INSTALLED_APPS = [
-    'channels',
+    # 'channels',
     'django_hosts',
     'authentication',
     'carbon_calculator',
@@ -102,7 +103,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'socket_notifications'
+    # 'socket_notifications'
 ]
 
 MIDDLEWARE = [
@@ -146,8 +147,10 @@ SECURE_HSTS_SECONDS = 3600
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 USE_X_FORWARDED_HOST = True
-# WSGI_APPLICATION = '_main_.wsgi.application'
-ASGI_APPLICATION = '_main_.asgi.application'
+
+WSGI_APPLICATION = '_main_.wsgi.application'
+# ASGI_APPLICATION = '_main_.asgi.application'
+
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 CSRF_COOKIE_SECURE = not DEBUG
@@ -249,8 +252,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # Sentry Logging Initialization
 sentry_sdk.init(
     dsn=os.environ.get('SENTRY_DSN'),
-    integrations=[DjangoIntegration()],
+    integrations=[DjangoIntegration(
+            transaction_style='url',
+            middleware_spans=True,
+        ),
+           CeleryIntegration(),
+],
     traces_sample_rate=1.0,
+
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
@@ -297,13 +306,3 @@ else:
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
-
-
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [('localhost', 6379)],
-#         },
-#     },
-# }

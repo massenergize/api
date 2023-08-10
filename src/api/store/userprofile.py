@@ -1,6 +1,7 @@
 from _main_.utils.common import serialize
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from api.constants import STANDARD_USER,GUEST_USER
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_users_filter_params
 from api.store.common import create_pdf_from_rich_text, sign_mou
@@ -18,7 +19,7 @@ from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY, DEBUG
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
-from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECEIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE, STANDARD_USER, INVITED_USER, GUEST_USER
+from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
 from wordfilter import Wordfilter
@@ -276,7 +277,7 @@ class UserStore:
         rich_text = sign_mou(policy.description, user, current_timestamp_str)
         pdf,_ = create_pdf_from_rich_text(rich_text,filename)
         # Notify the user who just signed
-        send_massenergize_email_with_attachments(MOU_SIGNED_ADMIN_RECEIPIENT,{"username":username},user.email,pdf,filename)
+        send_massenergize_email_with_attachments(MOU_SIGNED_ADMIN_RECIPIENT,{"username":username},user.email,pdf,filename)
         
         user_groups = CommunityAdminGroup.objects.filter(members=user)
         # Concatenate all community names into one string, separated by a comma
@@ -596,7 +597,7 @@ class UserStore:
       if not existing_user:
         if is_guest:
           ok = send_massenergize_email_with_attachments(
-            GUEST_USER_EMAIL_TEMPLATE_ID,
+            GUEST_USER_EMAIL_TEMPLATE,
             {"community_name":community.name,
              "community_logo":serialize(community.logo).get("url") if community.logo else None,
              "register_link":f'{COMMUNITY_URL_ROOT}/{community.subdomain}/signup'

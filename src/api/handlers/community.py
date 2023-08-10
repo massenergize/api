@@ -138,12 +138,19 @@ class CommunityHandler(RouteHandler):
 
 
   def list(self, request):
-    context: Context  = request.context
+    context: Context = request.context
+    args: dict = context.args
 
-    args = context.args
+    # self.validator.expect("zipcode", str, is_required=False)
+    self.validator.expect("zipcode", str, is_required=False)
+    self.validator.expect("max_distance", int, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+        return err
+
     community_info, err = self.service.list_communities(context, args)
     if err:
-      return err
+        return err
     return MassenergizeResponse(data=community_info)
 
   @admins_only
@@ -279,6 +286,5 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=community_completed_actions)
-
 
 

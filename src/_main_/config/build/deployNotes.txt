@@ -1,2 +1,5 @@
-7/14/2023: Production bug-fix release:
-  * fixes for cookie acceptance, testimonial images
+8/9/2023: Production release 4.12.1:
+  * Improvements of email templates
+  * Support for in-person/hybrid/online events
+  * Fix the event nudge for users
+  * Improve email validation messages

@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.10.8",
-  "BUILD_VERSION_NOTES": "7/14/2023: Production bug-fix release:\n  * fixes for cookie acceptance, testimonial images\n"
+  "BUILD_VERSION": "4.12.1",
+  "BUILD_VERSION_NOTES": "8/9/2023: Production release 4.12.1:\n  * Improvements of email templates\n  * Support for in-person/hybrid/online events\n  * Fix the event nudge for users\n  * Improve email validation messages\n"
 }

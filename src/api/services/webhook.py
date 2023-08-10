@@ -4,7 +4,7 @@ from _main_.utils.context import Context
 from typing import Tuple
 from api.services.message import MessageService
 from api.tasks import deactivate_user
-from api.utils.constants import GUEST_USER
+from api.constants import GUEST_USER
 
 from database.models import UserProfile
 import re
