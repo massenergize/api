@@ -51,6 +51,13 @@ class MediaLibraryService:
         if error:
             return None, error
         return image.simple_json(), None
+    
+    def findImages(self, args,context):
+        images, error = self.store.findImages(args,context)
+        if error:
+            return None, error
+        images = serialize_all(images)
+        return images, None
 
     def getImageInfo(self, args):
         media, error = self.store.getImageInfo(args)

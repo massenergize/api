@@ -18,6 +18,7 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.add", self.addToGallery)
         self.add("/gallery.remove", self.remove)
         self.add("/gallery.image.info", self.getImageInfo)
+        self.add("/gallery.find", self.findImages)
 
     @admins_only
     def fetch_content(self, request):
@@ -104,6 +105,20 @@ class MediaLibraryHandler(RouteHandler):
             return err
 
         response, error = self.service.getImageInfo(args)
+        if error:
+            return error
+        return MassenergizeResponse(data=response)
+    
+    def findImages(self, request):
+        """Retrieves images given a list of media_ids"""
+        context: Context = request.context
+        args: dict = context.args
+        self.validator.expect("ids", list, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return err
+
+        response, error = self.service.findImages(args, context)
         if error:
             return error
         return MassenergizeResponse(data=response)

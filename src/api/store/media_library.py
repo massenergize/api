@@ -13,6 +13,12 @@ class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
 
+
+    def findImages(self,args, _): 
+        ids = args.get("ids", [])
+        images = Media.objects.filter(pk__in = ids)
+        return images, None
+    
     def fetch_content(self, args):
         com_ids = args.get("community_ids") or []
         upper_limit = args.get("upper_limit")
