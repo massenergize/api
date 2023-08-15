@@ -4,7 +4,7 @@ from _main_.utils.common import serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
-from database.models import Community, Event, UserProfile, FeatureFlag
+from database.models import Community, CommunityMember, Event, UserProfile, FeatureFlag
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 from database.utils.common import get_json_if_not_none
@@ -114,8 +114,9 @@ def get_community_events(community_id):
 
 
 def get_community_users(community_id, flag):
-   users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True, communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
-
+#    users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True, communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
+   community_members = CommunityMember.objects.filter(community__id=community_id, is_admin=False, is_deleted=False).values_list("user", flat=True)
+   users = UserProfile.objects.filter(id__in=community_members)
 #    check if user is in flag
    if flag.user_audience == "SPECIFIC":
        users = users.filter(id__in=[str(u.id) for u in flag.users.all()])
