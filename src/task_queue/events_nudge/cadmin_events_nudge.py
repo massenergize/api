@@ -184,7 +184,7 @@ def send_events_nudge():
             communities = communities.exclude(id__in=[str(u.id) for u in flag.communities.all()])
 
         for com in communities:
-            d = generate_event_list_for_community(com,flag)
+            d = generate_event_list_for_community(com)
             admins = d.get("admins", [])
             event_list = d.get("events", [])
 
