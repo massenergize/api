@@ -1,7 +1,8 @@
 import html2text, traceback
 from django.shortcuts import render, redirect
+from _main_.utils.common import serialize_all
 from _main_.utils.massenergize_response import MassenergizeResponse
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from _main_.settings import IS_PROD, IS_CANARY, RUN_SERVER_LOCALLY
 from sentry_sdk import capture_message
 from api.store.misc import MiscellaneousStore
@@ -20,6 +21,8 @@ from database.models import (
     ImpactPageSettings,
     CustomCommunityWebsiteDomain,
 )
+from django.db.models import Q
+from django.template.loader import render_to_string
 
 extract_text_from_html = html2text.HTML2Text()
 extract_text_from_html.ignore_links = True
@@ -155,6 +158,40 @@ def home(request):
     return redirect(HOST)
 
 
+def search_communities(request):
+    meta = META
+    meta.update(
+        {
+            "title": "Massenergize Communities",
+            "redirect_to": f"{PORTAL_HOST}",
+            "stay_put": True,
+        }
+    )
+    query = request.POST.get("query")
+    is_zipcode = request.POST.get("is_zipcode")
+
+    print("=== is_zipcode", is_zipcode)
+    if is_zipcode:
+        pass
+    communities = Community.objects.filter(Q(name__icontains=query) | Q(subdomain__icontains=query))
+
+    is_sandbox = _get_is_sandbox(request)
+
+    args = {
+        "meta": meta,
+        "communities": communities.distinct(),
+        "sandbox": is_sandbox,
+        "suffix": "?sandbox=true" if is_sandbox else "" ,
+    }
+
+    html = render_to_string(
+    template_name="communities-results-partial.html", 
+    context=args
+    )
+
+    data_dict = {"html_from_view": html}
+    return JsonResponse(data=data_dict, safe=False)
+
 def communities(request):
     meta = META
     meta.update(
@@ -167,19 +204,16 @@ def communities(request):
 
     is_sandbox = _get_is_sandbox(request)
     if is_sandbox:
-        communityList = list(Community.objects.filter(
-            is_deleted=False
-            ).values("id", "name", "subdomain", "about_community", "location"))
+        communityList = Community.objects.filter(is_deleted=False)
         suffix = "?sandbox=true"
     else:
-        communityList = list(Community.objects.filter(
-            is_deleted=False, is_published=True
-            ).values("id", "name", "subdomain", "about_community", "location"))
+        communityList = Community.objects.filter(is_deleted=False, is_published=True)
         suffix = ""
 
     # for each community make a display name which is "Location - Community name"
+    _communities = []
     for community in communityList:
-        location = community.get("location", None)
+        location = community.location
         prefix = ""        
         if location:
             city = location.get("city")
@@ -190,18 +224,22 @@ def communities(request):
                         prefix = abbrev + ' - '
             if city:
                 prefix = city + ", " + prefix
-        displayName = prefix + community.get("name", "")
-        index = communityList.index(community)
-        communityList[index]["displayName"] = displayName
+        displayName = prefix + community.name
+        _communities.append({
+            "id":community.id,
+            "displayName": displayName,
+            "subdomain": community.subdomain,
+            "logo": _get_file_url(community.logo)
+        })
 
     # sort the list by the display name
     def sortFunc(e):
         return e.get('displayName','').capitalize()
-    communityList.sort(key=sortFunc)
+    _communities.sort(key=sortFunc)
 
     args = {
         "meta": meta,
-        "communities": communityList,
+        "communities": _communities,
         "sandbox": is_sandbox,
         "suffix": suffix,
     }

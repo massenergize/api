@@ -1,0 +1,30 @@
+{% if communities %}
+<p>AROUND YOU</p>
+
+{% for c in communities %}
+<div style="display: flex; border-top: 1px solid whitesmoke;padding: 10px;">
+    <img src="{{c.logo}}" class="community-logo" />
+    <div style="display: flex;align-items: center;justify-content: center;" onclick="(()=>{
+                const url = `{{meta.portal_host}}/{{c.subdomain}}{{suffix}}`;
+                window.location = url;
+              })()">
+        <p>{{c.displayName}}</p>
+    </div>
+</div>
+{% endfor %}
+
+<p>OTHER</p>
+{% for c in communities %}
+<div style="display: flex; border-top: 1px solid whitesmoke;padding: 10px;">
+    <img src="{{c.logo}}" class="community-logo" />
+    <div style="display: flex;align-items: center;justify-content: center;" onclick="(()=>{
+                const url = `{{meta.portal_host}}/{{c.subdomain}}{{suffix}}`;
+                window.location = url;
+              })()">
+        <p>{{c.displayName}}</p>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<p>No community found.</p>
+{% endif %}

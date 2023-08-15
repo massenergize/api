@@ -4,6 +4,7 @@ from website import views
 urlpatterns = [
   path('', views.home, name='home'),
   path('communities', views.communities, name='communities'),
+  path('communities/search/', views.search_communities, name='search_communities'),
   path('community/<slug:subdomain>', views.community, name='community'),
   path('actions', views.actions, name='actions'),
   path('action/<int:id>', views.action, name='action'),
