@@ -12,6 +12,7 @@ from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
 from django.utils import timezone
+from django.core.files.storage import default_storage
 
 from .utils.common import (
     get_images_in_sequence,
@@ -279,6 +280,14 @@ class Media(models.Model):
             "media_type": self.media_type,
             "tags": [tag.simple_json() for tag in self.tags.all()],
         }
+    
+    def delete(self, *args, **kwargs): 
+        # I'm overriding the delete fxn to actually delete the file from the S3 bucket as well, and not only the DB record
+        if self.file:
+            file_path = self.file.name
+            default_storage.delete(file_path)
+
+        super().delete(*args, **kwargs)
 
     class Meta:
         db_table = "media"

@@ -6,6 +6,7 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, Media, Tag, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
+
 limit = 32
 
 
@@ -150,7 +151,8 @@ class MediaLibraryStore:
         # ----------------------------------------------------------------
         Spy.create_media_footage(media = [media], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({media_id})")
         # ----------------------------------------------------------------
-        media.delete()
+        media.delete() 
+         
         return True, None
 
 
