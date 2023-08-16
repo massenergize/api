@@ -18,7 +18,8 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.add", self.addToGallery)
         self.add("/gallery.remove", self.remove)
         self.add("/gallery.image.info", self.getImageInfo)
-        self.add("/gallery.find", self.findImages)
+        self.add("/gallery.find", self.find_images)
+        self.add("/gallery.item.edit", self.edit_details)
 
     @admins_only
     def fetch_content(self, request):
@@ -109,7 +110,8 @@ class MediaLibraryHandler(RouteHandler):
             return error
         return MassenergizeResponse(data=response)
     
-    def findImages(self, request):
+    @admins_only
+    def find_images(self, request):
         """Retrieves images given a list of media_ids"""
         context: Context = request.context
         args: dict = context.args
@@ -118,7 +120,22 @@ class MediaLibraryHandler(RouteHandler):
         if err:
             return err
 
-        response, error = self.service.findImages(args, context)
+        response, error = self.service.find_images(args, context)
+        if error:
+            return error
+        return MassenergizeResponse(data=response)
+    
+    # @admins_only  # REMEMBER TO UNCHECK BEFORE PR (BPR)
+    def edit_details(self, request):
+        """Saves changes to updated image details"""
+        context: Context = request.context
+        args: dict = context.args
+        self.validator.expect("description").expect("underAge", bool).expect("copyright", bool).expect("copyright_att", str).expect("guardian_info", str).expect("tags", "str_list").expect("community_ids",list).expect("media_id", int, is_required=True).expect("user_upload_id", int, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return err
+
+        response, error = self.service.edit_details(args, context)
         if error:
             return error
         return MassenergizeResponse(data=response)

@@ -52,8 +52,16 @@ class MediaLibraryService:
             return None, error
         return image.simple_json(), None
     
-    def findImages(self, args,context):
-        images, error = self.store.findImages(args,context)
+    def edit_details(self, args,context):
+        media, error = self.store.edit_details(args,context)
+        if error:
+            return None, error
+        if media: 
+            return self.getImageInfo({"media_id": media.id}) # Refer back to the getinfo routine so that data can be return data in the same structture
+        return {}, None
+    
+    def find_images(self, args,context):
+        images, error = self.store.find_images(args,context)
         if error:
             return None, error
         images = serialize_all(images)

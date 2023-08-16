@@ -1,4 +1,6 @@
 from django.core.exceptions import ValidationError
+from sentry_sdk import capture_message
+from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from .utils import unique_media_filename
@@ -15,7 +17,59 @@ class MediaLibraryStore:
         self.name = "MediaLibrary Store/DB"
 
 
-    def findImages(self,args, _): 
+    def edit_details(self,args, context :Context):
+        try: 
+            id = args.get("user_upload_id")
+            media_id = args.get("media_id")
+          
+            email = context.user_email
+            user_media_upload = UserMediaUpload.objects.get(pk = id)
+
+            if not user_media_upload: 
+                return None, CustomMassenergizeError("Sorry, could not find the image  you want to edit")
+            if not (user_media_upload.user.email == email) and not context.user_is_super_admin: 
+                return None, CustomMassenergizeError("You need to be the uploader of the image  or a super admin to make edits")
+
+            copyright_permission = args.get("copyright", "")
+            under_age = args.get("underAge", "")
+            guardian_info = args.get("guardian_info")
+            copyright_att = args.get("copyright_att")
+            tags = args.get("tags")
+            communities = args.get("communities", [])
+            info = {
+                **(user_media_upload.info or {}),
+                "has_children": under_age, 
+                "has_copyright_permission": copyright_permission, 
+                "guardian_info" : guardian_info, 
+                "copyright_att": copyright_att
+            }
+            user_media_upload.info = info 
+            user_media_upload.save()
+            media = Media.objects.get(pk = media_id)
+
+
+            if communities:
+                communities = Community.objects.filter(id__in=communities)
+                media.communities.clear() 
+                media.communities.set(communities)
+
+            if tags: 
+                media.tags.clear() 
+                tags = self.proccess_tags(tags)
+                media.tags.set(tags)
+            
+            media.save()
+
+            
+            # user_media_upload.refresh_from_db()
+            return media, None
+        
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+    
+    def find_images(self,args, _): 
         ids = args.get("ids", [])
         images = Media.objects.filter(pk__in = ids)
         return images, None
@@ -187,7 +241,7 @@ class MediaLibraryStore:
         copyright_att = args.get("copyright_att")
 
         tags = self.proccess_tags(tags)
-
+        
         info = {
             "size": args.get("size"),
             "size_text": args.get("size_text"),
@@ -232,19 +286,15 @@ class MediaLibraryStore:
         is_universal = kwargs.get("is_universal")
         is_universal = True if is_universal else False
 
-        tags = Tag.objects.filter(id__in = tags)
+        # tags = Tag.objects.filter(id__in = tags)
         file.name = unique_media_filename(file)
 
         media = Media.objects.create(
             name=f"{title}-({round(time.time() * 1000)})",
             file=file,
         )
-        user_media = UserMediaUpload(
-            
-            user=user, media=media, is_universal=is_universal, info=info
-        )
-        user_media.save(
-        )
+        user_media = UserMediaUpload(user=user, media=media, is_universal=is_universal, info=info)
+        user_media.save()
         if media: 
             media.tags.set(tags) 
 
