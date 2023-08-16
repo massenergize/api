@@ -590,7 +590,7 @@ class Community(models.Model):
         # calculate values for community impact to be displayed on front-end sites
         impact_page_settings: ImpactPageSettings = ImpactPageSettings.objects.filter(community__id=self.pk).first()
         if impact_page_settings:
-            display_prefs = impact_page_settings.more_info
+            display_prefs = impact_page_settings.more_info or {}
         else:
             #capture_message("Impact Page Settings not found", level="error")
             display_prefs = {}      # not usual - show nothing
@@ -658,7 +658,6 @@ class Community(models.Model):
         #     )
         #     if enabled:
         #         feature_flags_json.append(f.simple_json())
-
         return {
             "id": self.id,
             "name": self.name,
