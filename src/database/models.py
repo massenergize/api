@@ -578,6 +578,7 @@ class Community(models.Model):
             ).prefetch_related("action__calculator_action")
 
         goal["organic_attained_number_of_actions"] = done_actions.count()
+
         carbon_footprint_reduction = 0
         for actionRel in done_actions:
             if actionRel.action and actionRel.action.calculator_action:
@@ -585,6 +586,41 @@ class Community(models.Model):
                     actionRel.action.calculator_action.average_points
                 )
         goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
+
+        # calculate values for community impact to be displayed on front-end sites
+        impact_page_settings: ImpactPageSettings = ImpactPageSettings.objects.filter(community__id=self.pk).first()
+        if impact_page_settings:
+            display_prefs = impact_page_settings.more_info
+        else:
+            #capture_message("Impact Page Settings not found", level="error")
+            display_prefs = {}      # not usual - show nothing
+  
+        value = 0
+        if display_prefs.get("manual_households"):
+            value += goal.get("initial_number_of_households",0)
+        if display_prefs.get("state_households"):
+            value += goal.get("attained_number_of_households",0)
+        if display_prefs.get("platform_households"):
+            value += goal.get("organic_attained_number_of_households",0)
+        goal["displayed_number_of_households"] = value
+
+        value = 0
+        if display_prefs.get("manual_actions"):
+            value += goal.get("initial_number_of_actions",0)
+        if display_prefs.get("state_actions"):
+            value += goal.get("attained_number_of_actions",0)
+        if display_prefs.get("platform_actions"):
+            value += goal.get("organic_attained_number_of_actions",0)
+        goal["displayed_number_of_actions"] = value
+
+        value = 0
+        if display_prefs.get("manual_carbon"):
+            value += goal.get("initial_carbon_footprint_reduction",0)
+        if display_prefs.get("state_carbon"):
+            value += goal.get("attained_carbon_footprint_reduction",0)
+        if display_prefs.get("platform_carbon"):
+            value += goal.get("organic_attained_carbon_footprint_reduction",0)
+        goal["displayed_carbon_footprint_reduction"] = value
 
         locations = ""
         for loc in self.locations.all():
