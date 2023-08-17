@@ -3,7 +3,7 @@ from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import strip_website
 from api.store.common import count_action_completed_and_todos
 from api.tests.common import RESET
-from api.utils.api_utils import is_admin_of_community
+from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import (
     Community,
@@ -660,7 +660,7 @@ class CommunityStore:
                                     "long"
                                 ]
 
-                                distance_between_zipcodes = self._haversince_distance(
+                                distance_between_zipcodes = get_distance_between_coords(
                                     float(zipcode_lat),
                                     float(zipcode_long),
                                     float(community_zipcode_lat),

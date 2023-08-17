@@ -12,11 +12,8 @@
     {% endif %}
     <div class="custom-select-wrapper elevate-float">
       <div class="select-envelope">
-        <!-- <form>
-          {% csrf_token %} -->
         <input type="text" placeholder="Type in your community name or zip code to see communities near you."
           class="custom-input" id="community-search" name="community-search" />
-        <!-- </form> -->
       </div>
       <div class="communities-list-container">
         {% include "communities-results-partial.html" %}
@@ -43,21 +40,26 @@
 {% block javascript %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    navigator.geolocation.getCurrentPosition(function (position) {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      sendRequest(latitude, longitude);
+    });
+
     const commList = $('.communities-list-container')
 
-    function makeSearch(text) {
+    function sendRequest(latitude, longitude) {
       $.ajax({
         type: "POST",
-        url: "{% url 'search_communities' %}",
+        url: "{% url 'communities' %}",
         data: {
-          query: text,
-          is_zipcode: !isNaN(text)
+          latitude: latitude,
+          longitude: longitude,
         },
         success: function (data) {
           commList.fadeTo('slow', 0).promise().then(() => {
-            // replace the HTML contents
             commList.html(data['html_from_view'])
-            // fade-in the div with new contents
             commList.fadeTo('fast', 1)
           })
         },
@@ -66,8 +68,24 @@
         }
       })
     }
-
-
+    function makeSearch(text) {
+      $.ajax({
+        type: "POST",
+        url: "{% url 'search_communities' %}",
+        data: {
+          query: text,
+        },
+        success: function (data) {
+          commList.fadeTo('slow', 0).promise().then(() => {
+            commList.html(data['html_from_view'])
+            commList.fadeTo('fast', 1)
+          })
+        },
+        error: function (err) {
+          console.log("==== err ==", err)
+        }
+      })
+    }
 
     const inputElement = document.getElementById("community-search");
     if (inputElement) {
@@ -120,6 +138,11 @@
     border: 0px;
   }
 
+  .community-name{
+        display: flex;
+    align-items: center;
+  }
+
   .content-wrapper h1 {
     text-align: center;
     font-weight: 500;
@@ -145,7 +168,7 @@
   }
 
   .custom-input {
-    /* width: 90%; */
+    width: 90%;
     background: none;
     border: none;
     padding: 7px;
@@ -185,6 +208,11 @@
     color: white;
   }
 
+  .label-txt {
+    color: gray;
+    margin-left: 10px;
+  }
+
 
   /* ------ PC EXCLUSIVE MODE ------ */
   @media only screen and (min-width: 768px) {
@@ -220,6 +248,13 @@
     .link-to-me {
       font-size: 1rem;
       margin: 0px 10px;
+    }
+
+    .custom-select-wrapper {
+      cursor: pointer;
+      padding: 5px;
+      font-size: 0.9rem;
+      width: 97% !important;
     }
   }
 </style>

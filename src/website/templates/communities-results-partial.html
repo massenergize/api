@@ -1,30 +1,68 @@
-{% if communities %}
-<p>AROUND YOU</p>
-
-{% for c in communities %}
-<div style="display: flex; border-top: 1px solid whitesmoke;padding: 10px;">
-    <img src="{{c.logo}}" class="community-logo" />
-    <div style="display: flex;align-items: center;justify-content: center;" onclick="(()=>{
+{% if exact %}
+<p class="label-txt">EXACT MATCH</p>
+{% for c in exact %}
+<div style="display: flex; border-bottom: 1px solid whitesmoke;padding: 10px;">
+    <div><img src="{{c.logo}}" class="community-logo" /> </div>
+    <div class="community-name" onclick="(()=>{
                 const url = `{{meta.portal_host}}/{{c.subdomain}}{{suffix}}`;
                 window.location = url;
               })()">
-        <p>{{c.displayName}}</p>
+        {{c.displayName}}
     </div>
 </div>
 {% endfor %}
 
-<p>OTHER</p>
-{% for c in communities %}
-<div style="display: flex; border-top: 1px solid whitesmoke;padding: 10px;">
-    <img src="{{c.logo}}" class="community-logo" />
-    <div style="display: flex;align-items: center;justify-content: center;" onclick="(()=>{
+{% else %}
+{% endif %}
+
+<!-- End exact -->
+
+
+{% if nearby %}
+<p class="label-txt">NEAR BY</p>
+{% for c in nearby %}
+<div style="display: flex; border-bottom: 1px solid whitesmoke;padding: 10px;">
+    <div><img src="{{c.logo}}" class="community-logo" /> </div>
+    <div class="community-name" onclick="(()=>{
                 const url = `{{meta.portal_host}}/{{c.subdomain}}{{suffix}}`;
                 window.location = url;
               })()">
-        <p>{{c.displayName}}</p>
+        {{c.displayName}}
+    </div>
+</div>
+{% endfor %}
+
+{% else %}
+{% endif %}
+
+<!-- End Nearby -->
+
+
+{% if other %}
+<p class="label-txt">
+    {% if other and not exact and not nearby %}
+    COMMUNITIES
+    {% else %}
+    OTHER
+    {% endif %}
+</p>
+{% for c in other %}
+<div style="display: flex; border-bottom: 1px solid whitesmoke;padding: 10px;">
+    <div><img src="{{c.logo}}" class="community-logo" /> </div>
+    <div class="community-name" onclick="(()=>{
+                const url = `{{meta.portal_host}}/{{c.subdomain}}{{suffix}}`;
+                window.location = url;
+              })()">
+        {{c.displayName}}
     </div>
 </div>
 {% endfor %}
 {% else %}
-<p>No community found.</p>
+
 {% endif %}
+
+{% if not other and not exact and not nearby %}
+<p style="text-align: center;">NO RESULTS FOUND</p>
+{% endif %}
+
+<!-- End Other -->

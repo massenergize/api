@@ -28,8 +28,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ********  LOAD CONFIG DATA ***********#
 # DJANGO_ENV can be passed in through the makefile, with "make start env=local"
 DJANGO_ENV = os.environ.get("DJANGO_ENV","remote")
-RUN_SERVER_LOCALLY = True
-RUN_CELERY_LOCALLY = True
+RUN_SERVER_LOCALLY = False
+RUN_CELERY_LOCALLY = False
 
 if is_test_mode():
     RUN_CELERY_LOCALLY = True
@@ -41,7 +41,7 @@ if DJANGO_ENV == "local":
 # Database selection, development DB unless one of these chosen
 IS_PROD = False
 IS_CANARY = False
-IS_LOCAL = True
+IS_LOCAL = False
 
 try:
     if IS_PROD:
@@ -250,21 +250,23 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Sentry Logging Initialization
-sentry_sdk.init(
-    dsn=os.environ.get('SENTRY_DSN'),
+sentry_dsn = os.environ.get('SENTRY_DSN')
+if sentry_dsn:
+  sentry_sdk.init(
+    dsn=sentry_dsn,
     integrations=[DjangoIntegration(
             transaction_style='url',
             middleware_spans=True,
         ),
            CeleryIntegration(),
-],
+    ],
     traces_sample_rate=1.0,
 
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
     send_default_pii=True
-)
+  )
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
