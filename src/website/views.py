@@ -305,6 +305,7 @@ def search_communities(request):
         "nearby": _restructure_communities(nearby),
         "sandbox": is_sandbox,
         "suffix": "?sandbox=true" if is_sandbox else "",
+        "ready": True,
     }
 
     html = render_to_string(
@@ -340,6 +341,7 @@ def communities(request):
         "other": _restructure_communities(other),
         "sandbox": is_sandbox,
         "suffix": suffix,
+        "ready": True,
     }
     if lat and long:
         html = render_to_string(

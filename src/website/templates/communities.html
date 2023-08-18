@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+
+{% if not ready %}
+<div class="loader-root">
+  <div class="me-circle-loader"></div>
+</div>
+{% else %}
 <div class="all-coms-root-container">
   <div class="content-wrapper">
     <img src="https://www.massenergize.org/wp-content/uploads/2023/03/MassEnergize-logo.png" class="me-logo" />
@@ -35,6 +41,7 @@
 
   </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block javascript %}
@@ -138,8 +145,8 @@
     border: 0px;
   }
 
-  .community-name{
-        display: flex;
+  .community-name {
+    display: flex;
     align-items: center;
   }
 
@@ -212,15 +219,47 @@
     color: gray;
     margin-left: 10px;
   }
-  .community-name a{
+
+  .community-name a {
     text-decoration: none;
     color: black;
     font-weight: bold;
   }
 
-  .community-name a:hover{
+  .community-name a:hover {
     color: #8dc443;
   }
+  .loader-root{
+    /* width: 100vw; */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .me-circle-loader {
+  padding: 10px;
+  height: 70px;
+  width: 70px;
+  background: white;
+  border-radius: 100%;
+  border: dotted 10px black;
+  border-top-color: #8dc343;
+  border-right-color: #f57b34;
+  border-bottom-color: #f57b34;
+  border-left-color: #8dc343;
+  animation: g-spin-circle 0.7s infinite;
+}
+@keyframes g-spin-circle {
+  0% {
+    transform: rotate(0);
+    animation-timing-function: linear;
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
 
 
   /* ------ PC EXCLUSIVE MODE ------ */
