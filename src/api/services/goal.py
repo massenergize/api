@@ -1,9 +1,8 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.goal import GoalStore
 from database.models import Goal
-from _main_.utils.context import Context
 
 from _main_.utils.utils import get_models_and_field_types
 from database import models
@@ -41,7 +40,7 @@ class GoalService:
       return None, err
     return serialize(goal, full=True), None
 
-  def list_goals(self, community_id, subdomain, team_id, user_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_goals(self, community_id, subdomain, team_id, user_id, context) -> Tuple[list, MassEnergizeAPIError]:
     goals, err = self.store.list_goals(community_id, subdomain, team_id, user_id)
     if err:
       return None, err
@@ -83,14 +82,14 @@ class GoalService:
     goals, err = self.store.list_goals_for_community_admin(context, community_id)
     if err:
       return None, err
-    return serialize_all(goals), None
+    return paginate(goals, context.get_pagination_data()), None
 
 
-  def list_goals_for_super_admin(self) -> Tuple[list, MassEnergizeAPIError]:
+  def list_goals_for_super_admin(self, context) -> Tuple[list, MassEnergizeAPIError]:
     goals, err = self.store.list_goals_for_super_admin()
     if err:
       return None, err
-    return serialize_all(goals), None
+    return paginate(goals, context.get_pagination_data()), None
 
   def increase_value(self, goal_id, field_name):
     goal, err = self.store.increase_value(goal_id, field_name)

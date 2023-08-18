@@ -1,19 +1,16 @@
 from django.test import Client
-import os
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     CustomMassenergizeError,
 )
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.common import serialize, serialize_all
 from api.store.misc import MiscellaneousStore
 from _main_.utils.context import Context
 from django.shortcuts import render
-from api.tests.common import makeAuthToken, signinAs
+from api.tests.common import signinAs
 from database.models import Deployment
 from _main_.settings import IS_PROD, IS_CANARY, BASE_DIR, TEST_PASSPORT_KEY
-from sentry_sdk import capture_message
 from _main_.utils.utils import load_json, load_text_contents
 from django.db.models.query import QuerySet
 from typing import Tuple
@@ -54,6 +51,11 @@ class MiscellaneousService:
 
     def backfill(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         result, err = self.store.backfill(context, args)
+        if err:
+            return None, err
+        return result, None
+    def actions_report(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        result, err = self.store.actions_report(context, args)
         if err:
             return None, err
         return result, None

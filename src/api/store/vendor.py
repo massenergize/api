@@ -1,14 +1,16 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from api.tests.common import RESET
+from api.utils.filter_functions import get_vendor_filter_params
 from database.models import Vendor, UserProfile, Media, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, ServerError, CustomMassenergizeError
-from django.utils.text import slugify
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, CustomMassenergizeError
 from _main_.utils.context import Context
-from django.db.models import Q
 from .utils import get_community_or_die, get_admin_communities, get_new_title
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
+from django.db.models import Q
+
 
 class VendorStore:
   def __init__(self):
@@ -48,16 +50,18 @@ class VendorStore:
       
       vendors = community.community_vendors.filter(is_deleted=False)
 
-      if not context['is_sandbox']:
-        vendors = vendors.filter(is_published=True)
+      if not context.is_sandbox:
+        if context.user_is_logged_in and not context.user_is_admin():
+          vendors = vendors.filter(Q(user__id=context.user_id) | Q(is_published=True))
+        else:
+          vendors = vendors.filter(is_published=True)
 
       return vendors, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-
-  def create_vendor(self, context: Context, args) -> Tuple[Vendor, MassEnergizeAPIError]:
+  def create_vendor(self, context: Context, args, user_submitted) -> Tuple[Vendor, MassEnergizeAPIError]:
     try:
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
@@ -78,7 +82,11 @@ class VendorStore:
 
       new_vendor = Vendor.objects.create(**args)
       if images:
-        logo = Media.objects.filter(pk = images[0]).first()
+        if user_submitted:
+          name=f"ImageFor {new_vendor.name} Vendor"
+          logo = Media.objects.create(name=name, file=images)
+        else:
+           logo = Media.objects.filter(pk = images[0]).first()
         new_vendor.logo = logo
       
       if onboarding_contact_email:
@@ -117,16 +125,17 @@ class VendorStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_vendor(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_vendor(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     
     try:
       vendor_id = args.pop('vendor_id', None)
-      vendor = Vendor.objects.filter(id=vendor_id)
-      if not vendor:
+      vendors = Vendor.objects.filter(id=vendor_id)
+      if not vendors:
         return None, InvalidResourceError()  
+      vendor = vendors.first()
 
       # checks if requesting user is the vendor creator, super admin or community admin else throw error
-      if str(vendor.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(vendor.user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
       communities = args.pop('communities', [])
@@ -145,9 +154,8 @@ class VendorStore:
         args['location'] = None
       is_published = args.pop('is_published', None)
 
-
-      vendor.update(**args)
-      vendor = vendor.first()
+      vendors.update(**args)
+      vendor = vendors.first()  # refresh after update
       
       if communities:
         vendor.communities.set(communities)
@@ -162,12 +170,20 @@ class VendorStore:
           vendor.key_contact = key_contact
 
       if images: #now, images will always come as an array of ids, or "reset" string 
-        if images[0] == "reset": #if image is reset, delete the existing image
-          vendor.logo = None
+        if user_submitted:
+          if "ImgToDel" in images:
+            vendor.logo = None
+          else:
+            image= Media.objects.create(file=images, name=f'ImageFor {vendor.name} Vendor')
+            vendor.logo = image
         else:
-          logo = Media.objects.filter(id = images[0]).first()
-          vendor.logo = logo
+          if images[0] == RESET: #if image is reset, delete the existing image
+            vendor.logo = None
+          else:
+            media = Media.objects.filter(id = image[0]).first()
+            vendor.logo = media
       
+    
       if onboarding_contact_email:
         onboarding_contact = UserProfile.objects.filter(email=onboarding_contact_email).first()
         if onboarding_contact:
@@ -312,6 +328,9 @@ class VendorStore:
         # return actions from all communities
         return self.list_vendors_for_super_admin(context)
 
+
+      filter_params = get_vendor_filter_params(context.get_params())
+
       if not community_id:     
         # different code in action.py/event.py
         #user = UserProfile.objects.get(pk=context.user_id)
@@ -322,14 +341,18 @@ class VendorStore:
         vendors = None
         for c in communities:
           if vendors is not None:
-            vendors |= c.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+            vendors |= c.community_vendors.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
           else:
-            vendors = c.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+            vendors = c.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
 
-        return vendors.distinct(), None
+        if vendors:
+          vendors = vendors.distinct()
+        return vendors, None
 
       community = get_community_or_die(context, {'community_id': community_id})
-      vendors = community.community_vendors.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
+      vendors = community.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
+      if vendors:
+        vendors = vendors.distinct()
       return vendors, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -338,8 +361,10 @@ class VendorStore:
 
   def list_vendors_for_super_admin(self, context: Context):
     try:
-      vendors = Vendor.objects.filter(is_deleted=False).select_related('logo').prefetch_related('communities', 'tags')
-      return vendors, None
+
+      filter_params = get_vendor_filter_params(context.get_params())
+      vendors = Vendor.objects.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
+      return vendors.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

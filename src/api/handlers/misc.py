@@ -1,14 +1,10 @@
 """Handler file for all routes pertaining to goals"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents
 from api.services.misc import MiscellaneousService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
-from _main_.utils.utils import Console, get_models_and_field_types
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, super_admins_only
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
 
@@ -35,6 +31,7 @@ class MiscellaneousHandler(RouteHandler):
         self.add("/preferences.list", self.fetch_available_preferences)
         self.add("/settings.list", self.fetch_available_preferences)
         self.add("/what.happened", self.fetch_footages)
+        self.add("/actions.report", self.actions_report)
 
     @admins_only
     def fetch_footages(self, request):
@@ -46,8 +43,9 @@ class MiscellaneousHandler(RouteHandler):
 
     def fetch_available_preferences(self, request):
         context: Context = request.context
+        args:dict = context.args
         if context.user_is_admin():
-            return MassenergizeResponse(data=AdminPortalSettings.Preferences)
+            return MassenergizeResponse(data=UserPortalSettings.Preferences if args.get("subdomain") else AdminPortalSettings.Preferences)
         return MassenergizeResponse(data=UserPortalSettings.Preferences)
 
     def remake_navigation_menu(self, request):
@@ -68,6 +66,15 @@ class MiscellaneousHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         goal_info, err = self.service.backfill(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=goal_info)
+
+    def actions_report(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        print("Got here")
+        goal_info, err = self.service.actions_report(context, args)
         if err:
             return err
         return MassenergizeResponse(data=goal_info)
@@ -98,7 +105,7 @@ class MiscellaneousHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=carbon_info)
-
+    
     def get_carbon_equivalencies(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -113,7 +120,7 @@ class MiscellaneousHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=carbon_info)
-
+    @super_admins_only
     def delete_carbon_equivalency(self, request):
         context: Context = request.context
         args: dict = context.args

@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from pathlib import Path  # python3 only
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
 
 from _main_.utils.utils import is_test_mode
 
@@ -78,7 +79,7 @@ ALLOWED_HOSTS = [
     'dev-api-env.eba-nfqpwkju.us-east-2.elasticbeanstalk.com',
     'massenergize-canary-api.us-east-2.elasticbeanstalk.com',
     'massenergize.test',
-    'massenergize.test:3000'
+    'massenergize.test:3000',
 ]
 
 if RUN_SERVER_LOCALLY:
@@ -86,6 +87,7 @@ if RUN_SERVER_LOCALLY:
     
 
 INSTALLED_APPS = [
+    # 'channels',
     'django_hosts',
     'authentication',
     'carbon_calculator',
@@ -101,6 +103,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'socket_notifications'
 ]
 
 MIDDLEWARE = [
@@ -144,7 +147,10 @@ SECURE_HSTS_SECONDS = 3600
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 USE_X_FORWARDED_HOST = True
+
 WSGI_APPLICATION = '_main_.wsgi.application'
+# ASGI_APPLICATION = '_main_.asgi.application'
+
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 CSRF_COOKIE_SECURE = not DEBUG
@@ -244,15 +250,23 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Sentry Logging Initialization
-sentry_sdk.init(
-    dsn=os.environ.get('SENTRY_DSN'),
-    integrations=[DjangoIntegration()],
+sentry_dsn = os.environ.get('SENTRY_DSN')
+if sentry_dsn:
+  sentry_sdk.init(
+    dsn=sentry_dsn,
+    integrations=[DjangoIntegration(
+            transaction_style='url',
+            middleware_spans=True,
+        ),
+           CeleryIntegration(),
+    ],
     traces_sample_rate=1.0,
+
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
     send_default_pii=True
-)
+  )
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -265,14 +279,15 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True 
 EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 587 
 EMAIL_HOST_USER = os.environ.get('EMAIL')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
-EMAIL_POSTMARK_SERVER_TOKEN = os.environ.get('EMAIL_POSTMARK_SERVER_TOKEN')
+POSTMARK_EMAIL_SERVER_TOKEN = os.environ.get('POSTMARK_EMAIL_SERVER_TOKEN')
+POSTMARK_DOWNLOAD_SERVER_TOKEN = os.environ.get('POSTMARK_DOWNLOAD_SERVER_TOKEN')
 SLACK_COMMUNITY_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_COMMUNITY_ADMINS_WEBHOOK_URL')
 SLACK_SUPER_ADMINS_WEBHOOK_URL = os.environ.get('SLACK_SUPER_ADMINS_WEBHOOK_URL')
 

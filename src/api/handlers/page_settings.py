@@ -1,15 +1,12 @@
 """Handler file for all routes pertaining to all page_settings"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import get_request_contents, rename_field
+from _main_.utils.common import rename_field
 from api.services.page_settings import PageSettingsService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.common import parse_bool
-from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
-import json
+from api.decorators import admins_only, community_admins_only, super_admins_only
 
 
 class PageSettingsHandler(RouteHandler):
@@ -62,7 +59,7 @@ class PageSettingsHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-    page_setting_info, err = self.service.list_page_settings(community_id)
+    page_setting_info, err = self.service.list_page_settings(context,community_id)
     if err:
       return err
     return MassenergizeResponse(data=page_setting_info)
@@ -71,7 +68,8 @@ class PageSettingsHandler(RouteHandler):
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
-
+    self.validator.expect("image", list, is_required=False)
+    args,_ = self.validator.verify(args)
     # special for impact page settings.  these variables won't exist otherwise
     more_info = {}
     for item in ['display_households', 'display_actions', 'display_carbon', 'platform_households', 'state_households', 'manual_households', 
@@ -80,7 +78,7 @@ class PageSettingsHandler(RouteHandler):
         more_info[item] = parse_bool(args.pop(item, False))
     args["more_info"] = more_info
 
-    page_setting_info, err = self.service.update_page_setting(args.get("id", None), args)
+    page_setting_info, err = self.service.update_page_setting(context, args)
     if err:
       return err
     return MassenergizeResponse(data=page_setting_info)
@@ -90,17 +88,17 @@ class PageSettingsHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     page_setting_id = args.get("id", None)
-    page_setting_info, err = self.service.delete_page_setting(page_setting_id)
+    page_setting_info, err = self.service.delete_page_setting(context,page_setting_id)
     if err:
       return err
     return MassenergizeResponse(data=page_setting_info)
 
-  @admins_only
+  @community_admins_only
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop("community_id", None)
-    page_settings, err = self.service.list_page_settings_for_community_admin(community_id)
+    page_settings, err = self.service.list_page_settings_for_community_admin(context,community_id)
     if err:
       return err
     return MassenergizeResponse(data=page_settings)

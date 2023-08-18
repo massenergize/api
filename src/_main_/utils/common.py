@@ -3,9 +3,21 @@ from querystring_parser import parser
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 #import cv2
+from datetime import datetime
+from dateutil import tz
 from sentry_sdk import capture_message
+
+
+def get_date_and_time_in_milliseconds(**kwargs): 
+  hours = kwargs.get("hours", None)
+  date = datetime.now(tz=pytz.UTC)
+  if hours: 
+    delta = timedelta(hours = hours) 
+    date = date + delta
+  current_time_in_ms = date.timestamp() * 1000
+  return current_time_in_ms
 
 def get_request_contents(request,**kwargs):
   filter_out = kwargs.get("filter_out")
@@ -106,11 +118,18 @@ def rename_fields(args, pairs):
   return args
 
 
-def serialize_all(data, full=False):
+def serialize_all(data, full=False, **kwargs):
+  #medium = (kwargs or {}).get("medium", False)
   if not data:
     return []
+
+  if isinstance(data[0], dict):
+    return data
+
   if full:
     return [d.full_json() for d in data]
+  #elif medium: 
+  #  return [d.medium_json() for d in data]
   return [d.simple_json() for d in data]
 
 
@@ -196,3 +215,11 @@ def set_cookie(response, key, value): # TODO
   MAX_AGE = 31536000
 
   response.set_cookie(key, value, MAX_AGE, samesite='Strict')
+
+
+
+def utc_to_local(iso_str):
+  local_zone = tz.tzlocal()
+  dt_utc = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=pytz.UTC)
+  local_now = dt_utc.astimezone(local_zone)
+  return local_now

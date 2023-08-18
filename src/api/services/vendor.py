@@ -1,10 +1,12 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.vendor import VendorStore
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die, get_community_or_die
 from sentry_sdk import capture_message
@@ -39,7 +41,7 @@ class VendorService:
         if not community:
           return None, CustomMassenergizeError('Vendor submission requires a community')
 
-      vendor, err = self.store.create_vendor(context, args)
+      vendor, err = self.store.create_vendor(context, args,user_submitted)
       if err:
         return None, err
 
@@ -75,7 +77,8 @@ class VendorService:
         send_massenergize_rich_email(
               subject, admin_email, 'vendor_submitted_email.html', content_variables)
 
-        send_slack_message(
+        if IS_PROD or IS_CANARY: 
+          send_slack_message(
             #SLACK_COMMUNITY_ADMINS_WEBHOOK_URL, {
             SLACK_SUPER_ADMINS_WEBHOOK_URL, {
             "content": "User submitted Vendor for "+community_name,
@@ -93,8 +96,8 @@ class VendorService:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_vendor(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    vendor, err = self.store.update_vendor(context, args)
+  def update_vendor(self, context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
+    vendor, err = self.store.update_vendor(context, args, user_submitted)
     if err:
       return None, err
     return serialize(vendor), None
@@ -123,11 +126,13 @@ class VendorService:
     vendors, err = self.store.list_vendors_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(vendors), None
+    sorted = sort_items(vendors, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_vendors_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     vendors, err = self.store.list_vendors_for_super_admin(context)
     if err:
       return None, err
-    return serialize_all(vendors), None
+    sorted = sort_items(vendors, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None

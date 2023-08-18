@@ -1,6 +1,7 @@
 import json
 from api.store.utils import get_community_or_die
-from database.models import HomePageSettings, ImageSequence, UserProfile, Media
+from api.tests.common import RESET
+from database.models import HomePageSettings, ImageSequence, UserProfile, Media, Event
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
@@ -37,6 +38,32 @@ class HomePageSettingsStore:
       return new_home_page_setting, None
     except Exception:
       return None, ServerError()
+    
+  def add_event(self, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      res = {}
+      community_id = args.get('community_id')
+      event_id = args.get("event_id")
+      event = Event.objects.filter(id=event_id).first()
+      home_page_setting = HomePageSettings.objects.filter(community__id=community_id).first()
+      event_already_exist =  home_page_setting.featured_events.filter(id=event_id).exists()
+      if event_already_exist:
+         home_page_setting.featured_events.remove(event)
+         res = {
+           "msg":f"{event.name} has been removed from your home page",
+           "status":False
+         }
+      else:
+        home_page_setting.featured_events.add(event)
+        res = {
+           "msg":f"{event.name} has been added to your home page",
+           "status":True
+         }
+      home_page_setting.save()
+      return res, None
+    except Exception:
+      return None, ServerError()
+
 
 
   def update_home_page_setting(self, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -99,24 +126,28 @@ class HomePageSettingsStore:
       #images
       images = args.pop("images", None)
       if images: 
-        new_sequence = json.dumps(images)
-        found_images = [ Media.objects.filter(id = img_id).first() for img_id in images ]
-        home_page_setting.images.clear() 
-        home_page_setting.images.set(found_images)
-        
-        sequence_obj = home_page_setting.image_sequence 
-        if sequence_obj: 
-          ImageSequence.objects.filter(id = sequence_obj.id).update(sequence = new_sequence)
-        else: # First time creating a sequence Obj for homepage images
-          name = f"Homepage settings Id - {home_page_id} - for community({home_page_setting.community.id}, {home_page_setting.community.name}) "
-          image_sequence = ImageSequence.objects.create(name = name, sequence= new_sequence) 
-          home_page_setting.image_sequence = image_sequence
+        if images[0] == RESET: 
+          home_page_setting.images.clear()
+        else:
+          new_sequence = json.dumps(images)
+          found_images = [ Media.objects.filter(id = img_id).first() for img_id in images ]
+          home_page_setting.images.clear() 
+          home_page_setting.images.set(found_images)
+          
+          sequence_obj = home_page_setting.image_sequence 
+          if sequence_obj: 
+            ImageSequence.objects.filter(id = sequence_obj.id).update(sequence = new_sequence)
+          else: # First time creating a sequence Obj for homepage images
+            name = f"Homepage settings Id - {home_page_id} - for community({home_page_setting.community.id}, {home_page_setting.community.name}) "
+            image_sequence = ImageSequence.objects.create(name = name, sequence= new_sequence) 
+            home_page_setting.image_sequence = image_sequence
 
       home_page_setting.save()
 
 
       #now, update the other fields in one swing
       HomePageSettings.objects.filter(id=home_page_id).update(**args)
+      home_page_setting.refresh_from_db()
       return home_page_setting, None
     except Exception as e:
       capture_message(str(e), level="error")

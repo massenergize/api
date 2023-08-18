@@ -1,13 +1,11 @@
 from django.core.exceptions import ValidationError
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
 from .utils import unique_media_filename
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, Media, Tag, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
-import json
 limit = 32
 
 
@@ -150,7 +148,7 @@ class MediaLibraryStore:
         return True, None
 
     def addToGallery(self, args,context):
-        community_ids = args.get("community_ids")
+        community_ids = args.get("community_ids", [])
         user_id = args.get("user_id")
         title = args.get("title") or "Gallery Upload"
         file = args.get("file")
@@ -183,7 +181,7 @@ class MediaLibraryStore:
             info=info,
         )
         # ----------------------------------------------------------------
-        Spy.create_media_footage(media = [user_media.media], communities = [communities], context = context,  type = FootageConstants.create(), notes=f"Media ID({user_media.media.id})")
+        Spy.create_media_footage(media = [user_media.media], communities = [*community_ids], context = context,  type = FootageConstants.create(), notes=f"Media ID({user_media.media.id})")
         # ----------------------------------------------------------------
         return user_media, None
 

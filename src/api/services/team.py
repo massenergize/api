@@ -1,12 +1,14 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
 from _main_.utils.common import serialize, serialize_all
+from _main_.utils.pagination import paginate
 from api.store.team import TeamStore
 from api.store.message import MessageStore
+from api.utils.filter_functions import sort_items
 from database.models import TeamMember
 from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL
+from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from .utils import send_slack_message
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -68,14 +70,14 @@ class TeamService:
       return None, err
     return serialize(team), None
 
-  def join_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.join_team(args)
+  def join_team(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.join_team(context,args)
     if err:
       return None, err
     return serialize(team), None
 
-  def leave_team(self, args) -> Tuple[dict, MassEnergizeAPIError]:
-    team, err = self.store.leave_team(args)
+  def leave_team(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    team, err = self.store.leave_team(context,args)
     if err:
       return None, err
     return serialize(team), None
@@ -96,7 +98,7 @@ class TeamService:
     members, err = self.store.members(context, args)
     if err:
       return None, err
-    return serialize_all(members), None
+    return paginate(members, context.get_pagination_data()), None
 
   def members_preferred_names(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
     preferred_names, err = self.store.members_preferred_names(context, args)
@@ -142,7 +144,8 @@ class TeamService:
           send_massenergize_rich_email(
             subject, user.email, 'contact_team_admin_email.html', content_variables)
 
-      send_slack_message(
+      if IS_PROD or IS_CANARY:
+        send_slack_message(
           SLACK_SUPER_ADMINS_WEBHOOK_URL, {
           "content": "Message to Team Admin of "+team.name,
           "from_name": message.user_name,
@@ -164,20 +167,22 @@ class TeamService:
     teams, err = self.store.list_teams_for_community_admin(context, args)
     if err:
       return None, err
-    return serialize_all(teams), None
+    sorted = sort_items(teams, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
-  def list_teams_for_super_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    teams, err = self.store.list_teams_for_super_admin(context)
+  def list_teams_for_super_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
+    teams, err = self.store.list_teams_for_super_admin(context,args)
     if err:
       return None, err
-    return serialize_all(teams), None
+    sorted = sort_items(teams, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_actions_completed(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     completed_actions_list, err = self.store.list_actions_completed(context, args)
     if err:
       return None, err
-    return completed_actions_list, None
+    return paginate(completed_actions_list, context.get_pagination_data()), None
 
 

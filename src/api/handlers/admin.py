@@ -1,15 +1,10 @@
 """Handler file for all routes pertaining to admins"""
 
 from _main_.utils.route_handler import RouteHandler
-import _main_.utils.common as utils
-from _main_.utils.common import get_request_contents, rename_field, parse_bool, parse_location, parse_list, validate_fields, parse_string
 from api.services.admin import AdminService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.massenergize_errors import CustomMassenergizeError
-from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
+from api.decorators import admins_only, super_admins_only
 
 
 class AdminHandler(RouteHandler):
@@ -25,9 +20,9 @@ class AdminHandler(RouteHandler):
     self.add("/admins.super.list", self.list_super_admin) 
     self.add("/admins.community.add", self.add_community_admin) 
     self.add("/admins.community.remove", self.remove_community_admin) 
-    self.add("/admins.community.list", self.list_community_admin) 
+    self.add("/admins.community.list", self.list_community_admin)  # Not a list route
     self.add("/admins.messages.add", self.message) 
-    self.add("/admins.messages.list", self.list_messages) 
+    self.add("/admins.messages.list", self.list_messages) # Not in use
 
   @super_admins_only
   def add_super_admin(self, request):
@@ -69,7 +64,7 @@ class AdminHandler(RouteHandler):
   @super_admins_only
   def list_super_admin(self, request): 
     context: Context  = request.context
-    args = context.get_request_body() 
+    args = context.get_request_body()
     admin_info, err = self.service.list_super_admin(context, args)
     if err:
       return err

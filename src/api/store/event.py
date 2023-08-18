@@ -1,20 +1,23 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
+from _main_.utils.utils import is_url_valid
 from api.tests.common import RESET
-from database.models import CommunityAdminGroup, Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
+from api.utils.api_utils import is_admin_of_community
+from api.utils.filter_functions import get_events_filter_params
+from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from django.db.models import Q
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 
 from database.utils.settings.model_constants.events import EventConstants
-from .utils import get_user_or_die, get_new_title
+from .utils import get_user_from_context, get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
 import calendar
 import pytz
 from typing import Tuple
+
 
 def _local_datetime(date_and_time):
   # the local date (in Massachusetts) is different than the UTC date
@@ -119,6 +122,8 @@ class EventStore:
         new_event.location = event_to_copy.location
         new_event.more_info = event_to_copy.more_info
         new_event.external_link = event_to_copy.external_link
+        new_event.external_link_type = event_to_copy.external_link_type
+        new_event.event_type = event_to_copy.event_type
         if not (event_to_copy.is_recurring == None):
           new_event.is_recurring = event_to_copy.is_recurring
           new_event.recurring_details = event_to_copy.recurring_details
@@ -190,7 +195,7 @@ class EventStore:
       return None, CustomMassenergizeError(e)
 
   def list_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    community_id = args.pop("community_id", None)
+    community_id = context.args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop("user_id", None)
     shared = []
@@ -198,13 +203,14 @@ class EventStore:
       #TODO: also account for communities who are added as invited_communities
       query =Q(community__id=community_id)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
+
       # Find events that have been shared to this community
       community = Community.objects.get(pk = community_id)
       shared = [] 
-      if community: shared = community.events_from_others.filter(is_published=True)
+      if community: 
+        shared = community.events_from_others.filter(is_published=True)
+
     
-      
-      
     elif subdomain:
       query =  Q(community__subdomain=subdomain)
       events = Event.objects.select_related('image', 'community').prefetch_related('tags', 'invited_communities').filter(query)
@@ -220,15 +226,17 @@ class EventStore:
       events = []
     
     if not context.is_sandbox and events:
-      events = events.filter(is_published=True)
+      if context.user_is_logged_in and not context.user_is_admin():
+          events = events.filter(Q(user__id=context.user_id) | Q(is_published=True))
+      else:
+         events = events.filter(is_published=True)
+    all_events = [*events, *shared]
 
-    
+    all_events = Event.objects.filter(pk__in=[item.id for item in all_events])
+    return all_events, None
 
-    return [*events,*shared], None
+  def create_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
 
-
-  def create_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-    
     try:
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -248,6 +256,9 @@ class EventStore:
 
       if end_date_and_time < start_date_and_time :
           return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
+      
+      if args.get('is_published', False):
+        args['published_at'] = datetime.datetime.now()
 
       if is_recurring:
         if final_date:
@@ -269,21 +280,34 @@ class EventStore:
       if recurring_type != "month":
         week_of_month = None
 
-      have_address = args.pop('have_address', False)
-      if not have_address:
+      event_type = args.get('event_type', None)
+      if event_type == "in-person":
+        args['external_link'] = None
+      elif event_type == "online":
         args['location'] = None
+
+      if args.get('external_link', None):
+        is_link_valid = is_url_valid(args.get("external_link"))
+        if not is_link_valid:
+          return None, CustomMassenergizeError("Please provide a valid link for the event.") 
+
 
       if community:
         community = Community.objects.get(pk=community)
         if not community:
           return None, CustomMassenergizeError("Please provide a valid community_id")
 
+
       new_event: Event = Event.objects.create(**args)
       if community:
         new_event.community = community
 
       if image: #now, images will always come as an array of ids 
-        media = Media.objects.filter(pk = image[0]).first()
+        if user_submitted:
+          name= f'ImageFor {new_event.name} Event'
+          media = Media.objects.create(name=name, file=image)
+        else: 
+          media = Media.objects.filter(pk = image[0]).first()
         new_event.image = media
 
       if tags:
@@ -331,19 +355,35 @@ class EventStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
-  def update_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_event(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
+
       publicity_selections = args.pop("publicity_selections", [])
       shared_to = args.pop("shared_to", [])
-      
+
       if not events:
         return None, InvalidResourceError()
+      event = events.first()
 
-      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(events.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
-        return None, NotAuthorizedError()
+      # check if requesting user is the action creator, super admin or community admin else throw error
+      creator = str(event.user_id)
+      community = event.community
+      if context.user_id == creator:
+        # action creators can't currently modify once published
+        if event.is_published and not context.user_is_admin():
+          # ideally this would submit changes to the community admin to publish
+          return None, CustomMassenergizeError("Unable to modify event once published.  Please contact Community Admin to do this")
+      else:
+        # otherwise you must be an administrator
+        if not context.user_is_admin():
+          return None, NotAuthorizedError()
+
+        # check if user is community admin and is also an admin of the community that created the event
+        if community:
+          if not is_admin_of_community(context, community.id):
+            return None, NotAuthorizedError()
 
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -365,6 +405,11 @@ class EventStore:
       community_id = args.pop("community_id", None)
       is_approved = args.pop('is_approved', None)
       is_published = args.pop('is_published', None)
+
+      if is_published:
+        args['published_at'] = datetime.datetime.now()
+      else:
+        args['published_at'] = None
 
 
       if start_date_and_time and end_date_and_time:
@@ -410,21 +455,41 @@ class EventStore:
       ### if not is_approved and is_published:
       ###    return None, CustomMassenergizeError("Cannot publish event that is not approved.")
 
-      have_address = args.pop('have_address', False)
-      if not have_address:
+      event_type = args.get('event_type', None)
+      if event_type == "in-person":
+        args['external_link'] = None
+      elif event_type == "online":
         args['location'] = None
 
+
+      if args.get('external_link', None):
+        is_link_valid = is_url_valid(args.get("external_link"))
+        if not is_link_valid:
+          return None, CustomMassenergizeError("Please provide a valid link for the event.") 
+
+       
+      #  preventing the user from approving event if they are not an admin
+      if not context.user_is_admin():
+        args.pop('is_approved', None)
+        args.pop('is_published', None)
 
       # update the event instance
       events.update(**args)
       event: Event = events.first()
 
       if image: #now, images will always come as an array of ids, or "reset" string 
-        if image[0] == RESET: #if image is reset, delete the existing image
-          event.image = None
+        if user_submitted:
+          if "ImgToDel" in image:
+            event.image = None
+          else:
+            image= Media.objects.create(file=image, name=f'ImageFor {event.name} Event')
+            event.image = image
         else:
-          media = Media.objects.filter(id = image[0]).first()
-          event.image = media
+          if image[0] == RESET: #if image is reset, delete the existing image
+            event.image = None
+          else:
+            media = Media.objects.filter(id = image[0]).first()
+            event.image = media
       
       if community_id:
         community = Community.objects.filter(pk=community_id).first()
@@ -440,7 +505,10 @@ class EventStore:
         event.communities_under_publicity.set(publicity_selections)
 
       if shared_to:
-        event.shared_to.set(shared_to)
+        first = shared_to[0]
+        if first == "reset": 
+          event.shared_to.clear()
+        else: event.shared_to.set(shared_to)
 
       if is_recurring:
 
@@ -477,6 +545,7 @@ class EventStore:
               archive = event.archive, 
               is_global = event.is_global, 
               external_link = event.external_link, 
+              external_link_type = event.external_link_type, 
               more_info = event.more_info, 
               is_deleted = event.is_deleted, 
               is_published = event.is_published,
@@ -663,6 +732,9 @@ class EventStore:
       if not events:
         return None, InvalidResourceError()
       
+      if not is_admin_of_community(context, events.first().community.id):
+          return None, NotAuthorizedError()
+      
       if len(events) > 1:
         return None, CustomMassenergizeError("Deleting multiple events not supported")
       event = events.first()
@@ -691,6 +763,8 @@ class EventStore:
       excluded = args.get("exclude", False)
       events = []
       admin_of = []
+      filter_params = get_events_filter_params(context.get_params())
+
       user = UserProfile.objects.filter(email=context.user_email).first()
       today = datetime.datetime.today()
       if user: 
@@ -699,10 +773,11 @@ class EventStore:
       if excluded: 
         # Find all events that are open in any community, but exclude events from the selected communities
         events = Event.objects.filter(Q(start_date_and_time__gte=today, is_published = True,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,publicity=EventConstants.open_to(),communities_under_publicity__id__in = admin_of)).exclude(community__id__in = ids).order_by("-id") 
+
       else: 
         # Find events that have publicity as open, and belong to the selected community, OR, find events that from any of the listed communities that are open to any of the admins communities
         events =  Event.objects.filter(Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids,publicity = EventConstants.open(), is_global = False) | Q(start_date_and_time__gte=today,is_published = True,community__id__in = ids, publicity = EventConstants.open_to(),communities_under_publicity__id__in = admin_of, is_global = False)).distinct().order_by("-id")
-      return events, None
+      return events.filter(*filter_params).distinct(), None
     except Exception as e: 
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -724,16 +799,20 @@ class EventStore:
         
       # community_id coming from admin portal is 'undefined'
       elif not community_id:
+        filter_params = get_events_filter_params(context.get_params())
+
         user = UserProfile.objects.get(pk=context.user_id)
         admin_groups = user.communityadmingroup_set.all()
         comm_ids = [ag.community.id for ag in admin_groups]
         # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
         # not as their own separate events
-        events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
-
+        events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
         return events, None
-
-      events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True), is_deleted=False).select_related('image', 'community').prefetch_related('tags')
+      
+      if not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
+      
+      events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -744,7 +823,9 @@ class EventStore:
     try:
       # don't return the events that are rescheduled instances of recurring events - these should be edited by CAdmins in the recurring event's edit form, 
       # not as their own separate events
-      events = Event.objects.filter(is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
+      filter_params = get_events_filter_params(context.get_params())
+      
+      events = Event.objects.filter(*filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -794,7 +875,7 @@ class EventStore:
     try:
       event_id = args.pop("event_id", None)
       status = args.pop("status", "SAVE")
-      user = get_user_or_die(context, args)      
+      user = get_user_from_context(context) 
       event = Event.objects.filter(pk=event_id).first()
       if not event:
         return None, InvalidResourceError()
@@ -821,7 +902,7 @@ class EventStore:
     try:
       rsvp_id = args.pop("rsvp_id", None)
       event_id = args.pop("event_id", None)
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
 
       if rsvp_id:
         result = EventAttendee.objects.filter(pk=rsvp_id).delete()
@@ -834,6 +915,26 @@ class EventStore:
         raise Exception("events.rsvp.remove: must specify rsvp or event id")
           
       return result, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+
+  def share_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      event_id = args.pop("event_id", None)
+      event = Event.objects.filter(id=event_id).first()
+      shared_to = args.pop("shared_to", None)
+      if shared_to:
+        first = shared_to[0]
+        if first == "reset": 
+          event.shared_to.clear()
+        else: event.shared_to.set(shared_to)
+      event.save()
+
+
+      return event, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

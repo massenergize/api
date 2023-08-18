@@ -104,7 +104,9 @@ class VendorHandler(RouteHandler):
       .expect("properties_serviced", 'str_list', is_required=False)
       .expect("image", "file", is_required=False)
       .expect("tags", list, is_required=False)
-      .expect("location", "location", is_required=False)
+      .expect("location", str, is_required=False)
+      .expect("vendor_id", str)
+    
     )
 
     args, err = self.validator.verify(args)
@@ -113,7 +115,12 @@ class VendorHandler(RouteHandler):
 
     # user submitted vendor, so notify the community admins
     user_submitted = True
-    vendor_info, err = self.service.create_vendor(context, args, user_submitted)
+    is_edit = args.get("vendor_id", None)
+
+    if is_edit:
+      vendor_info, err = self.service.update_vendor(context, args, user_submitted)
+    else:
+      vendor_info, err = self.service.create_vendor(context, args, user_submitted)
     if err:
       return err
     return MassenergizeResponse(data=vendor_info)
@@ -212,11 +219,12 @@ class VendorHandler(RouteHandler):
     args: dict = context.args
 
     self.validator.expect("community_id", int, is_required=False)
+
     args, err = self.validator.verify(args)
     if err:
       return err
-
     vendors, err = self.service.list_vendors_for_community_admin(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=vendors)

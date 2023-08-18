@@ -4,10 +4,7 @@ from _main_.utils.route_handler import RouteHandler
 #from _main_.utils.common import get_request_contents
 from api.services.goal import GoalService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from types import FunctionType as function
-from _main_.utils.utils import get_models_and_field_types
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
 
 
@@ -47,7 +44,7 @@ class GoalHandler(RouteHandler):
     return MassenergizeResponse(data=goal_info)
 
 
-  @login_required
+  @admins_only
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -68,7 +65,7 @@ class GoalHandler(RouteHandler):
     community_id = args.pop("community_id", None)
     subdomain = args.pop("subdomain", None)
     user_id = args.pop('user_id', None)
-    goal_info, err = self.service.list_goals(community_id, subdomain, team_id, user_id)
+    goal_info, err = self.service.list_goals(community_id, subdomain, team_id, user_id, context)
     if err:
       return err
     return MassenergizeResponse(data=goal_info)
@@ -118,7 +115,7 @@ class GoalHandler(RouteHandler):
   def super_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    goals, err = self.service.list_goals_for_super_admin()
+    goals, err = self.service.list_goals_for_super_admin(context)
     if err:
       return err
     return MassenergizeResponse(data=goals)

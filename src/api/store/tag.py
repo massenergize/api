@@ -1,7 +1,5 @@
-from database.models import Tag, UserProfile
+from database.models import Tag
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
 
@@ -16,7 +14,7 @@ class TagStore:
     return tag, None
 
 
-  def list_tags(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_tags(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
     tags = Tag.objects.filter(community__id=community_id)
     if not tags:
       return [], None
@@ -48,11 +46,12 @@ class TagStore:
     return tags.first()
 
 
-  def list_tags_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
-    return self.list_tags_for_super_admin()
+  def list_tags_for_community_admin(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    tags =  self.list_tags_for_super_admin()
+    return tags
 
 
-  def list_tags_for_super_admin(self):
+  def list_tags_for_super_admin(self, context):
     try:
       tags = Tag.objects.all()
       return tags, None

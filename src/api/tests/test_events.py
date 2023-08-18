@@ -38,12 +38,13 @@ class EventsTestCase(TestCase):
 
         self.startTime = datetime.now()
         self.endTime = datetime.now()
-        self.EVENT1 = Event.objects.create(community=self.COMMUNITY, name="event1", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
+        self.EVENT1 = Event.objects.create(community=self.COMMUNITY, name="event1", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=False)
         self.EVENT2 = Event.objects.create(community=self.COMMUNITY, name="event2", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
         self.EVENT3 = Event.objects.create(community=self.COMMUNITY, name="event3", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
         self.EVENT4 = Event.objects.create(community=self.COMMUNITY, name="event4", start_date_and_time=self.startTime, end_date_and_time=self.endTime, is_published=True)
 
         self.EVENT1.user = self.USER1
+        self.EVENT2.user = self.USER1
 
         self.EVENT1.save()
         self.EVENT2.save()
@@ -121,9 +122,9 @@ class EventsTestCase(TestCase):
         # test logged as cadmin
         signinAs(self.client, self.CADMIN)
         response = self.client.post('/api/events.create', urlencode({"community_id": self.COMMUNITY.id,
-                                                                           "name": "test_cadmin", 
-                                                                           "start_date_and_time": self.startTime, 
-                                                                           "end_date_and_time": self.endTime}), content_type="application/x-www-form-urlencoded").toDict()
+                                "name": "test_cadmin", 
+                                "start_date_and_time": self.startTime, 
+                                    "end_date_and_time": self.endTime}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "test_cadmin")
 
@@ -201,11 +202,16 @@ class EventsTestCase(TestCase):
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "name": "updated_name"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertFalse(response["success"])
 
-        # test logged as user who submitted it
+        # test logged as user who submitted it when it isn't published
         signinAs(self.client, self.USER1)
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "name": "updated_name1"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
         self.assertEqual(response["data"]["name"], "updated_name1")
+        
+         # test logged as user who submitted it when it isn't published
+        signinAs(self.client, self.USER1)
+        response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT2.id, "name": "updated_name2"}), content_type="application/x-www-form-urlencoded").toDict()
+        self.assertFalse(response["success"])
 
 
         # test logged as cadmin
@@ -227,9 +233,9 @@ class EventsTestCase(TestCase):
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_published": "false"}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
 
-        # test setting live but not yet approved
+        # test setting live but not yet approved ::BACKED-OUT::
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_approved": "false", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
-        self.assertFalse(response["success"])
+        self.assertTrue(response["success"])
 
         # test setting live and approved
         response = self.client.post('/api/events.update', urlencode({"event_id": self.EVENT1.id, "is_approved": "true", "is_published": "true"}), content_type="application/x-www-form-urlencoded").toDict()
@@ -296,6 +302,7 @@ class EventsTestCase(TestCase):
         # test logged as user
         signinAs(self.client, self.USER)
         response = self.client.post('/api/events.rsvp.remove', urlencode({"event_id": self.EVENT1.id}), content_type="application/x-www-form-urlencoded").toDict()
+
         self.assertTrue(response["success"])
 
         # test logged as cadmin
@@ -328,7 +335,7 @@ class EventsTestCase(TestCase):
         self.assertTrue(response["success"])      
         self.assertEqual(response["data"], {})
 
-        # test logged as sadmin
+        # test logged as sadmin["items"]
         #signinAs(self.client, self.SADMIN)
 
     def test_list_rsvps(self):
@@ -385,5 +392,22 @@ class EventsTestCase(TestCase):
         signinAs(self.client, None)
         response = self.client.post('/api/events.date.update', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
         self.assertTrue(response["success"])
+
+
+    def test_events_sharing(self):
+        # test share event to community as cadmin
+        signinAs(self.client, self.CADMIN)
+        response =self.client.post('/api/events.share',data=f"event_id={self.EVENT1.id}&shared_to={self.COMMUNITY.id}",content_type="application/x-www-form-urlencoded" ).json()
+        self.assertTrue(response["success"])
+
+        # test share event to community as normal user
+        signinAs(self.client, self.USER)
+        response =self.client.post('/api/events.share',data=f"event_id={self.EVENT1.id}&shared_to={self.COMMUNITY.id}",content_type="application/x-www-form-urlencoded" ).json()
+        self.assertFalse(response["success"])
+
+        # test share event to community with improper args 
+        signinAs(self.client, self.USER)
+        response =self.client.post('/api/events.share',data=f"event_id={self.EVENT1.id}",content_type="application/x-www-form-urlencoded" ).json()
+        self.assertFalse(response["success"])
 
         

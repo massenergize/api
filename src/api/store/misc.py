@@ -1,15 +1,11 @@
-from datetime import datetime
-from django.db.models import Q
 from _main_.utils.footage.spy import Spy
 from api.tests.common import createUsers
 from database.models import (
     Action,
-    FeatureFlag,
     Vendor,
     Subdomain,
     Event,
     Community,
-    Tag,
     Menu,
     Team,
     TeamMember,
@@ -22,7 +18,6 @@ from database.models import (
     UserActionRel,
     Data,
     Location,
-    Media,
     HomePageSettings,
 )
 from _main_.utils.massenergize_errors import (
@@ -82,6 +77,21 @@ class MiscellaneousStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
+
+    def actions_report(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        print("Actions report!")
+        total = 0
+        total_wo_ccaction = 0
+        for c in Community.objects.filter(is_published=True):
+            print(c)
+            actions = Action.objects.filter(community__id=c.id, is_published=True, is_deleted=False)
+            total += actions.count()
+            for action in actions:
+                if action.calculator_action == None:
+                    total_wo_ccaction += 1
+                    print(action.title + " has no corresponding CCAction")
+        print("Total actions = "+str(total) + ", no CCAction ="+str(total_wo_ccaction))
+        return None, None
 
     def backfill(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         return self.backfill_graph_default_data(context, args), None

@@ -3,7 +3,7 @@
 from _main_.utils.route_handler import RouteHandler
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from api.decorators import admins_only
+from api.decorators import super_admins_only
 from api.services.task_queue import TaskQueueService
 
 
@@ -24,7 +24,7 @@ class TaskQueueHandler(RouteHandler):
     self.add("/tasks.activate", self.activate)
     self.add("/tasks.deactivate", self.deactivate)
 
-  @admins_only
+  @super_admins_only
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -41,7 +41,7 @@ class TaskQueueHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=team_info)
 
-  @admins_only
+  @super_admins_only
   def create(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -63,7 +63,7 @@ class TaskQueueHandler(RouteHandler):
     return MassenergizeResponse(data=task)
 
 
-  @admins_only
+  @super_admins_only
   def list_tasks(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -72,7 +72,7 @@ class TaskQueueHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=tasks)
 
-  @admins_only
+  @super_admins_only
   def list_tasks_functions(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -82,7 +82,7 @@ class TaskQueueHandler(RouteHandler):
     return MassenergizeResponse(data=tasks)
 
 
-  @admins_only
+  @super_admins_only
   def update(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -104,7 +104,7 @@ class TaskQueueHandler(RouteHandler):
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data=task)
 
-  @admins_only
+  @super_admins_only
   def delete(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -122,7 +122,7 @@ class TaskQueueHandler(RouteHandler):
     return MassenergizeResponse(data=task)
 
 
-  @admins_only
+  @super_admins_only
   def activate(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -141,7 +141,7 @@ class TaskQueueHandler(RouteHandler):
 
 
 
-  @admins_only
+  @super_admins_only
   def deactivate(self, request):
     context: Context = request.context
     args: dict = context.args

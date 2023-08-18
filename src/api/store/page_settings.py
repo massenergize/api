@@ -1,5 +1,7 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from .utils import get_community, unique_media_filename
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError, NotAuthorizedError
+from api.tests.common import RESET
+from api.utils.api_utils import is_admin_of_community
+from .utils import get_community
 from sentry_sdk import capture_message
 from database.models import Media
 from typing import Tuple
@@ -31,7 +33,9 @@ class PageSettingsStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
   
-  def list_page_settings(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_page_settings(self,context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    if not is_admin_of_community(context, community_id):
+        return None, NotAuthorizedError()
     page_settings = self.pageSettingsModel.objects.filter(community__id=community_id)
     if not page_settings:
       return [], None
@@ -45,10 +49,15 @@ class PageSettingsStore:
     except Exception:
       return None, ServerError()
   
-  def update_page_setting(self, page_setting_id, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_page_setting(self,context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    page_setting_id = args.get("id", None)
     page_setting = self.pageSettingsModel.objects.filter(id=page_setting_id)
     if not page_setting:
       return None, InvalidResourceError()
+    if not is_admin_of_community(context, page_setting.first().community.id):
+        return None, NotAuthorizedError()
+    
+
     args['is_published'] = args.pop('is_published', '').lower() == 'true'
     
     more_info = args.pop("more_info", None)
@@ -59,30 +68,32 @@ class PageSettingsStore:
     if len(more_info.keys())>0:
       page_setting.more_info = more_info
       page_setting.save()
-    
-    # Page settings models support multiple images, but we currently allow just one.
-    # @TODO handle uploading multiple images for pages that have many images (currently no pages actually use it yet)
-    if image:
-      if image == "None":
-        page_setting.images.clear()
-      else:
-
-        image.name = unique_media_filename(image)
-        media = Media.objects.create(name="Page-Image", file=image)
-        page_setting.images.clear()
-        page_setting.images.add(media)
-      page_setting.save()
+   
+    if image: 
+        if image[0] == RESET: 
+          page_setting.images.clear()
+        else:
+          # It's setup to expect multiple images but we are using one image for now.(Just like it was before Mlibrary)
+          media = Media.objects.filter(id = image[0]).first()
+          page_setting.images.clear() 
+          page_setting.images.add(media)
+    page_setting.save()
     return page_setting, None
   
-  def delete_page_setting(self, page_setting_id) -> Tuple[dict, MassEnergizeAPIError]:
+  def delete_page_setting(self, context,page_setting_id) -> Tuple[dict, MassEnergizeAPIError]:
     page_settings = self.pageSettingsModel.objects.filter(id=page_setting_id)
     if not page_settings:
       return None, InvalidResourceError()
     
+    if not is_admin_of_community(context, page_settings.first().community.id):
+        return None, NotAuthorizedError()
+    
     page_settings.update(**{'is_deleted': True})
     return page_settings.first(), None
   
-  def list_page_settings_for_community_admin(self, community_id) -> Tuple[list, MassEnergizeAPIError]:
+  def list_page_settings_for_community_admin(self, context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+    if not is_admin_of_community(context, community_id):
+        return None, NotAuthorizedError()
     page_settings = self.pageSettingsModel.objects.filter(community__id=community_id)
     return page_settings, None
   

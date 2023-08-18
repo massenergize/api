@@ -2,7 +2,7 @@ from _main_.utils.route_handler import RouteHandler
 from api.services.download import DownloadService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from api.decorators import admins_only
+from api.decorators import admins_only, super_admins_only
 
 # see: https://docs.djangoproject.com/en/3.0/howto/outputting-csv
 
@@ -22,7 +22,9 @@ class DownloadHandler(RouteHandler):
     self.add("/downloads.metrics", self.metrics_download)
     self.add("/downloads.cadmin_report", self.send_cadmin_report)
     self.add("/downloads.sadmin_report", self.send_sadmin_report)
-    
+    self.add("/downloads.sample.user_report", self.send_sample_user_report)
+    self.add("/downloads.action.users", self.action_users_download)
+    self.add("/downloads.policy", self.policy_download)
 
   @admins_only
   def users_download(self, request):
@@ -46,9 +48,9 @@ class DownloadHandler(RouteHandler):
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
+  
 
-
-  @admins_only
+  @super_admins_only
   def communities_download(self, request):
     context: Context = request.context
     #args: dict = context.args
@@ -74,8 +76,10 @@ class DownloadHandler(RouteHandler):
     args: dict = context.args
 
     community_id = args.pop('community_id', None)
+    audience = args.pop('audience', None)
+    report_community_ids = args.pop('community_ids', None)
 
-    communities_data, err = self.service.metrics_download(context, args, community_id)
+    communities_data, err = self.service.metrics_download(context, args, community_id, audience, report_community_ids)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
@@ -85,19 +89,46 @@ class DownloadHandler(RouteHandler):
     context: Context = request.context
     args: dict = context.args
     community_id = args.pop('community_id', None)
-
     report, err = self.service.send_cadmin_report(context, community_id=community_id)
     print(report)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)
 
-  @admins_only
+  def send_sample_user_report(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    community_id = args.pop('community_id', None)
+    report, err = self.service.send_sample_user_report(context, community_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+
+  @super_admins_only
   def send_sadmin_report(self, request):
     context: Context = request.context
     args: dict = context.args
 
     report, err = self.service.send_sadmin_report(context)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+
+  @admins_only
+  def action_users_download(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    action_id = args.pop('action_id', None)
+    _, err = self.service.action_users_download(context, action_id)
+    if err:
+      return MassenergizeResponse(error=str(err), status=err.status)
+    return MassenergizeResponse(data={}, status=200)
+
+  @admins_only
+  def policy_download(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    report, err = self.service.policy_download(context, args)
     if err:
       return MassenergizeResponse(error=str(err), status=err.status)
     return MassenergizeResponse(data={}, status=200)

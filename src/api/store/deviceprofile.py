@@ -144,6 +144,7 @@ class DeviceStore:
         device.update_device_location(new_location)
 
       device.save()
+
       return device, None
 
     except Exception as e:
@@ -188,7 +189,7 @@ class DeviceStore:
     
   def metric_community_profiles(self, community_id) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      metric = UserProfile.objects.filter(communities__id=community_id, is_delete=False).count()
+      metric = UserProfile.objects.filter(communities__id=community_id, is_deleted=False).count()
       if not metric:
         return None, InvalidResourceError()
       return metric, None

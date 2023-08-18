@@ -71,7 +71,7 @@ class TestimonialHandler(RouteHandler):
       return err
 
     # no anonymous option anymore
-    args["anonymous"] = False
+    # args["anonymous"] = False
 
     testimonial_info, err = self.service.create_testimonial(context, args)
     if err:
@@ -92,17 +92,24 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('action_id', 'action')
     self.validator.rename('vendor_id', 'vendor')
     self.validator.rename('preferredName', 'preferred_name')
+    self.validator.expect('testimonial_id', str)
+    self.validator.expect("image", "file", is_required=False)
     args, err = self.validator.verify(args)
 
     if err:
       return err
 
     # no anonymous option anymore
-    args["anonymous"] = False
+    # args["anonymous"] = False
 
     # user submitted testimonial, so notify the community admins
     user_submitted = True
-    testimonial_info, err = self.service.create_testimonial(context, args, user_submitted)
+    is_edit = args.pop("testimonial_id", None)
+
+    if is_edit:
+      testimonial_info, err = self.service.update_testimonial(context, args)
+    else:
+      testimonial_info, err = self.service.create_testimonial(context, args, user_submitted)
     if err:
       return err
     return MassenergizeResponse(data=testimonial_info)
@@ -111,6 +118,7 @@ class TestimonialHandler(RouteHandler):
     context = request.context
     args = context.args
     testimonial_info, err = self.service.list_testimonials(context, args)
+
     if err:
       return err
     return MassenergizeResponse(data=testimonial_info)
@@ -179,8 +187,13 @@ class TestimonialHandler(RouteHandler):
   def community_admin_list(self, request):
     context: Context = request.context
     args: dict = context.args
-    community_id = args.pop("community_id", None)
-    testimonials, err = self.service.list_testimonials_for_community_admin(context, community_id)
+    # community_id = args.pop("community_id", None)
+    self.validator.expect("testimonial_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    
+    testimonials, err = self.service.list_testimonials_for_community_admin(context, args)
     if err:
       return err
     return MassenergizeResponse(data=testimonials)
@@ -188,7 +201,12 @@ class TestimonialHandler(RouteHandler):
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
-    testimonials, err = self.service.list_testimonials_for_super_admin(context)
+    args: dict = context.args
+    self.validator.expect("testimonial_ids", list, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    testimonials, err = self.service.list_testimonials_for_super_admin(context,args)
     if err:
       return err
     return MassenergizeResponse(data=testimonials)

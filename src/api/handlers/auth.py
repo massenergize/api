@@ -1,18 +1,17 @@
 """Handler file for all routes pertaining to auths"""
 
 from _main_.utils.route_handler import RouteHandler
-from _main_.utils.common import parse_list, parse_bool, check_length, rename_field
+from _main_.utils.common import get_date_and_time_in_milliseconds
 from api.services.auth import AuthService
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError
-from types import FunctionType as function
 from _main_.utils.context import Context
-from _main_.utils.validator import Validator
-from api.decorators import admins_only, super_admins_only, login_required
 from _main_.settings import RUN_SERVER_LOCALLY
+from api.constants import WHEN_USER_AUTHENTICATED_SESSION_EXPIRES
 
 ONE_YEAR = 365*24*60*60
 ONE_DAY = 24*60*60
+# ONE_DAY = 2*60 # FOR TESTING UNCOMMENT THIS (2 Minutes instead of 24hrs)
 
 class AuthHandler(RouteHandler):
 
@@ -29,8 +28,8 @@ class AuthHandler(RouteHandler):
     self.add("/auth.test", self.whoami)
     self.add("/auth.verifyCaptcha", self.verify_captcha)
     self.add("/auth.signinasguest", self.guest_login) 
-  
-  
+    self.add("/auth.email.verification", self.email_verification) 
+
   def login(self, request): 
     context: Context = request.context
     user_info, token, err = self.service.login(context)
@@ -47,6 +46,9 @@ class AuthHandler(RouteHandler):
     # if the signin is from an admin site then set it to 24 hrs
     if(context.is_admin_site):
       MAX_AGE = ONE_DAY
+      expiration_time = get_date_and_time_in_milliseconds(hours=24) # UNDO BEFORE PR , BPR
+      # expiration_time = get_date_and_time_in_milliseconds(hours=0.033) # FOR TESTING, UNCOMMENT THIS
+      request.session[WHEN_USER_AUTHENTICATED_SESSION_EXPIRES] = expiration_time
 
     if RUN_SERVER_LOCALLY:
       response.set_cookie("token", value=token, max_age=MAX_AGE, samesite='Strict')
@@ -70,6 +72,7 @@ class AuthHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=user_info)
+
 
 
   def verify_captcha(self, request): 
@@ -107,3 +110,19 @@ class AuthHandler(RouteHandler):
   
 
 
+  def email_verification(self, request): 
+    context: Context = request.context
+    args: dict = context.args
+    self.validator.expect('email', str, is_required=True)
+    self.validator.expect("url",str, is_required=True)
+    self.validator.expect("community_id",str, is_required=True)
+
+    args, err = self.validator.verify(args)
+
+    if err:
+      return err
+    
+    res, err = self.service.email_verification(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=res)

@@ -1,6 +1,8 @@
 from _main_.utils.utils import is_not_null
-from database.models import UserProfile, CommunityAdminGroup, Community, Media, UserProfile, Message
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
+from api.utils.api_utils import is_admin_of_community
+from api.utils.filter_functions import get_super_admins_filter_params
+from database.models import UserProfile, CommunityAdminGroup, Media, UserProfile, Message
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
 from .utils import get_community, get_user, get_community_or_die, unique_media_filename
 from api.store.community import CommunityStore
@@ -15,8 +17,8 @@ class AdminStore:
   def add_super_admin(self, context: Context, args) -> Tuple[UserProfile, MassEnergizeAPIError]:
     try:
       if not context.user_is_super_admin:
-        return None, CustomMassenergizeError("You must be a super Admin to add another Super Admin")
-      
+        return None, NotAuthorizedError()
+            
       email = args.pop("email", None)
       user_id = args.pop("user_id", None)
 
@@ -68,7 +70,10 @@ class AdminStore:
 
   def list_super_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     try:
-      admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False)
+      filter_params =[]
+      if args.get("params", None):
+        filter_params = get_super_admins_filter_params(args.get("params"))
+      admins = UserProfile.objects.filter(is_super_admin=True, is_deleted=False, *filter_params)
       return admins, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -87,7 +92,10 @@ class AdminStore:
 
       if not community:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
-
+      
+      if not is_admin_of_community(context, community.id):
+        return None, NotAuthorizedError()
+      
       admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community=community).first()
 
       if email:
@@ -97,10 +105,9 @@ class AdminStore:
       else:
         user: UserProfile = None
 
-      
       if user:
         admin_group.members.add(user)
-        if not user.is_super_admin and not user.is_super_admin:
+        if not user.is_super_admin and not user.is_community_admin:
           user.is_community_admin = True
           user.save()
       else:
@@ -143,6 +150,9 @@ class AdminStore:
         admin_group: CommunityAdminGroup = CommunityAdminGroup.objects.filter(community__subdomain=subdomain).first()
       else:
         return None, CustomMassenergizeError("Please provide a community_id or subdomain")
+      
+      if not is_admin_of_community(context, community_id):
+        return None, NotAuthorizedError()
 
       if email:
         user = UserProfile.objects.filter(email=email).first()
@@ -150,7 +160,6 @@ class AdminStore:
         user = UserProfile.objects.filter(id=user_id).first()
       else:
         user = None
-
 
       if user and user in admin_group.members.all():
         admin_group.members.remove(user)
@@ -259,10 +268,12 @@ class AdminStore:
 
       elif not community:
         return [], None
+      
+      if not is_admin_of_community(context, community.id):
+        return None, NotAuthorizedError()
 
       messages = Message.objects.filter(community__id = community.id, is_deleted=False).select_related('uploaded_file', 'community', 'user')
       return messages, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
-

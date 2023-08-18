@@ -34,6 +34,7 @@ class EventHandler(RouteHandler):
     self.add("/events.todo", self.save_for_later)
     self.add("/events.exceptions.list", self.list_exceptions)
     self.add("/events.date.update", self.update_recurring_date)
+    self.add("/events.share", self.share_event)
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list)
@@ -146,7 +147,7 @@ class EventHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=event_info)
 
-  # @login_required
+  @admins_only
   def update_recurring_date(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -190,7 +191,9 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
+    self.validator.expect("event_type",str)
     self.validator.expect("publicity_selections",list)
+    self.validator.expect("add_to_home_page", bool, is_required=False)
     args, err = self.validator.verify(args)
 
     if err:
@@ -217,6 +220,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
+    self.validator.expect('event_id', str)
     args, err = self.validator.verify(args)
 
     if err:
@@ -224,9 +228,14 @@ class EventHandler(RouteHandler):
 
     # user submitted event, so notify the community admins
     user_submitted = True
-    args["is_approved"] = False 
+  
+    is_edit = args.get("event_id", None)
 
-    event_info, err = self.service.create_event(context, args, user_submitted)
+    if is_edit:
+      event_info, err = self.service.update_event(context, args, user_submitted)
+    else:
+      args["is_approved"] = False 
+      event_info, err = self.service.create_event(context, args, user_submitted)
     if err:
       return err
     return MassenergizeResponse(data=event_info)
@@ -262,7 +271,6 @@ class EventHandler(RouteHandler):
 
     if err:
       return err
-
     return MassenergizeResponse(data=event_info)
 
   
@@ -299,8 +307,9 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
-    self.validator.expect("publicity_selections",list)
-    self.validator.expect("shared_to",list)
+    self.validator.expect("event_type",str)
+    self.validator.expect("publicity_selections","str_list")
+    self.validator.expect("shared_to","str_list")
     args, err = self.validator.verify(args)
 
     if err:
@@ -354,6 +363,7 @@ class EventHandler(RouteHandler):
     events, err = self.service.list_events_for_community_admin(context, args)
     if err:
       return err
+
     return MassenergizeResponse(data=events)
 
   @admins_only 
@@ -363,6 +373,7 @@ class EventHandler(RouteHandler):
 
     self.validator.expect("community_ids", "str_list", is_required=True)
     self.validator.expect("exclude", bool, is_required=False)
+
     
     args, err = self.validator.verify(args)
     if err:
@@ -373,11 +384,29 @@ class EventHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=events)
 
-
   @super_admins_only
   def super_admin_list(self, request):
     context: Context = request.context
     events, err = self.service.list_events_for_super_admin(context)
     if err:
       return err
+
     return MassenergizeResponse(data=events)
+
+
+  @admins_only
+  def share_event(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    self.validator.expect("event_id", int, is_required=True)
+    self.validator.expect("shared_to","str_list", is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.share_event(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=event_info)

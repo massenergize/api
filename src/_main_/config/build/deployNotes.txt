@@ -1,2 +1,2 @@
-Jan 6: Production bugfix release:
-- fix several minor issues from 12/27 release
+Feb 24: Admin portal pagination:
+- deliver content in small chunks

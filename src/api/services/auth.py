@@ -1,19 +1,14 @@
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.common import serialize, serialize_all
+from _main_.utils.common import serialize
 from _main_.utils.context import Context
-from database.utils.json_response_wrapper import Json
+from api.utils.constants import USER_EMAIL_VERIFICATION_TEMPLATE
 from firebase_admin import auth
-from django.middleware.csrf import get_token
-from django.http import JsonResponse
-from _main_.utils.massenergize_errors import NotAuthorizedError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.common import get_request_contents
-from database.models import UserProfile
+from _main_.utils.massenergize_errors import CustomMassenergizeError
+from database.models import Community, UserProfile
 from _main_.settings import SECRET_KEY
-import json, jwt
+import jwt
 from sentry_sdk import capture_message
 import requests
 import os
@@ -33,9 +28,11 @@ class AuthService:
     try:
       args = context.args or {}
       firebase_id_token = args.get('idToken', None)
+      noFootage = args.get('noFootage',"false") # Why this? Well login is used as verification in more than one scenario, so this is a way to know when user is actually signing in (1st time) -- so we can capture the footage only once.
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
+
         
         user = UserProfile.objects.filter(email=user_email).first()
         if (not user or not user.accepts_terms_and_conditions):
@@ -62,8 +59,12 @@ class AuthService:
           algorithm='HS256'
         ).decode('utf-8')
         #---------------------------------------------------------
-        if context.is_admin_site:
-          Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
+        if  noFootage == "false": 
+          if context.is_admin_site:
+             Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
+          else: 
+            where_user_signed_in_from = Community.objects.filter(subdomain = context.community)
+            Spy.create_sign_in_footage( communities = where_user_signed_in_from, actor = user, context = context, portal=FootageConstants.on_user_portal(), type = FootageConstants.sign_in())
         #---------------------------------------------------------
         return serialize(user, full=True), str(massenergize_jwt_token), None
 
@@ -91,6 +92,7 @@ class AuthService:
       if user and context.is_admin_site and not(user.is_super_admin or user.is_community_admin):
         raise PermissionError
 
+        
       return serialize(user, full=True), None
 
     except Exception as e:
@@ -162,6 +164,45 @@ class AuthService:
     except Exception as e:
       capture_message("Authentication Error", level="error")
       return None, None, CustomMassenergizeError(e)
+
+
+  
+  def email_verification(self, context: Context, args):
+    try:
+      email = args.get('email')
+      community_id = args.get('community_id')
+      url = args.get('url')
+      type = args.get('type', None)
+
+      community = Community.objects.filter(id = community_id).first()
+      if not community:
+        return None, CustomMassenergizeError("Community not found")
+      
+      action_code_settings = auth.ActionCodeSettings(
+          url=url,
+          handle_code_in_app=True,
+        )
+      if type == "EMAIL_PASSWORD_VERIFICATION":
+        link = auth.generate_email_verification_link(email, action_code_settings)
+      else:
+        link = auth.generate_sign_in_with_email_link(email,action_code_settings)
+      temp_data = {
+        "email": email,
+        "url": link,
+        "community": community.name,
+        "image": community.logo.file.url if community.logo.file else None
+      }
+      
+      ok = send_massenergize_email_with_attachments(USER_EMAIL_VERIFICATION_TEMPLATE,temp_data,[email], None, None)
+      if not ok:
+        return None, CustomMassenergizeError("email_not_sent")
+      
+      return {}, None
+      
+
+    except Exception as e:
+      capture_message("Authentication Error", level="error")
+      return None, CustomMassenergizeError(e)
 
 
   
