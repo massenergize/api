@@ -3,11 +3,11 @@
 {% for c in exact %}
 <div style="display: flex; border-bottom: 1px solid whitesmoke;padding: 10px;">
     <div><img src="{{c.logo}}" class="community-logo" /> </div>
-    <div class="community-name" onclick="(()=>{
-                const url = `{{meta.portal_host}}/{{c.subdomain}}{{suffix}}`;
-                window.location = url;
-              })()">
-        {{c.displayName}}
+    <div class="community-name">
+        <a class="community-name" href="{{meta.portal_host}}/{{c.subdomain}}{{suffix}}">
+            {{c.displayName}}
+        </a>
+
     </div>
 </div>
 {% endfor %}
@@ -23,11 +23,11 @@
 {% for c in nearby %}
 <div style="display: flex; border-bottom: 1px solid whitesmoke;padding: 10px;">
     <div><img src="{{c.logo}}" class="community-logo" /> </div>
-    <div class="community-name" onclick="(()=>{
-                const url = `{{meta.portal_host}}/{{c.subdomain}}{{suffix}}`;
-                window.location = url;
-              })()">
-        {{c.displayName}}
+    <div class="community-name">
+        <a class="community-name" href="{{meta.portal_host}}/{{c.subdomain}}{{suffix}}">
+            {{c.displayName}}
+        </a>
+
     </div>
 </div>
 {% endfor %}
@@ -49,11 +49,11 @@
 {% for c in other %}
 <div style="display: flex; border-bottom: 1px solid whitesmoke;padding: 10px;">
     <div><img src="{{c.logo}}" class="community-logo" /> </div>
-    <div class="community-name" onclick="(()=>{
-                const url = `{{meta.portal_host}}/{{c.subdomain}}{{suffix}}`;
-                window.location = url;
-              })()">
-        {{c.displayName}}
+    <div class="community-name">
+        <a class="community-name" href="{{meta.portal_host}}/{{c.subdomain}}{{suffix}}">
+            {{c.displayName}}
+        </a>
+
     </div>
 </div>
 {% endfor %}
