@@ -35,6 +35,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.listForCommunityAdmin", self.community_admin_list)
     self.add("/communities.others.listForCommunityAdmin", self.list_other_communities_for_cadmin)
     self.add("/communities.listForSuperAdmin", self.super_admin_list)
+    self.add("/communities.adminsOf", self.fetch_admins_of)
 
 
   def info(self, request):
@@ -221,6 +222,19 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
+  # @admins_only  # REMOVE BEFORE PR(BPR)
+  def fetch_admins_of(self, request):
+    context: Context  = request.context
+    args: dict = context.get_request_body() 
+    self.validator.expect("community_ids", list, is_required=True)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    communities, err = self.service.fetch_admins_of(args,context)
+    if err:
+      return err
+    return MassenergizeResponse(data=communities)
+  
   @admins_only 
   def list_other_communities_for_cadmin(self, request):
     context: Context  = request.context

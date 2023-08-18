@@ -35,7 +35,7 @@ class MediaLibraryStore:
             guardian_info = args.get("guardian_info")
             copyright_att = args.get("copyright_att")
             tags = args.get("tags")
-            communities = args.get("communities", [])
+            communities = args.get("community_ids", [])
             info = {
                 **(user_media_upload.info or {}),
                 "has_children": under_age, 
@@ -44,14 +44,16 @@ class MediaLibraryStore:
                 "copyright_att": copyright_att
             }
             user_media_upload.info = info 
-            user_media_upload.save()
+            # user_media_upload.save()
             media = Media.objects.get(pk = media_id)
 
 
             if communities:
                 communities = Community.objects.filter(id__in=communities)
-                media.communities.clear() 
-                media.communities.set(communities)
+                user_media_upload.communities.clear() 
+                user_media_upload.communities.set(communities)
+                
+            user_media_upload.save()
 
             if tags: 
                 media.tags.clear() 
