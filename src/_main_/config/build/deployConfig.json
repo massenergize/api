@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.12.5",
+  "BUILD_VERSION": "4.12.6",
   "BUILD_VERSION_NOTES": "8/15/2023: Production release 4.12.5:\n  * Minor bug fixes \n  * Sentry performance monitoring\n"
 }

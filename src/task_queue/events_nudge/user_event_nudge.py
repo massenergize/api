@@ -115,8 +115,9 @@ def get_community_events(community_id):
 
 def get_community_users(community_id, flag):
 #    users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True, communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
-   community_members = CommunityMember.objects.filter(community__id=community_id, is_admin=False, is_deleted=False).values_list("user", flat=True)
+   community_members = CommunityMember.objects.filter(community__id=community_id, is_deleted=False).values_list("user", flat=True)
    users = UserProfile.objects.filter(id__in=community_members)
+
 #    check if user is in flag
    if flag.user_audience == "SPECIFIC":
        users = users.filter(id__in=[str(u.id) for u in flag.users.all()])
@@ -201,7 +202,7 @@ def send_automated_nudge(events, user, community):
         user_is_ready_for_nudge = should_user_get_nudged(user)
 
         if user_is_ready_for_nudge:
-            print("sending nudge .......")
+            print("sending nudge to " + email)
             is_sent = send_events_report_email(name, email, events, community)
             if not is_sent:
                 print( f"**** Failed to send email to {name} for community {community.name} ****")
@@ -225,9 +226,10 @@ def send_user_requested_nudge(events, user, community):
 def get_user_events(notification_dates, community_events):
     today = timezone.now()
     a_week_ago = today - relativedelta(weeks=1)
+    a_month_ago = today - relativedelta(months=1)
     date_aware =None
     if not notification_dates:
-        return community_events.filter(Q(published_at__range=[a_week_ago, today]))
+        return community_events.filter(Q(published_at__range=[a_month_ago, today]))
     
     user_event_nudge = notification_dates.get("user_event_nudge", None)
     if user_event_nudge:
@@ -270,9 +272,10 @@ def prepare_user_events_nudge(email=None, community_id=None):
             # if flag.audience == "EVERYONE" or community in allowed_communities:
             events = get_community_events(community.id)
             users = get_community_users(community.id, flag)
-            for user in users:
-                events = get_user_events(user.notification_dates, events)
-                send_automated_nudge(events, user, community)
+
+            for user in users:          
+                user_events = get_user_events(user.notification_dates, events)
+                send_automated_nudge(user_events, user, community)
         
         return True   
     except Exception as e:
