@@ -37,7 +37,6 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.listForSuperAdmin", self.super_admin_list)
     self.add("/communities.adminsOf", self.fetch_admins_of)
 
-
   def info(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -222,8 +221,12 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
-  # @admins_only  # REMOVE BEFORE PR(BPR)
+  # @admins_only  # UNCOMMENT BEFORE PR(BPR)
   def fetch_admins_of(self, request):
+    """
+    Will fetch and group all admins per community, given a list of community IDs. 
+    Very different from "admins.community.list"
+    """
     context: Context  = request.context
     args: dict = context.get_request_body() 
     self.validator.expect("community_ids", list, is_required=True)
