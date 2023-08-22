@@ -250,7 +250,6 @@ class ActionHandler(RouteHandler):
   def import_action(self, request):
     context: Context = request.context
     args: dict = context.args
-
     data, err = self.service.import_action(args["documentID"], args["communities"])
     if err:
       return err

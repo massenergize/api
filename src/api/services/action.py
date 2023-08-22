@@ -30,6 +30,35 @@ from carbon_calculator.carbonCalculator import CarbonCalculator
 from django.core.exceptions import ObjectDoesNotExist
 import re
 
+def extract_styles(styles):
+    style_string = 'style = "'
+
+    bold = styles.get('bold')
+    style_string += 'font-weight: bold; ' if bold else ""
+
+    italic = styles.get('italic')
+    style_string += 'font-style: italic; ' if italic else ""
+
+    underline = styles.get('underline')
+    style_string += 'text-decoration: underline; ' if underline else ""
+    
+    size = styles.get('fontSize').get('magnitude')
+    style_string += 'font-size: ' + str(size) + 'pt; ' if size else ""
+
+    font = styles.get('weightedFontFamily', {}).get('fontFamily')
+    style_string += 'font-family: ' + font + '; ' if font else ""
+
+    red_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('red', 0)
+    blue_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('blue', 0)
+    green_color = styles.get('foregroundColor', {}).get('color', {}).get('rgbColor', {}).get('green', 0)
+    hex_color = '#%02x%02x%02x' % (int(red_color * 255), int(green_color * 255), int(blue_color * 255))
+    style_string += 'color: ' + hex_color + ';'
+
+    style_string += '"'
+
+    return style_string
+
+
 class ActionService:
   """
   Service Layer for all the actions
@@ -44,6 +73,11 @@ class ActionService:
     self.tag_store = TagStore()
     self.media_store = MediaLibraryStore()
     self.carbon_calc = CarbonCalculator()
+
+
+
+
+
 
   def import_action(self, docID, communities) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -76,7 +110,28 @@ class ActionService:
 
         # gets all of the content in the google doc
         doc = document.get("body").get("content")
-        
+        data = {}
+        title = None
+        for element in doc:
+            if 'paragraph' in element:
+                paragraph = element['paragraph']
+                if "elements" in paragraph:
+                    if paragraph.get("paragraphStyle", {}).get("namedStyleType") == "TITLE":
+                        title = paragraph['elements'][0]['textRun']['content']
+                        data[title] = []
+                    else:
+                     for element in paragraph['elements']:
+                        if title:
+                            print("\n=== PARAGRAPH ===\n", element)
+                            text_style = element["textRun"]["textStyle"]
+
+                            data[title].append({
+                                "text":element['textRun']['content'],
+                                "text_style": extract_styles(text_style),
+                                # "paragraph_style": paragraph_style
+                            })
+
+
         # excludes lines for metadata, title, instructions in template doc
         # set equal to the line number of the 'title' field label (images, blank lines, and single/multi-bullets all count as 1 individual line)
         buffer = 11
@@ -382,6 +437,8 @@ class ActionService:
                     found = True
 
         fields['calculator_action'] = fields['calculator_action'] if found else ""
+
+        print("== data ===", fields)
 
         return fields, None
     
