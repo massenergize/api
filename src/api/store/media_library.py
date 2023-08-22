@@ -1,3 +1,4 @@
+from functools import reduce
 from django.core.exceptions import ValidationError
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
@@ -188,9 +189,12 @@ class MediaLibraryStore:
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         queries = self.make_query_with_communities(**args)
-        query = queries.pop()
+        query = None
         for qObj in queries:
-            query |= qObj
+            if not query:
+                query = qObj
+            else:
+                query |= qObj
 
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
@@ -204,41 +208,70 @@ class MediaLibraryStore:
         return images, None
 
     def search(self, args, context: Context):
-        community_ids = args.get("target_communities",[])
+        community_ids = args.get("target_communities", [])
         most_recent = args.get("most_recent", False)
         mine = args.get("my_uploads", False)
         other_admins = args.get("user_ids", [])
         other_admins = not mine and other_admins
         search_by_community = not most_recent and community_ids
+        keywords = args.get("keywords", [])
 
-        if most_recent: 
-            if context.user_is_super_admin: 
+        if keywords:
+            return self.get_by_keywords(args)
+
+        if most_recent:
+            if context.user_is_super_admin:
                 return self.get_most_recent(args, context)
-            elif context.user_is_community_admin: 
+            elif context.user_is_community_admin:
                 communities = get_admin_communities(context)
-                args["community_ids"] = [c.id for c in communities]
+                args["target_communities"] = [c.id for c in communities]
                 return self.get_most_recent(args, context)
-            
+
         if search_by_community:
             return self.get_most_recent(args, context)
-        
+
         if mine:
             args["user_ids"] = [context.user_id]
             return self.get_uploads_by_user(args)
-        
-        if other_admins: 
+
+        if other_admins:
             return self.get_uploads_by_user(args)
-        
+
         return [], None
 
+    def get_by_keywords(self, args):
+        words = args.get("keywords", [])
+        queries = self.make_query_with_communities(**args)
+        upper_limit = args.get("upper_limit")
+        lower_limit = args.get("lower_limit")
 
-    def get_by_keywords(self,args): 
-        pass
+        query = None
+        for queryObj in queries:
+            words_into_q_objects = [Q(tags__name__icontains=word) for word in words]
+            objects_linked_by_OR = reduce(lambda q1, q2: q1 | q2, words_into_q_objects)
+            queryObj &= objects_linked_by_OR
+            if not query:
+                query = queryObj
+            else:
+                query |= queryObj
+
+        if not upper_limit and not lower_limit:
+            images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
+        else:
+            images = (
+                Media.objects.filter(query)
+                .distinct()
+                .exclude(id__gte=lower_limit, id__lte=upper_limit)
+                .order_by("-id")[:limit]
+            )
+
+        return images, None
+
     def get_uploads_by_user(self, args):
         user_ids = args.get("user_ids", [])
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
-        Console.log("We entered here",args)
+        Console.log("We entered here", args)
         query = Q(user_upload__user__id__in=user_ids)
         if upper_limit and lower_limit:
             images = (
@@ -248,11 +281,10 @@ class MediaLibraryStore:
             )
         else:
             images = Media.objects.filter(query).order_by("-id")[:limit]
-            
-        
+
         return images, None
-    
-    # def get_by_community(self, args): 
+
+    # def get_by_community(self, args):
     #     upper_limit = args.get("upper_limit")
     #     lower_limit = args.get("lower_limit")
 

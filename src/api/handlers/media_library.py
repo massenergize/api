@@ -43,14 +43,12 @@ class MediaLibraryHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("lower_limit", int).expect("upper_limit", int).expect(
-            "all_communities", bool
-        ).expect("target_communities", list).expect("any_community", bool).expect(
-            "tags", "str_list"
+            "target_communities", list
+        ).expect("most_recent", bool).expect("my_uploads", bool).expect(
+            "user_ids", "str_list"
         ).expect(
-            "most_recent", bool
-        ).expect(
-            "my_uploads", bool
-        ).expect("user_ids","str_list")
+            "keywords", "str_list"
+        )
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
