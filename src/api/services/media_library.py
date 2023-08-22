@@ -13,11 +13,11 @@ class MediaLibraryService:
             return None, error
         return self.organiseData(data=serialize_all(images, True), args=args), None
 
-    def search(self, args):
-        images, error = self.store.search(args)
+    def search(self, args, context):
+        images, error = self.store.search(args,context)
         if error:
             return None, error
-        return self.organiseData(data=serialize_all(images,True), args=args), None
+        return self.organiseData(data=serialize_all(images), args=args), None
 
     def organiseData(self, **kwargs):
         data = kwargs.get("data") or []

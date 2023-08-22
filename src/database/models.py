@@ -266,14 +266,20 @@ class Media(models.Model):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
 
     def simple_json(self):
-        return {
+        obj=  {
             "id": self.id,
             "name": self.name,
             "url": self.file.url,
         }
 
+        if hasattr(self, "user_upload"): 
+            obj["created_at"] = self.user_upload.created_at
+
+        return obj 
+
     def full_json(self):
         return {
+            **self.simple_json(),
             "id": self.id,
             "name": self.name,
             "url": self.file.url,

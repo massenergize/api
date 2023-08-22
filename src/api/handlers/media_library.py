@@ -37,26 +37,26 @@ class MediaLibraryHandler(RouteHandler):
             return error
         return MassenergizeResponse(data=images)
 
-    @admins_only
+    # @admins_only # UNCHECK BEFORE PR (BPR)
     def search(self, request):
         """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""
         context: Context = request.context
         args: dict = context.args
         self.validator.expect("lower_limit", int).expect("upper_limit", int).expect(
             "all_communities", bool
-        ).expect("filters", "str_list", is_required=True).expect(
-            "target_communities", list, is_required=True
-        ).expect(
-            "any_community", bool
-        ).expect(
+        ).expect("target_communities", list).expect("any_community", bool).expect(
             "tags", "str_list"
-        )
+        ).expect(
+            "most_recent", bool
+        ).expect(
+            "my_uploads", bool
+        ).expect("user_ids","str_list")
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
 
-        args["context"] = context
-        images, error = self.service.search(args)
+        # args["context"] = context
+        images, error = self.service.search(args, context)
         if error:
             return error
         return MassenergizeResponse(data=images)
@@ -71,7 +71,7 @@ class MediaLibraryHandler(RouteHandler):
         if err:
             return err
 
-        response, error = self.service.remove(args,context)
+        response, error = self.service.remove(args, context)
         if error:
             return error
         return MassenergizeResponse(data=response)
@@ -86,11 +86,25 @@ class MediaLibraryHandler(RouteHandler):
             "is_universal", bool
         ).expect(
             "tags", "str_list"
-        ).expect("size",str).expect("size_text", str).expect("description").expect("underAge", bool).expect("copyright", bool).expect("copyright_att", str).expect("guardian_info", str)
+        ).expect(
+            "size", str
+        ).expect(
+            "size_text", str
+        ).expect(
+            "description"
+        ).expect(
+            "underAge", bool
+        ).expect(
+            "copyright", bool
+        ).expect(
+            "copyright_att", str
+        ).expect(
+            "guardian_info", str
+        )
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
-        image, error = self.service.addToGallery(args,context)
+        image, error = self.service.addToGallery(args, context)
         if error:
             return error
         return MassenergizeResponse(data=image)
@@ -109,7 +123,7 @@ class MediaLibraryHandler(RouteHandler):
         if error:
             return error
         return MassenergizeResponse(data=response)
-    
+
     @admins_only
     def find_images(self, request):
         """Retrieves images given a list of media_ids"""
@@ -124,13 +138,23 @@ class MediaLibraryHandler(RouteHandler):
         if error:
             return error
         return MassenergizeResponse(data=response)
-    
+
     # @admins_only  # REMEMBER TO UNCHECK BEFORE PR (BPR)
     def edit_details(self, request):
         """Saves changes to updated image details"""
         context: Context = request.context
         args: dict = context.args
-        self.validator.expect("description").expect("underAge", bool).expect("copyright", bool).expect("copyright_att", str).expect("guardian_info", str).expect("tags", "str_list").expect("community_ids",list).expect("media_id", int, is_required=True).expect("user_upload_id", int, is_required=True)
+        self.validator.expect("description").expect("underAge", bool).expect(
+            "copyright", bool
+        ).expect("copyright_att", str).expect("guardian_info", str).expect(
+            "tags", "str_list"
+        ).expect(
+            "community_ids", list
+        ).expect(
+            "media_id", int, is_required=True
+        ).expect(
+            "user_upload_id", int, is_required=True
+        )
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
