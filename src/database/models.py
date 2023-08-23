@@ -1219,6 +1219,7 @@ class DeviceProfile(models.Model):
     visit_log = models.JSONField(default=list, null=True, blank=True)
     has_accepted_cookies = models.BooleanField(default=False, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def get_user_profiles(self):
         return json.load(self.user_profiles)
@@ -1274,8 +1275,8 @@ class DeviceProfile(models.Model):
                 "operating_system",
                 "browser",
                 "visit_log",
-                "is_deleted",
                 "has_accepted_cookies",
+                "created_at",
             ],
         )
         res["user_profiles"] = [u.simple_json() for u in self.user_profiles.all()]
@@ -1283,6 +1284,10 @@ class DeviceProfile(models.Model):
 
     def full_json(self):
         return self.simple_json()
+
+    class Meta:
+        db_table = "device_profiles"
+        ordering = ("-created_at",)
 
 
 class CommunityMember(models.Model):
