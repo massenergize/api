@@ -37,7 +37,7 @@ class MediaLibraryHandler(RouteHandler):
             return error
         return MassenergizeResponse(data=images)
 
-    # @admins_only # UNCHECK BEFORE PR (BPR)
+    @admins_only 
     def search(self, request):
         """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""
         context: Context = request.context
@@ -137,7 +137,7 @@ class MediaLibraryHandler(RouteHandler):
             return error
         return MassenergizeResponse(data=response)
 
-    # @admins_only  # REMEMBER TO UNCHECK BEFORE PR (BPR)
+    @admins_only 
     def edit_details(self, request):
         """Saves changes to updated image details"""
         context: Context = request.context

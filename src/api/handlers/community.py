@@ -221,7 +221,7 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
-  # @admins_only  # UNCOMMENT BEFORE PR(BPR)
+  @admins_only  
   def fetch_admins_of(self, request):
     """
     Will fetch and group all admins per community, given a list of community IDs. 
