@@ -279,9 +279,25 @@ class DeviceStore:
       if not devices:
         return None, InvalidResourceError()
       
+      device_count = 0
       devices_list = []
+      user_profiles = 0
+      multiple_profiles = 0
+      max_profiles = 0
       for device in devices:
         found = False
+        device_count +=1
+        if device_count%100 == 0:
+          print(device_count)
+        count = device.user_profiles.count()
+        if count > 0:
+          user_profiles += 1
+          if count > 1:
+            multiple_profiles += 1
+          if count > max_profiles:
+            max_profiles = count
+            device_w_max_profiles = str(device.id)
+  
         device_type = device.device_type.split(',')[0]
         for device_entry in devices_list:
           if device_type == device_entry['device_type'] and \
@@ -297,6 +313,12 @@ class DeviceStore:
 
       for entry in devices_list:
         print(entry['device_type'] + ',' + entry['operating_system'] + ',' + entry['browser'] + ',' + str(entry['number']))
+
+      print("Total devices: "+str(devices.count()))
+      print("Devices with user profiles: "+str(user_profiles))
+      print("Devices with multiple profiles: "+str(multiple_profiles))
+      print("Max profiles on a device: "+str(max_profiles))
+      print("Device with the most profiles: "+device_w_max_profiles)
 
       return {'devices': devices_list}, None
 
