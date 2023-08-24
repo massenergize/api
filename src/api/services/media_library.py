@@ -79,6 +79,7 @@ class MediaLibraryService:
         events = serialize_all(media.events.all())
         actions = serialize_all(media.actions.all())
         testimonials = serialize_all(media.testimonials.all())
+        vendors = serialize_all(media.vender_logo.all()) # yhup, thats right. lmfao!
         media_json = get_json_if_not_none(media, True)
         return {
             **media_json,
@@ -87,5 +88,6 @@ class MediaLibraryService:
                 "event": events,
                 "action": actions,
                 "testimonial": testimonials,
+                "vendor": vendors
             },
         }, None

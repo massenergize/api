@@ -222,8 +222,8 @@ class MediaLibraryStore:
         if most_recent:
             if context.user_is_super_admin:
                 return self.get_most_recent(args, context)
-            elif context.user_is_community_admin:
-                communities = get_admin_communities(context)
+            else :
+                communities,_ = get_admin_communities(context)
                 args["target_communities"] = [c.id for c in communities]
                 return self.get_most_recent(args, context)
 
