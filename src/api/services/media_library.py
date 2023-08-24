@@ -57,7 +57,7 @@ class MediaLibraryService:
         if error:
             return None, error
         if media: 
-            return self.getImageInfo({"media_id": media.id}) # Refer back to the getinfo routine so that data can be return data in the same structture
+            return self.getImageInfo({"media_id": media.id}) # Refer back to the getinfo routine so that data can be returned in the same structture
         return {}, None
     
     def find_images(self, args,context):
