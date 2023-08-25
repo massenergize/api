@@ -271,7 +271,6 @@ class MediaLibraryStore:
         user_ids = args.get("user_ids", [])
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
-        Console.log("We entered here", args)
         query = Q(user_upload__user__id__in=user_ids)
         if upper_limit and lower_limit:
             images = (
@@ -284,63 +283,7 @@ class MediaLibraryStore:
 
         return images, None
 
-    # def get_by_community(self, args):
-    #     upper_limit = args.get("upper_limit")
-    #     lower_limit = args.get("lower_limit")
-
-    # DONT REMOVE YET. This is the old search function that worked with the old Media Library page
-    # def search(self, args):
-    #     context = args.get("context")
-    #     com_ids = args.get("target_communities")
-    #     any_community = args.get("any_community")
-    #     filters = args.get("filters",[])
-    #     upper_limit = args.get("upper_limit")
-    #     lower_limit = args.get("lower_limit")
-    #     images = None
-    #     queries = None
-    #     tags = args.get("tags", None)
-
-    #     """
-    #     Options
-    #     1. No target communities.
-    #         - Check if user is community_admin, collect images from any community they manage with the provided filters
-    #         - User is super admin, collect images from any community, with provided filters
-    #     2. User provides target communities, use filters to search for images in the provided target communities
-    #     """
-    #     if any_community == True:
-    #         if context.user_is_community_admin:
-    #             queries = [
-    #                 self.generateQueryWithScope(scope=f, com_ids=com_ids, tags = tags)
-    #                 for f in filters
-    #             ]
-    #         else:
-    #             queries = [self.generateQueryWithScope(scope=f, tags = tags) for f in filters]
-    #     else:
-    #         queries = [
-    #             self.generateQueryWithScope(scope=f, com_ids=com_ids, tags = tags) for f in filters
-    #         ]
-
-    #     if len(queries) == 0:
-    #         return None, CustomMassenergizeError(
-
-    #             "Could not build query with your provided filters, please try again"
-
-    #         )
-
-    #     query = queries.pop()
-    #     for qObj in queries:
-    #         query |= qObj
-    #     query |= Q(user_upload__is_universal = True)
-    #     if not upper_limit and not lower_limit:
-    #         images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
-    #     else:
-    #         images = (
-    #             Media.objects.filter(query)
-    #             .distinct()
-    #             .exclude(id__gte=lower_limit, id__lte=upper_limit)
-    #             .order_by("-id")[:limit]
-    #         )
-    #     return images, None
+   
 
     def remove(self, args, context):
         media_id = args.get("media_id")
