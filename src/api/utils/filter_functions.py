@@ -3,6 +3,8 @@ import operator
 from functools import reduce
 from django.db.models import Q
 
+from database.models import CommunityMember
+
 
 def get_events_filter_params(params):
     try:
@@ -300,10 +302,11 @@ def get_users_filter_params(params):
       search_text = params.get("search_text", None)
 
       if search_text:
+        users = CommunityMember.objects.filter(community__name__icontains=search_text).values_list('user', flat=True).distinct()
         search= reduce(
         operator.or_, (
         Q(full_name__icontains= search_text),
-        Q(communities__name__icontains= search_text),
+        Q(Q(id__in=users)),# 
         Q(email__icontains= search_text),
         ))
         query.append(search)
@@ -311,7 +314,8 @@ def get_users_filter_params(params):
       communities = params.get("community", None)
 
       if communities:
-        query.append(Q(communities__name__in=communities))
+        users = CommunityMember.objects.filter(community__name__in=communities).values_list('user', flat=True).distinct()
+        query.append(Q(id__in=users))
 
       if  "Community Admin" in params.get("membership", []):
         query.append(Q(is_community_admin=True))
