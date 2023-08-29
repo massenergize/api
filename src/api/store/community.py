@@ -1014,6 +1014,14 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
+    def fetch_admins_of(
+        self,args,context: Context
+    ) -> Tuple[list, MassEnergizeAPIError]:
+        community_ids = args.get("community_ids",[])
+        comms = CommunityAdminGroup.objects.filter(community__id__in = community_ids )
+        # communities = Community.objects.filter(is_published=True).order_by("name")
+        return comms, None
+    
     def list_other_communities_for_cadmin(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:

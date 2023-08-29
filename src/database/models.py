@@ -12,6 +12,7 @@ from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
 from database.utils.settings.user_settings import UserPortalSettings
 from django.utils import timezone
+from django.core.files.storage import default_storage
 
 from .utils.common import (
     get_images_in_sequence,
@@ -264,20 +265,34 @@ class Media(models.Model):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
 
     def simple_json(self):
-        return {
+        obj=  {
             "id": self.id,
             "name": self.name,
             "url": self.file.url,
         }
 
+        if hasattr(self, "user_upload"): 
+            obj["created_at"] = self.user_upload.created_at
+
+        return obj 
+
     def full_json(self):
         return {
+            **self.simple_json(),
             "id": self.id,
             "name": self.name,
             "url": self.file.url,
             "media_type": self.media_type,
             "tags": [tag.simple_json() for tag in self.tags.all()],
         }
+    
+    def delete(self, *args, **kwargs): 
+        # Overriding the default delete fxn to delete actual file from  storage as well
+        if self.file:
+            file_path = self.file.name
+            default_storage.delete(file_path)
+
+        super().delete(*args, **kwargs)
 
     class Meta:
         db_table = "media"
