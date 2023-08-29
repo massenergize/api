@@ -1,8 +1,9 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console, strip_website
+from _main_.utils.utils import strip_website
 from api.store.common import count_action_completed_and_todos
 from api.tests.common import RESET
+from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import (
     Community,
@@ -46,29 +47,35 @@ from database.models import (
     CommunityAdminGroup,
     Location,
     RealEstateUnit,
-    UserActionRel,
 )
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
     CustomMassenergizeError,
+    NotAuthorizedError,
 )
 from _main_.utils.context import Context
 from api.store.graph import GraphStore
 from .utils import (
     get_community_or_die,
-    get_user_or_die,
+    get_user_from_context,
     get_new_title,
-    getCarbonScoreFromActionRel,
     is_reu_in_community,
 )
 from database.utils.common import json_loader
 from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
+import math
 from typing import Tuple
 import zipcodes
 from sentry_sdk import capture_message, capture_exception
 
 ALL = "all"
+
+cadmin_locked_fields=["subdomain", "is_geographically_focused", "locations", "Is_approved", "is_demo"]
+
+def remove_cadmin_locked_fields(args):
+    return {key: value for key, value in args.items() if key not in cadmin_locked_fields}
+
 
 def _clone_page_settings(pageSettings, title, community):
     """
@@ -473,6 +480,34 @@ class CommunityStore:
                         reu.community = None
                         reu.save()
 
+    def _haversince_distance(self, lat1: int, lon1: int, lat2: int, lon2: int):
+        """
+        Calculate the great circle distance between two points.
+        """
+        # convert decimal degrees to radians
+        lat1 = math.radians(lat1)
+        lon1 = math.radians(lon1)
+        lat2 = math.radians(lat2)
+        lon2 = math.radians(lon2)
+
+        earth_radius = 6371  # km
+
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
+        c = 2 * math.asin(math.sqrt(a))
+
+        # calculate the distance in kilometers
+        distance = earth_radius * c
+        # convert to miles
+        distance = distance * 0.621371
+
+        return distance
+
     def get_community_info(
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
@@ -535,7 +570,9 @@ class CommunityStore:
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             community = get_community_or_die(context, args)
-            user = get_user_or_die(context, args)
+            user = get_user_from_context(context)
+            if not user:
+                return None, CustomMassenergizeError("User not found")
             user.communities.add(community)
             user.save()
 
@@ -543,9 +580,7 @@ class CommunityStore:
                 community=community, user=user
             ).first()
             if not community_member:
-                community_member = CommunityMember.objects.create(
-                    community=community, user=user, is_admin=False
-                )
+                community_member = CommunityMember.objects.create(community=community, user=user, is_admin=False)
 
             return user, None
         except Exception as e:
@@ -557,7 +592,10 @@ class CommunityStore:
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             community = get_community_or_die(context, args)
-            user = get_user_or_die(context, args)
+            user = get_user_from_context(context)
+            if not user:
+                return None, CustomMassenergizeError("User not found")
+
             user.communities.remove(community)
             user.save()
 
@@ -577,16 +615,71 @@ class CommunityStore:
     ) -> Tuple[list, MassEnergizeAPIError]:
         try:
             if context.is_sandbox:
-                communities = Community.objects.filter(
-                    is_deleted=False, is_approved=True
-                ).exclude(subdomain="template")
+                communities = (
+                    Community.objects.filter(is_deleted=False, is_approved=True)
+                    .exclude(subdomain="template")
+                    .order_by("name")
+                )
             else:
-                communities = Community.objects.filter(
-                    is_deleted=False, is_approved=True, is_published=True
-                ).exclude(subdomain="template")
+                communities = (
+                    Community.objects.filter(
+                        is_deleted=False, is_approved=True, is_published=True
+                    )
+                    .exclude(subdomain="template")
+                    .order_by("name")
+                )
 
             if not communities:
                 return [], None
+
+            # check for zipcode:
+            if zipcode := args.get("zipcode", None):
+                if zipcodes.is_real(zipcode):
+                    # filter communities by coordinates
+                    filtered_communities = []
+
+                    # get coordinates of the zipcode
+                    zipcode_info = zipcodes.matching(zipcode)
+                    zipcode_lat = zipcode_info[0]["lat"]
+                    zipcode_long = zipcode_info[0]["long"]
+
+                    max_distance = args.get("max_distance", 25)
+
+                    added_communities = []
+                    for community in communities:
+                        if community.is_geographically_focused:
+                            for location in community.locations.all():
+                                # skip locations that don't include zipcode (bogus data in dev)
+                                if not location.zipcode:
+                                    continue
+                                community_zipcode_info = zipcodes.matching(
+                                    location.zipcode
+                                )
+                                community_zipcode_lat = community_zipcode_info[0]["lat"]
+                                community_zipcode_long = community_zipcode_info[0][
+                                    "long"
+                                ]
+
+                                distance_between_zipcodes = get_distance_between_coords(
+                                    float(zipcode_lat),
+                                    float(zipcode_long),
+                                    float(community_zipcode_lat),
+                                    float(community_zipcode_long),
+                                )
+
+                                if distance_between_zipcodes <= max_distance:
+                                    if community.id not in added_communities:
+                                        community.location[
+                                            "distance"
+                                        ] = distance_between_zipcodes
+                                        filtered_communities.append(community)
+                                        added_communities.append(community.id)
+                        else:
+                            filtered_communities.append(community)
+                    return filtered_communities, None
+                else:
+                    return [], CustomMassenergizeError("Invalid Zipcode")
+
             return communities, None
         except Exception as e:
             capture_exception(e)
@@ -790,8 +883,15 @@ class CommunityStore:
         try:
             community_id = args.pop("community_id", None)
             website = args.pop("website", None)
-
             logo = args.pop("logo", None)
+
+            # admins shouldn't be able to update data of other communities
+            if not is_admin_of_community(context, community_id):
+                return None, NotAuthorizedError()
+            
+            if not context.user_is_super_admin:
+                args = remove_cadmin_locked_fields(args)
+              
 
             # The set of zipcodes, stored as Location models, are what determines a boundary for a geograpically focussed community
             # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
@@ -914,6 +1014,14 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
+    def fetch_admins_of(
+        self,args,context: Context
+    ) -> Tuple[list, MassEnergizeAPIError]:
+        community_ids = args.get("community_ids",[])
+        comms = CommunityAdminGroup.objects.filter(community__id__in = community_ids )
+        # communities = Community.objects.filter(is_published=True).order_by("name")
+        return comms, None
+    
     def list_other_communities_for_cadmin(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
@@ -940,7 +1048,7 @@ class CommunityStore:
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
                 communities = [a.community for a in admin_groups]
-                communities = Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params)
+                communities = list(Community.objects.filter(id__in={com.id for com in communities}).filter(*filter_params).order_by('name'))
                 return communities, None
             else:
                 return [], None
@@ -954,8 +1062,8 @@ class CommunityStore:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
             filter_params = get_communities_filter_params(context.get_params())
-
-            communities = Community.objects.filter(is_deleted=False, *filter_params)
+            # the order_by didn't work properly until I added list(), due to "lazy evaluation"
+            communities = list(Community.objects.filter(is_deleted=False, *filter_params).order_by('name'))
             return communities, None
         except Exception as e:
             capture_exception(e)

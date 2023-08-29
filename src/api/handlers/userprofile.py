@@ -4,7 +4,7 @@ from _main_.utils import context
 from _main_.utils.route_handler import RouteHandler
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.massenergize_errors import CustomMassenergizeError
+from _main_.utils.massenergize_errors import NotAuthorizedError
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 from api.store.common import create_pdf_from_rich_text
@@ -36,7 +36,7 @@ class UserHandler(RouteHandler):
         self.add("/users.households.list", self.list_households)
         self.add("/users.events.list", self.list_events)
         self.add("/users.checkImported", self.check_user_imported)
-        self.add("/users.listForPublicView", self.list_publicview)
+        self.add("/users.listForPublicView", self.list_publicview) # NOT USED
         self.add("/users.validate.username", self.validate_username)
 
         # admin routes
@@ -65,7 +65,7 @@ class UserHandler(RouteHandler):
         args: dict = context.args
         args, err = (
             self.validator.expect("accept", bool, is_required=True)
-            .expect("email", str) # For postman tests
+            # .expect("email", str) # For postman tests
             .expect("policy_key", str, is_required=True)
             .verify(context.args)
         )
@@ -89,9 +89,9 @@ class UserHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        data, err = self.service.validate_username(args["username"])
+        data, err = self.service.validate_username(args.get("username"))
         if err:
-            return err
+            return MassenergizeResponse(error=err)
         return MassenergizeResponse(data=data)
 
     def create(self, request):
@@ -121,7 +121,7 @@ class UserHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         community_id = args.pop("community_id", None)
-        user_info, err = self.service.list_users(community_id)
+        user_info, err = self.service.list_users(context,community_id)
         if err:
             return err
         return MassenergizeResponse(data=user_info)
@@ -177,13 +177,22 @@ class UserHandler(RouteHandler):
     def update(self, request):
         context: Context = request.context
         args: dict = context.args
+
         args, err = (
-            self.validator.rename("user_id", "id")
-            .expect("id", str, is_required=True)
-            .verify(context.args)
+             self.validator.rename("user_id", "id")
+             .expect("id", str, is_required=False)
+             .verify(context.args)
         )
         if err:
-            return err
+             return err
+
+        # user info is now taken from context
+        # strip user_id, id out of args if not using
+        # validate that id passed in is 
+        id = args.pop('id', None)
+        if id and id != context.user_id:
+            return None, NotAuthorizedError()
+        
 
         user_info, err = self.service.update_user(context, args)
         if err:
@@ -223,7 +232,7 @@ class UserHandler(RouteHandler):
         args: dict = context.args
         args, err = self.validator.expect(
             "user_emails", "str_list", is_required=False
-        ).verify(args)
+        ).expect("community_ids", "str_list", is_required=False).verify(args)
         if err:
             return err
         users, err = self.service.list_users_for_super_admin(context, args)

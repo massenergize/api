@@ -3,8 +3,8 @@ import pytz
 from _main_.utils.common import serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE_ID
-from database.models import Community, Event, UserProfile, FeatureFlag
+from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
+from database.models import Community, CommunityMember, Event, UserProfile, FeatureFlag
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 from database.utils.common import get_json_if_not_none
@@ -38,7 +38,7 @@ USER_PREFERENCE_DEFAULTS = {
 
 
 
-USER_EVENT_NUDGE_KEY = "communication-prefs-feature-flag"
+USER_EVENT_NUDGE_KEY = "user-event-nudge-feature-flag"
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -108,13 +108,22 @@ def get_community_events(community_id):
         is_published=True, 
         is_deleted=False, 
         start_date_and_time__gte=timezone.now(),
-        )
+        ).distinct()
     
     return events
 
 
-def get_community_users(community_id):
-   users = UserProfile.objects.filter(communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
+def get_community_users(community_id, flag):
+#    users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True, communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
+   community_members = CommunityMember.objects.filter(community__id=community_id, is_deleted=False).values_list("user", flat=True)
+   users = UserProfile.objects.filter(id__in=community_members)
+
+#    check if user is in flag
+   if flag.user_audience == "SPECIFIC":
+       users = users.filter(id__in=[str(u.id) for u in flag.users.all()])
+   elif flag.user_audience == "ALL_EXCEPT":
+       users = users.exclude(id__in=[str(u.id) for u in flag.users.all()])
+
    return users
 
 def generate_change_pref_url(subdomain):
@@ -176,7 +185,7 @@ def send_events_report_email(name, email, event_list, comm):
         data["community_logo"] = get_json_if_not_none(comm.logo).get("url") if comm.logo else ""
         data["cadmin_email"]=comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
-        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))
@@ -193,7 +202,7 @@ def send_automated_nudge(events, user, community):
         user_is_ready_for_nudge = should_user_get_nudged(user)
 
         if user_is_ready_for_nudge:
-            print("sending nudge")
+            print("sending nudge to " + email)
             is_sent = send_events_report_email(name, email, events, community)
             if not is_sent:
                 print( f"**** Failed to send email to {name} for community {community.name} ****")
@@ -217,12 +226,12 @@ def send_user_requested_nudge(events, user, community):
 def get_user_events(notification_dates, community_events):
     today = timezone.now()
     a_week_ago = today - relativedelta(weeks=1)
+    a_month_ago = today - relativedelta(months=1)
     date_aware =None
     if not notification_dates:
-        return community_events.filter(Q(published_at__range=[a_week_ago, today]))
+        return community_events.filter(Q(published_at__range=[a_month_ago, today]))
     
     user_event_nudge = notification_dates.get("user_event_nudge", None)
-
     if user_event_nudge:
         last_received_at = datetime.datetime.strptime(user_event_nudge, '%Y-%m-%d')
         date_aware = timezone.make_aware(last_received_at, timezone=timezone.get_default_timezone())
@@ -233,15 +242,6 @@ def get_user_events(notification_dates, community_events):
 
     return community_events.filter(Q(published_at__range=[last_time, today]))
 
-# don't update notification date unless a notification was actually sent
-#def update_user_notification_dates(communities, flag):
-#        allowed_communities = list(flag.communities.all())
-#        for community in communities:
-#            if flag.audience == "EVERYONE" or community in allowed_communities:
-#                users = get_community_users(community.id)
-#                emails = get_email_lists(users)
-#                for email in emails:
-#                    update_last_notification_dates(email)
 
 '''
 Note: This function only get email as argument when the
@@ -251,7 +251,7 @@ nudge is requested on demand by a cadmin on user portal.
 def prepare_user_events_nudge(email=None, community_id=None):
     try:
         flag = FeatureFlag.objects.filter(key=USER_EVENT_NUDGE_KEY).first()
-        allowed_communities = list(flag.communities.all())
+        # allowed_communities = list(flag.communities.all())
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         if email and community_id:
@@ -262,20 +262,20 @@ def prepare_user_events_nudge(email=None, community_id=None):
             send_user_requested_nudge(events, user, community)
 
             return True
-      
-        for community in communities:
-            if flag.audience == "EVERYONE" or community in allowed_communities:
-                print(community)
-                events = get_community_events(community.id)
-                users = get_community_users(community.id)
-                for user in users:
-                    print(user)
-                    events = get_user_events(user.notification_dates, events)
-                    print(events)
-                    send_automated_nudge(events, user, community)
         
-        # Only update user notification date is an email was actually sent
-        # update_user_notification_dates(communities, flag)
+        if flag.audience == "SPECIFIC":
+            communities = communities.filter(id__in=[str(u.id) for u in flag.communities.all()])
+        elif flag.audience == "ALL_EXCEPT":
+            communities = communities.exclude(id__in=[str(u.id) for u in flag.communities.all()])
+        # print("=== communities: " , len(communities))
+        for community in communities:
+            # if flag.audience == "EVERYONE" or community in allowed_communities:
+            events = get_community_events(community.id)
+            users = get_community_users(community.id, flag)
+
+            for user in users:          
+                user_events = get_user_events(user.notification_dates, events)
+                send_automated_nudge(user_events, user, community)
         
         return True   
     except Exception as e:

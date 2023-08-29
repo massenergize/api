@@ -1,6 +1,7 @@
 import datetime
 from _main_.utils.footage.FootageConstants import FootageConstants
 from api.store.common import make_time_range_from_text
+from api.store.utils import get_user_from_context
 from database.models import (
     Community,
     CommunityMember,
@@ -15,13 +16,9 @@ from database.models import (
 )
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
-    InvalidResourceError,
-    ServerError,
     CustomMassenergizeError,
 )
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
-from django.db.models.query import QuerySet
 from sentry_sdk import capture_message
 from typing import Tuple
 from django.db.models import Q
@@ -43,11 +40,11 @@ class SummaryStore:
         end_time = args.get("end_time", None)
         communities = args.get("communities", [])
         today = datetime.datetime.utcnow()
-        email = args.get("email") or context.user_email
+        email = context.user_email
         is_community_admin = (
-            args.get("is_community_admin", False) or context.user_is_community_admin
+             context.user_is_community_admin
         )
-        is_super_admin = is_community_admin == "False" or context.user_is_super_admin
+        is_super_admin = context.user_is_super_admin
 
         today = pytz.utc.localize(today)
         if not time_range:
@@ -133,24 +130,22 @@ class SummaryStore:
             "done_interactions": done_interactions,
             "todo_interactions": todo_interactions,
             "user_sign_ins": user_sign_ins,
-            "testimonial":testimonials
+            "testimonials":testimonials
         }, None
 
     def next_steps_for_admins(
         self, context: Context, args
     ) -> Tuple[tuple, MassEnergizeAPIError]:
-        is_community_admin = (
-            args.get("is_community_admin", False) or context.user_is_community_admin
-        )
 
         # try:
         content = {}
         err = None
-        if is_community_admin:
-            content, err = self.next_steps_for_community_admins(context, args)
-        else:
-            content, err = self.next_steps_for_super_admins(context, args)
 
+        if context.user_is_super_admin:
+              content, err = self.next_steps_for_super_admins(context, args)
+        elif context.user_is_community_admin:
+            content, err = self.next_steps_for_community_admins(context, args)
+        
         return content, err
 
     def get_admins_last_visit(
@@ -176,11 +171,7 @@ class SummaryStore:
         return last_visit.created_at
 
     def next_steps_for_community_admins(self, context: Context, args):
-
-        email = context.user_email or args.get(
-            "email"
-        )  # Just for Postman Testing, remove before PR(BPR)
-        current_user = UserProfile.objects.filter(email=email).first()
+        current_user = get_user_from_context(context)
 
         if not current_user:
             return {}, CustomMassenergizeError(
@@ -239,10 +230,7 @@ class SummaryStore:
         }, None
 
     def next_steps_for_super_admins(self, context: Context, args):
-        email = context.user_email or args.get(
-            "email"
-        )  # Just for Postman Testing, remove before PR(BPR)
-        current_user = UserProfile.objects.filter(email=email).first()
+        current_user = get_user_from_context(context)
         if not current_user:
             return {}, CustomMassenergizeError(
                 "Sorry, could not find information of currently authenticated admin"
@@ -301,7 +289,11 @@ class SummaryStore:
             if context.user_is_super_admin:
                 return self.summary_for_super_admin(context)
 
-            user = UserProfile.objects.get(pk=context.user_id)
+            user = get_user_from_context(context)
+            if not user:
+                return {}, CustomMassenergizeError(
+                    "Sorry, could not find information of currently authenticated admin"
+                )
             admin_groups = user.communityadmingroup_set.all()
             communities = [ag.community for ag in admin_groups]
             comm_ids = [ag.community.id for ag in admin_groups]

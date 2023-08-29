@@ -1,6 +1,6 @@
+from api.utils.api_utils import is_admin_of_community
 from database.models import Policy, UserProfile, Community
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, ServerError, CustomMassenergizeError
-from _main_.utils.massenergize_response import MassenergizeResponse
+from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from django.db.models import Q
 from sentry_sdk import capture_message
@@ -29,12 +29,15 @@ class PolicyStore:
       return None, CustomMassenergizeError(e)
 
 
-  def create_policy(self, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_policy(self,context, community_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       key = args.pop("key",{})
       new_policy = Policy.objects.create(**args, more_info ={"key":key})
       new_policy.save()
       if community_id:
+        # if community admin check if is admin of the community_admin
+        if not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
         community = Community.objects.get(id=community_id)
         community.policies.add(new_policy)
         community.save()
@@ -44,13 +47,18 @@ class PolicyStore:
       return None, CustomMassenergizeError(e)
 
 
-  def update_policy(self, policy_id, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def update_policy(self, context, policy_id, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       key = args.pop("key",{})
       community_id = args.pop("community_id", None)
       policy = Policy.objects.filter(id=policy_id)
       if not policy:
         return None, InvalidResourceError()
+      
+      # if community is passed, check if is admin of the community
+      if community_id:
+        if not is_admin_of_community(context, community_id):
+            return None, NotAuthorizedError()
       policy.update(**args)
       policy: Policy = policy.first()
       policy.more_info = {**(policy.more_info or {}), "key":key}
@@ -66,13 +74,19 @@ class PolicyStore:
       return None, CustomMassenergizeError(e)
 
 
-  def delete_policy(self, policy_id) -> Tuple[Policy, MassEnergizeAPIError]:
+  def delete_policy(self, context,policy_id) -> Tuple[Policy, MassEnergizeAPIError]:
     try:
       #find the policy
       policies_to_delete = Policy.objects.filter(id=policy_id)
-      policies_to_delete.update(is_deleted=True)
       if not policies_to_delete:
         return None, InvalidResourceError()
+      # this is only necessary if cadmins can perform CRUD operations on policies
+      if not policies_to_delete.first().is_global:
+        community = policies_to_delete.first().community_policies.all().first()
+        if not is_admin_of_community(context,community.id):
+            return None, NotAuthorizedError()
+        
+      policies_to_delete.update(is_deleted=True)
       return policies_to_delete.first(), None
     except Exception as e:
       capture_message(str(e), level="error")

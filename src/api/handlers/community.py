@@ -35,7 +35,7 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.listForCommunityAdmin", self.community_admin_list)
     self.add("/communities.others.listForCommunityAdmin", self.list_other_communities_for_cadmin)
     self.add("/communities.listForSuperAdmin", self.super_admin_list)
-
+    self.add("/communities.adminsOf", self.fetch_admins_of)
 
   def info(self, request):
     context: Context = request.context
@@ -60,19 +60,19 @@ class CommunityHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    self.validator.expect("user_id", str, is_required=True)
+    # self.validator.expect("user_id", str, is_required=True) # the API already knows the user through the context
     self.validator.expect("community_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
 
     # test for perms
-    executor_id = context.user_id
+    # executor_id = context.user_id
 
-    if executor_id == args.get("user_id", None) or context.user_is_admin():
-      community_info, err = self.service.join_community(context, args)
-    else:
-      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.join on this user")
+    # if executor_id == args.get("user_id", None) or context.user_is_admin():
+    community_info, err = self.service.join_community(context, args)
+    # else:
+    #   return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.join on this user")
     if err:
       return err
     return MassenergizeResponse(data=community_info)
@@ -84,19 +84,19 @@ class CommunityHandler(RouteHandler):
     args: dict = context.args
 
     # verify the body of the incoming request
-    self.validator.expect("user_id", str, is_required=True)
+    # self.validator.expect("user_id", str, is_required=True)
     self.validator.expect("community_id", int, is_required=True)
     args, err = self.validator.verify(args, strict=True)
     if err:
       return err
 
     # test for perms
-    executor_id = context.user_id
+    # executor_id = context.user_id
 
-    if executor_id == args.get("user_id", None):
-      community_info, err = self.service.leave_community(context, args)
-    else:
-      return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.leave on this user")
+    # if executor_id == args.get("user_id", None):
+    community_info, err = self.service.leave_community(context, args)
+    # else:
+    #   return CustomMassenergizeError("Executor doesn't have sufficient permissions to use community.leave on this user")
 
     if err:
       return err
@@ -138,12 +138,19 @@ class CommunityHandler(RouteHandler):
 
 
   def list(self, request):
-    context: Context  = request.context
+    context: Context = request.context
+    args: dict = context.args
 
-    args = context.args
+    # self.validator.expect("zipcode", str, is_required=False)
+    self.validator.expect("zipcode", str, is_required=False)
+    self.validator.expect("max_distance", int, is_required=False)
+    args, err = self.validator.verify(args)
+    if err:
+        return err
+
     community_info, err = self.service.list_communities(context, args)
     if err:
-      return err
+        return err
     return MassenergizeResponse(data=community_info)
 
   @admins_only
@@ -214,6 +221,23 @@ class CommunityHandler(RouteHandler):
     return MassenergizeResponse(data=community_info)
 
 
+  @admins_only  
+  def fetch_admins_of(self, request):
+    """
+    Will fetch and group all admins per community, given a list of community IDs. 
+    Very different from "admins.community.list"
+    """
+    context: Context  = request.context
+    args: dict = context.get_request_body() 
+    self.validator.expect("community_ids", list, is_required=True)
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+    communities, err = self.service.fetch_admins_of(args,context)
+    if err:
+      return err
+    return MassenergizeResponse(data=communities)
+  
   @admins_only 
   def list_other_communities_for_cadmin(self, request):
     context: Context  = request.context
@@ -279,6 +303,5 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=community_completed_actions)
-
 
 

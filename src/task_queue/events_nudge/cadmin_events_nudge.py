@@ -1,7 +1,7 @@
 from _main_.utils.common import serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
-from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE_ID
+from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
 from database.models import *
 from django.utils import timezone
 import datetime
@@ -44,7 +44,7 @@ def generate_event_list_for_community(com):
         community__is_published=True,
         is_published=True,
         is_deleted=False
-    ).exclude(community=com, shared_to__id=com.id)
+    ).exclude(community=com).exclude(shared_to__id=com.id).distinct()
     
     return {
         "events": prepare_events_email_data(events),
@@ -57,10 +57,12 @@ def get_comm_admins(com):
     only get admins whose communities have been allowed in the feature flag to receive events
     nudge
     """
+    flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
     admins = []
+    user_list = []
 
-    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list(
-        'members__preferences', "members__email", "members__full_name", "members__notification_dates")
+    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
+
     for i in list(all_community_admins):
         admins.append({
             "pref": i[0] if is_viable(i) else default_pref,
@@ -68,6 +70,13 @@ def get_comm_admins(com):
             "name": i[2],
             "notification_dates": i[3]
         })
+
+    if flag.user_audience == "SPECIFIC":
+       user_list = [str(u.email) for u in flag.users.all()]
+       admins = list(filter(lambda admin: admin.get("email") in user_list,admins ))
+    elif flag.user_audience == "ALL_EXCEPT":
+        user_list = [str(u.email) for u in flag.users.all()]
+        admins = list(filter(lambda admin: admin.get("email") not in user_list,admins ))
 
     return admins
 
@@ -166,22 +175,27 @@ def send_events_nudge():
     try:
         admins_emailed=[]
         flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()
-        allowed_communities = list(flag.communities.all())
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
+
+        if flag.audience == "SPECIFIC":
+            communities = communities.filter(id__in=[str(u.id) for u in flag.communities.all()])
+        elif flag.audience == "ALL_EXCEPT":
+            communities = communities.exclude(id__in=[str(u.id) for u in flag.communities.all()])
+
         for com in communities:
-            if flag.audience == "EVERYONE" or com in allowed_communities:
-                d = generate_event_list_for_community(com)
-                admins = d.get("admins", [])
-                event_list = d.get("events", [])
-                if len(admins) > 0 and len(event_list) > 0:
-                    email_list = get_email_list(admins)
-                    for name, email in email_list.items():
-                        admins_emailed.append(email)
-                        stat = send_events_report(name, email, event_list)
-                        if not stat:
-                            print("send_events_report error return")
-                            return False
+            d = generate_event_list_for_community(com)
+            admins = d.get("admins", [])
+            event_list = d.get("events", [])
+
+            if len(admins) > 0 and len(event_list) > 0:
+                email_list = get_email_list(admins)
+                for name, email in email_list.items():
+                    stat = send_events_report(name, email, event_list)
+                    if not stat:
+                        print("send_events_report error return")
+                        return False
+                    admins_emailed.append(email)
         update_last_notification_dates(admins_emailed)
         return True
     except Exception as e:
@@ -196,7 +210,7 @@ def send_events_report(name, email, event_list):
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE_ID, data, [email], None, None)
+        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))

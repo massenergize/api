@@ -71,7 +71,7 @@ class TestimonialHandler(RouteHandler):
       return err
 
     # no anonymous option anymore
-    args["anonymous"] = False
+    # args["anonymous"] = False
 
     testimonial_info, err = self.service.create_testimonial(context, args)
     if err:
@@ -92,17 +92,24 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('action_id', 'action')
     self.validator.rename('vendor_id', 'vendor')
     self.validator.rename('preferredName', 'preferred_name')
+    self.validator.expect('testimonial_id', str)
+    self.validator.expect("image", "file", is_required=False)
     args, err = self.validator.verify(args)
 
     if err:
       return err
 
     # no anonymous option anymore
-    args["anonymous"] = False
+    # args["anonymous"] = False
 
     # user submitted testimonial, so notify the community admins
     user_submitted = True
-    testimonial_info, err = self.service.create_testimonial(context, args, user_submitted)
+    is_edit = args.pop("testimonial_id", None)
+
+    if is_edit:
+      testimonial_info, err = self.service.update_testimonial(context, args)
+    else:
+      testimonial_info, err = self.service.create_testimonial(context, args, user_submitted)
     if err:
       return err
     return MassenergizeResponse(data=testimonial_info)

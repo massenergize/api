@@ -34,6 +34,7 @@ class EventHandler(RouteHandler):
     self.add("/events.todo", self.save_for_later)
     self.add("/events.exceptions.list", self.list_exceptions)
     self.add("/events.date.update", self.update_recurring_date)
+    self.add("/events.share", self.share_event)
 
     #admin routes
     self.add("/events.listForCommunityAdmin", self.community_admin_list)
@@ -146,7 +147,7 @@ class EventHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=event_info)
 
-  # @login_required
+  @admins_only
   def update_recurring_date(self, request):
     context: Context = request.context
     args: dict = context.args
@@ -190,6 +191,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
+    self.validator.expect("event_type",str)
     self.validator.expect("publicity_selections",list)
     self.validator.expect("add_to_home_page", bool, is_required=False)
     args, err = self.validator.verify(args)
@@ -215,7 +217,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('tags', list)
     self.validator.expect('is_recurring', bool)
     self.validator.expect('have_address', bool)
-    self.validator.expect('location', str)
+    self.validator.expect('location', 'location')
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
     self.validator.expect('event_id', str)
@@ -305,6 +307,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_email', bool)
     self.validator.expect("image","str_list")
     self.validator.expect("publicity",str)
+    self.validator.expect("event_type",str)
     self.validator.expect("publicity_selections","str_list")
     self.validator.expect("shared_to","str_list")
     args, err = self.validator.verify(args)
@@ -389,3 +392,21 @@ class EventHandler(RouteHandler):
       return err
 
     return MassenergizeResponse(data=events)
+
+
+  @admins_only
+  def share_event(self, request):
+    context: Context = request.context
+    args: dict = context.args
+    
+    self.validator.expect("event_id", int, is_required=True)
+    self.validator.expect("shared_to","str_list", is_required=True)
+    args, err = self.validator.verify(args, strict=True)
+
+    if err:
+      return err
+
+    event_info, err = self.service.share_event(context, args)
+    if err:
+      return err
+    return MassenergizeResponse(data=event_info)

@@ -1,6 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from _main_.utils.utils import is_url_valid
 from api.tests.common import RESET
+from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_events_filter_params
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
@@ -9,12 +11,13 @@ from _main_.utils.context import Context
 from sentry_sdk import capture_message
 
 from database.utils.settings.model_constants.events import EventConstants
-from .utils import get_user_or_die, get_new_title
+from .utils import get_user_from_context, get_user_or_die, get_new_title
 import datetime
 from datetime import timedelta
 import calendar
 import pytz
 from typing import Tuple
+
 
 def _local_datetime(date_and_time):
   # the local date (in Massachusetts) is different than the UTC date
@@ -119,6 +122,8 @@ class EventStore:
         new_event.location = event_to_copy.location
         new_event.more_info = event_to_copy.more_info
         new_event.external_link = event_to_copy.external_link
+        new_event.external_link_type = event_to_copy.external_link_type
+        new_event.event_type = event_to_copy.event_type
         if not (event_to_copy.is_recurring == None):
           new_event.is_recurring = event_to_copy.is_recurring
           new_event.recurring_details = event_to_copy.recurring_details
@@ -221,7 +226,7 @@ class EventStore:
       events = []
     
     if not context.is_sandbox and events:
-      if context.user_is_logged_in:
+      if context.user_is_logged_in and not context.user_is_admin():
           events = events.filter(Q(user__id=context.user_id) | Q(is_published=True))
       else:
          events = events.filter(is_published=True)
@@ -275,9 +280,17 @@ class EventStore:
       if recurring_type != "month":
         week_of_month = None
 
-      have_address = args.pop('have_address', False)
-      if not have_address:
+      event_type = args.get('event_type', None)
+      if event_type == "in-person":
+        args['external_link'] = None
+      elif event_type == "online":
         args['location'] = None
+
+      if args.get('external_link', None):
+        is_link_valid = is_url_valid(args.get("external_link"))
+        if not is_link_valid:
+          return None, CustomMassenergizeError("Please provide a valid link for the event.") 
+
 
       if community:
         community = Community.objects.get(pk=community)
@@ -346,15 +359,31 @@ class EventStore:
     try:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
+
       publicity_selections = args.pop("publicity_selections", [])
       shared_to = args.pop("shared_to", [])
 
       if not events:
         return None, InvalidResourceError()
+      event = events.first()
 
-      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(events.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
-        return None, NotAuthorizedError()
+      # check if requesting user is the action creator, super admin or community admin else throw error
+      creator = str(event.user_id)
+      community = event.community
+      if context.user_id == creator:
+        # action creators can't currently modify once published
+        if event.is_published and not context.user_is_admin():
+          # ideally this would submit changes to the community admin to publish
+          return None, CustomMassenergizeError("Unable to modify event once published.  Please contact Community Admin to do this")
+      else:
+        # otherwise you must be an administrator
+        if not context.user_is_admin():
+          return None, NotAuthorizedError()
+
+        # check if user is community admin and is also an admin of the community that created the event
+        if community:
+          if not is_admin_of_community(context, community.id):
+            return None, NotAuthorizedError()
 
       image = args.pop('image', None)
       tags = args.pop('tags', [])
@@ -426,9 +455,23 @@ class EventStore:
       ### if not is_approved and is_published:
       ###    return None, CustomMassenergizeError("Cannot publish event that is not approved.")
 
-      have_address = args.pop('have_address', False)
-      if not have_address:
+      event_type = args.get('event_type', None)
+      if event_type == "in-person":
+        args['external_link'] = None
+      elif event_type == "online":
         args['location'] = None
+
+
+      if args.get('external_link', None):
+        is_link_valid = is_url_valid(args.get("external_link"))
+        if not is_link_valid:
+          return None, CustomMassenergizeError("Please provide a valid link for the event.") 
+
+       
+      #  preventing the user from approving event if they are not an admin
+      if not context.user_is_admin():
+        args.pop('is_approved', None)
+        args.pop('is_published', None)
 
       # update the event instance
       events.update(**args)
@@ -502,6 +545,7 @@ class EventStore:
               archive = event.archive, 
               is_global = event.is_global, 
               external_link = event.external_link, 
+              external_link_type = event.external_link_type, 
               more_info = event.more_info, 
               is_deleted = event.is_deleted, 
               is_published = event.is_published,
@@ -688,6 +732,9 @@ class EventStore:
       if not events:
         return None, InvalidResourceError()
       
+      if not is_admin_of_community(context, events.first().community.id):
+          return None, NotAuthorizedError()
+      
       if len(events) > 1:
         return None, CustomMassenergizeError("Deleting multiple events not supported")
       event = events.first()
@@ -761,7 +808,10 @@ class EventStore:
         # not as their own separate events
         events = Event.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params,is_deleted=False).exclude(name__contains=" (rescheduled)").select_related('image', 'community').prefetch_related('tags')
         return events, None
-
+      
+      if not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
+      
       events = Event.objects.filter(Q(community__id = community_id) | Q(is_global=True),*filter_params, is_deleted=False).select_related('image', 'community').prefetch_related('tags')
       return events, None
     except Exception as e:
@@ -825,7 +875,7 @@ class EventStore:
     try:
       event_id = args.pop("event_id", None)
       status = args.pop("status", "SAVE")
-      user = get_user_or_die(context, args)      
+      user = get_user_from_context(context) 
       event = Event.objects.filter(pk=event_id).first()
       if not event:
         return None, InvalidResourceError()
@@ -852,7 +902,7 @@ class EventStore:
     try:
       rsvp_id = args.pop("rsvp_id", None)
       event_id = args.pop("event_id", None)
-      user = get_user_or_die(context, args)
+      user = get_user_from_context(context)
 
       if rsvp_id:
         result = EventAttendee.objects.filter(pk=rsvp_id).delete()
@@ -865,6 +915,26 @@ class EventStore:
         raise Exception("events.rsvp.remove: must specify rsvp or event id")
           
       return result, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+
+  def share_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      event_id = args.pop("event_id", None)
+      event = Event.objects.filter(id=event_id).first()
+      shared_to = args.pop("shared_to", None)
+      if shared_to:
+        first = shared_to[0]
+        if first == "reset": 
+          event.shared_to.clear()
+        else: event.shared_to.set(shared_to)
+      event.save()
+
+
+      return event, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
