@@ -3,7 +3,7 @@ from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import strip_website
 from api.store.common import count_action_completed_and_todos
 from api.tests.common import RESET
-from api.utils.api_utils import is_admin_of_community
+from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import (
     Community,
@@ -660,7 +660,7 @@ class CommunityStore:
                                     "long"
                                 ]
 
-                                distance_between_zipcodes = self._haversince_distance(
+                                distance_between_zipcodes = get_distance_between_coords(
                                     float(zipcode_lat),
                                     float(zipcode_long),
                                     float(community_zipcode_lat),
@@ -1014,6 +1014,14 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
+    def fetch_admins_of(
+        self,args,context: Context
+    ) -> Tuple[list, MassEnergizeAPIError]:
+        community_ids = args.get("community_ids",[])
+        comms = CommunityAdminGroup.objects.filter(community__id__in = community_ids )
+        # communities = Community.objects.filter(is_published=True).order_by("name")
+        return comms, None
+    
     def list_other_communities_for_cadmin(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
