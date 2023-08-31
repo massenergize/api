@@ -1,10 +1,11 @@
 import datetime
 from datetime import timezone, timedelta
 import json
+import uuid
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
-from django.db.models.fields import BooleanField, related
+from django.db.models.fields import BooleanField
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *

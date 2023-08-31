@@ -1,6 +1,6 @@
 from fileinput import filename
 from .models import CalcDefault
-from .calcUsers import CalcUserLocality
+#from .calcUsers import CalcUserLocality
 from datetime import datetime
 import time
 import timeit
@@ -13,12 +13,13 @@ def getLocality(inputs):
     #userID = inputs.get("user_id","")
     locality = "default"
     
-    if id != "":
-        loc = CalcUserLocality(id)
-        if loc:
-            locality = loc
-
-    elif community != "":
+#    if id != "":
+#        loc = CalcUserLocality(id)
+#        if loc:
+#            locality = loc
+#
+#    elif community != "":
+    if community != "":
         locality = community
 
     return locality
