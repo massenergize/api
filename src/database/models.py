@@ -23,7 +23,7 @@ from .utils.common import (
 from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
-from carbon_calculator.carbonCalculator import CarbonCalculator
+from carbon_calculator.carbonCalculator import AverageImpact
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -596,9 +596,8 @@ class Community(models.Model):
         carbon_footprint_reduction = 0
         for actionRel in done_actions:
             if actionRel.action and actionRel.action.calculator_action:
-                carbon_footprint_reduction += (
-                    CarbonCalculator.AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
-                )
+                carbon_footprint_reduction += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
+
         goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
         # calculate values for community impact to be displayed on front-end sites

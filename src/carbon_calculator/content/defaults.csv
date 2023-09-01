@@ -1,8 +1,15 @@
 ﻿Variable,Locality,Value,Reference,Valid Date,Updated
+activism_average_points,default,15,Token small action points,,2023-05-15 20:38
+air_source_hp_average_points,default,7119,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+air_source_hp_average_points,default,7031,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1XLm7Mp_cM5qNAqcAWS2viHd7bBipKtSOHwQv40T9bCI/edit?usp=sharing),2022-09-01,2023-05-15 20:38
+avoid_purchase_average_points,default,15,Token small action points,,2023-05-15 20:38
+borrow_buy_used_average_points,default,15,Token small action points,,2023-05-15 20:38
 buy_bulk_co2,default,100,Default value without reference,,2019-11-03 14:09
+buy_e_bike_average_points,default,0,Needs evaluation,,2023-05-15 20:38
 buy_recycled_co2,default,200,Default value without reference,,2019-11-03 14:18
 buy_sell_use_savings,default,4000,Default value without reference,,2019-11-03 14:19
 buy_sell_used_co2,default,2000,Default value without reference,,2019-11-03 14:19
+campaign_average_points,default,15,Token small action points,,2023-05-15 20:38
 car_annual_insurance,default,1000,Default value without reference,,2019-11-03 20:38
 car_annual_service_electric,default,200,Default value without reference,,2019-11-03 17:01
 car_annual_service_gas,default,500,Default value without reference,,2019-11-03 16:58
@@ -26,7 +33,17 @@ car_PHEV_federal_credit,default,4500,Default value without reference,,2019-11-03
 car_PHEV_local_rebate,default,0,Default value without reference,,2019-11-03 17:38
 car_PHEV_price,default,27750,Default value without reference,,2019-11-03 17:38
 car_PHEV_state_credit,default,0,Default value without reference,,2019-11-03 17:38
+carbon_footprint_average_points,default,15,Token small action points,,2023-05-15 20:38
+coaching_average_points,default,15,Token small action points,,2023-05-15 20:38
+coldwater_wash_average_points,default,68,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+community_solar_average_points,default,3714,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+compost_average_points,default,189,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+compost_average_points,default,182,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),2022-09-01,2023-05-15 20:38
 compost_co2,default,189,https://www.mass.gov/doc/draft-2030-solid-waste-master-plan/download,,2019-11-03 14:02
+eat_locally_average_points,default,43,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+efficient_fossil_average_points,default,1146,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+efficient_renovations_average_points,default,328,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+efficient_renovations_average_points,default,322,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),2022-09-01,2023-05-15 20:38
 elec_bulb_average_ontime_hours,default,3,Default value without reference,,2019-10-27 13:23
 elec_bulb_average_wattage,default,60,Default value without reference,,2019-10-27 13:23
 elec_bulb_relative_LED_consumption,default,0.12,Default value without reference,,2019-10-27 13:23
@@ -68,20 +85,36 @@ elec_renewable_additional_kwh_cost,default,0.038,Default value without reference
 elec_typical_monthly_bill,default,150,Default value without reference,,2019-11-02 01:23
 elec_washer_average_annual_loads,default,300,Average loads per year: https://www.energystar.gov/products/appliances/clothes_washers,,2019-10-26 17:00
 elec_washer_water_heated_fraction,default,0.5,"Assuming hot water wash, cold water rinse 50% each",,2019-10-26 17:00
+electric_mower_average_points,default,369,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+electricity_monitor_average_points,default,111,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+eliminate_car_average_points,default,8429,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+eliminate_car_average_points,default,9392,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1XLm7Mp_cM5qNAqcAWS2viHd7bBipKtSOHwQv40T9bCI/edit?usp=sharing),2022-09-01,2023-05-15 20:38
+energy_audit_average_points,default,15,Token small action points,,2023-05-15 20:38
+energy_fair_average_points,default,15,Token small action points,,2023-05-15 20:38
+energystar_fridge_average_points,default,442,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+energystar_fridge_average_points,default,59,This does not look correct.  Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),2022-09-01,2023-05-15 20:38
+energystar_washer_average_points,default,148,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+EV_charger_average_points,default,0.,Needs evaluation,,2023-05-15 20:38
 flights_default_annual_family,default,12,Default value without reference,,2019-11-03 14:35
 flights_default_co2,default,2288,Default value without reference,,2019-11-03 14:36
 flights_default_cost,default,500,Default value without reference,,2019-11-03 14:36
 flights_default_offset_cost_per_ton,default,12,Default value without reference,,2019-11-03 14:40
 food_meat_co2_serving,default,4.75,Default value without reference,,2019-11-03 14:25
 food_vegetarian_co2_serving,default,0.88,Default value without reference,,2019-11-03 14:25
+fridge_pickup_average_points,default,591,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
 fueloil_co2_per_gallon,default,22.4,https://www.eia.gov/environment/emissions/co2_vol_mass.php,,2019-11-02 01:30
 fueloil_price_per_gallon,default,2.92,Default value without reference,,2019-11-02 01:30
 gasoline_co2_per_gal,default,17.68,# http://www.patagoniaalliance.org/wp-content/uploads/2014/08/How-much-carbon-dioxide-is-produced-by-burning-gasoline-and-diesel-fuel-FAQ-U.S.-Energy-Information-Administration-EIA.pdf,,2019-11-03 13:07
 gasoline_price,default,2.7,Default value without reference,,2019-11-03 16:58
 general_decent_home_investment_payback,default,10,Default value without reference,,2019-11-04 13:08
 general_household_size_default,default,4,Default value without reference,,2019-11-03 14:25
+get_involved_average_points,default,15,Token small action points,,2023-05-15 20:38
+ground_source_hp_average_points,default,11573,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+ground_source_hp_average_points,default,11462,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1XLm7Mp_cM5qNAqcAWS2viHd7bBipKtSOHwQv40T9bCI/edit?usp=sharing),2022-09-01,2023-05-15 20:38
+grow_local_average_points,default,15,Token small action points,,2023-05-15 20:38
 heating_ashp_fed_tax_credit,default,0,Default value without reference,,2019-11-02 21:29
 heating_ashp_utility_rebate,default,2500,Default value without reference,,2019-11-02 21:29
+heating_assessment_average_points,default,15,Token small action points,,2023-05-15 20:38
 heating_assessment_conversion,default,0.1,Assume 10% of coaching inquiries result in heat pumps,,2019-11-02 01:23
 heating_default_ashp_efficiency,default,3,Default value without reference,,2019-11-02 13:09
 heating_default_ashp_fraction,default,0.8,Default value without reference,,2019-11-02 21:29
@@ -106,6 +139,14 @@ heating_standard_geothermal_cost,default,60000,Default value without reference,,
 heating_standard_hieff_boiler_cost,default,8000,Default value without reference,,2019-11-02 14:13
 heating_typical_weatherization_cost,default,500,Default value without reference,,2019-11-02 13:54
 heating_wood_high_efficiency,default,0.88,Default value without reference,,2019-11-02 14:20
+hp_dryer_average_points,default,245,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+hp_water_heater_average_points,default,879,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+hw_assessment_average_points,default,15,Token small action points,,2023-05-15 20:38
+induction_stove_average_points,default,42,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+install_solarHW_average_points,default,708,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+install_solarPV_average_points,default,5494,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+install_solarPV_average_points,default,5494,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1XLm7Mp_cM5qNAqcAWS2viHd7bBipKtSOHwQv40T9bCI/edit?usp=sharing),2022-09-01,2023-05-15 20:38
+investing_average_points,default,0.,Needs evaluation,,2023-05-15 20:38
 lawn_average_yearly_mows,default,22,Default value without reference,,2019-11-03 13:10
 lawn_blower_gal_per_hour,default,0.5,Default value without reference,,2019-11-03 13:07
 lawn_blower_typical_hours,default,10,Default value without reference,,2019-11-03 13:07
@@ -118,15 +159,50 @@ lawn_fertilizer_nitrogen_concentration,default,0.1,Default value without referen
 lawn_fertilzer_bag_size,default,14,Default value without reference,,2019-11-03 13:38
 lawn_mow_gas_5000sf,default,0.5,Default value without reference,,2019-11-03 13:10
 lawn_mow_kwh_5000sf,default,2,Default value without reference,,2019-11-03 13:10
+led_lighting_average_points,default,624,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+light_pollution_average_points,default,15,Token small action points,,2023-05-15 20:38
+line_dry_average_points,default,223,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+local_decision_average_points,default,15,Token small action points,,2023-05-15 20:38
+local_govt_average_points,default,15,Token small action points,,2023-05-15 20:38
+low_carbon_diet_average_points,default,1417,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+low_carbon_diet_average_points,default,1400,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),2022-09-01,2023-05-15 20:38
+market_green_home_average_points,default,15,Token small action points,,2023-05-15 20:38
+muni_aggregation_average_points,default,0.,Needs evaluation,,2023-05-15 20:38
 natgas_ch4_global_warming_potential,default,86,IPCC 2014 report - low end GWP for Natural Gas on 20 yr timescale,,2019-10-27 11:20
 natgas_fraction_methane_leakage,default,0.023,"Science (AAAS), EDF article Assessment of methane emissions from the U.S. oil and gas supply chain. 2018 - 2.3% fugitive emissions",,2019-10-27 11:19
 natgas_lbs_co2_per_therm,default,11.7,Standard combustion CO2 for Natural Gas,,2019-10-27 11:18
 natgas_price_per_therm,default,1.52,Web: https://www.mass.gov/info-details/household-heating-costs Winter 2018-19,,2019-10-27 10:54
 nitrogen_co2_factor,default,0.02,Default value without reference,,2019-11-03 13:38
+offset_flights_average_points,default,1847,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+open_space_average_points,default,15,Token small action points,,2023-05-15 20:38
+opt_up_RE_average_points,default,0.,Needs evaluation,,2023-05-15 20:38
+people_power_average_points,default,15,Token small action points,,2023-05-15 20:38
+plant_native_average_points,default,15,Token small action points,,2023-05-15 20:38
+plant_trees_average_points,default,60,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+prog_thermostats_average_points,default,421,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+prog_thermostats_average_points,default,413,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),2022-09-01,2023-05-15 20:38
 propane_co2_per_gallon,default,12.7,# https://www.eia.gov/environment/emissions/co2_vol_mass.php,,2019-11-02 13:04
 propane_price_per_gallon,default,3.09,Default value without reference,,2019-11-02 13:04
+public_transit_average_points,default,15,Token small action points,,2023-05-15 20:38
+rain_barrel_average_points,default,15,Token small action points,,2023-05-15 20:38
+rake_elec_blower_average_points,default,71,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+reduce_car_miles_average_points,default,1686,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+reduce_car_miles_average_points,default,1878,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1XLm7Mp_cM5qNAqcAWS2viHd7bBipKtSOHwQv40T9bCI/edit?usp=sharing),2022-09-01,2023-05-15 20:38
+reduce_flights_average_points,default,1847,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+reduce_lawn_care_average_points,default,241,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+reduce_lawn_size_average_points,default,96,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+reduce_waste_average_points,default,481,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+reduce_waste_average_points,default,476,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),2022-09-01,2023-05-15 20:38
+reduce_watering_average_points,default,15,Token small action points,,2023-05-15 20:38
+renewable_elec_average_points,default,3714,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+replace_car_average_points,default,5820,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+replace_car_average_points,default,7067,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1XLm7Mp_cM5qNAqcAWS2viHd7bBipKtSOHwQv40T9bCI/edit?usp=sharing),2022-09-01,2023-05-15 20:38
 reuse_containers_co2,default,100,Default value without reference,,2019-11-03 14:07
+shave_peak_average_points,default,15,Token small action points,,2023-05-15 20:38
+showerheads_average_points,default,15,Token small action points,,2023-05-15 20:38
+smart_power_strip_average_points,default,92,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
 solar_annual_kwh_per_kw,default,1100,Default value without reference,,2019-11-04 13:14
+solar_assessment_average_points,default,15,Token small action points,,2023-05-15 20:38
 solar_assessment_convertion_fraction,default,0.2,Default value without reference,,2019-11-04 13:14
 solar_default_pv_size,default,7,Default value without reference,,2019-11-04 13:14
 solar_federal_tax_credit,default,0.26,Default value without reference,,2019-11-04 13:21
@@ -136,12 +212,15 @@ solar_hw_state_tax_credit,default,0,Default value without reference,,2019-11-04 
 solar_hw_system_average_cost,default,9000,Default value without reference,,2019-11-04 13:27
 solar_hw_utility_rebate,default,0,Default value without reference,,2019-11-04 13:27
 solar_local_price_factor,default,1,Default value without reference,,2019-11-04 13:21
+solar_oven_average_points,default,15,Token small action points,,2023-05-15 20:38
 solar_pv_kw_cost,default,3500,Default value without reference,,2019-11-04 13:21
 solar_srec_payment_per_mwh,default,200,Default value without reference,,2019-11-04 13:21
 solar_state_rebate,default,1000,Default value without reference,,2019-11-04 13:21
 solar_state_tax_credit,default,0,Default value without reference,,2019-11-04 13:21
 solar_utility_rebate,default,3000,Default value without reference,,2019-11-04 13:21
 solar_wh_system_fraction,default,0.8,Default value without reference,,2019-11-04 13:26
+sustain_school_average_points,default,15,Token small action points,,2023-05-15 20:38
+swap_donate_average_points,default,15,Token small action points,,2023-05-15 20:38
 transportation_public_daily_cost,default,25,Default value without reference,,2019-11-03 20:28
 transportation_public_monthly_cost,default,301,Default value without reference,,2019-11-03 20:28
 water_heater_electric_efficiency,default,0.9,Default value without reference,,2019-11-04 13:05
@@ -164,9 +243,12 @@ water_price_per_scf,LincolnMA,0.0442,Web site: https://efc.sog.unc.edu/resource/
 water_price_per_scf,default,0.0564,"Concord utility water price, July 2019 bill",,2019-10-26 12:45
 water_price_per_scf,ConcordMA,0.0564,"Concord utility water price, July 2019 bill",,2019-10-26 12:46
 water_price_per_scf,BedfordMA,0.0559,Web site: https://efc.sog.unc.edu/resource/massachusetts-water-and-wastewater-rates-dashboard,,2019-10-26 16:00
+weatherization_average_points,default,3281,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),,2023-05-15 20:38
+weatherization_average_points,default,3216,Documented in Carbon Calculator Inputs and Assumptions 2020 (https://docs.google.com/spreadsheets/d/1d1hYnfRW6oia9eoeS2f8bYPgDoVwrxHlcBm322YwYbE/edit),2022-09-01,2023-05-15 20:38
 weatherize_fractional_savings,default,0.15,Default value without reference,,2019-11-02 13:54
 weatherize_fractional_savings_2,default,0.5,Default value without reference,,2019-11-02 13:59
 weatherize_incremental_savings,default,0.05,Default value without reference,,2019-11-02 14:01
+windows_average_points,default,0,Needs evaluation,,2023-05-15 20:38
 wood_btu_per_cord,default,23.7,# https://chimneysweeponline.com/howood.htm,,2019-11-02 13:04
 wood_co2_per_mmbtu,default,255.2,#https://futuremetrics.info/wp-content/uploads/2013/07/CO2-from-Wood-and-Coal-Combustion.pdf,,2019-11-02 13:04
 wood_price_per_cord,default,320,Default value without reference,,2019-11-02 13:04
