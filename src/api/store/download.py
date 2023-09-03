@@ -37,6 +37,7 @@ from typing import Tuple
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
+from carbon_calculator.carbonCalculator import AverageImpact
 
 EMPTY_DOWNLOAD = (None, None)
 
@@ -407,7 +408,7 @@ class DownloadStore:
     def _get_action_info_cells(self, action):
 
         average_carbon_points = (
-            action.calculator_action.average_points
+            AverageImpact(action.calculator_action, action.date_completed)
             if action.calculator_action
             else int(action.average_carbon_score)
             if action.average_carbon_score.isdigit()
@@ -535,7 +536,7 @@ class DownloadStore:
             for done_action in done_actions:
                 if done_action.action and done_action.action.calculator_action:
                     total_carbon_points += (
-                        done_action.action.calculator_action.average_points
+                        AverageImpact(done_action.action.calculator_action, done_action.date_completed)
                     )
         total_carbon_points = str(total_carbon_points)
 
@@ -696,7 +697,7 @@ class DownloadStore:
 
         carbon_user_reported = sum(
             [
-                action_rel.action.calculator_action.average_points
+                AverageImpact(action_rel.action.calculator_action)
                 if action_rel.action.calculator_action
                 else 0
                 for action_rel in done_action_rels

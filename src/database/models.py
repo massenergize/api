@@ -1,11 +1,11 @@
 import datetime
 from datetime import timezone, timedelta
 import json
+import uuid
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
-from django.db.models.fields import BooleanField, related
-from django.db.models.query_utils import select_related_descend
+from django.db.models.fields import BooleanField
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
@@ -23,13 +23,12 @@ from .utils.common import (
 from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
-import uuid
+from carbon_calculator.carbonCalculator import AverageImpact
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
 
 # -------------------------------------------------------------------------
-
 
 def get_enabled_flags(
     _self, users=False
@@ -597,9 +596,8 @@ class Community(models.Model):
         carbon_footprint_reduction = 0
         for actionRel in done_actions:
             if actionRel.action and actionRel.action.calculator_action:
-                carbon_footprint_reduction += (
-                    actionRel.action.calculator_action.average_points
-                )
+                carbon_footprint_reduction += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
+
         goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
         # calculate values for community impact to be displayed on front-end sites

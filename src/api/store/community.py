@@ -1120,14 +1120,13 @@ class CommunityStore:
             # include actions from other communities that users in this community completed on their homes
 
             # TODO: Normal list causing pagination to throw exceptions: will fix this issue
-
             time_range = args.get("time_range", "")
             start_date = args.get("start_date", "")
             end_date = args.get("end_date", "")
 
             actions_completed = []
             if not context.is_admin_site:
-                community = get_community_or_die(context, args)                
+                community = get_community_or_die(context, args)            
                 actions_completed = count_action_completed_and_todos(
                     communities=[community],
                     time_range=time_range,

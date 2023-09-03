@@ -1,6 +1,6 @@
 from fileinput import filename
 from .models import CalcDefault
-from .calcUsers import CalcUserLocality
+#from .calcUsers import CalcUserLocality
 from datetime import datetime
 import time
 import timeit
@@ -13,12 +13,13 @@ def getLocality(inputs):
     #userID = inputs.get("user_id","")
     locality = "default"
     
-    if id != "":
-        loc = CalcUserLocality(id)
-        if loc:
-            locality = loc
-
-    elif community != "":
+#    if id != "":
+#        loc = CalcUserLocality(id)
+#        if loc:
+#            locality = loc
+#
+#    elif community != "":
+    if community != "":
         locality = community
 
     return locality
@@ -32,10 +33,6 @@ class CCD():
     DefaultsByLocality = {"default":{}} # the class variable
     try:
         cq = CalcDefault.objects.all()
-        num = cq.count()
-        msg = "Initializing %d Carbon Calc defaults from db" % num
-        print(msg)
-        
         for c in cq:
             # valid date is 0 if not specified
             date = '2000-01-01'
@@ -154,9 +151,9 @@ class CCD():
                         #valid_date = datetime.date(valid_date)
                         valid_date = datetime.strptime(valid_date, "%Y-%m-%d").date()
 
-                        qs = CalcDefault.objects.filter(variable=variable, locality=locality)
-                        if qs:
-                            qs[0].delete()
+                        #qs = CalcDefault.objects.filter(variable=variable, locality=locality)
+                        #if qs:
+                        #    qs[0].delete()
 
                         cd = CalcDefault(variable=variable,
                                 locality=locality,

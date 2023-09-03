@@ -241,10 +241,6 @@ def setupCC(client):
                 "Confirm": "Yes",
                 "Actions": "carbon_calculator/content/Actions.csv",
                 "Questions": "carbon_calculator/content/Questions.csv",
-                "Stations": "carbon_calculator/content/Stations.csv",
-                "Groups": "carbon_calculator/content/Groups.csv",
-                "Organizations": "carbon_calculator/content/Organizations.csv",
-                "Events": "carbon_calculator/content/Events.csv",
                 "Defaults": "carbon_calculator/content/Defaults.csv",
             },
         )
@@ -317,7 +313,7 @@ def createImage(picURL=None):
     resp = requests.get(picURL)
     if resp.status_code != requests.codes.ok:
         # Error handling here3
-        print("ERROR: Unable to import action photo from " + picURL)
+        print("ERROR: Unable to import image file from " + picURL)
         image_file = None
     else:
         image = resp.content
