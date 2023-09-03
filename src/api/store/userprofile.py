@@ -1,5 +1,7 @@
+from _main_.utils.common import serialize
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
+from api.constants import STANDARD_USER,GUEST_USER
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_users_filter_params
 from api.store.common import create_pdf_from_rich_text, sign_mou
@@ -16,10 +18,11 @@ import json
 from typing import Tuple
 from api.services.utils import send_slack_message
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY, DEBUG
-from _main_.utils.constants import ME_LOGO_PNG
-from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE_ID, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECEIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE, STANDARD_USER, INVITED_USER, GUEST_USER
+from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
+from api.utils.constants import GUEST_USER_EMAIL_TEMPLATE, ME_SUPPORT_TEAM_EMAIL, MOU_SIGNED_ADMIN_RECIPIENT, MOU_SIGNED_SUPPORT_TEAM_TEMPLATE
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
 from datetime import datetime
+from wordfilter import Wordfilter
 
 
 def remove_locked_fields(args):
@@ -175,22 +178,25 @@ class UserStore:
 
   def validate_username(self, username):
     # returns [is_valid, suggestion], error
+    filter = Wordfilter()
+    filter.addWords(["fuck","pussio"]) # These are not  in the general list that the plugin provides here https://github.com/dariusk/wordfilter/blob/master/lib/badwords.json
     try:    
         if (not username):
-            return {'valid': False, 'suggested_username': None}, None
-
-        # checks if username already exists
-        if not UserProfile.objects.filter(preferred_name=username).exists():
-            return {'valid': True, 'suggested_username': username}, None
-
-        # username exists, finds next available closest username
-        usernames = list(UserProfile.objects.filter(preferred_name__istartswith=username).order_by('preferred_name').values_list("preferred_name", flat=True))
-
+            return {'valid': False, "code":401, 'suggested_username': None}, None
+        is_bad_word = filter.blacklisted(username)
+       
+        if is_bad_word: 
+          return {'valid': False, 'suggested_username': None, "code":911, "message":"Your username may contain some profanity, please change..."}, None
+        
+        # (TODO: When there is time, this part downwards could be implemented better)
+        usernames = list(UserProfile.objects.filter(preferred_name__iexact=username).order_by('preferred_name').values_list("preferred_name", flat=True))
         if len(usernames) == 1:
             suggestion = username + "1"
-            return {'valid': False, 'suggested_username': suggestion}, None
-
-        # more than one username starting with the test username
+            return {'valid': False, "code":202,'suggested_username': suggestion}, None
+        elif len(usernames) == 0:  # The value is actually unique here so just return valid
+          return {'valid': True, "code":200,'suggested_username': username}, None
+       
+        # more than one username starting with the test username 
         suggestion = None
         for i in range(1, 999):
           test_username = username + str(i)
@@ -201,7 +207,7 @@ class UserStore:
         if not suggestion:
           return None, CustomMassenergizeError("No further usernames to suggest")
         else:
-          return {'valid': False, 'suggested_username': suggestion}, None
+          return {'valid': False, "code":202, 'suggested_username': suggestion}, None
         
     except Exception as e:
         return None, CustomMassenergizeError(e)
@@ -235,7 +241,9 @@ class UserStore:
   def decline_mou(self,user, args): 
     date = args.get("date")
     name = user.full_name
-    send_massenergize_email(f"{name} Declined MOU ({date})", f"{name}, declined the MOU. They have chosen to no longer be an admin.",ME_SUPPORT_TEAM_EMAIL)
+    send_massenergize_email(f"{name} Declined MOU ({date})", 
+                            f"{name}, declined the MOU. They have chosen to no longer be an admin.",
+                            ME_SUPPORT_TEAM_EMAIL)
 
     user.is_community_admin= False 
     user.is_super_admin = False
@@ -269,14 +277,18 @@ class UserStore:
         rich_text = sign_mou(policy.description, user, current_timestamp_str)
         pdf,_ = create_pdf_from_rich_text(rich_text,filename)
         # Notify the user who just signed
-        send_massenergize_email_with_attachments(MOU_SIGNED_ADMIN_RECEIPIENT,{"username":username},user.email,pdf,filename)
+        send_massenergize_email_with_attachments(MOU_SIGNED_ADMIN_RECIPIENT,{"username":username},user.email,pdf,filename)
         
         user_groups = CommunityAdminGroup.objects.filter(members=user)
         # Concatenate all community names into one string, separated by a comma
         community_names = ", ".join([group.community.name for group in user_groups])
         
         # Notify massenergize support team 
-        send_massenergize_email_with_attachments(MOU_SIGNED_SUPPORT_TEAM_TEMPLATE,{"admin_name":username, "salutation":"Dear Support Team,", "community_name":community_names or "..."},ME_SUPPORT_TEAM_EMAIL,pdf,filename)
+        send_massenergize_email_with_attachments(MOU_SIGNED_SUPPORT_TEAM_TEMPLATE,
+                                                 {"admin_name":username, 
+                                                  "salutation":"Dear Support Team,", 
+                                                  "community_name":community_names or "..."},
+                                                  ME_SUPPORT_TEAM_EMAIL,pdf,filename)
         record = PolicyAcceptanceRecords(user = user, policy=policy, signed_at = datetime.utcnow())
         record.save()
         user.refresh_from_db()
@@ -478,8 +490,8 @@ class UserStore:
       print(err)
       return [], None
     
-    if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-        return None, CustomMassenergizeError('You are not authorized to view users of this community')
+    if not is_admin_of_community(context, community_id):
+        return None, NotAuthorizedError()
     return community.userprofile_set.all(), None
   
   def list_publicview(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -584,7 +596,13 @@ class UserStore:
       existing_user = UserProfile.objects.filter(email=email).first()
       if not existing_user:
         if is_guest:
-          send_massenergize_email_with_attachments(GUEST_USER_EMAIL_TEMPLATE_ID,{"community":community.name}, email, None, None)
+          ok = send_massenergize_email_with_attachments(
+            GUEST_USER_EMAIL_TEMPLATE,
+            {"community_name":community.name,
+             "community_logo":serialize(community.logo).get("url") if community.logo else None,
+             "register_link":f'{COMMUNITY_URL_ROOT}/{community.subdomain}/signup'
+             },
+            email, None, None)
         user: UserProfile = UserProfile.objects.create(
           full_name=full_name,
           preferred_name=preferred_name,
@@ -830,8 +848,8 @@ class UserStore:
         print(err)
         return [], None
       
-      if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-          return None, CustomMassenergizeError('You are not authorized to view users of this community')
+      if not is_admin_of_community(context, community_id):
+          return None, NotAuthorizedError()
       
       users = [cm.user for cm in CommunityMember.objects.filter(community=community, is_deleted=False, user__is_deleted=False)]
       users = remove_dups(users)
@@ -844,6 +862,7 @@ class UserStore:
   def list_users_for_super_admin(self, context: Context, args):
     try:
       user_emails = args.get("user_emails")
+      community_ids = args.get("community_ids",None)
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
 
@@ -853,6 +872,10 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
+        return users.distinct(), None
+      
+      if community_ids:
+        users = UserProfile.objects.filter(communities__in=community_ids,is_deleted=False, *filter_params)
         return users.distinct(), None
 
       users = UserProfile.objects.filter(is_deleted=False, *filter_params)

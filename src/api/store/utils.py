@@ -8,13 +8,16 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from database.utils.constants import SHORT_STR_LEN
 import zipcodes
 import datetime
+from carbon_calculator.carbonCalculator import AverageImpact
 from sentry_sdk import capture_message
 
 
 def getCarbonScoreFromActionRel(actionRel): 
   if not actionRel or actionRel.status !="DONE":  return 0 
   if actionRel.carbon_impact : return actionRel.carbon_impact
-  if actionRel.action.calculator_action: return actionRel.action.calculator_action.average_points
+  calculator_action = actionRel.action.calculator_action
+  if calculator_action: 
+      return AverageImpact(calculator_action, actionRel.date_completed)
   return 0
 
 def get_community(community_id=None, subdomain=None):
@@ -319,3 +322,11 @@ def get_user_from_context(context):
 #    return "http://localhost:3001/"
 #  else: 
 #    return "https://admin.massenergize.dev/"
+
+
+def get_human_readable_date(date):
+  formatted_datetime = date.strftime("%d %B %Y, %I:%M %p")
+  day_suffix = "th" if 11 <= date.day <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(date.day % 10, "th")
+  formatted_datetime = formatted_datetime.replace("{:02d}".format(date.day), "{:d}{}".format(date.day, day_suffix))
+  return formatted_datetime
+

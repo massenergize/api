@@ -7,6 +7,7 @@ from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
     CustomMassenergizeError,
+    NotAuthorizedError,
 )
 from _main_.utils.context import Context
 from .utils import get_admin_communities, unique_media_filename
@@ -28,8 +29,8 @@ class MessageStore:
                 return None, InvalidResourceError()
             message = Message.objects.filter(pk=message_id).first()
 
-            if context.user_is_community_admin and not is_admin_of_community(context, message.community.id):
-                return None, CustomMassenergizeError('You are not authorized')
+            if not is_admin_of_community(context, message.community.id):
+                return None, NotAuthorizedError()
 
             if not message:
                 return None, InvalidResourceError()
@@ -221,8 +222,8 @@ class MessageStore:
     def delete_message(self, message_id, context) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             messages = Message.objects.filter(id=message_id)
-            if context.user_is_community_admin and not is_admin_of_community(context, messages.first().community.id):
-                return None, CustomMassenergizeError('You are not authorized')
+            if not is_admin_of_community(context, messages.first().community.id):
+                return None, NotAuthorizedError()
             messages.update(is_deleted=True)
             message = messages.first()
             # TODO: also remove it from all places that it was ever set in many to many or foreign key

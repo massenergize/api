@@ -7,6 +7,7 @@ from _main_.utils.massenergize_errors import (
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.context import Context
 from collections import Counter
+from api.store.utils import get_human_readable_date
 from api.utils.api_utils import get_user_community_ids, is_admin_of_community
 from database.models import (
     UserProfile,
@@ -26,7 +27,7 @@ from database.models import (
     CommunitySnapshot,
 )
 from api.store.team import get_team_users
-from api.utils.constants import STANDARD_USER, GUEST_USER
+from api.constants import STANDARD_USER, GUEST_USER
 from api.store.tag_collection import TagCollectionStore
 from api.store.deviceprofile import DeviceStore
 from django.db.models import Q
@@ -36,6 +37,7 @@ from typing import Tuple
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
+from carbon_calculator.carbonCalculator import AverageImpact
 
 EMPTY_DOWNLOAD = (None, None)
 
@@ -406,7 +408,7 @@ class DownloadStore:
     def _get_action_info_cells(self, action):
 
         average_carbon_points = (
-            action.calculator_action.average_points
+            AverageImpact(action.calculator_action, action.date_completed)
             if action.calculator_action
             else int(action.average_carbon_score)
             if action.average_carbon_score.isdigit()
@@ -534,7 +536,7 @@ class DownloadStore:
             for done_action in done_actions:
                 if done_action.action and done_action.action.calculator_action:
                     total_carbon_points += (
-                        done_action.action.calculator_action.average_points
+                        AverageImpact(done_action.action.calculator_action, done_action.date_completed)
                     )
         total_carbon_points = str(total_carbon_points)
 
@@ -675,9 +677,7 @@ class DownloadStore:
         
         primary_community_user_count = 0
         if community.name in prim_comm_dict:
-            print(str(community.name) + str(community.is_geographically_focused))
             primary_community_user_count = prim_comm_dict[community.name]
-        print(primary_community_user_count)
 
         users = [cm.user for cm in community_members]
 
@@ -697,7 +697,7 @@ class DownloadStore:
 
         carbon_user_reported = sum(
             [
-                action_rel.action.calculator_action.average_points
+                AverageImpact(action_rel.action.calculator_action)
                 if action_rel.action.calculator_action
                 else 0
                 for action_rel in done_action_rels
@@ -960,7 +960,8 @@ class DownloadStore:
         for com in communities:
             community_reported_rows = self._get_reported_data_rows(com)
             for row in community_reported_rows:
-                data.append([com.name]+ row)
+                is_focused = "Yes" if com.is_geographically_focused else "No"
+                data.append([com.name] + [is_focused] + row)
 
         
         data = sorted(data, key=lambda row: row[0])  # sort by community
@@ -1018,6 +1019,28 @@ class DownloadStore:
             )
 
         return data
+    
+    def _action_users_download(self, action):
+        user_action_rel = UserActionRel.objects.filter(action=action, is_deleted=False)
+        columns = ["Recorded At","User", "Email", "Unit Name", "Unit Type", "Carbon Impact", "Status"]
+        data = [columns]
+        if len(user_action_rel) > 0:
+            for user_action_rel in user_action_rel:
+                cell  = self._get_cells_from_dict(columns,{
+                    "Recorded At": get_human_readable_date(user_action_rel.created_at),
+                    "User": user_action_rel.user.full_name,
+                    "Email": user_action_rel.user.email,
+                    "Unit Name": user_action_rel.real_estate_unit.name,
+                    "Unit Type": user_action_rel.real_estate_unit.unit_type,
+                    "Carbon Impact": user_action_rel.carbon_impact,
+                    "Status": user_action_rel.status,
+                })
+                data.append(cell)
+            return data
+        else:
+            return []
+        
+    
     
 
     def _get_metrics_cells(self, community_id, time_stamp):
@@ -1081,6 +1104,9 @@ class DownloadStore:
         comms_list =[]
         #if more than one timestamp for a given community on certain date, get latest one
         for elem in comms:
+            # in dev database avoid some bad data
+            if not elem[0]:
+                continue
             stamp = snapshots.filter(community__id = elem[0]).order_by("-date").first()
             snapshots_list.append(stamp)
             comms_list.append(stamp.community.name)
@@ -1133,13 +1159,13 @@ class DownloadStore:
             "Testimonials Count": dic["testimonials_count"],
             "Service Providers Count": dic["service_providers_count"],
             }
+
         return self._get_cells_from_dict(self.metrics_columns, metrics_cells), comms_list, len(dic["is_live"])
 
     
     def _all_metrics_download(self, context, args):
         columns = ["Date", " # Communities", "# Live"] + self.metrics_columns + ["Communities"]
         data = [columns]
-
         audience = args["audience"]
         comm_ids = []
         if args["community_ids"] is not None:
@@ -1155,12 +1181,9 @@ class DownloadStore:
 
         #for every date make a row in the CSV
         for elem in distinct_dates:
-
             snapshots_list = community_snapshots.filter(date = elem[0])
             comm_ids = snapshots_list.values_list("community").distinct()
-
             most_info, comms_list, live_num = self._get_all_metrics_info_cells(snapshots_list, comm_ids)
-
             comms_list.sort()
             data.append([elem[0]] + [len(comms_list)] + [live_num] + most_info + [', '.join(comms_list)])
 
@@ -1207,7 +1230,10 @@ class DownloadStore:
             print(str(e))
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
-    
+        
+
+
+ 
     #For All Actions CSV and (for superadmins) the All Communities and Actions CSV
     def actions_download(
         self, context: Context, community_id
@@ -1215,7 +1241,7 @@ class DownloadStore:
         try:
             self.community_id = community_id
             if community_id:
-                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+                if not is_admin_of_community(context, community_id):
                     return EMPTY_DOWNLOAD, NotAuthorizedError()
                 community_name = Community.objects.get(id=community_id).name
                 return (
@@ -1255,21 +1281,18 @@ class DownloadStore:
     ) -> Tuple[list, MassEnergizeAPIError]:
         self.community_id = community_id
         try:
-# Allow this download only if the user is a community admin and an admin to the community or a superadm
-            if context.user_is_community_admin or context.user_is_super_admin:
-                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
-                    return EMPTY_DOWNLOAD, NotAuthorizedError()
-
-                community = Community.objects.get(id=community_id)
-                if community:
-                    return (
-                        self._community_teams_download(community.id),
-                        community.name,
-                    ), None
-                else:
-                    return EMPTY_DOWNLOAD, InvalidResourceError()
-            else:
+            # Allow this download only if the user is a community admin and an admin to the community or a superadm
+            if not is_admin_of_community(context, community_id):
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
+
+            community = Community.objects.get(id=community_id)
+            if community:
+                return (
+                    self._community_teams_download(community.id),
+                    community.name,
+                ), None
+            else:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
@@ -1282,7 +1305,7 @@ class DownloadStore:
             if not context.user_is_admin():
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
             if community_id: 
-                if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+                if not is_admin_of_community(context, community_id):
                     return EMPTY_DOWNLOAD, NotAuthorizedError()
                 community_name = Community.objects.get(id=community_id).name
                 return (
@@ -1293,6 +1316,28 @@ class DownloadStore:
                 return (
                     self._all_metrics_download(context, args), 
                     None,), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+    def action_users(self, context: Context, action_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            action = Action.objects.filter(id=action_id, is_deleted=False).first()
+            if not action:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+
+            action_users_data = self._action_users_download(action)
+            if len(action_users_data) == 0:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (action_users_data, action.title), None
+            
+            
         except Exception as e:
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)

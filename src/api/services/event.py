@@ -217,6 +217,13 @@ class EventService:
     if err:
       return None, err
     return serialize(event), None
+  
+
+  def share_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    event, err = self.store.share_event(context, args)
+    if err:
+      return None, err
+    return serialize(event), None
 
   def rank_event(self, args, context) -> Tuple[dict, MassEnergizeAPIError]:
     event, err = self.store.rank_event(args,context)

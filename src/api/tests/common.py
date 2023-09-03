@@ -99,7 +99,11 @@ def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
     file = kwargs.get("file") or kwargs.get("image") or createImage()
     file.name = unique_media_filename(file)
-    return Media.objects.create(**{**kwargs, "name": name, "file": file})
+    tags = kwargs.pop("tags", None) 
+    media = Media.objects.create(**{**kwargs, "name": name, "file": file})
+    if tags: 
+        media.tags.set(tags)
+    return media
 
 
 def makeTestimonial(**kwargs):
@@ -237,10 +241,6 @@ def setupCC(client):
                 "Confirm": "Yes",
                 "Actions": "carbon_calculator/content/Actions.csv",
                 "Questions": "carbon_calculator/content/Questions.csv",
-                "Stations": "carbon_calculator/content/Stations.csv",
-                "Groups": "carbon_calculator/content/Groups.csv",
-                "Organizations": "carbon_calculator/content/Organizations.csv",
-                "Events": "carbon_calculator/content/Events.csv",
                 "Defaults": "carbon_calculator/content/Defaults.csv",
                 "Categories": "carbon_calculator/content/Categories.csv",
                 "Subcategories": "carbon_calculator/content/Subcategories.csv",
@@ -315,7 +315,7 @@ def createImage(picURL=None):
     resp = requests.get(picURL)
     if resp.status_code != requests.codes.ok:
         # Error handling here3
-        print("ERROR: Unable to import action photo from " + picURL)
+        print("ERROR: Unable to import image file from " + picURL)
         image_file = None
     else:
         image = resp.content

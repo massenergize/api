@@ -3,6 +3,7 @@ from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_team_member_filter_params, get_teams_filter_params
+from api.utils.constants import TEAM_APPROVAL_EMAIL_TEMPLATE
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
 from _main_.utils.context import Context
@@ -10,9 +11,10 @@ from _main_.utils.constants import COMMUNITY_URL_ROOT, ADMIN_URL_ROOT
 from .utils import get_community_or_die, get_user_or_die, get_admin_communities, getCarbonScoreFromActionRel, unique_media_filename
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
-from _main_.utils.emailer.send_email import send_massenergize_email
+from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
+from carbon_calculator.carbonCalculator import AverageImpact
 from typing import Tuple
-
+from django.db.models import Q
 def can_set_parent(parent, this_team=None):
   if parent.parent:
     return False
@@ -115,7 +117,7 @@ class TeamStore:
             res["actions_todo"] += actions.filter(status="TODO").count()
             for done_action in done_actions:
               if done_action.action and done_action.action.calculator_action:
-                res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
+                res["carbon_footprint_reduction"] += AverageImpact(done_action.action.calculator_action, done_action.date_completed)
 
         ans.append(res)
 
@@ -239,11 +241,10 @@ class TeamStore:
     try:
       team_id = args.get('id', None)
       community_id = args.pop('community_id', None)
+      subdomain = None
       if community_id:
         community = Community.objects.filter(pk=community_id).first()
         subdomain = community.subdomain
-      else:
-        subdomain = "your_community"
 
       community_ids = args.pop('communities', None)   # in case of a team spanning multiple communities
 
@@ -277,16 +278,27 @@ class TeamStore:
       team.update(**args)
       team = team.first()
 
-      # TODO: create a rich email template for this?
+      if not subdomain:
+        if team.primary_community:
+          subdomain = team.primary_community.subdomain
+
       # TODO: only allow a cadmin or super admin to change this particular field?
-      if is_published and not team.is_published:
+      if is_published and not team.is_published and subdomain:
+
         team.is_published = True
+        team_link = ("%s/%s/teams/%i") % (COMMUNITY_URL_ROOT, subdomain, team.id)
+        community = team.primary_community
+        message_data = {"community_name":community.name,
+                  "community_logo":community.logo.file.url if community.logo and community.logo.file else None,
+                  "team_name":team.name,
+                  "team_logo":team.logo.file.url if team.logo and team.logo.file else None,
+                  "team_link":team_link 
+                  }
+        
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
-        # fix the broken URL in this message, needs to have community nam
-        message = "Your team %s has now been approved by a Community Admin and is viewable to anyone on the MassEnergize portal. See it here:\n\n%s" % (team.name, ("%s/%s/teams/%i") % (COMMUNITY_URL_ROOT, subdomain, team.id))
         for team_admin in team_admins:
-          send_massenergize_email(subject="Your team has been approved",
-                                msg=message, to=team_admin.user.email)
+          send_massenergize_email_with_attachments(TEAM_APPROVAL_EMAIL_TEMPLATE, message_data,
+                                                  team_admin.user.email, None, None)
       else:
         # this is how teams can get be made not live
         team.is_published = is_published
@@ -338,6 +350,7 @@ class TeamStore:
         # ----------------------------------------------------------------
       return team, None
     except Exception as e:
+      print(str(e))
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
     
@@ -351,7 +364,7 @@ class TeamStore:
         return None, InvalidResourceError()
       
       #  is context user an admin of the primary community?
-      if context.user_is_community_admin and not is_admin_of_community(context, teams.first().primary_community.id):
+      if not is_admin_of_community(context, teams.first().primary_community.id):
         return None, NotAuthorizedError()
       
       team_member = TeamMember.objects.filter(team=teams.first(), user=context.user_id).first()
@@ -419,8 +432,8 @@ class TeamStore:
 
       team = Team.objects.get(id=team_id)
 
-      if context.user_is_community_admin and not is_admin_of_community(context, team.primary_community.id):
-          return None, CustomMassenergizeError('You are not authorized to add members to this team')
+      if not is_admin_of_community(context, team.primary_community.id):
+          return None, NotAuthorizedError()
 
       if user_id:
         user = UserProfile.objects.get(id=user_id)
@@ -451,8 +464,8 @@ class TeamStore:
       elif email:
         user = UserProfile.objects.get(email=email)
 
-      if context.user_is_community_admin and not is_admin_of_community(context, team.primary_community.id):
-          return None, CustomMassenergizeError('You are not authorized to remove members from this team')
+      if not is_admin_of_community(context, team.primary_community.id):
+          return None, NotAuthorizedError()
 
       team_member = TeamMember.objects.filter(team__id=team_id, user=user)
       if team_member.count() > 0:
@@ -479,8 +492,8 @@ class TeamStore:
       
       team = Team.objects.filter(id=team_id).first()
       # for cadmins, allow only if admin of teams parent community
-      if context.user_is_community_admin and not is_admin_of_community(context, team.primary_community.id):
-          return None, CustomMassenergizeError('You are not authorized to view members of this team')
+      if not is_admin_of_community(context, team.primary_community.id):
+          return None, NotAuthorizedError()
 
       members = TeamMember.objects.filter(is_deleted=False, team__id=team_id, user__accepts_terms_and_conditions=True, user__is_deleted=False, *filter_params)
       return members.distinct(), None
@@ -544,9 +557,9 @@ class TeamStore:
         teams = Team.objects.filter(communities__id__in = comm_ids, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
         return teams.distinct(), None
       
-      if context.user_is_community_admin and not is_admin_of_community(context, community_id):
+      if not is_admin_of_community(context, community_id):
           return None, CustomMassenergizeError('You are not authorized to view members of this team')
-      teams = Team.objects.filter(communities__id=community_id, is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
+      teams = Team.objects.filter(Q(primary_community__id=community_id,is_published=True)|Q(communities__id=community_id), is_deleted=False,*filter_params).select_related('logo', 'primary_community')   
       return teams.distinct(), None
 
     except Exception as e:
@@ -558,9 +571,14 @@ class TeamStore:
       filter_params = get_teams_filter_params(context.get_params())
   
       team_ids = args.get("team_ids", None)
+      community_id = args.get("community_id")
       if team_ids: 
         teams = Team.objects.filter(id__in = team_ids, *filter_params).select_related('logo', 'primary_community')
         return teams, None
+      
+      if community_id:
+        teams = Team.objects.filter(primary_community__id=community_id, is_published=True, is_deleted=False, *filter_params).select_related('logo', 'primary_community')
+        return teams.distinct(), None
 
       teams = Team.objects.filter(is_deleted=False, *filter_params).select_related('logo', 'primary_community')
       return teams.distinct(), None

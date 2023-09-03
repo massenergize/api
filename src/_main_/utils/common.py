@@ -158,6 +158,8 @@ def parse_location(args):
     "state": args.pop("state", None),
     "zipcode": args.pop("zipcode", None),
     "country": args.pop("country", 'US'),
+    "building": args.pop("building", None),
+    "room": args.pop("room", None),
   }
   args['location'] = location
   return args
@@ -170,6 +172,8 @@ def extract_location(args):
     "state": args.pop("state", None),
     "zipcode": args.pop("zipcode", None),
     "country": args.pop("country", 'US'),
+    "building": args.pop("building", None),
+    "room": args.pop("room", None),
   }
   
   return location

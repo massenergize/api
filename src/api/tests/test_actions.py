@@ -192,6 +192,7 @@ class ActionHandlerTest(TestCase):
       # test as sadmin
       signinAs(self.client, self.SADMIN)
       response = self.client.post('/api/actions.delete', urlencode({"action_id": self.ACTION5.id}), content_type="application/x-www-form-urlencoded").toDict()
+
       self.assertTrue(response["success"])
       self.assertTrue(response["data"]["is_deleted"])
 

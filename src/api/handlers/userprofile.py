@@ -4,7 +4,7 @@ from _main_.utils import context
 from _main_.utils.route_handler import RouteHandler
 from api.services.userprofile import UserService
 from _main_.utils.massenergize_response import MassenergizeResponse
-from _main_.utils.massenergize_errors import CustomMassenergizeError
+from _main_.utils.massenergize_errors import NotAuthorizedError
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
 from api.store.common import create_pdf_from_rich_text
@@ -89,9 +89,9 @@ class UserHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        data, err = self.service.validate_username(args["username"])
+        data, err = self.service.validate_username(args.get("username"))
         if err:
-            return err
+            return MassenergizeResponse(error=err)
         return MassenergizeResponse(data=data)
 
     def create(self, request):
@@ -177,14 +177,22 @@ class UserHandler(RouteHandler):
     def update(self, request):
         context: Context = request.context
         args: dict = context.args
+
+        args, err = (
+             self.validator.rename("user_id", "id")
+             .expect("id", str, is_required=False)
+             .verify(context.args)
+        )
+        if err:
+             return err
+
         # user info is now taken from context
-        # args, err = (
-        #     self.validator.rename("user_id", "id")
-        #     .expect("id", str, is_required=False)
-        #     .verify(context.args)
-        # )
-        # if err:
-        #     return err
+        # strip user_id, id out of args if not using
+        # validate that id passed in is 
+        id = args.pop('id', None)
+        if id and id != context.user_id:
+            return None, NotAuthorizedError()
+        
 
         user_info, err = self.service.update_user(context, args)
         if err:
@@ -224,7 +232,7 @@ class UserHandler(RouteHandler):
         args: dict = context.args
         args, err = self.validator.expect(
             "user_emails", "str_list", is_required=False
-        ).verify(args)
+        ).expect("community_ids", "str_list", is_required=False).verify(args)
         if err:
             return err
         users, err = self.service.list_users_for_super_admin(context, args)

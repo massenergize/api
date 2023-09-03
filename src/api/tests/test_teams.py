@@ -5,6 +5,7 @@ from _main_.settings import BASE_DIR
 from _main_.utils.massenergize_response import MassenergizeResponse
 from database.models import Team, Community, UserProfile, Action, UserActionRel, TeamMember, RealEstateUnit, CommunityAdminGroup
 from carbon_calculator.models import Action as CCAction
+from carbon_calculator.models import CalcDefault as CCDefault
 from _main_.utils.utils import load_json
 from api.tests.common import signinAs, setupCC, createUsers
 
@@ -187,16 +188,23 @@ class TeamsTestCase(TestCase):
 
   # TODO: doesn't test households or actions todo
   def test_stats(self):
-    cca1 = CCAction.objects.create(name="CC Action 1", average_points=50, questions="foo")
-    cca2 = CCAction.objects.create(name="CC Action 2", average_points=100, questions="bar")
+    # note: this isn't how actions are created; need a helper routine for that
+    #cca1 = CCAction.objects.create(name="CC Action 1", average_points=50, questions="foo")
+    #cca2 = CCAction.objects.create(name="CC Action 2", average_points=100, questions="bar")
+    cca1 = CCAction.objects.get(name="energy_audit")
+    cca2 = CCAction.objects.get(name="air_source_hp")
+    ccv1 = CCDefault.objects.filter(variable="energy_audit_average_points").first().value
+    ccv2 = CCDefault.objects.filter(variable="air_source_hp_average_points").first().value
+    
     action1 = Action.objects.create(calculator_action=cca1)
     action2 = Action.objects.create(calculator_action=cca2)
     reu = RealEstateUnit.objects.create(name="Josh's House", unit_type="RESIDENTIAL")
-    UserActionRel.objects.create(user=self.USER1, action=action1, status="DONE", real_estate_unit=reu)
-    UserActionRel.objects.create(user=self.USER2, action=action1, status="DONE", real_estate_unit=reu)
-    UserActionRel.objects.create(user=self.USER2, action=action2, status="DONE", real_estate_unit=reu)
+    UserActionRel.objects.create(user=self.USER1, action=action1, status="DONE", real_estate_unit=reu, date_completed="2021-09-01")
+    UserActionRel.objects.create(user=self.USER2, action=action1, status="DONE", real_estate_unit=reu, date_completed="2021-09-01")
+    UserActionRel.objects.create(user=self.USER2, action=action2, status="DONE", real_estate_unit=reu, date_completed="2021-09-01")
 
     stats_response = self.client.post('/api/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
+    print(stats_response)
     self.assertTrue(stats_response["success"])
 
     self.assertIs(1, len(stats_response['data']))
@@ -221,8 +229,9 @@ class TeamsTestCase(TestCase):
     self.assertIs(1, team1stats['actions_completed'])
     self.assertIs(2, team2stats['actions_completed'])
 
-    self.assertIs(50, team1stats['carbon_footprint_reduction'])
-    self.assertIs(150, team2stats['carbon_footprint_reduction'])
+    # these are the values from the calculator actions chosen
+    self.assertEqual(ccv1, team1stats['carbon_footprint_reduction'])
+    self.assertEqual(ccv1+ccv2, team2stats['carbon_footprint_reduction'])
     
     self.TEAM2.is_published = False
     self.TEAM2.save()

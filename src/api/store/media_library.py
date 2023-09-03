@@ -1,17 +1,85 @@
+from functools import reduce
 from django.core.exceptions import ValidationError
+from sentry_sdk import capture_message
+from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from .utils import unique_media_filename
+from _main_.utils.utils import Console
+from .utils import get_admin_communities, unique_media_filename
 from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, Media, Tag, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
+
 limit = 32
 
 
 class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
+
+    def edit_details(self, args, context: Context):
+        try:
+            id = args.get("user_upload_id")
+            media_id = args.get("media_id")
+
+            email = context.user_email
+            user_media_upload = UserMediaUpload.objects.get(pk=id)
+
+            if not user_media_upload:
+                return None, CustomMassenergizeError(
+                    "Sorry, could not find the image  you want to edit"
+                )
+            if (
+                not (user_media_upload.user.email == email)
+                and not context.user_is_super_admin
+            ):
+                return None, CustomMassenergizeError(
+                    "You need to be the uploader of the image  or a super admin to make edits"
+                )
+
+            copyright_permission = args.get("copyright", "")
+            under_age = args.get("underAge", "")
+            guardian_info = args.get("guardian_info")
+            copyright_att = args.get("copyright_att")
+            tags = args.get("tags")
+            communities = args.get("community_ids", [])
+            info = {
+                **(user_media_upload.info or {}),
+                "has_children": under_age,
+                "has_copyright_permission": copyright_permission,
+                "guardian_info": guardian_info,
+                "copyright_att": copyright_att,
+            }
+            user_media_upload.info = info
+            # user_media_upload.save()
+            media = Media.objects.get(pk=media_id)
+
+            if communities:
+                communities = Community.objects.filter(id__in=communities)
+                user_media_upload.communities.clear()
+                user_media_upload.communities.set(communities)
+
+            user_media_upload.save()
+
+            if tags:
+                media.tags.clear()
+                tags = self.proccess_tags(tags)
+                media.tags.set(tags)
+
+            media.save()
+
+            # user_media_upload.refresh_from_db()
+            return media, None
+
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+    def find_images(self, args, _):
+        ids = args.get("ids", [])
+        images = Media.objects.filter(pk__in=ids)
+        return images, None
 
     def fetch_content(self, args):
         com_ids = args.get("community_ids") or []
@@ -80,53 +148,54 @@ class MediaLibraryStore:
             query_object = no_comms_query
 
         query = query_object.get(scope)
-        if tags: 
-            query &= Q(tags__in = tags) #If tags exist, it means all other filters & provided tags
+        if tags:
+            query &= Q(
+                tags__in=tags
+            )  # If tags exist, it means all other filters & provided tags
 
         return query
 
-    def search(self, args):
-        context = args.get("context")
-        com_ids = args.get("target_communities")
-        any_community = args.get("any_community")
-        filters = args.get("filters",[])
+    def make_query_with_communities(self, **kwargs):
+        com_ids = kwargs.get("target_communities", [])
+        without = [
+            Q(actions__isnull=False),
+            Q(events__isnull=False),
+            Q(testimonials__isnull=False),
+            Q(user_upload__isnull=False),
+            Q(vender_logo__isnull=False),
+        ]
+        with_communities = [
+            Q(actions__community__id__in=com_ids),
+            Q(events__community__id__in=com_ids),
+            Q(testimonials__community__id__in=com_ids),
+            Q(user_upload__communities__id__in=com_ids),
+            Q(vender_logo__communities__id__in=com_ids),
+        ]
+        query = None
+        if not com_ids:
+            query = without
+        else:
+            query = with_communities
+        return query
+
+    def get_most_recent(self, args, context: Context):
+        """
+        When communities are provided, fetch the most recent images attached to
+        actions, events, testimonials, vendors, user uploads that are based in any of the communities in the list.
+
+        If no communities are provided, we just pick anything that is used in (actions, events, testimonials etc...)
+        Meaning images that are not being used anywhere will not be included in the "most recent" fetches.
+        """
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
-        images = None
-        queries = None
-        tags = args.get("tags", None)
-
-        """
-        Options
-        1. No target communities. 
-            - Check if user is community_admin, collect images from any community they manage with the provided filters 
-            - User is super admin, collect images from any community, with provided filters
-        2. User provides target communities, use filters to search for images in the provided target communities
-        """
-        if any_community == True:
-            if context.user_is_community_admin:
-                queries = [
-                    self.generateQueryWithScope(scope=f, com_ids=com_ids, tags = tags)
-                    for f in filters
-                ]
-            else:
-                queries = [self.generateQueryWithScope(scope=f, tags = tags) for f in filters]
-        else:
-            queries = [
-                self.generateQueryWithScope(scope=f, com_ids=com_ids, tags = tags) for f in filters
-            ]
-
-        if len(queries) == 0:
-            return None, CustomMassenergizeError(
-                
-                "Could not build query with your provided filters, please try again"
-            
-            )
-       
-        query = queries.pop()
+        queries = self.make_query_with_communities(**args)
+        query = None
         for qObj in queries:
-            query |= qObj
-        query |= Q(user_upload__is_universal = True)
+            if not query:
+                query = qObj
+            else:
+                query |= qObj
+
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
@@ -138,17 +207,117 @@ class MediaLibraryStore:
             )
         return images, None
 
-    def remove(self, args,context):
+    def search(self, args, context: Context):
+        community_ids = args.get("target_communities", [])
+        most_recent = args.get("most_recent", False)
+        mine = args.get("my_uploads", False)
+        other_admins = args.get("user_ids", [])
+        other_admins = not mine and other_admins
+        search_by_community = not most_recent and community_ids
+        keywords = args.get("keywords", [])
+
+        if keywords:
+            return self.get_by_keywords(args)
+
+        if most_recent:
+            if context.user_is_super_admin:
+                return self.get_most_recent(args, context)
+            else :
+                communities,_ = get_admin_communities(context)
+                args["target_communities"] = [c.id for c in communities]
+                return self.get_most_recent(args, context)
+
+        if search_by_community:
+            return self.get_most_recent(args, context)
+
+        if mine:
+            args["user_ids"] = [context.user_id]
+            return self.get_uploads_by_user(args)
+
+        if other_admins:
+            return self.get_uploads_by_user(args)
+
+        return [], None
+
+    def get_by_keywords(self, args):
+        words = args.get("keywords", [])
+        queries = self.make_query_with_communities(**args)
+        upper_limit = args.get("upper_limit")
+        lower_limit = args.get("lower_limit")
+
+        query = None
+        for queryObj in queries:
+            words_into_q_objects = [Q(tags__name__icontains=word) for word in words]
+            objects_linked_by_OR = reduce(lambda q1, q2: q1 | q2, words_into_q_objects)
+            queryObj &= objects_linked_by_OR
+            if not query:
+                query = queryObj
+            else:
+                query |= queryObj
+
+        if not upper_limit and not lower_limit:
+            images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
+        else:
+            images = (
+                Media.objects.filter(query)
+                .distinct()
+                .exclude(id__gte=lower_limit, id__lte=upper_limit)
+                .order_by("-id")[:limit]
+            )
+
+        return images, None
+
+    def get_uploads_by_user(self, args):
+        user_ids = args.get("user_ids", [])
+        upper_limit = args.get("upper_limit")
+        lower_limit = args.get("lower_limit")
+        query = Q(user_upload__user__id__in=user_ids)
+        if upper_limit and lower_limit:
+            images = (
+                Media.objects.filter(query)
+                .exclude(id__gte=lower_limit, id__lte=upper_limit)
+                .order_by("-id")[:limit]
+            )
+        else:
+            images = Media.objects.filter(query).order_by("-id")[:limit]
+
+        return images, None
+
+   
+
+    def remove(self, args, context):
         media_id = args.get("media_id")
         media = Media.objects.get(pk=media_id)
         # ----------------------------------------------------------------
-        Spy.create_media_footage(media = [media], context = context,  type = FootageConstants.delete(), notes =f"Deleted ID({media_id})")
+        Spy.create_media_footage(
+            media=[media],
+            context=context,
+            type=FootageConstants.delete(),
+            notes=f"Deleted ID({media_id})",
+        )
         # ----------------------------------------------------------------
         media.delete()
+
         return True, None
 
-    def addToGallery(self, args,context):
-        community_ids = args.get("community_ids")
+    def proccess_tags(self, list_of_string_tags):
+        if not list_of_string_tags:
+            return []
+        created_tags = []
+
+        for tag_name in list_of_string_tags:
+            existing_tag = Tag.objects.filter(name__iexact=tag_name).first()
+            if existing_tag:
+                created_tags.append(existing_tag.id)
+            else:
+                tag = Tag(name=tag_name)
+                tag.save()
+                created_tags.append(tag.id)
+
+        return created_tags
+
+    def addToGallery(self, args, context):
+        community_ids = args.get("community_ids", [])
         user_id = args.get("user_id")
         title = args.get("title") or "Gallery Upload"
         file = args.get("file")
@@ -156,11 +325,24 @@ class MediaLibraryStore:
         is_universal = args.get("is_universal", None)
         communities = user = None
         description = args.get("description", None)
+        # ---------------------------------------------
+        copyright_permission = args.get("copyright", "")
+        under_age = args.get("underAge", "")
+        guardian_info = args.get("guardian_info")
+        copyright_att = args.get("copyright_att")
+
+        tags = self.proccess_tags(tags)
+
         info = {
             "size": args.get("size"),
             "size_text": args.get("size_text"),
             "description": description,
+            "has_children": under_age,
+            "has_copyright_permission": copyright_permission,
+            "guardian_info": guardian_info,
+            "copyright_att": copyright_att,
         }
+
         try:
             if community_ids:
                 communities = Community.objects.filter(id__in=community_ids)
@@ -177,11 +359,17 @@ class MediaLibraryStore:
             file=file,
             title=title,
             is_universal=is_universal,
-            tags = tags,
+            tags=tags,
             info=info,
         )
         # ----------------------------------------------------------------
-        Spy.create_media_footage(media = [user_media.media], communities = [communities], context = context,  type = FootageConstants.create(), notes=f"Media ID({user_media.media.id})")
+        Spy.create_media_footage(
+            media=[user_media.media],
+            communities=[*community_ids],
+            context=context,
+            type=FootageConstants.create(),
+            notes=f"Media ID({user_media.media.id})",
+        )
         # ----------------------------------------------------------------
         return user_media, None
 
@@ -195,7 +383,7 @@ class MediaLibraryStore:
         is_universal = kwargs.get("is_universal")
         is_universal = True if is_universal else False
 
-        tags = Tag.objects.filter(id__in = tags)
+        # tags = Tag.objects.filter(id__in = tags)
         file.name = unique_media_filename(file)
 
         media = Media.objects.create(
@@ -203,13 +391,11 @@ class MediaLibraryStore:
             file=file,
         )
         user_media = UserMediaUpload(
-            
             user=user, media=media, is_universal=is_universal, info=info
         )
-        user_media.save(
-        )
-        if media: 
-            media.tags.set(tags) 
+        user_media.save()
+        if media:
+            media.tags.set(tags)
 
         if communities:
             user_media.communities.set(communities)
@@ -223,9 +409,7 @@ class MediaLibraryStore:
             media = Media.objects.get(pk=media_id)
         except Media.DoesNotExist:
             return None, CustomMassenergizeError(
-                
                 "Media could not be found, provide a valid 'media_id'"
-            
             )
         except:
             return None, CustomMassenergizeError(

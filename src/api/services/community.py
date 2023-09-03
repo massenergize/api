@@ -1,4 +1,5 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError
+from sentry_sdk import capture_exception
+from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.pagination import paginate
 from api.store.community import CommunityStore
@@ -71,6 +72,30 @@ class CommunityService:
     return serialize_all(community), None
 
 
+  def fetch_admins_of(self, args,context: Context) -> Tuple[list, MassEnergizeAPIError]:
+    groups, err = self.store.fetch_admins_of(args,context)
+    if err:
+      return None, err
+    # Concept here is that: We group all unique admins together for every community. 
+    try:
+      obj = {}
+      for group in groups: 
+        com = group.community.simple_json() 
+        _id = com.get("id")
+        found = obj.get(_id) or {}
+        found["community"] = com
+        old_members = found.get("members") or {}
+        new_members = {str(m.id) : m.simple_json() for m in group.members.all()}
+        members ={**old_members, **new_members}
+        found["members"] = members 
+        obj[_id] = found
+      return obj, None
+    except Exception as e: 
+      e = capture_exception(e)
+      return None,CustomMassenergizeError(e)
+    # sorted = sort_items(communities, context.get_params())
+    # return paginate(sorted, context.get_pagination_data()), None
+  
   def list_other_communities_for_cadmin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
     communities, err = self.store.list_other_communities_for_cadmin(context)
     if err:

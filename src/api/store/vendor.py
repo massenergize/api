@@ -51,7 +51,7 @@ class VendorStore:
       vendors = community.community_vendors.filter(is_deleted=False)
 
       if not context.is_sandbox:
-        if context.user_is_logged_in:
+        if context.user_is_logged_in and not context.user_is_admin():
           vendors = vendors.filter(Q(user__id=context.user_id) | Q(is_published=True))
         else:
           vendors = vendors.filter(is_published=True)
@@ -129,12 +129,13 @@ class VendorStore:
     
     try:
       vendor_id = args.pop('vendor_id', None)
-      vendor = Vendor.objects.filter(id=vendor_id)
-      if not vendor:
+      vendors = Vendor.objects.filter(id=vendor_id)
+      if not vendors:
         return None, InvalidResourceError()  
+      vendor = vendors.first()
 
       # checks if requesting user is the vendor creator, super admin or community admin else throw error
-      if str(vendor.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
+      if str(vendor.user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
         return None, NotAuthorizedError()
 
       communities = args.pop('communities', [])
@@ -153,9 +154,8 @@ class VendorStore:
         args['location'] = None
       is_published = args.pop('is_published', None)
 
-
-      vendor.update(**args)
-      vendor = vendor.first()
+      vendors.update(**args)
+      vendor = vendors.first()  # refresh after update
       
       if communities:
         vendor.communities.set(communities)

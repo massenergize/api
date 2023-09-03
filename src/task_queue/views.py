@@ -1,13 +1,14 @@
 import csv
 from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from _main_.settings import IS_PROD
 from _main_.utils.constants import ADMIN_URL_ROOT
 from api.utils.constants import (
-    CADMIN_EMAIL_TEMPLATE_ID,
-    SADMIN_EMAIL_TEMPLATE_ID,
-    YEARLY_MOU_TEMPLATE_ID,
+    CADMIN_EMAIL_TEMPLATE,
+    SADMIN_EMAIL_TEMPLATE,
+    YEARLY_MOU_TEMPLATE,
 )
-from api.utils.constants import STANDARD_USER, GUEST_USER
+from api.constants import STANDARD_USER, GUEST_USER
 from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
 from django.utils import timezone
 import datetime
@@ -157,7 +158,7 @@ def super_admin_nudge():
         response.content,
         f"Weekly Report({one_week_ago.date()} to {today.date()}).csv",
         list(super_admins),
-        SADMIN_EMAIL_TEMPLATE_ID,
+        SADMIN_EMAIL_TEMPLATE,
         temp_data,
     )
     return "success"
@@ -206,7 +207,7 @@ def community_admin_nudge():
             "end": str(today.date()),
         }
 
-        send_nudge(None, None, cadmin_email_list, CADMIN_EMAIL_TEMPLATE_ID, temp_data)
+        send_nudge(None, None, cadmin_email_list, CADMIN_EMAIL_TEMPLATE, temp_data)
     return "Success"
 
 
@@ -390,7 +391,7 @@ def send_mou_email(email, name):
         "mou_page_url": f"{ADMIN_URL_ROOT}/admin/view/policy/mou?ct=true",
     }
     return send_massenergize_email_with_attachments(
-        YEARLY_MOU_TEMPLATE_ID, content_values, email, None, None
+        YEARLY_MOU_TEMPLATE, content_values, email, None, None
     )
 
 
@@ -399,7 +400,7 @@ def update_records(**kwargs):
     notices = kwargs.get("notices", [])
     user = kwargs.get("user", None)
     if not last:
-        record = PolicyAcceptanceRecords(user=user, notices=notices)
+        record = PolicyAcceptanceRecords.objects.create(user=user, type=PolicyConstants.mou(), last_notified=notices)
         record.save()
     elif last:
         last.last_notified = notices
@@ -418,43 +419,56 @@ def send_admin_mou_notification():
     # Calculate one year and one month ago for comparison
     a_year_ago = now - datetime.timedelta(days=365)
     a_month_ago = now - datetime.timedelta(days=31)
+    a_week_ago = now - datetime.timedelta(days=7)
+    long_enough_ago = a_month_ago if IS_PROD else a_week_ago
 
     # Filter all active community admins in the user profile
     admins = UserProfile.objects.filter(is_deleted=False, is_community_admin=True)
-
     for admin in admins:
         admin_name = admin.full_name
+        print(admin_name)
         try:
             # Get last MOU record signed by the admin
             last_record = admin.accepted_policies.filter(
                 type=PolicyConstants.mou()
             ).latest("signed_at")
 
-            # Check if it's been more than a year since they last signed
-            more_than_a_year = last_record.signed_at <= a_year_ago
+            if last_record.signed_at:
+                # Check if it's been more than a year since they last signed
+                # if not IS_PROD:
+                #     print(last_record)
+                needs_to_sign_mou = last_record.signed_at <= a_year_ago
+            else:
+                if not IS_PROD:
+                    print(admin_name + " has no MOU acceptance recorded")
+                needs_to_sign_mou = True
 
             # If it's time to notify the admin again, then add a new notification timestamp to their policy record
-            if more_than_a_year:
+            if needs_to_sign_mou:
                 notices = last_record.last_notified or []
                 last_date_of_notification = notices[len(notices) - 1]
                
                 # Record the current notification timestamp
-                new_notification_time = datetime.datetime.now(timezone.utc)
-                notices.append(new_notification_time.isoformat())
+                new_notification_time = datetime.datetime.now(timezone.utc).isoformat()
+                notices.append(new_notification_time)
 
                 # Send MOU email to the admin and update their policy record with the new notification timestamp(s)
                 if (
                     not last_date_of_notification
                 ):  # If for some reason notification date has never been recorded
+                    if not IS_PROD:
+                        print("Sending first MOU notification")
                     send_mou_email(admin.email, admin_name)
                     update_records(last=last_record, notices=notices)
                     
                     
                 else:  # They have been notified before
                     last_date_of_notification =  datetime.datetime.fromisoformat(last_date_of_notification)
-                    more_than_a_month = last_date_of_notification <= a_month_ago
+                    not_notified_recently = last_date_of_notification <= long_enough_ago
                     
-                    if more_than_a_month: #only notify if its been more than a month of notifying
+                    if not_notified_recently: #only notify if its been more than a month of notifying
+                        if not IS_PROD:
+                            print("Overdue: Sending another notification")
                         send_mou_email(admin.email, admin_name)
                         update_records(last=last_record, notices=notices)
                         
@@ -462,10 +476,12 @@ def send_admin_mou_notification():
                         
         except ObjectDoesNotExist:
             # If no MOU record exists for the admin, this means the first time they need to sign the MOU
+            if not IS_PROD:
+                print("Except: Sending first admin MOU notificaiton to " + admin_name)
             send_mou_email(admin.email, admin_name)
 
             # Record the current notification timestamp
-            new_notification_time = datetime.datetime.now(timezone.utc)
+            new_notification_time = datetime.datetime.now(timezone.utc).isoformat()
             update_records(notices=[new_notification_time], user=admin)
     
     return "success"

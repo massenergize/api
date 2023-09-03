@@ -53,7 +53,7 @@ class ActionStore:
         return [], None
 
       if not context.is_sandbox:
-        if context.user_is_logged_in:
+        if context.user_is_logged_in and not context.user_is_admin():
           actions = actions.filter(Q(user__id=context.user_id) | Q(is_published=True))
         else:
           actions = actions.filter(is_published=True)
@@ -231,18 +231,28 @@ class ActionStore:
   def update_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       action_id = args.pop('action_id', None)
-      action = Action.objects.filter(id=action_id)
-      if not action:
+      actions = Action.objects.filter(id=action_id)
+      if not actions:
         return None, InvalidResourceError()
+      action = actions.first()
 
-      # checks if requesting user is the testimonial creator, super admin or community admin else throw error
-      if str(action.first().user_id) != context.user_id and not context.user_is_super_admin and not context.user_is_community_admin:
-        return None, NotAuthorizedError()
-      
-      # check if user is community admin and is also an admin of the community that created the action
-      if context.user_is_community_admin:
-        if not is_admin_of_community(context, action.first().community.id):
+      # check if requesting user is the action creator, super admin or community admin else throw error
+      creator = str(action.user_id)
+      community = action.community
+      if context.user_id == creator:
+        # action creators can't currently modify once published
+        if action.is_published and not context.user_is_admin():
+          # ideally this would submit changes to the community admin to publish
+          return None, CustomMassenergizeError("Unable to modify action once published.  Please contact Community Admin to do this")
+      else:
+        # otherwise you must be an administrator
+        if not context.user_is_admin():
           return None, NotAuthorizedError()
+
+        # check if user is community admin and is also an admin of the community that created the action
+        if community:
+          if not is_admin_of_community(context, community.id):
+            return None, NotAuthorizedError()
 
       community_id = args.pop('community_id', None)
       tags = args.pop('tags', [])
@@ -259,8 +269,8 @@ class ActionStore:
         args.pop("is_approved", None)
         args.pop("is_published", None)
 
-      action.update(**args)
-      action = action.first()
+      actions.update(**args)
+      action = actions.first()  # refresh after update
 
       if image: #now, images will always come as an array of ids, or "reset" string 
         if user_submitted:
@@ -361,7 +371,9 @@ class ActionStore:
       #find the action
       action_to_delete = Action.objects.get(id=action_id)
 
-      if context.user_is_community_admin:
+      # TODO: could allow content creator to delete until it is published
+      # otherwise you need to be a super admin or admin of that community
+      if action_to_delete.community:
         if not is_admin_of_community(context, action_to_delete.community.id):
           return None, NotAuthorizedError()
         
@@ -405,7 +417,7 @@ class ActionStore:
         actions = Action.objects.filter(Q(community__id__in = comm_ids) | Q(is_global=True), *filter_params).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
         return actions.distinct(), None
       
-      if context.user_is_community_admin and  not is_admin_of_community(context, community_id):
+      if not is_admin_of_community(context, community_id):
           return None, NotAuthorizedError()
 
       actions = Action.objects.filter(Q(community__id = community_id) | Q(is_global=True)).select_related('image', 'community').prefetch_related('tags', 'vendors').filter(is_deleted=False)
