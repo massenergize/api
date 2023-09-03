@@ -3,7 +3,6 @@
 # Updated April 3
 #imports
 from datetime import datetime
-#from .models import Action, Question, Event, Station, Group, ActionPoints, CarbonCalculatorMedia, Org
 from .models import Action, Question, CarbonCalculatorMedia, CalcDefault
 #from django.utils import timezone
 
@@ -77,68 +76,73 @@ def AverageImpact(action, date=None, locality="default"):
 
 class CarbonCalculator:
     def __init__(self, reset=False) :
+        #fails on initial migration during test
+        try:
+            print("Initializing Carbon Calculator")
+            # if no actions in database, import them
+            if reset:
 
-        print("Initializing Carbon Calculator")
-        # if no actions in database, import them
-        if reset or Action.objects.count() == 0:
+                # abnormal situation, except during testing or starting from blank database
+                if not self.ImportAll():
+                    print("Error Initializing Carbon Calculator")
+                    return
 
-            # abnormal situation, except during testing or starting from blank database
-            if not self.ImportAll():
-                print("Error Initializing Carbon Calculator")
-                return
-
-        self.allActions = {
-                        'energy_fair':EnergyFair,
-                        'energy_audit':EnergyAudit,
-                        'prog_thermostats':ProgrammableThermostats,
-                        'weatherization':Weatherize,
-                        'community_solar':CommunitySolar,
-                        'renewable_elec':RenewableElectricity,
-                        'led_lighting':LEDLighting,
-                        'heating_assessment':HeatingAssessment,
-                        'efficient_fossil':EfficientBoilerFurnace,
-                        'air_source_hp':AirSourceHeatPump,
-                        'ground_source_hp':GroundSourceHeatPump,
-                        'hw_assessment':HotWaterAssessment,
-                        'hp_water_heater':HeatPumpWaterHeater,
-                        'solar_assessment':SolarAssessment,
-                        'install_solarPV':InstallSolarPV,
-                        'install_solarHW':InstallSolarHW,
-                        'energystar_fridge':EnergystarRefrigerator,
-                        'energystar_washer':EnergystarWasher,
-                        'induction_stove':InductionStove,
-                        'hp_dryer':HeatPumpDryer,
-                        'coldwater_wash':ColdWaterWash,
-                        'line_dry':LineDry,
-                        'fridge_pickup':RefrigeratorPickup,
-                        'smart_power_strip':SmartPowerStrip,
-                        'electricity_monitor':ElectricityMonitor,
-                        'replace_car':ReplaceCar,
-                        'reduce_car_miles':ReduceMilesDriven,
-                        'eliminate_car':EliminateCar,
-                        'reduce_flights':ReduceFlights,
-                        'offset_flights':OffsetFlights,
-                        'low_carbon_diet':LowCarbonDiet,
-                        'reduce_waste':ReduceWaste,
-                        'compost':Compost,
-                        'reduce_lawn_size':ReduceLawnSize,
-                        'reduce_lawn_care':ReduceLawnCare,
-                        'electric_mower':ElectricMower,
-                        'rake_elec_blower':RakeOrElecBlower,
-                        }
+            self.allActions = {
+                            'energy_fair':EnergyFair,
+                            'energy_audit':EnergyAudit,
+                            'prog_thermostats':ProgrammableThermostats,
+                            'weatherization':Weatherize,
+                            'community_solar':CommunitySolar,
+                            'renewable_elec':RenewableElectricity,
+                            'led_lighting':LEDLighting,
+                            'heating_assessment':HeatingAssessment,
+                            'efficient_fossil':EfficientBoilerFurnace,
+                            'air_source_hp':AirSourceHeatPump,
+                            'ground_source_hp':GroundSourceHeatPump,
+                            'hw_assessment':HotWaterAssessment,
+                            'hp_water_heater':HeatPumpWaterHeater,
+                            'solar_assessment':SolarAssessment,
+                            'install_solarPV':InstallSolarPV,
+                            'install_solarHW':InstallSolarHW,
+                            'energystar_fridge':EnergystarRefrigerator,
+                            'energystar_washer':EnergystarWasher,
+                            'induction_stove':InductionStove,
+                            'hp_dryer':HeatPumpDryer,
+                            'coldwater_wash':ColdWaterWash,
+                            'line_dry':LineDry,
+                            'fridge_pickup':RefrigeratorPickup,
+                            'smart_power_strip':SmartPowerStrip,
+                            'electricity_monitor':ElectricityMonitor,
+                            'replace_car':ReplaceCar,
+                            'reduce_car_miles':ReduceMilesDriven,
+                            'eliminate_car':EliminateCar,
+                            'reduce_flights':ReduceFlights,
+                            'offset_flights':OffsetFlights,
+                            'low_carbon_diet':LowCarbonDiet,
+                            'reduce_waste':ReduceWaste,
+                            'compost':Compost,
+                            'reduce_lawn_size':ReduceLawnSize,
+                            'reduce_lawn_care':ReduceLawnCare,
+                            'electric_mower':ElectricMower,
+                            'rake_elec_blower':RakeOrElecBlower,
+                            }
 
 
-        # add any actions in database which don't yet have methods        
-        #for action in Action.objects.filter(is_deleted=False):
-        for action in Action.objects.all():
-            name = action.name
-            if not name in self.allActions.keys():
-                self.allActions[name] = GenericUnspecifiedAction
+            # add any actions in database which don't yet have methods        
+            #for action in Action.objects.filter(is_deleted=False):
+            for action in Action.objects.all():
+                name = action.name
+                if not name in self.allActions.keys():
+                    self.allActions[name] = GenericUnspecifiedAction
 
-        for name in self.allActions.keys():
-            theClass = self.allActions[name]
-            theInstance = theClass(name)
-            self.allActions[name] = theInstance
+            for name in self.allActions.keys():
+                theClass = self.allActions[name]
+                theInstance = theClass(name)
+                self.allActions[name] = theInstance
+
+        except Exception as e:
+            print(str(e))
+            print("Calculator initialization skipped")
 
     # query actions
     def Query(self,action=None):

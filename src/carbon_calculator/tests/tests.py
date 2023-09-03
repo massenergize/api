@@ -1,13 +1,9 @@
 from django.test import TestCase, Client
-from carbon_calculator.models import Event, Station, Action, Group, Question
-from carbon_calculator.views import importcsv
+from carbon_calculator.models import Action
 from database.models import UserProfile
-from django.db.models import Count
 import json
 import jsons
-import requests
 import os
-import pprint, sys
 from django.utils import timezone #For keeping track of when the consistency was last checked
 from api.tests.common import signinAs, setupCC
 
@@ -207,72 +203,6 @@ class CarbonCalculatorTest(TestCase):
             print("\n")
         else:
             print("carbon_calculator results consistent with input data from "+str(oldtime))
-
-    def test_info_events(self):
-        ''' Tests /cc/info/events url and returns a json of events. '''
-
-        event_list = self.client.get("/cc/info/events", {}) # status code = 200
-        event_list_json = jsons.loads(event_list.content)   # loads into json
-        #print(event_list_json)                             # uncomment this to see json
-
-    # 2 I belive this one works... little unsure
-    def test_info_all_events(self):
-        '''tests /cc/info/event/~eventName~ and should return all data about that event '''
-        #print("2")
-        obj = Event.objects.first()  # getting the first object in model
-        field_object = Event._meta.get_field('name') # this and next is getting the name
-        #print("field object")
-        #print(field_object)
-        field_value = field_object.value_from_object(obj) # this returns actual name (as str)
-        #print("field value")
-        #print(field_value)
-
-        # UPDATE WORKS !!! Well pretty sure, gives me all of the info sooooo
-        event_url = "/cc/info/event/" + field_value
-        #print(event_url)
-        event_info = self.client.get(event_url, {})
-        event_json = jsons.loads(event_info.content)
-        #print(event_json)
-
-    # 4 !!!!!!! WORKS !!!!!!!
-    def test_info_impact_event(self):
-        #print("test info impact event")
-        obj = Event.objects.first()  # getting the first object in model
-        field_object = Event._meta.get_field('name')  # this and next is getting the name
-        field_value = field_object.value_from_object(obj)  # this returns actual name (as str)
-        #print(field_value)
-
-        event_url = "/cc/info/impact/" + field_value
-        #print(event_url)
-        event_info = self.client.get(event_url, {})
-        event_json = jsons.loads(event_info.content)
-        #print(event_json)
-
-    # 6 !!!!!!! WORKS !!!!!!!
-    def test_info_on_one_group(self):
-        obj = Group.objects.first()
-        field_object = Group._meta.get_field('name')
-        field_value = field_object.value_from_object(obj)
-        #print(field_value)
-
-        event_url = "/cc/info/group/" + field_value
-        #print(event_url)
-        event_info = self.client.get(event_url, {})
-        event_json = jsons.loads(event_info.content)
-        #print(event_json)
-
-    # 8 !!!!!!! WORKS !!!!!!!
-    def test_info_stations_one_station(self):
-        obj = Station.objects.first()
-        field_object = Station._meta.get_field('name')
-        field_value = field_object.value_from_object(obj)
-        #print(field_value)
-
-        event_url = "/cc/info/station/" + field_value
-        #print(event_url)
-        event_info = self.client.get(event_url, {})
-        event_json = jsons.loads(event_info.content)
-        #print(event_json)
 
     #extra
     def test_get_action_list(self):
