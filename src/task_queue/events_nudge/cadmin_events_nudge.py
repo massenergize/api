@@ -9,6 +9,9 @@ import pytz
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
 
+import json
+import base64
+
 
 WEEKLY = "weekly"
 BI_WEEKLY = "bi-weekly"
@@ -23,6 +26,11 @@ default_pref = {
 }
 
 WEEKLY_EVENT_NUDGE = "weekly_event_nudge-feature-flag"
+
+
+
+def encode_data(data):
+    return base64.b64encode(json.dumps(data).encode()).decode()
 
 
 def is_viable(item):
@@ -205,7 +213,8 @@ def send_events_nudge():
 
 def send_events_report(name, email, event_list):
     try:
-        change_preference_link = ADMIN_URL_ROOT+"/admin/profile/preferences"
+        cred = encode_data({"email": email})
+        change_preference_link = ADMIN_URL_ROOT+f"/admin/profile/preferences/?cred={cred}"
         data = {}
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
