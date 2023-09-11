@@ -113,18 +113,10 @@ def get_community_events(community_id):
     return events
 
 
-def get_community_users(community_id, flag):
-#    users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True, communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
-   community_members = CommunityMember.objects.filter(community__id=community_id, is_deleted=False).values_list("user", flat=True)
-   users = UserProfile.objects.filter(id__in=community_members)
-
-#    check if user is in flag
-   if flag.user_audience == "SPECIFIC":
-       users = users.filter(id__in=[str(u.id) for u in flag.users.all()])
-   elif flag.user_audience == "ALL_EXCEPT":
-       users = users.exclude(id__in=[str(u.id) for u in flag.users.all()])
-
-   return users
+def get_community_users(community_id):
+    community_members = CommunityMember.objects.filter(community__id=community_id, is_deleted=False).values_list("user", flat=True)
+    users = UserProfile.objects.filter(id__in=community_members)
+    return users
 
 def generate_change_pref_url(subdomain):
     url = f"{COMMUNITY_URL_ROOT}/{subdomain}/profile/settings"
@@ -250,10 +242,7 @@ nudge is requested on demand by a cadmin on user portal.
 # Entry point
 def prepare_user_events_nudge(email=None, community_id=None):
     try:
-        flag = FeatureFlag.objects.filter(key=USER_EVENT_NUDGE_KEY).first()
-        # allowed_communities = list(flag.communities.all())
 
-        communities = Community.objects.filter(is_published=True, is_deleted=False)
         if email and community_id:
             all_community_events = get_community_events(community_id)
             user = UserProfile.objects.filter(email=email).first()
@@ -263,15 +252,16 @@ def prepare_user_events_nudge(email=None, community_id=None):
 
             return True
         
-        if flag.audience == "SPECIFIC":
-            communities = communities.filter(id__in=[str(u.id) for u in flag.communities.all()])
-        elif flag.audience == "ALL_EXCEPT":
-            communities = communities.exclude(id__in=[str(u.id) for u in flag.communities.all()])
-        # print("=== communities: " , len(communities))
+        flag = FeatureFlag.objects.get(key=USER_EVENT_NUDGE_KEY)
+        if not flag or not flag.enabled():
+            return False
+    
+        communities = Community.objects.filter(is_published=True, is_deleted=False)
+        communities = flag.enabled_communities(communities)
         for community in communities:
-            # if flag.audience == "EVERYONE" or community in allowed_communities:
             events = get_community_events(community.id)
-            users = get_community_users(community.id, flag)
+            users = get_community_users(community.id)
+            users = flag.enabled_users(users)
 
             for user in users:          
                 user_events = get_user_events(user.notification_dates, events)

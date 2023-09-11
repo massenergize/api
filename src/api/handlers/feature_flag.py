@@ -33,8 +33,6 @@ class FeatureFlagHandler(RouteHandler):
         ).expect("community_ids", "str_list").expect("notes", str).expect(
             "user_ids", "str_list"
         ).expect(
-            "owner", str
-        ).expect(
             "scope", str
         ).expect(
             "audience", str, is_required=True
