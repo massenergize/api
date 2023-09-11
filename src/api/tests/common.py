@@ -81,7 +81,8 @@ def makeFlag(**kwargs):
         **{
             "expires_on": future_expiration,
             "audience": FeatureFlagConstants.for_everyone(),
-            "key": str(time.time()) + "-feature",
+            "user_audience": FeatureFlagConstants.for_everyone(),
+            "key": name + "-feature",
             **kwargs,
             "name": name,
         }
@@ -89,8 +90,13 @@ def makeFlag(**kwargs):
 
     if coms:
         flag.communities.set(coms)
+        flag.audience = FeatureFlagConstants.for_specific_audience()
+        flag.save()
+
     if users:
         flag.users.set(users)
+        flag.user_audience = FeatureFlagConstants.for_specific_audience()
+        flag.save()
 
     return flag
 

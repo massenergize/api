@@ -3687,7 +3687,7 @@ class FeatureFlag(models.Model):
 
     def enabled(self):
         current_date_and_time = datetime.datetime.now(timezone.utc)
-        if self.expires_on and self.expire_on<current_date_and_time:
+        if self.expires_on and self.expires_on<current_date_and_time:
             return False   # flag not active
         return True
     

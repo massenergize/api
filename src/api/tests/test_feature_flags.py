@@ -1,5 +1,5 @@
 """
-This is the test file for actions
+This is the test file for feature flags
 """
 from datetime import datetime, timedelta
 import time
@@ -143,6 +143,48 @@ class FeatureFlagHandlerTest(TestCase):
 
         Console.underline("Feature flag updated was successful!")
 
+    def test_use_feature_flags_backend(self):
+        """
+        Test backend feature flag like used in nudges,
+        Expectations:  can be enabled for specific users or communities, and can 
+        """
+        Console.header("Fetching User Features on User Portal (NOT - Authenticated)")
+
+        print(
+            "Created flag with (specific flag, non related flag, universal flag..."
+        )
+
+        my_community = makeCommunity(subdomain="my_community")
+        another_community = makeCommunity(subdomain="another_community")
+        my_community_nudge_flag = makeFlag(
+            name="single-community-nudge",
+            communities=[my_community],
+            audience=FeatureFlagConstants.for_specific_audience(),
+        )
+        all_community_nudge_flag = makeFlag(name="all-community-nudge")
+        today = datetime.utcnow()
+        last_week = today - timedelta(days=7)
+
+        expired_flag = makeFlag(name="expired-flag",expires_on=last_week)
+                                
+        key = 'single-community-nudge-feature'
+        flag1 = FeatureFlag.objects.get(key=key)
+
+        allCommunities = Community.objects.all()
+        self.assertTrue(flag1.enabled())
+
+        flagCommunities = flag1.enabled_communities(allCommunities)
+        self.assertEqual(flagCommunities.count(),1)
+
+        key2 = "all-community-nudge-feature"
+        flag2 = FeatureFlag.objects.get(key=key2)
+        flag2Communities = flag2.enabled_communities(allCommunities)
+        self.assertEqual(flag2Communities.count(),allCommunities.count())
+
+        key3 = 'expired-flag-feature'
+        flag3 = FeatureFlag.objects.get(key=key3)
+        self.assertFalse(flag3.enabled())
+
     def test_get_feature_flags_on_portal(self):
         """
         No signed in user will be available here,
@@ -189,6 +231,7 @@ class FeatureFlagHandlerTest(TestCase):
         """
         signinAs(self.client, self.USER)
         Console.header("Fetching User Features on User Portal (Authenticated)")
+        
         user_specific_flag = makeFlag(
             name="User Specific Flag",
             user_audience=FeatureFlagConstants.for_specific_audience(),
