@@ -56,7 +56,7 @@ class FeatureFlagHandler(RouteHandler):
         args: dict = context.args
         self.validator.expect("id", int, is_required=True).expect(
             "community_ids", "str_list"
-        ).expect("notes", str).expect("user_ids", "str_list")
+        ).expect("notes", str).expect("user_ids", "str_list").expect("expires_on", 'date')
         args, err = self.validator.verify(args)
         if err:
             return err

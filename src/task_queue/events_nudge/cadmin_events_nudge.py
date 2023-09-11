@@ -62,12 +62,10 @@ def get_comm_admins(com):
     """
     flag = FeatureFlag.objects.filter(key=WEEKLY_EVENT_NUDGE).first()    
 
-    all_community_admins = CommunityAdminGroup.objects.filter(community=com)
-    community_admins = flag.enabled_users(all_community_admins)
-    community_admins = community_admins.values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
+    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
 
     admins = []
-    for i in list(community_admins):
+    for i in list(all_community_admins):
         admins.append({
             "pref": i[0] if is_viable(i) else default_pref,
             "email": i[1],
@@ -75,14 +73,14 @@ def get_comm_admins(com):
             "notification_dates": i[3]
         })
 
-    # using flag.enabled_users() instead
-    #user_list = []   
-    #if flag.user_audience == "SPECIFIC":
-    #   user_list = [str(u.email) for u in flag.users.all()]
-    #   admins = list(filter(lambda admin: admin.get("email") in user_list,admins ))
-    #elif flag.user_audience == "ALL_EXCEPT":
-    #    user_list = [str(u.email) for u in flag.users.all()]
-    #    admins = list(filter(lambda admin: admin.get("email") not in user_list,admins ))
+    # TODO: use flag.enabled_users() instead
+    user_list = []   
+    if flag.user_audience == "SPECIFIC":
+        user_list = [str(u.email) for u in flag.users.all()]
+        admins = list(filter(lambda admin: admin.get("email") in user_list,admins ))
+    elif flag.user_audience == "ALL_EXCEPT":
+        user_list = [str(u.email) for u in flag.users.all()]
+        admins = list(filter(lambda admin: admin.get("email") not in user_list,admins ))
 
     return admins
 
@@ -180,21 +178,16 @@ def prepare_events_email_data(events):
 def send_events_nudge():
     try:
         admins_emailed=[]
-        
         flag = FeatureFlag.objects.get(key=WEEKLY_EVENT_NUDGE)
         if not flag or not flag.enabled():
             return False
 
         communities = Community.objects.filter(is_published=True, is_deleted=False)
         communities = flag.enabled_communities(communities)
-
         for com in communities:
             d = generate_event_list_for_community(com)
             admins = d.get("admins", [])
-            admins = flag.enabled_users(admins)
-
             event_list = d.get("events", [])
-
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_email_list(admins)
                 for name, email in email_list.items():

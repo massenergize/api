@@ -119,7 +119,6 @@ class FeatureFlagHandlerTest(TestCase):
             "notes": "This is a description I am passing as an update",
             "audience": FeatureFlagConstants.for_specific_audience(),
             "scope": FeatureFlagConstants.for_admin_frontend(),
-            "owner": "Update Machine",
             "community_ids": [str(coms[2].id)],
             "user_ids": [str(users[2].id)],
         }

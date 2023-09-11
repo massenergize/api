@@ -97,6 +97,8 @@ def parse_int(b):
 
 def parse_date(d):
   try:
+    if d == 'undefined' or d == 'null':      # providing date as 'null' should clear it
+      return None
     if len(d) == 10:
       return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d'))
     else:
@@ -180,6 +182,8 @@ def extract_location(args):
 
 def is_value(b):
   if b and b != 'undefined' and b != "NONE":
+    return True
+  if b == '':   # an empty string is a string value
     return True
   return False
 
