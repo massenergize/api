@@ -1,4 +1,4 @@
-from _main_.utils.common import serialize_all
+from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
@@ -8,9 +8,6 @@ import datetime
 import pytz
 from django.db.models import Q
 from dateutil.relativedelta import relativedelta
-
-import json
-import base64
 
 
 WEEKLY = "weekly"
@@ -26,11 +23,6 @@ default_pref = {
 }
 
 WEEKLY_EVENT_NUDGE = "weekly_event_nudge-feature-flag"
-
-
-
-def encode_data(data):
-    return base64.b64encode(json.dumps(data).encode()).decode()
 
 
 def is_viable(item):
@@ -213,7 +205,7 @@ def send_events_nudge():
 
 def send_events_report(name, email, event_list):
     try:
-        cred = encode_data({"email": email})
+        cred = encode_data_for_URL({"email": email})
         change_preference_link = ADMIN_URL_ROOT+f"/admin/profile/preferences/?cred={cred}"
         data = {}
         data["name"] = name.split(" ")[0]

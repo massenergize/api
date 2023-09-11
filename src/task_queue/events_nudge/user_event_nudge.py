@@ -1,6 +1,6 @@
 import datetime
 import pytz
-from _main_.utils.common import serialize_all
+from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from api.constants import GUEST_USER
@@ -12,15 +12,12 @@ from database.utils.common import get_json_if_not_none
 
 from database.utils.settings.model_constants.events import EventConstants
 from django.utils import timezone
-import json
-import base64
 
 WEEKLY = "per_week"
 BI_WEEKLY = "biweekly"
 MONTHLY = "per_month"
 DAILY="per_day"
-def encode_data(data):
-    return base64.b64encode(json.dumps(data).encode()).decode()
+
 
 
 eastern_tz = pytz.timezone("US/Eastern")
@@ -133,10 +130,7 @@ def get_community_users(community_id, flag):
    return users
 
 def generate_change_pref_url(subdomain,email, login_method):
-    encoded = encode_data({
-        "email": email,
-        "login_method": login_method,
-    })
+    encoded = encode_data_for_URL({"email": email,"login_method": login_method,})
     url = f"{COMMUNITY_URL_ROOT}/{subdomain}/profile/settings/?cred={encoded}"
     return url
 
