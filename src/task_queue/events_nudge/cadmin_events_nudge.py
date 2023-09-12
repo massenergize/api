@@ -1,4 +1,4 @@
-from _main_.utils.common import serialize_all
+from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
@@ -61,14 +61,15 @@ def get_comm_admins(com):
     admins = []
     user_list = []
 
-    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates")
+    all_community_admins = CommunityAdminGroup.objects.filter(community=com).values_list('members__preferences', "members__email", "members__full_name", "members__notification_dates", "members__user_info")
 
     for i in list(all_community_admins):
         admins.append({
             "pref": i[0] if is_viable(i) else default_pref,
             "email": i[1],
             "name": i[2],
-            "notification_dates": i[3]
+            "notification_dates": i[3],
+            "user_info":i[4]
         })
 
     if flag.user_audience == "SPECIFIC":
@@ -190,8 +191,8 @@ def send_events_nudge():
 
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_email_list(admins)
-                for name, email in email_list.items():
-                    stat = send_events_report(name, email, event_list)
+                for name, email, user_info in email_list.items():
+                    stat = send_events_report(name, email, event_list, user_info)
                     if not stat:
                         print("send_events_report error return")
                         return False
@@ -203,9 +204,11 @@ def send_events_nudge():
         return False
 
 
-def send_events_report(name, email, event_list):
+def send_events_report(name, email, event_list, user_info):
     try:
-        change_preference_link = ADMIN_URL_ROOT+"/admin/profile/preferences"
+        login_method= user_info.get("login_method", None)
+        cred = encode_data_for_URL({"email": email, "login_method":login_method})
+        change_preference_link = ADMIN_URL_ROOT+f"/admin/profile/preferences/?cred={cred}"
         data = {}
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link

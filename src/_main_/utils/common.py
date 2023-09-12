@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from datetime import datetime
 from dateutil import tz
 from sentry_sdk import capture_message
+import base64
 
 
 def get_date_and_time_in_milliseconds(**kwargs): 
@@ -227,3 +228,8 @@ def utc_to_local(iso_str):
   dt_utc = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=pytz.UTC)
   local_now = dt_utc.astimezone(local_zone)
   return local_now
+
+
+
+def encode_data_for_URL(data):
+    return base64.b64encode(json.dumps(data).encode()).decode()
