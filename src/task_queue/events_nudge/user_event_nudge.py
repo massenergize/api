@@ -213,7 +213,6 @@ def send_user_requested_nudge(events, user, community):
         name = user.full_name
         email = user.email
         login_method = (user.user_info or {}).get("login_method") or ""
-        print("login_method", login_method)
         is_sent = send_events_report_email(name, email, events, community, login_method)
         if not is_sent:
             print(f"**** Failed to send email to {name} for community {community.name} ****")
