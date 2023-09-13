@@ -206,7 +206,7 @@ def send_events_nudge():
 
 def send_events_report(name, email, event_list, user_info):
     try:
-        login_method= user_info.get("login_method", None)
+        login_method= (user_info or {}).get("login_method", None)
         cred = encode_data_for_URL({"email": email, "login_method":login_method})
         change_preference_link = ADMIN_URL_ROOT+f"/admin/profile/preferences/?cred={cred}"
         data = {}

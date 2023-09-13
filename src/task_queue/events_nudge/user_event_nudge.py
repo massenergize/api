@@ -192,7 +192,7 @@ def send_automated_nudge(events, user, community):
     if len(events) > 0 and user:
         name = user.full_name
         email = user.email
-        login_method = user.user_info.get("login_method") or ""
+        login_method = (user.user_info or {}).get("login_method") or ""
         if not name or not email:
             print("Missing name or email for user: " + str(user))
             return False
@@ -212,8 +212,7 @@ def send_user_requested_nudge(events, user, community):
     if len(events) > 0 and user:
         name = user.full_name
         email = user.email
-        login_method = user.user_info.get("login_method") or ""
-
+        login_method = (user.user_info or {}).get("login_method") or ""
         is_sent = send_events_report_email(name, email, events, community, login_method)
         if not is_sent:
             print(f"**** Failed to send email to {name} for community {community.name} ****")
@@ -249,7 +248,6 @@ nudge is requested on demand by a cadmin on user portal.
 # Entry point
 def prepare_user_events_nudge(email=None, community_id=None):
     try:
-
         if email and community_id:
             all_community_events = get_community_events(community_id)
             user = UserProfile.objects.filter(email=email).first()
