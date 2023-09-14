@@ -2,7 +2,7 @@ import csv
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT
+from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
 from api.store.download import DownloadStore
 from api.constants import DOWNLOAD_POLICY
 from api.store.common import create_pdf_from_rich_text, sign_mou
@@ -127,6 +127,19 @@ def download_data(self, args, download_type):
         "name":user.full_name,
     }
         send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[user.email], pdf,f'{args.get("title")}.pdf')
+
+    elif download_type == COMMUNITY_PAGEMAP:
+        community_id = args.get("community_id", None)
+        if community_id:
+             com, err = get_community(community_id)
+             
+        (files, dummy), err = store.community_pagemap_download(context, community_id=community_id)
+        if err:
+            error_notification(COMMUNITY_PAGEMAP, email)
+        else:
+            generate_csv_and_email(
+                data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email)
+
 
 
 @shared_task(bind=True)

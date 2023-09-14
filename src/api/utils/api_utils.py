@@ -2,7 +2,6 @@
 
 
 from math import atan2, cos, radians, sin, sqrt
-from _main_.utils.utils import is_test_mode
 from database.models import CommunityAdminGroup, UserProfile
 
 
