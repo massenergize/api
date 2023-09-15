@@ -28,6 +28,8 @@ from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
+import hashlib
+
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -269,6 +271,7 @@ class Media(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
     tags = models.ManyToManyField(Tag, related_name="media_tags", blank=True)
+    hash = models.TextField(max_length=LONG_STR_LEN, blank=True)
 
     def __str__(self):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
@@ -302,6 +305,23 @@ class Media(models.Model):
             default_storage.delete(file_path)
 
         super().delete(*args, **kwargs)
+
+    def calculate_hash(self, uploaded_file):
+        if not self.hash:
+            # Read the uploaded file data
+            image_data = uploaded_file.read()
+            hash_object = hashlib.sha256()
+            hash_object.update(image_data)
+            calculated_hash = hash_object.hexdigest()
+            self.hash = calculated_hash
+            return calculated_hash
+        return self.hash 
+    
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.calculate_hash(self.file.file)
+        super().save(*args, **kwargs)
+    
 
     class Meta:
         db_table = "media"

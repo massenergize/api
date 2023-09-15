@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from database.utils.settings.model_constants.user_media_uploads import (
     UserMediaConstants,
 )
+from api.store.common import calculate_hash_for_bucket_item
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -20,6 +21,26 @@ limit = 32
 class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
+
+
+    def generate_hashes(self,args,context: Context): 
+        """
+            Goes over all media items in the database and generates hash values for them. 
+            It saves the hash value to the media object after that. 
+            If an image is corrupted or not valid in the bucket, the hash generation of that particular image will simply fail silently. 
+
+            This route is simply meant to be run once, since there are lots of images in our system that dont have their hash values generated already. 
+            All future image uploads will have their hash values generated automatically and saved to the media object. 
+            Check the Media model for the modifications on the "save()" function.
+        """
+        images = Media.objects.order_by("-id")
+        for image in images: 
+            if not image.hash:
+                hash = calculate_hash_for_bucket_item(image.file.name)
+                if hash: 
+                    image.hash = hash 
+                    image.save()
+        return ["Successfully generated all hashes!"], None
 
     def edit_details(self, args, context: Context):
         try:

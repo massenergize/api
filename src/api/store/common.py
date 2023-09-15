@@ -1,6 +1,7 @@
 import datetime
 import io
 from django.http import FileResponse
+from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
 from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
@@ -8,6 +9,10 @@ from api.store.utils import getCarbonScoreFromActionRel
 from database.models import UserActionRel
 from django.db.models import Q
 from django.utils import timezone
+import boto3
+import hashlib
+
+s3 = boto3.client('s3', region_name=AWS_S3_REGION_NAME)
 
 
 LAST_VISIT = "last-visit"
@@ -195,3 +200,16 @@ def get_media_info(media):
         if hasattr(media.user_upload, "info"):
             return media.user_upload.info or {}, True
     return {}, False
+
+
+
+def calculate_hash_for_bucket_item(key, bucket=AWS_STORAGE_BUCKET_NAME):
+    try:
+        response = s3.get_object(Bucket=bucket, Key=key)
+        image_data = response['Body'].read()
+        hash_object = hashlib.sha256()
+        hash_object.update(image_data)
+        return hash_object.hexdigest()
+    except Exception as e:
+        print(f"Error calculating hash for {key}: {e}")
+        return None
