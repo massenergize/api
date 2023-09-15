@@ -460,7 +460,7 @@ class Community(models.Model):
       any another dynamic information we would like to store about this location
 
     postmark_contact_info: JSON
-       looks like this {"sender_signature_name": str,"is_validated":bool , "is_nudged":bool ,"sender_signature_id":str}
+       looks like this {"is_validated":bool , "is_nudged":bool ,"sender_signature_id":str}
     """
 
     id = models.AutoField(primary_key=True)
@@ -468,6 +468,7 @@ class Community(models.Model):
     subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
     owner_name = models.CharField(max_length=SHORT_STR_LEN, default="Unknown")
     owner_email = models.EmailField(blank=False)
+    sender_signature_name = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     owner_phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
     logo = models.ForeignKey(
@@ -544,6 +545,7 @@ class Community(models.Model):
                 "more_info",
                 "location",
                 "postmark_contact_info",
+                # "sender_signature_name"
             ],
         )
         res["logo"] = get_json_if_not_none(self.logo)
@@ -700,6 +702,7 @@ class Community(models.Model):
             "locations": locations,
             "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
+            # "sender_signature_name": self.sender_signature_name
         }
 
     class Meta:

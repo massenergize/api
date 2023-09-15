@@ -12,9 +12,7 @@ def check_and_update_signatures():
         res = response.json()
         signatures = res.get("Signatures", [])
         for signature in signatures:
-            community = communities.filter(
-                postmark_contact_info__sender_signature_id=signature.get("ID")
-            ).first()
+            community = communities.filter(postmark_contact_info__sender_signature_id=signature.get("ID")).first()
             if community:
                 community.postmark_contact_info = {
                     **community.postmark_contact_info,
@@ -30,7 +28,7 @@ def collect_and_create_signatures():
     for community in communities:
         email = community.owner_email
         postmark_info = community.postmark_contact_info or {}
-        alias = postmark_info.get("sender_signature_name", community.name)
+        alias = community.sender_signature_name or community.name
         if not postmark_info.get("is_validated"):
             if postmark_info.get("is_nudged"):
                 response = resend_signature_confirmation(
@@ -49,5 +47,6 @@ def collect_and_create_signatures():
                 }
 
                 community.postmark_contact_info = postmark_info
+                community.sender_signature_name = alias
                 community.save()
     return True
