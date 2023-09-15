@@ -1,10 +1,11 @@
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+import requests
 from sentry_sdk import capture_message
 import pystmark
 
-from _main_.settings import IS_CANARY, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
+from _main_.settings import IS_CANARY, POSTMARK_ACCOUNT_TOKEN, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
 from _main_.utils.constants import ME_INBOUND_EMAIL_ADDRESS
 from _main_.utils.utils import is_test_mode
 
@@ -100,3 +101,44 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
     return False
 
   return True
+
+
+
+
+
+def add_sender_signature(email, name, message):
+  if is_test_mode():
+    return True
+  url = "https://api.postmarkapp.com/senders"
+  headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
+  data = {
+      "FromEmail": email,
+      "Name": name,
+      "ReplyToEmail": "",
+      "ConfirmationPersonalNote": message
+  }
+
+  response = requests.post(url, headers=headers, json=data)
+
+  return response
+
+
+def resend_signature_confirmation(signature_id):
+  if is_test_mode():
+    return True
+  print("=signature_id=", signature_id)
+  url = f"https://api.postmarkapp.com/senders/{signature_id}/resend"
+  headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token":POSTMARK_ACCOUNT_TOKEN }
+  response = requests.post(url, headers=headers)
+  return response
+
+
+
+def get_all_sender_signatures(count=100):
+  if is_test_mode():
+    return True
+  url = f"https://api.postmarkapp.com/senders"
+  headers = {"Accept": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
+  params = {"count": count,"offset": 0}
+  response = requests.get(url, headers=headers, params=params)
+  return response

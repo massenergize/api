@@ -1,6 +1,7 @@
 
 from task_queue.events_nudge.cadmin_events_nudge import send_events_nudge
 from task_queue.events_nudge.user_event_nudge import prepare_user_events_nudge
+from task_queue.nudges.postmark_sender_signature import check_and_update_signatures, collect_and_create_signatures
 from task_queue.views import super_admin_nudge, create_snapshots, send_admin_mou_notification
 
 """
@@ -17,4 +18,6 @@ FUNCTIONS = {
     "Admin MOU Notifier": send_admin_mou_notification,
     "User Event Nudge": prepare_user_events_nudge,
     "Create Community Snapshots": create_snapshots,
+    "Postmark Sender Signature": collect_and_create_signatures,
+    "Check Postmark Sender Signature Updates": check_and_update_signatures
 }
