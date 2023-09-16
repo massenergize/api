@@ -49,7 +49,7 @@ def versionCheck():
         print(version.note)
         return False    # reload data
     else:
-        version = version.first()
+        version = version.latest('id')
 
     # update based on date of most recent data file
     files_updated = max(fileDateTime(QUESTIONS_DATA),
