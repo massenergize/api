@@ -1,3 +1,4 @@
+from _main_.utils.constants import PUBLIC_EMAIL_DOMAINS
 from _main_.utils.emailer.send_email import (
     add_sender_signature,
     get_all_sender_signatures,
@@ -27,6 +28,8 @@ def collect_and_create_signatures():
     communities = Community.objects.filter(id=6, is_published=True, is_deleted=False)
     for community in communities:
         email = community.owner_email
+        if not email or email.split("@")[1] in PUBLIC_EMAIL_DOMAINS:
+            continue
         postmark_info = community.postmark_contact_info or {}
         alias = community.sender_signature_name or community.name
         if not postmark_info.get("is_validated"):
