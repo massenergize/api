@@ -10,6 +10,25 @@ MED_STR_LEN = 200
 LONG_STR_LEN = 1000
 CHOICES = json_loader('./database/raw_data/other/databaseFieldChoices.json')
 
+class Version(models.Model):
+    id = models.AutoField(primary_key=True)
+    version = models.CharField(max_length=TINY_STR_LEN, blank=True, null=True)
+    note = models.CharField(max_length=MED_STR_LEN, blank=True, null=True)
+    updated_on = models.DateTimeField(auto_now=True)
+
+    def simple_json(self):
+        return model_to_dict(self)
+    
+    def full_json(self):
+        return self.simple_json()
+
+    def __str__(self):      
+        return self.version + " - " + str(self.updated_on)
+
+    class Meta:
+        db_table = "version_cc"
+
+
 class CarbonCalculatorMedia(models.Model):
     """
     A class used to represent any CarbonCalculatorMedia that is uploaded to this website
