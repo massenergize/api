@@ -2,8 +2,10 @@
 # Brad Hubbard-Nelson (bradhn@mindspring.com)
 # Updated April 3
 #imports
+import os
+import pytz
 from datetime import datetime
-from .models import Action, Question, CarbonCalculatorMedia, CalcDefault
+from .models import Action, Question, CarbonCalculatorMedia, CalcDefault, Version
 #from django.utils import timezone
 
 from io import BytesIO
@@ -25,6 +27,47 @@ from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminate
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
 #from .calcUsers import ExportCalcUsers, CalcUserUpdate
+
+CALCULATOR_VERSION = "4.0.1"
+QUESTIONS_DATA = 'carbon_calculator/content/Questions.csv'
+ACTIONS_DATA = 'carbon_calculator/content/Actions.csv'
+DEFAULTS_DATA = 'carbon_calculator/content/Defaults.csv'
+
+def fileDateTime(path):
+    # file modification
+    timestamp = os.path.getmtime(path)
+    utc=pytz.UTC
+
+    # convert timestamp into DateTime object
+    datestamp = datetime.fromtimestamp(timestamp).replace(tzinfo=utc)
+    return datestamp
+
+def versionCheck():
+    version = Version.objects.all()
+    if not version:
+        version = Version.objects.create(version=CALCULATOR_VERSION, note="Initial Version")
+        print(version.note)
+        return False    # reload data
+    else:
+        version = version.first()
+
+    # update based on date of most recent data file
+    files_updated = max(fileDateTime(QUESTIONS_DATA),
+                       fileDateTime(ACTIONS_DATA),
+                       fileDateTime(DEFAULTS_DATA))
+
+    if version.version != CALCULATOR_VERSION: 
+        version.version = CALCULATOR_VERSION
+        version.note = "Calculator version update on "+str(datetime.today())
+        print(version.note)
+        version.save()
+        return False    # reload data
+    elif version.updated_on < files_updated:
+        version.note = "Calculator data update on "+str(datetime.today())
+        print(version.note)
+        version.save()
+        return False    # reload data
+    return True
 
 def SavePic2Media(picURL):
     if picURL == '':
@@ -65,6 +108,7 @@ def SavePic2Media(picURL):
                 return media
             else:
                 return None
+            
     except Exception as e:
         print("Error encountered: "+str(e))
         return None
@@ -73,16 +117,18 @@ def AverageImpact(action, date=None, locality="default"):
     averageName = action.name + '_average_points'
     return getDefault(locality, averageName, date)
 
-
 class CarbonCalculator:
     def __init__(self, reset=False) :
         #fails on initial migration during test
         try:
-            print("Initializing Carbon Calculator")
-            # if no actions in database, import them
-            if reset:
+            print("Initializing Carbon Calculator, version "+CALCULATOR_VERSION)
 
-                # abnormal situation, except during testing or starting from blank database
+            # check version, reload if version or data has been updated
+            if not versionCheck():
+                reset = True
+
+            # reload data if starting from blank database or data version update
+            if reset:
                 if not self.ImportAll():
                     print("Error Initializing Carbon Calculator")
                     return
@@ -193,13 +239,13 @@ class CarbonCalculator:
 
     def ImportAll(self):
         print("Importing Carbon Calculator information")
-        if not self.ImportQuestions('carbon_calculator/content/Questions.csv'):
+        if not self.ImportQuestions(QUESTIONS_DATA):
             return False
 
-        if not self.ImportActions('carbon_calculator/content/Actions.csv'):
+        if not self.ImportActions(ACTIONS_DATA):
             return False
         
-        if not CCD.importDefaults(CCD, 'carbon_calculator/content/Defaults.csv'):
+        if not CCD.importDefaults(CCD, DEFAULTS_DATA):
             return False
         
         return True
