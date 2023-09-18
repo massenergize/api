@@ -363,9 +363,6 @@ class CarbonCalculator:
                                 picture = picture)
                             action.save()
 
-                            if name in self.allActions:
-                                self.allActions[name].__init__(name)
-                            num+=1
                 msg = "Imported %d Carbon Calculator Actions" % num
                 print(msg)
                 csvfile.close()
