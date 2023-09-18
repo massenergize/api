@@ -4,6 +4,13 @@ from database.utils.settings.model_constants.user_media_uploads import (
     UserMediaConstants,
 )
 from api.store.common import calculate_hash_for_bucket_item
+from _main_.utils.common import serialize
+from api.store.common import (
+    calculate_hash_for_bucket_item,
+    combine_relation_objs,
+    find_duplicate_items,
+    find_relations_for_item,
+)
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -22,25 +29,36 @@ class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
 
+    def summarize_duplicates(self, args, context: Context):
+        grouped_dupes = find_duplicate_items(True)
+        response = {}
+        # for hash, array in grouped_dupes.items():
+        #     merged_usages = find_relations_for_item(None)
+        #     for index, dupe_item in enumerate(array):
+        #         usage = find_relations_for_item(dupe_item)
+        #         merged_usages = combine_relation_objs(usage, merged_usages)
 
-    def generate_hashes(self,args,context: Context): 
-        """
-            Goes over all media items in the database and generates hash values for them. 
-            It saves the hash value to the media object after that. 
-            If an image is corrupted or not valid in the bucket, the hash generation of that particular image will simply fail silently. 
+        #         last_item = index == len(array) - 1
+        #         if last_item:
+        #             merged_usages = combine_relation_objs(usage, merged_usages, True)
+        #         else:
+        #             merged_usages = combine_relation_objs(usage, merged_usages)
 
-            This route is simply meant to be run once, since there are lots of images in our system that dont have their hash values generated already. 
-            All future image uploads will have their hash values generated automatically and saved to the media object. 
-            Check the Media model for the modifications on the "save()" function.
-        """
+        #     response[hash] = {"media": serialize(array[0]), "usage": merged_usages}
+
+        return grouped_dupes, None
+
+    def generate_hashes(self, args, context: Context):
         images = Media.objects.order_by("-id")
-        for image in images: 
-            if not image.hash:
-                hash = calculate_hash_for_bucket_item(image.file.name)
-                if hash: 
-                    image.hash = hash 
-                    image.save()
-        return ["Successfully generated all hashes!"], None
+        count = 0
+        for image in images:
+            hash = calculate_hash_for_bucket_item(image.file.name)
+            Console.underline("We can now save hash : " + str(hash))
+            if hash:
+                image.hash = hash
+                image.save()
+                count = count + 1
+        return f"Generated hashes for {count} items!", None
 
     def edit_details(self, args, context: Context):
         try:

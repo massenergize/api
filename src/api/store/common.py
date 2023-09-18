@@ -2,17 +2,21 @@ import datetime
 import io
 from django.http import FileResponse
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
+from _main_.utils.common import serialize
 from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
 from database.models import UserActionRel
+from database.models import Media, UserActionRel
 from django.db.models import Q
 from django.utils import timezone
 import boto3
 import hashlib
+from django.db.models import Count
 
-s3 = boto3.client('s3', region_name=AWS_S3_REGION_NAME)
+
+s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME)
 
 
 LAST_VISIT = "last-visit"
@@ -206,10 +210,130 @@ def get_media_info(media):
 def calculate_hash_for_bucket_item(key, bucket=AWS_STORAGE_BUCKET_NAME):
     try:
         response = s3.get_object(Bucket=bucket, Key=key)
-        image_data = response['Body'].read()
+        image_data = response["Body"].read()
         hash_object = hashlib.sha256()
         hash_object.update(image_data)
         return hash_object.hexdigest()
     except Exception as e:
+        print("........................................")
         print(f"Error calculating hash for {key}: {e}")
+        print("........................................")
         return None
+
+
+def find_duplicate_items(_serialize=False):
+    # Retrieve all media items with duplicate hashes (excluding empty or None hashes)
+    duplicate_hashes = (
+        Media.objects.exclude(hash__exact="")
+        .exclude(hash=None)
+        .values("hash")
+        .annotate(hash_count=Count("hash"))
+        .filter(hash_count__gt=1)
+    )
+
+    # Now, retrieve the media items associated with the duplicate hashes
+    duplicate_media_items = Media.objects.filter(
+        hash__in=duplicate_hashes.values("hash")
+    )
+
+    return group_duplicates(duplicate_media_items,_serialize)
+
+
+def group_duplicates(duplicates, _serialize=False):
+    # Here, media library items that have the same hashes are grouped with the hash value as key, and the items themselves in an array
+    response = {}
+    count = 0
+    for item in duplicates:
+        count = count + 1
+        old = response.get(item.hash, None)
+        json = item
+        if _serialize:
+            json = serialize(item)
+
+        if old:
+            old.append(json)
+        else:
+            response[item.hash] = [json]
+
+    return response
+
+
+def find_relations_for_item(media_item: Media):
+    # Given a media item, this function finds all entities that are using it on the entire platform
+    relations = {
+        "community_logos": [],
+        "actions": [],
+        "events": [],
+        "vendors": [],
+        "teams": [],
+        "homepage": [],
+    }
+    if not media_item:
+        return relations
+    communities = (
+        media_item.community_logo.all()
+    )  # communities that use this media as their logo
+    homepage = (
+        media_item.homepage_images.all()
+    )  # communities that use this media as their homepage image
+    actions = media_item.actions.all()  # actions that use this media
+    events = media_item.events.all()  # events that uuse this media
+    vendors = media_item.vendor_logos.all()  # vendors that use this media as their logo
+    teams = media_item.team_logos.all()  # teams that use this media as their logo
+
+    return {
+        "community_logos": communities,
+        "actions": actions,
+        "events": events,
+        "vendors": vendors,
+        "teams": teams,
+        "homepage": homepage,
+    }
+
+
+def merge_and_get_distinct(queryset1, queryset2, property_name, _serialize=False):
+    # Combine the two arrays
+    combined_querysets = queryset1.union(queryset2)
+    # Create a set to keep track of distinct property values
+    distinct_property_values = set()
+    # Create a list to store the distinct query objects
+    distinct_objects = []
+    for obj in combined_querysets:
+        property_value = getattr(obj, property_name, None)
+        if property_value not in distinct_property_values:
+            distinct_property_values.add(property_value)
+            if _serialize:
+                distinct_objects.append(serialize(obj))
+            else:
+                distinct_objects.append(obj)
+    return distinct_objects
+
+
+def combine_relation_objs(relObj1, relObj2, _serialize=False):
+    communities = merge_and_get_distinct(
+        relObj1.get("communities"), relObj2.get("communities"), "id", _serialize
+    )
+    actions = merge_and_get_distinct(
+        relObj1.get("actions"), relObj2.get("actions"), "id", _serialize
+    )
+    events = merge_and_get_distinct(
+        relObj1.get("events"), relObj2.get("events"), "id", _serialize
+    )
+    teams = merge_and_get_distinct(
+        relObj1.get("teams"), relObj2.get("teams"), "id", _serialize
+    )
+    vendors = merge_and_get_distinct(
+        relObj1.get("vendors"), relObj2.get("vendors"), "id", _serialize
+    )
+    homepage = merge_and_get_distinct(
+        relObj1.get("homepage"), relObj2.get("homepage"), "id", _serialize
+    )
+
+    return {
+        "communities": communities,
+        "events": events,
+        "actions": actions,
+        "teams": teams,
+        "vendors": vendors,
+        "homepage": homepage,
+    }

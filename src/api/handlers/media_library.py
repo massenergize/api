@@ -21,8 +21,23 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.image.info", self.getImageInfo)
         self.add("/gallery.find", self.find_images)
         self.add("/gallery.item.edit", self.edit_details)
-        self.add("/gallery.generate.hashes", self.generate_hashes) # A temporary route that we will need to run to generate hashes of already uploaded content (ONCE!)
 
+        self.add("/gallery.generate.hashes", self.generate_hashes) # A temporary route that we will need to run to generate hashes of already uploaded content (ONCE!)
+        self.add("/gallery.duplicates.summarize", self.summarize_duplicates) # Generates a CSV of duplicate images with other useful attributes
+
+    # @admins_only
+    def summarize_duplicates(self, request):
+        """Fetches image content related communities that admins can browse through"""
+        context: Context = request.context
+        args: dict = context.args
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return err
+        images, error = self.service.summarize_duplicates(args, context)
+        if error:
+            return error
+        return MassenergizeResponse(data=images)
+    
     # @admins_only
     def generate_hashes(self, request):
         """Generates hashes of media images in the database that dont have hashes yet"""
