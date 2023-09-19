@@ -114,7 +114,7 @@ def add_sender_signature(email, name, message):
   data = {
       "FromEmail": email,
       "Name": name,
-      "ReplyToEmail": "",
+      "ReplyToEmail":email,
       "ConfirmationPersonalNote": message
   }
 
@@ -126,7 +126,6 @@ def add_sender_signature(email, name, message):
 def resend_signature_confirmation(signature_id):
   if is_test_mode():
     return True
-  print("=signature_id=", signature_id)
   url = f"https://api.postmarkapp.com/senders/{signature_id}/resend"
   headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token":POSTMARK_ACCOUNT_TOKEN }
   response = requests.post(url, headers=headers)
@@ -141,4 +140,17 @@ def get_all_sender_signatures(count=100):
   headers = {"Accept": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
   params = {"count": count,"offset": 0}
   response = requests.get(url, headers=headers, params=params)
+  return response
+
+
+
+def update_sender_signature(signature_id, name):
+  if is_test_mode():
+    return True
+  url = f"https://api.postmarkapp.com/senders/{signature_id}"
+  headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
+  data = {
+  "Name":name,
+}
+  response = requests.put(url, headers=headers, data=data)
   return response

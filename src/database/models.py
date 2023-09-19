@@ -702,7 +702,7 @@ class Community(models.Model):
             "locations": locations,
             "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
-            # "sender_signature_name": self.sender_signature_name
+            "sender_signature_name": self.sender_signature_name
         }
 
     class Meta:
