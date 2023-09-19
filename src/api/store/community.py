@@ -827,9 +827,19 @@ class CommunityStore:
                         owner.is_community_admin = True
                     owner.communities.add(community)
                     owner.save()
-                if sender_signature_name and owner_email not in PUBLIC_EMAIL_DOMAINS:
-                     msg = f"Dear Admin,\n As part of the new development to improve communication and trust between community and its members"
-                     add_sender_signature(owner_email, sender_signature_name, msg)
+                if sender_signature_name and owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
+                     res = add_sender_signature(owner_email, sender_signature_name)
+
+                     if res.status_code == 200:
+                        community.postmark_contact_info = {
+                            "is_nudged": True,
+                            "is_validated": res.json()["Confirmed"],
+                            "sender_signature_id": res.json()["ID"]
+                        }
+                        community.save()
+
+
+
             # Also clone all template actions for this community
             # 11/1/20 BHN: Add protection against excessive copying in case of too many actions marked as template
             # Also don't copy the ones marked as deleted!
@@ -885,10 +895,10 @@ class CommunityStore:
         self, context: Context, args
     ) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            print("==== args====", args)
             community_id = args.pop("community_id", None)
             website = args.pop("website", None)
             logo = args.pop("logo", None)
+            owner_email = args.get("owner_email", None)
 
             # admins shouldn't be able to update data of other communities
             if not is_admin_of_community(context, community_id):
@@ -915,6 +925,25 @@ class CommunityStore:
                 raise Exception(
                     "Subdomain is already reserved.  Please, choose a different subdomain"
                 )
+            
+            community = filter_set.first()
+            # if user updates owner_email we need to update the signature on postmark
+            if owner_email and owner_email != community.owner_email:
+                if owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
+                    name = sender_signature_name or community.sender_signature_name or community.name
+                    res =  add_sender_signature(owner_email, name)
+                    if res.status_code == 200:
+                        args["postmark_contact_info"] = {
+                            "is_nudged": True,
+                            "is_validated": res.json()["Confirmed"],
+                            "sender_signature_id": res.json()["ID"]
+                        }
+
+            if sender_signature_name and sender_signature_name != community.sender_signature_name:
+                postmark_contact_info = community.postmark_contact_info or {}
+                sender_signature_id = postmark_contact_info.get("sender_signature_id")
+                if sender_signature_id:
+                   update_sender_signature(sender_signature_id, sender_signature_name)
 
             filter_set.update(**args)
             community = filter_set.first()
@@ -944,7 +973,7 @@ class CommunityStore:
                 community.favicon = cFavicon
                 community.save()
 
-            owner_email = args.get("owner_email", None)
+
             if owner_email:
                 owner = UserProfile.objects.filter(email=owner_email)
                 owner.update(is_community_admin=True)
@@ -959,19 +988,6 @@ class CommunityStore:
                         owner.is_community_admin = True
                     owner.save()
             
-            # if user updates owner_email we need to update the signature on postmark
-            if owner_email and owner_email != community.owner_email:
-                if owner_email not in PUBLIC_EMAIL_DOMAINS:
-                    name = sender_signature_name or community.sender_signature_name or community.name
-                    msg = f"Dear Admin,\n As part of the new development to improve communication and trust between community and its members"
-                    add_sender_signature(owner_email, name, msg)
-
-            if sender_signature_name and sender_signature_name != community.sender_signature_name:
-                postmark_contact_info = community.postmark_contact_info or {}
-                sender_signature_id = postmark_contact_info.get("sender_signature_id")
-                if sender_signature_id:
-                    update_sender_signature(sender_signature_id, sender_signature_name)
-            
 
             # let's make sure we reserve this subdomain
             if subdomain:
@@ -979,9 +995,7 @@ class CommunityStore:
 
             # save custom website if specified
             if website:
-                ret, err = self.add_custom_website(
-                    context, {"community_id": community.id, "website": website}
-                )
+                ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
                 if err:
                     raise Exception("Failed to save custom website: " + str(err))
 

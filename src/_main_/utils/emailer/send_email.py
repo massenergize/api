@@ -106,16 +106,17 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
 
 
 
-def add_sender_signature(email, name, message):
+def add_sender_signature(email, name):
   if is_test_mode():
     return True
   url = "https://api.postmarkapp.com/senders"
   headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
+  msg = f"Dear Admin,\n As part of the new development to improve communication and trust between community and its members"
   data = {
       "FromEmail": email,
       "Name": name,
       "ReplyToEmail":email,
-      "ConfirmationPersonalNote": message
+      "ConfirmationPersonalNote": msg
   }
 
   response = requests.post(url, headers=headers, json=data)
@@ -152,5 +153,5 @@ def update_sender_signature(signature_id, name):
   data = {
   "Name":name,
 }
-  response = requests.put(url, headers=headers, data=data)
+  response = requests.put(url, headers=headers, json=data)
   return response

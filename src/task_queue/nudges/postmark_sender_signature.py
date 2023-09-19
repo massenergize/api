@@ -7,7 +7,7 @@ from _main_.utils.emailer.send_email import (
 from database.models import Community, FeatureFlag
 
 def check_and_update_signatures():
-    communities = Community.objects.filter(is_published=True, is_deleted=False, postmark_contact_info__is_validated=False)
+    communities = Community.objects.filter(is_published=True, is_deleted=False, postmark_contact_info__is_validated=False,  owner_email__icontains="abdullai")
     response = get_all_sender_signatures(len(communities))
     if response.status_code == 200:
         res = response.json()
@@ -24,8 +24,7 @@ def check_and_update_signatures():
 
 
 def collect_and_create_signatures():
-    msg = f"Message for Admins"
-    communities = Community.objects.filter(id=6, is_published=True, is_deleted=False)
+    communities = Community.objects.filter(is_published=True, is_deleted=False, owner_email__icontains="abdullai")
     for community in communities:
         email = community.owner_email
         if not email or email.split("@")[1] in PUBLIC_EMAIL_DOMAINS:
@@ -38,7 +37,7 @@ def collect_and_create_signatures():
                     postmark_info.get("sender_signature_id")
                 )
             else:
-                response = add_sender_signature(email, alias, msg)
+                response = add_sender_signature(email, alias)
                 if not response.status_code == 200:
                     return False
                 res = response.json()
