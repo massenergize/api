@@ -229,6 +229,9 @@ class Tag(models.Model):
 
     def __str__(self):
         return "%s - %s" % (self.name, self.tag_collection)
+    
+    def info(self): 
+        return model_to_dict(self, ["id", "name"])
 
     def simple_json(self):
         res = model_to_dict(self)
@@ -275,6 +278,9 @@ class Media(models.Model):
 
     def __str__(self):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
+    
+    def info(self): 
+        return self.simple_json()
 
     def simple_json(self):
         obj = {
@@ -3243,6 +3249,9 @@ class HomePageSettings(models.Model):
 
     def __str__(self):
         return "HomePageSettings - %s" % (self.community)
+    
+    def info(self): 
+        return model_to_dict(self, ["id", "title", "community"])
 
     def simple_json(self):
         res = model_to_dict(

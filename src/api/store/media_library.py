@@ -8,6 +8,7 @@ from _main_.utils.common import serialize
 from api.store.common import (
     calculate_hash_for_bucket_item,
     combine_relation_objs,
+    create_duplicate_summary,
     find_duplicate_items,
     find_relations_for_item,
 )
@@ -30,23 +31,8 @@ class MediaLibraryStore:
         self.name = "MediaLibrary Store/DB"
 
     def summarize_duplicates(self, args, context: Context):
-        grouped_dupes = find_duplicate_items(True)
-        response = {}
-        # for hash, array in grouped_dupes.items():
-        #     merged_usages = find_relations_for_item(None)
-        #     for index, dupe_item in enumerate(array):
-        #         usage = find_relations_for_item(dupe_item)
-        #         merged_usages = combine_relation_objs(usage, merged_usages)
-
-        #         last_item = index == len(array) - 1
-        #         if last_item:
-        #             merged_usages = combine_relation_objs(usage, merged_usages, True)
-        #         else:
-        #             merged_usages = combine_relation_objs(usage, merged_usages)
-
-        #     response[hash] = {"media": serialize(array[0]), "usage": merged_usages}
-
-        return grouped_dupes, None
+        response = create_duplicate_summary()
+        return response, None
 
     def generate_hashes(self, args, context: Context):
         images = Media.objects.order_by("-id")

@@ -2,7 +2,7 @@ import datetime
 import io
 from django.http import FileResponse
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
-from _main_.utils.common import serialize
+from _main_.utils.common import serialize, serialize_all
 from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
@@ -13,7 +13,7 @@ from django.db.models import Q
 from django.utils import timezone
 import boto3
 import hashlib
-from django.db.models import Count
+from django.db.models import Count, QuerySet
 
 
 s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME)
@@ -220,7 +220,6 @@ def calculate_hash_for_bucket_item(key, bucket=AWS_STORAGE_BUCKET_NAME):
         print("........................................")
         return None
 
-
 def find_duplicate_items(_serialize=False):
     # Retrieve all media items with duplicate hashes (excluding empty or None hashes)
     duplicate_hashes = (
@@ -236,8 +235,7 @@ def find_duplicate_items(_serialize=False):
         hash__in=duplicate_hashes.values("hash")
     )
 
-    return group_duplicates(duplicate_media_items,_serialize)
-
+    return group_duplicates(duplicate_media_items, _serialize)
 
 def group_duplicates(duplicates, _serialize=False):
     # Here, media library items that have the same hashes are grouped with the hash value as key, and the items themselves in an array
@@ -257,8 +255,12 @@ def group_duplicates(duplicates, _serialize=False):
 
     return response
 
+def serial_wrapper(queryset, _serialize=False):
+    if _serialize:
+        return serialize_all(queryset, False, info=True)
+    return queryset
 
-def find_relations_for_item(media_item: Media):
+def find_relations_for_item(media_item: Media, _serialize=False):
     # Given a media item, this function finds all entities that are using it on the entire platform
     relations = {
         "community_logos": [],
@@ -267,20 +269,32 @@ def find_relations_for_item(media_item: Media):
         "vendors": [],
         "teams": [],
         "homepage": [],
+        "tags":[]
     }
+
     if not media_item:
         return relations
-    communities = (
-        media_item.community_logo.all()
+    
+    communities = serial_wrapper(
+        media_item.community_logo.all(), _serialize
     )  # communities that use this media as their logo
-    homepage = (
-        media_item.homepage_images.all()
+    homepage = serial_wrapper(
+        media_item.homepage_images.all(), _serialize
     )  # communities that use this media as their homepage image
-    actions = media_item.actions.all()  # actions that use this media
-    events = media_item.events.all()  # events that uuse this media
-    vendors = media_item.vendor_logos.all()  # vendors that use this media as their logo
-    teams = media_item.team_logos.all()  # teams that use this media as their logo
+    actions = serial_wrapper(
+        media_item.actions.all(), _serialize
+    )  # actions that use this media
+    events = serial_wrapper(
+        media_item.events.all(), _serialize
+    )  # events that use this media
+    vendors = serial_wrapper(
+        media_item.vender_logo.all(), _serialize
+    )  # vendors that use this media as their logo
+    teams = serial_wrapper(
+        media_item.team_logo.all(), _serialize
+    )  # teams that use this media as their logo
 
+    tags = serial_wrapper(media_item.tags.all(), _serialize)
     return {
         "community_logos": communities,
         "actions": actions,
@@ -288,30 +302,33 @@ def find_relations_for_item(media_item: Media):
         "vendors": vendors,
         "teams": teams,
         "homepage": homepage,
+        "tags": tags
     }
 
-
-def merge_and_get_distinct(queryset1, queryset2, property_name, _serialize=False):
-    # Combine the two arrays
-    combined_querysets = queryset1.union(queryset2)
+def merge_and_get_distinct(array1, array2, property_name, _serialize=False):
+    # Merges two arrays of dictionaries based on a property and returns distinct items
+    if not array1 and not array2:
+        return []
     # Create a set to keep track of distinct property values
     distinct_property_values = set()
-    # Create a list to store the distinct query objects
+    # Create a list to store the distinct objects
     distinct_objects = []
-    for obj in combined_querysets:
-        property_value = getattr(obj, property_name, None)
+    # Combine the two arrays
+    combined_array = array1 + array2
+
+    for obj in combined_array:
+        property_value = obj.get(property_name, None)
         if property_value not in distinct_property_values:
             distinct_property_values.add(property_value)
-            if _serialize:
-                distinct_objects.append(serialize(obj))
-            else:
-                distinct_objects.append(obj)
+            distinct_objects.append(obj)
+         
+
     return distinct_objects
 
-
 def combine_relation_objs(relObj1, relObj2, _serialize=False):
+    # takes two relation objects, takes out the individal arrays (vendors, events, community_logos etc) from each, and tries to merge them into one array of distinct items
     communities = merge_and_get_distinct(
-        relObj1.get("communities"), relObj2.get("communities"), "id", _serialize
+        relObj1.get("community_logos"), relObj2.get("community_logos"), "id", _serialize
     )
     actions = merge_and_get_distinct(
         relObj1.get("actions"), relObj2.get("actions"), "id", _serialize
@@ -328,6 +345,11 @@ def combine_relation_objs(relObj1, relObj2, _serialize=False):
     homepage = merge_and_get_distinct(
         relObj1.get("homepage"), relObj2.get("homepage"), "id", _serialize
     )
+    tags = merge_and_get_distinct(
+        relObj1.get("tags"), relObj2.get("tags"), "id", _serialize
+    )
+
+    
 
     return {
         "communities": communities,
@@ -336,4 +358,31 @@ def combine_relation_objs(relObj1, relObj2, _serialize=False):
         "teams": teams,
         "vendors": vendors,
         "homepage": homepage,
+        "tags":tags
     }
+
+
+def create_duplicate_summary(): 
+     # Find duplicate images with their hashes, and group similar items according to same hash value
+    grouped_dupes = find_duplicate_items() 
+    response = {}
+    for hash, array in grouped_dupes.items(): 
+        merged_usages = find_relations_for_item(None)
+        for index, dupe_item in enumerate(array):
+            # for every media item that is in a duplicate set, find out what entities on the platform are using it
+            # (Eg. communities, events, actions, vendors, are any communities using them on their homepage?)
+            usage = find_relations_for_item(dupe_item, True)
+            # As relations are found, combine all the groups of items found for reach. 
+            # i.e since for any two media records that are marked as duplicates, find out the list of say (communities, events, actions etc) 
+            # for each, combine that list and remove duplicates
+            merged_usages = combine_relation_objs(usage, merged_usages, True)
+
+        # Pick one of the items (first one) amongst the duplicates, and then mark the remaining as disposable
+        disposable = [media.info() for media in array[1:]]
+
+        # Finally, the response is a large object with key, value pairs. Where the key is the hash, and value is another object of
+        response[hash] = {
+            "media": serialize(array[0]),
+            "usage": merged_usages,
+            "disposable": disposable,
+        }
