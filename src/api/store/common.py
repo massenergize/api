@@ -362,6 +362,18 @@ def combine_relation_objs(relObj1, relObj2, _serialize=False):
     }
 
 
+def resolve_relations(dupes): 
+    merged_usages = find_relations_for_item(None)
+    for dupe_item in dupes:
+        usage = find_relations_for_item(dupe_item, True)
+        merged_usages = combine_relation_objs(usage, merged_usages, True)
+
+    disposable = serialize_all(dupes)
+    return {
+        "media": disposable[0],
+        "usage": merged_usages,
+        "disposable": disposable[1:],
+    }
 def create_duplicate_summary(): 
      # Find duplicate images with their hashes, and group similar items according to same hash value
     grouped_dupes = find_duplicate_items() 
@@ -386,3 +398,5 @@ def create_duplicate_summary():
             "usage": merged_usages,
             "disposable": disposable,
         }
+    
+    return response

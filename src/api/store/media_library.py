@@ -5,12 +5,14 @@ from database.utils.settings.model_constants.user_media_uploads import (
 )
 from api.store.common import calculate_hash_for_bucket_item
 from _main_.utils.common import serialize
+from _main_.utils.common import serialize, serialize_all
 from api.store.common import (
     calculate_hash_for_bucket_item,
     combine_relation_objs,
     create_duplicate_summary,
     find_duplicate_items,
     find_relations_for_item,
+    resolve_relations,
 )
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
@@ -30,8 +32,31 @@ class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
 
+    def clean_duplicates(self, args, context: Context):
+        hash = args.get("hash", None)
+        dupes = Media.objects.filter(hash=hash)
+        response = resolve_relations(dupes)
+        # merged_usages = find_relations_for_item(None)
+        # for dupe_item in dupes:
+        #     usage = find_relations_for_item(dupe_item, True)
+        #     merged_usages = combine_relation_objs(usage, merged_usages, True)
+
+        # disposable = serialize_all(dupes)
+        # response = {
+        #     "media": serialize(dupes.first()),
+        #     "usage": merged_usages,
+        #     "disposable": disposable[1:],
+        # }
+        return response, None
+
     def summarize_duplicates(self, args, context: Context):
-        response = create_duplicate_summary()
+        # response = create_duplicate_summary()
+
+        grouped_dupes = find_duplicate_items()
+        response = {}
+        for hash, array in grouped_dupes.items():
+            combined = resolve_relations(array)
+            response[hash] = combined
         return response, None
 
     def generate_hashes(self, args, context: Context):

@@ -24,10 +24,25 @@ class MediaLibraryHandler(RouteHandler):
 
         self.add("/gallery.generate.hashes", self.generate_hashes) # A temporary route that we will need to run to generate hashes of already uploaded content (ONCE!)
         self.add("/gallery.duplicates.summarize", self.summarize_duplicates) # Generates a CSV of duplicate images with other useful attributes
+        self.add("/gallery.duplicates.clean", self.clean_duplicates) # Allows you to clean all/some duplicates and transfer relationships to only one record
 
     # @admins_only
+    def clean_duplicates(self, request):
+        """Based on requests params, this route can remove duplicates and re-assign relationships for a specific group of similar duplicate items, or do so for all groups """
+        context: Context = request.context
+        args: dict = context.args
+        self.validator.expect("hash", str, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return err
+        images, error = self.service.clean_duplicates(args, context)
+        if error:
+            return error
+        return MassenergizeResponse(data=images)
+    
+
     def summarize_duplicates(self, request):
-        """Fetches image content related communities that admins can browse through"""
+        """Creates a summary of duplicate images and a combined list of wherever they are being used on the platform"""
         context: Context = request.context
         args: dict = context.args
         args, err = self.validator.verify(args, strict=True)

@@ -274,7 +274,7 @@ class Media(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
     tags = models.ManyToManyField(Tag, related_name="media_tags", blank=True)
-    hash = models.TextField(max_length=LONG_STR_LEN, blank=True)
+    hash = models.TextField(max_length=LONG_STR_LEN, blank=True, db_index=True)
 
     def __str__(self):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
