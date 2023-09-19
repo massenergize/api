@@ -134,13 +134,12 @@ def resend_signature_confirmation(signature_id):
 
 
 
-def get_all_sender_signatures(count=100):
+def get_sender_signature_info(signature_id):
   if is_test_mode():
     return True
-  url = f"https://api.postmarkapp.com/senders"
+  url = f"https://api.postmarkapp.com/senders/{signature_id}"
   headers = {"Accept": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
-  params = {"count": count,"offset": 0}
-  response = requests.get(url, headers=headers, params=params)
+  response = requests.get(url, headers=headers)
   return response
 
 
