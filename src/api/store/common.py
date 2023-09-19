@@ -374,29 +374,3 @@ def resolve_relations(dupes):
         "usage": merged_usages,
         "disposable": disposable[1:],
     }
-def create_duplicate_summary(): 
-     # Find duplicate images with their hashes, and group similar items according to same hash value
-    grouped_dupes = find_duplicate_items() 
-    response = {}
-    for hash, array in grouped_dupes.items(): 
-        merged_usages = find_relations_for_item(None)
-        for index, dupe_item in enumerate(array):
-            # for every media item that is in a duplicate set, find out what entities on the platform are using it
-            # (Eg. communities, events, actions, vendors, are any communities using them on their homepage?)
-            usage = find_relations_for_item(dupe_item, True)
-            # As relations are found, combine all the groups of items found for reach. 
-            # i.e since for any two media records that are marked as duplicates, find out the list of say (communities, events, actions etc) 
-            # for each, combine that list and remove duplicates
-            merged_usages = combine_relation_objs(usage, merged_usages, True)
-
-        # Pick one of the items (first one) amongst the duplicates, and then mark the remaining as disposable
-        disposable = [media.info() for media in array[1:]]
-
-        # Finally, the response is a large object with key, value pairs. Where the key is the hash, and value is another object of
-        response[hash] = {
-            "media": serialize(array[0]),
-            "usage": merged_usages,
-            "disposable": disposable,
-        }
-    
-    return response
