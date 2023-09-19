@@ -7,6 +7,7 @@ import pytz
 from datetime import datetime
 from .models import Action, Question, CarbonCalculatorMedia, CalcDefault, Version
 #from django.utils import timezone
+from _main_.settings import BASE_DIR
 
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -29,9 +30,12 @@ from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecB
 #from .calcUsers import ExportCalcUsers, CalcUserUpdate
 
 CALCULATOR_VERSION = "4.0.1"
-QUESTIONS_DATA = 'carbon_calculator/content/Questions.csv'
-ACTIONS_DATA = 'carbon_calculator/content/Actions.csv'
-DEFAULTS_DATA = 'carbon_calculator/content/Defaults.csv'
+QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
+ACTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Actions.csv"
+DEFAULTS_DATA = BASE_DIR + "/carbon_calculator/content/defaults.csv"
+#QUESTIONS_DATA = "/carbon_calculator/content/Questions.csv"
+#ACTIONS_DATA = "/carbon_calculator/content/Actions.csv"
+#DEFAULTS_DATA = "/carbon_calculator/content/Defaults.csv"
 
 def fileDateTime(path):
     # file modification
