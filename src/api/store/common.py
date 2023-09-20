@@ -1,3 +1,4 @@
+import csv
 import datetime
 import io
 from django.http import FileResponse
@@ -14,6 +15,7 @@ from django.utils import timezone
 import boto3
 import hashlib
 from django.db.models import Count, QuerySet
+from django.http import HttpResponse
 
 
 s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME)
@@ -427,7 +429,7 @@ def attach_relations_to_media(usage_object):
     vendors = get_property_in_dict(vendors)
     homepage = get_property_in_dict(homepage)
     tags = get_property_in_dict(tags)
-    
+
     # set relationships
     media.community_logo.set(get_items_by_ids(Community,communities))
     media.actions.set(get_items_by_ids(Action,actions))
@@ -442,6 +444,16 @@ def attach_relations_to_media(usage_object):
 
     return media
 
-    
-
+def create_csv_file(fieldnames :list, data : list, filename="data.csv"):
+    """
+    Returns: 
+    - str : output.getvalue()
+    """
+    # Create an in-memory CSV file
+    output = io.StringIO()
+    csv_writer = csv.DictWriter(output, fieldnames=fieldnames)
+    csv_writer.writeheader()
+    for row in data:
+        csv_writer.writerow(row)
+    return output.getvalue()
 

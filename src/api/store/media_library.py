@@ -9,6 +9,7 @@ from _main_.utils.common import serialize, serialize_all
 from api.store.common import (
     attach_relations_to_media,
     calculate_hash_for_bucket_item,
+    create_csv_file,
     find_duplicate_items,
     resolve_relations,
 )
@@ -22,19 +23,73 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 from database.models import Community, Media, Tag, UserMediaUpload, UserProfile
 from django.db.models import Q
 import time
+from django.http import HttpResponse
+
 
 limit = 32
+CSV_FIELD_NAMES = [
+    "media_url",
+    "primary_media_id",
+    "usage_stats",
+    "usage_summary",
+    "ids_of_duplicates",
+    "duplicates",
+]
 
 
 class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
 
+    def arrange_for_csv(self, usage_object: dict):
+        usage_object = {} if not usage_object else usage_object
+
+        text = ""
+        count = 0
+
+        for key, value in usage_object.items():
+            length = len(value)
+            count = count + length
+            if length:
+                if text:
+                    text += f", {key}({length})"
+                else:
+                    text = f"{key}:{length}"
+
+        return count, text
+
+    def print_duplicates(self, args, context: Context):
+        grouped_dupes = find_duplicate_items()
+        csv_data = []
+
+        for hash, array in grouped_dupes.items():
+            combined = resolve_relations(array)
+            usage_count, usage_summary = self.arrange_for_csv(combined.get("usage", {}))
+            media = array[0]
+            obj = {
+                "media_url": media.file.url,
+                "primary_media_id": media.id,  # No other criteria is used to determine which media is going to be the primary media. The first 1 is simply chosen...
+                "usage_stats": usage_count,
+                "usage_summary": usage_summary,
+                "duplicates": ", ".join([m.file.url for m in array[1:]]),
+                "ids_of_duplicates": ", ".join([str(m.id) for m in array[1:]]),
+            }
+            csv_data.append(obj)
+
+        filename = "summary-of-duplicates"
+        csv_file = create_csv_file(CSV_FIELD_NAMES, csv_data, filename + ".csv")
+
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        response.write(csv_file)
+
+        return response, None
+
     def clean_duplicates(self, args, context: Context):
         hash = args.get("hash", None)
         dupes = Media.objects.filter(hash=hash)
         relations = resolve_relations(dupes)
-        media_after_attaching =  attach_relations_to_media(relations)
+        media_after_attaching = attach_relations_to_media(relations)
         # TODO: then delete disposables here... Remove before PR (BPR)
         return serialize(media_after_attaching, True), None
 
