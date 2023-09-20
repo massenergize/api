@@ -24,7 +24,7 @@ class DownloadHandler(RouteHandler):
     self.add("/downloads.sadmin_report", self.send_sadmin_report)
     self.add("/downloads.sample.user_report", self.send_sample_user_report)
     self.add("/downloads.action.users", self.action_users_download)
-    self.add("/downloads.page_map", self.community_pagemap_download)
+    self.add("/downloads.pagemap", self.community_pagemap_download)
 
   @admins_only
   def users_download(self, request):

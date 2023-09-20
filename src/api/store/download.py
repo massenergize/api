@@ -1238,7 +1238,7 @@ class DownloadStore:
         else:
             communityURL = f'{COMMUNITY_URL_ROOT}/{community.subdomain}'
 
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/edit'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/community/community-admin'
         pagedata = {"Page Name":hyperlink("Home Page", communityURL),
                     "Status":"Enabled",  
                     "Admin Page Name":hyperlink("Community Information",adminURL),
@@ -1252,13 +1252,13 @@ class DownloadStore:
         data.append(pagedata)
 
         #Community admins
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/community-admins'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/community-admins'
         pagedata = {"Admin Page Name":hyperlink("Community Admins",adminURL),
                     }
         data.append(pagedata)
 
         #Home page settings
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/home'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/home'
         pageSettings = HomePageSettings.objects.get(community__id=community.id)
         pagedata = {"Admin Page Name":hyperlink("Home Page Settings",adminURL),
                     "Updated on":update_date(pageSettings),
@@ -1266,7 +1266,7 @@ class DownloadStore:
         data.append(pagedata)
 
         #Goals and impact data
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/impacts'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/impacts'
         pagedata = {"Admin Page Name":hyperlink("Goals and Impact Data",adminURL),
                     }
         data.append(pagedata)
@@ -1274,7 +1274,7 @@ class DownloadStore:
         #Impact page
         pageSettings = ImpactPageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/impact'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/impact'
         pagedata = {"Page Name":hyperlink("Impact Page", communityURL+'/impact'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("Impact Page Settings",adminURL),
@@ -1285,7 +1285,7 @@ class DownloadStore:
         #AboutUs page
         pageSettings = AboutUsPageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/about'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/about'
         pagedata = {"Page Name":hyperlink("AboutUs Page",communityURL+'/aboutus'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("AboutUs Page Settings",adminURL),
@@ -1296,7 +1296,7 @@ class DownloadStore:
         #Donate Page
         pageSettings = DonatePageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/donate'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/donate'
         pagedata = {"Page Name":hyperlink("Donate Page",communityURL+'/donate'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("Donate Page Settings",adminURL),
@@ -1307,7 +1307,7 @@ class DownloadStore:
         #ContactUs Page
         pageSettings = ContactUsPageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/contact_us'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/contact_us'
         pagedata = {"Page Name":hyperlink("ContactUs Page",communityURL+'/contactus'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("ContactUs Page Settings",adminURL),
@@ -1318,7 +1318,7 @@ class DownloadStore:
         #All Actions Page
         pageSettings = AboutUsPageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/all-actions'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-actions'
         pagedata = {"Page Name":hyperlink("All Actions Page",communityURL+'/actions'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("Actions Page Settings",adminURL),
@@ -1342,7 +1342,7 @@ class DownloadStore:
         #All Events Page
         pageSettings = EventsPageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/all-events'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-events'
         pagedata = {"Page Name":hyperlink("All Events Page",communityURL+'/events'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("Events Page Settings",adminURL),
@@ -1366,7 +1366,7 @@ class DownloadStore:
         #All Testimonials Page
         pageSettings = TestimonialsPageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/all-testimonials'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-testimonials'
         pagedata = {"Page Name":hyperlink("All Testimonials Page",communityURL+'/testimonials'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("Testimonials Page Settings",adminURL),
@@ -1390,7 +1390,7 @@ class DownloadStore:
         #All Service Providers page
         pageSettings = VendorsPageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/all-vendors'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edity/{community.id}/all-vendors'
         pagedata = {"Page Name":hyperlink("All Services Page",communityURL+'/services'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("Services Page Settings",adminURL),
@@ -1415,7 +1415,7 @@ class DownloadStore:
         #All Teams page
         pageSettings = TeamsPageSettings.objects.get(community__id=community.id)
         status = "Enabled" if pageSettings.is_published else "Disabled"
-        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/all-teams'
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-teams'
         pagedata = {"Page Name":hyperlink("All Teams Page",communityURL+'/teams'), 
                     "Status": status,  
                     "Admin Page Name":hyperlink("Teams Page Settings",adminURL),
