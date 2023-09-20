@@ -7,6 +7,7 @@ from api.store.common import calculate_hash_for_bucket_item
 from _main_.utils.common import serialize
 from _main_.utils.common import serialize, serialize_all
 from api.store.common import (
+    attach_relations_to_media,
     calculate_hash_for_bucket_item,
     find_duplicate_items,
     resolve_relations,
@@ -32,8 +33,10 @@ class MediaLibraryStore:
     def clean_duplicates(self, args, context: Context):
         hash = args.get("hash", None)
         dupes = Media.objects.filter(hash=hash)
-        response = resolve_relations(dupes)
-        return response, None
+        relations = resolve_relations(dupes)
+        media_after_attaching =  attach_relations_to_media(relations)
+        # TODO: then delete disposables here... Remove before PR (BPR)
+        return serialize(media_after_attaching, True), None
 
     def summarize_duplicates(self, args, context: Context):
         grouped_dupes = find_duplicate_items()

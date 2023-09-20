@@ -3,13 +3,13 @@ import io
 from django.http import FileResponse
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
 from _main_.utils.common import serialize, serialize_all
+from carbon_calculator.models import Action
 from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
-from database.models import UserActionRel
-from database.models import Media, UserActionRel
-from django.db.models import Q
+from database.models import Community, Event, Media, Team, UserActionRel
+from django.db.models import Q, Model
 from django.utils import timezone
 import boto3
 import hashlib
@@ -374,3 +374,74 @@ def resolve_relations(dupes):
         "usage": merged_usages,
         "disposable": disposable[1:],
     }
+
+
+def get_property_in_dict(array, property_name = "id"): 
+    return [ item.get(property_name) for item in array]
+
+def get_items_by_ids(model :Model, ids):
+    """
+    Retrieve items of a specified model by a list of IDs.
+
+    Parameters:
+    - model (django.db.models.Model): The Django model class.
+    - ids (list of int): A list of IDs to filter items by.
+
+    Returns:
+    - Queryset: A queryset containing items with the specified IDs.
+    """
+    if not issubclass(model, Model):
+        raise ValueError("The 'model' parameter must be a valid Django model class.")
+
+    if not ids:
+        return model.objects.none()  # Return an empty queryset if the 'ids' list is empty
+
+    return model.objects.filter(id__in=ids)
+
+
+def attach_relations_to_media(usage_object): 
+    media = usage_object.get("media") 
+    if not usage_object or not media: 
+        return None 
+    
+    media = Media.objects.filter(id = media.get("id")).first() 
+    if not media: 
+        return None 
+    
+    usage = usage_object.get("usage")
+
+
+    communities = usage.get("communities",[])
+    actions = usage.get("actions",[])
+    events = usage.get("events",[])
+    teams = usage.get("teams",[])
+    vendors = usage.get("vendors",[])
+    homepage = usage.get('homepage',[])
+    tags = usage.get('tags',[])
+
+    # Reduce them to only their ids
+    communities = get_property_in_dict(communities)
+    actions = get_property_in_dict(actions)
+    events = get_property_in_dict(events)
+    teams = get_property_in_dict(teams)
+    vendors = get_property_in_dict(vendors)
+    homepage = get_property_in_dict(homepage)
+    tags = get_property_in_dict(tags)
+    
+    # set relationships
+    media.community_logo.set(get_items_by_ids(Community,communities))
+    media.actions.set(get_items_by_ids(Action,actions))
+    media.events.set(get_items_by_ids(Event,events))
+    media.team_logo.set(get_items_by_ids(Team,teams)) 
+    media.vender_logo.set(vendors) 
+    media.homepage_images.set(homepage) 
+    media.tags.set(tags)
+
+    media.save()
+    media.refresh_from_db()
+
+    return media
+
+    
+
+
