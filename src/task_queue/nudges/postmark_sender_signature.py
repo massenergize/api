@@ -12,29 +12,35 @@ def check_and_update_signatures():
     if communities.count() == 0:
         return True
     for community in communities:
-        postmark_info = community.postmark_contact_info or {}
+        postmark_info = community.contact_info or {}
         id = postmark_info.get("sender_signature_id")
         response = get_sender_signature_info(id)
         if response.status_code == 200:
             res = response.json()
             if res.get("Confirmed") != postmark_info.get("is_validated"):
-                community.postmark_contact_info = {**postmark_info, "is_validated": res.get("Confirmed")}
+                community.contact_info = {**postmark_info, "is_validated": res.get("Confirmed")}
                 community.save()
     return True
 
 
 def collect_and_create_signatures():
     communities = Community.objects.filter(is_published=True, is_deleted=False, postmark_contact_info__is_validated=False)
-    if communities.count() == 0:
-        return True
     for community in communities:
         email = community.owner_email
         if not email or email.split("@")[1] in PUBLIC_EMAIL_DOMAINS:
             continue
-        postmark_info = community.postmark_contact_info or {}
-        alias = community.sender_signature_name or community.name
-        if postmark_info.get("is_nudged"):
-            resend_signature_confirmation(postmark_info.get("sender_signature_id"))
+        postmark_info = community.contact_info or {}
+        alias = community.contact_sender_alias or community.name
+        if postmark_info.get("is_nudged"):    
+            id = postmark_info.get("sender_signature_id")
+            response = get_sender_signature_info(id)
+            if response.status_code == 200:
+                res = response.json()
+                if res.get("Confirmed"):
+                    community.contact_info = {**postmark_info, "is_validated": res.get("Confirmed")}
+                    community.save()
+                else:
+                    resend_signature_confirmation(postmark_info.get("sender_signature_id"))
         else:
             response = add_sender_signature(email, alias)
             if response.status_code != 200:
@@ -48,7 +54,7 @@ def collect_and_create_signatures():
                 "sender_signature_id": res.get("ID"),
             }
 
-            community.postmark_contact_info = postmark_info
-            community.sender_signature_name = alias
+            community.contact_info = postmark_info
+            community.contact_sender_alias = alias
             community.save()
     return True

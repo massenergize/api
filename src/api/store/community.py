@@ -706,7 +706,7 @@ class CommunityStore:
             # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
             # These we can deal with by having the Location include city and or state fields
             locations = args.pop("locations", None)
-            sender_signature_name = args.get("sender_signature_name", None)
+            contact_sender_alias = args.get("contact_sender_alias", None)
 
             favicon = args.pop("favicon", None)
             community = Community.objects.create(**args)
@@ -827,11 +827,11 @@ class CommunityStore:
                         owner.is_community_admin = True
                     owner.communities.add(community)
                     owner.save()
-                if sender_signature_name and owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
-                     res = add_sender_signature(owner_email, sender_signature_name)
+                if contact_sender_alias and owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
+                     res = add_sender_signature(owner_email, contact_sender_alias)
 
                      if res.status_code == 200:
-                        community.postmark_contact_info = {
+                        community.contact_info = {
                             "is_nudged": True,
                             "is_validated": res.json()["Confirmed"],
                             "sender_signature_id": res.json()["ID"]
@@ -912,7 +912,7 @@ class CommunityStore:
             # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
             # These we can deal with by having the Location include city and or state fields
             locations = args.pop("locations", None)
-            sender_signature_name = args.get("sender_signature_name", None)
+            contact_sender_alias = args.get("contact_sender_alias", None)
 
             favicon = args.pop("favicon", None)
             filter_set = Community.objects.filter(id=community_id)
@@ -930,20 +930,20 @@ class CommunityStore:
             # if user updates owner_email we need to update the signature on postmark
             if owner_email and owner_email != community.owner_email:
                 if owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
-                    name = sender_signature_name or community.sender_signature_name or community.name
+                    name = contact_sender_alias or community.contact_sender_alias or community.name
                     res =  add_sender_signature(owner_email, name)
                     if res.status_code == 200:
-                        args["postmark_contact_info"] = {
+                        args["contact_info"] = {
                             "is_nudged": True,
                             "is_validated": res.json()["Confirmed"],
                             "sender_signature_id": res.json()["ID"]
                         }
 
-            if sender_signature_name and sender_signature_name != community.sender_signature_name:
-                postmark_contact_info = community.postmark_contact_info or {}
-                sender_signature_id = postmark_contact_info.get("sender_signature_id")
+            if contact_sender_alias and contact_sender_alias != community.contact_sender_alias:
+                contact_info = community.contact_info or {}
+                sender_signature_id = contact_info.get("sender_signature_id")
                 if sender_signature_id:
-                   update_sender_signature(sender_signature_id, sender_signature_name)
+                   update_sender_signature(sender_signature_id, contact_sender_alias)
 
             filter_set.update(**args)
             community = filter_set.first()
