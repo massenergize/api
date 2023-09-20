@@ -40,6 +40,7 @@ def collect_and_create_signatures():
             if response.status_code != 200:
                 return False
             res = response.json()
+            # change is_nudge to a int of no of time a users received
             postmark_info = {
                 **postmark_info,
                 "is_validated": res.get("Confirmed"),

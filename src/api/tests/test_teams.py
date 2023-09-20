@@ -191,10 +191,13 @@ class TeamsTestCase(TestCase):
     # note: this isn't how actions are created; need a helper routine for that
     #cca1 = CCAction.objects.create(name="CC Action 1", average_points=50, questions="foo")
     #cca2 = CCAction.objects.create(name="CC Action 2", average_points=100, questions="bar")
-    cca1 = CCAction.objects.get(name="energy_audit")
-    cca2 = CCAction.objects.get(name="air_source_hp")
-    ccv1 = CCDefault.objects.filter(variable="energy_audit_average_points").first().value
-    ccv2 = CCDefault.objects.filter(variable="air_source_hp_average_points").first().value
+    cca1 = CCAction.objects.filter(name="energy_audit").first()
+    cca2 = CCAction.objects.filter(name="air_source_hp").first()
+    ccv1 = CCDefault.objects.filter(variable="energy_audit_average_points").first()
+    ccv2 = CCDefault.objects.filter(variable="air_source_hp_average_points").first()
+
+    ccv1_value = ccv1.value if ccv1 else 0
+    ccv2_value = ccv2.value if cca2 else 0
     
     action1 = Action.objects.create(calculator_action=cca1)
     action2 = Action.objects.create(calculator_action=cca2)
@@ -230,8 +233,8 @@ class TeamsTestCase(TestCase):
     self.assertIs(2, team2stats['actions_completed'])
 
     # these are the values from the calculator actions chosen
-    self.assertEqual(ccv1, team1stats['carbon_footprint_reduction'])
-    self.assertEqual(ccv1+ccv2, team2stats['carbon_footprint_reduction'])
+    self.assertEqual(ccv1_value, team1stats['carbon_footprint_reduction'])
+    self.assertEqual(ccv1_value+ccv2_value, team2stats['carbon_footprint_reduction'])
     
     self.TEAM2.is_published = False
     self.TEAM2.save()
