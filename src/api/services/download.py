@@ -1,5 +1,5 @@
 from _main_.utils.massenergize_errors import MassEnergizeAPIError
-from api.constants import ACTION_USERS, ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT
+from api.constants import ACTION_USERS, ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
 from api.store.download import DownloadStore
 from _main_.utils.context import Context
 from typing import Tuple
@@ -119,5 +119,16 @@ class DownloadService:
             "title": args.get("title"),
         }
         download_data.delay(data, DOWNLOAD_POLICY)
+        return [], None
+    
+    def community_pagemap_download(self, context: Context, community_id) -> Tuple[list, MassEnergizeAPIError]:
+        data = {
+            'community_id': community_id,
+            'user_is_community_admin': context.user_is_community_admin,
+            'user_is_super_admin':context.user_is_super_admin,
+            'email': context.user_email,
+            'user_is_logged_in': context.user_is_logged_in
+        }
+        download_data.delay(data, COMMUNITY_PAGEMAP)
         return [], None
 
