@@ -832,7 +832,7 @@ class CommunityStore:
 
                      if res.status_code == 200:
                         community.contact_info = {
-                            "is_nudged": True,
+                            "nudge_count": 1,
                             "is_validated": res.json()["Confirmed"],
                             "sender_signature_id": res.json()["ID"]
                         }
@@ -934,7 +934,7 @@ class CommunityStore:
                     res =  add_sender_signature(owner_email, name, community.owner_name, community.name)
                     if res.status_code == 200:
                         args["contact_info"] = {
-                            "is_nudged": True,
+                            "nudge_count": 1,
                             "is_validated": res.json()["Confirmed"],
                             "sender_signature_id": res.json()["ID"]
                         }

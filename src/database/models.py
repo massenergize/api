@@ -460,7 +460,7 @@ class Community(models.Model):
       any another dynamic information we would like to store about this location
 
     contact_info: JSON
-       looks like this {"is_validated":bool , "is_nudged":bool ,"sender_signature_id":str}
+       looks like this {"is_validated":bool , "nudge_count":int ,"sender_signature_id":str}
     """
 
     id = models.AutoField(primary_key=True)
