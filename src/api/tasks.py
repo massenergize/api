@@ -2,7 +2,7 @@ import csv
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT
+from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
 from api.store.download import DownloadStore
 from api.constants import DOWNLOAD_POLICY
 from api.store.common import create_pdf_from_rich_text, sign_mou
@@ -24,10 +24,11 @@ from task_queue.events_nudge.user_event_nudge import prepare_user_events_nudge
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None):
     response = HttpResponse(content_type="text/csv")
+    now = datetime.datetime.now().strftime("%Y%m%d")
     if not community_name:
-        filename = "all-%s-data.csv" % download_type
+        filename = "all-%s-data-%s.csv" % (download_type, now)
     else:
-        filename = "%s-%s-data.csv" % (community_name, download_type)
+        filename = "%s-%s-data-%s.csv" % (community_name, download_type, now)
     writer = csv.writer(response)
     for row in data:
         writer.writerow(row)
@@ -126,6 +127,19 @@ def download_data(self, args, download_type):
         "name":user.full_name,
     }
         send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[user.email], pdf,f'{args.get("title")}.pdf')
+
+    elif download_type == COMMUNITY_PAGEMAP:
+        community_id = args.get("community_id", None)
+        if community_id:
+             com, err = get_community(community_id)
+             
+        (files, dummy), err = store.community_pagemap_download(context, community_id=community_id)
+        if err:
+            error_notification(COMMUNITY_PAGEMAP, email)
+        else:
+            generate_csv_and_email(
+                data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email)
+
 
 
 @shared_task(bind=True)

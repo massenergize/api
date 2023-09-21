@@ -1463,6 +1463,10 @@ class Team(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    # which user created this Teamt - may be the responsible party
+    user = models.ForeignKey(
+        UserProfile, related_name="team_user", on_delete=models.SET_NULL, null=True
+    )
 
     def is_admin(self, UserProfile):
         return self.admins.filter(id=UserProfile.id)
@@ -2012,6 +2016,8 @@ class Event(models.Model):
     rsvp_email = models.BooleanField(default=False, blank=True)
     rsvp_message = models.TextField(max_length=LONG_STR_LEN, blank=True)
     more_info = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
@@ -3048,6 +3054,7 @@ class PageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3154,6 +3161,7 @@ class HomePageSettings(models.Model):
     is_template = models.BooleanField(default=False, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return "HomePageSettings - %s" % (self.community)
@@ -3203,6 +3211,7 @@ class ActionsPageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3242,6 +3251,7 @@ class ContactUsPageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3285,6 +3295,7 @@ class DonatePageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3325,6 +3336,7 @@ class AboutUsPageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3365,6 +3377,7 @@ class ImpactPageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
