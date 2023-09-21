@@ -828,7 +828,7 @@ class CommunityStore:
                     owner.communities.add(community)
                     owner.save()
                 if contact_sender_alias and owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
-                     res = add_sender_signature(owner_email, contact_sender_alias)
+                     res = add_sender_signature(owner_email, contact_sender_alias, community.owner_name, community.name)
 
                      if res.status_code == 200:
                         community.contact_info = {
@@ -931,7 +931,7 @@ class CommunityStore:
             if owner_email and owner_email != community.owner_email:
                 if owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
                     name = contact_sender_alias or community.contact_sender_alias or community.name
-                    res =  add_sender_signature(owner_email, name)
+                    res =  add_sender_signature(owner_email, name, community.owner_name, community.name)
                     if res.status_code == 200:
                         args["contact_info"] = {
                             "is_nudged": True,

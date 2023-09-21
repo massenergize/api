@@ -106,15 +106,17 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
 
 
 
-def add_sender_signature(email, name):
+def add_sender_signature(email, alias, first_name, community):
   if is_test_mode():
     return True
+  if not first_name:
+    first_name = "Admin"
   url = "https://api.postmarkapp.com/senders"
   headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
-  msg = f"Dear Admin,\n As part of the new development to improve communication and trust between community and its members"
+  msg = f'Dear {first_name} - as the community contact for {community}, we need you to validate your email as a valid email address. Please select "confirm sender signature" to continue. If you have questions about this, feel free to contact Support@MassEnergize.org. Thank you! \n Aimee, Kaat and Brad from the MassEnergize platform team.'
   data = {
       "FromEmail": email,
-      "Name": name,
+      "Name": alias,
       "ReplyToEmail":email,
       "ConfirmationPersonalNote": msg
   }
