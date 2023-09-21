@@ -54,7 +54,7 @@ class MediaLibraryStore:
                 if text:
                     text += f", {key}({length})"
                 else:
-                    text = f"{key}:{length}"
+                    text = f"{key}({length})"
 
         return count, text
 
@@ -90,7 +90,11 @@ class MediaLibraryStore:
         dupes = Media.objects.filter(hash=hash)
         relations = resolve_relations(dupes)
         media_after_attaching = attach_relations_to_media(relations)
-        # TODO: then delete disposables here... Remove before PR (BPR)
+        disposables = relations.get("disposable",[])
+        disposables = [m.get("id", None) for m in disposables]
+        print("disposables", disposables)
+        Media.objects.filter(pk__in =disposables).delete()
+
         return serialize(media_after_attaching, True), None
 
     def summarize_duplicates(self, args, context: Context):
