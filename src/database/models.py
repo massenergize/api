@@ -458,6 +458,9 @@ class Community(models.Model):
       about this community
     more_info: JSON
       any another dynamic information we would like to store about this location
+
+    contact_info: JSON
+       looks like this {"is_validated":bool , "nudge_count":int ,"sender_signature_id":str}
     """
 
     id = models.AutoField(primary_key=True)
@@ -465,9 +468,8 @@ class Community(models.Model):
     subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
     owner_name = models.CharField(max_length=SHORT_STR_LEN, default="Unknown")
     owner_email = models.EmailField(blank=False)
-    owner_phone_number = models.CharField(
-        blank=True, null=True, max_length=SHORT_STR_LEN
-    )
+    contact_sender_alias = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    owner_phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     about_community = models.TextField(max_length=LONG_STR_LEN, blank=True)
     logo = models.ForeignKey(
         Media,
@@ -519,6 +521,7 @@ class Community(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_demo = models.BooleanField(default=False, blank=True)
+    contact_info = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return str(self.id) + " - " + self.name
@@ -541,6 +544,8 @@ class Community(models.Model):
                 "is_approved",
                 "more_info",
                 "location",
+                "contact_info",
+                # "contact_sender_alias"
             ],
         )
         res["logo"] = get_json_if_not_none(self.logo)
@@ -697,6 +702,7 @@ class Community(models.Model):
             "locations": locations,
             "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
+            "contact_sender_alias": self.contact_sender_alias
         }
 
     class Meta:

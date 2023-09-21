@@ -48,3 +48,6 @@ DEFAULT_PAGINATION_LIMIT = 50
 ME_INBOUND_EMAIL_ADDRESS = (
     "inbound@massenergize.org"if IS_PROD else os.environ.get('POSTMARK_DEFAULT_INBOUND_EMAIL') if IS_LOCAL else "inbound@massenergize.dev"
 )
+
+
+PUBLIC_EMAIL_DOMAINS=["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "aol.com"]
