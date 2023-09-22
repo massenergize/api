@@ -1,4 +1,5 @@
 from functools import reduce
+from typing import List
 from django.core.exceptions import ValidationError
 from database.utils.settings.model_constants.user_media_uploads import (
     UserMediaConstants,
@@ -85,15 +86,47 @@ class MediaLibraryStore:
 
         return response, None
 
+    def group_disposable(self, original: dict, disposable: List[int]):
+        """This function simply identifies which items in the disposable list share the same image as the original.
+        NB: because we initially did not dynamically label uploaded images (many many years ago.. lool) there are many scenarios where a user has  uploaded the same image multiple times and because the image was the same (with name & everything), it always replaced the existing record in the bucket, but under new media records in the database.
+
+        So many duplicate images(media records) still share the same image reference with the original media record. This is why items that share the same image reference as the chosen original need to be identified and grouped.
+        Deletion for such records will be treated differently than other duplicates where the images are the same as the original, but are completely
+        different uploads in terms of the reference in the s3 bucket. In such cases the images in the s3 bucket will be removed as well!
+        """
+
+        media = Media.objects.filter(pk=original.get("id")).first()
+        if not media:
+            return None, None
+        can_delete = Media.objects.filter(pk__in=disposable)
+        only_records = []
+        with_image = []
+        for m in can_delete:
+            if m.file.name == media.file.name:
+                only_records.append(m)
+            else:
+                with_image.append(m)
+
+        return only_records, with_image
+
     def clean_duplicates(self, args, context: Context):
         hash = args.get("hash", None)
         dupes = Media.objects.filter(hash=hash)
         relations = resolve_relations(dupes)
         media_after_attaching = attach_relations_to_media(relations)
-        disposables = relations.get("disposable",[])
+        disposables = relations.get("disposable", [])
         disposables = [m.get("id", None) for m in disposables]
-        print("disposables", disposables)
-        Media.objects.filter(pk__in =disposables).delete()
+        media = relations.get("media", {})
+        del_only_records, del_with_image = self.group_disposable(media, disposables)
+        # print("disposables", disposables)
+        if del_only_records:
+            Media.objects.filter(
+                pk__in=[m.id for m in del_only_records]
+            ).delete()  # This only deletes records & doesnt fire the models "delete()" function which is what actually deletes actual image from the s3 bucket
+
+        if del_with_image:
+            for m in del_with_image:
+                m.delete()  # will delete record and image from s3 bucket
 
         return serialize(media_after_attaching, True), None
 
