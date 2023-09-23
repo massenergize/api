@@ -8,13 +8,16 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from database.utils.constants import SHORT_STR_LEN
 import zipcodes
 import datetime
+from carbon_calculator.carbonCalculator import AverageImpact
 from sentry_sdk import capture_message
 
 
 def getCarbonScoreFromActionRel(actionRel): 
   if not actionRel or actionRel.status !="DONE":  return 0 
   if actionRel.carbon_impact : return actionRel.carbon_impact
-  if actionRel.action.calculator_action: return actionRel.action.calculator_action.average_points
+  calculator_action = actionRel.action.calculator_action
+  if calculator_action: 
+      return AverageImpact(calculator_action, actionRel.date_completed)
   return 0
 
 def get_community(community_id=None, subdomain=None):

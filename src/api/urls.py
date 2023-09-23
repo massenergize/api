@@ -50,7 +50,6 @@ ROUTE_HANDLERS = [
     DeviceHandler(),
     DonatePageSettingsHandler(),
     DownloadHandler(),
-    # EmailTemplatesHandler(),
     EventHandler(),
     EventsPageSettingsHandler(),
     FeatureFlagHandler(),

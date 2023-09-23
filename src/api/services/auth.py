@@ -29,6 +29,7 @@ class AuthService:
       args = context.args or {}
       firebase_id_token = args.get('idToken', None)
       noFootage = args.get('noFootage',"false") # Why this? Well login is used as verification in more than one scenario, so this is a way to know when user is actually signing in (1st time) -- so we can capture the footage only once.
+      login_method = args.get('login_method', None)
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
@@ -59,6 +60,14 @@ class AuthService:
           algorithm='HS256'
         ).decode('utf-8')
         #---------------------------------------------------------
+        # track login method of users for personalization in nudge.
+        if login_method:
+          existing_info = user.user_info or {}
+          user.user_info = {
+            **existing_info,
+            "login_method": login_method,
+          }
+          user.save()
         if  noFootage == "false": 
           if context.is_admin_site:
              Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())

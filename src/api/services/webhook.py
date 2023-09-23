@@ -67,7 +67,7 @@ class WebhookService:
     if bounce_type == HARD_BOUNCE and email_subject == WELCOME_MESSAGE:
         user = UserProfile.objects.filter(email=email).first()
         if user:
-            user_info = user.user_info.get("user_type")
+            user_info = (user.user_info or {}).get("user_type")
             if user_info == GUEST_USER:
                 deactivate_user.apply_async((user.email,),countdown=ONE_DAY)
 

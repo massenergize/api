@@ -1,8 +1,9 @@
 import datetime
 import pytz
-from _main_.utils.common import serialize_all
+from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from api.constants import GUEST_USER
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
 from database.models import Community, CommunityMember, Event, UserProfile, FeatureFlag
 from django.db.models import Q
@@ -16,6 +17,8 @@ WEEKLY = "per_week"
 BI_WEEKLY = "biweekly"
 MONTHLY = "per_month"
 DAILY="per_day"
+
+
 
 eastern_tz = pytz.timezone("US/Eastern")
 
@@ -113,21 +116,14 @@ def get_community_events(community_id):
     return events
 
 
-def get_community_users(community_id, flag):
-#    users = UserProfile.objects.filter(is_deleted=False, accepts_terms_and_conditions=True, communities__id=community_id, is_super_admin=False, is_community_admin=False, is_vendor=False)
-   community_members = CommunityMember.objects.filter(community__id=community_id, is_deleted=False).values_list("user", flat=True)
-   users = UserProfile.objects.filter(id__in=community_members)
+def get_community_users(community_id):
+    community_members = CommunityMember.objects.filter(community__id=community_id, is_deleted=False).values_list("user", flat=True)
+    users = UserProfile.objects.filter(id__in=community_members)
+    return users
 
-#    check if user is in flag
-   if flag.user_audience == "SPECIFIC":
-       users = users.filter(id__in=[str(u.id) for u in flag.users.all()])
-   elif flag.user_audience == "ALL_EXCEPT":
-       users = users.exclude(id__in=[str(u.id) for u in flag.users.all()])
-
-   return users
-
-def generate_change_pref_url(subdomain):
-    url = f"{COMMUNITY_URL_ROOT}/{subdomain}/profile/settings"
+def generate_change_pref_url(subdomain,email, login_method):
+    encoded = encode_data_for_URL({"email": email,"login_method": login_method,})
+    url = f"{COMMUNITY_URL_ROOT}/{subdomain}/profile/settings/?cred={encoded}"
     return url
 
 def get_logo(event):
@@ -169,11 +165,11 @@ def prepare_events_email_data(events):
     return data
 
 
-def send_events_report_email(name, email, event_list, comm):
+def send_events_report_email(name, email, event_list, comm, login_method=""):
     try:
         events = prepare_events_email_data(event_list[:LIMIT])
         has_more_events = len(event_list) > LIMIT
-        change_pref_link = generate_change_pref_url(comm.subdomain)
+        change_pref_link = generate_change_pref_url(comm.subdomain,email,login_method)
         data = {}
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_pref_link
@@ -196,6 +192,7 @@ def send_automated_nudge(events, user, community):
     if len(events) > 0 and user:
         name = user.full_name
         email = user.email
+        login_method = (user.user_info or {}).get("login_method") or ""
         if not name or not email:
             print("Missing name or email for user: " + str(user))
             return False
@@ -203,7 +200,7 @@ def send_automated_nudge(events, user, community):
 
         if user_is_ready_for_nudge:
             print("sending nudge to " + email)
-            is_sent = send_events_report_email(name, email, events, community)
+            is_sent = send_events_report_email(name, email, events, community,login_method)
             if not is_sent:
                 print( f"**** Failed to send email to {name} for community {community.name} ****")
                 return False
@@ -215,7 +212,8 @@ def send_user_requested_nudge(events, user, community):
     if len(events) > 0 and user:
         name = user.full_name
         email = user.email
-        is_sent = send_events_report_email(name, email, events, community)
+        login_method = (user.user_info or {}).get("login_method") or ""
+        is_sent = send_events_report_email(name, email, events, community, login_method)
         if not is_sent:
             print(f"**** Failed to send email to {name} for community {community.name} ****")
             return False
@@ -250,10 +248,6 @@ nudge is requested on demand by a cadmin on user portal.
 # Entry point
 def prepare_user_events_nudge(email=None, community_id=None):
     try:
-        flag = FeatureFlag.objects.filter(key=USER_EVENT_NUDGE_KEY).first()
-        # allowed_communities = list(flag.communities.all())
-
-        communities = Community.objects.filter(is_published=True, is_deleted=False)
         if email and community_id:
             all_community_events = get_community_events(community_id)
             user = UserProfile.objects.filter(email=email).first()
@@ -263,15 +257,16 @@ def prepare_user_events_nudge(email=None, community_id=None):
 
             return True
         
-        if flag.audience == "SPECIFIC":
-            communities = communities.filter(id__in=[str(u.id) for u in flag.communities.all()])
-        elif flag.audience == "ALL_EXCEPT":
-            communities = communities.exclude(id__in=[str(u.id) for u in flag.communities.all()])
-        # print("=== communities: " , len(communities))
+        flag = FeatureFlag.objects.get(key=USER_EVENT_NUDGE_KEY)
+        if not flag or not flag.enabled():
+            return False
+    
+        communities = Community.objects.filter(is_published=True, is_deleted=False)
+        communities = flag.enabled_communities(communities)
         for community in communities:
-            # if flag.audience == "EVERYONE" or community in allowed_communities:
             events = get_community_events(community.id)
-            users = get_community_users(community.id, flag)
+            users = get_community_users(community.id)
+            users = flag.enabled_users(users)
 
             for user in users:          
                 user_events = get_user_events(user.notification_dates, events)

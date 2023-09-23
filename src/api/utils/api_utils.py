@@ -1,7 +1,7 @@
 
 
 
-from _main_.utils.utils import is_test_mode
+from math import atan2, cos, radians, sin, sqrt
 from database.models import CommunityAdminGroup, UserProfile
 
 
@@ -43,3 +43,22 @@ def get_key(name):
     return "-".join(arr)+"-template-id"
 
     
+
+
+def get_distance_between_coords(lat1, lon1, lat2, lon2):
+    # approximate radius of earth in km
+    R = 6373.0
+
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+
+    difference_long = lon2 - lon1
+    difference_lat = lat2 - lat1
+
+    a = sin(difference_lat / 2)**2 + cos(lat1) * cos(lat2) * sin(difference_long / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c
+    return distance
