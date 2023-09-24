@@ -8,7 +8,7 @@ from api.constants import DOWNLOAD_POLICY
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from api.store.utils import get_user_from_context
 from database.models import Policy
-from task_queue.events_nudge.cadmin_events_nudge import generate_event_list_for_community, send_events_report
+from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
 from celery import shared_task
 from api.store.download import DownloadStore
@@ -19,7 +19,7 @@ import datetime
 from django.utils.timezone import utc
 from django.db.models import Count
 
-from task_queue.events_nudge.user_event_nudge import prepare_user_events_nudge
+from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None):

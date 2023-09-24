@@ -1,9 +1,9 @@
 
-from task_queue.events_nudge.cadmin_events_nudge import send_events_nudge
-from task_queue.events_nudge.user_event_nudge import prepare_user_events_nudge
+from task_queue.nudges.cadmin_events_nudge import send_events_nudge
+from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 from task_queue.nudges.postmark_sender_signature import collect_and_create_signatures
-from task_queue.nudges.contents_spacing_correction import correct_contents_spacing
 from task_queue.views import super_admin_nudge, create_snapshots, send_admin_mou_notification
+from task_queue.database_tasks.contents_spacing_correction import correct_contents_spacing
 
 """
 PLEASE NOTE:
