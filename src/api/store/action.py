@@ -1,6 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.tests.common import RESET
+from _main_.utils.utils import Console
+from api.store.common import make_media_info
+from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_actions_filter_params
 from database.models import Action, UserProfile, Community, Media
@@ -72,6 +74,7 @@ class ActionStore:
       calculator_action = args.pop('calculator_action', None)
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
+      image_info = make_media_info(args)
 
       # check if there is an existing action with this name and community
       actions = Action.objects.filter(title=title, community__id=community_id, is_deleted=False)
@@ -90,6 +93,9 @@ class ActionStore:
         if user_submitted:
           name = f'ImageFor {new_action.title} Action'
           media = Media.objects.create(name=name, file=images)
+          # create user media upload here 
+          makeUserUpload(media = media,info=image_info)
+          
         else:
           media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media

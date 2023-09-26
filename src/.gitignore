@@ -13,3 +13,4 @@ deployment/aws/
 test_data/
 celerybeat-schedule.db
 *.rdb*
+venv
