@@ -90,6 +90,19 @@ class ActionHandler(RouteHandler):
       .expect("image", "file", is_required=False, options={"is_logo": True})
       .expect("vendors", list, is_required=False)
       .expect("action_id", str, is_required=False)
+      .expect(
+            "underAge", bool,
+        ).expect(
+            "copyright", bool,
+        ).expect(
+            "copyright_att", str,
+        ).expect(
+            "guardian_info", str,
+        ).expect(
+            "size", str
+        ).expect(
+            "size_text", str
+        )
     )
 
     args, err = self.validator.verify(args)
