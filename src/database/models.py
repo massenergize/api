@@ -268,11 +268,11 @@ class Media(models.Model):
         obj=  {
             "id": self.id,
             "name": self.name,
-            "url": self.file.url,
+            "url": self.file.url,   
         }
-
         if hasattr(self, "user_upload"): 
             obj["created_at"] = self.user_upload.created_at
+            obj["info"] = self.user_upload.info
 
         return obj 
 
@@ -1184,8 +1184,11 @@ class UserMediaUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{str(self.id)} - {self.media.name} from {self.user.preferred_name or self.user.full_name} "
-
+        if self.user:
+            return f"{str(self.id)} - {self.media.name} from {self.user.preferred_name or self.user.full_name} "
+        
+        return f"{str(self.id)} - {self.media.name} from ..."
+    
     def simple_json(self):
         res = model_to_dict(
             self, ["settings", "media", "created_at", "id", "is_universal", "info"]

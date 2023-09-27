@@ -94,7 +94,7 @@ class ActionStore:
           name = f'ImageFor {new_action.title} Action'
           media = Media.objects.create(name=name, file=images)
           # create user media upload here 
-          makeUserUpload(media = media,info=image_info)
+          user_media_upload = makeUserUpload(media = media,info=image_info)
           
         else:
           media = Media.objects.filter(pk = images[0]).first()
@@ -110,6 +110,9 @@ class ActionStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_action.user = user
+          if user_media_upload:
+            user_media_upload.user = user 
+            user_media_upload.save()
 
       #save so you set an id
       new_action.save()
@@ -198,6 +201,7 @@ class ActionStore:
 
   def update_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      image_info = make_media_info(args)
       action_id = args.pop('action_id', None)
       actions = Action.objects.filter(id=action_id)
       if not actions:
@@ -246,6 +250,7 @@ class ActionStore:
           else:
             image= Media.objects.create(file=image, name=f'ImageFor {action.title} Action')
             action.image = image
+            makeUserUpload(media = media,info=image_info, user = action.user) 
         else:
           if image[0] == RESET: #if image is reset, delete the existing image
             action.image = None

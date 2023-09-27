@@ -147,8 +147,8 @@ def make_media_info(args):
     guardian_info = args.pop("guardian_info","")
     copyright_att = args.pop("copyright_att","")
     return {
-            "size": args.pop("size"),
-            "size_text": args.pop("size_text"),
+            "size": args.pop("size",""),
+            "size_text": args.pop("size_text",""),
             "has_children": under_age,
             "has_copyright_permission": copyright_permission,
             "guardian_info": guardian_info,
