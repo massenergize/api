@@ -107,7 +107,14 @@ class VendorHandler(RouteHandler):
       .expect("location", str, is_required=False)
       .expect("vendor_id", str)
     
-    )
+    ) 
+    self.validator.expect("size", str)
+    self.validator.expect("size_text", str)
+    self.validator.expect("description")
+    self.validator.expect("underAge", bool)
+    self.validator.expect("copyright", bool)
+    self.validator.expect("copyright_att", str)
+    self.validator.expect("guardian_info", str)
 
     args, err = self.validator.verify(args)
     if err:

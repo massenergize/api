@@ -1,7 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import is_url_valid
-from api.tests.common import RESET
+from _main_.utils.utils import Console, is_url_valid
+from api.store.common import make_media_info
+from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_events_filter_params
 from database.models import Event, RecurringEventException, UserProfile, EventAttendee, Media, Community
@@ -242,6 +243,7 @@ class EventStore:
       tags = args.pop('tags', [])
       community = args.pop("community_id", None)
       user_email = args.pop('user_email', context.user_email)
+      image_info = make_media_info(args)
 
       start_date_and_time = args.get('start_date_and_time', None)
       end_date_and_time = args.get('end_date_and_time', None)
@@ -306,12 +308,14 @@ class EventStore:
         if user_submitted:
           name= f'ImageFor {new_event.name} Event'
           media = Media.objects.create(name=name, file=image)
+          user_media_upload = makeUserUpload(media = media,info=image_info)
         else: 
           media = Media.objects.filter(pk = image[0]).first()
         new_event.image = media
 
       if tags:
         new_event.tags.set(tags)
+        
 
       user = None
       if user_email:
@@ -323,6 +327,9 @@ class EventStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_event.user = user
+          if user_media_upload:
+            user_media_upload.user = user 
+            user_media_upload.save()
         
       if publicity_selections:
         new_event.communities_under_publicity.set(publicity_selections)
@@ -359,6 +366,10 @@ class EventStore:
     try:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
+      image_info = make_media_info(args)
+      # image_info = None
+      # Console.log("LE ARGS", args)
+      Console.log("SEE IMAGE_INFO",image_info)
 
       publicity_selections = args.pop("publicity_selections", [])
       shared_to = args.pop("shared_to", [])
@@ -484,6 +495,7 @@ class EventStore:
           else:
             image= Media.objects.create(file=image, name=f'ImageFor {event.name} Event')
             event.image = image
+            makeUserUpload(media = media,info=image_info, user = event.user)
         else:
           if image[0] == RESET: #if image is reset, delete the existing image
             event.image = None
