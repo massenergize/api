@@ -1,7 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
-from api.store.common import make_media_info
+from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_testimonials_filter_params
@@ -196,6 +196,12 @@ class TestimonialStore:
                     image = Media.objects.create(file=images, name=f"ImageFor {testimonial.title} Testimonial")
                     testimonial.image = image
                     makeUserUpload(media = image,info=image_info, user = testimonial.user)
+      
+      if testimonial.image:
+        old_image_info, can_save_info = get_media_info(testimonial.image)
+        if can_save_info: 
+          testimonial.image.user_upload.info.update({**old_image_info,**image_info})
+          testimonial.image.user_upload.save()
       
       if action:
         testimonial_action = Action.objects.filter(id=action).first()

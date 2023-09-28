@@ -1,7 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console
-from api.store.common import make_media_info
+from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_actions_filter_params
@@ -257,6 +257,12 @@ class ActionStore:
           else:
             media = Media.objects.filter(id = image[0]).first()
             action.image = media
+
+      if action.image:
+        old_image_info, can_save_info = get_media_info(action.image)
+        if can_save_info: 
+          action.image.user_upload.info.update({**old_image_info,**image_info})
+          action.image.user_upload.save()
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
