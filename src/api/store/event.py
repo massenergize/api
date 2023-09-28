@@ -1,7 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import Console, is_url_valid
-from api.store.common import make_media_info
+from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_events_filter_params
@@ -245,6 +245,7 @@ class EventStore:
       user_email = args.pop('user_email', context.user_email)
       image_info = make_media_info(args)
 
+
       start_date_and_time = args.get('start_date_and_time', None)
       end_date_and_time = args.get('end_date_and_time', None)
       is_recurring  = args.pop('is_recurring', False)
@@ -367,9 +368,6 @@ class EventStore:
       event_id = args.pop('event_id', None)
       events = Event.objects.filter(id=event_id)
       image_info = make_media_info(args)
-      # image_info = None
-      # Console.log("LE ARGS", args)
-      Console.log("SEE IMAGE_INFO",image_info)
 
       publicity_selections = args.pop("publicity_selections", [])
       shared_to = args.pop("shared_to", [])
@@ -502,6 +500,14 @@ class EventStore:
           else:
             media = Media.objects.filter(id = image[0]).first()
             event.image = media
+
+      if event.image:
+        old_image_info, can_save_info = get_media_info(event.image)
+        # There are media objects that do not  have user upload references. (because we didnt have that model at the time of upload) thats why we need to check first
+        if can_save_info: 
+          event.image.user_upload.info.update({**old_image_info,**image_info})
+          event.image.user_upload.save()
+    
       
       if community_id:
         community = Community.objects.filter(pk=community_id).first()

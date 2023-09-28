@@ -142,15 +142,20 @@ def sign_mou(mou_rich_text, user=None, date=None):
 
 
 def make_media_info(args): 
-    copyright_permission = args.pop("copyright", "")
-    under_age = args.pop("underAge", "")
-    guardian_info = args.pop("guardian_info","")
-    copyright_att = args.pop("copyright_att","")
-    return {
-            "size": args.pop("size",""),
-            "size_text": args.pop("size_text",""),
-            "has_children": under_age,
-            "has_copyright_permission": copyright_permission,
-            "guardian_info": guardian_info,
-            "copyright_att": copyright_att,
-        }
+    fields = ["copyright","copyright_att", "underAge","size", "size_text", "guardian_info"]
+    name_to_obj_name = {"underAge":"has_children", "copyright": "has_copyright_permission"}
+    obj = {} 
+    for name in fields: 
+        value = args.pop(name, None)
+        name = name_to_obj_name.get(name,name)
+        if value: 
+            obj[name] = value 
+    return obj 
+
+def get_media_info(media): 
+    if not media: 
+        return {}, False
+    if hasattr(media,"user_upload"):
+        if hasattr(media.user_upload, "info"): 
+            return media.user_upload.info or {}, True
+    return {}, False
