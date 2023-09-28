@@ -1,6 +1,6 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.store.common import make_media_info
+from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.filter_functions import get_vendor_filter_params
 from database.models import Vendor, UserProfile, Media, Community
@@ -191,6 +191,12 @@ class VendorStore:
           else:
             media = Media.objects.filter(id = image[0]).first()
             vendor.logo = media
+
+      if vendor.image:
+        old_image_info, can_save_info = get_media_info(vendor.logo)
+        if can_save_info: 
+          vendor.image.user_upload.info.update({**old_image_info,**image_info})
+          vendor.image.user_upload.save()
       
     
       if onboarding_contact_email:
