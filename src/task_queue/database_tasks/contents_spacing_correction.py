@@ -1,44 +1,126 @@
-from database.models import Action, Event, Testimonial
+import csv
+import datetime
+from django.apps import apps
+from sentry_sdk import capture_message
+from database import models as db_models
+import re
 
+FEATURE_FLAG_KEY = "update-html-format-feature-flag"
+PATTERNS = ["<p><br></p>", "<p>.</p>", "<p>&nbsp;</p>"]
+PATTERN = "|".join(re.escape(p) for p in PATTERNS)
 
-def correct_spacing_in_actions():
-    actions = Action.objects.filter(is_deleted=False)
-    for action in actions:
-        about = action.about.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", "")
-        deep_dive = action.deep_dive.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", "")
-        action.about = about
-        action.deep_dive = deep_dive
-        action.save()
-    return actions.count()
+"""
+This File is used to fix spacing for both universal contents(contents not tied to a community) and content tied to a community.
+There are two parts to this:
+1. Generate a report of the contents that need to be fixed with the following information
+    a. Community: the community the content belongs to
+    b. Content type: whether content is an Action/Event/Testimonial etc.
+    c. Item name: the name or title of the content
+    d. Field name: the field name of the content to be corrected
+    e. Count: the number of occurrences of spacing in the content.
+2. Fix the spacing in the database.
+"""
 
-
-
-def correct_spacing_in_events():
-    events = Event.objects.filter(is_deleted=False)
-    for event in events:
-        description = event.description.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", "")
-        event.description = description
-        event.save()
-    return events.count()
-
-
-def correct_spacing_in_testimonials():
-    testimonials = Testimonial.objects.filter(is_deleted=False)
-    for testimonial in testimonials:
-        body = testimonial.body.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", "")
-        testimonial.body = body
-        testimonial.save()
-    return testimonials.count()
-
-def correct_contents_spacing():
-    actions = correct_spacing_in_actions()
-    print(f"==Corrected {actions} Actions spacing==")
-    events = correct_spacing_in_events()
-    print(f"==Corrected {events} Actions spacing==")
-    testimonials = correct_spacing_in_testimonials()
-    print(f"==Corrected {testimonials} Actions spacing==")
-    return True
+def write_to_csv(data):
+    file_name = f"report-{datetime.datetime.now()}.csv"
+    with open(file_name, mode='w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=["Community", "Content Type","Item Name", "Field Name", "Count"])
+        writer.writeheader()
+        for row in data:
+             writer.writerow(row)
+        return file
+def get_community(instance):
+    if instance and hasattr(instance, "community"):
+        return instance.community.name if instance.community else "N/A"
     
 
+def get_model_instances(model_name, app_label):
+    model = apps.get_model(app_label=app_label, model_name=model_name)
+    filter_args = {} if model_name == "PastEvent" else {"is_deleted": False}
+    model_instances = model.objects.filter(**filter_args)
+    return model,model_instances
 
+def get_table_report(field_name, model_name, app_label):
+    data = []
+    try:
+        model, model_instances = get_model_instances(model_name, app_label)
+        for instance in model_instances:
+            field_value = getattr(instance, field_name)
+            if field_value:
+                count = len(re.findall(PATTERN, field_value))
+                if count > 0:
+                    data.append({
+                        "Community": get_community(instance),
+                        "Content Type": model_name,
+                        "Item Name": instance.name if hasattr(model, "name") else instance.title,
+                        "Field Name": field_name,
+                        "Count": count,
+                    })
+    except LookupError as e:
+        print("==ERROR==", e)
+    return data
+
+
+
+def auto_correct_spacing(field_name, model_name, app_label, enabled_communities):
+    try:
+        model, model_instances = get_model_instances(model_name, app_label)
+        for instance in model_instances:
+            if hasattr(instance, "community"):
+                if instance.community in enabled_communities:
+                    field_value = getattr(instance, field_name)
+                    if field_value:
+                        count = len(re.findall(PATTERN, field_value))
+                        if count > 0:
+                            setattr(instance, field_name, field_value.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", ""))
+                            instance.save()
+            else:
+                # fix spacing for universal items(items not tied to a community)
+                setattr(instance, field_name, field_value.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", ""))
+                instance.save()
+
+
+    except LookupError as e:
+        print("==ERROR==", e)
+        pass
+
+def process_spacing_data(generate_report=False):
+    communities = db_models.Community.objects.filter(is_published=True, is_deleted=False)
+    flag = db_models.FeatureFlag.objects.filter(key=FEATURE_FLAG_KEY).first()
+    if not flag or not flag.enabled():
+        return
+    enabled_communities = flag.enabled_communities(communities)
+
+    data = []
+    models = apps.get_models()
+    for model in models:
+        app_label = model._meta.app_label
+        for field in model._meta.fields:
+            if field.__class__.__name__ == "TextField" and app_label in ["database", "task_queue"]:
+                model_name = model.__name__
+                field_name = field.name
+                if generate_report:
+                    report = get_table_report(field_name, model_name, app_label)
+                    data.extend(report)
+                else:
+                    auto_correct_spacing(field_name, model_name, app_label, enabled_communities)
+
+    if generate_report:
+       return write_to_csv(data)
+    
+
+def generate_spacing_report():
+    try:
+        process_spacing_data(generate_report=True)
+        return True
+    except Exception as e:
+        capture_message(str(e), level="error")
+    
+
+def fix_spacing():
+    try:
+        process_spacing_data(generate_report=False)
+        return True
+    except Exception as e:
+        capture_message(str(e), level="error")
 

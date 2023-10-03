@@ -1,9 +1,10 @@
 
+from task_queue.database_tasks.contents_spacing_correction import fix_spacing, generate_spacing_report
 from task_queue.nudges.cadmin_events_nudge import send_events_nudge
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 from task_queue.nudges.postmark_sender_signature import collect_and_create_signatures
 from task_queue.views import super_admin_nudge, create_snapshots, send_admin_mou_notification
-from task_queue.database_tasks.contents_spacing_correction import correct_contents_spacing
+# from task_queue.database_tasks.contents_spacing_correction import correct_contents_spacing
 
 """
 PLEASE NOTE:
@@ -20,5 +21,6 @@ FUNCTIONS = {
     "User Event Nudge": prepare_user_events_nudge,
     "Create Community Snapshots": create_snapshots,
     "Postmark Sender Signature": collect_and_create_signatures,
-    "Correct Contents Spacing": correct_contents_spacing
+    "Generate Spacing Report": generate_spacing_report,
+    "Fix Contents Spacing": fix_spacing,
 }
