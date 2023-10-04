@@ -2,8 +2,12 @@ import csv
 import datetime
 from django.apps import apps
 from sentry_sdk import capture_message
+from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
+from api.utils.constants import DATA_DOWNLOAD_TEMPLATE
 from database import models as db_models
+from django.http import HttpResponse
 import re
+
 
 FEATURE_FLAG_KEY = "update-html-format-feature-flag"
 PATTERNS = ["<p><br></p>", "<p>.</p>", "<p>&nbsp;</p>"]
@@ -22,13 +26,12 @@ There are two parts to this:
 """
 
 def write_to_csv(data):
-    file_name = f"report-{datetime.datetime.now()}.csv"
-    with open(file_name, mode='w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=["Community", "Content Type","Item Name", "Field Name", "Count"])
-        writer.writeheader()
-        for row in data:
-             writer.writerow(row)
-        return file
+    response = HttpResponse(content_type="text/csv")
+    writer = csv.DictWriter(response, fieldnames=["Community", "Content Type", "Item Name", "Field Name", "Count"])
+    writer.writeheader()
+    for row in data:
+        writer.writerow(row)
+    return response.content
 def get_community(instance):
     if instance and hasattr(instance, "community"):
         return instance.community.name if instance.community else "N/A"
@@ -75,7 +78,6 @@ def auto_correct_spacing(field_name, model_name, app_label, enabled_communities)
                             setattr(instance, field_name, field_value.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", ""))
                             instance.save()
             else:
-                # fix spacing for universal items(items not tied to a community)
                 setattr(instance, field_name, field_value.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", ""))
                 instance.save()
 
@@ -109,12 +111,16 @@ def process_spacing_data(generate_report=False):
        return write_to_csv(data)
     
 
-def generate_spacing_report():
+def generate_spacing_report(task):
     try:
-        process_spacing_data(generate_report=True)
+        report  = process_spacing_data(generate_report=True)
+        temp_data = {'data_type': "Content Spacing", "name":task.creator.full_name if task.creator else "admin"}
+        file_name = "Content-Spacing-Report-{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d"))
+        send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[task.creator.email], report, file_name)
         return True
     except Exception as e:
         capture_message(str(e), level="error")
+        return False
     
 
 def fix_spacing():
@@ -123,4 +129,5 @@ def fix_spacing():
         return True
     except Exception as e:
         capture_message(str(e), level="error")
+        return False
 

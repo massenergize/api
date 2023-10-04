@@ -22,13 +22,14 @@ from django.db.models import Count
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 
 
-def generate_csv_and_email(data, download_type, community_name=None, email=None):
+def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
     response = HttpResponse(content_type="text/csv")
     now = datetime.datetime.now().strftime("%Y%m%d")
-    if not community_name:
-        filename = "all-%s-data-%s.csv" % (download_type, now)
-    else:
-        filename = "%s-%s-data-%s.csv" % (community_name, download_type, now)
+    if not filename:
+        if not community_name:
+            filename = "all-%s-data-%s.csv" % (download_type, now)
+        else:
+            filename = "%s-%s-data-%s.csv" % (community_name, download_type, now)
     writer = csv.writer(response)
     for row in data:
         writer.writerow(row)
