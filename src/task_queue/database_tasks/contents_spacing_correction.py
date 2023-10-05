@@ -54,28 +54,27 @@ def auto_correct_spacing(instance, field_name, field_value):
 
 
 
-def is_feature_enabled(instance, enabled_communities):
-     if hasattr(instance, "community") and instance.community in enabled_communities:
+def is_feature_enabled(instance):
+    communities = db_models.Community.objects.filter(is_deleted=False)
+    flag = db_models.FeatureFlag.objects.filter(key=FEATURE_FLAG_KEY).first()
+    if not flag or not flag.enabled():
+        return False
+    enabled_communities = flag.enabled_communities(communities)
+    if hasattr(instance, "community") and instance.community in enabled_communities:
          return True
-     elif hasattr(instance, "primary_community") and instance.primary_community in enabled_communities:
+    elif hasattr(instance, "primary_community") and instance.primary_community in enabled_communities:
          return True
-     else:
+    else:
          return False
 
 def process_spacing_data(task=None):
     try:
-        communities = db_models.Community.objects.filter(is_published=True, is_deleted=False)
-        flag = db_models.FeatureFlag.objects.filter(key=FEATURE_FLAG_KEY).first()
-        if not flag or not flag.enabled():
-            return
-        enabled_communities = flag.enabled_communities(communities)
-
         data = []
         models = apps.get_models()
         for model in models:
             app_label = model._meta.app_label
             for field in model._meta.fields:
-                if field.__class__.__name__ == "TextField" and app_label in ["database", "task_queue"]:
+                if field.__class__.__name__ == "TextField" and app_label in ["database"]:
                     model_name = model.__name__
                     field_name = field.name
                     model_instances = get_model_instances(model_name, app_label)
@@ -84,7 +83,7 @@ def process_spacing_data(task=None):
                          if field_value:
                             count = len(re.findall(PATTERN, field_value))
                             if count > 0:
-                                if is_feature_enabled(instance, enabled_communities):
+                                if is_feature_enabled(instance):
                                     auto_correct_spacing(instance, field_name, field_value)
                                 else:
                                    data.append({
@@ -103,6 +102,7 @@ def process_spacing_data(task=None):
     
         return True
     except Exception as e:
+        print(str(e))
         capture_message(str(e), level="error")
         return False
   
