@@ -39,7 +39,7 @@ def get_community(instance):
         return instance.community.name if instance.community else ""
     elif instance and hasattr(instance, "primary_community"):
         return instance.primary_community.name if instance.primary_community else ""
-    
+    return "N/A"
 
 def get_model_instances(model_name, app_label):
     model = apps.get_model(app_label=app_label, model_name=model_name)
