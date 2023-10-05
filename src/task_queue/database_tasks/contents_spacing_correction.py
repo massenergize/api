@@ -10,7 +10,7 @@ import re
 
 
 FEATURE_FLAG_KEY = "update-html-format-feature-flag"
-PATTERNS = ["<p><br></p>", "<p>.</p>", "<p>&nbsp;</p>"]
+PATTERNS = ["<p><br></p>", "<p>.</p>", "<p>&nbsp;</p>", "<br />."]
 PATTERN = "|".join(re.escape(p) for p in PATTERNS)
 
 """
@@ -32,6 +32,8 @@ def write_to_csv(data):
     for row in data:
         writer.writerow(row)
     return response.content
+
+
 def get_community(instance):
     if instance and hasattr(instance, "community"):
         return instance.community.name if instance.community else ""
@@ -60,12 +62,14 @@ def is_feature_enabled(instance):
     if not flag or not flag.enabled():
         return False
     enabled_communities = flag.enabled_communities(communities)
-    if hasattr(instance, "community") and instance.community in enabled_communities:
-         return True
-    elif hasattr(instance, "primary_community") and instance.primary_community in enabled_communities:
-         return True
-    else:
-         return False
+    if hasattr(instance, "community"):
+        if not instance.community or instance.community in enabled_communities:
+            return True
+    elif hasattr(instance, "primary_community"):
+        if not instance.primary_community or instance.primary_community in enabled_communities:
+            return True
+    return False
+    
 
 def process_spacing_data(task=None):
     try:
@@ -85,8 +89,8 @@ def process_spacing_data(task=None):
                             if count > 0:
                                 if is_feature_enabled(instance):
                                     auto_correct_spacing(instance, field_name, field_value)
-                                else:
-                                   data.append({
+                                
+                                data.append({
                                         "Community": get_community(instance),
                                         "Content Type": model_name,
                                         "Item Name": instance.name if hasattr(model, "name") else instance.title,
