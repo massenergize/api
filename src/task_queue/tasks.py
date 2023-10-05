@@ -23,7 +23,7 @@ def run_some_task(self, task_id):
         if func:
             task.status= "SCHEDULED"
             task.save()
-            res = func()
+            res = func(task)
             task.status = "SUCCEEDED" if res else "FAILED"
         else:
             task.status = "FAILED"

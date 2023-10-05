@@ -176,7 +176,7 @@ def prepare_events_email_data(events):
 #  this is the function called in jobs.py
 
 
-def send_events_nudge():
+def send_events_nudge(task=None):
     try:
         admins_emailed=[]
         flag = FeatureFlag.objects.get(key=WEEKLY_EVENT_NUDGE)

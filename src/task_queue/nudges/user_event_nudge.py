@@ -246,7 +246,7 @@ Note: This function only get email as argument when the
 nudge is requested on demand by a cadmin on user portal.
 '''
 # Entry point
-def prepare_user_events_nudge(email=None, community_id=None):
+def prepare_user_events_nudge(task=None,email=None, community_id=None):
     try:
         if email and community_id:
             all_community_events = get_community_events(community_id)
