@@ -34,100 +34,77 @@ def write_to_csv(data):
     return response.content
 def get_community(instance):
     if instance and hasattr(instance, "community"):
-        return instance.community.name if instance.community else "N/A"
+        return instance.community.name if instance.community else ""
+    elif instance and hasattr(instance, "primary_community"):
+        return instance.primary_community.name if instance.primary_community else ""
     
 
 def get_model_instances(model_name, app_label):
     model = apps.get_model(app_label=app_label, model_name=model_name)
     filter_args = {} if model_name == "PastEvent" else {"is_deleted": False}
     model_instances = model.objects.filter(**filter_args)
-    return model,model_instances
+    return model_instances
 
-def get_table_report(field_name, model_name, app_label):
-    data = []
+
+def auto_correct_spacing(instance, field_name, field_value):
+    for pattern in PATTERNS:
+        field_value = field_value.replace(pattern, "") 
+    setattr(instance, field_name, field_value)
+    instance.save()
+
+
+
+def is_feature_enabled(instance, enabled_communities):
+     if hasattr(instance, "community") and instance.community in enabled_communities:
+         return True
+     elif hasattr(instance, "primary_community") and instance.primary_community in enabled_communities:
+         return True
+     else:
+         return False
+
+def process_spacing_data(task=None):
     try:
-        model, model_instances = get_model_instances(model_name, app_label)
-        for instance in model_instances:
-            field_value = getattr(instance, field_name)
-            if field_value:
-                count = len(re.findall(PATTERN, field_value))
-                if count > 0:
-                    data.append({
-                        "Community": get_community(instance),
-                        "Content Type": model_name,
-                        "Item Name": instance.name if hasattr(model, "name") else instance.title,
-                        "Field Name": field_name,
-                        "Count": count,
-                    })
-    except LookupError as e:
-        print("==ERROR==", e)
-    return data
+        communities = db_models.Community.objects.filter(is_published=True, is_deleted=False)
+        flag = db_models.FeatureFlag.objects.filter(key=FEATURE_FLAG_KEY).first()
+        if not flag or not flag.enabled():
+            return
+        enabled_communities = flag.enabled_communities(communities)
 
-
-
-def auto_correct_spacing(field_name, model_name, app_label, enabled_communities):
-    try:
-        model, model_instances = get_model_instances(model_name, app_label)
-        for instance in model_instances:
-            if hasattr(instance, "community"):
-                if instance.community in enabled_communities:
-                    field_value = getattr(instance, field_name)
-                    if field_value:
-                        count = len(re.findall(PATTERN, field_value))
-                        if count > 0:
-                            setattr(instance, field_name, field_value.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", ""))
-                            instance.save()
-            else:
-                setattr(instance, field_name, field_value.replace("<p><br></p>", "").replace("<p>.</p>", "").replace("<p>&nbsp;</p>", ""))
-                instance.save()
-
-
-    except LookupError as e:
-        print("==ERROR==", e)
-        pass
-
-def process_spacing_data(generate_report=False):
-    communities = db_models.Community.objects.filter(is_published=True, is_deleted=False)
-    flag = db_models.FeatureFlag.objects.filter(key=FEATURE_FLAG_KEY).first()
-    if not flag or not flag.enabled():
-        return
-    enabled_communities = flag.enabled_communities(communities)
-
-    data = []
-    models = apps.get_models()
-    for model in models:
-        app_label = model._meta.app_label
-        for field in model._meta.fields:
-            if field.__class__.__name__ == "TextField" and app_label in ["database", "task_queue"]:
-                model_name = model.__name__
-                field_name = field.name
-                if generate_report:
-                    report = get_table_report(field_name, model_name, app_label)
-                    data.extend(report)
-                else:
-                    auto_correct_spacing(field_name, model_name, app_label, enabled_communities)
-
-    if generate_report:
-       return write_to_csv(data)
+        data = []
+        models = apps.get_models()
+        for model in models:
+            app_label = model._meta.app_label
+            for field in model._meta.fields:
+                if field.__class__.__name__ == "TextField" and app_label in ["database", "task_queue"]:
+                    model_name = model.__name__
+                    field_name = field.name
+                    model_instances = get_model_instances(model_name, app_label)
+                    for instance in model_instances:
+                         field_value = getattr(instance, field_name)
+                         if field_value:
+                            count = len(re.findall(PATTERN, field_value))
+                            if count > 0:
+                                if is_feature_enabled(instance, enabled_communities):
+                                    auto_correct_spacing(instance, field_name, field_value)
+                                else:
+                                   data.append({
+                                        "Community": get_community(instance),
+                                        "Content Type": model_name,
+                                        "Item Name": instance.name if hasattr(model, "name") else instance.title,
+                                        "Field Name": field_name,
+                                        "Count": count,
+                                    })
+                             
+        if len(data) > 0:
+            report =  write_to_csv(data)
+            temp_data = {'data_type': "Content Spacing", "name":task.creator.full_name if task.creator else "admin"}
+            file_name = "Content-Spacing-Report-{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d"))
+            send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[task.creator.email], report, file_name)
     
-
-def generate_spacing_report(task):
-    try:
-        report  = process_spacing_data(generate_report=True)
-        temp_data = {'data_type': "Content Spacing", "name":task.creator.full_name if task.creator else "admin"}
-        file_name = "Content-Spacing-Report-{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d"))
-        send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[task.creator.email], report, file_name)
         return True
     except Exception as e:
         capture_message(str(e), level="error")
         return False
+  
     
-
-def fix_spacing():
-    try:
-        process_spacing_data(generate_report=False)
-        return True
-    except Exception as e:
-        capture_message(str(e), level="error")
-        return False
 

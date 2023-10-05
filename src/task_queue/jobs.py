@@ -1,16 +1,16 @@
 
-from task_queue.database_tasks.contents_spacing_correction import fix_spacing, generate_spacing_report
+from task_queue.database_tasks.contents_spacing_correction import process_spacing_data
 from task_queue.nudges.cadmin_events_nudge import send_events_nudge
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 from task_queue.nudges.postmark_sender_signature import collect_and_create_signatures
 from task_queue.views import super_admin_nudge, create_snapshots, send_admin_mou_notification
-# from task_queue.database_tasks.contents_spacing_correction import correct_contents_spacing
 
 """
 PLEASE NOTE:
  1- Do not update the dictionary keys.
  2- Do not delete dictionary item if there is a task attached to it.
  3- Make sure to wrap your function in try except and return True or False
+ 4- All tasks from Oct 5th 2023 should have at least one argument(task) which is the task instance.
 
  You can only add new items to the dictionary.
 """
@@ -21,6 +21,5 @@ FUNCTIONS = {
     "User Event Nudge": prepare_user_events_nudge,
     "Create Community Snapshots": create_snapshots,
     "Postmark Sender Signature": collect_and_create_signatures,
-    "Generate Spacing Report": generate_spacing_report,
-    "Fix Contents Spacing": fix_spacing,
+    "Process Content Spacing": process_spacing_data,
 }
