@@ -119,7 +119,8 @@ def SavePic2Media(picURL):
 
 def AverageImpact(action, date=None, locality="default"):
     averageName = action.name + '_average_points'
-    return getDefault(locality, averageName, date)
+    impact = getDefault(locality, averageName, date)
+    return impact
 
 class CarbonCalculator:
     def __init__(self, reset=False) :
@@ -292,39 +293,80 @@ class CarbonCalculator:
                         if item[0] == '':
                             continue
 
-                        qs = Question.objects.filter(name=item[0])
-                        if qs:
-                            qs[0].delete()
-
                         skip = [[],[],[],[],[],[]]
                         for i in range(6):
                             ii = 5+2*i
                             if item[ii]!='' :
                                 skip[i] = item[ii].split(",")
 
-                        question = Question(name=item[0],
-                            category=item[1],
-                            question_text=item[2],
-                            question_type=item[3],
-                            response_1=item[4], skip_1=skip[0],
-                            response_2=item[6], skip_2=skip[1],
-                            response_3=item[8], skip_3=skip[2],
-                            response_4=item[10], skip_4=skip[3],
-                            response_5=item[12], skip_5=skip[4],
-                            response_6=item[14], skip_6=skip[5])
-                        #print('Importing Question ',question.name,': ',question.question_text)
-
+                        minimum_value = maximum_value = typical_value = None
                         if len(item)>19:
                             if len(item[16]):
-                                question.minimum_value = eval(item[16])
+                                minimum_value = eval(item[16])
                             if len(item[17])>0:
-                                question.maximum_value = eval(item[17])
+                                maximum_value = eval(item[17])
                             if len(item[18])>0:
-                                question.typical_value = eval(item[18])
+                                typical_value = eval(item[18])
 
-                        question.save()
-                        num+=1
-                msg = "Imported %d Carbon Calculator Questions" % num
+                        # update the unique Question with this name
+                        qs, created = Question.objects.update_or_create(
+                            name=item[0],
+                            defaults={
+                                'category':item[1],
+                                'question_text':item[2],
+                                'question_type':item[3],
+                                'response_1':item[4], 'skip_1':skip[0],
+                                'response_2':item[6], 'skip_2':skip[1],
+                                'response_3':item[8], 'skip_3':skip[2],
+                                'response_4':item[10], 'skip_4':skip[3],
+                                'response_5':item[12], 'skip_5':skip[4],
+                                'response_6':item[14], 'skip_6':skip[5],
+                                'minimum_value':minimum_value,
+                                'maximum_value':maximum_value,
+                                'typical_value':typical_value
+                            }
+                        )
+
+                        if created:
+                            num += 1
+
+                        #qs = Question.objects.filter(name=item[0])
+                        #if qs:
+                        #    qs[0].delete()
+#
+                        #skip = [[],[],[],[],[],[]]
+                        #for i in range(6):
+                        #    ii = 5+2*i
+                        #    if item[ii]!='' :
+                        #        skip[i] = item[ii].split(",")
+
+                        #question = Question(name=item[0],
+                        #    category=item[1],
+                        #    question_text=item[2],
+                        #    question_type=item[3],
+                        #    response_1=item[4], skip_1=skip[0],
+                        #    response_2=item[6], skip_2=skip[1],
+                        #    response_3=item[8], skip_3=skip[2],
+                        #    response_4=item[10], skip_4=skip[3],
+                        #    response_5=item[12], skip_5=skip[4],
+                        #    response_6=item[14], skip_6=skip[5])
+                        #print('Importing Question ',question.name,': ',question.question_text)
+
+                        #if len(item)>19:
+                        #    if len(item[16]):
+                        #        question.minimum_value = eval(item[16])
+                        #    if len(item[17])>0:
+                        #        question.maximum_value = eval(item[17])
+                        #    if len(item[18])>0:
+                        #        question.typical_value = eval(item[18])
+
+                        #question.save()
+                        #num+=1
+
+                if num>0:
+                    msg = "Imported %d Carbon Calculator Questions" % num
+                else:
+                    msg = "Updated Carbon Calculator Questions from import"
                 print(msg)
                 csvfile.close()
             return True
@@ -350,24 +392,40 @@ class CarbonCalculator:
                         if name == '':
                             continue
 
-                        qs = Action.objects.filter(name=name)
-                        if qs:
-                            qs[0].delete()
+                        # update the unique Action with this name
+                        qs, created = Action.objects.update_or_create(
+                            name=name,
+                            defaults={
+                                'description':item[t["Description"]],
+                                'helptext':item[t["Helptext"]],
+                                'category':item[t["Category"]],
+                                'average_points':int(eval(item[t["Avg points"]])),
+                                'questions':item[t["Questions"]].split(",")
+                            }
+                        )
+                        
+                        if created:
+                            num += 1
 
-                        picture = None
-                        if len(item)>=4 and name!='':
-                            picture = SavePic2Media(item[t["Picture"]])
-                            action = Action(name=item[0],
-                                title = item[t["Title"]],
-                                description=item[t["Description"]],
-                                helptext=item[t["Helptext"]],
-                                category=item[t["Category"]],
-                                average_points=int(eval(item[t["Avg points"]])),
-                                questions=item[t["Questions"]].split(","),
-                                picture = picture)
-                            action.save()
+                        # NOTE - WE ARE SKIPPING THE IMAGES; not currently used, could re-implement later
+                           
+                        #    picture = None
+                        #    if len(item)>=4 and name!='':
+                        #        picture = SavePic2Media(item[t["Picture"]])
+                        #        action = Action(name=item[0],
+                        #            title = item[t["Title"]],
+                        #            description=item[t["Description"]],
+                        #            helptext=item[t["Helptext"]],
+                        #            category=item[t["Category"]],
+                        #            average_points=int(eval(item[t["Avg points"]])),
+                        #            questions=item[t["Questions"]].split(","),
+                        #            picture = picture)
+                        #        action.save()
 
-                msg = "Imported %d Carbon Calculator Actions" % num
+                if num:
+                    msg = "Imported %d Carbon Calculator Actions" % num
+                else:
+                    msg = "Updated Carbon Calculator Actions from import"
                 print(msg)
                 csvfile.close()
             return True

@@ -119,6 +119,7 @@ class CCD():
         if csvfile:
             csvfile.close()
         return status
+    
     def importDefaults(self,fileName):
         csvfile = None
         try:
@@ -126,8 +127,9 @@ class CCD():
             with open(fileName, newline='') as csvfile:
                 inputlist = csv.reader(csvfile)
                 first = True
+                num = 0
                 for item in inputlist:
-                    if first:
+                    if first:   # header row
                         t = {}
                         for i in range(len(item)):
                             it = item[i]
@@ -151,17 +153,18 @@ class CCD():
                         #valid_date = datetime.date(valid_date)
                         valid_date = datetime.strptime(valid_date, "%Y-%m-%d").date()
 
-                        #qs = CalcDefault.objects.filter(variable=variable, locality=locality)
-                        #if qs:
-                        #    qs[0].delete()
-
-                        cd = CalcDefault(variable=variable,
-                                locality=locality,
-                                value=value,
-                                reference=reference,
-                                valid_date = valid_date,
-                                updated=updated)
-                        cd.save()
+                        # update the default value for this variable, localith and valid_date
+                        qs, created = CalcDefault.objects.update_or_create(
+                            variable=variable, 
+                            locality=locality,
+                            valid_date=valid_date,
+                            defaults={
+                                'value':value,
+                                'reference':reference,
+                                'updated':updated
+                            })
+                        if created:
+                            num += 1
 
                         if not locality in self.DefaultsByLocality:
                             self.DefaultsByLocality[locality] = {}
@@ -190,7 +193,11 @@ class CCD():
                             if not f:
                                 var["valid_dates"].append(valid_date)
                                 var["values"].append(value)
- 
+                if num>0:
+                    msg = "Imported %d Carbon Calculator Defaults" % num
+                else:
+                    msg = "Carbon Calculator default values updated"
+                print(msg)       
             status = True
         except Exception as error:
             print("Error importing Carbon Calculator Defaults from CSV file")
