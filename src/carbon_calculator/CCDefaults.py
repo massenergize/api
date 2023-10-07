@@ -28,51 +28,63 @@ def getLocality(inputs):
 def getDefault(locality, variable, date=None):
     return CCD.getDefault(CCD,locality, variable, date)
 
+def removeDuplicates():
+    print("Removing duplicate default values, please wait...")
+    # assuming which duplicate is removed doesn't matter...
+    for row in CalcDefault.objects.all().reverse():
+        if CalcDefault.objects.filter(variable=row.variable, locality=row.locality, valid_date=row.valid_date).count() > 1:
+            print("Purging "+row.variable+" in "+row.locality+" locality, valid from"+str(row.valid_date))
+            row.delete()
+    print("Done!")
+
+
 class CCD():
 
-    DefaultsByLocality = {"default":{}} # the class variable
-    try:
-        cq = CalcDefault.objects.all()
-        for c in cq:
-            # valid date is 0 if not specified
-            date = '2000-01-01'
-            if c.valid_date != None:
-                date = c.valid_date
-
-            if c.locality not in DefaultsByLocality:
-                DefaultsByLocality[c.locality] = {}
-            if c.variable not in DefaultsByLocality[c.locality]:
-                DefaultsByLocality[c.locality][c.variable] = {"valid_dates":[date], "values":[c.value]}
-            else:
-                # already one value for this parameter, order by dates
-                f = False
-                for i in range(len(DefaultsByLocality[c.locality][c.variable]["values"])):
-                    valid_date = DefaultsByLocality[c.locality][c.variable]["valid_dates"][i]
-                    if date < valid_date:
-                        # insert value at this point
-                        f = True
-                        DefaultsByLocality[c.locality][c.variable]["valid_dates"].insert(i,date)
-                        DefaultsByLocality[c.locality][c.variable]["values"].insert(i,c.value)
-                        break
-                    elif date == valid_date:
-                        # multiple values with one date
-                        print('CCDefaults: multiple values with same valid date')
-                        f = True
-                        break
-                
-                # if not inserted into list, append to the end
-                if not f:
-                    DefaultsByLocality[c.locality][c.variable]["valid_dates"].append(date)
-                    DefaultsByLocality[c.locality][c.variable]["values"].append(c.value)
-
-
-    except Exception as e:
-        print(str(e))
-        print("CalcDefault initialization skipped")
-
+    def ready(self):
+        DefaultsByLocality = {"default":{}} # the class variable
+        try:
+            cq = CalcDefault.objects.all()
+            for c in cq:
+                # valid date is 0 if not specified
+                date = '2000-01-01'
+                if c.valid_date != None:
+                    date = c.valid_date
+    
+                if c.locality not in DefaultsByLocality:
+                    DefaultsByLocality[c.locality] = {}
+                if c.variable not in DefaultsByLocality[c.locality]:
+                    DefaultsByLocality[c.locality][c.variable] = {"valid_dates":[date], "values":[c.value]}
+                else:
+                    # already one value for this parameter, order by dates
+                    f = False
+                    for i in range(len(DefaultsByLocality[c.locality][c.variable]["values"])):
+                        valid_date = DefaultsByLocality[c.locality][c.variable]["valid_dates"][i]
+                        if date < valid_date:
+                            # insert value at this point
+                            f = True
+                            DefaultsByLocality[c.locality][c.variable]["valid_dates"].insert(i,date)
+                            DefaultsByLocality[c.locality][c.variable]["values"].insert(i,c.value)
+                            break
+                        elif date == valid_date:
+                            # multiple values with one date; clean this from database
+                            removeDuplicates()
+                            f = True
+                            break
+                        
+                    # if not inserted into list, append to the end
+                    if not f:
+                        DefaultsByLocality[c.locality][c.variable]["valid_dates"].append(date)
+                        DefaultsByLocality[c.locality][c.variable]["values"].append(c.value)
+    
+    
+        except Exception as e:
+            print(str(e))
+            print("CalcDefault initialization skipped")
+    
     def __init__(self):
         print("CCD __init__ called")
 
+        
 
     def getDefault(self, locality, variable, date):
         if locality not in self.DefaultsByLocality:
