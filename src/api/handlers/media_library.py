@@ -37,7 +37,7 @@ class MediaLibraryHandler(RouteHandler):
             return error
         return MassenergizeResponse(data=images)
 
-    @admins_only 
+    @admins_only
     def search(self, request):
         """Filters images and only retrieves content related to a scope(events, testimonials,actions etc). More search types to be added later when requested..."""
         context: Context = request.context
@@ -80,7 +80,9 @@ class MediaLibraryHandler(RouteHandler):
         args: dict = context.args
         self.validator.expect("user_id", str, is_required=True).expect(
             "community_ids", list
-        ).expect("title", str).expect("file", "file", is_required=True).expect(
+        ).expect("publicity", str).expect("title", str).expect(
+            "file", "file", is_required=True
+        ).expect(
             "is_universal", bool
         ).expect(
             "tags", "str_list"
@@ -137,7 +139,7 @@ class MediaLibraryHandler(RouteHandler):
             return error
         return MassenergizeResponse(data=response)
 
-    @admins_only 
+    @admins_only
     def edit_details(self, request):
         """Saves changes to updated image details"""
         context: Context = request.context
@@ -152,7 +154,7 @@ class MediaLibraryHandler(RouteHandler):
             "media_id", int, is_required=True
         ).expect(
             "user_upload_id", int, is_required=True
-        )
+        ).expect("publicity", str)
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err

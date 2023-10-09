@@ -1,5 +1,6 @@
 from functools import reduce
 from django.core.exceptions import ValidationError
+from database.utils.settings.model_constants.user_media_uploads import UserMediaConstants
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -44,6 +45,7 @@ class MediaLibraryStore:
             copyright_att = args.get("copyright_att")
             tags = args.get("tags")
             communities = args.get("community_ids", [])
+            publicity = args.get("publicity", None)
             info = {
                 **(user_media_upload.info or {}),
                 "has_children": under_age,
@@ -60,6 +62,8 @@ class MediaLibraryStore:
                 user_media_upload.communities.clear()
                 user_media_upload.communities.set(communities)
 
+            if publicity: 
+                user_media_upload.publicity = publicity
             user_media_upload.save()
 
             if tags:
@@ -222,8 +226,8 @@ class MediaLibraryStore:
         if most_recent:
             if context.user_is_super_admin:
                 return self.get_most_recent(args, context)
-            else :
-                communities,_ = get_admin_communities(context)
+            else:
+                communities, _ = get_admin_communities(context)
                 args["target_communities"] = [c.id for c in communities]
                 return self.get_most_recent(args, context)
 
@@ -283,8 +287,6 @@ class MediaLibraryStore:
 
         return images, None
 
-   
-
     def remove(self, args, context):
         media_id = args.get("media_id")
         media = Media.objects.get(pk=media_id)
@@ -325,6 +327,7 @@ class MediaLibraryStore:
         is_universal = args.get("is_universal", None)
         communities = user = None
         description = args.get("description", None)
+        publicity = args.get("publicity", None)
         # ---------------------------------------------
         copyright_permission = args.get("copyright", "")
         under_age = args.get("underAge", "")
@@ -361,6 +364,7 @@ class MediaLibraryStore:
             is_universal=is_universal,
             tags=tags,
             info=info,
+            publicity=publicity,
         )
         # ----------------------------------------------------------------
         Spy.create_media_footage(
@@ -379,6 +383,9 @@ class MediaLibraryStore:
         user = kwargs.get("user")
         tags = kwargs.get("tags")
         info = kwargs.get("info")
+        publicity = kwargs.get("publicity", None)
+        if not publicity:
+            publicity = UserMediaConstants.open_to()
         communities = kwargs.get("communities")
         is_universal = kwargs.get("is_universal")
         is_universal = True if is_universal else False
@@ -391,7 +398,11 @@ class MediaLibraryStore:
             file=file,
         )
         user_media = UserMediaUpload(
-            user=user, media=media, is_universal=is_universal, info=info
+            user=user,
+            media=media,
+            is_universal=is_universal,
+            info=info,
+            publicity=publicity,
         )
         user_media.save()
         if media:
