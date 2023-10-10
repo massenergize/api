@@ -28,14 +28,14 @@ from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminate
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
 #from .calcUsers import ExportCalcUsers, CalcUserUpdate
+# uncomment to measure elapsed time
+#import time
 
-CALCULATOR_VERSION = "4.0.1"
+CALCULATOR_VERSION = "4.0.2"
 QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
 ACTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Actions.csv"
 DEFAULTS_DATA = BASE_DIR + "/carbon_calculator/content/defaults.csv"
-#QUESTIONS_DATA = "/carbon_calculator/content/Questions.csv"
-#ACTIONS_DATA = "/carbon_calculator/content/Actions.csv"
-#DEFAULTS_DATA = "/carbon_calculator/content/Defaults.csv"
+TOKEN_POINTS = 15
 
 def fileDateTime(path):
     # file modification
@@ -119,12 +119,13 @@ def SavePic2Media(picURL):
 
 def AverageImpact(action, date=None, locality="default"):
     averageName = action.name + '_average_points'
-    impact = getDefault(locality, averageName, date)
+    impact = getDefault(locality, averageName, date, default=TOKEN_POINTS)
     return impact
 
 class CarbonCalculator:
     def __init__(self, reset=False) :
-        #fails on initial migration during test
+        # uncomment to measure elapsed time
+        #start = time.time()
         try:
             print("Initializing Carbon Calculator, version "+CALCULATOR_VERSION)
 
@@ -190,6 +191,10 @@ class CarbonCalculator:
                 theClass = self.allActions[name]
                 theInstance = theClass(name)
                 self.allActions[name] = theInstance
+
+            # uncomment to measure elapsed time
+            #end = time.time()
+            #print(end - start)
 
         except Exception as e:
             print(str(e))
@@ -385,23 +390,26 @@ class CarbonCalculator:
                     if first:
                         t = {}
                         for i in range(len(item)):
+                            if i==0:
+                                item[i] = 'Name'
                             t[item[i]] = i
                         first = False
                     else:
                         name = item[0]
                         if name == '':
                             continue
-
-                        # update the unique Action with this name
-                        qs, created = Action.objects.update_or_create(
-                            name=name,
-                            defaults={
+                        avg_points = item[t["Avg points"]]
+                        defaults = {
                                 'description':item[t["Description"]],
                                 'helptext':item[t["Helptext"]],
                                 'category':item[t["Category"]],
-                                'average_points':int(eval(item[t["Avg points"]])),
+                                'average_points': int(eval(avg_points)) if avg_points else TOKEN_POINTS,
                                 'questions':item[t["Questions"]].split(",")
                             }
+                        # update the unique Action with this name
+                        qs, created = Action.objects.update_or_create(
+                            name=name,
+                            defaults=defaults
                         )
                         
                         if created:
@@ -458,9 +466,10 @@ class CalculatorAction:
         self.savings = 0
         self.text = "" # "Explanation for the calculated results."
         self.picture = ""
-#
+
+    def Query(self):
         status, actionInfo = QuerySingleAction(self.name)
-        if status == VALID_QUERY:
+        if not self.id and status == VALID_QUERY:
             self.id = actionInfo["id"]
             self.title = actionInfo["title"]
             self.description = actionInfo["description"]
@@ -470,8 +479,6 @@ class CalculatorAction:
             self.picture = actionInfo["picture"]
             self.initialized = True
 
-    def Query(self):
-        status, actionInfo = QuerySingleAction(self.name)
         return {"status":status, "action":actionInfo}
 
     def Eval(self, inputs):

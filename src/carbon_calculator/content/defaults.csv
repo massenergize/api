@@ -56,7 +56,7 @@ elec_cost_heatpump_dryer_low,default,1250,Default value without reference,,2019-
 "elec_cost_heatpump_dryer_low""",default,1200,https://www.greenbuildingadvisor.com/article/heat-pump-clothes-dryers - LG dryer,,2019-10-27 11:28
 elec_cost_induction_stove_low,default,1600,Web: Crane's appliances - Fridgidaire Gallery + $300 for cookware,,2019-10-27 11:15
 elec_cost_smart_power_strip,default,15,Default value without reference,,2019-11-04 10:56
-elec_dryer_average_annual_loads,default,439,Average loads per year: https://neep.org/file/2766/download?token=wn4kylsO,,
+elec_dryer_average_annual_loads,default,439,Average loads per year: https://neep.org/file/2766/download?token=wn4kylsO,,2019-11-04 20:39
 elec_dryer_hpwh_energy_factor,default,3.,Typical value for rebate eligible hpwh,,2020-07-25 18:24
 elec_dryer_load_kwh,default,3.3,Default value without reference,,2019-10-27 16:03
 elec_dryerload_therm_gas,default,0.24,Default value without reference,,2019-10-27 16:09
