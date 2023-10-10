@@ -1209,7 +1209,7 @@ class UserMediaUpload(models.Model):
 
     def simple_json(self):
         res = model_to_dict(
-            self, ["settings", "media", "created_at", "id", "is_universal", "info"]
+            self, ["settings", "media", "created_at", "id", "is_universal", "info", "publicity"]
         )
         res["user"] = get_summary_info(self.user)
         res["image"] = get_json_if_not_none(self.media)

@@ -1,6 +1,8 @@
 from functools import reduce
 from django.core.exceptions import ValidationError
-from database.utils.settings.model_constants.user_media_uploads import UserMediaConstants
+from database.utils.settings.model_constants.user_media_uploads import (
+    UserMediaConstants,
+)
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.footage.FootageConstants import FootageConstants
@@ -52,6 +54,8 @@ class MediaLibraryStore:
                 "has_copyright_permission": copyright_permission,
                 "guardian_info": guardian_info,
                 "copyright_att": copyright_att,
+                "permission_key": args.get("permission_key", None),
+                "permission_notes": args.get("permission_notes", None),
             }
             user_media_upload.info = info
             # user_media_upload.save()
@@ -62,7 +66,7 @@ class MediaLibraryStore:
                 user_media_upload.communities.clear()
                 user_media_upload.communities.set(communities)
 
-            if publicity: 
+            if publicity:
                 user_media_upload.publicity = publicity
             user_media_upload.save()
 
@@ -344,6 +348,8 @@ class MediaLibraryStore:
             "has_copyright_permission": copyright_permission,
             "guardian_info": guardian_info,
             "copyright_att": copyright_att,
+            "permission_key": args.get("permission_key", None),
+            "permission_notes": args.get("permission_notes", None),
         }
 
         try:

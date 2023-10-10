@@ -3,6 +3,7 @@ from _main_.utils.route_handler import RouteHandler
 from api.decorators import admins_only
 from api.services.media_library import MediaLibraryService
 from _main_.utils.massenergize_response import MassenergizeResponse
+from api.store.common import expect_media_fields
 
 
 class MediaLibraryHandler(RouteHandler):
@@ -86,21 +87,8 @@ class MediaLibraryHandler(RouteHandler):
             "is_universal", bool
         ).expect(
             "tags", "str_list"
-        ).expect(
-            "size", str
-        ).expect(
-            "size_text", str
-        ).expect(
-            "description"
-        ).expect(
-            "underAge", bool
-        ).expect(
-            "copyright", bool
-        ).expect(
-            "copyright_att", str
-        ).expect(
-            "guardian_info", str
         )
+        self = expect_media_fields(self)
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
@@ -144,9 +132,7 @@ class MediaLibraryHandler(RouteHandler):
         """Saves changes to updated image details"""
         context: Context = request.context
         args: dict = context.args
-        self.validator.expect("description").expect("underAge", bool).expect(
-            "copyright", bool
-        ).expect("copyright_att", str).expect("guardian_info", str).expect(
+        self.validator.expect(
             "tags", "str_list"
         ).expect(
             "community_ids", list
@@ -155,6 +141,7 @@ class MediaLibraryHandler(RouteHandler):
         ).expect(
             "user_upload_id", int, is_required=True
         ).expect("publicity", str)
+        self = expect_media_fields(self)
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
