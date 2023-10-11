@@ -204,7 +204,9 @@ class MediaLibraryStore:
             else:
                 query |= qObj
 
+        count = 0
         if not upper_limit and not lower_limit:
+            count = Media.objects.filter(query).distinct().count()
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
             images = (
@@ -213,7 +215,27 @@ class MediaLibraryStore:
                 .exclude(id__gte=lower_limit, id__lte=upper_limit)
                 .order_by("-id")[:limit]
             )
-        return images, None
+        return images, {"total": count}, None
+
+    def get_public_images(self, args):
+        upper_limit = args.get("upper_limit")
+        lower_limit = args.get("lower_limit")
+        count = 0
+        if not upper_limit and not lower_limit:
+            count = Media.objects.filter(
+                user_upload__publicity=UserMediaConstants.open()
+            ).count()
+            images = Media.objects.filter(
+                user_upload__publicity=UserMediaConstants.open()
+            ).order_by("-id")[:limit]
+        else:
+            images = (
+                Media.objects.filter(user_upload__publicity=UserMediaConstants.open())
+                .exclude(id__gte=lower_limit, id__lte=upper_limit)
+                .order_by("-id")[:limit]
+            )
+
+        return images, {"total": count}, None
 
     def search(self, args, context: Context):
         community_ids = args.get("target_communities", [])
@@ -223,7 +245,11 @@ class MediaLibraryStore:
         other_admins = not mine and other_admins
         search_by_community = not most_recent and community_ids
         keywords = args.get("keywords", [])
+        public = args.get("public", False)
 
+
+        if public: 
+            return self.get_public_images(args)
         if keywords:
             return self.get_by_keywords(args)
 
@@ -245,7 +271,7 @@ class MediaLibraryStore:
         if other_admins:
             return self.get_uploads_by_user(args)
 
-        return [], None
+        return [], {}, None
 
     def get_by_keywords(self, args):
         words = args.get("keywords", [])
@@ -263,7 +289,9 @@ class MediaLibraryStore:
             else:
                 query |= queryObj
 
+        count = 0
         if not upper_limit and not lower_limit:
+            count = Media.objects.filter(query).distinct().count()
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
             images = (
@@ -273,13 +301,14 @@ class MediaLibraryStore:
                 .order_by("-id")[:limit]
             )
 
-        return images, None
+        return images, {"total": count}, None
 
     def get_uploads_by_user(self, args):
         user_ids = args.get("user_ids", [])
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         query = Q(user_upload__user__id__in=user_ids)
+        count = 0
         if upper_limit and lower_limit:
             images = (
                 Media.objects.filter(query)
@@ -287,9 +316,10 @@ class MediaLibraryStore:
                 .order_by("-id")[:limit]
             )
         else:
+            count = Media.objects.filter(query).count()
             images = Media.objects.filter(query).order_by("-id")[:limit]
 
-        return images, None
+        return images, {"total": count}, None
 
     def remove(self, args, context):
         media_id = args.get("media_id")

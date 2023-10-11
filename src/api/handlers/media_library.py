@@ -49,7 +49,7 @@ class MediaLibraryHandler(RouteHandler):
             "user_ids", "str_list"
         ).expect(
             "keywords", "str_list"
-        )
+        ).expect("public", str)
         args, err = self.validator.verify(args, strict=True)
         if err:
             return err
