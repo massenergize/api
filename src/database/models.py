@@ -1171,7 +1171,32 @@ class PolicyAcceptanceRecords(models.Model):
 
 
 class UserMediaUpload(models.Model):
-    """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded"""
+    """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded
+    
+    Attributes
+    ----------
+    user : UserProfile
+    A user profile object of the currently signed in user who uploaded the media 
+
+    communities: Community 
+    All communities that have access to the attached media object 
+
+    media : Media 
+    A reference to the actual media object
+
+    is_universal: bool
+    True/False value that indicates whether or not an image is open to everyone. 
+    PS: Its no longer being used (as at 12/10/23). We want more than two states, so we now use "publicity" 
+
+    publicity: str 
+    This value is used to determine whether or not an upload is OPEN_TO specific communities, CLOSED_TO, or wide open  to any communities check UserMediaConstants for all the available options
+
+    info: JSON 
+    Json field that stores very important information about the attached media. Example: has_copyright_permission,copyright_att,guardian_info,size etc.
+
+    settings: JSON 
+    Just another field to store more information about the media (I dont think we use this...)
+    """
 
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(

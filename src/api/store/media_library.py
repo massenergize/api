@@ -204,9 +204,8 @@ class MediaLibraryStore:
             else:
                 query |= qObj
 
-        count = 0
+        count = Media.objects.filter(query).distinct().count()
         if not upper_limit and not lower_limit:
-            count = Media.objects.filter(query).distinct().count()
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
             images = (
@@ -220,11 +219,10 @@ class MediaLibraryStore:
     def get_public_images(self, args):
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
-        count = 0
-        if not upper_limit and not lower_limit:
-            count = Media.objects.filter(
+        count = Media.objects.filter(
                 user_upload__publicity=UserMediaConstants.open()
             ).count()
+        if not upper_limit and not lower_limit:
             images = Media.objects.filter(
                 user_upload__publicity=UserMediaConstants.open()
             ).order_by("-id")[:limit]
@@ -289,9 +287,8 @@ class MediaLibraryStore:
             else:
                 query |= queryObj
 
-        count = 0
+        count = Media.objects.filter(query).distinct().count()
         if not upper_limit and not lower_limit:
-            count = Media.objects.filter(query).distinct().count()
             images = Media.objects.filter(query).distinct().order_by("-id")[:limit]
         else:
             images = (
@@ -308,7 +305,7 @@ class MediaLibraryStore:
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         query = Q(user_upload__user__id__in=user_ids)
-        count = 0
+        count = Media.objects.filter(query).count()
         if upper_limit and lower_limit:
             images = (
                 Media.objects.filter(query)
@@ -316,7 +313,6 @@ class MediaLibraryStore:
                 .order_by("-id")[:limit]
             )
         else:
-            count = Media.objects.filter(query).count()
             images = Media.objects.filter(query).order_by("-id")[:limit]
 
         return images, {"total": count}, None
