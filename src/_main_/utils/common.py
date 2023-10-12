@@ -4,8 +4,6 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
 from datetime import datetime, timedelta
-#import cv2
-from datetime import datetime
 from dateutil import tz
 from sentry_sdk import capture_message
 import base64

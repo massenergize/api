@@ -4,7 +4,8 @@
 #imports
 import os
 import pytz
-from datetime import datetime
+from dateutil import tz
+from datetime import datetime, date
 from .models import Action, Question, CarbonCalculatorMedia, CalcDefault, Version
 #from django.utils import timezone
 from _main_.settings import BASE_DIR
@@ -60,14 +61,15 @@ def versionCheck():
                        fileDateTime(ACTIONS_DATA),
                        fileDateTime(DEFAULTS_DATA))
 
+    today = str(date.today())
     if version.version != CALCULATOR_VERSION: 
         version.version = CALCULATOR_VERSION
-        version.note = "Calculator version update on "+str(datetime.today())
+        version.note = "Calculator version update on "+today
         print(version.note)
         version.save()
         return False    # reload data
     elif version.updated_on < files_updated:
-        version.note = "Calculator data update on "+str(datetime.today())
+        version.note = "Calculator data update on "+today
         print(version.note)
         version.save()
         return False    # reload data
@@ -400,6 +402,7 @@ class CarbonCalculator:
                             continue
                         avg_points = item[t["Avg points"]]
                         defaults = {
+                                'title':item[t["Title"]],
                                 'description':item[t["Description"]],
                                 'helptext':item[t["Helptext"]],
                                 'category':item[t["Category"]],
