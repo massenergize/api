@@ -8,7 +8,6 @@ from database.models import Community, Action, FeatureFlag
 from carbon_calculator.models import Action as CCAction
 from django.http import HttpResponse
 from _main_.settings import BASE_DIR
-import re
 
 
 FEATURE_FLAG_KEY = "update-actions-content-feature-flag"
@@ -34,32 +33,6 @@ def write_to_csv(data):
         writer.writerow(row)
     return response.content
 
-
-#def get_community(instance):
-#    if instance and hasattr(instance, "community"):
-#        return instance.community.name if instance.community else ""
-#    return "N/A"
-
-#def get_model_instances(model_name, app_label):
-#    model = apps.get_model(app_label=app_label, model_name=model_name)
-#    filter_args = {} if model_name == "PastEvent" else {"is_deleted": False}
-#    model_instances = model.objects.filter(**filter_args)
-#    return model_instances
-
-#def is_feature_enabled(instance):
-#    communities = db_models.Community.objects.filter(is_deleted=False)
-#    flag = db_models.FeatureFlag.objects.filter(key=FEATURE_FLAG_KEY).first()
-#    if not flag or not flag.enabled():
-#        return False
-#    enabled_communities = flag.enabled_communities(communities)
-#    if hasattr(instance, "community"):
-#        if not instance.community or instance.community in enabled_communities:
-#            return True
-#    elif hasattr(instance, "primary_community"):
-#        if not instance.primary_community or instance.primary_community in enabled_communities:
-#            return True
-#    return False
-    
 
 def update_actions_content(task=None):
     try:
@@ -106,7 +79,7 @@ def update_actions_content(task=None):
                     action_title = item[t["Action"]]
                     impact = item[t["Impact"]]
                     cost = item[t["Cost"]]
-                    category = item[t["Category"]]
+                    #category = item[t["Category"]]
                     ccActionName = item[t["Carbon Calculator Action"]]
 
                     # locate the Action from title and community
@@ -125,7 +98,6 @@ def update_actions_content(task=None):
                                 "Impact": impact,
                                 "Cost": cost,
                                 }
-                            print(line)
                             data.append(line)
                             
                             if update_enabled:
