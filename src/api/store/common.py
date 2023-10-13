@@ -147,7 +147,6 @@ def sign_mou(mou_rich_text, user=None, date=None):
     )
 
 
-
 def expect_media_fields(self):
     self.validator.expect("size", str).expect("size_text", str).expect(
         "description"
@@ -161,24 +160,38 @@ def expect_media_fields(self):
         "permission_notes", str
     )
     return self
-    
 
 
-def make_media_info(args): 
-    fields = ["copyright","copyright_att", "underAge","size", "size_text", "guardian_info"]
-    name_to_obj_name = {"underAge":"has_children", "copyright": "has_copyright_permission"}
-    obj = {} 
-    for name in fields: 
+def make_media_info(args):
+    """Request arg names are different from how they are stored on the media object, so this function corrects the naming and makes sure it matches the structure that is actually saved on the media object"""
+    fields = [
+        "copyright",
+        "copyright_att",
+        "underAge",
+        "size",
+        "size_text",
+        "guardian_info",
+        "permission_key", 
+        "permission_notes"
+    ]
+    name_to_obj_name = {
+        "underAge": "has_children",
+        "copyright": "has_copyright_permission",
+    }
+    obj = {}
+    for name in fields:
         value = args.pop(name, None)
-        name = name_to_obj_name.get(name,name)
-        if value: 
-            obj[name] = value 
-    return obj 
+        name = name_to_obj_name.get(name, name)
+        if value:
+            obj[name] = value
+    return obj
 
-def get_media_info(media): 
-    if not media: 
+
+def get_media_info(media):
+    """Retrieves media info from media object"""
+    if not media:
         return {}, False
-    if hasattr(media,"user_upload"):
-        if hasattr(media.user_upload, "info"): 
+    if hasattr(media, "user_upload"):
+        if hasattr(media.user_upload, "info"):
             return media.user_upload.info or {}, True
     return {}, False

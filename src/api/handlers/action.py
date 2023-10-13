@@ -6,6 +6,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 #from types import FunctionType as function
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
+from api.store.common import expect_media_fields
 
 
 class ActionHandler(RouteHandler):
@@ -90,20 +91,8 @@ class ActionHandler(RouteHandler):
       .expect("image", "file", is_required=False, options={"is_logo": True})
       .expect("vendors", list, is_required=False)
       .expect("action_id", str, is_required=False)
-      .expect(
-            "underAge", bool,
-        ).expect(
-            "copyright", bool,
-        ).expect(
-            "copyright_att", str,
-        ).expect(
-            "guardian_info", str,
-        ).expect(
-            "size", str
-        ).expect(
-            "size_text", str
-        )
     )
+    self = expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:
@@ -163,6 +152,8 @@ class ActionHandler(RouteHandler):
       .expect("tags", list, is_required=False)
       .expect("vendors", list, is_required=False)
     )
+
+    self = expect_media_fields(self)
 
     args, err = self.validator.verify(args)
     if err:
