@@ -96,17 +96,7 @@ class TestimonialStore:
           new_testimonial.user = user
 
       
-      if images:
-        if type(images) == list:
-          # from admin portal, using media library
-          image = Media.objects.filter(id = images[0]).first(); 
-          new_testimonial.image = image
-        else:
-          # from community portal, image upload
-          images.name = unique_media_filename(images)
-          image = Media.objects.create(file=images, name=f"ImageFor {args.get('title', '')} Testimonial")
-          new_testimonial.image = image
-          makeUserUpload(media = image,info=image_info, user = user)
+      
 
 
       if action:
@@ -122,6 +112,21 @@ class TestimonialStore:
         new_testimonial.community = testimonial_community
       else:
         testimonial_community = None
+
+      if images:
+        if type(images) == list:
+          # from admin portal, using media library
+          image = Media.objects.filter(id = images[0]).first(); 
+          new_testimonial.image = image
+        else:
+          # from community portal, image upload
+          images.name = unique_media_filename(images)
+          image = Media.objects.create(file=images, name=f"ImageFor {args.get('title', '')} Testimonial")
+          new_testimonial.image = image
+
+          user_media_upload = makeUserUpload(media = image,info=image_info, user = user,communities=[testimonial_community])
+          user_media_upload.user = user 
+          user_media_upload.save()
 
       tags_to_set = []
       for t in tags:
@@ -182,6 +187,13 @@ class TestimonialStore:
       testimonials.update(**args)
       testimonial = testimonials.first() # refresh after update
 
+      if community:
+        testimonial_community = Community.objects.filter(id=community).first()
+        if testimonial_community:
+          testimonial.community = testimonial_community
+        else:
+          testimonial.community = None
+
       if images:
             if type(images) == list:
                 if images[0] == RESET: 
@@ -195,7 +207,7 @@ class TestimonialStore:
                 else:
                     image = Media.objects.create(file=images, name=f"ImageFor {testimonial.title} Testimonial")
                     testimonial.image = image
-                    makeUserUpload(media = image,info=image_info, user = testimonial.user)
+                    makeUserUpload(media = image,info=image_info, user = testimonial.user,communities=[testimonial_community])
       
       if testimonial.image:
         old_image_info, can_save_info = get_media_info(testimonial.image)
@@ -215,12 +227,7 @@ class TestimonialStore:
       else:
         testimonial.vendor = None
 
-      if community:
-        testimonial_community = Community.objects.filter(id=community).first()
-        if testimonial_community:
-          testimonial.community = testimonial_community
-        else:
-          testimonial.community = None
+
 
       if rank:
           testimonial.rank = rank

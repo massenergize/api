@@ -83,11 +83,15 @@ class VendorStore:
         args['location'] = None
 
       new_vendor = Vendor.objects.create(**args)
+
+      if communities:
+        new_vendor.communities.set(communities)
+
       if images:
         if user_submitted:
           name=f"ImageFor {new_vendor.name} Vendor"
           logo = Media.objects.create(name=name, file=images)
-          user_media_upload = makeUserUpload(media = logo,info=image_info)
+          user_media_upload = makeUserUpload(media = logo,info=image_info,communities=new_vendor.communities)
           
         else:
            logo = Media.objects.filter(pk = images[0]).first()
@@ -117,8 +121,7 @@ class VendorStore:
       
       new_vendor.save()
 
-      if communities:
-        new_vendor.communities.set(communities)
+      
 
       if tags:
         new_vendor.tags.set(tags)
@@ -184,7 +187,8 @@ class VendorStore:
           else:
             image= Media.objects.create(file=images, name=f'ImageFor {vendor.name} Vendor')
             vendor.logo = image
-            makeUserUpload(media = image,info=image_info, user=vendor.user)
+            makeUserUpload(media = image,info=image_info, user=vendor.user,communities=vendor.communities)
+            
         else:
           if images[0] == RESET: #if image is reset, delete the existing image
             vendor.logo = None

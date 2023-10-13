@@ -170,6 +170,7 @@ class VendorHandler(RouteHandler):
       .expect("location", "location", is_required=False)
     )
 
+    self = expect_media_fields(self)
     args, err = self.validator.verify(args)
     if err:
       return err

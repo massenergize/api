@@ -312,6 +312,8 @@ class EventHandler(RouteHandler):
     self.validator.expect("event_type",str)
     self.validator.expect("publicity_selections","str_list")
     self.validator.expect("shared_to","str_list")
+
+    self = expect_media_fields(self)
     args, err = self.validator.verify(args)
 
     if err:

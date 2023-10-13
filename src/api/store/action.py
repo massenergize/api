@@ -94,7 +94,7 @@ class ActionStore:
           name = f'ImageFor {new_action.title} Action'
           media = Media.objects.create(name=name, file=images)
           # create user media upload here 
-          user_media_upload = makeUserUpload(media = media,info=image_info)
+          user_media_upload = makeUserUpload(media = media,info=image_info, communities=[community])
           
         else:
           media = Media.objects.filter(pk = images[0]).first()
@@ -243,6 +243,14 @@ class ActionStore:
       actions.update(**args)
       action = actions.first()  # refresh after update
 
+
+      if community_id and not args.get('is_global', False):
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          action.community = community
+        else:
+          action.community = None
+
       if image: #now, images will always come as an array of ids, or "reset" string 
         if user_submitted:
           if "ImgToDel" in image:
@@ -250,7 +258,7 @@ class ActionStore:
           else:
             image= Media.objects.create(file=image, name=f'ImageFor {action.title} Action')
             action.image = image
-            makeUserUpload(media = media,info=image_info, user = action.user) 
+            makeUserUpload(media = image,info=image_info, user = action.user, communities=[community]) 
         else:
           if image[0] == RESET: #if image is reset, delete the existing image
             action.image = None
@@ -273,12 +281,7 @@ class ActionStore:
       if vendors:
         action.vendors.set(vendors)
 
-      if community_id and not args.get('is_global', False):
-        community = Community.objects.filter(id=community_id).first()
-        if community:
-          action.community = community
-        else:
-          action.community = None
+      
 
       if calculator_action:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()

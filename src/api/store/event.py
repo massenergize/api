@@ -309,7 +309,7 @@ class EventStore:
         if user_submitted:
           name= f'ImageFor {new_event.name} Event'
           media = Media.objects.create(name=name, file=image)
-          user_media_upload = makeUserUpload(media = media,info=image_info)
+          user_media_upload = makeUserUpload(media = media,info=image_info,communities=[community])
         else: 
           media = Media.objects.filter(pk = image[0]).first()
         new_event.image = media
@@ -486,6 +486,13 @@ class EventStore:
       events.update(**args)
       event: Event = events.first()
 
+      if community_id:
+        community = Community.objects.filter(pk=community_id).first()
+        if community:
+          event.community = community
+        else:
+          event.community = None
+
       if image: #now, images will always come as an array of ids, or "reset" string 
         if user_submitted:
           if "ImgToDel" in image:
@@ -493,7 +500,7 @@ class EventStore:
           else:
             image= Media.objects.create(file=image, name=f'ImageFor {event.name} Event')
             event.image = image
-            makeUserUpload(media = media,info=image_info, user = event.user)
+            makeUserUpload(media = image,info=image_info, user = event.user , communities=[community])
         else:
           if image[0] == RESET: #if image is reset, delete the existing image
             event.image = None
@@ -509,12 +516,7 @@ class EventStore:
           event.image.user_upload.save()
     
       
-      if community_id:
-        community = Community.objects.filter(pk=community_id).first()
-        if community:
-          event.community = community
-        else:
-          event.community = None
+      
 
       if tags:
         event.tags.set(tags)

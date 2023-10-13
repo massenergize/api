@@ -146,6 +146,8 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('action_id', 'action')
     self.validator.rename('vendor_id', 'vendor')
     self.validator.expect("image", "str_list")
+
+    self = expect_media_fields(self)
     args, err = self.validator.verify(args)
 
     if err:
