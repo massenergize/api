@@ -4,12 +4,10 @@
 #imports
 import os
 import pytz
-from dateutil import tz
 from datetime import datetime, date
-from .models import Action, Question, CarbonCalculatorMedia, CalcDefault, Version
-#from django.utils import timezone
-from _main_.settings import BASE_DIR
-
+from .models import Action, Question, CarbonCalculatorMedia, Version
+from _main_.settings import BASE_DIR, RUN_SERVER_LOCALLY
+import time
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils.text import slugify
@@ -28,9 +26,6 @@ from .hotWater import EvalHotWaterAssessment, EvalHeatPumpWaterHeater, EvalSolar
 from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminateCar, EvalReduceFlights, EvalOffsetFlights
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
-#from .calcUsers import ExportCalcUsers, CalcUserUpdate
-# uncomment to measure elapsed time
-#import time
 
 CALCULATOR_VERSION = "4.0.2"
 QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
@@ -126,8 +121,8 @@ def AverageImpact(action, date=None, locality="default"):
 
 class CarbonCalculator:
     def __init__(self, reset=False) :
-        # uncomment to measure elapsed time
-        #start = time.time()
+
+        start = time.time()
         try:
             print("Initializing Carbon Calculator, version "+CALCULATOR_VERSION)
 
@@ -194,9 +189,9 @@ class CarbonCalculator:
                 theInstance = theClass(name)
                 self.allActions[name] = theInstance
 
-            # uncomment to measure elapsed time
-            #end = time.time()
-            #print(end - start)
+            end = time.time()
+            if RUN_SERVER_LOCALLY:
+                print("Carbon Calculator initialization time: "+str(end - start)+" seconds")
 
         except Exception as e:
             print(str(e))
@@ -337,39 +332,6 @@ class CarbonCalculator:
                         if created:
                             num += 1
 
-                        #qs = Question.objects.filter(name=item[0])
-                        #if qs:
-                        #    qs[0].delete()
-#
-                        #skip = [[],[],[],[],[],[]]
-                        #for i in range(6):
-                        #    ii = 5+2*i
-                        #    if item[ii]!='' :
-                        #        skip[i] = item[ii].split(",")
-
-                        #question = Question(name=item[0],
-                        #    category=item[1],
-                        #    question_text=item[2],
-                        #    question_type=item[3],
-                        #    response_1=item[4], skip_1=skip[0],
-                        #    response_2=item[6], skip_2=skip[1],
-                        #    response_3=item[8], skip_3=skip[2],
-                        #    response_4=item[10], skip_4=skip[3],
-                        #    response_5=item[12], skip_5=skip[4],
-                        #    response_6=item[14], skip_6=skip[5])
-                        #print('Importing Question ',question.name,': ',question.question_text)
-
-                        #if len(item)>19:
-                        #    if len(item[16]):
-                        #        question.minimum_value = eval(item[16])
-                        #    if len(item[17])>0:
-                        #        question.maximum_value = eval(item[17])
-                        #    if len(item[18])>0:
-                        #        question.typical_value = eval(item[18])
-
-                        #question.save()
-                        #num+=1
-
                 if num>0:
                     msg = "Imported %d Carbon Calculator Questions" % num
                 else:
@@ -385,53 +347,38 @@ class CarbonCalculator:
     def ImportActions(self, actionsFile):
         try:
             with open(actionsFile, newline='') as csvfile:
-                inputlist = csv.reader(csvfile)
-                first = True
+                reader = csv.reader(csvfile)
                 num = 0
-                for item in inputlist:
-                    if first:
-                        t = {}
-                        for i in range(len(item)):
-                            if i==0:
-                                item[i] = 'Name'
-                            t[item[i]] = i
-                        first = False
-                    else:
-                        name = item[0]
-                        if name == '':
-                            continue
-                        avg_points = item[t["Avg points"]]
-                        defaults = {
-                                'title':item[t["Title"]],
-                                'description':item[t["Description"]],
-                                'helptext':item[t["Helptext"]],
-                                'category':item[t["Category"]],
-                                'average_points': int(eval(avg_points)) if avg_points else TOKEN_POINTS,
-                                'questions':item[t["Questions"]].split(",")
-                            }
-                        # update the unique Action with this name
-                        qs, created = Action.objects.update_or_create(
-                            name=name,
-                            defaults=defaults
-                        )
-                        
-                        if created:
-                            num += 1
 
-                        # NOTE - WE ARE SKIPPING THE IMAGES; not currently used, could re-implement later
-                           
-                        #    picture = None
-                        #    if len(item)>=4 and name!='':
-                        #        picture = SavePic2Media(item[t["Picture"]])
-                        #        action = Action(name=item[0],
-                        #            title = item[t["Title"]],
-                        #            description=item[t["Description"]],
-                        #            helptext=item[t["Helptext"]],
-                        #            category=item[t["Category"]],
-                        #            average_points=int(eval(item[t["Avg points"]])),
-                        #            questions=item[t["Questions"]].split(","),
-                        #            picture = picture)
-                        #        action.save()
+                # dictionary of column indices by heading
+                column_index = {}
+                headers = next(reader, None)
+                for index in range(len(headers)):
+                    heading = headers[index] if index!=0 else 'Name'
+                    column_index[heading] = index
+
+                for item in reader:
+                    name = item[0]
+                    if name == '':
+                        continue
+                    avg_points = item[column_index["Avg points"]]
+                    defaults = {
+                            'title':item[column_index["Title"]],
+                            'description':item[column_index["Description"]],
+                            'helptext':item[column_index["Helptext"]],
+                            'category':item[column_index["Category"]],
+                            'average_points': int(eval(avg_points)) if avg_points else TOKEN_POINTS,
+                            'questions':item[column_index["Questions"]].split(",")
+                        }
+
+                    # update the unique Action with this name
+                    qs, created = Action.objects.update_or_create(
+                        name=name,
+                        defaults=defaults
+                    )
+                    
+                    if created:
+                        num += 1
 
                 if num:
                     msg = "Imported %d Carbon Calculator Actions" % num

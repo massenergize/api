@@ -4,22 +4,22 @@ from datetime import datetime
 from django.utils import timezone
 import csv
 
+current_tz = timezone.get_current_timezone()
+
 def getLocality(inputs):
-    id = inputs.get("user_id","")
+
     community = inputs.get("community","")
-    #userID = inputs.get("user_id","")
     locality = "default"
     
-#    if id != "":
-#        loc = CalcUserLocality(id)
-#        if loc:
-#            locality = loc
-#
-#    elif community != "":
     if community != "":
         locality = community
 
     return locality
+
+
+def localized_time(time_string):
+    time = datetime.strptime(time_string, '%Y-%m-%d  %H:%M')
+    return current_tz.localize(time)
 
 
 def getDefault(locality, variable, date=None, default=None):
@@ -34,6 +34,9 @@ def removeDuplicates():
 class CCD():
     DefaultsByLocality = {"default":{}} # the class variable
 
+    # This initialization routine runs when database ready to access
+    # Purpose: load Carbon Calculator constants into DefaultByLocality for routine access
+    # For each variable, there is a list of values for different localities and valid_dates, ordered by date
     def ready(self):
         self.DefaultsByLocality = {"default":{}} # the class variable
         try:
@@ -50,23 +53,22 @@ class CCD():
                     self.DefaultsByLocality[c.locality][c.variable] = {"valid_dates":[date], "values":[c.value]}
                 else:
                     # already one value for this parameter, order by dates
-                    f = False
+                    found = False
                     for i in range(len(self.DefaultsByLocality[c.locality][c.variable]["values"])):
                         valid_date = self.DefaultsByLocality[c.locality][c.variable]["valid_dates"][i]
                         if date < valid_date:
                             # insert value at this point
-                            f = True
+                            found = True
                             self.DefaultsByLocality[c.locality][c.variable]["valid_dates"].insert(i,date)
                             self.DefaultsByLocality[c.locality][c.variable]["values"].insert(i,c.value)
                             break
                         elif date == valid_date:
-                            # multiple values with one date; clean this from database
-                            print("Duplicate encountered")
-                            f = True
+                            # multiple values with one date; skip
+                            found = True
                             break
                         
                     # if not inserted into list, append to the end
-                    if not f:
+                    if not found:
                         self.DefaultsByLocality[c.locality][c.variable]["valid_dates"].append(date)
                         self.DefaultsByLocality[c.locality][c.variable]["values"].append(c.value)
 
@@ -74,9 +76,6 @@ class CCD():
         except Exception as e:
             print(str(e))
             print("CalcDefault initialization skipped")
-
-    def __init__(self):
-        print("CCD __init__ called")        
 
     def getDefault(self, locality, variable, date, default=None):
         if locality not in self.DefaultsByLocality:
@@ -133,77 +132,73 @@ class CCD():
         try:
             status = True
             with open(fileName, newline='') as csvfile:
-                inputlist = csv.reader(csvfile)
-                first = True
+                reader = csv.reader(csvfile)
+
+                # dictionary of column indices by heading
+                column_index = {}
+                headers = next(reader, None)
+                for index in range(len(headers)):
+                    heading = headers[index] if index!=0 else 'Variable'
+                    column_index[heading] = index
+
                 num = 0
-                for item in inputlist:
-                    if first:   # header row
-                        t = {}
-                        for i in range(len(item)):
-                            it = item[i]
-                            if i == 0:
-                                it = 'Variable'
-                            t[it] = i
-                        first = False
+                for item in reader:
+                    if len(item)<6 or item[0] == '' or item[1] == '':
+                        continue
+
+                    variable = item[column_index["Variable"]]
+                    locality = item[column_index["Locality"]]
+                    valid_date = item[column_index["Valid Date"]]
+                    value = eval(item[column_index["Value"]])
+                    reference = item[column_index["Reference"]]
+                    updated = localized_time(item[column_index["Updated"]])
+
+                    if not valid_date or valid_date=="":
+                        valid_date = '2000-01-01'
+
+                    #valid_date = datetime.date(valid_date)
+                    valid_date = datetime.strptime(valid_date, "%Y-%m-%d").date()
+
+                    # update the default value for this variable, localith and valid_date
+                    qs, created = CalcDefault.objects.update_or_create(
+                        variable=variable, 
+                        locality=locality,
+                        valid_date=valid_date,
+                        defaults={
+                            'value':value,
+                            'reference':reference,
+                            'updated':updated
+                        })
+                    if created:
+                        num += 1
+
+                    if not locality in self.DefaultsByLocality:
+                        self.DefaultsByLocality[locality] = {}
+
+                    if not variable in self.DefaultsByLocality[locality]:
+                        self.DefaultsByLocality[locality][variable] = {}
+
+                        self.DefaultsByLocality[locality][variable]["valid_dates"] = [valid_date]
+                        self.DefaultsByLocality[locality][variable]["values"] = [value]
                     else:
-                        if len(item)<6 or item[0] == '' or item[1] == '':
-                            continue
-                        variable = item[t["Variable"]]
-                        locality = item[t["Locality"]]
-                        valid_date = item[t["Valid Date"]]
-                        value = eval(item[t["Value"]])
-                        reference = item[t["Reference"]]
-                        updated = item[t["Updated"]]
-                        updated = datetime.strptime(updated, '%Y-%m-%d  %H:%M')
-                        current_tz = timezone.get_current_timezone()
-                        updated = current_tz.localize(updated)
-
-                        if not valid_date or valid_date=="":
-                            valid_date = '2000-01-01'
-
-                        #valid_date = datetime.date(valid_date)
-                        valid_date = datetime.strptime(valid_date, "%Y-%m-%d").date()
-
-                        # update the default value for this variable, localith and valid_date
-                        qs, created = CalcDefault.objects.update_or_create(
-                            variable=variable, 
-                            locality=locality,
-                            valid_date=valid_date,
-                            defaults={
-                                'value':value,
-                                'reference':reference,
-                                'updated':updated
-                            })
-                        if created:
-                            num += 1
-
-                        if not locality in self.DefaultsByLocality:
-                            self.DefaultsByLocality[locality] = {}
-
-                        if not variable in self.DefaultsByLocality[locality]:
-                            self.DefaultsByLocality[locality][variable] = {}
-
-                            self.DefaultsByLocality[locality][variable]["valid_dates"] = [valid_date]
-                            self.DefaultsByLocality[locality][variable]["values"] = [value]
-                        else:
-                            f = False
-                            var = self.DefaultsByLocality[locality][variable]
-                            for i in range(len(var["valid_dates"])):
-                                compdate = var["valid_dates"][i]
-                                if type(compdate)==type('str'):
-                                    compdate = datetime.strptime(compdate, "%Y-%m-%d").date()
-                                if valid_date < compdate:
-                                    var["valid_dates"].insert(i,valid_date)
-                                    var["values"].insert(i,value)
-                                    f = True
-                                    break
-                                elif valid_date == compdate:
-                                    var["values"][i] = value
-                                    f = True
-                                    break
-                            if not f:
-                                var["valid_dates"].append(valid_date)
-                                var["values"].append(value)
+                        f = False
+                        var = self.DefaultsByLocality[locality][variable]
+                        for i in range(len(var["valid_dates"])):
+                            compdate = var["valid_dates"][i]
+                            if type(compdate)==type('str'):
+                                compdate = datetime.strptime(compdate, "%Y-%m-%d").date()
+                            if valid_date < compdate:
+                                var["valid_dates"].insert(i,valid_date)
+                                var["values"].insert(i,value)
+                                f = True
+                                break
+                            elif valid_date == compdate:
+                                var["values"][i] = value
+                                f = True
+                                break
+                        if not f:
+                            var["valid_dates"].append(valid_date)
+                            var["values"].append(value)
                 if num>0:
                     msg = "Imported %d Carbon Calculator Defaults" % num
                 else:
