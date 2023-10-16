@@ -76,10 +76,11 @@ def QuerySingleAction(name,event_tag=""):
 
             questionInfo = []
             for question in q.questions:
-                qq = CalculatorQuestion(question, event_tag)
-                # a question with no text is not to be included; this is how depending on the event_tag some questions would not be asked.
-                if len(qq.questionText)>0:
-                    questionInfo.append(jsons.dump(qq))
+                if question != '':
+                    qq = CalculatorQuestion(question, event_tag)
+                    # a question with no text is not to be included; this is how depending on the event_tag some questions would not be asked.
+                    if len(qq.questionText)>0:
+                        questionInfo.append(jsons.dump(qq))
 
             picture = ""
             if q.picture:
