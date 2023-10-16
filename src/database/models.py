@@ -940,7 +940,7 @@ class UserProfile(models.Model):
         done_points = 0
         for actionRel in done_actions:
             if actionRel.action and actionRel.action.calculator_action:
-                done_points += actionRel.action.calculator_action.average_points
+                done_points += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
             else:
                 done_points += actionRel.carbon_impact
 
@@ -950,7 +950,7 @@ class UserProfile(models.Model):
         todo_points = 0
         for actionRel in todo_actions:
             if actionRel.action and actionRel.action.calculator_action:
-                todo_points += actionRel.action.calculator_action.average_points
+                todo_points += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
             else:
                 todo_points += actionRel.carbon_impact
 
@@ -1949,7 +1949,7 @@ class Action(models.Model):
                     "name": u.real_estate_unit.name if u.real_estate_unit else None,
                 },
                 "date_completed": u.date_completed,
-                "carbon_impact": u.action.calculator_action.average_points if u.action.calculator_action else None,
+                "carbon_impact": AverageImpact(u.action.calculator_action, u.date_completed) if u.action.calculator_action else None,
                 "recorded_at": u.updated_at,
             
             }

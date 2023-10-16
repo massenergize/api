@@ -100,7 +100,7 @@ class Action(models.Model):
         return self.simple_json()
 
     def __str__(self): 
-        s = self.category + ':' + self.title     
+        s = self.category + ' : ' + self.title     
         return s
 
     class Meta:
