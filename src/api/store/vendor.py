@@ -1,6 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.tests.common import RESET
+from api.store.common import get_media_info, make_media_info
+from api.tests.common import RESET, makeUserUpload
 from api.utils.filter_functions import get_vendor_filter_params
 from database.models import Vendor, UserProfile, Media, Community
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, NotAuthorizedError, InvalidResourceError, CustomMassenergizeError
@@ -63,6 +64,7 @@ class VendorStore:
 
   def create_vendor(self, context: Context, args, user_submitted) -> Tuple[Vendor, MassEnergizeAPIError]:
     try:
+      image_info = make_media_info(args)
       tags = args.pop('tags', [])
       communities = args.pop('communities', [])
       images = args.pop('image', None)
@@ -81,10 +83,16 @@ class VendorStore:
         args['location'] = None
 
       new_vendor = Vendor.objects.create(**args)
+
+      if communities:
+        new_vendor.communities.set(communities)
+
       if images:
         if user_submitted:
           name=f"ImageFor {new_vendor.name} Vendor"
           logo = Media.objects.create(name=name, file=images)
+          user_media_upload = makeUserUpload(media = logo,info=image_info,communities=new_vendor.communities)
+          
         else:
            logo = Media.objects.filter(pk = images[0]).first()
         new_vendor.logo = logo
@@ -104,14 +112,16 @@ class VendorStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_vendor.user = user
+          if user_media_upload:
+            user_media_upload.user = user 
+            user_media_upload.save()
 
       if website:
         new_vendor.more_info = {'website': website}
       
       new_vendor.save()
 
-      if communities:
-        new_vendor.communities.set(communities)
+      
 
       if tags:
         new_vendor.tags.set(tags)
@@ -128,6 +138,7 @@ class VendorStore:
   def update_vendor(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     
     try:
+      image_info = make_media_info(args)
       vendor_id = args.pop('vendor_id', None)
       vendors = Vendor.objects.filter(id=vendor_id)
       if not vendors:
@@ -176,12 +187,20 @@ class VendorStore:
           else:
             image= Media.objects.create(file=images, name=f'ImageFor {vendor.name} Vendor')
             vendor.logo = image
+            makeUserUpload(media = image,info=image_info, user=vendor.user,communities=vendor.communities)
+            
         else:
           if images[0] == RESET: #if image is reset, delete the existing image
             vendor.logo = None
           else:
             media = Media.objects.filter(id = image[0]).first()
             vendor.logo = media
+
+      if vendor.image:
+        old_image_info, can_save_info = get_media_info(vendor.logo)
+        if can_save_info: 
+          vendor.image.user_upload.info.update({**old_image_info,**image_info})
+          vendor.image.user_upload.save()
       
     
       if onboarding_contact_email:

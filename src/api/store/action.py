@@ -1,6 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.tests.common import RESET
+from _main_.utils.utils import Console
+from api.store.common import get_media_info, make_media_info
+from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_actions_filter_params
 from database.models import Action, UserProfile, Community, Media
@@ -72,6 +74,7 @@ class ActionStore:
       calculator_action = args.pop('calculator_action', None)
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
+      image_info = make_media_info(args)
 
       # check if there is an existing action with this name and community
       actions = Action.objects.filter(title=title, community__id=community_id, is_deleted=False)
@@ -90,6 +93,9 @@ class ActionStore:
         if user_submitted:
           name = f'ImageFor {new_action.title} Action'
           media = Media.objects.create(name=name, file=images)
+          # create user media upload here 
+          user_media_upload = makeUserUpload(media = media,info=image_info, communities=[community])
+          
         else:
           media = Media.objects.filter(pk = images[0]).first()
         new_action.image = media
@@ -104,6 +110,9 @@ class ActionStore:
         user = UserProfile.objects.filter(email=user_email).first()
         if user:
           new_action.user = user
+          if user_media_upload:
+            user_media_upload.user = user 
+            user_media_upload.save()
 
       #save so you set an id
       new_action.save()
@@ -192,6 +201,7 @@ class ActionStore:
 
   def update_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
+      image_info = make_media_info(args)
       action_id = args.pop('action_id', None)
       actions = Action.objects.filter(id=action_id)
       if not actions:
@@ -233,6 +243,14 @@ class ActionStore:
       actions.update(**args)
       action = actions.first()  # refresh after update
 
+
+      if community_id and not args.get('is_global', False):
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          action.community = community
+        else:
+          action.community = None
+
       if image: #now, images will always come as an array of ids, or "reset" string 
         if user_submitted:
           if "ImgToDel" in image:
@@ -240,12 +258,19 @@ class ActionStore:
           else:
             image= Media.objects.create(file=image, name=f'ImageFor {action.title} Action')
             action.image = image
+            makeUserUpload(media = image,info=image_info, user = action.user, communities=[community]) 
         else:
           if image[0] == RESET: #if image is reset, delete the existing image
             action.image = None
           else:
             media = Media.objects.filter(id = image[0]).first()
             action.image = media
+
+      if action.image:
+        old_image_info, can_save_info = get_media_info(action.image)
+        if can_save_info: 
+          action.image.user_upload.info.update({**old_image_info,**image_info})
+          action.image.user_upload.save()
 
       action.steps_to_take = steps_to_take
       action.deep_dive = deep_dive
@@ -256,12 +281,7 @@ class ActionStore:
       if vendors:
         action.vendors.set(vendors)
 
-      if community_id and not args.get('is_global', False):
-        community = Community.objects.filter(id=community_id).first()
-        if community:
-          action.community = community
-        else:
-          action.community = None
+      
 
       if calculator_action:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
