@@ -4,6 +4,7 @@ import io
 from django.http import FileResponse
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
 from _main_.utils.common import serialize, serialize_all
+from api.constants import CSV_FIELD_NAMES
 from carbon_calculator.models import Action
 from xhtml2pdf import pisa
 import pytz
@@ -222,8 +223,10 @@ def calculate_hash_for_bucket_item(key, bucket=AWS_STORAGE_BUCKET_NAME):
         print("........................................")
         return None
 
-def find_duplicate_items(_serialize=False):
-    # Retrieve all media items with duplicate hashes (excluding empty or None hashes)
+def find_duplicate_items(_serialize=False, **kwargs):
+    community_ids = kwargs.get("community_ids", None)
+    
+    # Retrieve all media items with multiple occurences of the same hash (excluding empty or None hashes)
     duplicate_hashes = (
         Media.objects.exclude(hash__exact="")
         .exclude(hash=None)
@@ -232,10 +235,16 @@ def find_duplicate_items(_serialize=False):
         .filter(hash_count__gt=1)
     )
 
-    # Now, retrieve the media items associated with the duplicate hashes
-    duplicate_media_items = Media.objects.filter(
-        hash__in=duplicate_hashes.values("hash")
-    )
+
+     # Now, retrieve the media items associated with the duplicate hashes
+    if community_ids: 
+        duplicate_media_items = Media.objects.filter(
+            hash__in=duplicate_hashes.values("hash"), user_upload__communities__id__in = community_ids
+        ) 
+    else: 
+        duplicate_media_items = Media.objects.filter(
+            hash__in=duplicate_hashes.values("hash")
+        )
 
     return group_duplicates(duplicate_media_items, _serialize)
 
@@ -457,3 +466,47 @@ def create_csv_file(fieldnames :list, data : list, filename="data.csv"):
         csv_writer.writerow(row)
     return output.getvalue()
 
+
+
+def arrange_for_csv(usage_object: dict):
+        usage_object = {} if not usage_object else usage_object
+
+        text = ""
+        count = 0
+
+        for key, value in usage_object.items():
+            length = len(value)
+            count = count + length
+            if length:
+                if text:
+                    text += f", {key}({length})"
+                else:
+                    text = f"{key}({length})"
+
+        return count, text
+
+
+def summarize_duplicates_into_csv(grouped_dupes, filename, field_names = CSV_FIELD_NAMES):
+        """
+        Returns: 
+        - csv file : output.getvalue()
+        """
+        csv_data = []
+        for hash, array in grouped_dupes.items():
+            combined = resolve_relations(array)
+            usage_count, usage_summary = arrange_for_csv(combined.get("usage", {}))
+            media = array[0]
+            obj = {
+                "media_url": media.file.url,
+                "primary_media_id": media.id,  # No other criteria is used to determine which media is going to be the primary media. The first 1 is simply chosen...
+                "usage_stats": usage_count,
+                "usage_summary": usage_summary,
+                "duplicates": ", ".join([m.file.url for m in array[1:]]),
+                "ids_of_duplicates": ", ".join([str(m.id) for m in array[1:]]),
+            }
+            csv_data.append(obj)
+
+        filename = filename or "summary-of-duplicates"
+        csv_file = create_csv_file(field_names, csv_data, filename + ".csv")
+
+        return csv_file

@@ -3,13 +3,14 @@ from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.settings import IS_PROD
 from _main_.utils.constants import ADMIN_URL_ROOT
+from api.store.common import find_duplicate_items, resolve_relations, summarize_duplicates_into_csv
 from api.utils.constants import (
     CADMIN_EMAIL_TEMPLATE,
     SADMIN_EMAIL_TEMPLATE,
     YEARLY_MOU_TEMPLATE,
 )
 from api.constants import STANDARD_USER, GUEST_USER
-from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
+from database.models import FeatureFlag, UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
@@ -485,3 +486,21 @@ def send_admin_mou_notification(task=None):
             update_records(notices=[new_notification_time], user=admin)
     
     return "success"
+
+REMOVE_DUPLICATE_IMAGE_FLAG_KEY = "remove-duplicate-images-feature-flag"
+def remove_duplicate_images(): 
+    """
+       This checks all media on the platform and removes all duplicates. 
+       Its based on the "Remove Dupliate Images" feature flag. For communities that are subscribed 
+       to the flag, duplicates will be removed from their libraries. 
+    """
+    flag = FeatureFlag.objects.filter(key = REMOVE_DUPLICATE_IMAGE_FLAG_KEY).first()
+    communities = [com.id for com in flag.communities.all()]
+    grouped_dupes = find_duplicate_items(False, community_ids=communities)
+    csv_file = summarize_duplicates_into_csv(grouped_dupes,"Summary of duplicates - Task")
+    # summarize duplicates 
+    # Remove duplicates 
+    # Then send email with CSV attached... 
+    
+    return "success"
+
