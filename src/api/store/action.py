@@ -88,7 +88,8 @@ class ActionStore:
       if community_id and not args.get('is_global', False):
         community = Community.objects.get(id=community_id)
         new_action.community = community
-      
+
+      user_media_upload = None      
       if images: #now, images will always come as an array of ids 
         if user_submitted:
           name = f'ImageFor {new_action.title} Action'

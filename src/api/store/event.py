@@ -305,6 +305,7 @@ class EventStore:
       if community:
         new_event.community = community
 
+      user_media_upload = None
       if image: #now, images will always come as an array of ids 
         if user_submitted:
           name= f'ImageFor {new_event.name} Event'

@@ -87,6 +87,7 @@ class VendorStore:
       if communities:
         new_vendor.communities.set(communities)
 
+      user_media_upload = None
       if images:
         if user_submitted:
           name=f"ImageFor {new_vendor.name} Vendor"
@@ -196,11 +197,11 @@ class VendorStore:
             media = Media.objects.filter(id = image[0]).first()
             vendor.logo = media
 
-      if vendor.image:
+      if vendor.logo:
         old_image_info, can_save_info = get_media_info(vendor.logo)
         if can_save_info: 
-          vendor.image.user_upload.info.update({**old_image_info,**image_info})
-          vendor.image.user_upload.save()
+          vendor.logo.user_upload.info.update({**old_image_info,**image_info})
+          vendor.logo.user_upload.save()
       
     
       if onboarding_contact_email:
