@@ -27,7 +27,7 @@ from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminate
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
 
-CALCULATOR_VERSION = "4.0.2"
+CALCULATOR_VERSION = "4.0.3"
 QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
 ACTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Actions.csv"
 DEFAULTS_DATA = BASE_DIR + "/carbon_calculator/content/defaults.csv"
@@ -416,6 +416,18 @@ class CalculatorAction:
         self.savings = 0
         self.text = "" # "Explanation for the calculated results."
         self.picture = ""
+
+        status, actionInfo = QuerySingleAction(self.name)
+        if status == VALID_QUERY:
+            self.id = actionInfo["id"]
+            self.title = actionInfo["title"]
+            self.description = actionInfo["description"]
+            self.helptext = actionInfo["helptext"]
+            self.questions = actionInfo["questionInfo"]    # question with list of valid responses.
+            self.average_points = actionInfo["average_points"]
+            self.picture = actionInfo["picture"]
+            self.initialized = True
+
 
     def Query(self):
         status, actionInfo = QuerySingleAction(self.name)

@@ -207,7 +207,6 @@ class TeamsTestCase(TestCase):
     UserActionRel.objects.create(user=self.USER2, action=action2, status="DONE", real_estate_unit=reu, date_completed="2021-09-01")
 
     stats_response = self.client.post('/api/teams.stats', urlencode({"community_id": self.COMMUNITY.id}), content_type="application/x-www-form-urlencoded").toDict()
-    print(stats_response)
     self.assertTrue(stats_response["success"])
 
     self.assertIs(1, len(stats_response['data']))
