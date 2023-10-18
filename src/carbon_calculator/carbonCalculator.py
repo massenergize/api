@@ -208,6 +208,9 @@ class CarbonCalculator:
         response = {}
         actionList = []
         for action in self.allActions:
+            if not self.allActions[action].initialized:
+                dummy = self.allActions[action].Query()
+                
             name = self.allActions[action].name
             title = self.allActions[action].title
             description = self.allActions[action].description
@@ -416,18 +419,6 @@ class CalculatorAction:
         self.savings = 0
         self.text = "" # "Explanation for the calculated results."
         self.picture = ""
-
-        status, actionInfo = QuerySingleAction(self.name)
-        if status == VALID_QUERY:
-            self.id = actionInfo["id"]
-            self.title = actionInfo["title"]
-            self.description = actionInfo["description"]
-            self.helptext = actionInfo["helptext"]
-            self.questions = actionInfo["questionInfo"]    # question with list of valid responses.
-            self.average_points = actionInfo["average_points"]
-            self.picture = actionInfo["picture"]
-            self.initialized = True
-
 
     def Query(self):
         status, actionInfo = QuerySingleAction(self.name)

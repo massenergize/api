@@ -150,6 +150,8 @@ refrigerator_energystar<ME>,ME,Is the current refrigerator an EnergyStar model?,
 washer_energystar<ME>,ME,Is the current washer an EnergyStar model?,Choice,Yes,,No,,Not sure,,,,,,,,,,,
 dryer_loads<ME>,ME,How many dryer loads do you do each week on average?,Number,,,,,,,,,,,,,0.0,14.0,4.0,
 fraction_line_dry<ME>,ME,What fraction of wash loads would you dry on the line or drying rack?,Choice,None,,Some,,Half,,Most,,All,,,,,,,
+how_many_trees<ME>,ME,How many trees did you plant,Number,,,,,,,,,,,,,0.0,1000.0,5.0,
+plant_trees<ME>,ME,"Did you plant some trees, and will you raise them to maturity?",Choice,Yes,,No,how_many_trees,,,,,,,,,,,,
 buy_sell_used,Reduce/Reuse,"When possible, will you buy or sell used goods rather than new?",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,,,,reduce_waste
 reuse_containers,Reduce/Reuse,"When possible, will you use refillable containers (bags,mugs,bottles)",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,,,,reduce_waste
 buy_bulk,Reduce/Reuse,"When possible, will you buy in bulk to minimize packaging?",Choice,Usually,,Sometimes,,Rarely,,Never,,,,,,,,,reduce_waste
@@ -196,3 +198,6 @@ leaf_cleanup_gas_blower,Yard/Landscaping,Do you use a gas blower to clean leaves
 leaf_cleanup_blower_switch,Yard/Landscaping,Will you choose to switch from gas blower to rake or electric blower?,Choice,No,,Yes,,,,,,,,,,,,,rake_elec_blower
 lawn_service,Yard/Landscaping,Do you use a landscape service to take care of your lawn?,Choice,Yes,,No,,,,,,,,,,,,,reduce_lawn_care
 lawn_size,Yard/Landscaping,How large is your lawn?,Choice,Small (<500 sq ft),,Medium (500-2000 sq ft),,Sizable (2000-5000 sq ft),,Large (>5000 sq ft),,,,,,,,,"reduce_lawn_size,reduce_lawn_care,electric_mower"
+how_many_trees,Yard/Landscaping,How many trees will you plant and grow to maturity?,Number,,,,,,,,,,,,,0.0,1000.0,5.0,plant_trees
+plant_trees,Yard/Landscaping,Will you plant one or more trees and raise them to maturity?,Choice,Yes,,No,how_many_trees,,,,,,,,,,,,
+,Yard/Landscaping,,,,,,,,,,,,,,,,,,
