@@ -118,7 +118,7 @@ def get_community_events(community_id):
 
 def get_community_users(community_id):
     community_members = CommunityMember.objects.filter(community__id=community_id, is_deleted=False).values_list("user", flat=True)
-    users = UserProfile.objects.filter(id__in=community_members)
+    users = UserProfile.objects.filter(id__in=community_members, accepts_terms_and_conditions=True)
     return users
 
 def generate_change_pref_url(subdomain,email, login_method):
@@ -246,7 +246,7 @@ Note: This function only get email as argument when the
 nudge is requested on demand by a cadmin on user portal.
 '''
 # Entry point
-def prepare_user_events_nudge(email=None, community_id=None):
+def prepare_user_events_nudge(task=None,email=None, community_id=None):
     try:
         if email and community_id:
             all_community_events = get_community_events(community_id)

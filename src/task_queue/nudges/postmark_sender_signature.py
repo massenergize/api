@@ -9,7 +9,7 @@ from database.models import Community, FeatureFlag
 COMMUNITY_EMAIL_SENDER_SIGNATURE_FF = "community-email-sender-signature-feature-flag"
 
 
-def collect_and_create_signatures():
+def collect_and_create_signatures(task=None):
     flag = FeatureFlag.objects.filter(key=COMMUNITY_EMAIL_SENDER_SIGNATURE_FF).first()
     if not flag or not flag.enabled():
         return False
