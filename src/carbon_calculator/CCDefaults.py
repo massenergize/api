@@ -37,7 +37,7 @@ class CCD():
     # This initialization routine runs when database ready to access
     # Purpose: load Carbon Calculator constants into DefaultByLocality for routine access
     # For each variable, there is a list of values for different localities and valid_dates, ordered by date
-    def ready(self):
+    def loadDefaults(self):
         self.DefaultsByLocality = {"default":{}} # the class variable
         try:
             cq = CalcDefault.objects.all()
@@ -72,12 +72,15 @@ class CCD():
                         self.DefaultsByLocality[c.locality][c.variable]["valid_dates"].append(date)
                         self.DefaultsByLocality[c.locality][c.variable]["values"].append(c.value)
 
-
         except Exception as e:
             print(str(e))
             print("CalcDefault initialization skipped")
 
     def getDefault(self, locality, variable, date, default=None):
+        # load default values if they haven't yet been loaded
+        if self.DefaultsByLocality["default"]=={}:
+            self.loadDefaults(self)
+
         if locality not in self.DefaultsByLocality:
             locality = "default"
         if variable in self.DefaultsByLocality[locality]:
