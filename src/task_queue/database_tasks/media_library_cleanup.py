@@ -5,6 +5,7 @@ from api.store.common import (
     find_duplicate_items,
     get_admins_of_communities,
     get_duplicate_count,
+    remove_duplicates_and_attach_relations,
     summarize_duplicates_into_csv,
 )
 from api.utils.constants import MEDIA_LIBRARY_CLEANUP_TEMPLATE
@@ -29,7 +30,10 @@ def remove_duplicate_images():
             num_of_dupes_in_all = get_duplicate_count(grouped_dupes)
             csv_file = summarize_duplicates_into_csv(grouped_dupes)
             admins = get_admins_of_communities(ids)
-        
+
+            for hash_value in grouped_dupes.keys(): 
+                remove_duplicates_and_attach_relations(hash_value)
+
             for admin in admins:
                 send_summary_email_to_admin(admin, community, num_of_dupes_in_all, csv_file)
         

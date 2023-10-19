@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from database.utils.settings.model_constants.user_media_uploads import (
     UserMediaConstants,
 )
-from api.store.common import calculate_hash_for_bucket_item
+from api.store.common import calculate_hash_for_bucket_item, remove_duplicates_and_attach_relations
 from _main_.utils.common import serialize
 from _main_.utils.common import serialize, serialize_all
 from api.store.common import (
@@ -71,23 +71,7 @@ class MediaLibraryStore:
 
     def clean_duplicates(self, args, context: Context):
         hash = args.get("hash", None)
-        dupes = Media.objects.filter(hash=hash)
-        relations = resolve_relations(dupes)
-        media_after_attaching = attach_relations_to_media(relations)
-        disposables = relations.get("disposable", [])
-        disposables = [m.get("id", None) for m in disposables]
-        media = relations.get("media", {})
-        del_only_records, del_with_image = self.group_disposable(media, disposables)
-        # print("disposables", disposables)
-        if del_only_records:
-            Media.objects.filter(
-                pk__in=[m.id for m in del_only_records]
-            ).delete()  # This only deletes records & doesnt fire the models "delete()" function which is what actually deletes actual image from the s3 bucket
-
-        if del_with_image:
-            for m in del_with_image:
-                m.delete()  # will delete record and image from s3 bucket
-
+        media_after_attaching = remove_duplicates_and_attach_relations(hash)
         return serialize(media_after_attaching, True), None
 
     def summarize_duplicates(self, args, context: Context):
@@ -99,6 +83,15 @@ class MediaLibraryStore:
         return response, None
 
     def generate_hashes(self, args, context: Context):
+        """
+          Goes over all media items in the database and generates hash values for them. 
+          It saves the hash value to the media object after that. 
+          If an image is corrupted or not valid in the bucket, the hash generation of that particular image will simply fail silently. 
+
+          This route is simply meant to be run once, since there are lots of images in our system that dont have their hash values generated already. 
+          All future image uploads will have their hash values generated automatically and saved to the media object. 
+          Check the Media model for the modifications on the "save()" function.
+      """
         images = Media.objects.order_by("-id")
         count = 0
         for image in images:
