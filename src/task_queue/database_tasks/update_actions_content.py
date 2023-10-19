@@ -119,7 +119,7 @@ def update_actions_content(task=None):
         if len(data) > 0:
             report =  write_to_csv(data)
             temp_data = {'data_type': "Content Spacing", "name":task.creator.full_name if task.creator else "admin"}
-            file_name = "Content-Spacing-Report-{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d"))
+            file_name = "Update-Actions-Report-{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d"))
             send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[task.creator.email], report, file_name)
     
         return True
