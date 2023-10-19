@@ -1,5 +1,6 @@
 import csv
 import datetime
+from functools import reduce
 import io
 from django.http import FileResponse
 from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
@@ -10,7 +11,7 @@ from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
-from database.models import Community, Event, Media, Team, UserActionRel
+from database.models import Community, CommunityAdminGroup, Event, Media, Team, UserActionRel
 from django.db.models import Q, Model
 from django.utils import timezone
 import boto3
@@ -486,7 +487,7 @@ def arrange_for_csv(usage_object: dict):
         return count, text
 
 
-def summarize_duplicates_into_csv(grouped_dupes, filename, field_names = CSV_FIELD_NAMES):
+def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = CSV_FIELD_NAMES):
         """
         Returns: 
         - csv file : output.getvalue()
@@ -510,3 +511,23 @@ def summarize_duplicates_into_csv(grouped_dupes, filename, field_names = CSV_FIE
         csv_file = create_csv_file(field_names, csv_data, filename + ".csv")
 
         return csv_file
+
+
+
+def get_admins_of_communities(community_ids): 
+     groups = CommunityAdminGroup.objects.filter(community__id__in = community_ids)
+     admins = [g.members.all() for g in groups]
+     admins = reduce(lambda x, y: list(x) + list(y), admins)
+     return admins
+
+
+def get_duplicate_count(grouped_dupes :dict): 
+    """
+        Returns: 
+        - count : (int) total count of all duplicate groups together
+    """
+    count = 0 
+    for duplicates in grouped_dupes.values(): 
+        count +=len(duplicates) -1 # Subtracting 1 because one of them is the main one, and the remaining are duplicates
+        
+    return count
