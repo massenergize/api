@@ -25,11 +25,10 @@ def remove_duplicate_images(task):
     try: 
         flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FLAG_KEY).first()
         communities = flag.enabled_communities()
-        # task = Task.objects.filter(pk=task_id).first()
-        # for community in communities:
-        #     ids = [community.id]
-        clean_and_notify(communities,None,task.creator)
-            
+        # task = Task.objects.filter(name="Media Library Cleanup Routine").first()
+        ids = [c.id for c in communities]
+        clean_and_notify(ids,None,task.creator)
+        
         return "success"
     
     except Exception as e: 
