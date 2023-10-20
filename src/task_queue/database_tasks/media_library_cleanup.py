@@ -16,7 +16,7 @@ from task_queue.models import Task
 REMOVE_DUPLICATE_IMAGE_FLAG_KEY = "remove-duplicate-images-feature-flag"
 
 
-def remove_duplicate_images():
+def remove_duplicate_images(task):
     """
     This checks all media on the platform and removes all duplicates.
     Its based on the "Remove Duplicate Images" feature flag. For communities that are subscribed
@@ -25,7 +25,7 @@ def remove_duplicate_images():
     try: 
         flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FLAG_KEY).first()
         communities = flag.enabled_communities()
-        task = Task.objects.filter(name = "Media Library Cleanup Routine").first()
+        # task = Task.objects.filter(pk=task_id).first()
         # for community in communities:
         #     ids = [community.id]
         clean_and_notify(communities,None,task.creator)
