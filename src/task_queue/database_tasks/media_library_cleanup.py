@@ -10,6 +10,7 @@ from api.store.common import (
 )
 from api.utils.constants import MEDIA_LIBRARY_CLEANUP_TEMPLATE
 from database.models import FeatureFlag
+from task_queue.models import Task
 
 
 REMOVE_DUPLICATE_IMAGE_FLAG_KEY = "remove-duplicate-images-feature-flag"
@@ -23,31 +24,34 @@ def remove_duplicate_images():
     """
     try: 
         flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FLAG_KEY).first()
-
-        for community in flag.communities.all():
+        communities = flag.enabled_communities()
+        task = Task.objects.filter(name = "Media Library Cleanup Routine").first()
+        for community in communities:
             ids = [community.id]
-            grouped_dupes = find_duplicate_items(False, community_ids=ids)
-            num_of_dupes_in_all = get_duplicate_count(grouped_dupes)
-            csv_file = summarize_duplicates_into_csv(grouped_dupes)
-            admins = get_admins_of_communities(ids)
-
-            for hash_value in grouped_dupes.keys(): 
-                remove_duplicates_and_attach_relations(hash_value)
-
-            for admin in admins:
-                send_summary_email_to_admin(admin, community, num_of_dupes_in_all, csv_file)
-        
+            clean_and_notify(ids,community,task.creator)
+            
         return "success"
     
     except Exception as e: 
         print("Duplicate Removal Error (Media Library Cleanup): " + str(e))
         return "Failure"
 
+def clean_and_notify(ids,community,notification_receiver): 
+        grouped_dupes = find_duplicate_items(False, community_ids=ids)
+        num_of_dupes_in_all = get_duplicate_count(grouped_dupes)
+        csv_file = summarize_duplicates_into_csv(grouped_dupes)
+
+        for hash_value in grouped_dupes.keys(): 
+            remove_duplicates_and_attach_relations(hash_value)
+
+        if notification_receiver: 
+            send_summary_email_to_admin(notification_receiver, community, num_of_dupes_in_all, csv_file)
+
 
 def send_summary_email_to_admin(admin, community, total, csv_file, **kwargs):
     args = {
         "admin_name": admin.preferred_name,
-        "community_name": community.name,
+        "community_name": community.name if community else "",
         "total": total,
     }
     filename = f"Summary of duplicates as at ({str(datetime.datetime.now())}).csv"
