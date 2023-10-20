@@ -28,8 +28,7 @@ def remove_duplicate_images():
         task = Task.objects.filter(name = "Media Library Cleanup Routine").first()
         # for community in communities:
         #     ids = [community.id]
-        ids = [c.id for c in communities]
-        clean_and_notify(ids,None,task.creator)
+        clean_and_notify(communities,None,task.creator)
             
         return "success"
     

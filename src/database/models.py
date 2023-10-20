@@ -3792,8 +3792,12 @@ class FeatureFlag(models.Model):
         return True
 
     def enabled_communities(self, communities_in: QuerySet):
+        """
+            Returns list of community ids
+        """
         if not communities_in: 
             communities_in = Community.objects.filter(is_deleted=False) 
+            communities_in = [str(u.id) for u in communities_in]
 
         if self.audience == "EVERYONE":
             return communities_in
