@@ -92,7 +92,6 @@ class CCD():
             else:
                 for i in range(len(var["valid_dates"])):
                     valid_date = datetime.strptime(var["valid_dates"][i], '%Y-%m-%d').date()
-                    print(locality,variable,valid_date,type(valid_date))
                     if valid_date < date:
                         value = var["values"][i]
             return value
