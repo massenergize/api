@@ -329,7 +329,7 @@ class CommunityStore:
                     state = "MA"
 
                 zips = zipcodes.filter_by(
-                    county=town, state=state, zip_code_type="STANDARD"
+                    county=county, state=state, zip_code_type="STANDARD"
                 )
                 print("Number of zipcodes = " + str(len(zips)))
                 if len(zips) > 0:
