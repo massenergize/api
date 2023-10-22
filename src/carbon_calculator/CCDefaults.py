@@ -91,7 +91,7 @@ class CCD():
                 value = var["values"][-1]
             else:
                 for i in range(len(var["valid_dates"])):
-                    valid_date = var["valid_dates"][i]
+                    valid_date = datetime.strptime(var["valid_dates"][i], '%Y-%m-%d').date()
                     if valid_date < date:
                         value = var["values"][i]
             return value
