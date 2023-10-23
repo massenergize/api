@@ -62,3 +62,10 @@ def get_distance_between_coords(lat1, lon1, lat2, lon2):
 
     distance = R * c
     return distance
+
+
+
+def is_null(val):
+    if val in ["", None, [], {}, "undefined", "null"]:
+        return True
+    return False

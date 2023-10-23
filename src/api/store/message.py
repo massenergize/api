@@ -1,8 +1,10 @@
+from datetime import datetime, timedelta
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.utils.api_utils import is_admin_of_community
+from api.tasks import send_scheduled_email
+from api.utils.api_utils import is_admin_of_community, is_null
 from api.utils.filter_functions import get_messages_filter_params
-from database.models import Message, Media, Team
+from database.models import Message, Media, Team, CommunityAdminGroup, UserProfile
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
@@ -10,12 +12,37 @@ from _main_.utils.massenergize_errors import (
     NotAuthorizedError,
 )
 from _main_.utils.context import Context
-from .utils import get_admin_communities, unique_media_filename
+from .utils import get_admin_communities, get_user_from_context, unique_media_filename
 from _main_.utils.context import Context
 from .utils import get_community, get_user
 from sentry_sdk import capture_message
 from typing import Tuple
 from django.db.models import Q
+from celery.result import AsyncResult
+
+
+
+def get_schedule(schedule):
+    if  not is_null(schedule):
+       date, timezone = schedule.split("GMT") # find a proper way to handle this
+       return datetime.strptime(date.strip(),  "%a %b %d %Y %H:%M:%S")
+
+    return datetime.utcnow() + timedelta(minutes=1)
+    
+
+
+def get_message_recipients(audience, audience_type, sub_audience_type):
+    if not is_null(audience):
+        audience = audience.split(",")
+        return UserProfile.objects.filter(id__in=audience)
+    else:
+        if audience_type == "COMMUNITY_ADMIN" and sub_audience_type == "ALL":
+            admins =  CommunityAdminGroup.objects.all().values_list("members", flat=True)
+            return UserProfile.objects.filter(id__in=admins)
+        elif audience_type == "USERS" and sub_audience_type == "ALL":
+            return UserProfile.objects.filter(is_super_admin=False, is_community_admin=False)
+
+    return None
 
 class MessageStore:
     def __init__(self):
@@ -24,16 +51,17 @@ class MessageStore:
     def get_message_info(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             message_id = args.pop("message_id", None) or args.pop("id", None)
-
             if not message_id:
                 return None, InvalidResourceError()
             message = Message.objects.filter(pk=message_id).first()
+            community_id = message.community.id if message.community else None
 
-            if not is_admin_of_community(context, message.community.id):
+            if not is_admin_of_community(context,community_id):
                 return None, NotAuthorizedError()
 
             if not message:
                 return None, InvalidResourceError()
+        
 
             return message, None
         except Exception as e:
@@ -307,6 +335,62 @@ class MessageStore:
             else:
                 messages = []
             return messages, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+
+    def send_message(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            audience_type = args.pop("audience_type", None)
+            subject = args.pop("subject", None)
+            message = args.pop("message", None)
+            message_id = args.pop("id", None)
+            sub_audience_type = args.pop("sub_audience_type", None)
+            audience = args.pop("audience", None)
+            schedule = get_schedule(args.pop("schedule", None))
+            recipients = get_message_recipients(audience, audience_type, sub_audience_type)
+
+            if not recipients:
+                return None, InvalidResourceError()
+            
+            user = get_user_from_context(context)
+            if not user:
+                return None, InvalidResourceError()
+        
+            if message_id:
+                messages = Message.objects.filter(pk=message_id)
+                if not messages.first():
+                    return None, InvalidResourceError()
+                # revoke the previous task
+                task_id = messages.first().scheduled_info.get("schedule_id", None)
+                if task_id:
+                    result = AsyncResult(task_id)
+                    result.revoke()
+                # schedule new task and update message
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,recipients],eta=schedule).id
+                scheduled_info = {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":recipients}
+                messages.update(**{"scheduled_info": scheduled_info, "body": message, "title": subject})
+            else:
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,[]],eta=schedule).id
+                new_message = Message(
+                title=subject,
+                body=message,
+                user=user,
+                scheduled_info = {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":[]}
+                )
+                new_message.save()
+            
+    
+            
+
+
+
+            
+
+
+            return new_message, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

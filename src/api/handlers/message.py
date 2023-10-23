@@ -27,6 +27,7 @@ class MessageHandler(RouteHandler):
     self.add("/messages.listTeamAdminMessages", self.team_admin_list)
     self.add("/messages.replyFromCommunityAdmin", self.reply_from_community_admin)
     self.add("/messages.forwardToTeamAdmins", self.forward_to_team_admins)
+    self.add("/messages.send", self.send_message)
 
   @admins_only
   def info(self, request):
@@ -65,6 +66,16 @@ class MessageHandler(RouteHandler):
     if not message_id:
       return CustomMassenergizeError("Please Provide Message Id")
     message_info, err = self.service.delete_message(message_id,context)
+    if err:
+      return err
+    return MassenergizeResponse(data=message_info)
+  
+  @admins_only
+  def send_message(self, request):
+    context: Context = request.context
+    args: dict = context.args
+
+    message_info, err = self.service.send_message(context,args)
     if err:
       return err
     return MassenergizeResponse(data=message_info)
