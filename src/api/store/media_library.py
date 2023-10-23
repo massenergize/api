@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from database.utils.settings.model_constants.user_media_uploads import (
     UserMediaConstants,
 )
-from api.store.common import calculate_hash_for_bucket_item, remove_duplicates_and_attach_relations
+from api.store.common import calculate_hash_for_bucket_item, generate_hashes, remove_duplicates_and_attach_relations
 from _main_.utils.common import serialize
 from _main_.utils.common import serialize, serialize_all
 from api.store.common import (
@@ -92,16 +92,8 @@ class MediaLibraryStore:
           All future image uploads will have their hash values generated automatically and saved to the media object. 
           Check the Media model for the modifications on the "save()" function.
       """
-        images = Media.objects.order_by("-id")
-        count = 0
-        for image in images:
-            hash = calculate_hash_for_bucket_item(image.file.name)
-            Console.underline("We can now save hash : " + str(hash))
-            if hash:
-                image.hash = hash
-                image.save()
-                count = count + 1
-        return f"Generated hashes for {count} items!", None
+        generated = generate_hashes()
+        return f"Generated hashes for {generated} items!", None
 
     def edit_details(self, args, context: Context):
         try:

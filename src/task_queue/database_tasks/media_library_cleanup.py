@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from api.store.common import (
     find_duplicate_items,
+    generate_hashes,
     get_admins_of_communities,
     get_duplicate_count,
     remove_duplicates_and_attach_relations,
@@ -23,6 +24,7 @@ def remove_duplicate_images(task):
     to the flag, duplicates will be removed from their libraries.
     """
     try: 
+        generate_hashes() 
         flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FLAG_KEY).first()
         communities = flag.enabled_communities()
         # task = Task.objects.filter(name="Media Library Cleanup Routine").first()

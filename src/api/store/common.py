@@ -8,6 +8,7 @@ from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
 from _main_.utils.common import serialize, serialize_all
 from api.constants import CSV_FIELD_NAMES
 from carbon_calculator.models import Action
+from database.utils.common import calculate_hash_for_bucket_item
 from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
@@ -212,18 +213,7 @@ def get_media_info(media):
 
 
 
-def calculate_hash_for_bucket_item(key, bucket=AWS_STORAGE_BUCKET_NAME):
-    try:
-        response = s3.get_object(Bucket=bucket, Key=key)
-        image_data = response["Body"].read()
-        hash_object = hashlib.sha256()
-        hash_object.update(image_data)
-        return hash_object.hexdigest()
-    except Exception as e:
-        print("........................................")
-        print(f"Error calculating hash for {key}: {e}")
-        print("........................................")
-        return None
+
 
 def find_duplicate_items(_serialize=False, **kwargs):
     community_ids = kwargs.get("community_ids", None)
@@ -578,3 +568,17 @@ def remove_duplicates_and_attach_relations(hash):
 
     return media_after_attaching
 
+
+def generate_hashes(): 
+    """
+        Returns : Number of items that have had their hashes generated
+    """
+    images = Media.objects.filter(Q(hash__exact="") | Q(hash=None)).distinct()
+    count = 0
+    for image in images:
+        hash = calculate_hash_for_bucket_item(image.file.name)
+        if hash:
+            image.hash = hash
+            image.save()
+            count = count + 1
+    return count

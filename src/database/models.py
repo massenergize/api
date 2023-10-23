@@ -19,10 +19,12 @@ from django.core.files.storage import default_storage
 from django.db.models.query import QuerySet
 
 from .utils.common import (
+    calculate_hash_for_bucket_item,
     get_images_in_sequence,
     json_loader,
     get_json_if_not_none,
     get_summary_info,
+    make_hash_from_file,
 )
 from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
@@ -314,18 +316,16 @@ class Media(models.Model):
 
     def calculate_hash(self, uploaded_file):
         if not self.hash:
-            # Read the uploaded file data
             image_data = uploaded_file.read()
-            hash_object = hashlib.sha256()
-            hash_object.update(image_data)
-            calculated_hash = hash_object.hexdigest()
-            self.hash = calculated_hash
+            calculated_hash =  make_hash_from_file(image_data)
             return calculated_hash
-        return self.hash 
+        return None
     
     def save(self, *args, **kwargs):
-        if self.file:
-            self.calculate_hash(self.file.file)
+        if self.file and not self.hash:
+            hash = self.calculate_hash(self.file.file)
+            if hash: 
+                self.hash = hash
         super().save(*args, **kwargs)
     
 
