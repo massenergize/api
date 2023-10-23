@@ -98,8 +98,8 @@ Energize Lexington,Yes,Buy Secondhand Clothing ,Low,0,Waste & Recycling,avoid_pu
 Sustainable Sherborn,Yes,Buying Less Stuff,High,0,Waste & Recycling,avoid_purchase
 Energize Lexington,Yes,Repair it,Low,0,Waste & Recycling,avoid_purchase
 EcoNatick,No,Repair it-MW,Low,0,Waste & Recycling,avoid_purchase
-Sustainable Medfield,Yes,“3 Months of Less” Challenge,Medium,0,Waste & Recycling,avoid_purchases
-Sustainable Medfield,Yes,Borrow from the Unusual Items Collection,Low,0,Waste & Recycling,avoid_purchases
+Sustainable Medfield,Yes,“3 Months of Less” Challenge,Medium,0,Waste & Recycling,avoid_purchase
+Sustainable Medfield,Yes,Borrow from the Unusual Items Collection,Low,0,Waste & Recycling,avoid_purchase
 Energize Wayland,Yes,Home Battery Storage,Medium,$$,Home Energy,battery
 HarvardEnergize,Yes,E-Bikes,Medium,$$,Transportation,buy_e_bike
 Sustainable Sherborn,Yes,Electrifying your Ride,High,$$$,Transportation,buy_e_bike
@@ -122,18 +122,18 @@ LexCAN Toolkit,Yes,Cool Climate Carbon Calculator,Low,0,Activism & Education,car
 Cooler Springfield,Yes,Shrink My Carbon Footprint,Low,0,Activism & Education,carbon_footprint
 Agawam,Yes,What's Your Carbon Footprint? Age 14+,Low,0,Activism & Education,carbon_footprint
 Jewish Climate Action Network -- JCAN-MA,Yes,What's Your Carbon Footprint? Age 14+,Low,0,Activism & Education,carbon_footprint
-Energize Wayland,No,Annual roadside trash Clean Up!,Low,0,Waste & Recycling,cleanup_community
-Agawam,Yes,Clean Up Agawam,Low,0,Waste & Recycling,cleanup_community
-Solarize Eastie,No,Clean Up Your Communit-Green Eastie,Low,0,Activism & Education,cleanup_community
-Green Pepperell,No,Clean Up Your Communit-PepperellMA,Low,0,Activism & Education,cleanup_community
-Sustainable Middlesex,Yes,Clean Up Your Community,Low,0,Activism & Education,cleanup_community
-Melrose Climate Action,No,Clean Up Your Community-MelroseMA,Low,0,Activism & Education,cleanup_community
-Hampshire Regional HS,No,Clean Up Your Community-westhampton,Low,0,Activism & Education,cleanup_community
-EcoNatick,Yes,Keep Natick Beautiful,Low,0,Waste & Recycling,cleanup_community
-Agawam,Yes,"Litter Free Agawam, Age 4+",Low,0,Waste & Recycling,cleanup_community
-EcoNatick,No,Litter-Free Natick,Low,0,Waste & Recycling,cleanup_community
-Energize Framingham,No,Participate in a Framingham Clean-Up! ,Low,0,Activism & Education,cleanup_community
-Kaat's Test Community,No,Wayland Cleans Up!,Low,$$,Transportation,cleanup_community
+Energize Wayland,No,Annual roadside trash Clean Up!,Low,0,Waste & Recycling,community_cleanup
+Agawam,Yes,Clean Up Agawam,Low,0,Waste & Recycling,community_cleanup
+Solarize Eastie,No,Clean Up Your Communit-Green Eastie,Low,0,Activism & Education,community_cleanup
+Green Pepperell,No,Clean Up Your Communit-PepperellMA,Low,0,Activism & Education,community_cleanup
+Sustainable Middlesex,Yes,Clean Up Your Community,Low,0,Activism & Education,community_cleanup
+Melrose Climate Action,No,Clean Up Your Community-MelroseMA,Low,0,Activism & Education,community_cleanup
+Hampshire Regional HS,No,Clean Up Your Community-westhampton,Low,0,Activism & Education,community_cleanup
+EcoNatick,Yes,Keep Natick Beautiful,Low,0,Waste & Recycling,community_cleanup
+Agawam,Yes,"Litter Free Agawam, Age 4+",Low,0,Waste & Recycling,community_cleanup
+EcoNatick,No,Litter-Free Natick,Low,0,Waste & Recycling,community_cleanup
+Energize Framingham,No,Participate in a Framingham Clean-Up! ,Low,0,Activism & Education,community_cleanup
+Kaat's Test Community,No,Wayland Cleans Up!,Low,$$,Transportation,community_cleanup
 Sustainable Sherborn,Yes,Consulting with a Sherborn Energy Coach,Low,0,Home Energy,coaching
 Energize Wayland,No,Annual roadside trash Clean Up!,Low,0,Waste & Recycling,community_cleanup
 Agawam,Yes,Clean Up Agawam,Low,0,Waste & Recycling,community_cleanup
@@ -805,13 +805,13 @@ Energize Wayland,No,Shop Local: Farmers Market,Medium,$,Food,eat_locally
 EcoNatick,No,Shop Local: Farmers Market-MW,High,0,Food,eat_locally
 Cooler Communities,No,Support Access to Local Food,Low,$,Food,eat_locally
 Cooler Communities,No,Support Access to Local Food,Low,$,Food,eat_locally
-Green Newton,Yes,Promote Sustainability in Our Schools,Low,0,Activism & Education,education
-Green Newton,Yes,Promote Sustainability in Our Schools,Low,0,Activism & Education,education
-EcoNatick,No,Promote Sustainability in Our Schools-MW,Low,0,Activism & Education,education
-EcoNatick,No,Promote Sustainability in Our Schools-MW,Low,0,Activism & Education,education
-Energize Lexington,No,Support Lexington Youth,High,0,Activism & Education,education
-Pioneer Valley Schools,Yes,Unexpected Allies - Students,Medium,0,Activism & Education,education
-Pioneer Valley Schools,Yes,Unexpected Allies - Students,Medium,0,Activism & Education,education
+Green Newton,Yes,Promote Sustainability in Our Schools,Low,0,Activism & Education,sustain_school
+Green Newton,Yes,Promote Sustainability in Our Schools,Low,0,Activism & Education,sustain_school
+EcoNatick,No,Promote Sustainability in Our Schools-MW,Low,0,Activism & Education,sustain_school
+EcoNatick,No,Promote Sustainability in Our Schools-MW,Low,0,Activism & Education,sustain_school
+Energize Lexington,No,Support Lexington Youth,High,0,Activism & Education,sustain_school
+Pioneer Valley Schools,Yes,Unexpected Allies - Students,Medium,0,Activism & Education,sustain_school
+Pioneer Valley Schools,Yes,Unexpected Allies - Students,Medium,0,Activism & Education,sustain_school
 LexCAN Toolkit,Yes,Renovating? Go for High Efficiency ,High,$$$,Home Energy,efficient_fossil
 Green Newton,Yes,Go for High Efficiency Renovations,Medium,$$$,Home Energy,efficient_renovations
 Green Pepperell,No,Mass Save Residential New Construction,High,$$$,Home Energy,efficient_renovations
@@ -1170,12 +1170,12 @@ Energize Lexington,Yes,Do a Lazy Fall Garden Clean Up,Low,0,"Land, Soil & Water"
 Agawam,Yes,Earth-Friendly Gardening Age 6+,Low,$,"Land, Soil & Water",grow_local
 Cooler Communities,No,Gardening for Life Age 6+,Low,$,"Land, Soil & Water",grow_local
 Global,No,landscaping,Medium,$$,Home Energy,grow_local
-Energize Wayland,No,Community Garden Plot,Medium,$,Food,grow_locally
-EcoNatick,No,Grow your own food,Medium,$,Food,grow_locally
-Energize Wayland,Yes,Grow your own food,Medium,$,Food,grow_locally
-Training,Yes,Grow your own food,Medium,$,Food,grow_locally
-Cooler Greenfield,Yes,Indoor Plants,Low,$,"Land, Soil & Water",grow_locally
-EcoNatick,Yes,Try the Seed Library!,Low,0,Food,grow_locally
+Energize Wayland,No,Community Garden Plot,Medium,$,Food,grow_local
+EcoNatick,No,Grow your own food,Medium,$,Food,grow_local
+Energize Wayland,Yes,Grow your own food,Medium,$,Food,grow_local
+Training,Yes,Grow your own food,Medium,$,Food,grow_local
+Cooler Greenfield,Yes,Indoor Plants,Low,$,"Land, Soil & Water",grow_local
+EcoNatick,Yes,Try the Seed Library!,Low,0,Food,grow_local
 Energize Boxborough,Yes,Get Started,Low,0,Activism & Education,help_community
 Energize Acton,No,How can you help? Join us! Sign up now.,Low,0,Activism & Education,help_community
 Energize Stow,Yes,Join this site,High,0,Activism & Education,help_community
@@ -1391,10 +1391,10 @@ Cooler SICS,Yes,The Adventure Starts Here!,,0,Activism & Education,learn
 Hampshire Regional HS,Yes,The Adventure Starts Here!,,0,Activism & Education,learn
 Energize Acton,No,Welcome & Intro to Actions & Goals,Low,0,Home Energy,learn
 Energize Lexington,Yes,Why We Should Electrify Everything,High,0,Activism & Education,learn
-EcoNatick,Yes,Grab a good book!,Low,0,Activism & Education,learning
-Agawam,Yes,Less Plastic Is Good! Age 6+,Low,0,Activism & Education,learning
-EcoNatick,Yes,Read Natick's Net Zero Plan,Low,0,Activism & Education,learning
-Sustainable Medfield,Yes,Read with the Eco-Centric Book Club,Low,0,Activism & Education,learning
+EcoNatick,Yes,Grab a good book!,Low,0,Activism & Education,learn
+Agawam,Yes,Less Plastic Is Good! Age 6+,Low,0,Activism & Education,learn
+EcoNatick,Yes,Read Natick's Net Zero Plan,Low,0,Activism & Education,learn
+Sustainable Medfield,Yes,Read with the Eco-Centric Book Club,Low,0,Activism & Education,learn
 Solarize Eastie,No,Change to LED Lightin-Green Eastie,Medium,$,Home Energy,led_lighting
 Green Pepperell,No,Change to LED Lightin-PepperellMA,Medium,$,Home Energy,led_lighting
 Cooler Concord,Yes,Change to LED lighting,Medium,$,Home Energy,led_lighting

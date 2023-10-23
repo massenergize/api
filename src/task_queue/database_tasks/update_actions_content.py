@@ -83,7 +83,7 @@ def update_actions_content(task=None):
                     ccActionName = item[t["Carbon Calculator Action"]]
 
                     # locate the Action from title and community
-                    action = Action.objects.filter(title=action_title, community=community)
+                    action = Action.objects.filter(title=action_title, community=community, is_deleted=False)
                     if action:
                         action = action.first()
 
@@ -112,14 +112,13 @@ def update_actions_content(task=None):
                                             print("Carbon calculator action '"+ccActionName+"' does not exist")
                                             continue
                                         action.calculator_action = ccAction.first()
-    
                                     action.save()
 
                              
         if len(data) > 0:
             report =  write_to_csv(data)
             temp_data = {'data_type': "Content Spacing", "name":task.creator.full_name if task.creator else "admin"}
-            file_name = "Content-Spacing-Report-{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d"))
+            file_name = "Update-Actions-Report-{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d"))
             send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[task.creator.email], report, file_name)
     
         return True
