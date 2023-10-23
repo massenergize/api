@@ -219,7 +219,7 @@ class TeamStore:
         from_email = get_sender_email(primary_community_id)
 
         for cadmin in cadmins:
-          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email,from_email=from_email )
+          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email,sender=from_email )
       team.save()
       for admin in verified_admins:
         teamMember, _ = TeamMember.objects.get_or_create(team=team,user=admin)
