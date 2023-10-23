@@ -1,6 +1,7 @@
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from api.utils.api_utils import get_sender_email
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
 from database.utils.settings.model_constants.events import EventConstants
 from database.models import Community, FeatureFlag, UserProfile, Event, CommunityAdminGroup
@@ -192,7 +193,7 @@ def send_events_nudge(task=None):
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_email_list(admins)
                 for name, email, user_info in email_list.items():
-                    stat = send_events_report(name, email, event_list, user_info)
+                    stat = send_events_report(name, email, event_list, user_info,com)
                     if not stat:
                         print("send_events_report error return")
                         return False
@@ -204,7 +205,7 @@ def send_events_nudge(task=None):
         return False
 
 
-def send_events_report(name, email, event_list, user_info):
+def send_events_report(name, email, event_list, user_info,comm):
     try:
         login_method= (user_info or {}).get("login_method", None)
         cred = encode_data_for_URL({"email": email, "login_method":login_method})
@@ -213,7 +214,8 @@ def send_events_report(name, email, event_list, user_info):
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
+        from_email = get_sender_email(comm.id)
+        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))

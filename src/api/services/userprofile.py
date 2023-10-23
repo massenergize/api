@@ -10,6 +10,7 @@ import os, csv
 import re
 from sentry_sdk import capture_message
 from typing import Tuple
+from api.utils.api_utils import get_sender_email
 
 from api.utils.filter_functions import sort_items
 
@@ -223,6 +224,8 @@ class UserService:
         subject = f'Welcome to {community_name}, a MassEnergize community'
         homelink = f'{COMMUNITY_URL_ROOT}/{subdomain}'
 
+        from_email = get_sender_email(community.id)
+
         content_variables = {
           'name': user.preferred_name,
           'community': community_name,
@@ -234,7 +237,7 @@ class UserService:
           'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
           }
 
-        send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables)
+        send_massenergize_rich_email(subject, user.email, 'user_registration_email.html', content_variables, from_email)
       user = serialize(user, full=True)
       return {**user, "is_new":True }, None
     except Exception as e:

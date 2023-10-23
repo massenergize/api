@@ -6,6 +6,7 @@ from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die, get_community_or_die
@@ -64,6 +65,7 @@ class VendorService:
           return None, CustomMassenergizeError('Vendor submission incomplete')
 
         subject = 'User Service Provider Submitted'
+        from_email = get_sender_email(community.id)
 
         content_variables = {
           'name': first_name,
@@ -75,7 +77,7 @@ class VendorService:
           'body': vendor.description,
         }
         send_massenergize_rich_email(
-              subject, admin_email, 'vendor_submitted_email.html', content_variables)
+              subject, admin_email, 'vendor_submitted_email.html', content_variables, from_email)
 
         if IS_PROD or IS_CANARY: 
           send_slack_message(

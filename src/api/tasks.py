@@ -7,6 +7,7 @@ from api.store.download import DownloadStore
 from api.constants import DOWNLOAD_POLICY
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from api.store.utils import get_user_from_context
+from api.utils.api_utils import get_sender_email
 from database.models import Policy
 from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_community, send_events_report
 from api.store.utils import get_community, get_user
@@ -22,7 +23,7 @@ from django.db.models import Count
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 
 
-def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
+def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None,from_email=None):
     response = HttpResponse(content_type="text/csv")
     now = datetime.datetime.now().strftime("%Y%m%d")
     if not filename:
@@ -38,13 +39,13 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None,
         'data_type': download_type,
         "name":user.full_name,
     }
-    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], response.content, filename)
+    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], response.content, filename, from_email)
     return True
 
 
-def error_notification(download_type, email):
+def error_notification(download_type, email, from_email):
     msg = f'Sorry, an error occurred while generating {download_type} data. Please try again.'
-    send_massenergize_email(f"{download_type.capitalize()} Data",msg, email )
+    send_massenergize_email(f"{download_type.capitalize()} Data",msg, email , from_email)
 
 
 @shared_task(bind=True)
@@ -56,43 +57,43 @@ def download_data(self, args, download_type):
     context.user_is_logged_in = args.get("user_is_logged_in", False)
     context.user_email = args.get("email", None)
     email = args.get("email", None)
+    from_email = get_sender_email(args.get("community_id"))
     if download_type == USERS:
         (files, com_name), err = store.users_download(context, community_id=args.get("community_id"), team_id=args.get("team_id"))
         if  err:
-            error_notification(USERS, email)
+            error_notification(USERS, email,from_email)
         else:
-            generate_csv_and_email(data=files, download_type=USERS, community_name=com_name, email=email)
+            generate_csv_and_email(data=files, download_type=USERS, community_name=com_name, email=email,from_email=from_email)
 
     elif download_type == ACTIONS:
         (files, com_name), err = store.actions_download(context, community_id=args.get("community_id"))
         if err:
-            error_notification(ACTIONS, email)
+            error_notification(ACTIONS, email,from_email)
         else:
-            generate_csv_and_email(data=files, download_type=ACTIONS, community_name=com_name, email=email)
+            generate_csv_and_email(data=files, download_type=ACTIONS, community_name=com_name, email=email,from_email=from_email)
     
 
     elif download_type == COMMUNITIES:
         (files, dummy), err = store.communities_download(context)
         if err:
-            error_notification(COMMUNITIES, email)
+            error_notification(COMMUNITIES, email,from_email)
         else:   
-            generate_csv_and_email(
-                data=files, download_type=COMMUNITIES, email=email)
+            generate_csv_and_email(data=files, download_type=COMMUNITIES, email=email,from_email=from_email)
 
     elif download_type == TEAMS:
         (files, com_name), err = store.teams_download(context, community_id=args.get("community_id"))
         if err:
-            error_notification(TEAMS, email)
+            error_notification(TEAMS, email,from_email)
         else:
-            generate_csv_and_email(data=files, download_type=TEAMS, community_name=com_name, email=email)
+            generate_csv_and_email(data=files, download_type=TEAMS, community_name=com_name, email=email,from_email=from_email)
 
     elif download_type == METRICS:
         (files, com_name), err = store.metrics_download(context, args, community_id=args.get("community_id"))
         if err:
-            error_notification(METRICS, email)
+            error_notification(METRICS, email,from_email)
         else:
             generate_csv_and_email(
-                data=files, download_type=METRICS, community_name=com_name, email=email)
+                data=files, download_type=METRICS, community_name=com_name, email=email,from_email=from_email)
 
     elif download_type == CADMIN_REPORT:
         user, err = get_user(None, email)
@@ -112,7 +113,7 @@ def download_data(self, args, download_type):
             event_list = events.get("events", [])
             stat = send_events_report(user.full_name, user.email, event_list, user.user_info)        
             if not stat:
-                error_notification(CADMIN_REPORT, email)
+                error_notification(CADMIN_REPORT, email, from_email)
                 return
             
     elif download_type == SAMPLE_USER_REPORT:
@@ -136,10 +137,10 @@ def download_data(self, args, download_type):
              
         (files, dummy), err = store.community_pagemap_download(context, community_id=community_id)
         if err:
-            error_notification(COMMUNITY_PAGEMAP, email)
+            error_notification(COMMUNITY_PAGEMAP, email,from_email)
         else:
             generate_csv_and_email(
-                data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email)
+                data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email,from_email=from_email)
 
 
 
@@ -191,9 +192,10 @@ def generate_and_send_weekly_report(self):
             'end': str(today.date()),
 
         }
+        from_email = get_sender_email(community.id)
         
 
-        send_email(None, None,all_community_admins, CADMIN_EMAIL_TEMPLATE,cadmin_temp_data)
+        send_email(None, None,all_community_admins, CADMIN_EMAIL_TEMPLATE,cadmin_temp_data, from_email)
 
         writer.writerow([community_name, community_total_signup,community_weekly_signup, community_actions_taken, community_weekly_done_actions, community_weekly_todo_actions])
     
@@ -208,8 +210,8 @@ def generate_and_send_weekly_report(self):
 
 
 
-def send_email(file, file_name, email_list, temp_id, t_model):
-    send_massenergize_email_with_attachments(temp_id, t_model, email_list, file, file_name)
+def send_email(file, file_name, email_list, temp_id, t_model,from_email=None):
+    send_massenergize_email_with_attachments(temp_id, t_model, email_list, file, file_name, from_email)
 
 
 

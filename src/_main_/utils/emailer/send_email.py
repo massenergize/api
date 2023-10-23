@@ -18,14 +18,14 @@ def is_dev_env():
     return True
 
 
-def send_massenergize_email(subject, msg, to):
+def send_massenergize_email(subject, msg, to, sender):
   if is_test_mode(): 
     return True
 
   message = pystmark.Message(
     subject=subject,
     to=to,
-    sender=FROM_EMAIL, 
+    sender=sender or FROM_EMAIL, 
     text=msg, 
   )
   response = pystmark.send(message, api_key=POSTMARK_EMAIL_SERVER_TOKEN)
@@ -37,13 +37,13 @@ def send_massenergize_email(subject, msg, to):
     return False
   return True
 
-def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name):
+def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name, sender=None):
   if is_test_mode():
     return True
   t_model = {**t_model, "is_dev":is_dev_env()}
 
   
-  message = pystmark.Message(sender=FROM_EMAIL, to=to, template_alias=temp, template_model=t_model)
+  message = pystmark.Message(sender=sender or FROM_EMAIL, to=to, template_alias=temp, template_model=t_model)
   # postmark server can be Production, Development or Testing (for local testing)
   postmark_server = POSTMARK_EMAIL_SERVER_TOKEN
   if file is not None:

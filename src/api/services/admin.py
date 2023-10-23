@@ -5,6 +5,7 @@ from api.store.admin import AdminStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
+from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from sentry_sdk import capture_message
@@ -31,8 +32,9 @@ class AdminService:
             'admintype': 'Super',
             'admintext': "Now that you are a super admin, you have access the MassEnergize admin website at %s. You have full control over the content of our sites, can publish new communities and add new admins" % (ADMIN_URL_ROOT)
         }
+        from_email = get_sender_email()
         send_massenergize_rich_email(
-            subject, admin.email, 'new_admin_email.html', content_variables)
+            subject, admin.email, 'new_admin_email.html', content_variables, from_email)
         return serialize(admin, full=True), None
       except Exception as e:
         capture_message(str(e), level="error")
@@ -66,8 +68,9 @@ class AdminService:
             'portal_link':  f"{COMMUNITY_URL_ROOT}/{res['subdomain']}",
             'admin_type': 'Community'
         }
+        from_email = get_sender_email()
         send_massenergize_rich_email(
-            subject, res["email"], 'new_admin_email.html', content_variables)
+            subject, res["email"], 'new_admin_email.html', content_variables, from_email)
         res["user"] = serialize(res.get("user"))
         return res, None
       except Exception as e:
@@ -112,7 +115,8 @@ class AdminService:
             "subject": message.title,
             "message_body": message.body,
         }
-        send_massenergize_rich_email(subject, admin_email, 'contact_admin_email.html', content_variables)
+        from_email = get_sender_email(message.community.id)
+        send_massenergize_rich_email(subject, admin_email, 'contact_admin_email.html', content_variables, from_email)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(

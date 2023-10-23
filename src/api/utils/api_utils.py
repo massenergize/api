@@ -2,7 +2,7 @@
 
 
 from math import atan2, cos, radians, sin, sqrt
-from database.models import CommunityAdminGroup, UserProfile
+from database.models import Community, CommunityAdminGroup, UserProfile
 
 
 def is_admin_of_community(context, community_id):
@@ -62,3 +62,21 @@ def get_distance_between_coords(lat1, lon1, lat2, lon2):
 
     distance = R * c
     return distance
+
+
+
+def get_sender_email(community_id):
+    DEFAULT_SENDER = 'no-reply@massenergize.org'
+    if not community_id:
+        return DEFAULT_SENDER
+    community = Community.objects.filter(id=community_id).first()
+    if not community:
+        return DEFAULT_SENDER
+    postmark_info = community.contact_info if community.contact_info else {}
+    if not community.owner_email:
+        return DEFAULT_SENDER
+    
+    if postmark_info.get("is_validated"):
+        return community.owner_email
+    
+    return DEFAULT_SENDER

@@ -6,6 +6,7 @@ from api.store.event import EventStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
+from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
@@ -89,7 +90,7 @@ class EventService:
 
           # need to validate e-mails from community admins
           #from_email = community.owner_email
-          from_email = None
+          from_email = get_sender_email(event.community.id)
 
           homelink = f'{COMMUNITY_URL_ROOT}/{community.subdomain}'
 
@@ -107,6 +108,7 @@ class EventService:
             'logo': community_logo,
             'privacylink': f"{homelink}/policies?name=Privacy%20Policy"
           }
+          
 
           send_massenergize_rich_email(
               subject, user_email, 'event_rsvp_email.html', content_variables, from_email)
@@ -190,8 +192,9 @@ class EventService:
           'title': event.name,
           'body': event.description,
         }
+        from_email = get_sender_email(event.community.id)
         send_massenergize_rich_email(
-              subject, admin_email, 'event_submitted_email.html', content_variables)
+              subject, admin_email, 'event_submitted_email.html', content_variables, from_email)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(

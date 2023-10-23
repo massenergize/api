@@ -1,7 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
-from api.utils.api_utils import is_admin_of_community
+from api.utils.api_utils import get_sender_email, is_admin_of_community
 from api.utils.filter_functions import get_team_member_filter_params, get_teams_filter_params
 from api.utils.constants import TEAM_APPROVAL_EMAIL_TEMPLATE
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
@@ -216,9 +216,10 @@ class TeamStore:
         cadmins = CommunityAdminGroup.objects.filter(community__id=primary_community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team.\n\n%s" % ("%s/admin/edit/%i/team" %
           (ADMIN_URL_ROOT, team.id))
+        from_email = get_sender_email(primary_community_id)
 
         for cadmin in cadmins:
-          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email)
+          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email,from_email=from_email )
       team.save()
       for admin in verified_admins:
         teamMember, _ = TeamMember.objects.get_or_create(team=team,user=admin)
@@ -296,9 +297,10 @@ class TeamStore:
                   }
         
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
+        from_email = get_sender_email(community.id)
         for team_admin in team_admins:
           send_massenergize_email_with_attachments(TEAM_APPROVAL_EMAIL_TEMPLATE, message_data,
-                                                  team_admin.user.email, None, None)
+                                                  team_admin.user.email, None, None, from_email)
       else:
         # this is how teams can get be made not live
         team.is_published = is_published
