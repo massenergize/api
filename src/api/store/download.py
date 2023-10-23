@@ -421,7 +421,7 @@ class DownloadStore:
             }
         return self._get_cells_from_dict(self.user_info_columns_new, user_cells)
     
-    # Recieves an action, returns how many times it's been marked as Done in the last 30 days
+    # Receives an action, returns how many times it's been marked as Done in the last 30 days
     def _get_last_30_days_count(self, action):
         today = datetime.date.today()
         thirty_days_ago = today - timezone.timedelta(days = 30)
@@ -434,9 +434,8 @@ class DownloadStore:
 
     #Gets row information for the All Actions CSV and the All Communities and Actions CSV
     def _get_action_info_cells(self, action):
-
         average_carbon_points = (
-            AverageImpact(action.calculator_action, action.date_completed)
+            AverageImpact(action.calculator_action)
             if action.calculator_action
             else int(action.average_carbon_score)
             if action.average_carbon_score.isdigit()
@@ -1007,7 +1006,6 @@ class DownloadStore:
 
         columns = self.action_info_columns
         data = [columns]
-
         for action in actions:
             data.append(self._get_action_info_cells(action))
 

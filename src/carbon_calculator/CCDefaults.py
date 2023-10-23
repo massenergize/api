@@ -43,7 +43,7 @@ class CCD():
             cq = CalcDefault.objects.all()
             for c in cq:
                 # valid date is 0 if not specified
-                date = '2000-01-01'
+                date = datetime.strptime('2000-01-01','%Y-%m-%d').date()
                 if c.valid_date != None:
                     date = c.valid_date
 
@@ -91,7 +91,7 @@ class CCD():
                 value = var["values"][-1]
             else:
                 for i in range(len(var["valid_dates"])):
-                    valid_date = datetime.strptime(var["valid_dates"][i], '%Y-%m-%d').date()
+                    valid_date = var["valid_dates"][i]
                     if valid_date < date:
                         value = var["values"][i]
             return value

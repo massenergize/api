@@ -83,7 +83,7 @@ def update_actions_content(task=None):
                     ccActionName = item[t["Carbon Calculator Action"]]
 
                     # locate the Action from title and community
-                    action = Action.objects.filter(title=action_title, community=community)
+                    action = Action.objects.filter(title=action_title, community=community, is_deleted=False)
                     if action:
                         action = action.first()
 
@@ -112,7 +112,6 @@ def update_actions_content(task=None):
                                             print("Carbon calculator action '"+ccActionName+"' does not exist")
                                             continue
                                         action.calculator_action = ccAction.first()
-    
                                     action.save()
 
                              
