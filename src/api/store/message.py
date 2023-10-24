@@ -4,7 +4,7 @@ from _main_.utils.footage.spy import Spy
 from api.tasks import send_scheduled_email
 from api.utils.api_utils import is_admin_of_community, is_null
 from api.utils.filter_functions import get_messages_filter_params
-from database.models import Message, Media, Team, CommunityAdminGroup, UserProfile
+from database.models import Community, Message, Media, Team, CommunityAdminGroup, UserProfile
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
     InvalidResourceError,
@@ -27,14 +27,23 @@ def get_schedule(schedule):
        date, timezone = schedule.split("GMT") # find a proper way to handle this
        return datetime.strptime(date.strip(),  "%a %b %d %Y %H:%M:%S")
 
-    return datetime.utcnow() + timedelta(minutes=1)
+    return  datetime.utcnow() + timedelta(minutes=1)
     
 
 
 def get_message_recipients(audience, audience_type, sub_audience_type):
     if not is_null(audience):
+        if audience_type == "COMMUNITY_CONTACTS":
+             if audience.lower() == "all":
+                contacts = Community.objects.filter(is_deleted=False).only("owner_email", "id", "name")
+             else:
+                 audience = audience.split(",")
+                 contacts = Community.objects.filter(id__in=audience).only("owner_email", "id", "name")
+             return contacts
+        
         audience = audience.split(",")
         return UserProfile.objects.filter(id__in=audience)
+    
     else:
         if audience_type == "COMMUNITY_ADMIN" and sub_audience_type == "ALL":
             admins =  CommunityAdminGroup.objects.all().values_list("members", flat=True)
@@ -343,13 +352,13 @@ class MessageStore:
 
     def send_message(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
-            audience_type = args.pop("audience_type", None)
-            subject = args.pop("subject", None)
-            message = args.pop("message", None)
-            message_id = args.pop("id", None)
-            sub_audience_type = args.pop("sub_audience_type", None)
-            audience = args.pop("audience", None)
-            schedule = get_schedule(args.pop("schedule", None))
+            audience_type = args.get("audience_type", None)
+            subject = args.get("subject", None)
+            message = args.get("message", None)
+            message_id = args.get("id", None)
+            sub_audience_type = args.get("sub_audience_type", None)
+            audience = args.get("audience", None)
+            schedule = get_schedule(args.get("schedule", None))
             recipients = get_message_recipients(audience, audience_type, sub_audience_type)
 
             if not recipients:
@@ -358,6 +367,9 @@ class MessageStore:
             user = get_user_from_context(context)
             if not user:
                 return None, InvalidResourceError()
+            
+
+            email_list =  list(recipients.values_list("owner_email" if audience_type == "COMMUNITY_CONTACTS" else "email", flat=True))
         
             if message_id:
                 messages = Message.objects.filter(pk=message_id)
@@ -369,27 +381,18 @@ class MessageStore:
                     result = AsyncResult(task_id)
                     result.revoke()
                 # schedule new task and update message
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,recipients],eta=schedule).id
-                scheduled_info = {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":recipients}
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
+                scheduled_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":email_list}
                 messages.update(**{"scheduled_info": scheduled_info, "body": message, "title": subject})
             else:
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,[]],eta=schedule).id
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
                 new_message = Message(
                 title=subject,
                 body=message,
                 user=user,
-                scheduled_info = {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":[]}
+                scheduled_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":email_list}
                 )
                 new_message.save()
-            
-    
-            
-
-
-
-            
-
-
             return new_message, None
         except Exception as e:
             capture_message(str(e), level="error")
