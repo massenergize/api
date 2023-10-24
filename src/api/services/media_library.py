@@ -7,6 +7,12 @@ class MediaLibraryService:
     def __init__(self):
         self.store = MediaLibraryStore()
 
+    def read_image(self, args):
+        string, error = self.store.read_image(args)
+        if error:
+            return None, error
+        return string, None
+    
     def fetch_content(self, args):
         images, error = self.store.fetch_content(args)
         if error:

@@ -21,7 +21,24 @@ class MediaLibraryHandler(RouteHandler):
         self.add("/gallery.image.info", self.getImageInfo)
         self.add("/gallery.find", self.find_images)
         self.add("/gallery.item.edit", self.edit_details)
+        self.add("/gallery.image.read", self.read_image)
 
+    # @admins_only
+    def read_image(self, request):
+        """Reads the content of an image that exists in our s3 bucket and returns the base64 results as a response.
+            The route is used when cropping already uploaded images to skip CORS error.
+        """
+        context: Context = request.context
+        args: dict = context.args
+        self.validator.expect("media_id", int, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return err
+        image_data, error = self.service.read_image(args)
+        if error:
+            return error
+        return MassenergizeResponse(data=image_data)
+    
     @admins_only
     def fetch_content(self, request):
         """Fetches image content related communities that admins can browse through"""

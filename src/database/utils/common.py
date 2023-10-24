@@ -3,15 +3,18 @@ This file contains utility functions that come in handy for processing and
 retrieving data
 """
 from ast import Lambda
+import base64
 import json
 from django.core import serializers
 from django.forms.models import model_to_dict
 from collections.abc import Iterable
+from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
 from sentry_sdk import capture_message
 
 from _main_.utils.utils import Console
+import boto3
 
-
+s3 = boto3.client('s3', region_name=AWS_S3_REGION_NAME)
 
 
 def get_images_in_sequence(images,sequence): 
@@ -163,3 +166,17 @@ def get_request_contents(request):
       capture_message(str(e), level="error")
       return {}
 
+
+
+
+def read_image_from_s3(key, bucket_name =None):
+  bucket_name = bucket_name or  AWS_STORAGE_BUCKET_NAME
+  # Retrieve the image from the S3 bucket
+  response = s3.get_object(Bucket=bucket_name, Key=key)
+  # Get the image data as bytes
+  image_data = response['Body'].read()
+  # Encode the image data to base64
+  base64_image = base64.b64encode(image_data).decode('utf-8') 
+  data = f'data:{response["ContentType"]};base64,{base64_image}'
+
+  return data
