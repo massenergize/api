@@ -261,6 +261,12 @@ class MessageStore:
             messages = Message.objects.filter(id=message_id)
             if not is_admin_of_community(context, messages.first().community.id):
                 return None, NotAuthorizedError()
+            
+            schedule_info = messages.first().scheduled_info or {}
+            if schedule_info.get("schedule_id"):
+                result = AsyncResult(schedule_info.get("schedule_id"))
+                result.revoke()
+
             messages.update(is_deleted=True)
             message = messages.first()
             # TODO: also remove it from all places that it was ever set in many to many or foreign key
@@ -289,7 +295,6 @@ class MessageStore:
             with_ids = Q()
             if message_ids:
                 with_ids = Q(id__in=message_ids)
-
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
                     Q(
@@ -299,6 +304,7 @@ class MessageStore:
                     with_ids,
                     *filter_params
                 ).distinct()
+
             elif context.user_is_community_admin:
                 messages = Message.objects.filter(
                     Q(
@@ -382,7 +388,7 @@ class MessageStore:
                     result.revoke()
                 # schedule new task and update message
                 schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
-                scheduled_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":email_list}
+                scheduled_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type}}
                 messages.update(**{"scheduled_info": scheduled_info, "body": message, "title": subject})
             else:
                 schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
@@ -390,7 +396,7 @@ class MessageStore:
                 title=subject,
                 body=message,
                 user=user,
-                scheduled_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":email_list}
+                scheduled_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id, "schedule": str(schedule),"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type}}
                 )
                 new_message.save()
             return new_message, None

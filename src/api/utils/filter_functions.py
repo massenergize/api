@@ -1,3 +1,4 @@
+import datetime
 import json
 import operator
 from functools import reduce
@@ -144,6 +145,7 @@ def get_messages_filter_params(params):
       teams = params.get("team", None)
       status = None
       forwarded =None
+      is_scheduled = params.get("is_scheduled", None)
       
       search_text = params.get("search_text", None)
       if search_text:
@@ -166,6 +168,10 @@ def get_messages_filter_params(params):
         forwarded= True
       if "No" in params.get("forwarded to team admin?", []):
         forwarded= False
+
+
+      if is_scheduled:
+        query.append(Q(scheduled_info__schedule__gt=json.dumps(datetime.datetime.now().isoformat())))
 
       if communities:
         query.append(Q(community__name__in=communities))
