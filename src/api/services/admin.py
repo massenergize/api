@@ -32,9 +32,9 @@ class AdminService:
             'admintype': 'Super',
             'admintext': "Now that you are a super admin, you have access the MassEnergize admin website at %s. You have full control over the content of our sites, can publish new communities and add new admins" % (ADMIN_URL_ROOT)
         }
-        from_email = get_sender_email()
+        # from_email = get_sender_email()
         send_massenergize_rich_email(
-            subject, admin.email, 'new_admin_email.html', content_variables, from_email)
+            subject, admin.email, 'new_admin_email.html', content_variables, None)
         return serialize(admin, full=True), None
       except Exception as e:
         capture_message(str(e), level="error")
@@ -115,8 +115,8 @@ class AdminService:
             "subject": message.title,
             "message_body": message.body,
         }
-        from_email = get_sender_email(message.community.id)
-        send_massenergize_rich_email(subject, admin_email, 'contact_admin_email.html', content_variables, from_email)
+        # from_email = get_sender_email(message.community.id)
+        send_massenergize_rich_email(subject, admin_email, 'contact_admin_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(

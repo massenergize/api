@@ -69,9 +69,9 @@ class ActionService:
           'title': action.title,
           'body': action.featured_summary,
         }
-        from_email = get_sender_email(action.community.id)
+        # from_email = get_sender_email(action.community.id)
         send_massenergize_rich_email(
-              subject, admin_email, 'action_submitted_email.html', content_variables, from_email)
+              subject, admin_email, 'action_submitted_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(

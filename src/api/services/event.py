@@ -192,9 +192,9 @@ class EventService:
           'title': event.name,
           'body': event.description,
         }
-        from_email = get_sender_email(event.community.id)
+        # from_email = get_sender_email(event.community.id)
         send_massenergize_rich_email(
-              subject, admin_email, 'event_submitted_email.html', content_variables, from_email)
+              subject, admin_email, 'event_submitted_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(
