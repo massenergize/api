@@ -18,7 +18,7 @@ def is_dev_env():
     return True
 
 
-def send_massenergize_email(subject, msg, to, sender):
+def send_massenergize_email(subject, msg, to, sender=None):
   if is_test_mode(): 
     return True
 
