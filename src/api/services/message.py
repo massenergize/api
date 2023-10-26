@@ -7,6 +7,7 @@ from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email
 from sentry_sdk import capture_message
 from typing import Tuple
+from api.utils.api_utils import get_sender_email
 
 from api.utils.filter_functions import sort_items
 
@@ -48,9 +49,10 @@ class MessageService:
       to = args.pop('to', None)
       body = args.pop('body', None)
       orig_date = message.created_at.strftime("%Y-%m-%d %H:%M")
+      from_email = get_sender_email(message.community.id)
 
       reply_body = body + "\r\n\r\n============================================\r\nIn reply to the following message received "+orig_date + ":\r\n\r\n" + message.body
-      success = send_massenergize_email(title, reply_body, to)
+      success = send_massenergize_email(title, reply_body, to, from_email)
       if success:
         message.have_replied = True
         message.save()

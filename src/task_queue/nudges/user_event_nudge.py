@@ -4,6 +4,7 @@ from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from api.constants import GUEST_USER
+from api.utils.api_utils import get_sender_email
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
 from database.models import Community, CommunityMember, Event, UserProfile, FeatureFlag
 from django.db.models import Q
@@ -118,7 +119,7 @@ def get_community_events(community_id):
 
 def get_community_users(community_id):
     community_members = CommunityMember.objects.filter(community__id=community_id, is_deleted=False).values_list("user", flat=True)
-    users = UserProfile.objects.filter(id__in=community_members)
+    users = UserProfile.objects.filter(id__in=community_members, accepts_terms_and_conditions=True)
     return users
 
 def generate_change_pref_url(subdomain,email, login_method):
@@ -181,7 +182,8 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         data["community_logo"] = get_json_if_not_none(comm.logo).get("url") if comm.logo else ""
         data["cadmin_email"]=comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
-        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
+        from_email = get_sender_email(comm.id)
+        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))

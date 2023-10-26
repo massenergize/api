@@ -4,6 +4,7 @@ from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.common import serialize, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.utils.pagination import paginate
+from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.testimonial import TestimonialStore
@@ -66,7 +67,7 @@ class TestimonialService:
           'body': testimonial.body,
         }
         send_massenergize_rich_email(
-              subject, admin_email, 'testimonial_submitted_email.html', content_variables)
+              subject, admin_email, 'testimonial_submitted_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(

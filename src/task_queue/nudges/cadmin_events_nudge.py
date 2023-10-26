@@ -1,6 +1,7 @@
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
+from api.utils.api_utils import get_sender_email
 from api.utils.constants import WEEKLY_EVENTS_NUDGE_TEMPLATE
 from database.utils.settings.model_constants.events import EventConstants
 from database.models import Community, FeatureFlag, UserProfile, Event, CommunityAdminGroup
@@ -213,7 +214,8 @@ def send_events_report(name, email, event_list, user_info):
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
+        # sent from MassEnergize to cadmins
+        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))

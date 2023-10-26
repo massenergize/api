@@ -1,7 +1,5 @@
-#from django.shortcuts import render
 from django.http import JsonResponse
 from database.utils.json_response_wrapper import Json
-#from django.views.decorators.csrf import csrf_exempt
 from database.utils.common import get_request_contents
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.massenergize_errors import NotAuthorizedError
