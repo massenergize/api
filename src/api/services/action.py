@@ -68,8 +68,9 @@ class ActionService:
           'title': action.title,
           'body': action.featured_summary,
         }
+        # sent from MassEnergize to cadmins
         send_massenergize_rich_email(
-              subject, admin_email, 'action_submitted_email.html', content_variables)
+              subject, admin_email, 'action_submitted_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(
