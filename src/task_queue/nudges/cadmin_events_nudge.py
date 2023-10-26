@@ -214,8 +214,8 @@ def send_events_report(name, email, event_list, user_info,comm):
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
-        from_email = get_sender_email(comm.id)
-        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email)
+        # from_email = get_sender_email(comm.id)
+        send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))

@@ -65,7 +65,7 @@ class VendorService:
           return None, CustomMassenergizeError('Vendor submission incomplete')
 
         subject = 'User Service Provider Submitted'
-        from_email = get_sender_email(community.id)
+        # from_email = get_sender_email(community.id)
 
         content_variables = {
           'name': first_name,
@@ -77,7 +77,7 @@ class VendorService:
           'body': vendor.description,
         }
         send_massenergize_rich_email(
-              subject, admin_email, 'vendor_submitted_email.html', content_variables, from_email)
+              subject, admin_email, 'vendor_submitted_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY: 
           send_slack_message(

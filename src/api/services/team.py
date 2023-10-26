@@ -121,7 +121,7 @@ class TeamService:
       community = team.primary_community
       admin_email = community.owner_email
       admin_name = community.owner_name
-      from_email = get_sender_email(community.id)
+      # from_email = get_sender_email(community.id)
 
       subject = 'A message was sent to the Team Admin for ' + team.name + ' in ' + community.name
       team_members = TeamMember.objects.filter(team=team)
@@ -144,7 +144,7 @@ class TeamService:
               "message_body": message.body,
           }
           send_massenergize_rich_email(
-            subject, user.email, 'contact_team_admin_email.html', content_variables, from_email)
+            subject, user.email, 'contact_team_admin_email.html', content_variables, None)
 
       if IS_PROD or IS_CANARY:
         send_slack_message(

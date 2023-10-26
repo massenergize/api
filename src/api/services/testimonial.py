@@ -56,7 +56,7 @@ class TestimonialService:
           return None, CustomMassenergizeError('Testimonial submission incomplete')
 
         subject = 'User Testimonial Submitted'
-        from_email = get_sender_email(testimonial.community.id)
+        # from_email = get_sender_email(testimonial.community.id)
 
         content_variables = {
           'name': first_name,
@@ -68,7 +68,7 @@ class TestimonialService:
           'body': testimonial.body,
         }
         send_massenergize_rich_email(
-              subject, admin_email, 'testimonial_submitted_email.html', content_variables, from_email)
+              subject, admin_email, 'testimonial_submitted_email.html', content_variables, None)
 
         if IS_PROD or IS_CANARY:
           send_slack_message(

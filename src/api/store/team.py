@@ -216,10 +216,10 @@ class TeamStore:
         cadmins = CommunityAdminGroup.objects.filter(community__id=primary_community_id).first().members.all()
         message = "A team has requested creation in your community. Visit the link below to view their information and if it is satisfactory, check the approval box and update the team.\n\n%s" % ("%s/admin/edit/%i/team" %
           (ADMIN_URL_ROOT, team.id))
-        from_email = get_sender_email(primary_community_id)
+        # from_email = get_sender_email(primary_community_id)
 
         for cadmin in cadmins:
-          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email,sender=from_email )
+          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email,sender=None )
       team.save()
       for admin in verified_admins:
         teamMember, _ = TeamMember.objects.get_or_create(team=team,user=admin)

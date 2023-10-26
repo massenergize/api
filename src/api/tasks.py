@@ -23,7 +23,7 @@ from django.db.models import Count
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 
 
-def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None,from_email=None):
+def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
     response = HttpResponse(content_type="text/csv")
     now = datetime.datetime.now().strftime("%Y%m%d")
     if not filename:
@@ -39,13 +39,13 @@ def generate_csv_and_email(data, download_type, community_name=None, email=None,
         'data_type': download_type,
         "name":user.full_name,
     }
-    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], response.content, filename, from_email)
+    send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], response.content, filename, None)
     return True
 
 
-def error_notification(download_type, email, from_email):
+def error_notification(download_type, email):
     msg = f'Sorry, an error occurred while generating {download_type} data. Please try again.'
-    send_massenergize_email(f"{download_type.capitalize()} Data",msg, email , from_email)
+    send_massenergize_email(f"{download_type.capitalize()} Data",msg, email)
 
 
 @shared_task(bind=True)
@@ -61,39 +61,39 @@ def download_data(self, args, download_type):
     if download_type == USERS:
         (files, com_name), err = store.users_download(context, community_id=args.get("community_id"), team_id=args.get("team_id"))
         if  err:
-            error_notification(USERS, email,from_email)
+            error_notification(USERS, email)
         else:
-            generate_csv_and_email(data=files, download_type=USERS, community_name=com_name, email=email,from_email=from_email)
+            generate_csv_and_email(data=files, download_type=USERS, community_name=com_name, email=email)
 
     elif download_type == ACTIONS:
         (files, com_name), err = store.actions_download(context, community_id=args.get("community_id"))
         if err:
-            error_notification(ACTIONS, email,from_email)
+            error_notification(ACTIONS, email)
         else:
-            generate_csv_and_email(data=files, download_type=ACTIONS, community_name=com_name, email=email,from_email=from_email)
+            generate_csv_and_email(data=files, download_type=ACTIONS, community_name=com_name, email=email)
     
 
     elif download_type == COMMUNITIES:
         (files, dummy), err = store.communities_download(context)
         if err:
-            error_notification(COMMUNITIES, email,from_email)
+            error_notification(COMMUNITIES, email)
         else:   
-            generate_csv_and_email(data=files, download_type=COMMUNITIES, email=email,from_email=from_email)
+            generate_csv_and_email(data=files, download_type=COMMUNITIES, email=email)
 
     elif download_type == TEAMS:
         (files, com_name), err = store.teams_download(context, community_id=args.get("community_id"))
         if err:
-            error_notification(TEAMS, email,from_email)
+            error_notification(TEAMS, email)
         else:
-            generate_csv_and_email(data=files, download_type=TEAMS, community_name=com_name, email=email,from_email=from_email)
+            generate_csv_and_email(data=files, download_type=TEAMS, community_name=com_name, email=email)
 
     elif download_type == METRICS:
         (files, com_name), err = store.metrics_download(context, args, community_id=args.get("community_id"))
         if err:
-            error_notification(METRICS, email,from_email)
+            error_notification(METRICS, email)
         else:
             generate_csv_and_email(
-                data=files, download_type=METRICS, community_name=com_name, email=email,from_email=from_email)
+                data=files, download_type=METRICS, community_name=com_name, email=email)
 
     elif download_type == CADMIN_REPORT:
         user, err = get_user(None, email)
@@ -113,7 +113,7 @@ def download_data(self, args, download_type):
             event_list = events.get("events", [])
             stat = send_events_report(user.full_name, user.email, event_list, user.user_info)        
             if not stat:
-                error_notification(CADMIN_REPORT, email, from_email)
+                error_notification(CADMIN_REPORT, email)
                 return
             
     elif download_type == SAMPLE_USER_REPORT:
@@ -137,10 +137,10 @@ def download_data(self, args, download_type):
              
         (files, dummy), err = store.community_pagemap_download(context, community_id=community_id)
         if err:
-            error_notification(COMMUNITY_PAGEMAP, email,from_email)
+            error_notification(COMMUNITY_PAGEMAP, email)
         else:
             generate_csv_and_email(
-                data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email,from_email=from_email)
+                data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email)
 
 
 
