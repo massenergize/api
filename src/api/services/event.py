@@ -192,7 +192,7 @@ class EventService:
           'title': event.name,
           'body': event.description,
         }
-        # from_email = get_sender_email(event.community.id)
+        # sent from MassEnergize to cadmins
         send_massenergize_rich_email(
               subject, admin_email, 'event_submitted_email.html', content_variables, None)
 

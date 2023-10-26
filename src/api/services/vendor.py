@@ -65,7 +65,6 @@ class VendorService:
           return None, CustomMassenergizeError('Vendor submission incomplete')
 
         subject = 'User Service Provider Submitted'
-        # from_email = get_sender_email(community.id)
 
         content_variables = {
           'name': first_name,

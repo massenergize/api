@@ -6,7 +6,6 @@ from _main_.utils.context import Context
 from _main_.utils.constants import ADMIN_URL_ROOT
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from api.store.utils import get_user_or_die
@@ -69,7 +68,7 @@ class ActionService:
           'title': action.title,
           'body': action.featured_summary,
         }
-        # from_email = get_sender_email(action.community.id)
+        # sent from MassEnergize to cadmins
         send_massenergize_rich_email(
               subject, admin_email, 'action_submitted_email.html', content_variables, None)
 

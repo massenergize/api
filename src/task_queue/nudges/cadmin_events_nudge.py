@@ -214,7 +214,7 @@ def send_events_report(name, email, event_list, user_info):
         data["name"] = name.split(" ")[0]
         data["change_preference_link"] = change_preference_link
         data["events"] = event_list
-        # from_email = get_sender_email(comm.id)
+        # sent from MassEnergize to cadmins
         send_massenergize_email_with_attachments(WEEKLY_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, None)
         return True
     except Exception as e:

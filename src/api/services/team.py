@@ -121,7 +121,6 @@ class TeamService:
       community = team.primary_community
       admin_email = community.owner_email
       admin_name = community.owner_name
-      # from_email = get_sender_email(community.id)
 
       subject = 'A message was sent to the Team Admin for ' + team.name + ' in ' + community.name
       team_members = TeamMember.objects.filter(team=team)

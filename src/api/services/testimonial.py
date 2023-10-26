@@ -56,7 +56,6 @@ class TestimonialService:
           return None, CustomMassenergizeError('Testimonial submission incomplete')
 
         subject = 'User Testimonial Submitted'
-        # from_email = get_sender_email(testimonial.community.id)
 
         content_variables = {
           'name': first_name,
