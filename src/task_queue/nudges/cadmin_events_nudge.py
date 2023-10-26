@@ -193,7 +193,7 @@ def send_events_nudge(task=None):
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_email_list(admins)
                 for name, email, user_info in email_list.items():
-                    stat = send_events_report(name, email, event_list, user_info,com)
+                    stat = send_events_report(name, email, event_list, user_info)
                     if not stat:
                         print("send_events_report error return")
                         return False
@@ -205,7 +205,7 @@ def send_events_nudge(task=None):
         return False
 
 
-def send_events_report(name, email, event_list, user_info,comm):
+def send_events_report(name, email, event_list, user_info):
     try:
         login_method= (user_info or {}).get("login_method", None)
         cred = encode_data_for_URL({"email": email, "login_method":login_method})
