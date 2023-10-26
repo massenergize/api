@@ -364,6 +364,8 @@ class UserService:
           regex = '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
           if(re.search(regex,email)):  
             info, err = self.store.add_invited_user(context, args, first_name, last_name, email)
+            if err:
+              return None, err
 
             # send invitation e-mail to each new user
             _send_invitation_email(info, custom_message)
@@ -374,8 +376,6 @@ class UserService:
         except Exception as e:
           print(str(e))
           return None, CustomMassenergizeError(e)
-      if err:
-        return None, err
       return {'invalidEmails': invalid_emails}, None
     except Exception as e:
       capture_message(str(e), level="error")
