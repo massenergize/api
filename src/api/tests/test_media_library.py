@@ -5,6 +5,7 @@ from django.urls import reverse
 from api.tests.common import (
     createImage,
     createUsers,
+    image_url_to_base64,
     makeAction,
     makeAdmin,
     makeCommunity,
@@ -45,72 +46,27 @@ class TestMediaLibrary(TestCase):
         }
         cls.DB = cls.inflate_database(cls)
 
-    # def test_block_normal_users(self):
-    #     Console.header("Testing That Media Library Routes Are Protected")
-    #     protected_routes = self.routes.get("protected")
-    #     for name, route in protected_routes.items():
-    #         print(f"Regular user is not allowed to -> {name} ")
-    #         response = self.client.post(route)
-    #         error = response.json().get("error")
-    #         self.assertEquals(error, "permission_denied")
-    #     Console.underline("End test_block_normal_users")
 
-    # def test_user_add_new_upload(self):
-    #     Console.header("Testing That Any User Type Is Able To Add Media")
-    #     print("Any user type is able to add new media")
-    #     Console.underline()
+    def test_image_reading(self): 
+        """
+            Procedure: 
 
-    #     add = self.routes.get("add")
-    #     for name, user in self.users.items():
-    #         print(f"Uploading as --> {name}")
-    #         signinAs(self.client, user)
-    #         data = {
-    #             "title": f"new {name} upload",
-    #             "user_id": user.id,
-    #             "file": createImage(),
-    #         }
+            Upload an image
+            Using the id of the media record created, 
+            hit the route. 
+            
+            now get the base64 string of the image that was just uploaded manually,  
+            And match that string against the string that was returned from the route. 
+            If the results match, the route works well!
+        """
+        media = makeMedia() 
+        base64 = image_url_to_base64() 
+        response = self.client.post("/api/gallery.image.read", data = {"media_id":media.id}).json() 
+        base64_from_route = response.get("data")
+        self.assertEqual(base64,base64_from_route)
 
-    #         response = self.client.post(add, data)
-    #         status = response.status_code
-    #         response = response.json()
-    #         returned_user = response.get("data").get("user")
-    #         passed = returned_user.get("full_name"), name
 
-    #         self.assertEquals(status, 200)
-    #         self.assertTrue(passed)
-    #         if passed:
-    #             print(f"{name} was able to add new upload to the library!")
-    #     Console.underline("End test_user_add_new_upload")
 
-    # def test_fetch_with_communities(self):
-    #     """
-    #     Idea:
-    #     Create a few media records
-    #     Create a few community records
-    #     Use communities and media records to create events, actions, and testimonials
-    #     Now run a request to retrieve images that belong to particular communities
-    #     Go through response and see if the community object on each of the images presented
-    #     is right
-    #     """
-    #     Console.header("Testing Community Specific Fetches")
-    #     content = self.DB
-    #     communities = content.get("communities")
-    #     route = self.routes.get("protected").get("fetch")
-    #     Console.header("Test Fetching Images As Admin")
-    #     signinAs(self.client, self.cadmin)
-    #     data = {"community_ids": list([communities[0].id])}
-    #     response = self.client.post(route, data).json()
-    #     images = response.get("data").get("images")
-    #     valid_ids = [1, 4, 7, 10]
-    #     valid = True  # True means all images is from the right community
-    #     for image in images:
-    #         if image.get("id") not in valid_ids:
-    #             valid = False
-    #             print(
-    #                 "Some images in the response do not belong to the specified community...!"
-    #             )
-    #     self.assertTrue(valid)
-    #     print("All images are from the specified community!")
 
     def test_mine_and_user_specific_search(self):
         print("Signing in as cadmin")

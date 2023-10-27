@@ -180,3 +180,5 @@ def read_image_from_s3(key, bucket_name =None):
   data = f'data:{response["ContentType"]};base64,{base64_image}'
 
   return data
+
+
