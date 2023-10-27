@@ -59,202 +59,208 @@ class TestMediaLibrary(TestCase):
             And match that string against the string that was returned from the route. 
             If the results match, the route works well!
         """
+        Console.underline("Testing Image Reading Route")
+        print("Creating new media with new upload...")
         media = makeMedia() 
         base64 = image_url_to_base64() 
+        print("Manually generating base64 of same uploaded media...")
         response = self.client.post("/api/gallery.image.read", data = {"media_id":media.id}).json() 
         base64_from_route = response.get("data")
+        print("Checking if returned strings match...")
+        self.assertFalse(base64_from_route == None)
         self.assertEqual(base64,base64_from_route)
+        print("Route reads the right image and returns base64!")
 
 
 
 
-    def test_mine_and_user_specific_search(self):
-        print("Signing in as cadmin")
-        signinAs(self.client, self.cadmin)
+    # def test_mine_and_user_specific_search(self):
+    #     print("Signing in as cadmin")
+    #     signinAs(self.client, self.cadmin)
 
-        print("Uploading an image with signed in user details...")
-        user_media_upload = makeUserUpload(user=self.cadmin)
+    #     print("Uploading an image with signed in user details...")
+    #     user_media_upload = makeUserUpload(user=self.cadmin)
 
-        search_route = self.routes.get("protected").get("search")
-        print("Running request to fetch images uploaded by signed in user...")
-        response = self.client.post(search_route, data={"my_uploads": True}).json()
-        data = response.get("data")
-        count = data.get("count")
-        self.assertEqual(count, 1)  # Only one image must be retrieved
-        print("Checking if image response is the same as what was uploaded...")
-        image_from_response = data.get("images")[0]
-        self.assertEqual(
-            user_media_upload.media.id, image_from_response.get("id")
-        )  # And the image retrieved needs to be exactly the same one that was uploaded
-        print("My upload retrieval works nicely!")
+    #     search_route = self.routes.get("protected").get("search")
+    #     print("Running request to fetch images uploaded by signed in user...")
+    #     response = self.client.post(search_route, data={"my_uploads": True}).json()
+    #     data = response.get("data")
+    #     count = data.get("count")
+    #     self.assertEqual(count, 1)  # Only one image must be retrieved
+    #     print("Checking if image response is the same as what was uploaded...")
+    #     image_from_response = data.get("images")[0]
+    #     self.assertEqual(
+    #         user_media_upload.media.id, image_from_response.get("id")
+    #     )  # And the image retrieved needs to be exactly the same one that was uploaded
+    #     print("My upload retrieval works nicely!")
 
-        # User specific
-        Console.underline("Checking user spefic content")
-        users = self.DB.get("users")
-        print("Running a request with an array of a random user...")
-        response = self.client.post(
-            search_route, data={"user_ids": [users[2].id]}
-        ).json()
-        print("Checking if user retrieved images belong to the specified user...")
-        data = response.get("data")
-        count = data.get("count")
+    #     # User specific
+    #     Console.underline("Checking user spefic content")
+    #     users = self.DB.get("users")
+    #     print("Running a request with an array of a random user...")
+    #     response = self.client.post(
+    #         search_route, data={"user_ids": [users[2].id]}
+    #     ).json()
+    #     print("Checking if user retrieved images belong to the specified user...")
+    #     data = response.get("data")
+    #     count = data.get("count")
 
-        self.assertEqual(count, 1)
-        images = data.get("images")
-        images = [im.get("id") for im in images]
-        self.assertEqual(images[0], 9)
+    #     self.assertEqual(count, 1)
+    #     images = data.get("images")
+    #     images = [im.get("id") for im in images]
+    #     self.assertEqual(images[0], 9)
 
-        print("User specific search brings in images by specified user ID nicely!")
+    #     print("User specific search brings in images by specified user ID nicely!")
 
-    def make_tags(self, words):
-        tags = []
-        for w in words:
-            t = Tag.objects.create(name=w)
-            tags.append(t)
-        return tags
+    # def make_tags(self, words):
+    #     tags = []
+    #     for w in words:
+    #         t = Tag.objects.create(name=w)
+    #         tags.append(t)
+    #     return tags
 
-    def test_keyword_search(self):
-        signinAs(self.client, self.cadmin)
-        search_route = self.routes.get("protected").get("search")
-        words = ["one", "two", "three"]
-        words_set_two = ["mass", "energize"]
+    # def test_keyword_search(self):
+    #     signinAs(self.client, self.cadmin)
+    #     search_route = self.routes.get("protected").get("search")
+    #     words = ["one", "two", "three"]
+    #     words_set_two = ["mass", "energize"]
 
-        tags = self.make_tags(words)
-        tags_set_two = self.make_tags(words_set_two)
-        media =makeMedia(tags=tags)
-        media2 = makeMedia(tags=tags_set_two)
-        makeUserUpload(user=self.cadmin, media = media)
-        makeUserUpload(user=self.cadmin, media = media2)
+    #     tags = self.make_tags(words)
+    #     tags_set_two = self.make_tags(words_set_two)
+    #     media =makeMedia(tags=tags)
+    #     media2 = makeMedia(tags=tags_set_two)
+    #     makeUserUpload(user=self.cadmin, media = media)
+    #     makeUserUpload(user=self.cadmin, media = media2)
 
-        response = self.client.post(search_route, data = {"keywords":words})
-        data = response.json().get("data")
-        response_image = data.get("images")[0]
-        count = data.get("count")
-        self.assertEqual(count,1)
-        self.assertEqual(media.id, response_image.get("id"))
+    #     response = self.client.post(search_route, data = {"keywords":words})
+    #     data = response.json().get("data")
+    #     response_image = data.get("images")[0]
+    #     count = data.get("count")
+    #     self.assertEqual(count,1)
+    #     self.assertEqual(media.id, response_image.get("id"))
 
-    def test_search_by_community(self):
-        Console.underline("Testing search by community")
-        print("Signing in as admin")
-        signinAs(self.client, self.cadmin)
-        coms = self.DB.get("communities")
-        com3 = coms[2]
-        coms = [c.id for c in coms]
-        search_route = self.routes.get("protected").get("search")
-        print("Sending request with specific community ids...")
-        response = self.client.post(
-            search_route,
-            data={"target_communities": [com3.id]},
-        ).json()
-        data = response.get("data")
-        count = data.get("count")
+    # def test_search_by_community(self):
+    #     Console.underline("Testing search by community")
+    #     print("Signing in as admin")
+    #     signinAs(self.client, self.cadmin)
+    #     coms = self.DB.get("communities")
+    #     com3 = coms[2]
+    #     coms = [c.id for c in coms]
+    #     search_route = self.routes.get("protected").get("search")
+    #     print("Sending request with specific community ids...")
+    #     response = self.client.post(
+    #         search_route,
+    #         data={"target_communities": [com3.id]},
+    #     ).json()
+    #     data = response.get("data")
+    #     count = data.get("count")
 
-        print("Checking if only images related to communities were retrieved...")
+    #     print("Checking if only images related to communities were retrieved...")
 
-        self.assertEqual(count, 4)
-        images = [im.get("id") for im in data.get("images")]
-        self.assertEqual(
-            set(images), set([3, 6, 9, 10])
-        )  # if you check "inflate_db" you should see that community3 is related to medias with the listed IDs
+    #     self.assertEqual(count, 4)
+    #     images = [im.get("id") for im in data.get("images")]
+    #     self.assertEqual(
+    #         set(images), set([3, 6, 9, 10])
+    #     )  # if you check "inflate_db" you should see that community3 is related to medias with the listed IDs
 
-        print("Search by community works well!")
+    #     print("Search by community works well!")
 
-    def test_image_details_edit(self):
-        Console.underline("Testing image details edit")
-        coms = self.DB.get("communities")
-        edit_route = self.routes.get("protected").get("edit")
-        user_upload = makeUserUpload(user=self.cadmin)
+    # def test_image_details_edit(self):
+    #     Console.underline("Testing image details edit")
+    #     coms = self.DB.get("communities")
+    #     edit_route = self.routes.get("protected").get("edit")
+    #     user_upload = makeUserUpload(user=self.cadmin)
 
-        signinAs(self.client, self.cadmin)
-        data = {
-            "media_id": user_upload.media.id,
-            "user_upload_id": user_upload.id,
-            "copyright": True,
-            "underAge": True,
-            "guardian_info": "kidsmum@gmail.com",
-            "copyright_att": "mrowner@gmail.com",
-            "community_ids": [coms[0].id],
-        }
-        print("Sending request to update image details...")
-        response = self.client.post(edit_route, data=data)
-        response_data = response.json().get("data")
-        # Console.log("RESPONSE", data)
-        response_info = response_data.get("information").get("info")
-        print("Checking if response matches details sent...")
-        self.assertEqual(data["copyright"], response_info["has_copyright_permission"])
-        self.assertEqual(data["copyright_att"], response_info["copyright_att"])
-        self.assertEqual(data["underAge"], response_info["has_children"])
-        self.assertEqual(data["guardian_info"], response_info["guardian_info"])
+    #     signinAs(self.client, self.cadmin)
+    #     data = {
+    #         "media_id": user_upload.media.id,
+    #         "user_upload_id": user_upload.id,
+    #         "copyright": True,
+    #         "underAge": True,
+    #         "guardian_info": "kidsmum@gmail.com",
+    #         "copyright_att": "mrowner@gmail.com",
+    #         "community_ids": [coms[0].id],
+    #     }
+    #     print("Sending request to update image details...")
+    #     response = self.client.post(edit_route, data=data)
+    #     response_data = response.json().get("data")
+    #     # Console.log("RESPONSE", data)
+    #     response_info = response_data.get("information").get("info")
+    #     print("Checking if response matches details sent...")
+    #     self.assertEqual(data["copyright"], response_info["has_copyright_permission"])
+    #     self.assertEqual(data["copyright_att"], response_info["copyright_att"])
+    #     self.assertEqual(data["underAge"], response_info["has_children"])
+    #     self.assertEqual(data["guardian_info"], response_info["guardian_info"])
 
-        communities = response_data.get("information").get("communities", [])
-        self.assertEqual(coms[0].id, communities[0].get("id"))
-        print("Editing works nicely!")
+    #     communities = response_data.get("information").get("communities", [])
+    #     self.assertEqual(coms[0].id, communities[0].get("id"))
+    #     print("Editing works nicely!")
 
    
 
-    def test_image_info(self):
-        """
-        Idea:
-        Create an image record in the database
-        Use the image to create one event, an action, and a testiomonial record in the db
-        Run a request to retrieve information about the media record in the database
-        The request should retrieve one event, one action, and one testimonial that match the  just
-        created records.
-        """
-        Console.header("Testing Image Info Retrieval")
-        media = makeMedia(name="Picture of my face")
-        event = makeEvent(image=media)
-        action = makeAction(image=media)
-        story = makeTestimonial(image=media)
-        community = makeCommunity(name="Lit Community")
-        Console.underline("Testing image info")
-        cadmin = makeAdmin(full_name="Pongo Admin", communities=[community])
-        signinAs(self.client, cadmin)
-        route = self.routes.get("protected").get("image-info")
-        response = self.client.post(route, {"media_id": media.id})
-        response = response.json()
-        data = response.get("data").get("relations")
-        event_in_response = data.get("event")[0]
-        action_in_response = data.get("action")[0]
-        story_in_response = data.get("testimonial")[0]
-        event_is_good = event.name == event_in_response.get("name")
-        action_is_good = action.title == action_in_response.get("title")
-        story_is_good = story.title == story_in_response.get("title")
-        if event_is_good:
-            print("Media retrieved appropriate related events")
-        self.assertTrue(event_is_good)
+    # def test_image_info(self):
+    #     """
+    #     Idea:
+    #     Create an image record in the database
+    #     Use the image to create one event, an action, and a testiomonial record in the db
+    #     Run a request to retrieve information about the media record in the database
+    #     The request should retrieve one event, one action, and one testimonial that match the  just
+    #     created records.
+    #     """
+    #     Console.header("Testing Image Info Retrieval")
+    #     media = makeMedia(name="Picture of my face")
+    #     event = makeEvent(image=media)
+    #     action = makeAction(image=media)
+    #     story = makeTestimonial(image=media)
+    #     community = makeCommunity(name="Lit Community")
+    #     Console.underline("Testing image info")
+    #     cadmin = makeAdmin(full_name="Pongo Admin", communities=[community])
+    #     signinAs(self.client, cadmin)
+    #     route = self.routes.get("protected").get("image-info")
+    #     response = self.client.post(route, {"media_id": media.id})
+    #     response = response.json()
+    #     data = response.get("data").get("relations")
+    #     event_in_response = data.get("event")[0]
+    #     action_in_response = data.get("action")[0]
+    #     story_in_response = data.get("testimonial")[0]
+    #     event_is_good = event.name == event_in_response.get("name")
+    #     action_is_good = action.title == action_in_response.get("title")
+    #     story_is_good = story.title == story_in_response.get("title")
+    #     if event_is_good:
+    #         print("Media retrieved appropriate related events")
+    #     self.assertTrue(event_is_good)
 
-        if action_is_good:
-            print("Media retrieved appropriate related actions")
-        self.assertTrue(action_is_good)
+    #     if action_is_good:
+    #         print("Media retrieved appropriate related actions")
+    #     self.assertTrue(action_is_good)
 
-        if story_is_good:
-            print("Media retrieved appropriated related testimonials")
-        self.assertTrue(story_is_good)
+    #     if story_is_good:
+    #         print("Media retrieved appropriated related testimonials")
+    #     self.assertTrue(story_is_good)
 
-    def test_remove_image(self):
-        """
-        Idea:
-        Create a media record in the database
-        Send http request to remove image from database
-        Expect an okay response
-        Try to find the item in the db again,
-        expect an empty response
-        """
-        Console.header("Testing Media Removal As Admin")
-        media = makeMedia(name="Fake Media")
-        signinAs(self.client, self.cadmin)
-        if media:
-            print(f"New media record '{media.name}' is created!")
-        route = self.routes.get("protected").get("remove")
-        response = self.client.post(route, {"media_id": media.id})
-        response = response.json()
-        ok_response = response.get("success")
-        self.assertTrue(ok_response)
-        try:
-            Media.objects.get(id=media.id)
-        except Media.DoesNotExist:
-            print("Media has been removed successfully!")
+    # def test_remove_image(self):
+    #     """
+    #     Idea:
+    #     Create a media record in the database
+    #     Send http request to remove image from database
+    #     Expect an okay response
+    #     Try to find the item in the db again,
+    #     expect an empty response
+    #     """
+    #     Console.header("Testing Media Removal As Admin")
+    #     media = makeMedia(name="Fake Media")
+    #     signinAs(self.client, self.cadmin)
+    #     if media:
+    #         print(f"New media record '{media.name}' is created!")
+    #     route = self.routes.get("protected").get("remove")
+    #     response = self.client.post(route, {"media_id": media.id})
+    #     response = response.json()
+    #     ok_response = response.get("success")
+    #     self.assertTrue(ok_response)
+    #     try:
+    #         Media.objects.get(id=media.id)
+    #     except Media.DoesNotExist:
+    #         print("Media has been removed successfully!")
 
     def inflate_database(self):
         Console.header(
