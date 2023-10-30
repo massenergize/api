@@ -1,6 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console, is_url_valid
+from _main_.utils.utils import is_url_valid
+from _main_.utils.common import local_time
 from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
@@ -261,7 +262,7 @@ class EventStore:
           return None, CustomMassenergizeError("Please provide an end date and time that comes after the start date and time.")
       
       if args.get('is_published', False):
-        args['published_at'] = datetime.datetime.now()
+        args['published_at'] = local_time()
 
       if is_recurring:
         if final_date:
