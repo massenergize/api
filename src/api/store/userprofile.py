@@ -2,7 +2,7 @@ from _main_.utils.common import serialize
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.constants import STANDARD_USER,GUEST_USER
-from api.utils.api_utils import is_admin_of_community
+from api.utils.api_utils import get_sender_email, is_admin_of_community
 from api.utils.filter_functions import get_users_filter_params
 from api.store.common import create_pdf_from_rich_text, sign_mou
 from database.models import CommunityAdminGroup, Footage, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
@@ -596,13 +596,14 @@ class UserStore:
       existing_user = UserProfile.objects.filter(email=email).first()
       if not existing_user:
         if is_guest:
+          from_email = get_sender_email(community.id)
           ok = send_massenergize_email_with_attachments(
             GUEST_USER_EMAIL_TEMPLATE,
             {"community_name":community.name,
              "community_logo":serialize(community.logo).get("url") if community.logo else None,
              "register_link":f'{COMMUNITY_URL_ROOT}/{community.subdomain}/signup'
              },
-            email, None, None)
+            email, None, None, from_email)
         user: UserProfile = UserProfile.objects.create(
           full_name=full_name,
           preferred_name=preferred_name,
