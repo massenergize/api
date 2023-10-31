@@ -632,29 +632,29 @@ class Community(models.Model):
             display_prefs = {}  # not usual - show nothing
 
         value = 0
-        if display_prefs.get("manual_households"):
+        if display_prefs.get("manual_households", True):
             value += goal.get("initial_number_of_households", 0)
-        if display_prefs.get("state_households"):
+        if display_prefs.get("state_households", False):
             value += goal.get("attained_number_of_households", 0)
-        if display_prefs.get("platform_households"):
+        if display_prefs.get("platform_households", True):
             value += goal.get("organic_attained_number_of_households", 0)
         goal["displayed_number_of_households"] = value
 
         value = 0
-        if display_prefs.get("manual_actions"):
+        if display_prefs.get("manual_actions", False):
             value += goal.get("initial_number_of_actions", 0)
-        if display_prefs.get("state_actions"):
+        if display_prefs.get("state_actions", True):
             value += goal.get("attained_number_of_actions", 0)
-        if display_prefs.get("platform_actions"):
+        if display_prefs.get("platform_actions", True):
             value += goal.get("organic_attained_number_of_actions", 0)
         goal["displayed_number_of_actions"] = value
 
         value = 0
-        if display_prefs.get("manual_carbon"):
+        if display_prefs.get("manual_carbon", False):
             value += goal.get("initial_carbon_footprint_reduction", 0)
-        if display_prefs.get("state_carbon"):
+        if display_prefs.get("state_carbon", False):
             value += goal.get("attained_carbon_footprint_reduction", 0)
-        if display_prefs.get("platform_carbon"):
+        if display_prefs.get("platform_carbon", True):
             value += goal.get("organic_attained_carbon_footprint_reduction", 0)
         goal["displayed_carbon_footprint_reduction"] = value
 

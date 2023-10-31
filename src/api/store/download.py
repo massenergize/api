@@ -1519,14 +1519,9 @@ class DownloadStore:
                     self._community_actions_download(community_id),
                     community_name,
                 ), None
-            elif context.user_is_super_admin:
+            elif context.user_is_super_admin or context.user_is_community_admin:
                 #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
-            #  if user is cadmin  and no community id is passed, get actions of communities the user
-            #  an admin of
-            elif context.user_is_community_admin: 
-                ids = get_user_community_ids(context)
-                return (self._all_actions_download(community_ids=ids), None), None
             else:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
