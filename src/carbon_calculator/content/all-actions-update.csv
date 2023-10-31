@@ -381,7 +381,7 @@ Bedford,No,Community Garden plot-BedfordMA,Medium,$$,Food,DELETE
 creationYO,No,Community Garden plot-creation,Medium,$$,Food,DELETE
 One more,No,Community Garden plot-onemore-153,Medium,$$,Food,DELETE
 Energize Springfield,No,Community Garden plot-SpringfieldMA,Medium,$$,Food,DELETE
-Solarize Eastie,No,Community Sola-Green Eastie,Medium,0,Solar,DELETE
+Solarize Eastie,No,Community Sola-Green Eastie,Medium,0,Solar,community_solar
 Green Pepperell,No,Community Sola-PepperellMA,Medium,0,Solar,DELETE
 Energize Boxborough,No,Community Solar-BoxboroughMA,Medium,0,Solar,DELETE
 ,No,Community Solar-Copy,Medium,0,Solar,DELETE
@@ -500,7 +500,7 @@ Melrose Climate Action,No,Get Hot & Cool with Mini-Splits-MelroseMA,High,$$$,Hom
 ,No,Get Hot & Cool with Mini-Splits-SCIS,High,$$$,Home Energy,DELETE
 Solarize Eastie,No,Get involved in Town's Climate Action-Green Eastie,Medium,0,Activism & Education,DELETE
 Green Pepperell,No,Get involved in Town's Climate Action-PepperellMA,Medium,0,Activism & Education,DELETE
-Melrose Climate Action,No,Get involved in Town's Climate Action!,High,$$$,Activism & Education,DELETE
+Melrose Climate Action,No,Get involved in Town's Climate Action!,High,$$$,Activism & Education,activism
 Sustainable Medfield,No,Get rid of junk mail-Copy,Low,0,Waste & Recycling,DELETE
 Sustainable Milton,No,Get rid of junk mail-sustainablemilton,Low,0,Waste & Recycling,DELETE
 ,No,Get Started-Copy,Low,0,Activism & Education,DELETE
@@ -556,7 +556,7 @@ Green Newton,No,Install A Heat Pump Water Heater Copy 6127,Medium,0,Home Energy,
 ,Yes,Install Mini-Splits Heat Pumps,High,$$$,Home Energy,DELETE
 ,No,Install Mini-Splits Heat Pumps-Copy,High,$$$,Home Energy,DELETE
 ,No,Install rooftop or ground mount solar PV,High,$$$,Solar,DELETE
-,No,Install rooftop or ground mount solar PV,High,$$$,Solar,DELETE
+,No,Install rooftop or ground mount solar PV,High,$$$,Solar,install_solarPV
 ,No,Install Rooftop or Ground Mount Solar PV-Copy,High,$$$,Solar,DELETE
 ,No,Install Rooftop or Ground Mount Solar PV-Copy,High,$$$,Solar,DELETE
 ,No,Install Solar PV-Copy-Copy,High,$$$,Solar,DELETE
@@ -564,7 +564,7 @@ Green Newton,No,Install A Heat Pump Water Heater Copy 6127,Medium,0,Home Energy,
 ,No,Install Solar PV-Copy-Copy-Copy,High,$$$,Solar,DELETE
 ,No,Install Solar PV-Copy-Copy-Copy,High,$$$,Solar,DELETE
 ,No,Insulate & Weatherize to the Max-Copy,High,$$$,Home Energy,DELETE
-,Yes,Insulate and Air Seal Your Home,High,$$,Home Energy,DELETE
+,Yes,Insulate and Air Seal Your Home,High,$$,Home Energy,weatherization
 Green Newton,No,Insulate and Air Seal Your Home Copy 2269,High,0,Home Energy,DELETE
 Jewish Climate Action Network -- JCAN-MA,No,Insulate and Air Seal Your Home-Copy,Medium,0,Home Energy,DELETE
 EnergizeNewburyport,No,Insulate and Weatherize -Copy,High,0,Home Energy,DELETE
@@ -572,10 +572,10 @@ EnergizeNewburyport,No,Insulate and Weatherize -Copy,High,0,Home Energy,DELETE
 ,No,Insulate like Crazy-Copy,High,0,Home Energy,DELETE
 ,Yes,Insulate like crazy-Copy,High,0,Home Energy,DELETE
 ,No,Insulate like Crazy-Copy,High,0,Home Energy,DELETE
-,No,Invest Like a Climate Activis-GreenerStow,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activis-GreenerStow,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activis-GreenerStow,Medium,0,Activism & Education,investing
+,No,Invest Like a Climate Activis-GreenerStow,Medium,0,Activism & Education,investing
 ,No,Invest Like a Climate Activis-StowMA,Medium,0,Activism & Education,DELETE
-,No,Invest Like a Climate Activis-StowMA,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activis-StowMA,Medium,0,Activism & Education,investing
 ,No,Invest Like a Climate Activist,Medium,0,Activism & Education,DELETE
 ,No,Invest Like a Climate Activist,Medium,0,Activism & Education,DELETE
 ,Yes,Invest Like a Climate Activist,Medium,0,Activism & Education,DELETE
@@ -607,7 +607,7 @@ Melrose Climate Action,No,Market my Green Home-MelroseMA,Low,0,Home Energy,DELET
 ,No,May Line Drying Challenge-Copy,Low,$,Home Energy,DELETE
 ,No,Mini-Split Heat Pumps Are For Yo-taCom,High,$$$,Home Energy,DELETE
 TaCommunity,No,Mini-Split Heat Pumps Are For Yo-taCom,High,$$$,Home Energy,DELETE
-,Yes,Mini-Split Heat Pumps Are For You,High,$$$,Home Energy,DELETE
+,Yes,Mini-Split Heat Pumps Are For You,High,$$$,Home Energy,air_source_hp
 ,No,Mini-Split Heat Pumps Are For You,High,$$$,Home Energy,DELETE
 Sam,No,Mini-Split Heat Pumps Are For You-357,High,$$$,Home Energy,DELETE
 creationYO,No,Mini-Split Heat Pumps Are For You-creation,High,$$$,Home Energy,DELETE
@@ -685,9 +685,9 @@ Sustainable Milton,No,Savings for Renters-sustainablemilton,Low,0,Home Energy,DE
 ,No,Schedule No-Cost Home Energy Assessment-Copy,Low,0,Home Energy,DELETE
 ,No,Shrink My Carbon Footprint-Copy,,,,DELETE
 ,No,Shrink My Carbon Footprint-Copy,,,,DELETE
-,Yes,Solar On Your Roof,High,$$$,Solar,DELETE
-,Yes,Solar On Your Roof,High,$$$,Solar,DELETE
-Solarize Eastie,No,Solarize Eastie!,High,$$,Solar,DELETE
+,Yes,Solar On Your Roof,High,$$$,Solar,install_solarPV
+,Yes,Solar On Your Roof,High,$$$,Solar,install_solarPV
+Solarize Eastie,No,Solarize Eastie!,High,$$,Solar,install_solarPV
 ,No,Solarize!-Copy,High,$$,Solar,DELETE
 ,No,Solarize!-Copy,High,$$,Solar,DELETE
 ,Yes,Start Ecological Landscaping,Low,$$,"Land, Soil & Water",DELETE
@@ -701,7 +701,7 @@ Sustainable Milton,No,Suggest a New Action-sustainablemilton,Low,0,Activism & Ed
 ,No,Sun Power-Copy,High,,Solar,DELETE
 ,No,Support Lexington Youth-Copy,,,,DELETE
 ,No,Support Lexington Youth-Copy,,,,DELETE
-,Yes,Sustainable Household Goods,Low,$,Waste & Recycling,DELETE
+,Yes,Sustainable Household Goods,Low,$,Waste & Recycling,reduce_waste
 EcoNatick,No,Sustainable Household Goods-EcoNatick,Low,$,Waste & Recycling,DELETE
 Cooler Greenfield,No,Sustainable Household Goods-GreenfieldMA,Low,$,Waste & Recycling,DELETE
 Sustainable Milton,No,Sustainable Household Goods-sustainablemilton,Low,$,Waste & Recycling,DELETE
@@ -2116,115 +2116,584 @@ Energize Franklin,Yes,New or Replacement Windows,Low,$$$,Home Energy,windows
 Energize Franklin,Yes,New or Replacement Windows,Low,$$$,Home Energy,windows
 Cooler Greenfield,Yes,Getting Off Fossil Fuels,High,,Home Energy,zero_emissions
 Energize Acton,Yes,Take the Zero Emissions Pledge,Low,0,Home Energy,zero_emissions
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
+CSNDC Community,Yes,"""Support"" HERO Legislation",High,0,Activism & Education,activism
+CSNDC Community,No,"""Support"" HERO Legislation-Copy",High,0,Activism & Education,DELETE
+Cooler Communities,Yes,3 Ways to Choose Solar Power,High,,Solar,solar_assessment
+,No,A new template action,Medium,0,Home Energy,DELETE
+MassEnergize Demo,No,An Action you want to show up first -Copy-Copy-Copy,Medium,$,Home Energy,DELETE
+MassEnergize Demo,No,An Action you want to show up first !,Medium,$,Home Energy,DELETE
+MassEnergize Demo,Yes,An Action you want to show up first yo!,Medium,$,Home Energy,help_community
+Demo 2022,No,An Action You Want to Show Up First-Copy-Copy,Low,0,Food,DELETE
+Demo 2022,No,An Action You Want to Show Up First-Copy-Copy-Copy,Low,0,Food,DELETE
+MassEnergize Demo,Yes,An action you want to show up next,Medium,0,Solar,help_community
+MassEnergize Demo,No,An action you want to show up next-Copy,Medium,0,Solar,DELETE
+MassEnergize Demo,Yes,And so on: you rank your actions yo,Medium,0,Transportation,help_community
+,No,asdfasdfa,Medium,$,Solar,DELETE
+Training,Yes,awesome solar  ,High,$$$,Solar,install_solarPV
+EcoNatick,Yes,Backyard compost or food scrap service,Low,$,Waste & Recycling,compost
+Energize MORE!,No,Backyard compost or servic-blaMA,Low,0,Food,DELETE
+Energize Chelmsford,No,Backyard compost or servic-ChelmsfordMA,Low,0,Food,DELETE
+,No,Backyard compost or servic-EnergizeCorp1,Low,0,Food,DELETE
+,No,Backyard compost or servic-hello_hello,Low,0,Food,DELETE
+,No,Backyard compost or servic-marathon City,Low,0,Food,DELETE
+,No,Backyard compost or servic-marathon day,Low,0,Food,DELETE
+Maynard,No,Backyard compost or servic-MaynardMAUSA,Low,0,Food,DELETE
+Energize Test,No,Backyard compost or servic-new_subdomain,Low,0,Food,DELETE
+,No,Backyard compost or servic-NewCommunityMA,Low,0,Food,DELETE
+,No,Backyard compost or servic-testingonemore,Low,0,Food,DELETE
+Energize Vineyard,No,Backyard compost or servic-theVineyard,Low,0,Food,DELETE
+UU Mass Action,No,Backyard compost or servic-UUMassAction,Low,0,Food,DELETE
+,No,Backyard compost or service,Low,0,Food,DELETE
+,No,Backyard compost or service,Low,0,Food,compost
+Energize Carlisle,No,Backyard compost or service-CarlisleMA,Low,0,Food,DELETE
+Cooler Greenfield  (GCVS),No,Backyard compost or service-GCVS,Low,0,Food,DELETE
+Cooler Northampton,No,Backyard compost or service-northampton,Low,0,Food,DELETE
+Cooler Springfield (SICS),No,Backyard compost or service-SICS,Low,0,Food,DELETE
+Cooler Westhampton,No,Backyard compost or service-westhampton,Low,0,Food,DELETE
+Energize Chelmsford,No,bla action for templat-ChelmsfordMA,Low,0,Solar,DELETE
+,No,bla action for templat-EnergizeCorp1,Low,0,Solar,DELETE
+,No,bla action for templat-hello_hello,Low,0,Solar,DELETE
+Maynard,No,bla action for templat-MaynardMAUSA,Low,0,Solar,DELETE
+Energize Test,No,bla action for templat-new_subdomain,Low,0,Solar,DELETE
+,No,bla action for templat-testingonemore,Low,0,Solar,DELETE
+Energize Vineyard,No,bla action for templat-theVineyard,Low,0,Solar,DELETE
+UU Mass Action,No,bla action for templat-UUMassAction,Low,0,Solar,DELETE
+,Yes,bla action for template,Low,0,Solar,DELETE
+Energize Chelmsford,No,blabl-ChelmsfordMA,Low,$,Solar,DELETE
+,No,blabl-hello_hello,Low,$,Solar,DELETE
+Maynard,No,blabl-MaynardMAUSA,Low,$,Solar,DELETE
+Energize Test,No,blabl-new_subdomain,Low,$,Solar,DELETE
+,No,blabl-testingonemore,Low,$,Solar,DELETE
+Energize Vineyard,No,blabl-theVineyard,Low,$,Solar,DELETE
+UU Mass Action,No,blabl-UUMassAction,Low,$,Solar,DELETE
+,No,blabla,Low,$,Solar,DELETE
+CSNDC Community,Yes,"Bring a bag, save the Earth and 10¢-Copy",Low,0,Waste & Recycling,community_cleanup
+Energize Framingham,Yes,"Bring a bag, save the Earth and 10¢-Copy",Low,0,Waste & Recycling,community_cleanup
+Boxborough,No,Buy Food from a Local Farm,Medium,$,Food,eat_locally
+EcoNatick,No,Buy food from a local farm-EcoNatick,Medium,$,Food,eat_locally
+JCAN,Yes,Buy or Lease Electric Car,High,$$$,Transportation,replace_car
+Training,No,Calculate Carbon Footprint Copy,Low,0,Activism & Education,carbon_footprint
+Boxborough,No,Calculate your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
+Demo 2022,Yes,Calculate Your Carbon Footprint,Low,0,Activism & Education,carbon_footprint
+EcoNatick,No,Calculate your Carbon Footprint-EcoNatick,Low,0,Activism & Education,carbon_footprint
+MassEnergize Demo,No,Calculate your Carbon Footprint! ,Low,0,Activism & Education,carbon_footprint
+,No,Calculate your Carbon Footprint!-Copy,Low,0,Activism & Education,DELETE
+Energize MORE!,No,Change Thermostat Setting-blaMA,Medium,$$$,Home Energy,DELETE
+Energize Chelmsford,No,Change Thermostat Setting-ChelmsfordMA,Medium,$$$,Home Energy,DELETE
+,No,Change Thermostat Setting-EnergizeCorp1,Medium,$$$,Home Energy,DELETE
+,No,Change Thermostat Setting-hello_hello,Medium,$$$,Home Energy,DELETE
+,No,Change Thermostat Setting-marathon City,Medium,$$$,Home Energy,DELETE
+,No,Change Thermostat Setting-marathon day,Medium,$$$,Home Energy,DELETE
+Maynard,No,Change Thermostat Setting-MaynardMAUSA,Medium,$$$,Home Energy,DELETE
+Energize Test,No,Change Thermostat Setting-new_subdomain,Medium,$$$,Home Energy,DELETE
+,No,Change Thermostat Setting-NewCommunityMA,Medium,$$$,Home Energy,DELETE
+,No,Change Thermostat Setting-testingonemore,Medium,$$$,Home Energy,DELETE
+Energize Vineyard,No,Change Thermostat Setting-theVineyard,Medium,$$$,Home Energy,DELETE
+UU Mass Action,No,Change Thermostat Setting-UUMassAction,Medium,$$$,Home Energy,DELETE
+Demo 2022,Yes,Change Thermostat Settings,Medium,$$$,Home Energy,prog_thermostats
+Boxborough,No,Change Thermostat Settings-BoxboroughMA,Medium,$$$,Home Energy,DELETE
+Energize Carlisle,No,Change Thermostat Settings-CarlisleMA,Medium,$$$,Home Energy,DELETE
+Cooler Greenfield  (GCVS),No,Change Thermostat Settings-GCVS,Medium,$$$,Home Energy,DELETE
+Cooler Springfield (SICS),No,Change Thermostat Settings-SICS,Medium,$$$,Home Energy,DELETE
+Cooler Westhampton,No,Change Thermostat Settings-westhampton,Medium,$$$,Home Energy,DELETE
+Energize MORE!,No,Change to LED Lightin-blaMA,Medium,$,Home Energy,DELETE
+Energize Chelmsford,No,Change to LED Lightin-ChelmsfordMA,Medium,$,Home Energy,DELETE
+,No,Change to LED Lightin-EnergizeCorp1,Medium,$,Home Energy,DELETE
+,No,Change to LED Lightin-hello_hello,Medium,$,Home Energy,DELETE
+,No,Change to LED Lightin-marathon City,Medium,$,Home Energy,DELETE
+,No,Change to LED Lightin-marathon day,Medium,$,Home Energy,DELETE
+Maynard,No,Change to LED Lightin-MaynardMAUSA,Medium,$,Home Energy,DELETE
+Energize Test,No,Change to LED Lightin-new_subdomain,Medium,$,Home Energy,DELETE
+,No,Change to LED Lightin-NewCommunityMA,Medium,$,Home Energy,DELETE
+,No,Change to LED Lightin-testingonemore,Medium,$,Home Energy,DELETE
+Energize Vineyard,No,Change to LED Lightin-theVineyard,Medium,$,Home Energy,DELETE
+UU Mass Action,No,Change to LED Lightin-UUMassAction,Medium,$,Home Energy,DELETE
+JCAN,Yes,Change to LED Lighting,Low,0,Home Energy,led_lighting
+Energize Carlisle,No,Change to LED Lighting-CarlisleMA,Medium,$,Home Energy,DELETE
+,No,Change to LED Lighting-CarlisleMA-Copy,Medium,$,Home Energy,DELETE
+Cooler Greenfield  (GCVS),No,Change to LED Lighting-GCVS,Medium,$,Home Energy,DELETE
+Cooler Northampton,No,Change to LED Lighting-northampton,Medium,$,Home Energy,DELETE
+Cooler Springfield (SICS),No,Change to LED Lighting-SICS,Medium,$,Home Energy,DELETE
+Cooler Westhampton,No,Change to LED Lighting-westhampton,Medium,$,Home Energy,DELETE
+Energize MORE!,No,Clean Up Your Communit-blaMA,Low,0,Activism & Education,DELETE
+Energize Chelmsford,No,Clean Up Your Communit-ChelmsfordMA,Low,0,Activism & Education,DELETE
+,No,Clean Up Your Communit-EnergizeCorp1,Low,0,Activism & Education,DELETE
+,No,Clean Up Your Communit-hello_hello,Low,0,Activism & Education,DELETE
+,No,Clean Up Your Communit-marathon City,Low,0,Activism & Education,DELETE
+,No,Clean Up Your Communit-marathon day,Low,0,Activism & Education,DELETE
+Maynard,No,Clean Up Your Communit-MaynardMAUSA,Low,0,Activism & Education,DELETE
+Energize Test,No,Clean Up Your Communit-new_subdomain,Low,0,Activism & Education,DELETE
+,No,Clean Up Your Communit-NewCommunityMA,Low,0,Activism & Education,DELETE
+,No,Clean Up Your Communit-testingonemore,Low,0,Activism & Education,DELETE
+Energize Vineyard,No,Clean Up Your Communit-theVineyard,Low,0,Activism & Education,DELETE
+UU Mass Action,No,Clean Up Your Communit-UUMassAction,Low,0,Activism & Education,DELETE
+Energize Carlisle,No,Clean Up Your Community-CarlisleMA,Low,0,Activism & Education,DELETE
+Cooler Greenfield  (GCVS),No,Clean Up Your Community-GCVS,Low,0,Activism & Education,DELETE
+Cooler Northampton,No,Clean Up Your Community-northampton,Low,0,Activism & Education,DELETE
+Cooler Springfield (SICS),No,Clean Up Your Community-SICS,Low,0,Activism & Education,DELETE
+Cooler Westhampton,No,Clean Up Your Community-westhampton,Low,0,Activism & Education,DELETE
+Boxborough,No,Climate Action Crew,Medium,0,Home Energy,activism
+Boxborough,No,Climate Action Crew-Copy,Medium,0,Home Energy,DELETE
+Energize MORE!,No,Community Sola-blaMA,Medium,0,Solar,DELETE
+Energize Chelmsford,No,Community Sola-ChelmsfordMA,Medium,0,Solar,DELETE
+,No,Community Sola-EnergizeCorp1,Medium,0,Solar,DELETE
+,No,Community Sola-hello_hello,Medium,0,Solar,DELETE
+,No,Community Sola-marathon City,Medium,0,Solar,DELETE
+,No,Community Sola-marathon day,Medium,0,Solar,DELETE
+Maynard,No,Community Sola-MaynardMAUSA,Medium,0,Solar,DELETE
+Energize Test,No,Community Sola-new_subdomain,Medium,0,Solar,DELETE
+,No,Community Sola-NewCommunityMA,Medium,0,Solar,DELETE
+,No,Community Sola-testingonemore,Medium,0,Solar,DELETE
+Energize Vineyard,No,Community Sola-theVineyard,Medium,0,Solar,DELETE
+UU Mass Action,No,Community Sola-UUMassAction,Medium,0,Solar,DELETE
+Cooler Concord!,Yes,Community Solar,Medium,$,Solar,community_solar
+Demo 2022,Yes,Community Solar,Medium,0,Solar,community_solar
+Boxborough,No,Community Solar-BoxboroughMA,Medium,0,Solar,DELETE
+Energize Carlisle,No,Community Solar-CarlisleMA,Medium,0,Solar,DELETE
+Cooler Greenfield  (GCVS),No,Community Solar-GCVS,Medium,0,Solar,DELETE
+Cooler Northampton,No,Community Solar-northampton,Medium,0,Solar,DELETE
+Cooler Springfield (SICS),No,Community Solar-SICS,Medium,0,Solar,DELETE
+Cooler Westhampton,No,Community Solar-westhampton,Medium,0,Solar,DELETE
+JCAN,Yes,"Community Solar, No Installation ",Medium,$,Solar,community_solar
+Demo 2022,Yes,Compost at Home or with a Service,Low,0,Waste & Recycling,compost
+JCAN,Yes,Compost at Home or With a Service,Low,0,Waste & Recycling,compost
+Boxborough,No,Compost Food Waste with Black Earth,Low,0,Waste & Recycling,compost
+MassEnergize Demo,No,Copy 7641,High,$$,Home Energy,DELETE
+Energize Framingham,Yes,Curbside & Backyard Composting,Low,0,Waste & Recycling,compost
+CSNDC Community,Yes,Curbside & Backyard Composting-Copy,Low,0,Waste & Recycling,compost
+JCAN,Yes,Dayenu: A Jewish Call to Climate Action,Medium,0,Activism & Education,activism
+Energize Wayland,No,Discounted Rain Barrels: SOLD OUT,Low,0,"Land, Soil & Water",rain_barrel
+Energize MORE!,No,Donate Building Material-blaMA,Low,0,Waste & Recycling,DELETE
+Energize Chelmsford,Yes,Donate Building Material-ChelmsfordMA,Low,0,Waste & Recycling,DELETE
+,No,Donate Building Material-EnergizeCorp1,Low,0,Waste & Recycling,DELETE
+,No,Donate Building Material-hello_hello,Low,0,Waste & Recycling,DELETE
+,No,Donate Building Material-marathon City,Low,0,Waste & Recycling,DELETE
+,No,Donate Building Material-marathon day,Low,0,Waste & Recycling,DELETE
+Maynard,No,Donate Building Material-MaynardMAUSA,Low,0,Waste & Recycling,DELETE
+Energize Test,No,Donate Building Material-new_subdomain,Low,0,Waste & Recycling,DELETE
+,No,Donate Building Material-NewCommunityMA,Low,0,Waste & Recycling,DELETE
+,No,Donate Building Material-testingonemore,Low,0,Waste & Recycling,DELETE
+Energize Vineyard,No,Donate Building Material-theVineyard,Low,0,Waste & Recycling,DELETE
+UU Mass Action,No,Donate Building Material-UUMassAction,Low,0,Waste & Recycling,DELETE
+Energize Carlisle,No,Donate Building Materials-CarlisleMA,Low,0,Waste & Recycling,DELETE
+Cooler Greenfield  (GCVS),No,Donate Building Materials-GCVS,Low,0,Waste & Recycling,DELETE
+Cooler Northampton,No,Donate Building Materials-northampton,Low,0,Waste & Recycling,DELETE
+Cooler Springfield (SICS),No,Donate Building Materials-SICS,Low,0,Waste & Recycling,DELETE
+Cooler Westhampton,No,Donate Building Materials-westhampton,Low,0,Waste & Recycling,DELETE
+Demo 2022,Yes,Eat a More Plant-Based Diet,High,0,Food,low_carbon_diet
+Energize Framingham,Yes,Eat Less Meat and Dairy,High,0,Food,low_carbon_diet
+JCAN,Yes,Eat Less Meat and Dairy,High,0,Food,low_carbon_diet
+CSNDC Community,Yes,Eat Less Meat and Dairy-Copy,High,0,Food,low_carbon_diet
+Boxborough,No,Eat More Plant-Based Meals,Medium,0,Food,low_carbon_diet
+Energize Wayland,Yes,Ecological Landscaping,Low,$$,"Land, Soil & Water",plant_native
+Training,Yes,Ecological Landscaping,Low,$$,"Land, Soil & Water",plant_native
+JCAN,Yes,Ecological Landscaping & Tree Planting,Low,$$,"Land, Soil & Water",plant_native
+Training,No,Ecological Landscaping Copy,Low,$$,"Land, Soil & Water",plant_native
+Energize MORE!,No,Ecological Landscaping Tree Plantin-blaMA,Low,$$,"Land, Soil & Water",DELETE
+Energize Chelmsford,No,Ecological Landscaping Tree Plantin-ChelmsfordMA,Low,$$,"Land, Soil & Water",DELETE
+,No,Ecological Landscaping Tree Plantin-EnergizeCorp1,Low,$$,"Land, Soil & Water",DELETE
+,No,Ecological Landscaping Tree Plantin-hello_hello,Low,$$,"Land, Soil & Water",DELETE
+,No,Ecological Landscaping Tree Plantin-marathon City,Low,$$,"Land, Soil & Water",DELETE
+,No,Ecological Landscaping Tree Plantin-marathon day,Low,$$,"Land, Soil & Water",DELETE
+Maynard,No,Ecological Landscaping Tree Plantin-MaynardMAUSA,Low,$$,"Land, Soil & Water",DELETE
+Energize Test,No,Ecological Landscaping Tree Plantin-new_subdomain,Low,$$,"Land, Soil & Water",DELETE
+,No,Ecological Landscaping Tree Plantin-NewCommunityMA,Low,$$,"Land, Soil & Water",DELETE
+,No,Ecological Landscaping Tree Plantin-testingonemore,Low,$$,"Land, Soil & Water",DELETE
+Energize Vineyard,No,Ecological Landscaping Tree Plantin-theVineyard,Low,$$,"Land, Soil & Water",DELETE
+UU Mass Action,No,Ecological Landscaping Tree Plantin-UUMassAction,Low,$$,"Land, Soil & Water",DELETE
+Demo 2022,No,Ecological Landscaping Tree Planting,Low,$$,"Land, Soil & Water",plant_trees
+Energize Carlisle,No,Ecological Landscaping Tree Planting-CarlisleMA,Low,$$,"Land, Soil & Water",DELETE
+Cooler Greenfield  (GCVS),No,Ecological Landscaping Tree Planting-GCVS,Low,$$,"Land, Soil & Water",DELETE
+Cooler Northampton,No,Ecological Landscaping Tree Planting-northampton,Low,$$,"Land, Soil & Water",DELETE
+Cooler Springfield (SICS),No,Ecological Landscaping Tree Planting-SICS,Low,$$,"Land, Soil & Water",DELETE
+Cooler Westhampton,No,Ecological Landscaping Tree Planting-westhampton,Low,$$,"Land, Soil & Water",DELETE
+Cooler Concord!,No,Electric bike,Medium,$$,Transportation,buy_e_bike
+Cooler Concord!,Yes,Electric lawncare,Medium,$$,"Land, Soil & Water",electric_mower
+Energize Wayland,No,Electrify your Lawn (Mower)!,Medium,$$,"Land, Soil & Water",electric_mower
+Demo 2022,Yes,Electrify Your Ride ,High,$$$,Waste & Recycling,replace_car
+Energize MORE!,Yes,Energy-Efficient Appliance-blaMA,High,$$,Home Energy,DELETE
+Energize Chelmsford,No,Energy-Efficient Appliance-ChelmsfordMA,High,$$,Home Energy,DELETE
+,No,Energy-Efficient Appliance-EnergizeCorp1,High,$$,Home Energy,DELETE
+,No,Energy-Efficient Appliance-hello_hello,High,$$,Home Energy,DELETE
+,No,Energy-Efficient Appliance-marathon City,High,$$,Home Energy,DELETE
+,No,Energy-Efficient Appliance-marathon day,High,$$,Home Energy,DELETE
+Maynard,No,Energy-Efficient Appliance-MaynardMAUSA,High,$$,Home Energy,DELETE
+Energize Test,No,Energy-Efficient Appliance-new_subdomain,High,$$,Home Energy,DELETE
+,No,Energy-Efficient Appliance-NewCommunityMA,High,$$,Home Energy,DELETE
+,No,Energy-Efficient Appliance-testingonemore,High,$$,Home Energy,DELETE
+Energize Vineyard,No,Energy-Efficient Appliance-theVineyard,High,$$,Home Energy,DELETE
+UU Mass Action,No,Energy-Efficient Appliance-UUMassAction,High,$$,Home Energy,DELETE
+JCAN,Yes,Energy-Efficient Appliances ,Medium,$$,Home Energy,energystar_fridge
+Energize Carlisle,No,Energy-Efficient Appliances-CarlisleMA,High,$$,Home Energy,DELETE
+Cooler Greenfield  (GCVS),No,Energy-Efficient Appliances-GCVS,High,$$,Home Energy,DELETE
+Cooler Northampton,No,Energy-Efficient Appliances-northampton,High,$$,Home Energy,DELETE
+Cooler Springfield (SICS),No,Energy-Efficient Appliances-SICS,High,$$,Home Energy,DELETE
+Cooler Westhampton,No,Energy-Efficient Appliances-westhampton,High,$$,Home Energy,DELETE
+Energize Wayland,No,Food scraps pickup,Low,$,Waste & Recycling,compost
+EcoNatick,No,Food scraps pickup-EcoNatick,Low,$,Waste & Recycling,compost
+Boxborough,No,FreeBee Market,Low,$$,"Land, Soil & Water",swap_donate
+Energize Framingham,Yes,Get Cool with Mini-Splits,High,$$$,Home Energy,air_source_hp
+Energize Acton,Yes,Get Dirty in the Garden,Low,$,Waste & Recycling,grow_local
+Energize MORE!,No,Get Hot & Cool with Mini-Split-blaMA,High,$$$,Home Energy,DELETE
+Energize Chelmsford,No,Get Hot & Cool with Mini-Split-ChelmsfordMA,High,$$$,Home Energy,DELETE
+,No,Get Hot & Cool with Mini-Split-EnergizeCorp1,High,$$$,Home Energy,DELETE
+,No,Get Hot & Cool with Mini-Split-hello_hello,High,$$$,Home Energy,DELETE
+,No,Get Hot & Cool with Mini-Split-marathon City,High,$$$,Home Energy,DELETE
+,No,Get Hot & Cool with Mini-Split-marathon day,High,$$$,Home Energy,DELETE
+Maynard,No,Get Hot & Cool with Mini-Split-MaynardMAUSA,High,$$$,Home Energy,DELETE
+Energize Test,No,Get Hot & Cool with Mini-Split-new_subdomain,High,$$$,Home Energy,DELETE
+,No,Get Hot & Cool with Mini-Split-NewCommunityMA,High,$$$,Home Energy,DELETE
+,No,Get Hot & Cool with Mini-Split-testingonemore,High,$$$,Home Energy,DELETE
+Energize Vineyard,No,Get Hot & Cool with Mini-Split-theVineyard,High,$$$,Home Energy,DELETE
+UU Mass Action,No,Get Hot & Cool with Mini-Split-UUMassAction,High,$$$,Home Energy,DELETE
+MassEnergize Demo,Yes,Get Hot & Cool with Mini-Splits,High,$$$,Home Energy,air_source_hp
+Energize Carlisle,No,Get Hot & Cool with Mini-Splits-CarlisleMA,High,$$$,Home Energy,DELETE
+MassEnergize Demo,No,Get Hot & Cool with Mini-Splits-Copy,High,$$$,Home Energy,DELETE
+MassEnergize Demo,No,Get Hot & Cool with Mini-Splits-Copy-Copy,High,$$$,Home Energy,DELETE
+Cooler Greenfield  (GCVS),No,Get Hot & Cool with Mini-Splits-GCVS,High,$$$,Home Energy,DELETE
+Cooler Northampton,No,Get Hot & Cool with Mini-Splits-northampton,High,$$$,Home Energy,DELETE
+Cooler Springfield (SICS),No,Get Hot & Cool with Mini-Splits-SICS,High,$$$,Home Energy,DELETE
+Cooler Westhampton,No,Get Hot & Cool with Mini-Splits-westhampton,High,$$$,Home Energy,DELETE
+MassEnergize Demo,No,Go solar!,High,$$$,Solar,install_solarPV
+JCAN,Yes,Go Solar! ,High,$$$,Solar,install_solarPV
+Boxborough,No,Green Heating & Cooling ,High,$$$,Home Energy,air_source_hp
+JCAN,Yes,Green Heating and AC,High,$$$,Home Energy,air_source_hp
+MassEnergize Demo,Yes,Green Heating and AC copy,High,$$$,Home Energy,air_source_hp
+Energize MORE!,No,Green Your Electricit-blaMA,High,0,Home Energy,DELETE
+Energize Chelmsford,No,Green Your Electricit-ChelmsfordMA,High,0,Home Energy,DELETE
+,No,Green Your Electricit-EnergizeCorp1,High,0,Home Energy,DELETE
+,No,Green Your Electricit-hello_hello,High,0,Home Energy,DELETE
+,No,Green Your Electricit-marathon City,High,0,Home Energy,DELETE
+,No,Green Your Electricit-marathon day,High,0,Home Energy,DELETE
+Maynard,No,Green Your Electricit-MaynardMAUSA,High,0,Home Energy,DELETE
+Energize Test,No,Green Your Electricit-new_subdomain,High,0,Home Energy,DELETE
+,No,Green Your Electricit-NewCommunityMA,High,0,Home Energy,DELETE
+,No,Green Your Electricit-testingonemore,High,0,Home Energy,DELETE
+Energize Vineyard,No,Green Your Electricit-theVineyard,High,0,Home Energy,DELETE
+UU Mass Action,No,Green Your Electricit-UUMassAction,High,0,Home Energy,DELETE
+JCAN,Yes,Green Your Electricity,High,0,Home Energy,renewable_elec
+MassEnergize Demo,Yes,Green Your Electricity,High,0,Home Energy,renewable_elec
+Energize Framingham,No,Green Your Electricity ,Medium,0,Home Energy,renewable_elec
+Energize Carlisle,No,Green Your Electricity-CarlisleMA,High,0,Home Energy,DELETE
+JCAN,No,Green Your Electricity-Copy,High,0,Home Energy,DELETE
+Cooler Greenfield  (GCVS),No,Green Your Electricity-GCVS,High,0,Home Energy,DELETE
+Cooler Northampton,No,Green Your Electricity-northampton,High,0,Home Energy,DELETE
+Cooler Springfield (SICS),No,Green Your Electricity-SICS,High,0,Home Energy,DELETE
+Cooler Westhampton,No,Green Your Electricity-westhampton,High,0,Home Energy,DELETE
+EcoNatick,No,Grow herbs and vegetables,Medium,$,Food,DELETE
+Energize MORE!,No,Heat my water with Solar-blaMA,Medium,$$$,Solar,DELETE
+Energize Chelmsford,No,Heat my water with Solar-ChelmsfordMA,Medium,$$$,Solar,DELETE
+,No,Heat my water with Solar-EnergizeCorp1,Medium,$$$,Solar,DELETE
+,No,Heat my water with Solar-hello_hello,Medium,$$$,Solar,DELETE
+,No,Heat my water with Solar-marathon City,Medium,$$$,Solar,DELETE
+,No,Heat my water with Solar-marathon day,Medium,$$$,Solar,DELETE
+Maynard,No,Heat my water with Solar-MaynardMAUSA,Medium,$$$,Solar,DELETE
+Energize Test,No,Heat my water with Solar-new_subdomain,Medium,$$$,Solar,DELETE
+,No,Heat my water with Solar-NewCommunityMA,Medium,$$$,Solar,DELETE
+,No,Heat my water with Solar-testingonemore,Medium,$$$,Solar,DELETE
+Energize Vineyard,No,Heat my water with Solar-theVineyard,Medium,$$$,Solar,DELETE
+UU Mass Action,No,Heat my water with Solar-UUMassAction,Medium,$$$,Solar,DELETE
+JCAN,Yes,Heat my water with Solar!,Medium,$$,Solar,install_solarHW
+MassEnergize Demo,Yes,Heat my water with Solar!,Medium,$$,Home Energy,install_solarHW
+Boxborough,No,Heat my water with Solar!-BoxboroughMA,Medium,$$$,Solar,DELETE
+Energize Carlisle,No,Heat my water with Solar!-CarlisleMA,Medium,$$$,Solar,DELETE
+Cooler Greenfield  (GCVS),No,Heat my water with Solar!-GCVS,Medium,$$$,Solar,DELETE
+Cooler Northampton,No,Heat my water with Solar!-northampton,Medium,$$$,Solar,DELETE
+Cooler Springfield (SICS),No,Heat my water with Solar!-SICS,Medium,$$$,Solar,DELETE
+Cooler Westhampton,No,Heat my water with Solar!-westhampton,Medium,$$$,Solar,DELETE
+Energize MORE!,No,Heating & Cooling with Heat Pump-blaMA,High,$$,Home Energy,DELETE
+Energize Chelmsford,No,Heating & Cooling with Heat Pump-ChelmsfordMA,High,$$,Home Energy,DELETE
+,No,Heating & Cooling with Heat Pump-EnergizeCorp1,High,$$,Home Energy,DELETE
+,No,Heating & Cooling with Heat Pump-hello_hello,High,$$,Home Energy,DELETE
+,No,Heating & Cooling with Heat Pump-marathon City,High,$$,Home Energy,DELETE
+,No,Heating & Cooling with Heat Pump-marathon day,High,$$,Home Energy,DELETE
+Maynard,No,Heating & Cooling with Heat Pump-MaynardMAUSA,High,$$,Home Energy,DELETE
+Energize Test,No,Heating & Cooling with Heat Pump-new_subdomain,High,$$,Home Energy,DELETE
+,No,Heating & Cooling with Heat Pump-NewCommunityMA,High,$$,Home Energy,DELETE
+,No,Heating & Cooling with Heat Pump-testingonemore,High,$$,Home Energy,DELETE
+Energize Vineyard,No,Heating & Cooling with Heat Pump-theVineyard,High,$$,Home Energy,DELETE
+UU Mass Action,No,Heating & Cooling with Heat Pump-UUMassAction,High,$$,Home Energy,DELETE
+Energize Carlisle,No,Heating & Cooling with Heat Pumps-CarlisleMA,High,$$,Home Energy,DELETE
+EcoNatick,No,Heating & Cooling with Heat Pumps-EcoNatick,High,$$,Home Energy,DELETE
+Cooler Greenfield  (GCVS),No,Heating & Cooling with Heat Pumps-GCVS,High,$$,Home Energy,DELETE
+Cooler Northampton,No,Heating & Cooling with Heat Pumps-northampton,High,$$,Home Energy,DELETE
+Cooler Springfield (SICS),No,Heating & Cooling with Heat Pumps-SICS,High,$$,Home Energy,DELETE
+Cooler Westhampton,No,Heating & Cooling with Heat Pumps-westhampton,High,$$,Home Energy,DELETE
+CSNDC Community,Yes,HERO Bill - Send Email,High,0,Activism & Education,activism
+Energize Lexington,Yes,How Can You Help? Sign Up!,Low,0,Activism & Education,activism
+Boxborough,Yes,Install a Heat Pump Water Heater,Medium,$$$,Home Energy,hp_water_heater
+Energize Carlisle,No,Install A Heat Pump Water Heater ,Medium,$$,Home Energy,hp_water_heater
+Maynard,No,Install a mini-split heat pump,High,$$$,Home Energy,air_source_hp
+Demo 2022,Yes,Insulate and Air Seal Your Home,High,$$,Home Energy,weatherization
+JCAN,Yes,Insulate and Air Seal Your Home,Medium,0,Home Energy,weatherization
+Boxborough,No,Insulate and Air Seal Your Home-BoxboroughMA,High,$$,Home Energy,DELETE
+JCAN,No,Insulate and Air Seal Your Home-Copy,Medium,0,Home Energy,DELETE
+Energize MORE!,Yes,Invest Like a Climate Activist Cop-blaMA,Medium,0,Activism & Education,DELETE
+Energize Chelmsford,No,Invest Like a Climate Activist Cop-ChelmsfordMA,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activist Cop-EnergizeCorp1,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activist Cop-hello_hello,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activist Cop-marathon City,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activist Cop-marathon day,Medium,0,Activism & Education,DELETE
+Maynard,No,Invest Like a Climate Activist Cop-MaynardMAUSA,Medium,0,Activism & Education,DELETE
+Energize Test,No,Invest Like a Climate Activist Cop-new_subdomain,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activist Cop-NewCommunityMA,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activist Cop-testingonemore,Medium,0,Activism & Education,DELETE
+Energize Vineyard,No,Invest Like a Climate Activist Cop-theVineyard,Medium,0,Activism & Education,DELETE
+UU Mass Action,No,Invest Like a Climate Activist Cop-UUMassAction,Medium,0,Activism & Education,DELETE
+Energize Carlisle,No,Invest Like a Climate Activist Copy-CarlisleMA,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activist Copy-CarlisleMA-Copy,Medium,0,Activism & Education,DELETE
+Cooler Greenfield  (GCVS),No,Invest Like a Climate Activist Copy-GCVS,Medium,0,Activism & Education,DELETE
+Cooler Northampton,No,Invest Like a Climate Activist Copy-northampton,Medium,0,Activism & Education,DELETE
+,No,Invest Like a Climate Activist Copy-SCIS,Medium,0,Activism & Education,DELETE
+Cooler Springfield (SICS),No,Invest Like a Climate Activist Copy-SICS,Medium,0,Activism & Education,DELETE
+Cooler Westhampton,No,Invest Like a Climate Activist Copy-westhampton,Medium,0,Activism & Education,DELETE
+Boxborough,Yes,Join 2040 Handbook Book Club,Low,0,Activism & Education,learn
+Boxborough,No,Join 2040 Handbook Book Club-Copy,Low,0,Activism & Education,DELETE
+,No,Knit your own sweaters - TMP,Low,$,Home Energy,DELETE
+,No,Knit your own sweaters --Copy,Low,$,Home Energy,DELETE
+Maynard,No,Knit your own sweaters -MaynardMAUSA,Low,$,Home Energy,DELETE
+Energize Test,No,Knit your own sweaters -new_subdomain,Low,$,Home Energy,DELETE
+Energize Vineyard,No,Knit your own sweaters -theVineyard,Low,$,Home Energy,DELETE
+Boxborough,No,Landlord Near Free Property Upgrades-BoxboroughMA,Low,0,Home Energy,DELETE
+Energize Framingham,Yes,Landlords - Limited Time Free Insulation,Low,0,Home Energy,weatherization
+JCAN,Yes,Learn about JCAN-MA,Medium,0,Activism & Education,learn
+MassEnergize Demo,Yes,"Lease, Buy an Electric Car",High,$$$,Transportation,replace_car
+JCAN,Yes,Local Farmshare or Farmstand,Medium,0,Food,eat_locally
+Training,No,Local food with Farmshare or Farmstand,Medium,0,Food,eat_locally
+Energize MORE!,No,Market my Green Hom-blaMA,Low,0,Home Energy,DELETE
+Energize Chelmsford,Yes,Market my Green Hom-ChelmsfordMA,Low,0,Home Energy,DELETE
+,No,Market my Green Hom-EnergizeCorp1,Low,0,Home Energy,DELETE
+,No,Market my Green Hom-hello_hello,Low,0,Home Energy,DELETE
+,No,Market my Green Hom-marathon City,Low,0,Home Energy,DELETE
+,No,Market my Green Hom-marathon day,Low,0,Home Energy,DELETE
+Maynard,No,Market my Green Hom-MaynardMAUSA,Low,0,Home Energy,DELETE
+Energize Test,No,Market my Green Hom-new_subdomain,Low,0,Home Energy,DELETE
+,No,Market my Green Hom-NewCommunityMA,Low,0,Home Energy,DELETE
+,No,Market my Green Hom-testingonemore,Low,0,Home Energy,DELETE
+Energize Vineyard,No,Market my Green Hom-theVineyard,Low,0,Home Energy,DELETE
+UU Mass Action,No,Market my Green Hom-UUMassAction,Low,0,Home Energy,DELETE
+Energize Carlisle,No,Market my Green Home-CarlisleMA,Low,0,Home Energy,DELETE
+,No,Market my Green Home-Copy,,,,DELETE
+Cooler Greenfield  (GCVS),No,Market my Green Home-GCVS,Low,0,Home Energy,DELETE
+Cooler Northampton,No,Market my Green Home-northampton,Low,0,Home Energy,DELETE
+Cooler Springfield (SICS),No,Market my Green Home-SICS,Low,0,Home Energy,DELETE
+Cooler Westhampton,No,Market my Green Home-westhampton,Low,0,Home Energy,DELETE
+CSNDC Community,Yes,May Line Drying Challenge-Copy,Low,$,Home Energy,line_dry
+Energize MORE!,No,Monitor My Electricity Usag-blaMA,Low,$$,Home Energy,DELETE
+Energize Chelmsford,No,Monitor My Electricity Usag-ChelmsfordMA,Low,$$,Home Energy,DELETE
+,No,Monitor My Electricity Usag-EnergizeCorp1,Low,$$,Home Energy,DELETE
+,No,Monitor My Electricity Usag-hello_hello,Low,$$,Home Energy,DELETE
+,No,Monitor My Electricity Usag-marathon City,Low,$$,Home Energy,DELETE
+,No,Monitor My Electricity Usag-marathon day,Low,$$,Home Energy,DELETE
+Maynard,No,Monitor My Electricity Usag-MaynardMAUSA,Low,$$,Home Energy,DELETE
+Energize Test,No,Monitor My Electricity Usag-new_subdomain,Low,$$,Home Energy,DELETE
+,No,Monitor My Electricity Usag-NewCommunityMA,Low,$$,Home Energy,DELETE
+,No,Monitor My Electricity Usag-testingonemore,Low,$$,Home Energy,DELETE
+Energize Vineyard,No,Monitor My Electricity Usag-theVineyard,Low,$$,Home Energy,DELETE
+UU Mass Action,No,Monitor My Electricity Usag-UUMassAction,Low,$$,Home Energy,DELETE
+Energize Carlisle,No,Monitor My Electricity Usage-CarlisleMA,Low,$$,Home Energy,DELETE
+,No,Monitor My Electricity Usage-CarlisleMA-Copy,Low,$$,Home Energy,DELETE
+Cooler Greenfield  (GCVS),No,Monitor My Electricity Usage-GCVS,Low,$$,Home Energy,DELETE
+Cooler Northampton,No,Monitor My Electricity Usage-northampton,Low,$$,Home Energy,DELETE
+Cooler Springfield (SICS),No,Monitor My Electricity Usage-SICS,Low,$$,Home Energy,DELETE
+Cooler Westhampton,No,Monitor My Electricity Usage-westhampton,Low,$$,Home Energy,DELETE
+Cooler Concord!,No,New action,Low,0,Activism & Education,DELETE
+,No,New action-Copy,Low,0,Activism & Education,DELETE
+Energize Chelmsford,No,New template actio-ChelmsfordMA,High,$$$,Home Energy,DELETE
+,No,New template actio-hello_hello,High,$$$,Home Energy,DELETE
+Maynard,No,New template actio-MaynardMAUSA,High,$$$,Home Energy,DELETE
+Energize Test,No,New template actio-new_subdomain,High,$$$,Home Energy,DELETE
+Energize Vineyard,No,New template actio-theVineyard,High,$$$,Home Energy,DELETE
+,No,New template action,High,$$$,Home Energy,DELETE
+Energize MORE!,Yes,No-cost Home Energy Assessmen-blaMA,Low,0,Home Energy,DELETE
+Energize Chelmsford,No,No-cost Home Energy Assessmen-ChelmsfordMA,Low,0,Home Energy,DELETE
+,No,No-cost Home Energy Assessmen-EnergizeCorp1,Low,0,Home Energy,DELETE
+,No,No-cost Home Energy Assessmen-hello_hello,Low,0,Home Energy,DELETE
+,No,No-cost Home Energy Assessmen-marathon City,Low,0,Home Energy,DELETE
+,No,No-cost Home Energy Assessmen-marathon day,Low,0,Home Energy,DELETE
+,No,No-cost Home Energy Assessmen-NewCommunityMA,Low,0,Home Energy,DELETE
+,No,No-cost Home Energy Assessmen-testingonemore,Low,0,Home Energy,DELETE
+UU Mass Action,No,No-cost Home Energy Assessmen-UUMassAction,Low,0,Home Energy,DELETE
+Cooler Greenfield,No,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
+Demo 2022,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
+Energize Wayland,Yes,No-cost home energy assessment,Low,0,Home Energy,energy_audit
+JCAN,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
+MassEnergize Demo,Yes,No-cost Home Energy Assessment,Low,0,Home Energy,energy_audit
+Boxborough,No,No-cost Home Energy Assessment-BoxboroughMA,Low,0,Home Energy,DELETE
+Energize Carlisle,No,No-cost Home Energy Assessment-CarlisleMA,Low,0,Home Energy,DELETE
+,No,No-cost Home Energy Assessment-Copy,,,,DELETE
+EcoNatick,No,No-cost Home Energy Assessment-EcoNatick,Low,0,Home Energy,DELETE
+Cooler Greenfield  (GCVS),No,No-cost Home Energy Assessment-GCVS,Low,0,Home Energy,DELETE
+Cooler Northampton,No,No-cost Home Energy Assessment-northampton,Low,0,Home Energy,DELETE
+Cooler Springfield (SICS),No,No-cost Home Energy Assessment-SICS,Low,0,Home Energy,DELETE
+Cooler Westhampton,No,No-cost Home Energy Assessment-westhampton,Low,0,Home Energy,DELETE
+Maynard,Yes,NOT:,Medium,$,Solar,DELETE
+,Yes,NOT: Community Solar,Medium,$,Solar,DELETE
+Energize MORE!,No,"NOT: Community Solar, No Installatio-blaMA",Medium,$,Solar,DELETE
+Energize Chelmsford,No,"NOT: Community Solar, No Installatio-ChelmsfordMA",Medium,$,Solar,DELETE
+,No,"NOT: Community Solar, No Installatio-EnergizeCorp1",Medium,$,Solar,DELETE
+,No,"NOT: Community Solar, No Installatio-hello_hello",Medium,$,Solar,DELETE
+,No,"NOT: Community Solar, No Installatio-marathon City",Medium,$,Solar,DELETE
+,No,"NOT: Community Solar, No Installatio-marathon day",Medium,$,Solar,DELETE
+Energize Test,No,"NOT: Community Solar, No Installatio-new_subdomain",Medium,$,Solar,DELETE
+,No,"NOT: Community Solar, No Installatio-NewCommunityMA",Medium,$,Solar,DELETE
+,No,"NOT: Community Solar, No Installatio-testingonemore",Medium,$,Solar,DELETE
+Energize Vineyard,No,"NOT: Community Solar, No Installatio-theVineyard",Medium,$,Solar,DELETE
+UU Mass Action,No,"NOT: Community Solar, No Installatio-UUMassAction",Medium,$,Solar,DELETE
+,No,"NOT: Community Solar, No Installation",Medium,$,Solar,DELETE
+Energize Carlisle,No,"NOT: Community Solar, No Installation-CarlisleMA",Medium,$,Solar,DELETE
+Cooler Greenfield  (GCVS),No,"NOT: Community Solar, No Installation-GCVS",Medium,$,Solar,DELETE
+Cooler Northampton,No,"NOT: Community Solar, No Installation-northampton",Medium,$,Solar,DELETE
+Cooler Springfield (SICS),No,"NOT: Community Solar, No Installation-SICS",Medium,$,Solar,DELETE
+Cooler Westhampton,No,"NOT: Community Solar, No Installation-westhampton",Medium,$,Solar,DELETE
+Boxborough,No,Not: Green Your Electricity-BoxboroughMA,High,0,Home Energy,DELETE
+Energize MORE!,No,Offset your air trave-blaMA,Medium,$,Transportation,DELETE
+Energize Chelmsford,No,Offset your air trave-ChelmsfordMA,Medium,$,Transportation,DELETE
+,No,Offset your air trave-EnergizeCorp1,Medium,$,Transportation,DELETE
+,No,Offset your air trave-hello_hello,Medium,$,Transportation,DELETE
+,No,Offset your air trave-marathon City,Medium,$,Transportation,DELETE
+,No,Offset your air trave-marathon day,Medium,$,Transportation,DELETE
+Maynard,No,Offset your air trave-MaynardMAUSA,Medium,$,Transportation,DELETE
+Energize Test,No,Offset your air trave-new_subdomain,Medium,$,Transportation,DELETE
+,No,Offset your air trave-NewCommunityMA,Medium,$,Transportation,DELETE
+,No,Offset your air trave-testingonemore,Medium,$,Transportation,DELETE
+Energize Vineyard,No,Offset your air trave-theVineyard,Medium,$,Transportation,DELETE
+UU Mass Action,No,Offset your air trave-UUMassAction,Medium,$,Transportation,DELETE
+Energize Carlisle,No,Offset your air travel-CarlisleMA,Medium,$,Transportation,DELETE
+Cooler Greenfield  (GCVS),No,Offset your air travel-GCVS,Medium,$,Transportation,DELETE
+Cooler Northampton,No,Offset your air travel-northampton,Medium,$,Transportation,DELETE
+Cooler Springfield (SICS),No,Offset your air travel-SICS,Medium,$,Transportation,DELETE
+Cooler Westhampton,No,Offset your air travel-westhampton,Medium,$,Transportation,DELETE
+Energize Framingham,Yes,Participate in a Framingham Clean-Up!,Low,0,Activism & Education,community_cleanup
+Energize Framingham,No,Participate in a Framingham Clean-Up!-Copy,Low,0,Activism & Education,DELETE
+Energize MORE!,No,Pass on used good-blaMA,Medium,0,Waste & Recycling,DELETE
+Energize Chelmsford,No,Pass on used good-ChelmsfordMA,Medium,0,Waste & Recycling,DELETE
+,No,Pass on used good-EnergizeCorp1,Medium,0,Waste & Recycling,DELETE
+,No,Pass on used good-hello_hello,Medium,0,Waste & Recycling,DELETE
+,No,Pass on used good-marathon City,Medium,0,Waste & Recycling,DELETE
+,No,Pass on used good-marathon day,Medium,0,Waste & Recycling,DELETE
+Maynard,No,Pass on used good-MaynardMAUSA,Medium,0,Waste & Recycling,DELETE
+Energize Test,No,Pass on used good-new_subdomain,Medium,0,Waste & Recycling,DELETE
+,No,Pass on used good-NewCommunityMA,Medium,0,Waste & Recycling,DELETE
+,No,Pass on used good-testingonemore,Medium,0,Waste & Recycling,DELETE
+Energize Vineyard,No,Pass on used good-theVineyard,Medium,0,Waste & Recycling,DELETE
+UU Mass Action,No,Pass on used good-UUMassAction,Medium,0,Waste & Recycling,DELETE
+Energize Carlisle,No,Pass on used goods-CarlisleMA,Medium,0,Waste & Recycling,DELETE
+Cooler Greenfield  (GCVS),No,Pass on used goods-GCVS,Medium,0,Waste & Recycling,DELETE
+Cooler Northampton,No,Pass on used goods-northampton,Medium,0,Waste & Recycling,DELETE
+Cooler Springfield (SICS),No,Pass on used goods-SICS,Medium,0,Waste & Recycling,DELETE
+Cooler Westhampton,No,Pass on used goods-westhampton,Medium,0,Waste & Recycling,DELETE
+JCAN,Yes,People Power Your Errands,High,0,Transportation,people_power
+JCAN,No,People Power Your Errands Copy 3050,High,0,Transportation,DELETE
+Boxborough,No,People Power Your Errands-BoxboroughMA,High,0,Transportation,DELETE
+Cooler Concord!,No,Pick invasive weeds,,,,DELETE
+EcoNatick,Yes,Plant native grasses instead of lawns,Low,$$,"Land, Soil & Water",plant_natives
+JCAN,Yes,Pledge to Vote,Medium,0,Activism & Education,local_decision
+Boxborough,No,Pledge to Vote-BoxboroughMA,Medium,0,Activism & Education,DELETE
+Sustainable Medfield,Yes,Recycle Your Christmas Tree,Low,$,Waste & Recycling,reduce_waste
+Boxborough,No,Recycle Your Clothing!,Low,0,Waste & Recycling,reduce_waste
+Demo 2022,Yes,Reduce Always-On Wasted Electricity,Low,0,Home Energy,conserve_electricity
+Demo 2022,Yes,Refer a Friend ,Low,0,Activism & Education,help_community
+Boxborough,No,Refer a Friend-BoxboroughMA,Low,0,Activism & Education,DELETE
+JCAN,Yes,Renovating? Improve Efficiency too! ,High,$$,Home Energy,efficient_renovations
+Energize Carlisle,No,Renovating? Improve Efficiency too! -CarlisleMA,High,$$,Home Energy,DELETE
+,No,Renovating? Improve Efficiency too! -CarlisleMA-Copy,,,,DELETE
+Cooler Greenfield  (GCVS),No,Renovating? Improve Efficiency too! -GCVS,High,$$,Home Energy,DELETE
+Cooler Northampton,No,Renovating? Improve Efficiency too! -northampton,High,$$,Home Energy,DELETE
+Cooler Springfield (SICS),No,Renovating? Improve Efficiency too! -SICS,High,$$,Home Energy,DELETE
+Cooler Westhampton,No,Renovating? Improve Efficiency too! -westhampton,High,$$,Home Energy,DELETE
+Energize MORE!,No,Renovating? Improve Efficiency too!-blaMA,High,$$,Home Energy,DELETE
+Energize Chelmsford,No,Renovating? Improve Efficiency too!-ChelmsfordMA,High,$$,Home Energy,DELETE
+,No,Renovating? Improve Efficiency too!-EnergizeCorp1,High,$$,Home Energy,DELETE
+,No,Renovating? Improve Efficiency too!-hello_hello,High,$$,Home Energy,DELETE
+,No,Renovating? Improve Efficiency too!-marathon City,High,$$,Home Energy,DELETE
+,No,Renovating? Improve Efficiency too!-marathon day,High,$$,Home Energy,DELETE
+Maynard,No,Renovating? Improve Efficiency too!-MaynardMAUSA,High,$$,Home Energy,DELETE
+Energize Test,No,Renovating? Improve Efficiency too!-new_subdomain,High,$$,Home Energy,DELETE
+,No,Renovating? Improve Efficiency too!-NewCommunityMA,High,$$,Home Energy,DELETE
+,No,Renovating? Improve Efficiency too!-testingonemore,High,$$,Home Energy,DELETE
+Energize Vineyard,No,Renovating? Improve Efficiency too!-theVineyard,High,$$,Home Energy,DELETE
+UU Mass Action,No,Renovating? Improve Efficiency too!-UUMassAction,High,$$,Home Energy,DELETE
+Boxborough,No,Repurpose Used Goods,Medium,0,Waste & Recycling,swap_donate
+Boxborough,No,Rooftop solar-BoxboroughMA,High,$$$,Solar,DELETE
+Demo 2022,No,Sample Action 1,Low,0,Home Energy,DELETE
+Demo 2022,No,Sample Action 1-Copy,Low,0,Home Energy,DELETE
+Energize Framingham,No,Savings for Renters -Copy,Low,0,Home Energy,DELETE
+Boxborough,No,Savings for Renters-BoxboroughMA,Low,0,Home Energy,DELETE
+JCAN,Yes,Shop Local: Farmers Market,High,0,Food,eat_locally
+CSNDC Community,Yes,Sign up for our HERO Newsletter!  ,High,0,Activism & Education,activism
+Cooler Concord!,No,Solar assist water heater,,,,install_solarHW
+Boxborough,No,START HERE for Energy Savings-BoxboroughMA,Low,0,Home Energy,DELETE
+Cooler Greenfield,No,START HERE for Energy Savings-GreenfieldMA,Low,0,Home Energy,DELETE
+Pioneer Valley Schools,No,Staying Cozy at Home Copy 4752,Medium,$,Home Energy,DELETE
+Demo 2022,Yes,Suggest a New Action,Low,0,Activism & Education,help_community
+Boxborough,No,Suggest a New Action-BoxboroughMA,Low,0,Activism & Education,DELETE
+Demo 2022,No,Suggested action,,,,help_community
+Demo 2022,Yes,Suggested action-Copy,,,,help_community
+Demo 2022,Yes,Sustainable Household Goods,Low,$,Waste & Recycling,swap_donate
+Energize MORE!,No,TEM Buy or Lease an Electric Ca-blaMA,High,$$$,Transportation,DELETE
+Energize Chelmsford,No,TEM Buy or Lease an Electric Ca-ChelmsfordMA,High,$$$,Transportation,DELETE
+,No,TEM Buy or Lease an Electric Ca-EnergizeCorp1,High,$$$,Transportation,DELETE
+,No,TEM Buy or Lease an Electric Ca-hello_hello,High,$$$,Transportation,DELETE
+,No,TEM Buy or Lease an Electric Ca-marathon City,High,$$$,Transportation,DELETE
+,No,TEM Buy or Lease an Electric Ca-marathon day,High,$$$,Transportation,DELETE
+Maynard,No,TEM Buy or Lease an Electric Ca-MaynardMAUSA,High,$$$,Transportation,DELETE
+Energize Test,No,TEM Buy or Lease an Electric Ca-new_subdomain,High,$$$,Transportation,DELETE
+,No,TEM Buy or Lease an Electric Ca-NewCommunityMA,High,$$$,Transportation,DELETE
+,No,TEM Buy or Lease an Electric Ca-testingonemore,High,$$$,Transportation,DELETE
+Energize Vineyard,No,TEM Buy or Lease an Electric Ca-theVineyard,High,$$$,Transportation,DELETE
+UU Mass Action,No,TEM Buy or Lease an Electric Ca-UUMassAction,High,$$$,Transportation,DELETE
+,No,TEM Buy or Lease an Electric Car,High,$$$,Transportation,DELETE
+Boxborough,No,TEM Buy or Lease an Electric Car-BoxboroughMA,High,$$$,Transportation,DELETE
+Energize Carlisle,No,TEM Buy or Lease an Electric Car-CarlisleMA,High,$$$,Transportation,DELETE
+EcoNatick,No,TEM Buy or Lease an Electric Car-EcoNatick,High,$$$,Transportation,DELETE
+Cooler Greenfield  (GCVS),No,TEM Buy or Lease an Electric Car-GCVS,High,$$$,Transportation,DELETE
+Cooler Northampton,No,TEM Buy or Lease an Electric Car-northampton,High,$$$,Transportation,DELETE
+Cooler Springfield (SICS),No,TEM Buy or Lease an Electric Car-SICS,High,$$$,Transportation,DELETE
+Cooler Westhampton,No,TEM Buy or Lease an Electric Car-westhampton,High,$$$,Transportation,DELETE
+,No,Test action,,,,DELETE
+,Yes,TEST ACTION,Low,$$$,Solar,DELETE
+MassEnergize Demo,No,Test Action you want to show up first ,High,0,Home Energy,help_community
+JCAN,No,test for lynne,Medium,$,Home Energy,DELETE
+Energize Chelmsford,Yes,Test templat-ChelmsfordMA,Medium,$,Solar,DELETE
+,No,Test templat-hello_hello,Medium,$,Solar,DELETE
+Maynard,No,Test templat-MaynardMAUSA,Medium,$,Solar,DELETE
+Energize Test,No,Test templat-new_subdomain,Medium,$,Solar,DELETE
+Energize Vineyard,No,Test templat-theVineyard,Medium,$,Solar,DELETE
+UU Mass Action,No,Test templat-UUMassAction,Medium,$,Solar,DELETE
+,No,Test template,Medium,$,Solar,DELETE
+,No,testing,,,,DELETE
+Energize MORE!,Yes,testing again,Low,0,Home Energy,help_community
+,No,Testing copy,,,,DELETE
+Training,No,Testing numbering,Low,0,Home Energy,DELETE
+Energize Framingham,Yes,testing out this,,,,help_community
+MassEnergize Demo,Yes,testing this again,Medium,$,Home Energy,help_community
+Energize MORE!,Yes,testing this again-Copy,Medium,$,Home Energy,help_community
+,No,testing this again-Copy-Copy,Medium,$,Home Energy,DELETE
+Energize MORE!,Yes,testing this again-Copycopy,Medium,$,Home Energy,help_community
+,No,testing-Copy,Low,0,Home Energy,DELETE
+,No,TMP Change Thermostat Settings,Medium,$$$,Home Energy,DELETE
+,No,TMP Change to LED Lighting,Medium,$,Home Energy,DELETE
+CSNDC Community,No,TMP Change to LED Lighting-Copy,Medium,$,Home Energy,DELETE
+,No,TMP Clean Up Your Community,Low,0,Activism & Education,DELETE
+,No,TMP Community Solar,Medium,0,Solar,DELETE
+,No,TMP Donate Building Materials,Low,0,Waste & Recycling,DELETE
+,No,TMP Ecological Landscaping Tree Planting,Low,$$,"Land, Soil & Water",DELETE
+,No,TMP Energy-Efficient Appliances,High,$$,Home Energy,DELETE
+,No,TMP Get Hot & Cool with Mini-Splits,High,$$$,Home Energy,DELETE
+,No,TMP Green Your Electricity,High,0,Home Energy,DELETE
+MassEnergize Demo,No,TMP Green Your Electricity-Copy,High,0,Home Energy,DELETE
+,No,TMP Heat my water with Solar!,Medium,$$$,Solar,DELETE
+,No,TMP Heating & Cooling with Heat Pumps,High,$$,Home Energy,DELETE
+,No,TMP Invest Like a Climate Activist Copy,Medium,0,Activism & Education,DELETE
+,No,TMP Market my Green Home,Low,0,Home Energy,DELETE
+,No,TMP Monitor My Electricity Usage,Low,$$,Home Energy,DELETE
+,No,TMP No-cost Home Energy Assessment,Low,0,Home Energy,DELETE
+,No,TMP Offset your air travel,Medium,$,Transportation,DELETE
+,No,TMP Pass on used goods,Medium,0,Waste & Recycling,DELETE
+,No,TMP Renovating? Improve Efficiency too! ,High,$$,Home Energy,DELETE
+Demo 2022,Yes,Update Heating and Cooling,High,$$$,Home Energy,efficient_fossil
+Cooler Concord!,Yes,Use a low carbon bank,Low,0,Activism & Education,investing
+Energize Framingham,Yes,Use heat pumps for asthma,Medium,0,Home Energy,air_source_hp
+Energize Lexington,Yes,Walk More; Drive Less,High,0,Transportation,people_power
+CSNDC Community,Yes,Want to Volunteer?-Copy,Low,0,Activism & Education,activism

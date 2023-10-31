@@ -224,6 +224,12 @@ def set_cookie(response, key, value): # TODO
   response.set_cookie(key, value, MAX_AGE, samesite='Strict')
 
 
+def local_time():
+  local_zone = tz.tzlocal()
+  dt_utc = datetime.utcnow()
+  local_now = dt_utc.astimezone(local_zone)
+  return local_now
+
 
 def utc_to_local(iso_str):
   local_zone = tz.tzlocal()
