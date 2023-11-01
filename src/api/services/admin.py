@@ -5,7 +5,6 @@ from api.store.admin import AdminStore
 from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.settings import SLACK_SUPER_ADMINS_WEBHOOK_URL, IS_PROD, IS_CANARY
-from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from .utils import send_slack_message
 from sentry_sdk import capture_message
@@ -68,9 +67,9 @@ class AdminService:
             'portal_link':  f"{COMMUNITY_URL_ROOT}/{res['subdomain']}",
             'admin_type': 'Community'
         }
-        from_email = get_sender_email()
+        #sent from MassEnergize support
         send_massenergize_rich_email(
-            subject, res["email"], 'new_admin_email.html', content_variables, from_email)
+            subject, res["email"], 'new_admin_email.html', content_variables, None)
         res["user"] = serialize(res.get("user"))
         return res, None
       except Exception as e:
