@@ -27,7 +27,7 @@ from .transportation import EvalReplaceCar, EvalReduceMilesDriven, EvalEliminate
 from .foodWaste import EvalLowCarbonDiet, EvalReduceWaste, EvalCompost
 from .landscaping import EvalReduceLawnSize, EvalReduceLawnCare, EvalRakeOrElecBlower, EvalElectricMower
 
-CALCULATOR_VERSION = "4.0.3"
+CALCULATOR_VERSION = "4.0.4"
 QUESTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Questions.csv"
 ACTIONS_DATA = BASE_DIR + "/carbon_calculator/content/Actions.csv"
 DEFAULTS_DATA = BASE_DIR + "/carbon_calculator/content/defaults.csv"
