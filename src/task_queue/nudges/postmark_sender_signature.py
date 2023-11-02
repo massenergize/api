@@ -19,7 +19,7 @@ def collect_and_create_signatures(task=None):
     ff_enabled_communities = flag.enabled_communities(communities)
     for community in ff_enabled_communities:
         email = community.owner_email
-        if not email or email.split("@")[1] in PUBLIC_EMAIL_DOMAINS:
+        if not email or email.split("@")[1].strip().lower() in PUBLIC_EMAIL_DOMAINS:
             continue
         postmark_info = community.contact_info or {}
         alias = community.contact_sender_alias or community.name

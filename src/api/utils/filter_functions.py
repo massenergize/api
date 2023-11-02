@@ -306,9 +306,6 @@ def get_users_filter_params(params):
     try:
       query = []
       search_text = params.get("search_text", None)
-
-      print("==params==", params)
-
       if search_text:
         users = CommunityMember.objects.filter(community__name__icontains=search_text).values_list('user', flat=True).distinct()
         search= reduce(
