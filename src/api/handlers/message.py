@@ -74,6 +74,13 @@ class MessageHandler(RouteHandler):
   def send_message(self, request):
     context: Context = request.context
     args: dict = context.args
+    self.validator.expect("id",str, is_required=False)
+    self.validator.expect("subject",str, is_required=False)
+    self.validator.expect("message",str, is_required=False)
+    self.validator.expect("sub_audience_type",str, is_required=False)
+    self.validator.expect("audience",str, is_required=False)
+    self.validator.expect("schedule",str, is_required=False)
+    self.validator.expect("community_ids",str, is_required=False)
 
     message_info, err = self.service.send_message(context,args)
     if err:
