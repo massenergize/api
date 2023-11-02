@@ -31,7 +31,7 @@ class SendAdminMOUNotificationTests(TestCase):
         # Create an admin who should receive a notification (last notified more than a month ago)
         admin1 = UserProfile.objects.create(
             full_name="Akwesi",
-            email="akwesi@me.org",
+            email="akwesi@massenergize.org",
             is_deleted=False,
             is_community_admin=True,
         )
@@ -39,7 +39,7 @@ class SendAdminMOUNotificationTests(TestCase):
         # Create an admin who should not receive a notification (last notified less than a month ago)
         admin2 = UserProfile.objects.create(
             full_name="Brad",
-            email="brad@me.org",
+            email="brad@massenergize.org",
             is_deleted=False,
             is_community_admin=True,
         )
@@ -47,7 +47,7 @@ class SendAdminMOUNotificationTests(TestCase):
         # Create an admin who should receive a notification (never signed MOU)
         admin3 = UserProfile.objects.create(
             full_name="Tahiru",
-            email="tahiru@me.org",
+            email="tahiru@massenergize.org",
             is_deleted=False,
             is_community_admin=True,
         )

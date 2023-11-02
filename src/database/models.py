@@ -1,17 +1,22 @@
 import datetime
 from datetime import timezone, timedelta
 import json
+import uuid
 from _main_.utils.policy.PolicyConstants import PolicyConstants
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
-from django.db.models.fields import BooleanField, related
-from django.db.models.query_utils import select_related_descend
+from django.db.models.fields import BooleanField
 from _main_.utils.feature_flags.FeatureFlagConstants import FeatureFlagConstants
 from _main_.utils.footage.FootageConstants import FootageConstants
 from database.utils.constants import *
 from database.utils.settings.admin_settings import AdminPortalSettings
+from database.utils.settings.model_constants.user_media_uploads import (
+    UserMediaConstants,
+)
 from database.utils.settings.user_settings import UserPortalSettings
 from django.utils import timezone
+from django.core.files.storage import default_storage
+from django.db.models.query import QuerySet
 
 from .utils.common import (
     get_images_in_sequence,
@@ -22,7 +27,7 @@ from .utils.common import (
 from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
-import uuid
+from carbon_calculator.carbonCalculator import AverageImpact
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -74,16 +79,21 @@ def user_is_due_for_mou(user):
         ).latest("signed_at")
     except PolicyAcceptanceRecords.DoesNotExist:
         return True, None
-    
+
     # ok if user signed MOU after the date one year ago
-    if last_record.signed_at and last_record.signed_at > a_year_ago: 
+    if last_record.signed_at and last_record.signed_at > a_year_ago:
         return False, last_record.simple_json()
-    
+
     return True, last_record.simple_json()
-     
-def fetch_few_visits(user): 
-    footages = Footage.objects.filter(actor__id = user.id, activity_type=FootageConstants.sign_in(), portal = FootageConstants.on_user_portal()).values_list("created_at", flat=True)[:5]
-    if len(footages): 
+
+
+def fetch_few_visits(user):
+    footages = Footage.objects.filter(
+        actor__id=user.id,
+        activity_type=FootageConstants.sign_in(),
+        portal=FootageConstants.on_user_portal(),
+    ).values_list("created_at", flat=True)[:5]
+    if len(footages):
         return list(footages)
 
     visits = user.visit_log or []
@@ -264,20 +274,34 @@ class Media(models.Model):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
 
     def simple_json(self):
-        return {
+        obj = {
             "id": self.id,
             "name": self.name,
-            "url": self.file.url,
+            "url": self.file.url,   
         }
+        if hasattr(self, "user_upload"): 
+            obj["created_at"] = self.user_upload.created_at
+            obj["info"] = self.user_upload.info
+
+        return obj
 
     def full_json(self):
         return {
+            **self.simple_json(),
             "id": self.id,
             "name": self.name,
             "url": self.file.url,
             "media_type": self.media_type,
             "tags": [tag.simple_json() for tag in self.tags.all()],
         }
+
+    def delete(self, *args, **kwargs):
+        # Overriding the default delete fxn to delete actual file from  storage as well
+        if self.file:
+            file_path = self.file.name
+            default_storage.delete(file_path)
+
+        super().delete(*args, **kwargs)
 
     class Meta:
         db_table = "media"
@@ -443,6 +467,9 @@ class Community(models.Model):
       about this community
     more_info: JSON
       any another dynamic information we would like to store about this location
+
+    contact_info: JSON
+       looks like this {"is_validated":bool , "nudge_count":int ,"sender_signature_id":str}
     """
 
     id = models.AutoField(primary_key=True)
@@ -450,6 +477,9 @@ class Community(models.Model):
     subdomain = models.SlugField(max_length=SHORT_STR_LEN, unique=True, db_index=True)
     owner_name = models.CharField(max_length=SHORT_STR_LEN, default="Unknown")
     owner_email = models.EmailField(blank=False)
+    contact_sender_alias = models.CharField(
+        blank=True, null=True, max_length=SHORT_STR_LEN
+    )
     owner_phone_number = models.CharField(
         blank=True, null=True, max_length=SHORT_STR_LEN
     )
@@ -504,6 +534,7 @@ class Community(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_demo = models.BooleanField(default=False, blank=True)
+    contact_info = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return str(self.id) + " - " + self.name
@@ -526,6 +557,8 @@ class Community(models.Model):
                 "is_approved",
                 "more_info",
                 "location",
+                "contact_info",
+                # "contact_sender_alias"
             ],
         )
         res["logo"] = get_json_if_not_none(self.logo)
@@ -582,44 +615,47 @@ class Community(models.Model):
         carbon_footprint_reduction = 0
         for actionRel in done_actions:
             if actionRel.action and actionRel.action.calculator_action:
-                carbon_footprint_reduction += (
-                    actionRel.action.calculator_action.average_points
+                carbon_footprint_reduction += AverageImpact(
+                    actionRel.action.calculator_action, actionRel.date_completed
                 )
+
         goal["organic_attained_carbon_footprint_reduction"] = carbon_footprint_reduction
 
         # calculate values for community impact to be displayed on front-end sites
-        impact_page_settings: ImpactPageSettings = ImpactPageSettings.objects.filter(community__id=self.pk).first()
+        impact_page_settings: ImpactPageSettings = ImpactPageSettings.objects.filter(
+            community__id=self.pk
+        ).first()
         if impact_page_settings:
             display_prefs = impact_page_settings.more_info or {}
         else:
-            #capture_message("Impact Page Settings not found", level="error")
-            display_prefs = {}      # not usual - show nothing
-  
+            # capture_message("Impact Page Settings not found", level="error")
+            display_prefs = {}  # not usual - show nothing
+
         value = 0
-        if display_prefs.get("manual_households"):
-            value += goal.get("initial_number_of_households",0)
-        if display_prefs.get("state_households"):
-            value += goal.get("attained_number_of_households",0)
-        if display_prefs.get("platform_households"):
-            value += goal.get("organic_attained_number_of_households",0)
+        if display_prefs.get("manual_households", True):
+            value += goal.get("initial_number_of_households", 0)
+        if display_prefs.get("state_households", False):
+            value += goal.get("attained_number_of_households", 0)
+        if display_prefs.get("platform_households", True):
+            value += goal.get("organic_attained_number_of_households", 0)
         goal["displayed_number_of_households"] = value
 
         value = 0
-        if display_prefs.get("manual_actions"):
-            value += goal.get("initial_number_of_actions",0)
-        if display_prefs.get("state_actions"):
-            value += goal.get("attained_number_of_actions",0)
-        if display_prefs.get("platform_actions"):
-            value += goal.get("organic_attained_number_of_actions",0)
+        if display_prefs.get("manual_actions", False):
+            value += goal.get("initial_number_of_actions", 0)
+        if display_prefs.get("state_actions", True):
+            value += goal.get("attained_number_of_actions", 0)
+        if display_prefs.get("platform_actions", True):
+            value += goal.get("organic_attained_number_of_actions", 0)
         goal["displayed_number_of_actions"] = value
 
         value = 0
-        if display_prefs.get("manual_carbon"):
-            value += goal.get("initial_carbon_footprint_reduction",0)
-        if display_prefs.get("state_carbon"):
-            value += goal.get("attained_carbon_footprint_reduction",0)
-        if display_prefs.get("platform_carbon"):
-            value += goal.get("organic_attained_carbon_footprint_reduction",0)
+        if display_prefs.get("manual_carbon", False):
+            value += goal.get("initial_carbon_footprint_reduction", 0)
+        if display_prefs.get("state_carbon", False):
+            value += goal.get("attained_carbon_footprint_reduction", 0)
+        if display_prefs.get("platform_carbon", True):
+            value += goal.get("organic_attained_carbon_footprint_reduction", 0)
         goal["displayed_carbon_footprint_reduction"] = value
 
         locations = ""
@@ -683,6 +719,7 @@ class Community(models.Model):
             "locations": locations,
             "feature_flags": get_enabled_flags(self),
             "is_demo": self.is_demo,
+            "contact_sender_alias": self.contact_sender_alias,
         }
 
     class Meta:
@@ -920,7 +957,7 @@ class UserProfile(models.Model):
         done_points = 0
         for actionRel in done_actions:
             if actionRel.action and actionRel.action.calculator_action:
-                done_points += actionRel.action.calculator_action.average_points
+                done_points += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
             else:
                 done_points += actionRel.carbon_impact
 
@@ -930,7 +967,7 @@ class UserProfile(models.Model):
         todo_points = 0
         for actionRel in todo_actions:
             if actionRel.action and actionRel.action.calculator_action:
-                todo_points += actionRel.action.calculator_action.average_points
+                todo_points += AverageImpact(actionRel.action.calculator_action, actionRel.date_completed)
             else:
                 todo_points += actionRel.carbon_impact
 
@@ -1072,10 +1109,10 @@ class UserProfile(models.Model):
             "admin_portal_settings": admin_portal_settings,
         }
         data["feature_flags"] = get_enabled_flags(self, True)
-        if self.is_community_admin: 
+        if self.is_community_admin:
             mou_details = user_is_due_for_mou(self)
             data["needs_to_accept_mou"] = mou_details[0]
-            data["mou_details"] =  mou_details[1]
+            data["mou_details"] = mou_details[1]
 
         return data
 
@@ -1115,15 +1152,13 @@ class PolicyAcceptanceRecords(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def simple_json(self): 
-        res = model_to_dict(
-            self, [ "signed_at", "id"]
-        )
-        if self.policy: 
+    def simple_json(self):
+        res = model_to_dict(self, ["signed_at", "id"])
+        if self.policy:
             res["policy"] = self.policy.simple_json()
         return res
 
-    def full_json(self): 
+    def full_json(self):
         return self.simple_json()
 
     def __str__(self) -> str:
@@ -1136,7 +1171,32 @@ class PolicyAcceptanceRecords(models.Model):
 
 
 class UserMediaUpload(models.Model):
-    """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded"""
+    """A class that creates a relationship between a user(all user kinds) on the platform and media they have uploaded
+    
+    Attributes
+    ----------
+    user : UserProfile
+    A user profile object of the currently signed in user who uploaded the media 
+
+    communities: Community 
+    All communities that have access to the attached media object 
+
+    media : Media 
+    A reference to the actual media object
+
+    is_universal: bool
+    True/False value that indicates whether or not an image is open to everyone. 
+    PS: Its no longer being used (as at 12/10/23). We want more than two states, so we now use "publicity" 
+
+    publicity: str 
+    This value is used to determine whether or not an upload is OPEN_TO specific communities, CLOSED_TO, or wide open  to any communities check UserMediaConstants for all the available options
+
+    info: JSON 
+    Json field that stores very important information about the attached media. Example: has_copyright_permission,copyright_att,guardian_info,size etc.
+
+    settings: JSON 
+    Just another field to store more information about the media (I dont think we use this...)
+    """
 
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(
@@ -1162,13 +1222,22 @@ class UserMediaUpload(models.Model):
     info = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    publicity = models.CharField(
+        max_length=SHORT_STR_LEN,
+        default=UserMediaConstants.open_to(),
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
-        return f"{str(self.id)} - {self.media.name} from {self.user.preferred_name or self.user.full_name} "
-
+        if self.user:
+            return f"{str(self.id)} - {self.media.name} from {self.user.preferred_name or self.user.full_name} "
+        
+        return f"{str(self.id)} - {self.media.name} from ..."
+    
     def simple_json(self):
         res = model_to_dict(
-            self, ["settings", "media", "created_at", "id", "is_universal", "info"]
+            self, ["settings", "media", "created_at", "id", "is_universal", "info", "publicity"]
         )
         res["user"] = get_summary_info(self.user)
         res["image"] = get_json_if_not_none(self.media)
@@ -1449,6 +1518,10 @@ class Team(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
+    # which user created this Teamt - may be the responsible party
+    user = models.ForeignKey(
+        UserProfile, related_name="team_user", on_delete=models.SET_NULL, null=True
+    )
 
     def is_admin(self, UserProfile):
         return self.admins.filter(id=UserProfile.id)
@@ -1901,8 +1974,10 @@ class Action(models.Model):
         # Adding this so that vendors will be preselected when creating/updating action.
         # List of vendors will typically not be that long, so this doesnt pose any problems
         data["vendors"] = [v.info() for v in self.vendors.all()]
-        data["action_users"] =len( UserActionRel.objects.filter(action=self, is_deleted=False)) or 0
-        
+        data["action_users"] = (
+            len(UserActionRel.objects.filter(action=self, is_deleted=False)) or 0
+        )
+
         if self.user:
             data["user_email"] = self.user.email
         return data
@@ -1921,13 +1996,14 @@ class Action(models.Model):
                 "email": u.user.email,
                 "full_name": u.user.full_name,
                 "real_estate_unit": {
-                    "zipcode":u.real_estate_unit.address.zipcode if u.real_estate_unit and u.real_estate_unit.address else None,
+                    "zipcode": u.real_estate_unit.address.zipcode
+                    if u.real_estate_unit and u.real_estate_unit.address
+                    else None,
                     "name": u.real_estate_unit.name if u.real_estate_unit else None,
                 },
                 "date_completed": u.date_completed,
-                "carbon_impact": u.action.calculator_action.average_points if u.action.calculator_action else None,
+                "carbon_impact": AverageImpact(u.action.calculator_action, u.date_completed) if u.action.calculator_action else None,
                 "recorded_at": u.updated_at,
-            
             }
             for u in UserActionRel.objects.filter(action=self, is_deleted=False)
         ] or []
@@ -1998,6 +2074,8 @@ class Event(models.Model):
     rsvp_email = models.BooleanField(default=False, blank=True)
     rsvp_message = models.TextField(max_length=LONG_STR_LEN, blank=True)
     more_info = models.JSONField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     rank = models.PositiveIntegerField(default=0, blank=True, null=True)
@@ -3034,6 +3112,7 @@ class PageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3140,6 +3219,7 @@ class HomePageSettings(models.Model):
     is_template = models.BooleanField(default=False, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return "HomePageSettings - %s" % (self.community)
@@ -3189,6 +3269,7 @@ class ActionsPageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3228,6 +3309,7 @@ class ContactUsPageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3271,6 +3353,7 @@ class DonatePageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3311,6 +3394,7 @@ class AboutUsPageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3351,6 +3435,7 @@ class ImpactPageSettings(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=True)
     is_template = models.BooleanField(default=False, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def simple_json(self):
         res = model_to_dict(self, exclude=["images"])
@@ -3604,7 +3689,6 @@ class FeatureFlag(models.Model):
     A class used to represent Feature flags to turn on for
     communities and users
 
-    owner : str - The name of the user at the time of uploading.
     scope : str - Whether this flag is for backend, admin frontend, of user frontend
     audience : str - (Communities) Whether the feature is for every community/ Specific Communities / or All, except some communities
     user_audience : str - (Users) Whether the feature is for every user/ Specific Users / or All, except some users
@@ -3617,7 +3701,6 @@ class FeatureFlag(models.Model):
 
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    owner = models.CharField(max_length=SHORT_STR_LEN)
     scope = models.CharField(
         max_length=SHORT_STR_LEN, default=FeatureFlagConstants.for_user_frontend()
     )  # Is Backend/AdminFrontend/Portal Frontend etc.
@@ -3672,6 +3755,34 @@ class FeatureFlag(models.Model):
             for u in self.users.all()
         ]
         return res
+
+    def enabled(self):
+        current_date_and_time = datetime.datetime.now(timezone.utc)
+        if self.expires_on and self.expires_on < current_date_and_time:
+            return False  # flag not active
+        return True
+
+    def enabled_communities(self, communities_in: QuerySet):
+        if self.audience == "EVERYONE":
+            return communities_in
+        elif self.audience == "SPECIFIC":
+            return communities_in.filter(
+                id__in=[str(u.id) for u in self.communities.all()]
+            )
+        elif self.audience == "ALL_EXCEPT":
+            return communities_in.exclude(
+                id__in=[str(u.id) for u in self.communities.all()]
+            )
+        return None
+
+    def enabled_users(self, users_in: QuerySet):
+        if self.user_audience == "EVERYONE":
+            return users_in
+        elif self.user_audience == "SPECIFIC":
+            return users_in.filter(id__in=[str(u.id) for u in self.users.all()])
+        elif self.user_audience == "ALL_EXCEPT":
+            return users_in.exclude(id__in=[str(u.id) for u in self.users.all()])
+        return None
 
     class Meta:
         db_table = "feature_flags"
@@ -3747,4 +3858,3 @@ class Footage(models.Model):
     class Meta:
         db_table = "footages"
         ordering = ("-id",)
-

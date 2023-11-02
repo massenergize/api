@@ -1,10 +1,11 @@
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+import requests
 from sentry_sdk import capture_message
 import pystmark
 
-from _main_.settings import IS_CANARY, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
+from _main_.settings import IS_CANARY, POSTMARK_ACCOUNT_TOKEN, POSTMARK_EMAIL_SERVER_TOKEN, POSTMARK_DOWNLOAD_SERVER_TOKEN, IS_PROD
 from _main_.utils.constants import ME_INBOUND_EMAIL_ADDRESS
 from _main_.utils.utils import is_test_mode
 
@@ -17,14 +18,14 @@ def is_dev_env():
     return True
 
 
-def send_massenergize_email(subject, msg, to):
+def send_massenergize_email(subject, msg, to, sender=None):
   if is_test_mode(): 
     return True
 
   message = pystmark.Message(
     subject=subject,
     to=to,
-    sender=FROM_EMAIL, 
+    sender=sender or FROM_EMAIL, 
     text=msg, 
   )
   response = pystmark.send(message, api_key=POSTMARK_EMAIL_SERVER_TOKEN)
@@ -36,13 +37,13 @@ def send_massenergize_email(subject, msg, to):
     return False
   return True
 
-def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name):
+def send_massenergize_email_with_attachments(temp, t_model, to, file, file_name, sender=None):
   if is_test_mode():
     return True
   t_model = {**t_model, "is_dev":is_dev_env()}
 
   
-  message = pystmark.Message(sender=FROM_EMAIL, to=to, template_alias=temp, template_model=t_model)
+  message = pystmark.Message(sender=sender or FROM_EMAIL, to=to, template_alias=temp, template_model=t_model)
   # postmark server can be Production, Development or Testing (for local testing)
   postmark_server = POSTMARK_EMAIL_SERVER_TOKEN
   if file is not None:
@@ -100,3 +101,58 @@ def send_massenergize_mass_email(subject, msg, recipient_emails):
     return False
 
   return True
+
+
+
+
+
+def add_sender_signature(email, alias, first_name, community):
+  if is_test_mode():
+    return True
+  if not first_name:
+    first_name = "Admin"
+  url = "https://api.postmarkapp.com/senders"
+  headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
+  msg = f'Dear {first_name} - as the community contact for {community}, we need you to validate your email as a valid email address. Please select "confirm sender signature" to continue. If you have questions about this, feel free to contact Support@MassEnergize.org. Thank you! \n Aimee, Kaat and Brad from the MassEnergize platform team.'
+  data = {
+      "FromEmail": email,
+      "Name": alias,
+      "ReplyToEmail":email,
+      "ConfirmationPersonalNote": msg
+  }
+
+  response = requests.post(url, headers=headers, json=data)
+
+  return response
+
+
+def resend_signature_confirmation(signature_id):
+  if is_test_mode():
+    return True
+  url = f"https://api.postmarkapp.com/senders/{signature_id}/resend"
+  headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token":POSTMARK_ACCOUNT_TOKEN }
+  response = requests.post(url, headers=headers)
+  return response
+
+
+
+def get_sender_signature_info(signature_id):
+  if is_test_mode():
+    return True
+  url = f"https://api.postmarkapp.com/senders/{signature_id}"
+  headers = {"Accept": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
+  response = requests.get(url, headers=headers)
+  return response
+
+
+
+def update_sender_signature(signature_id, name):
+  if is_test_mode():
+    return True
+  url = f"https://api.postmarkapp.com/senders/{signature_id}"
+  headers = {"Accept": "application/json","Content-Type": "application/json","X-Postmark-Account-Token": POSTMARK_ACCOUNT_TOKEN}
+  data = {
+  "Name":name,
+}
+  response = requests.put(url, headers=headers, json=data)
+  return response

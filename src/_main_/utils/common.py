@@ -4,10 +4,9 @@ from _main_.utils.massenergize_errors import CustomMassenergizeError
 import pytz
 from django.utils import timezone
 from datetime import datetime, timedelta
-#import cv2
-from datetime import datetime
 from dateutil import tz
 from sentry_sdk import capture_message
+import base64
 
 
 def get_date_and_time_in_milliseconds(**kwargs): 
@@ -97,6 +96,8 @@ def parse_int(b):
 
 def parse_date(d):
   try:
+    if d == 'undefined' or d == 'null':      # providing date as 'null' should clear it
+      return None
     if len(d) == 10:
       return pytz.utc.localize(datetime.strptime(d, '%Y-%m-%d'))
     else:
@@ -158,6 +159,8 @@ def parse_location(args):
     "state": args.pop("state", None),
     "zipcode": args.pop("zipcode", None),
     "country": args.pop("country", 'US'),
+    "building": args.pop("building", None),
+    "room": args.pop("room", None),
   }
   args['location'] = location
   return args
@@ -170,12 +173,16 @@ def extract_location(args):
     "state": args.pop("state", None),
     "zipcode": args.pop("zipcode", None),
     "country": args.pop("country", 'US'),
+    "building": args.pop("building", None),
+    "room": args.pop("room", None),
   }
   
   return location
 
 def is_value(b):
   if b and b != 'undefined' and b != "NONE":
+    return True
+  if b == '':   # an empty string is a string value
     return True
   return False
 
@@ -217,9 +224,20 @@ def set_cookie(response, key, value): # TODO
   response.set_cookie(key, value, MAX_AGE, samesite='Strict')
 
 
+def local_time():
+  local_zone = tz.tzlocal()
+  dt_utc = datetime.utcnow()
+  local_now = dt_utc.astimezone(local_zone)
+  return local_now
+
 
 def utc_to_local(iso_str):
   local_zone = tz.tzlocal()
   dt_utc = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=pytz.UTC)
   local_now = dt_utc.astimezone(local_zone)
   return local_now
+
+
+
+def encode_data_for_URL(data):
+    return base64.b64encode(json.dumps(data).encode()).decode()

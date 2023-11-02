@@ -8,6 +8,7 @@ from types import FunctionType as function
 from _main_.utils.context import Context
 from _main_.utils.validator import Validator
 from api.decorators import admins_only, super_admins_only, login_required
+from api.store.common import expect_media_fields
 
 
 class TestimonialHandler(RouteHandler):
@@ -94,6 +95,7 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('preferredName', 'preferred_name')
     self.validator.expect('testimonial_id', str)
     self.validator.expect("image", "file", is_required=False)
+    self = expect_media_fields(self)
     args, err = self.validator.verify(args)
 
     if err:
@@ -144,6 +146,8 @@ class TestimonialHandler(RouteHandler):
     self.validator.rename('action_id', 'action')
     self.validator.rename('vendor_id', 'vendor')
     self.validator.expect("image", "str_list")
+
+    self = expect_media_fields(self)
     args, err = self.validator.verify(args)
 
     if err:

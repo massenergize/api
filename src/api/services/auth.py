@@ -3,6 +3,7 @@ from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.common import serialize
 from _main_.utils.context import Context
+from api.utils.api_utils import get_sender_email
 from api.utils.constants import USER_EMAIL_VERIFICATION_TEMPLATE
 from firebase_admin import auth
 from _main_.utils.massenergize_errors import CustomMassenergizeError
@@ -29,6 +30,7 @@ class AuthService:
       args = context.args or {}
       firebase_id_token = args.get('idToken', None)
       noFootage = args.get('noFootage',"false") # Why this? Well login is used as verification in more than one scenario, so this is a way to know when user is actually signing in (1st time) -- so we can capture the footage only once.
+      login_method = args.get('login_method', None)
       if firebase_id_token:
         decoded_token = auth.verify_id_token(firebase_id_token)
         user_email = decoded_token.get("email")
@@ -59,6 +61,14 @@ class AuthService:
           algorithm='HS256'
         ).decode('utf-8')
         #---------------------------------------------------------
+        # track login method of users for personalization in nudge.
+        if login_method:
+          existing_info = user.user_info or {}
+          user.user_info = {
+            **existing_info,
+            "login_method": login_method,
+          }
+          user.save()
         if  noFootage == "false": 
           if context.is_admin_site:
              Spy.create_sign_in_footage(actor = user ,context = context, type = FootageConstants.sign_in())
@@ -192,8 +202,9 @@ class AuthService:
         "community": community.name,
         "image": community.logo.file.url if community.logo.file else None
       }
+      from_email = get_sender_email(community.id)
       
-      ok = send_massenergize_email_with_attachments(USER_EMAIL_VERIFICATION_TEMPLATE,temp_data,[email], None, None)
+      ok = send_massenergize_email_with_attachments(USER_EMAIL_VERIFICATION_TEMPLATE,temp_data,[email], None, None, from_email)
       if not ok:
         return None, CustomMassenergizeError("email_not_sent")
       

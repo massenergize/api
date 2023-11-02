@@ -6,6 +6,7 @@ from _main_.utils.emailer.send_email import send_massenergize_rich_email
 from _main_.utils.constants import COMMUNITY_URL_ROOT, ME_LOGO_PNG
 from sentry_sdk import capture_message
 from typing import Tuple
+from api.utils.api_utils import get_sender_email
 
 from api.utils.filter_functions import sort_items
 
@@ -35,6 +36,8 @@ class SubscriberService:
       subscriber, err = self.store.create_subscriber(community_id, args)
       if err:
         return None, err
+      
+      from_email = get_sender_email(subscriber.community.id)
 
       subject = 'Thank you for subscribing'
       content_variables = {
@@ -44,7 +47,7 @@ class SubscriberService:
         'community': subscriber.community.name if subscriber.community and subscriber.community.name else 'MassEnergize',
         'homelink': '%s/%s' %(COMMUNITY_URL_ROOT, subscriber.community.subdomain) if subscriber.community else COMMUNITY_URL_ROOT
       }
-      send_massenergize_rich_email(subject, subscriber.email, 'subscriber_registration_email.html', content_variables)
+      send_massenergize_rich_email(subject, subscriber.email, 'subscriber_registration_email.html', content_variables, from_email)
 
       return serialize(subscriber), None
     except Exception as e:

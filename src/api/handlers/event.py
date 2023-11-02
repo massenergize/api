@@ -7,6 +7,7 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from types import FunctionType as function
 from _main_.utils.context import Context
 from api.decorators import admins_only, super_admins_only, login_required
+from api.store.common import expect_media_fields
 
 
 class EventHandler(RouteHandler):
@@ -221,6 +222,7 @@ class EventHandler(RouteHandler):
     self.validator.expect('rsvp_enabled', bool)
     self.validator.expect('rsvp_email', bool)
     self.validator.expect('event_id', str)
+    self = expect_media_fields(self)
     args, err = self.validator.verify(args)
 
     if err:
@@ -310,6 +312,8 @@ class EventHandler(RouteHandler):
     self.validator.expect("event_type",str)
     self.validator.expect("publicity_selections","str_list")
     self.validator.expect("shared_to","str_list")
+
+    self = expect_media_fields(self)
     args, err = self.validator.verify(args)
 
     if err:

@@ -1,9 +1,10 @@
+from _main_.utils.emailer.send_email import add_sender_signature, update_sender_signature
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from _main_.utils.utils import strip_website
 from api.store.common import count_action_completed_and_todos
 from api.tests.common import RESET
-from api.utils.api_utils import is_admin_of_community
+from api.utils.api_utils import get_distance_between_coords, is_admin_of_community
 from api.utils.filter_functions import get_communities_filter_params
 from database.models import (
     Community,
@@ -63,7 +64,7 @@ from .utils import (
     is_reu_in_community,
 )
 from database.utils.common import json_loader
-from _main_.utils.constants import RESERVED_SUBDOMAIN_LIST
+from _main_.utils.constants import PUBLIC_EMAIL_DOMAINS, RESERVED_SUBDOMAIN_LIST
 import math
 from typing import Tuple
 import zipcodes
@@ -328,7 +329,7 @@ class CommunityStore:
                     state = "MA"
 
                 zips = zipcodes.filter_by(
-                    county=town, state=state, zip_code_type="STANDARD"
+                    county=county, state=state, zip_code_type="STANDARD"
                 )
                 print("Number of zipcodes = " + str(len(zips)))
                 if len(zips) > 0:
@@ -660,7 +661,7 @@ class CommunityStore:
                                     "long"
                                 ]
 
-                                distance_between_zipcodes = self._haversince_distance(
+                                distance_between_zipcodes = get_distance_between_coords(
                                     float(zipcode_lat),
                                     float(zipcode_long),
                                     float(community_zipcode_lat),
@@ -705,6 +706,7 @@ class CommunityStore:
             # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
             # These we can deal with by having the Location include city and or state fields
             locations = args.pop("locations", None)
+            contact_sender_alias = args.get("contact_sender_alias", None)
 
             favicon = args.pop("favicon", None)
             community = Community.objects.create(**args)
@@ -825,6 +827,18 @@ class CommunityStore:
                         owner.is_community_admin = True
                     owner.communities.add(community)
                     owner.save()
+                if contact_sender_alias and owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
+                     res = add_sender_signature(owner_email, contact_sender_alias, community.owner_name, community.name)
+
+                     if res.status_code == 200:
+                        community.contact_info = {
+                            "nudge_count": 1,
+                            "is_validated": res.json()["Confirmed"],
+                            "sender_signature_id": res.json()["ID"]
+                        }
+                        community.save()
+
+
 
             # Also clone all template actions for this community
             # 11/1/20 BHN: Add protection against excessive copying in case of too many actions marked as template
@@ -884,6 +898,7 @@ class CommunityStore:
             community_id = args.pop("community_id", None)
             website = args.pop("website", None)
             logo = args.pop("logo", None)
+            owner_email = args.get("owner_email", None)
 
             # admins shouldn't be able to update data of other communities
             if not is_admin_of_community(context, community_id):
@@ -897,6 +912,7 @@ class CommunityStore:
             # This will work for the large majority of cases, but there may be some where a zip code overlaps a town or state boundary
             # These we can deal with by having the Location include city and or state fields
             locations = args.pop("locations", None)
+            contact_sender_alias = args.get("contact_sender_alias", None)
 
             favicon = args.pop("favicon", None)
             filter_set = Community.objects.filter(id=community_id)
@@ -909,6 +925,25 @@ class CommunityStore:
                 raise Exception(
                     "Subdomain is already reserved.  Please, choose a different subdomain"
                 )
+            
+            community = filter_set.first()
+            # if user updates owner_email we need to update the signature on postmark
+            if owner_email and owner_email != community.owner_email:
+                if owner_email.split("@")[1] not in PUBLIC_EMAIL_DOMAINS:
+                    name = contact_sender_alias or community.contact_sender_alias or community.name
+                    res =  add_sender_signature(owner_email, name, community.owner_name, community.name)
+                    if res.status_code == 200:
+                        args["contact_info"] = {
+                            "nudge_count": 1,
+                            "is_validated": res.json()["Confirmed"],
+                            "sender_signature_id": res.json()["ID"]
+                        }
+
+            if contact_sender_alias and contact_sender_alias != community.contact_sender_alias:
+                contact_info = community.contact_info or {}
+                sender_signature_id = contact_info.get("sender_signature_id")
+                if sender_signature_id:
+                   update_sender_signature(sender_signature_id, contact_sender_alias)
 
             filter_set.update(**args)
             community = filter_set.first()
@@ -938,7 +973,7 @@ class CommunityStore:
                 community.favicon = cFavicon
                 community.save()
 
-            owner_email = args.get("owner_email", None)
+
             if owner_email:
                 owner = UserProfile.objects.filter(email=owner_email)
                 owner.update(is_community_admin=True)
@@ -952,6 +987,7 @@ class CommunityStore:
                     if not owner.is_super_admin:
                         owner.is_community_admin = True
                     owner.save()
+            
 
             # let's make sure we reserve this subdomain
             if subdomain:
@@ -959,9 +995,7 @@ class CommunityStore:
 
             # save custom website if specified
             if website:
-                ret, err = self.add_custom_website(
-                    context, {"community_id": community.id, "website": website}
-                )
+                ret, err = self.add_custom_website(context, {"community_id": community.id, "website": website})
                 if err:
                     raise Exception("Failed to save custom website: " + str(err))
 
@@ -1014,6 +1048,14 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
+    def fetch_admins_of(
+        self,args,context: Context
+    ) -> Tuple[list, MassEnergizeAPIError]:
+        community_ids = args.get("community_ids",[])
+        comms = CommunityAdminGroup.objects.filter(community__id__in = community_ids )
+        # communities = Community.objects.filter(is_published=True).order_by("name")
+        return comms, None
+    
     def list_other_communities_for_cadmin(
         self, context: Context
     ) -> Tuple[list, MassEnergizeAPIError]:
@@ -1112,14 +1154,13 @@ class CommunityStore:
             # include actions from other communities that users in this community completed on their homes
 
             # TODO: Normal list causing pagination to throw exceptions: will fix this issue
-
             time_range = args.get("time_range", "")
             start_date = args.get("start_date", "")
             end_date = args.get("end_date", "")
 
             actions_completed = []
             if not context.is_admin_site:
-                community = get_community_or_die(context, args)                
+                community = get_community_or_die(context, args)            
                 actions_completed = count_action_completed_and_todos(
                     communities=[community],
                     time_range=time_range,

@@ -25,9 +25,22 @@ from database.models import (
     TagCollection,
     Goal,
     CommunitySnapshot,
+    CustomCommunityWebsiteDomain,
+    HomePageSettings,
+    ImpactPageSettings,
+    ActionsPageSettings,
+    EventsPageSettings,
+    Vendor,
+    TestimonialsPageSettings,
+    VendorsPageSettings,
+    TeamsPageSettings,
+    DonatePageSettings,
+    AboutUsPageSettings,
+    ContactUsPageSettings,
 )
 from api.store.team import get_team_users
 from api.constants import STANDARD_USER, GUEST_USER
+from _main_.utils.constants import ADMIN_URL_ROOT, COMMUNITY_URL_ROOT
 from api.store.tag_collection import TagCollectionStore
 from api.store.deviceprofile import DeviceStore
 from django.db.models import Q
@@ -37,9 +50,18 @@ from typing import Tuple
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
+from carbon_calculator.carbonCalculator import AverageImpact
 
 EMPTY_DOWNLOAD = (None, None)
 
+def hyperlink(text, link):
+    return '=HYPERLINK("'+link+'","'+text+'")'
+
+def update_user(item):
+    return item.user.email if item.user and not item.user.is_deleted else ""
+
+def update_date(item):
+    return item.updated_at.date() if item.updated_at else ""
 
 class DownloadStore:
     def __init__(self):
@@ -177,6 +199,13 @@ class DownloadStore:
             "Service Providers Count",
         ]
 
+        self.pagemap_columns = [
+            "Page Name",
+            "Status",
+            "Admin Page Name",
+            "Updated on",
+            "Updated by",
+        ]
         # Fields should include for Actions, Households, Carbon Reduction: user reported, manual addition, goal for this period, (calculated) % of goal.
 
         # For Actions entered data - the numbers entered into each category.
@@ -392,7 +421,7 @@ class DownloadStore:
             }
         return self._get_cells_from_dict(self.user_info_columns_new, user_cells)
     
-    # Recieves an action, returns how many times it's been marked as Done in the last 30 days
+    # Receives an action, returns how many times it's been marked as Done in the last 30 days
     def _get_last_30_days_count(self, action):
         today = datetime.date.today()
         thirty_days_ago = today - timezone.timedelta(days = 30)
@@ -405,9 +434,8 @@ class DownloadStore:
 
     #Gets row information for the All Actions CSV and the All Communities and Actions CSV
     def _get_action_info_cells(self, action):
-
         average_carbon_points = (
-            action.calculator_action.average_points
+            AverageImpact(action.calculator_action)
             if action.calculator_action
             else int(action.average_carbon_score)
             if action.average_carbon_score.isdigit()
@@ -535,7 +563,7 @@ class DownloadStore:
             for done_action in done_actions:
                 if done_action.action and done_action.action.calculator_action:
                     total_carbon_points += (
-                        done_action.action.calculator_action.average_points
+                        AverageImpact(done_action.action.calculator_action, done_action.date_completed)
                     )
         total_carbon_points = str(total_carbon_points)
 
@@ -696,7 +724,7 @@ class DownloadStore:
 
         carbon_user_reported = sum(
             [
-                action_rel.action.calculator_action.average_points
+                AverageImpact(action_rel.action.calculator_action)
                 if action_rel.action.calculator_action
                 else 0
                 for action_rel in done_action_rels
@@ -978,7 +1006,6 @@ class DownloadStore:
 
         columns = self.action_info_columns
         data = [columns]
-
         for action in actions:
             data.append(self._get_action_info_cells(action))
 
@@ -1188,6 +1215,250 @@ class DownloadStore:
 
         return data
 
+    def _fill_pagemap_header(self, community):
+        data = []
+
+        line = community.name + " page map"	
+        data.append(line)
+        today = datetime.date.today()
+        line = "Generated: " + str(today)
+        data.append(line)
+        data.append("")			
+        return data
+    
+    def _get_pagemap_data(self, community):
+        data = []
+
+        #Home page
+        customDomain = CustomCommunityWebsiteDomain.objects.filter(community__id=community.id)
+        if customDomain:
+            communityURL = 'https://'+customDomain.first().website
+        else:
+            communityURL = f'{COMMUNITY_URL_ROOT}/{community.subdomain}'
+
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/community/community-admin'
+        pagedata = {"Page Name":hyperlink("Home Page", communityURL),
+                    "Status":"Enabled",  
+                    "Admin Page Name":hyperlink("Community Information",adminURL),
+                    }
+        data.append(pagedata)
+
+        #Community profile
+        adminURL = f'{ADMIN_URL_ROOT}/admin/community/{community.id}/profile'
+        pagedata = {"Admin Page Name":hyperlink("Community Profile",adminURL),
+                    }
+        data.append(pagedata)
+
+        #Community admins
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/community-admins'
+        pagedata = {"Admin Page Name":hyperlink("Community Admins",adminURL),
+                    }
+        data.append(pagedata)
+
+        #Home page settings
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/home'
+        pageSettings = HomePageSettings.objects.get(community__id=community.id)
+        pagedata = {"Admin Page Name":hyperlink("Home Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #Goals and impact data
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/impacts'
+        pagedata = {"Admin Page Name":hyperlink("Goals and Impact Data",adminURL),
+                    }
+        data.append(pagedata)
+
+        #Impact page
+        pageSettings = ImpactPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/impact'
+        pagedata = {"Page Name":hyperlink("Impact Page", communityURL+'/impact'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Impact Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #AboutUs page
+        pageSettings = AboutUsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/about'
+        pagedata = {"Page Name":hyperlink("AboutUs Page",communityURL+'/aboutus'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("AboutUs Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #Donate Page
+        pageSettings = DonatePageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/donate'
+        pagedata = {"Page Name":hyperlink("Donate Page",communityURL+'/donate'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Donate Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #ContactUs Page
+        pageSettings = ContactUsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/contact_us'
+        pagedata = {"Page Name":hyperlink("ContactUs Page",communityURL+'/contactus'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("ContactUs Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #All Actions Page
+        pageSettings = AboutUsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-actions'
+        pagedata = {"Page Name":hyperlink("All Actions Page",communityURL+'/actions'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Actions Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        # individual action pages
+        actions = Action.objects.filter(community__id=community.id, is_deleted=False)
+        for action in actions:
+            status = "Published" if action.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{action.id}/action'
+            pagedata = {"Page Name":hyperlink(action.title,communityURL+'/actions/'+str(action.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Action Content",adminURL),
+                        "Updated on":update_date(action),
+                        "Updated by":update_user(action),
+                        }
+            data.append(pagedata)
+
+        #All Events Page
+        pageSettings = EventsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-events'
+        pagedata = {"Page Name":hyperlink("All Events Page",communityURL+'/events'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Events Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        # individual event pages
+        events = Event.objects.filter(community__id=community.id, is_deleted=False)
+        for event in events:
+            status = "Published" if action.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{action.id}/event'
+            pagedata = {"Page Name":hyperlink(event.name,communityURL+'/events/'+str(action.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Event Content",adminURL),
+                        "Updated on":update_date(event),
+                        "Updated by":update_user(event),
+                        }
+            data.append(pagedata)
+
+        #All Testimonials Page
+        pageSettings = TestimonialsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-testimonials'
+        pagedata = {"Page Name":hyperlink("All Testimonials Page",communityURL+'/testimonials'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Testimonials Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        # individual testimonial pages
+        items = Testimonial.objects.filter(community__id=community.id, is_deleted=False)
+        for item in items:
+            status = "Published" if item.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{item.id}/testimonial'
+            pagedata = {"Page Name":hyperlink(item.title,communityURL+'/testimonials/'+str(item.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Testimonial Content",adminURL),
+                        "Updated on":update_date(item),
+                        "Updated by":update_user(item),
+                        }
+            data.append(pagedata)
+
+        #All Service Providers page
+        pageSettings = VendorsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edity/{community.id}/all-vendors'
+        pagedata = {"Page Name":hyperlink("All Services Page",communityURL+'/services'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Services Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        #individual service provider pages
+        items = Vendor.objects.filter(communities__id=community.id, is_deleted=False)
+        for item in items:
+            status = "Published" if item.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{item.id}/vendor'
+            pagedata = {"Page Name":hyperlink(item.name,communityURL+'/services/'+str(item.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Service Content",adminURL),
+                        "Updated on":update_date(item),
+                        "Updated by":update_user(item),
+                    }
+            data.append(pagedata)
+
+
+        #All Teams page
+        pageSettings = TeamsPageSettings.objects.get(community__id=community.id)
+        status = "Enabled" if pageSettings.is_published else "Disabled"
+        adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{community.id}/all-teams'
+        pagedata = {"Page Name":hyperlink("All Teams Page",communityURL+'/teams'), 
+                    "Status": status,  
+                    "Admin Page Name":hyperlink("Teams Page Settings",adminURL),
+                    "Updated on":update_date(pageSettings),
+                    }
+        data.append(pagedata)
+
+        # individual teams pages
+        items = Team.objects.filter(primary_community__id=community.id, is_deleted=False)
+        for item in items:
+            status = "Published" if item.is_published else ""
+            adminURL = f'{ADMIN_URL_ROOT}/admin/edit/{item.id}/team'
+            pagedata = {"Page Name":hyperlink(item.name,communityURL+'/teams/'+str(item.id)), 
+                        "Status": status,  
+                        "Admin Page Name":hyperlink("Edit Team Content",adminURL),
+                        "Updated on":update_date(item),
+                        "Updated by":update_user(item),
+                        }
+            data.append(pagedata)
+        return data
+
+    def _fill_pagemap_cells(self, pagedata):
+        return self._get_cells_from_dict(self.pagemap_columns, pagedata)
+
+
+
+    def _community_pagemap_download(self, context, community_id):
+
+        community = Community.objects.get(id=community_id)
+
+        data = [self._fill_pagemap_header(community)]
+        data.append([])
+
+        # column titles
+        columns = self.pagemap_columns
+
+        data.append(columns)
+
+        pages = self._get_pagemap_data(community)
+        for page in pages:
+            row = self._fill_pagemap_cells(page)
+            data.append(row)
+        return data
+
+
     # For All Users CSV -- all users for a given team, or all users for a given community, or (for superadmins) all users overall 
     def users_download(
         self, context: Context, community_id, team_id
@@ -1248,14 +1519,9 @@ class DownloadStore:
                     self._community_actions_download(community_id),
                     community_name,
                 ), None
-            elif context.user_is_super_admin:
+            elif context.user_is_super_admin or context.user_is_community_admin:
                 #All Communities and Actions CSV method - action data across all communities
                 return (self._all_actions_download(), None), None
-            #  if user is cadmin  and no community id is passed, get actions of communities the user
-            #  an admin of
-            elif context.user_is_community_admin: 
-                ids = get_user_community_ids(context)
-                return (self._all_actions_download(community_ids=ids), None), None
             else:
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
         except Exception as e:
@@ -1338,5 +1604,24 @@ class DownloadStore:
             
             
         except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    def community_pagemap_download(
+        self, context: Context, community_id
+    ) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            if community_id: 
+                return (
+                    self._community_pagemap_download(context, community_id),
+                    None,
+                ), None
+            else:
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+        except Exception as e:
+            print("community_pagemap_exception: " + str(e))
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)

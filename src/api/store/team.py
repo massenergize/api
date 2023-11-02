@@ -1,7 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
-from api.utils.api_utils import is_admin_of_community
+from api.utils.api_utils import get_sender_email, is_admin_of_community
 from api.utils.filter_functions import get_team_member_filter_params, get_teams_filter_params
 from api.utils.constants import TEAM_APPROVAL_EMAIL_TEMPLATE
 from database.models import Team, UserProfile, Media, Community, TeamMember, CommunityAdminGroup, UserActionRel
@@ -12,6 +12,7 @@ from .utils import get_community_or_die, get_user_or_die, get_admin_communities,
 from database.models import Team, UserProfile
 from sentry_sdk import capture_message
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
+from carbon_calculator.carbonCalculator import AverageImpact
 from typing import Tuple
 from django.db.models import Q
 def can_set_parent(parent, this_team=None):
@@ -116,7 +117,7 @@ class TeamStore:
             res["actions_todo"] += actions.filter(status="TODO").count()
             for done_action in done_actions:
               if done_action.action and done_action.action.calculator_action:
-                res["carbon_footprint_reduction"] += done_action.action.calculator_action.average_points
+                res["carbon_footprint_reduction"] += AverageImpact(done_action.action.calculator_action, done_action.date_completed)
 
         ans.append(res)
 
@@ -217,7 +218,7 @@ class TeamStore:
           (ADMIN_URL_ROOT, team.id))
 
         for cadmin in cadmins:
-          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email)
+          send_massenergize_email(subject="New team awaiting approval",msg=message, to=cadmin.email,sender=None )
       team.save()
       for admin in verified_admins:
         teamMember, _ = TeamMember.objects.get_or_create(team=team,user=admin)
@@ -295,9 +296,10 @@ class TeamStore:
                   }
         
         team_admins = TeamMember.objects.filter(team=team, is_admin=True).select_related('user')
+        from_email = get_sender_email(community.id)
         for team_admin in team_admins:
           send_massenergize_email_with_attachments(TEAM_APPROVAL_EMAIL_TEMPLATE, message_data,
-                                                  team_admin.user.email, None, None)
+                                                  team_admin.user.email, None, None, from_email)
       else:
         # this is how teams can get be made not live
         team.is_published = is_published
