@@ -18,9 +18,23 @@ def getLocality(inputs):
 
 
 def localized_time(time_string):
-    time = datetime.strptime(time_string, '%Y-%m-%d  %H:%M')
+    # Airtable changed default time format, unexpectedly.  Make it work but protect iin case it changes backj
+    ind = time_string.find('/')
+    if ind>0:   # new format 11/1/2023
+        time = datetime.strptime(time_string, '%m/%d/%y  %H:%M')
+    else:   # old format 2023-10-01
+        time = datetime.strptime(time_string, '%Y-%m-%d  %H:%M')
+
     return current_tz.localize(time)
 
+def date_import(date_string):
+    # Airtable changed default time format, unexpectedly.  Make it work but protect iin case it changes backj
+    ind = date_string.find('/')
+    if ind>0:   # new format 11/1/2023
+        date = datetime.strptime(date_string, '%m/%d/%y')
+    else:   # old format 2023-10-01
+        date = datetime.strptime(date_string, '%Y-%m-%d')
+    return date.date()
 
 def getDefault(locality, variable, date=None, default=None):
     return CCD.getDefault(CCD,locality, variable, date, default=default)
@@ -159,8 +173,7 @@ class CCD():
                     if not valid_date or valid_date=="":
                         valid_date = '2000-01-01'
 
-                    #valid_date = datetime.date(valid_date)
-                    valid_date = datetime.strptime(valid_date, "%Y-%m-%d").date()
+                    valid_date = date_import(valid_date)
 
                     # update the default value for this variable, localith and valid_date
                     qs, created = CalcDefault.objects.update_or_create(

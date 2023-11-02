@@ -1,2 +1,2 @@
-Feb 24: Admin portal pagination:
-- deliver content in small chunks
+Nov 2: Release 4.13.0
+- many changes, described in release notes
