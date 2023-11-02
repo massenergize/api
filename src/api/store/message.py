@@ -19,28 +19,20 @@ from sentry_sdk import capture_message
 from typing import Tuple
 from django.db.models import Q
 from celery.result import AsyncResult
-
+from django.utils import timezone
 
 
 def get_schedule(schedule):
     if  not is_null(schedule):
-       date, timezone = schedule.split("GMT") # find a proper way to handle this
-       return datetime.strptime(date.strip(),  "%a %b %d %Y %H:%M:%S")
+       parsed_datetime = datetime.strptime(schedule, '%a, %d %b %Y %H:%M:%S %Z')
+       formatted_date_string = timezone.make_aware(parsed_datetime)
+       return formatted_date_string
 
     return  datetime.utcnow() + timedelta(minutes=1)
     
 
 
 def get_message_recipients(audience, audience_type, sub_audience_type, communities):
-
-    print("=== data===", {
-        "audience": audience,
-        "audience_type": audience_type,
-        "sub_audience_type": sub_audience_type,
-        "communities": communities
-        
-    })
-    
     if not is_null(audience):
         if audience_type == "COMMUNITY_CONTACTS":
              if audience.lower() == "all":
@@ -421,7 +413,7 @@ class MessageStore:
                 
                 schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
                 schedule_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id,"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
-                messages.update(**{"schedule_info": schedule_info, "body": message, "title": subject, "scheduled_at": scheduled_at})
+                messages.update(**{"schedule_info": schedule_info, "body": message, "title": subject, "scheduled_at":scheduled_at })
                 return messages.first(), None
             else:
                 schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
@@ -429,7 +421,7 @@ class MessageStore:
                 title=subject,
                 body=message,
                 user=user,
-                scheduled_at= schedule if args.get("schedule", None) else None,
+                scheduled_at= schedule,
                 schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
                 )
                 new_message.save()

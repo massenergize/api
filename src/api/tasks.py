@@ -236,7 +236,7 @@ def send_scheduled_email(subject, message, recipients):
            "body": message,
            "subject": subject
         }
-        send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, ["abdullai.tahiru@gmail.com"], None, None)
+        send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
 
     except Exception as e:
         print(f"Error sending email: {str(e)}")
