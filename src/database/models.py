@@ -3590,7 +3590,8 @@ class Message(models.Model):
     response = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
     parent = models.ForeignKey("self", blank=True, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
-    scheduled_info = models.JSONField(blank=True, null=True)
+    scheduled_at = models.DateTimeField(blank=True, null=True)
+    schedule_info = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.title}"

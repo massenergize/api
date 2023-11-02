@@ -100,8 +100,8 @@ class CommunityService:
     sorted = sort_items(communities, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
 
-  def list_communities_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    communities, err = self.store.list_communities_for_community_admin(context)
+  def list_communities_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    communities, err = self.store.list_communities_for_community_admin(context, args)
     if err:
       return None, err
     sorted = sort_items(communities, context.get_params())
