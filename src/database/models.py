@@ -19,15 +19,19 @@ from django.core.files.storage import default_storage
 from django.db.models.query import QuerySet
 
 from .utils.common import (
+    calculate_hash_for_bucket_item,
     get_images_in_sequence,
     json_loader,
     get_json_if_not_none,
     get_summary_info,
+    make_hash_from_file,
 )
 from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
+import hashlib
+from _main_.settings import IS_LOCAL
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -227,6 +231,9 @@ class Tag(models.Model):
 
     def __str__(self):
         return "%s - %s" % (self.name, self.tag_collection)
+    
+    def info(self): 
+        return model_to_dict(self, ["id", "name"])
 
     def simple_json(self):
         res = model_to_dict(self)
@@ -269,9 +276,13 @@ class Media(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
     tags = models.ManyToManyField(Tag, related_name="media_tags", blank=True)
+    hash = models.TextField(max_length=LONG_STR_LEN, blank=True, db_index=True)
 
     def __str__(self):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
+    
+    def info(self): 
+        return self.simple_json()
 
     def simple_json(self):
         obj = {
@@ -302,6 +313,21 @@ class Media(models.Model):
             default_storage.delete(file_path)
 
         super().delete(*args, **kwargs)
+
+    def calculate_hash(self, uploaded_file):
+        if not self.hash:
+            image_data = uploaded_file.read()
+            calculated_hash =  make_hash_from_file(image_data)
+            return calculated_hash
+        return None
+    
+    def save(self, *args, **kwargs):
+        if self.file and not self.hash:
+            hash = self.calculate_hash(self.file.file)
+            if hash: 
+                self.hash = hash
+        super().save(*args, **kwargs)
+    
 
     class Meta:
         db_table = "media"
@@ -632,29 +658,29 @@ class Community(models.Model):
             display_prefs = {}  # not usual - show nothing
 
         value = 0
-        if display_prefs.get("manual_households"):
+        if display_prefs.get("manual_households", True):
             value += goal.get("initial_number_of_households", 0)
-        if display_prefs.get("state_households"):
+        if display_prefs.get("state_households", False):
             value += goal.get("attained_number_of_households", 0)
-        if display_prefs.get("platform_households"):
+        if display_prefs.get("platform_households", True):
             value += goal.get("organic_attained_number_of_households", 0)
         goal["displayed_number_of_households"] = value
 
         value = 0
-        if display_prefs.get("manual_actions"):
+        if display_prefs.get("manual_actions", False):
             value += goal.get("initial_number_of_actions", 0)
-        if display_prefs.get("state_actions"):
+        if display_prefs.get("state_actions", True):
             value += goal.get("attained_number_of_actions", 0)
-        if display_prefs.get("platform_actions"):
+        if display_prefs.get("platform_actions", True):
             value += goal.get("organic_attained_number_of_actions", 0)
         goal["displayed_number_of_actions"] = value
 
         value = 0
-        if display_prefs.get("manual_carbon"):
+        if display_prefs.get("manual_carbon", False):
             value += goal.get("initial_carbon_footprint_reduction", 0)
-        if display_prefs.get("state_carbon"):
+        if display_prefs.get("state_carbon", False):
             value += goal.get("attained_carbon_footprint_reduction", 0)
-        if display_prefs.get("platform_carbon"):
+        if display_prefs.get("platform_carbon", True):
             value += goal.get("organic_attained_carbon_footprint_reduction", 0)
         goal["displayed_carbon_footprint_reduction"] = value
 
@@ -3223,6 +3249,9 @@ class HomePageSettings(models.Model):
 
     def __str__(self):
         return "HomePageSettings - %s" % (self.community)
+    
+    def info(self): 
+        return model_to_dict(self, ["id", "title", "community"])
 
     def simple_json(self):
         res = model_to_dict(
@@ -3764,7 +3793,13 @@ class FeatureFlag(models.Model):
             return False  # flag not active
         return True
 
-    def enabled_communities(self, communities_in: QuerySet):
+    def enabled_communities(self, communities_in: QuerySet = None):
+        """
+            Returns : List of communities as a QuerySet
+        """
+        if not communities_in: 
+            communities_in = Community.objects.filter(is_deleted=False) 
+
         if self.audience == "EVERYONE":
             return communities_in
         elif self.audience == "SPECIFIC":

@@ -42,11 +42,12 @@ def collect_and_create_signatures(task=None):
                             **postmark_info,
                             "nudge_count": postmark_info.get("nudge_count", 0) + 1,
                         }
-
+                    else:
+                        print(f"ERROR Resending Confirmation to {community.name}: ", res.json())
+            else:
+                print(f"ERROR getting Contact Info of {community.name}: ", response.json())
         else:
-            response = add_sender_signature(
-                email, alias, community.owner_name, community.name
-            )
+            response = add_sender_signature(email, alias, community.owner_name, community.name)
             if response.status_code == 200:
                 res = response.json()
                 postmark_info = {
@@ -57,5 +58,8 @@ def collect_and_create_signatures(task=None):
                 }
                 community.contact_info = postmark_info
                 community.contact_sender_alias = alias
-        community.save()
+            
+                community.save()
+            else:
+                print(f"ERROR adding signature for {community.name}: ", response.json())
     return True
