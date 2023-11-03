@@ -13,7 +13,7 @@ from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_commun
 from api.store.utils import get_community, get_user
 from celery import shared_task
 from api.store.download import DownloadStore
-from api.utils.constants import CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, SADMIN_EMAIL_TEMPLATE
+from api.utils.constants import BROADCAST_EMAIL_TEMPLATE, CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, SADMIN_EMAIL_TEMPLATE
 from database.models import Community, CommunityAdminGroup, CommunityMember, UserActionRel, UserProfile
 from django.utils import timezone
 import datetime
@@ -21,6 +21,8 @@ from django.utils.timezone import utc
 from django.db.models import Count
 
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
+
+from _main_.celery.app import app
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
@@ -220,3 +222,21 @@ def deactivate_user(self,email):
     user = UserProfile.objects.filter(email=email).first()
     if user:
         user.delete()
+
+
+
+
+
+
+
+@app.task
+def send_scheduled_email(subject, message, recipients):
+    try:
+        data = {
+           "body": message,
+           "subject": subject
+        }
+        send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
+
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
