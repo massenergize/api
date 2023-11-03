@@ -26,6 +26,8 @@ from database.models import Community, FeatureFlag, Media, Tag, UserMediaUpload,
 from django.db.models import Q
 import time
 from django.http import HttpResponse
+from _main_.settings import IS_LOCAL
+import time
 
 
 limit = 32
@@ -92,8 +94,14 @@ class MediaLibraryStore:
           All future image uploads will have their hash values generated automatically and saved to the media object. 
           Check the Media model for the modifications on the "save()" function.
       """
+        start = time.time()
         generated = generate_hashes()
-        return f"Generated hashes for {generated} items!", None
+
+        end = time.time()
+        msg = f"Generated hashes for {generated} items in {end - start} seconds"
+        print(msg)
+
+        return msg, None
 
     def edit_details(self, args, context: Context):
         try:

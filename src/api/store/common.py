@@ -4,7 +4,7 @@ from functools import reduce
 import io
 from typing import List
 from django.http import FileResponse
-from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME
+from _main_.settings import AWS_S3_REGION_NAME, AWS_STORAGE_BUCKET_NAME, IS_LOCAL
 from _main_.utils.common import serialize, serialize_all
 from api.constants import CSV_FIELD_NAMES
 from carbon_calculator.models import Action
@@ -217,7 +217,7 @@ def get_media_info(media):
 
 def find_duplicate_items(_serialize=False, **kwargs):
     community_ids = kwargs.get("community_ids", None)
-    
+
     # Retrieve all media items with multiple occurences of the same hash (excluding empty or None hashes)
     duplicate_hashes = (
         Media.objects.exclude(hash__exact="")
@@ -226,7 +226,12 @@ def find_duplicate_items(_serialize=False, **kwargs):
         .annotate(hash_count=Count("hash"))
         .filter(hash_count__gt=1)
     )
+    print(duplicate_hashes)
 
+    if IS_LOCAL:
+        #check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash").annotate(hash_count=Count("hash"))
+        check_hashes = Media.objects.exclude(hash__exact="").exclude(hash=None).values("hash","id").annotate(Count('hash'))
+        print(check_hashes, check_hashes.count())
 
      # Now, retrieve the media items associated with the duplicate hashes
     if community_ids: 
@@ -242,6 +247,7 @@ def find_duplicate_items(_serialize=False, **kwargs):
 
 def group_duplicates(duplicates, _serialize=False):
     # Here, media library items that have the same hashes are grouped with the hash value as key, and the items themselves in an array
+    print("group_duplicates")
     response = {}
     count = 0
     for item in duplicates:

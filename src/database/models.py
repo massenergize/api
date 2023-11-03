@@ -31,7 +31,7 @@ from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
 import hashlib
-
+from _main_.settings import IS_LOCAL
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")

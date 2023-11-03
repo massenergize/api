@@ -9,6 +9,7 @@ from api.store.common import (
     remove_duplicates_and_attach_relations,
     summarize_duplicates_into_csv,
 )
+from api.store.media_library import MediaLibraryStore as media_store
 from api.utils.constants import MEDIA_LIBRARY_CLEANUP_TEMPLATE
 from database.models import FeatureFlag
 from task_queue.models import Task
@@ -26,10 +27,16 @@ def remove_duplicate_images(task):
     try: 
         generate_hashes() 
         flag = FeatureFlag.objects.filter(key=REMOVE_DUPLICATE_IMAGE_FLAG_KEY).first()
+        do_updates = flag and flag.enabled()
+            
+        if do_updates:
+             print("Generating hashes")
+             result = media_store.generate_hashes(None, None, None)
+
         communities = flag.enabled_communities()
         # task = Task.objects.filter(name="Media Library Cleanup Routine").first()
         ids = [c.id for c in communities]
-        clean_and_notify(ids,None,task.creator)
+        clean_and_notify(ids,None,task.creator, do_updates)
         
         return "success"
     
@@ -37,13 +44,15 @@ def remove_duplicate_images(task):
         print("Duplicate Removal Error (Media Library Cleanup): " + str(e))
         return "Failure"
 
-def clean_and_notify(ids,community,notification_receiver): 
+def clean_and_notify(ids,community,notification_receiver, do_updates): 
+        print(ids)
         grouped_dupes = find_duplicate_items(False, community_ids=ids)
         num_of_dupes_in_all = get_duplicate_count(grouped_dupes)
         csv_file = summarize_duplicates_into_csv(grouped_dupes)
 
-        for hash_value in grouped_dupes.keys(): 
-            remove_duplicates_and_attach_relations(hash_value)
+        if do_updates:
+            for hash_value in grouped_dupes.keys(): 
+                remove_duplicates_and_attach_relations(hash_value)
 
         if notification_receiver: 
             send_summary_email_to_admin(notification_receiver, community, num_of_dupes_in_all, csv_file)
