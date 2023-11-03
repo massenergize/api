@@ -14,3 +14,12 @@ STANDARD_USER = 'standard_user'
 GUEST_USER = 'guest_user'
 INVITED_USER = 'invited_user'  
 WHEN_USER_AUTHENTICATED_SESSION_EXPIRES = "WHEN_USER_AUTHENTICATED_SESSION_EXPIRES"
+
+CSV_FIELD_NAMES = [
+    "media_url",
+    "primary_media_id",
+    "usage_stats",
+    "usage_summary",
+    "ids_of_duplicates",
+    "duplicates",
+]
