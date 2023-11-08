@@ -13,8 +13,15 @@ from xhtml2pdf import pisa
 import pytz
 from _main_.utils.utils import Console
 from api.store.utils import getCarbonScoreFromActionRel
-from database.models import Community, CommunityAdminGroup, Event, Media, Team, UserActionRel
-from django.db.models import Q, Model
+from database.models import (
+    Community,
+    CommunityAdminGroup,
+    Event,
+    Media,
+    Team,
+    UserActionRel,
+)
+from django.db.models import Q, Model, Subquery, OuterRef, F
 from django.utils import timezone
 import boto3
 import hashlib
@@ -186,8 +193,8 @@ def make_media_info(args):
         "size",
         "size_text",
         "guardian_info",
-        "permission_key", 
-        "permission_notes"
+        "permission_key",
+        "permission_notes",
     ]
     name_to_obj_name = {
         "underAge": "has_children",
@@ -212,33 +219,44 @@ def get_media_info(media):
     return {}, False
 
 
-
-
-
 def find_duplicate_items(_serialize=False, **kwargs):
     community_ids = kwargs.get("community_ids", None)
-    
+
     # Retrieve all media items with multiple occurences of the same hash (excluding empty or None hashes)
-    duplicate_hashes = (
-        Media.objects.exclude(hash__exact="")
-        .exclude(hash=None)
-        .values("hash")
-        .annotate(hash_count=Count("hash"))
-        .filter(hash_count__gt=1)
-    )
+    if community_ids:
+        duplicate_hashes = (
+            Media.objects.exclude(hash__exact="")
+            .exclude(hash=None)
+            .filter(user_upload__communities__id__in=community_ids)
+            .values("hash")
+            .annotate(hash_count=Count("hash"))
+            .filter(hash_count__gt=1)
+        )
+    else:
+        duplicate_hashes = (
+            Media.objects.exclude(hash__exact="")
+            .exclude(hash=None)
+            .values("hash")
+            .annotate(hash_count=Count("hash"))
+            .filter(hash_count__gt=1)
+        )
 
-
-     # Now, retrieve the media items associated with the duplicate hashes
-    if community_ids: 
+    # Now, retrieve the media items associated with the duplicate hashes
+    if community_ids:
         duplicate_media_items = Media.objects.filter(
             hash__in=duplicate_hashes.values("hash"), user_upload__communities__id__in = community_ids
-        ) 
-    else: 
+        )
+    else:
         duplicate_media_items = Media.objects.filter(
             hash__in=duplicate_hashes.values("hash")
         )
 
+    # duplicate_media_items = Media.objects.filter(
+    #     hash__in=duplicate_hashes.values("hash")
+    # )
+
     return group_duplicates(duplicate_media_items, _serialize)
+
 
 def group_duplicates(duplicates, _serialize=False):
     # Here, media library items that have the same hashes are grouped with the hash value as key, and the items themselves in an array
@@ -258,10 +276,12 @@ def group_duplicates(duplicates, _serialize=False):
 
     return response
 
+
 def serial_wrapper(queryset, _serialize=False):
     if _serialize:
         return serialize_all(queryset, False, info=True)
     return queryset
+
 
 def find_relations_for_item(media_item: Media, _serialize=False):
     # Given a media item, this function finds all entities that are using it on the entire platform
@@ -272,12 +292,12 @@ def find_relations_for_item(media_item: Media, _serialize=False):
         "vendors": [],
         "teams": [],
         "homepage": [],
-        "tags":[]
+        "tags": [],
     }
 
     if not media_item:
         return relations
-    
+
     communities = serial_wrapper(
         media_item.community_logo.all(), _serialize
     )  # communities that use this media as their logo
@@ -305,8 +325,9 @@ def find_relations_for_item(media_item: Media, _serialize=False):
         "vendors": vendors,
         "teams": teams,
         "homepage": homepage,
-        "tags": tags
+        "tags": tags,
     }
+
 
 def merge_and_get_distinct(array1, array2, property_name, _serialize=False):
     # Merges two arrays of dictionaries based on a property and returns distinct items
@@ -324,9 +345,9 @@ def merge_and_get_distinct(array1, array2, property_name, _serialize=False):
         if property_value not in distinct_property_values:
             distinct_property_values.add(property_value)
             distinct_objects.append(obj)
-         
 
     return distinct_objects
+
 
 def combine_relation_objs(relObj1, relObj2, _serialize=False):
     # takes two relation objects, takes out the individal arrays (vendors, events, community_logos etc) from each, and tries to merge them into one array of distinct items
@@ -352,8 +373,6 @@ def combine_relation_objs(relObj1, relObj2, _serialize=False):
         relObj1.get("tags"), relObj2.get("tags"), "id", _serialize
     )
 
-    
-
     return {
         "communities": communities,
         "events": events,
@@ -361,11 +380,11 @@ def combine_relation_objs(relObj1, relObj2, _serialize=False):
         "teams": teams,
         "vendors": vendors,
         "homepage": homepage,
-        "tags":tags
+        "tags": tags,
     }
 
 
-def resolve_relations(dupes): 
+def resolve_relations(dupes):
     merged_usages = find_relations_for_item(None)
     for dupe_item in dupes:
         usage = find_relations_for_item(dupe_item, True)
@@ -379,10 +398,11 @@ def resolve_relations(dupes):
     }
 
 
-def get_property_in_dict(array, property_name = "id"): 
-    return [ item.get(property_name) for item in array]
+def get_property_in_dict(array, property_name="id"):
+    return [item.get(property_name) for item in array]
 
-def get_items_by_ids(model :Model, ids):
+
+def get_items_by_ids(model: Model, ids):
     """
     Retrieve items of a specified model by a list of IDs.
 
@@ -397,30 +417,31 @@ def get_items_by_ids(model :Model, ids):
         raise ValueError("The 'model' parameter must be a valid Django model class.")
 
     if not ids:
-        return model.objects.none()  # Return an empty queryset if the 'ids' list is empty
+        return (
+            model.objects.none()
+        )  # Return an empty queryset if the 'ids' list is empty
 
     return model.objects.filter(id__in=ids)
 
 
-def attach_relations_to_media(usage_object): 
-    media = usage_object.get("media") 
-    if not usage_object or not media: 
-        return None 
-    
-    media = Media.objects.filter(id = media.get("id")).first() 
-    if not media: 
-        return None 
-    
+def attach_relations_to_media(usage_object):
+    media = usage_object.get("media")
+    if not usage_object or not media:
+        return None
+
+    media = Media.objects.filter(id=media.get("id")).first()
+    if not media:
+        return None
+
     usage = usage_object.get("usage")
 
-
-    communities = usage.get("communities",[])
-    actions = usage.get("actions",[])
-    events = usage.get("events",[])
-    teams = usage.get("teams",[])
-    vendors = usage.get("vendors",[])
-    homepage = usage.get('homepage',[])
-    tags = usage.get('tags',[])
+    communities = usage.get("communities", [])
+    actions = usage.get("actions", [])
+    events = usage.get("events", [])
+    teams = usage.get("teams", [])
+    vendors = usage.get("vendors", [])
+    homepage = usage.get("homepage", [])
+    tags = usage.get("tags", [])
 
     # Reduce them to only their ids
     communities = get_property_in_dict(communities)
@@ -432,12 +453,12 @@ def attach_relations_to_media(usage_object):
     tags = get_property_in_dict(tags)
 
     # set relationships
-    media.community_logo.set(get_items_by_ids(Community,communities))
-    media.actions.set(get_items_by_ids(Action,actions))
-    media.events.set(get_items_by_ids(Event,events))
-    media.team_logo.set(get_items_by_ids(Team,teams)) 
-    media.vender_logo.set(vendors) 
-    media.homepage_images.set(homepage) 
+    media.community_logo.set(get_items_by_ids(Community, communities))
+    media.actions.set(get_items_by_ids(Action, actions))
+    media.events.set(get_items_by_ids(Event, events))
+    media.team_logo.set(get_items_by_ids(Team, teams))
+    media.vender_logo.set(vendors)
+    media.homepage_images.set(homepage)
     media.tags.set(tags)
 
     media.save()
@@ -445,9 +466,10 @@ def attach_relations_to_media(usage_object):
 
     return media
 
-def create_csv_file(fieldnames :list, data : list, filename="data.csv"):
+
+def create_csv_file(fieldnames: list, data: list, filename="data.csv"):
     """
-    Returns: 
+    Returns:
     - str : output.getvalue()
     """
     # Create an in-memory CSV file
@@ -459,95 +481,99 @@ def create_csv_file(fieldnames :list, data : list, filename="data.csv"):
     return output.getvalue()
 
 
-
 def arrange_for_csv(usage_object: dict):
-        usage_object = {} if not usage_object else usage_object
+    usage_object = {} if not usage_object else usage_object
 
-        text = ""
-        count = 0
+    text = ""
+    count = 0
 
-        for key, value in usage_object.items():
-            length = len(value)
-            count = count + length
-            if length:
-                if text:
-                    text += f", {key}({length})"
-                else:
-                    text = f"{key}({length})"
+    for key, value in usage_object.items():
+        length = len(value)
+        count = count + length
+        if length:
+            if text:
+                text += f", {key}({length})"
+            else:
+                text = f"{key}({length})"
 
-        return count, text
-
-
-def summarize_duplicates_into_csv(grouped_dupes, filename = None, field_names = CSV_FIELD_NAMES):
-        """
-        Returns: 
-        - csv file : output.getvalue()
-        """
-        csv_data = []
-        for hash, array in grouped_dupes.items():
-            combined = resolve_relations(array)
-            usage_count, usage_summary = arrange_for_csv(combined.get("usage", {}))
-            media = array[0]
-            obj = {
-                "media_url": media.file.url,
-                "primary_media_id": media.id,  # No other criteria is used to determine which media is going to be the primary media. The first 1 is simply chosen...
-                "usage_stats": usage_count,
-                "usage_summary": usage_summary,
-                "duplicates": ", ".join([m.file.url for m in array[1:]]),
-                "ids_of_duplicates": ", ".join([str(m.id) for m in array[1:]]),
-            }
-            csv_data.append(obj)
-
-        filename = filename or "summary-of-duplicates"
-        csv_file = create_csv_file(field_names, csv_data, filename + ".csv")
-
-        return csv_file
+    return count, text
 
 
-
-def get_admins_of_communities(community_ids): 
-     groups = CommunityAdminGroup.objects.filter(community__id__in = community_ids)
-     admins = [g.members.all() for g in groups]
-     admins = reduce(lambda x, y: list(x) + list(y), admins)
-     return admins
-
-
-def get_duplicate_count(grouped_dupes :dict): 
+def summarize_duplicates_into_csv(
+    grouped_dupes, filename=None, field_names=CSV_FIELD_NAMES
+):
     """
-        Returns: 
-        - count : (int) total count of all duplicate groups together
+    Returns:
+    - csv file : output.getvalue()
     """
-    count = 0 
-    for duplicates in grouped_dupes.values(): 
-        count +=len(duplicates) -1 # Subtracting 1 because one of them is the main one, and the remaining are duplicates
-        
+    csv_data = []
+    for hash, array in grouped_dupes.items():
+        combined = resolve_relations(array)
+        usage_count, usage_summary = arrange_for_csv(combined.get("usage", {}))
+        media = array[0]
+        obj = {
+            "media_url": media.file.url,
+            "primary_media_id": media.id,  # No other criteria is used to determine which media is going to be the primary media. The first 1 is simply chosen...
+            "usage_stats": usage_count,
+            "usage_summary": usage_summary,
+            "duplicates": ", ".join([m.file.url for m in array[1:]]),
+            "ids_of_duplicates": ", ".join([str(m.id) for m in array[1:]]),
+        }
+        csv_data.append(obj)
+
+    filename = filename or "summary-of-duplicates"
+    csv_file = create_csv_file(field_names, csv_data, filename + ".csv")
+
+    return csv_file
+
+
+def get_admins_of_communities(community_ids):
+    groups = CommunityAdminGroup.objects.filter(community__id__in=community_ids)
+    admins = [g.members.all() for g in groups]
+    admins = reduce(lambda x, y: list(x) + list(y), admins)
+    return admins
+
+
+def get_duplicate_count(grouped_dupes: dict):
+    """
+    Returns:
+    - count : (int) total count of all duplicate groups together
+    """
+    count = 0
+    for duplicates in grouped_dupes.values():
+        count += (
+            len(duplicates) - 1
+        )  # Subtracting 1 because one of them is the main one, and the remaining are duplicates
+
     return count
 
+
 def group_disposable(original: dict, disposable: List[int]):
-        """This function simply identifies which items in the disposable list share the same image as the original.
-        NB: because we initially did not dynamically label uploaded images (many many years ago.. lool) there are many scenarios where a user has  uploaded the same image multiple times and because the image was the same (with name & everything), it always replaced the existing record in the bucket, but under new media records in the database.
+    """This function simply identifies which items in the disposable list share the same image as the original.
+    NB: because we initially did not dynamically label uploaded images (many many years ago.. lool) there are many scenarios where a user has  uploaded the same image multiple times and because the image was the same (with name & everything), it always replaced the existing record in the bucket, but under new media records in the database.
 
-        So many duplicate images(media records) still share the same image reference with the original media record. This is why items that share the same image reference as the chosen original need to be identified and grouped.
-        Deletion for such records will be treated differently than other duplicates where the images are the same as the original, but are completely
-        different uploads in terms of the reference in the s3 bucket. In such cases the images in the s3 bucket will be removed as well!
-        """
+    So many duplicate images(media records) still share the same image reference with the original media record. This is why items that share the same image reference as the chosen original need to be identified and grouped.
+    Deletion for such records will be treated differently than other duplicates where the images are the same as the original, but are completely
+    different uploads in terms of the reference in the s3 bucket. In such cases the images in the s3 bucket will be removed as well!
+    """
 
-        media = Media.objects.filter(pk=original.get("id")).first()
-        if not media:
-            return None, None
-        can_delete = Media.objects.filter(pk__in=disposable)
-        only_records = []
-        with_image = []
-        for m in can_delete:
-            if m.file.name == media.file.name:
-                only_records.append(m)
-            else:
-                with_image.append(m)
+    media = Media.objects.filter(pk=original.get("id")).first()
+    if not media:
+        return None, None
+    can_delete = Media.objects.filter(pk__in=disposable)
+    only_records = []
+    with_image = []
+    for m in can_delete:
+        if m.file.name == media.file.name:
+            only_records.append(m)
+        else:
+            with_image.append(m)
 
-        return only_records, with_image
+    return only_records, with_image
 
-def remove_duplicates_and_attach_relations(hash): 
-    if not hash: 
+
+def remove_duplicates_and_attach_relations(hash):
+    if not hash:
         return None
     dupes = Media.objects.filter(hash=hash)
     relations = resolve_relations(dupes)
@@ -569,9 +595,9 @@ def remove_duplicates_and_attach_relations(hash):
     return media_after_attaching
 
 
-def generate_hashes(): 
+def generate_hashes():
     """
-        Returns : Number of items that have had their hashes generated
+    Returns : Number of items that have had their hashes generated
     """
     images = Media.objects.filter(Q(hash__exact="") | Q(hash=None)).distinct()
     count = 0

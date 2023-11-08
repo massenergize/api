@@ -103,7 +103,7 @@ def makeFlag(**kwargs):
 
 def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
-    file = kwargs.get("file") or kwargs.get("image") or createImage()
+    file = kwargs.pop("file", None) or kwargs.pop("image", None) or createImage()
     file.name = unique_media_filename(file)
     tags = kwargs.pop("tags", None) 
     media = Media.objects.create(**{**kwargs, "name": name, "file": file})
@@ -195,9 +195,9 @@ def makeUser(**kwargs):
 
 def makeUserUpload(**kwargs):
     media = kwargs.get("media") or makeMedia()
-    communities = kwargs.get("communities")
-    if communities:
-        del kwargs["communities"]
+    communities = kwargs.pop("communities",None)
+    # if communities:
+    #     del kwargs["communities"]
     up = UserMediaUpload.objects.create(**{**kwargs, "media": media})
     if communities:
         up.communities.set(communities)
