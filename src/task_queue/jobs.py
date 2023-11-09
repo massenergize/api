@@ -4,6 +4,7 @@ from task_queue.database_tasks.update_actions_content import update_actions_cont
 from task_queue.nudges.cadmin_events_nudge import send_events_nudge
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
 from task_queue.nudges.postmark_sender_signature import collect_and_create_signatures
+from task_queue.database_tasks.media_library_cleanup import remove_duplicate_images
 from task_queue.views import super_admin_nudge, create_snapshots, send_admin_mou_notification
 
 """
@@ -24,4 +25,5 @@ FUNCTIONS = {
     "Postmark Sender Signature": collect_and_create_signatures,
     "Process Content Spacing": process_spacing_data,
     "Update Action Content": update_actions_content,
+    "Remove Duplicate Images" : remove_duplicate_images
 }

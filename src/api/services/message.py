@@ -116,6 +116,12 @@ class MessageService:
     if err:
       return None, err
     return serialize(message), None
+  
+  def send_message(self, context,args) -> Tuple[dict, MassEnergizeAPIError]:
+    message, err = self.store.send_message(context,args)
+    if err:
+      return None, err
+    return serialize(message), None
 
 
   def list_community_admin_messages_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:

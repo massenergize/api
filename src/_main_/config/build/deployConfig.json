@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": true,
-  "BUILD_VERSION": "4.13.0",
+  "BUILD_VERSION": "4.13.3",
   "BUILD_VERSION_NOTES": "Nov 2: Release 4.13.0\n- many changes, described in release notes"
 }

@@ -121,24 +121,33 @@ def rename_fields(args, pairs):
 
 def serialize_all(data, full=False, **kwargs):
   #medium = (kwargs or {}).get("medium", False)
+  info = (kwargs or {}).get("info", False)
   if not data:
     return []
 
   if isinstance(data[0], dict):
     return data
 
+
   if full:
     return [d.full_json() for d in data]
+  elif info:
+    return [d.info() for d in data]
   #elif medium: 
   #  return [d.medium_json() for d in data]
   return [d.simple_json() for d in data]
 
 
-def serialize(data, full=False):
+def serialize(data, full=False, **kwargs):
+  info = (kwargs or {}).get("info", False)
   if not data:
     return {}
+  
   if full:
     return data.full_json()
+  elif info: 
+    return data.info()
+
   return data.simple_json()
 
 def check_length(args, field,  min_length=5, max_length=40):

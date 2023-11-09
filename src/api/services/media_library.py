@@ -7,6 +7,33 @@ class MediaLibraryService:
     def __init__(self):
         self.store = MediaLibraryStore()
 
+    def print_duplicates(self, args, context):
+        response, error = self.store.print_duplicates(args, context)
+        if error:
+            return None, error
+        # return serialize_all(response), None
+        return response, None
+    
+    def clean_duplicates(self, args, context):
+        response, error = self.store.clean_duplicates(args, context)
+        if error:
+            return None, error
+        # return serialize_all(response), None
+        return response, None
+    
+    def summarize_duplicates(self, args, context):
+        response, error = self.store.summarize_duplicates(args, context)
+        if error:
+            return None, error
+        # return serialize_all(response), None
+        return response, None
+    
+    def generate_hashes(self, args, context):
+        response, error = self.store.generate_hashes(args, context)
+        if error:
+            return None, error
+        return response, None
+    
     def fetch_content(self, args):
         images, error = self.store.fetch_content(args)
         if error:

@@ -64,7 +64,12 @@ def get_distance_between_coords(lat1, lon1, lat2, lon2):
     return distance
 
 
+def is_null(val):
+    if val in ["", None, [], {}, "undefined", "null"]:
+        return True
+    return False
 
+  
 def get_sender_email(community_id):
     DEFAULT_SENDER = 'no-reply@massenergize.org'
     if not community_id:
@@ -80,3 +85,4 @@ def get_sender_email(community_id):
         return community.owner_email
     
     return DEFAULT_SENDER
+
