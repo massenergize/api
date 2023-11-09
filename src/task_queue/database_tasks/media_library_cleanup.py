@@ -33,13 +33,12 @@ def remove_duplicate_images(task=None):
              print("Generating hashes")
              result = media_store.generate_hashes(None, None, None)
 
-        if flag: 
+        if flag and do_updates: 
             communities = flag.enabled_communities()
         else: 
              communities = Community.objects.all()
         # task = Task.objects.filter(name="Media Library Cleanup Routine").first()
         ids = [c.id for c in communities]
-        print("Here are the ids", ids)
         clean_and_notify(ids,None,task.creator, do_updates)
         
         return "success"
