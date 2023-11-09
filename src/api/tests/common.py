@@ -24,6 +24,7 @@ from database.models import (
     UserActionRel,
     UserMediaUpload,
     UserProfile,
+    Vendor,
 )
 from carbon_calculator.models import CalcDefault
 import requests
@@ -117,6 +118,19 @@ def makeTestimonial(**kwargs):
     title = kwargs.get("title") or kwargs.get("name") or f"New Testimonial - {key}"
     return Testimonial.objects.create(**{**kwargs, "title": title})
 
+def makeVendor(**kwargs):
+    key = round(time.time() * 1000)
+    title = kwargs.get("title") or kwargs.get("name") or f"New Vendor - {key}"
+    image = kwargs.pop("image",None)
+    vendor =  Vendor.objects.create(**{**kwargs, "name": title})
+    if image: 
+        vendor.logo = image 
+        vendor.save() 
+    
+    return vendor
+
+        
+
 
 def makeEvent(**kwargs):
     community = kwargs.get("community")
@@ -209,6 +223,7 @@ def makeHomePageSettings(**kwargs):
     community = kwargs.get(
         "community", makeCommunity(name="Default Community - For Homepage")
     )
+    images = kwargs.pop("images", None)
     home = HomePageSettings.objects.create(
         **{
             **kwargs,
@@ -216,7 +231,9 @@ def makeHomePageSettings(**kwargs):
             "title": title,
         }
     )
-
+    if images: 
+        home.images.set(images)
+        home.save()
     return home
 
 
