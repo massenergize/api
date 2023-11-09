@@ -401,7 +401,8 @@ class MessageStore:
                 if not messages.first():
                     return None, InvalidResourceError()
                 # revoke the previous task
-                task_id = messages.first().schedule_info.get("schedule_id", None)
+                message_schedule_info = messages.first().schedule_info or {}
+                task_id = message_schedule_info.get("schedule_id", None)
                 if task_id:
                     result = AsyncResult(task_id)
                     result.revoke()
@@ -411,18 +412,18 @@ class MessageStore:
                 if messages.first().scheduled_at != schedule:
                    scheduled_at = schedule
                 
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
-                schedule_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id,"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule)
+                schedule_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None,"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
                 messages.update(**{"schedule_info": schedule_info, "body": message, "title": subject, "scheduled_at":scheduled_at })
                 return messages.first(), None
             else:
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule)
                 new_message = Message(
                 title=subject,
                 body=message,
                 user=user,
                 scheduled_at= schedule,
-                schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
+                schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
                 )
                 new_message.save()
                 return new_message, None
