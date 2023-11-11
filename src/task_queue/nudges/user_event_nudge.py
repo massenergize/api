@@ -108,7 +108,7 @@ def get_community_events(community_id):
         is_published=True, 
         is_deleted=False, 
         start_date_and_time__gte=timezone.now(),
-        ).distinct()
+        ).distinct().order_by("start_date_and_time")
     
     return events
 
@@ -158,7 +158,7 @@ def prepare_events_email_data(events):
             "view_link": f'{COMMUNITY_URL_ROOT}/{event.get("community", {}).get("subdomain")}/events/{event.get("id")}',
             } for event in events]
     #sort list of events by date
-    data = (sorted(data, key=lambda i: i['date'], reverse=True))
+    # data = (sorted(data, key=lambda i: i['date'], reverse=True))
     return data
 
 
