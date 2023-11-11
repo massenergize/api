@@ -1,2 +1,1 @@
-Nov 2: Release 4.13.0
-- many changes, described in release notes
+Nov 11: User events nudge fix - sorting by date and 12 hour time_string
