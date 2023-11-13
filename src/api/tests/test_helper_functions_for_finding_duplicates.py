@@ -1,7 +1,17 @@
 from django.test import TestCase
 from _main_.utils.utils import Console
-from api.store.common import find_duplicate_items
-from api.tests.common import createImage, makeAction, makeCommunity, makeEvent, makeHomePageSettings, makeMedia, makeTeam, makeUserUpload, makeVendor
+from api.store.common import find_duplicate_items, find_relations_for_item
+from api.tests.common import (
+    createImage,
+    makeAction,
+    makeCommunity,
+    makeEvent,
+    makeHomePageSettings,
+    makeMedia,
+    makeTeam,
+    makeUserUpload,
+    makeVendor,
+)
 from database.models import Media, Tag
 
 
@@ -33,15 +43,41 @@ class TestHelperFunctionsForDuplicates(TestCase):
             retrieved 
         """
 
-       
-        tag = Tag.objects.create(name = "Personal Tag")
-        media = makeMedia(tags = [tag])
+        tag = Tag.objects.create(name="Personal Tag")
+        media = makeMedia(tags=[tag])
         com = makeCommunity(name="Top Community", logo=media)
         action = makeAction(image=media)
         event = makeEvent(image=media)
-        team = makeTeam (logo=media, community =com )
+        team = makeTeam(logo=media, community=com)
         vendor = makeVendor(image=media)
-        homepage = makeHomePageSettings(title="Top Settings", images = [media])
-        
+        homepage = makeHomePageSettings(title="Top Settings", images=[media])
 
-        
+        item = find_relations_for_item(media)
+        actions = item.get("actions", [])
+        actions = [a.id for a in actions]
+        com_logos = item.get("community_logos")
+        com_logos = [com.id for com in com_logos]
+        homepages = item.get("homepage", [])
+        homepages = [h.id for h in homepages]
+        teams = item.get("teams", [])
+        teams = [t.id for t in teams]
+        events = item.get("events", [])
+        events = [e.id for e in events]
+        vendors = item.get("vendors", [])
+        vendors = [v.id for v in vendors]
+        print("Checking to see if all related items are available...")
+        self.assertEquals(len(actions), 1)
+        self.assertIn(action.id, actions)
+        self.assertEquals(len(com_logos), 1)
+        self.assertIn(com.id, com_logos)
+        self.assertEquals(len(homepages), 1)
+        self.assertIn(homepage.id, homepages)
+        self.assertEquals(len(teams), 1)
+        self.assertIn(team.id, teams)
+        self.assertEquals(len(events), 1)
+        self.assertIn(event.id, events)
+        self.assertEquals(len(vendors), 1)
+        self.assertIn(vendor.id, vendors)
+        print(
+            "Actions, homepages, events, vendors, community logos,  all relations with media were retrieved successfully!"
+        )
