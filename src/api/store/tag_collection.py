@@ -77,21 +77,24 @@ class TagCollectionStore:
               tag.delete()
               continue
 
-            new_name = v.strip()
+            tag.name = v.strip()
 
-            if tag_collection.name == "Category":
+            #  Emma's code for creating carbon calculator categories; we make these in AirTable
+            #
+            #  if tag_collection.name == "Category":
+            #
+            #   old_name = tag.name
+            #   cc_category = Category.objects.filter(name =old_name)
+            #   if cc_category:
+            #
+            #     cc_category[0].name = new_name
+            #     cc_category[0].save()
+            #   else:
+            #     new_cc_category = Category.objects.create(name = new_name)
+            #     new_cc_category.save()
+            # 
+            # tag.name = new_name
 
-              old_name = tag.name
-              cc_category = Category.objects.filter(name =old_name)
-              if cc_category:
-
-                cc_category[0].name = new_name
-                cc_category[0].save()
-              else:
-                new_cc_category = Category.objects.create(name = new_name)
-                new_cc_category.save()
-            
-            tag.name = new_name
             tag.save()
         elif k.startswith('tag_') and k.endswith('_rank'):
           tag_id = int(k.split('_')[1])
@@ -112,21 +115,23 @@ class TagCollectionStore:
           tag = Tag.objects.create(name=t.strip().title(), tag_collection=tag_collection, rank=len(tags)+i+1)
           tag.save()
 
-
-          if tag_collection.name=="Category":
-            cc_category = Category.objects.create(name = t.strip().title())
-            cc_category.save()
+          #Emma code for creating carbon calculator categories; don't think we need this
+          # if tag_collection.name=="Category":
+          #   cc_category = Category.objects.create(name = t.strip().title())
+          #   cc_category.save()
 
       tags_to_delete = args.pop('tags_to_delete', '')
       if tags_to_delete: 
         tags_to_delete = [t.strip() for t in tags_to_delete.split(',')]
         ts = tags.filter(name__in=tags_to_delete)
         ts.delete()
-        if tag_collection.name=="Category":
 
-          cc_categories = Category.objects.filter(name__in =tags_to_delete)
-          cc_categories.delete()
-          #set subcategory is_deleted?
+        # possible deletion of Carbon Calculator category; skip this
+        #if tag_collection.name=="Category":
+        #
+        #  cc_categories = Category.objects.filter(name__in =tags_to_delete)
+        #  cc_categories.delete()
+        #  #set subcategory is_deleted?
 
 
       tag_collection.save()
