@@ -5,7 +5,7 @@ from api.store.common import get_media_info, make_media_info
 from api.tests.common import RESET, makeUserUpload
 from api.utils.api_utils import is_admin_of_community
 from api.utils.filter_functions import get_actions_filter_params
-from database.models import Action, UserProfile, Community, Media
+from database.models import Action, UserProfile, Community, Media, Tag, TagCollection
 from carbon_calculator.models import Action as CCAction
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -27,7 +27,12 @@ class ActionStore:
       # if context.not_if_deleted:
       #   actions_retrieved = actions_retrieved.filter(is_deleted=False)
 
+      print(actions_retrieved)
+
       action: Action = actions_retrieved.first()
+
+      print(action)
+      #pass category as string
 
       if not action:
         return None, InvalidResourceError()
@@ -64,6 +69,29 @@ class ActionStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+  def add_tags(self, action, ccAction, tags = None):
+    tag_options = Tag.objects.filter(name = ccAction.category, tag_collection__name = "Category").values("id")
+        
+    #resets the tags so don't have to worry about past CCAction ones
+    if not tag_options:
+
+      category_tags = Tag.objects.filter(tag_collection__name="Category")
+
+      tag_collection = TagCollection.objects.filter(name="Category").first()
+      new_tag = Tag.objects.create(name=ccAction.category.name, tag_collection=tag_collection, rank=len(category_tags)+1)
+      new_tag.save()
+      tag_id= new_tag.id
+
+    else: 
+      tag_id = str(tag_options[0]["id"])
+
+
+    if tags:
+      tags.append(tag_id)
+      action.tags.set(tags)
+    else:
+      action.tags.set(tag_id)
+
 
   def create_action(self, context: Context, args, user_submitted) -> Tuple[dict, MassEnergizeAPIError]:
     try:
@@ -75,6 +103,7 @@ class ActionStore:
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
       image_info = make_media_info(args)
+      calculator_category = args.pop("calculator_category", None)
 
       # check if there is an existing action with this name and community
       actions = Action.objects.filter(title=title, community__id=community_id, is_deleted=False)
@@ -115,7 +144,6 @@ class ActionStore:
             user_media_upload.user = user 
             user_media_upload.save()
 
-      #save so you set an id
       new_action.save()
 
       if tags:
@@ -128,6 +156,13 @@ class ActionStore:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
         if ccAction:
           new_action.calculator_action = ccAction
+
+          new_action.category = ccAction.category
+          new_action.subcategory = ccAction.sub_category
+
+          if ccAction.category:
+            self.add_tags(new_action, ccAction, tags)
+             
 
       new_action.save()
       # ----------------------------------------------------------------
@@ -166,6 +201,9 @@ class ActionStore:
         new_action.icon = action_to_copy.icon
         new_action.image = action_to_copy.image
         new_action.calculator_action = action_to_copy.calculator_action
+
+        new_action.category = action_to_copy.category
+        new_action.subcategory = action_to_copy.subcategory
         new_action.average_carbon_score = action_to_copy.average_carbon_score
       else:
         new_action = action_to_copy        
@@ -236,6 +274,7 @@ class ActionStore:
       deep_dive = args.pop('deep_dive','')
       calculator_action = args.pop('calculator_action', None)
       is_published = args.pop('is_published', None)
+      calculator_category = args.pop("calculator_category", None)
 
       if not context.user_is_admin():
         args.pop("is_approved", None)
@@ -288,6 +327,13 @@ class ActionStore:
         ccAction = CCAction.objects.filter(pk=calculator_action).first()
         if ccAction:
           action.calculator_action = ccAction
+
+          action.category = ccAction.category
+          action.subcategory = ccAction.sub_category
+
+          if ccAction.category:
+            self.add_tags( action, ccAction, tags)
+
         else:
           action.calculator_action = None
 

@@ -4,6 +4,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResour
 from _main_.utils.context import Context
 from sentry_sdk import capture_message
 from typing import Tuple
+from carbon_calculator.models import Category
 
 class TagCollectionStore:
   def __init__(self):
@@ -75,7 +76,22 @@ class TagCollectionStore:
             if not tag.name.strip():
               tag.delete()
               continue
-            tag.name = v.strip()
+
+            new_name = v.strip()
+
+            if tag_collection.name == "Category":
+
+              old_name = tag.name
+              cc_category = Category.objects.filter(name =old_name)
+              if cc_category:
+
+                cc_category[0].name = new_name
+                cc_category[0].save()
+              else:
+                new_cc_category = Category.objects.create(name = new_name)
+                new_cc_category.save()
+            
+            tag.name = new_name
             tag.save()
         elif k.startswith('tag_') and k.endswith('_rank'):
           tag_id = int(k.split('_')[1])
@@ -97,11 +113,21 @@ class TagCollectionStore:
           tag.save()
 
 
+          if tag_collection.name=="Category":
+            cc_category = Category.objects.create(name = t.strip().title())
+            cc_category.save()
+
       tags_to_delete = args.pop('tags_to_delete', '')
       if tags_to_delete: 
         tags_to_delete = [t.strip() for t in tags_to_delete.split(',')]
         ts = tags.filter(name__in=tags_to_delete)
         ts.delete()
+        if tag_collection.name=="Category":
+
+          cc_categories = Category.objects.filter(name__in =tags_to_delete)
+          cc_categories.delete()
+          #set subcategory is_deleted?
+
 
       tag_collection.save()
       return tag_collection, None

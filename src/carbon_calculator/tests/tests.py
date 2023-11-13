@@ -279,6 +279,9 @@ class CarbonCalculatorTest(TestCase):
         response = self.client.get("/cc/info/users")
         #print(jsons.loads(response.content))
 
+    def test_category_csv(self):
+        print("ran setupCC")
+
     # honestly no idea if this works, it gives a response that its exporting but idk if it is
     def test_exporting_csv(self):
         self.client.post('/cc/export',

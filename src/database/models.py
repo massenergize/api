@@ -32,6 +32,8 @@ from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
 import hashlib
 from _main_.settings import IS_LOCAL
+from carbon_calculator.models import Category as CCCategory
+from carbon_calculator.models import Subcategory as CCSubcategory
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -1964,6 +1966,9 @@ class Action(models.Model):
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
     # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
+
+    category= models.ForeignKey(CCCategory, blank=True, null=True, on_delete=models.SET_NULL, related_name="action_category")
+    subcategory = models.ForeignKey(CCSubcategory , blank=True, null=True, on_delete=models.SET_NULL,related_name="action_subcategory" )
 
     def __str__(self):
         return f"{str(self.id)} - {self.title}"
