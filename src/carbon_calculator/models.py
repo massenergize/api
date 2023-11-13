@@ -128,7 +128,6 @@ class Action(models.Model):
     category = models.ForeignKey(Category, on_delete= models.SET_NULL, null =True)
     sub_category = models.ForeignKey(Subcategory, on_delete = models.SET_NULL, null =True)
 
-
     # for the possibility of deleting actions
     # is_deleted = models.BooleanField(default=False)
     

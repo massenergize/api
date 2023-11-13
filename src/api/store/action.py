@@ -103,7 +103,6 @@ class ActionStore:
       title = args.get('title', None)
       user_email = args.pop('user_email', context.user_email)
       image_info = make_media_info(args)
-      calculator_category = args.pop("calculator_category", None)
 
       # check if there is an existing action with this name and community
       actions = Action.objects.filter(title=title, community__id=community_id, is_deleted=False)
@@ -157,8 +156,8 @@ class ActionStore:
         if ccAction:
           new_action.calculator_action = ccAction
 
-          new_action.category = ccAction.category
-          new_action.subcategory = ccAction.sub_category
+          #new_action.category = ccAction.category
+          #new_action.subcategory = ccAction.sub_category
 
           if ccAction.category:
             self.add_tags(new_action, ccAction, tags)
@@ -202,8 +201,8 @@ class ActionStore:
         new_action.image = action_to_copy.image
         new_action.calculator_action = action_to_copy.calculator_action
 
-        new_action.category = action_to_copy.category
-        new_action.subcategory = action_to_copy.subcategory
+        #new_action.category = action_to_copy.category
+        #new_action.subcategory = action_to_copy.subcategory
         new_action.average_carbon_score = action_to_copy.average_carbon_score
       else:
         new_action = action_to_copy        
@@ -274,7 +273,6 @@ class ActionStore:
       deep_dive = args.pop('deep_dive','')
       calculator_action = args.pop('calculator_action', None)
       is_published = args.pop('is_published', None)
-      calculator_category = args.pop("calculator_category", None)
 
       if not context.user_is_admin():
         args.pop("is_approved", None)
@@ -328,8 +326,8 @@ class ActionStore:
         if ccAction:
           action.calculator_action = ccAction
 
-          action.category = ccAction.category
-          action.subcategory = ccAction.sub_category
+          #action.category = ccAction.category
+          #action.subcategory = ccAction.sub_category
 
           if ccAction.category:
             self.add_tags( action, ccAction, tags)

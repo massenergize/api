@@ -65,13 +65,11 @@ class ActionHandler(RouteHandler):
       .expect('is_approved', bool)
       .expect("tags", list, is_required=False)
       .expect("vendors", list, is_required=False)
-      .expect("calculator_category", int, is_required = False)
     )
     args, err = self.validator.verify(args)
     if err:
       return err
 
-    print("post verify")
     # not a user submitted action
     args["is_approved"] = args.pop("is_approved", True)
 
@@ -152,7 +150,6 @@ class ActionHandler(RouteHandler):
       .expect("is_published", bool, is_required=False)
       .expect("tags", list, is_required=False)
       .expect("vendors", list, is_required=False)
-      .expect("calculator_category", int, is_required = False)
     )
 
     self = expect_media_fields(self)
