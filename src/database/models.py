@@ -1965,11 +1965,6 @@ class Action(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
-
-    # Emma added these two, but I think they are redundant
-    #category= models.ForeignKey(CCCategory, blank=True, null=True, on_delete=models.SET_NULL, related_name="action_category")
-    #subcategory = models.ForeignKey(CCSubcategory , blank=True, null=True, on_delete=models.SET_NULL,related_name="action_subcategory" )
 
     def __str__(self):
         return f"{str(self.id)} - {self.title}"
@@ -1999,6 +1994,9 @@ class Action(models.Model):
         )
         data["image"] = get_json_if_not_none(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
+        if self.calculator_action:
+            data["category"] = self.calculator_action.category.name
+            data["subcategory"] = self.calculator_action.sub_category.name
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
         data["created_at"] = self.created_at

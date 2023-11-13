@@ -23,17 +23,7 @@ class ActionStore:
       action_id = args.get("id", None)
       actions_retrieved = Action.objects.select_related('image', 'community').prefetch_related('tags', 'vendors').filter(id=action_id)
 
-      # may want to add a filter on is_deleted, switched on context
-      # if context.not_if_deleted:
-      #   actions_retrieved = actions_retrieved.filter(is_deleted=False)
-
-      print(actions_retrieved)
-
       action: Action = actions_retrieved.first()
-
-      print(action)
-      #pass category as string
-
       if not action:
         return None, InvalidResourceError()
       return action, None

@@ -232,8 +232,11 @@ class CarbonCalculator:
         #for action in self.allActions:
         actions = Action.objects.filter() #no is_deleted field?
         for action in actions:
-            #if not self.allActions[action].initialized:
-            #    dummy = self.allActions[action].Query()
+            if not self.allActions[action].initialized:
+                ret = self.allActions[action].Query()
+                if ret["status"] != VALID_QUERY:
+                    print("Action " + theAction.name + " initialization failed")
+                    return ret
                 
             name = action.name
             title = action.title
@@ -241,17 +244,9 @@ class CarbonCalculator:
             id = action.id
             points = action.average_points
 
-            if action.category is None:
-                category = ""
-            else:
-                category = action.category.name
+            category = action.category.name if action.category else ""
+            subcategory = action.sub_category.name if action.sub_category else ""
 
-            if action.sub_category is None:
-                subcategory = ""
-            else:
-                subcategory = action.sub_category.name
-
-                #category = self.allActions[action].category.name
             actionList.append( {'id': id, 'name':name, 'title':title, 'description':description, 'average_points':points, 'category': category, 'subcategory': subcategory} ) 
 
         categoryList = []
@@ -275,8 +270,11 @@ class CarbonCalculator:
         queryFailed = {'status':INVALID_QUERY}
         if action in self.allActions:
             theAction = self.allActions[action]
-            if not theAction.initialized:
-                return queryFailed
+            if not theAction.initialized:       # this initializes the calculation if not done previously
+                ret = self.allActions[action].Query()    
+                if ret["status"] != VALID_QUERY:
+                    print("Action " + theAction.name + " initialization failed")
+                    return queryFailed
 
             try:
                 results = theAction.Eval(inputs)
@@ -288,6 +286,7 @@ class CarbonCalculator:
                 print(error)
                 return queryFailed
         else:
+            print("action not in allActions")
             return queryFailed
 
     def Reset(self):
