@@ -104,8 +104,9 @@ def makeFlag(**kwargs):
 
 def makeMedia(**kwargs):
     name = kwargs.get("name") or "New Media"
+    filename =kwargs.pop("filename",None)
     file = kwargs.pop("file", None) or kwargs.pop("image", None) or createImage()
-    file.name = unique_media_filename(file)
+    file.name = filename or unique_media_filename(file)
     tags = kwargs.pop("tags", None) 
     media = Media.objects.create(**{**kwargs, "name": name, "file": file})
     if tags: 
@@ -327,7 +328,7 @@ def createUsers():
     return user, cadmin, sadmin
 
 
-def createImage(picURL=None):
+def createImage(picURL=None,filename=None):
 
     # this may break if that picture goes away.  Ha ha - keep you on your toes!
     if not picURL:
@@ -340,7 +341,7 @@ def createImage(picURL=None):
         image_file = None
     else:
         image = resp.content
-        file_name = picURL.split("/")[-1]
+        file_name = filename or picURL.split("/")[-1]
         file_type_ext = file_name.split(".")[-1]
 
         content_type = "image/jpeg"
