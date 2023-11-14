@@ -1,11 +1,8 @@
 from sentry_sdk import capture_exception
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
-from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.pagination import paginate
 from api.store.community import CommunityStore
 from _main_.utils.common import serialize, serialize_all
-from _main_.utils.emailer.send_email import send_massenergize_rich_email
-from _main_.utils.emailer.email_types import COMMUNITY_REGISTRATION_EMAIL
 from _main_.utils.context import Context
 from typing import Tuple
 
@@ -103,8 +100,8 @@ class CommunityService:
     sorted = sort_items(communities, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
 
-  def list_communities_for_community_admin(self, context: Context) -> Tuple[list, MassEnergizeAPIError]:
-    communities, err = self.store.list_communities_for_community_admin(context)
+  def list_communities_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    communities, err = self.store.list_communities_for_community_admin(context, args)
     if err:
       return None, err
     sorted = sort_items(communities, context.get_params())

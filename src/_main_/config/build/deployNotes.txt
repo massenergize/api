@@ -1,2 +1,1 @@
-Feb 24: Admin portal pagination:
-- deliver content in small chunks
+Nov 11: User events nudge fix - sorting by date and 12 hour time_string

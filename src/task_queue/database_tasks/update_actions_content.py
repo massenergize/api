@@ -82,10 +82,9 @@ def update_actions_content(task=None):
                     #category = item[t["Category"]]
                     ccActionName = item[t["Carbon Calculator Action"]]
 
-                    # locate the Action from title and community
-                    action = Action.objects.filter(title=action_title, community=community, is_deleted=False)
-                    if action:
-                        action = action.first()
+                    # locate the Action from title and community.  There could be multiple versions with same name
+                    actions = Action.objects.filter(title=action_title, community=community, is_deleted=False)
+                    for action in actions:
 
                         # check whether action has correct calculator_action, impact and cost
                         if not action.calculator_action or action.calculator_action.name != ccActionName:

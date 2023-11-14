@@ -3,7 +3,7 @@ import pytz
 from _main_.utils.common import encode_data_for_URL, serialize_all
 from _main_.utils.constants import COMMUNITY_URL_ROOT
 from _main_.utils.emailer.send_email import send_massenergize_email_with_attachments
-from api.constants import GUEST_USER
+from api.utils.api_utils import get_sender_email
 from api.utils.constants import USER_EVENTS_NUDGE_TEMPLATE
 from database.models import Community, CommunityMember, Event, UserProfile, FeatureFlag
 from django.db.models import Q
@@ -17,8 +17,6 @@ WEEKLY = "per_week"
 BI_WEEKLY = "biweekly"
 MONTHLY = "per_month"
 DAILY="per_day"
-
-
 
 eastern_tz = pytz.timezone("US/Eastern")
 
@@ -42,7 +40,6 @@ USER_PREFERENCE_DEFAULTS = {
 
 
 USER_EVENT_NUDGE_KEY = "user-event-nudge-feature-flag"
-
 
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -111,7 +108,7 @@ def get_community_events(community_id):
         is_published=True, 
         is_deleted=False, 
         start_date_and_time__gte=timezone.now(),
-        ).distinct()
+        ).distinct().order_by("start_date_and_time")
     
     return events
 
@@ -141,8 +138,8 @@ def get_date_range(start, end):
     start_date =start.strftime('%b-%d-%Y')
     end_date = end.strftime('%b-%d-%Y')
     if start_date == end_date:
-        return f"{convert_date(start,'%b %d, %Y')}, {convert_date(start,' %H:%M %p')} - {convert_date(end,' %H:%M %p')}"
-    return f"{convert_date(start,'%b %d, %Y %H:%M %p')} - {convert_date(end,'%b %d, %Y %H:%M %p')}"
+        return f"{convert_date(start,'%b %d, %Y')}, {convert_date(start,' %I:%M %p')} - {convert_date(end,' %I:%M %p')}"
+    return f"{convert_date(start,'%b %d, %Y %I:%M %p')} - {convert_date(end,'%b %d, %Y %I:%M %p')}"
 
 
 def truncate_title(title):
@@ -161,7 +158,7 @@ def prepare_events_email_data(events):
             "view_link": f'{COMMUNITY_URL_ROOT}/{event.get("community", {}).get("subdomain")}/events/{event.get("id")}',
             } for event in events]
     #sort list of events by date
-    data = (sorted(data, key=lambda i: i['date'], reverse=True))
+    # data = (sorted(data, key=lambda i: i['date'], reverse=True))
     return data
 
 
@@ -181,7 +178,8 @@ def send_events_report_email(name, email, event_list, comm, login_method=""):
         data["community_logo"] = get_json_if_not_none(comm.logo).get("url") if comm.logo else ""
         data["cadmin_email"]=comm.owner_email if comm.owner_email else ""
         data["community"] = comm.name
-        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None)
+        from_email = get_sender_email(comm.id)
+        send_massenergize_email_with_attachments(USER_EVENTS_NUDGE_TEMPLATE, data, [email], None, None, from_email)
         return True
     except Exception as e:
         print("send_events_report exception: " + str(e))
@@ -238,7 +236,7 @@ def get_user_events(notification_dates, community_events):
     # else use the last nudge date
     last_time = date_aware if date_aware else a_week_ago
 
-    return community_events.filter(Q(published_at__range=[last_time, today]))
+    return community_events.filter(Q(published_at__range=[last_time, today])).order_by('start_date_and_time')
 
 
 '''
@@ -268,7 +266,7 @@ def prepare_user_events_nudge(task=None,email=None, community_id=None):
             users = get_community_users(community.id)
             users = flag.enabled_users(users)
 
-            for user in users:          
+            for user in users:       
                 user_events = get_user_events(user.notification_dates, events)
                 send_automated_nudge(user_events, user, community)
         

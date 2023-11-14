@@ -3,6 +3,7 @@ from _main_.utils.common import serialize, serialize_all
 from _main_.utils.pagination import paginate
 from api.store.team import TeamStore
 from api.store.message import MessageStore
+from api.utils.api_utils import get_sender_email
 from api.utils.filter_functions import sort_items
 from database.models import TeamMember
 from _main_.utils.context import Context
@@ -142,7 +143,7 @@ class TeamService:
               "message_body": message.body,
           }
           send_massenergize_rich_email(
-            subject, user.email, 'contact_team_admin_email.html', content_variables)
+            subject, user.email, 'contact_team_admin_email.html', content_variables, None)
 
       if IS_PROD or IS_CANARY:
         send_slack_message(

@@ -4,6 +4,7 @@ retrieving data
 """
 from ast import Lambda
 import base64
+import hashlib
 import json
 from django.core import serializers
 from django.forms.models import model_to_dict
@@ -167,8 +168,6 @@ def get_request_contents(request):
       return {}
 
 
-
-
 def read_image_from_s3(key, bucket_name =None):
   bucket_name = bucket_name or  AWS_STORAGE_BUCKET_NAME
   # Retrieve the image from the S3 bucket
@@ -182,3 +181,26 @@ def read_image_from_s3(key, bucket_name =None):
   return data
 
 
+def make_hash_from_file(file_data): 
+  """
+    Given data from a file that has been read, it
+    Returns: 
+    A hash representation of the file as string
+  """
+  if not file_data: 
+    return None 
+  hash_object = hashlib.sha256()
+  hash_object.update(file_data)
+  return hash_object.hexdigest()
+
+s3 = boto3.client("s3", region_name=AWS_S3_REGION_NAME)
+def calculate_hash_for_bucket_item(key, bucket=AWS_STORAGE_BUCKET_NAME):
+    try:
+        response = s3.get_object(Bucket=bucket, Key=key)
+        image_data = response["Body"].read()
+        return make_hash_from_file(image_data)
+    except Exception as e:
+        print("........................................")
+        print(f"Error calculating hash for {key}: {e}")
+        print("........................................")
+        return None
