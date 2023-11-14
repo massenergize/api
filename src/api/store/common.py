@@ -581,6 +581,10 @@ def remove_duplicates_and_attach_relations(hash):
     disposables = relations.get("disposable", [])
     disposables = [m.get("id", None) for m in disposables]
     media = relations.get("media", {})
+    do_deletion(media,disposables)
+    return media_after_attaching
+
+def do_deletion(media, disposables): 
     del_only_records, del_with_image = group_disposable(media, disposables)
     # print("disposables", disposables)
     if del_only_records:
@@ -592,7 +596,6 @@ def remove_duplicates_and_attach_relations(hash):
         for m in del_with_image:
             m.delete()  # will delete record and image from s3 bucket
 
-    return media_after_attaching
 
 
 def generate_hashes():

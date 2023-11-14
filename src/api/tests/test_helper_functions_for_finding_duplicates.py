@@ -1,6 +1,7 @@
 from django.test import TestCase
 from _main_.utils.utils import Console
 from api.store.common import (
+    do_deletion,
     find_duplicate_items,
     find_relations_for_item,
     group_disposable,
@@ -85,7 +86,7 @@ class TestHelperFunctionsForDuplicates(TestCase):
     #         "Actions, homepages, events, vendors, community logos,  all relations with media were retrieved successfully!"
     #     )
 
-    def test_grouping_disposables(self):
+    def test_grouping_disposables_(self):
         """
         The idea is to create 3 media records with the same image and details.
         Then upload a 4th one, that is the same image, but with a different file name.
@@ -110,14 +111,15 @@ class TestHelperFunctionsForDuplicates(TestCase):
         different = makeMedia(file=file, filename="a-very-unique-name")
 
         print("Passing records down to be grouped...")
+        disposable = [media2.id, media3.id, different.id]
+        # disposable =  [m.id for m in disposable]
         has_same_ref, has_different_ref = group_disposable(
-            media1.simple_json(), [media2.id, media3.id, different.id]
+            media1.simple_json(), disposable
         )
 
         has_same_ref = [m.id for m in has_same_ref]
         has_different_ref = [m.id for m in has_different_ref]
-
-        print("Here we go, what are the references", has_same_ref, has_different_ref)
+        
         print("Checking to see if items were separated into the right groups...")
         self.assertEquals(len(has_same_ref), 2)
         self.assertIn(media2.id, has_same_ref)
@@ -128,3 +130,17 @@ class TestHelperFunctionsForDuplicates(TestCase):
         print(
             "Awesome! Function was able to identify items with same reference, and items with different s3 bucket references!"
         )
+
+        Console.header("Testing 'Do Deletion' Function")
+
+        do_deletion(media1.simple_json(), disposable)
+
+        items_in_there = Media.objects.filter(id__in=disposable)
+        print("Trying to see if disposed items are removed...")
+        self.assertEquals(len(items_in_there), 0)
+
+        found_original = Media.objects.filter(id=media1.id).first()
+
+        self.assertEquals(found_original.id, media1.id)
+
+        print("Great! Disposables were removed, and original/primary image remained!")
