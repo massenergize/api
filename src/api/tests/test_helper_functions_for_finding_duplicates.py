@@ -5,6 +5,7 @@ from api.store.common import (
     find_duplicate_items,
     find_relations_for_item,
     group_disposable,
+    resolve_relations,
 )
 from api.tests.common import (
     createImage,
@@ -25,66 +26,66 @@ class TestHelperFunctionsForDuplicates(TestCase):
     # def setUp(self):
     #     pass
 
-    # def test_relationship_finder(self):
-    #     Console.header("Testing Relationship Finder On Media Library")
-    #     """
-    #         The find_relationship function goes over all the relationships a media item has and retrieves all the items that use the particular media.
-    #         So if one media item is being used in 5 actions, 3 events, 10 community homepages, it will pull all of them and arrange all of them in groups as (actions, events, vendors, etc...)
-    #         and return an object.
+    def test_relationship_finder(self):
+        Console.header("Testing Relationship Finder On Media Library")
+        """
+            The find_relationship function goes over all the relationships a media item has and retrieves all the items that use the particular media.
+            So if one media item is being used in 5 actions, 3 events, 10 community homepages, it will pull all of them and arrange all of them in groups as (actions, events, vendors, etc...)
+            and return an object.
 
-    #         To test this, the idea is to:
+            To test this, the idea is to:
 
-    #         Create a media object.
-    #         Create an action that uses it.
-    #         Create an event that uses it.
-    #         Create a vendor that uses it.
-    #         Create a team that uses it
-    #         Create a community and let it use it on it's homepage.
+            Create a media object.
+            Create an action that uses it.
+            Create an event that uses it.
+            Create a vendor that uses it.
+            Create a team that uses it
+            Create a community and let it use it on it's homepage.
 
-    #         Then use the "find_relations_for_item" on the media object.
+            Then use the "find_relations_for_item" on the media object.
 
-    #         The function should return an object that has all the actions, events, teams etc
-    #         retrieved
-    #     """
+            The function should return an object that has all the actions, events, teams etc
+            retrieved
+        """
 
-    #     tag = Tag.objects.create(name="Personal Tag")
-    #     media = makeMedia(tags=[tag])
-    #     com = makeCommunity(name="Top Community", logo=media)
-    #     action = makeAction(image=media)
-    #     event = makeEvent(image=media)
-    #     team = makeTeam(logo=media, community=com)
-    #     vendor = makeVendor(image=media)
-    #     homepage = makeHomePageSettings(title="Top Settings", images=[media])
+        tag = Tag.objects.create(name="Personal Tag")
+        media = makeMedia(tags=[tag])
+        com = makeCommunity(name="Top Community", logo=media)
+        action = makeAction(image=media)
+        event = makeEvent(image=media)
+        team = makeTeam(logo=media, community=com)
+        vendor = makeVendor(image=media)
+        homepage = makeHomePageSettings(title="Top Settings", images=[media])
 
-    #     item = find_relations_for_item(media)
-    #     actions = item.get("actions", [])
-    #     actions = [a.id for a in actions]
-    #     com_logos = item.get("community_logos")
-    #     com_logos = [com.id for com in com_logos]
-    #     homepages = item.get("homepage", [])
-    #     homepages = [h.id for h in homepages]
-    #     teams = item.get("teams", [])
-    #     teams = [t.id for t in teams]
-    #     events = item.get("events", [])
-    #     events = [e.id for e in events]
-    #     vendors = item.get("vendors", [])
-    #     vendors = [v.id for v in vendors]
-    #     print("Checking to see if all related items are available...")
-    #     self.assertEquals(len(actions), 1)
-    #     self.assertIn(action.id, actions)
-    #     self.assertEquals(len(com_logos), 1)
-    #     self.assertIn(com.id, com_logos)
-    #     self.assertEquals(len(homepages), 1)
-    #     self.assertIn(homepage.id, homepages)
-    #     self.assertEquals(len(teams), 1)
-    #     self.assertIn(team.id, teams)
-    #     self.assertEquals(len(events), 1)
-    #     self.assertIn(event.id, events)
-    #     self.assertEquals(len(vendors), 1)
-    #     self.assertIn(vendor.id, vendors)
-    #     print(
-    #         "Actions, homepages, events, vendors, community logos,  all relations with media were retrieved successfully!"
-    #     )
+        item = find_relations_for_item(media)
+        actions = item.get("actions", [])
+        actions = [a.id for a in actions]
+        com_logos = item.get("community_logos")
+        com_logos = [com.id for com in com_logos]
+        homepages = item.get("homepage", [])
+        homepages = [h.id for h in homepages]
+        teams = item.get("teams", [])
+        teams = [t.id for t in teams]
+        events = item.get("events", [])
+        events = [e.id for e in events]
+        vendors = item.get("vendors", [])
+        vendors = [v.id for v in vendors]
+        print("Checking to see if all related items are available...")
+        self.assertEquals(len(actions), 1)
+        self.assertIn(action.id, actions)
+        self.assertEquals(len(com_logos), 1)
+        self.assertIn(com.id, com_logos)
+        self.assertEquals(len(homepages), 1)
+        self.assertIn(homepage.id, homepages)
+        self.assertEquals(len(teams), 1)
+        self.assertIn(team.id, teams)
+        self.assertEquals(len(events), 1)
+        self.assertIn(event.id, events)
+        self.assertEquals(len(vendors), 1)
+        self.assertIn(vendor.id, vendors)
+        print(
+            "Actions, homepages, events, vendors, community logos,  all relations with media were retrieved successfully!"
+        )
 
     def test_grouping_disposables_(self):
         """
@@ -119,7 +120,7 @@ class TestHelperFunctionsForDuplicates(TestCase):
 
         has_same_ref = [m.id for m in has_same_ref]
         has_different_ref = [m.id for m in has_different_ref]
-        
+
         print("Checking to see if items were separated into the right groups...")
         self.assertEquals(len(has_same_ref), 2)
         self.assertIn(media2.id, has_same_ref)
@@ -144,3 +145,48 @@ class TestHelperFunctionsForDuplicates(TestCase):
         self.assertEquals(found_original.id, media1.id)
 
         print("Great! Disposables were removed, and original/primary image remained!")
+
+    # def test_relationship_attachment(self): 
+    #     """
+    #         Testing Idea: 
+    #         Create 3 diff media records 
+    #         make create actions, vendors, events, and teams with each of them. 
+
+    #         Then resolve all the relationships into only one of them 
+
+    #         And validate that the final item has all the relationships that have been moved.
+
+    #         Steps. 
+
+    #         Create 3 media objs 
+    #         Create 3 actions 
+    #         Create 3 events 
+    #         Create 3 teams 
+    #         Create 3 homepage usages
+
+    #     """
+
+    #     com1 = makeCommunity()
+    #     com2 = makeCommunity()
+    #     com3 = makeCommunity()
+    #     media1 = makeMedia()
+    #     media2 = makeMedia()
+    #     media3 = makeMedia()
+    #     action1 = makeAction(title="Action1",image=media1)
+    #     action2 = makeAction(title="Action2",image=media2)
+    #     action3 = makeAction(title="Action3",image=media3)
+    #     event1 = makeEvent(name="Event1",image = media1)
+    #     event2 = makeEvent(name="Event1",image = media2)
+    #     event3 = makeEvent(name="Event1",image = media3)
+    #     team1 = makeTeam(name="Team1", logo=media1, community = com1)
+    #     team2 = makeTeam(name="Team1", logo=media2, community = com2)
+    #     team3 = makeTeam(name="Team1", logo=media3, community = com3)
+    #     home1  = makeHomePageSettings(title="Top Settings", images=[media1])
+    #     home2  = makeHomePageSettings(title="Top Settings", images=[media2])
+    #     home3  = makeHomePageSettings(title="Top Settings", images=[media3])
+
+    #     dupes = Media.objects.filter(hash=media1.hash)
+    #     response = resolve_relations(dupes)
+
+    #     print("LE RESPONSE",response )
+    
