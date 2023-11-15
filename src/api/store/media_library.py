@@ -1,6 +1,7 @@
 from functools import reduce
 from typing import List
 from django.core.exceptions import ValidationError
+from database.utils.common import read_image_from_s3
 from database.utils.settings.model_constants.user_media_uploads import (
     UserMediaConstants,
 )
@@ -36,6 +37,16 @@ limit = 32
 class MediaLibraryStore:
     def __init__(self):
         self.name = "MediaLibrary Store/DB"
+
+    def read_image(self, args):
+        try:
+            id = args.get("media_id", None)
+            image = Media.objects.filter(pk=id).get()
+            string = read_image_from_s3(image.file.name)
+            return string, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
 
     def print_duplicates(self, args, context: Context):
         grouped_dupes = find_duplicate_items()
@@ -302,8 +313,8 @@ class MediaLibraryStore:
         upper_limit = args.get("upper_limit")
         lower_limit = args.get("lower_limit")
         count = Media.objects.filter(
-                user_upload__publicity=UserMediaConstants.open()
-            ).count()
+            user_upload__publicity=UserMediaConstants.open()
+        ).count()
         if not upper_limit and not lower_limit:
             images = Media.objects.filter(
                 user_upload__publicity=UserMediaConstants.open()
@@ -327,8 +338,7 @@ class MediaLibraryStore:
         keywords = args.get("keywords", [])
         public = args.get("public", False)
 
-
-        if public: 
+        if public:
             return self.get_public_images(args)
         if keywords:
             return self.get_by_keywords(args)
