@@ -7,6 +7,12 @@ class MediaLibraryService:
     def __init__(self):
         self.store = MediaLibraryStore()
 
+    def read_image(self, args):
+        string, error = self.store.read_image(args)
+        if error:
+            return None, error
+        return string, None
+
     def print_duplicates(self, args, context):
         response, error = self.store.print_duplicates(args, context)
         if error:
