@@ -1068,9 +1068,7 @@ class CommunityStore:
         communities = Community.objects.filter(is_published=True).order_by("name")
         return communities, None
 
-    def list_communities_for_community_admin(
-        self, context: Context, args
-    ) -> Tuple[list, MassEnergizeAPIError]:
+    def list_communities_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")

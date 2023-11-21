@@ -29,6 +29,15 @@ def get_schedule(schedule):
        return formatted_date_string
 
     return  datetime.utcnow() + timedelta(minutes=1)
+
+
+def get_logo(id, is_cadmin):
+    if is_cadmin:
+        com = Community.objects.filter(id=id).first()
+        if com:
+            return com.logo.file.url
+    return "https://www.massenergize.org/wp-content/uploads/2023/03/MassEnergize-logo.png"
+        
     
 
 
@@ -56,7 +65,6 @@ def get_message_recipients(audience, audience_type, sub_audience_type, communiti
             return UserProfile.objects.filter(is_super_admin=True)
             
 
-        
         audience = audience.split(",")
         return UserProfile.objects.filter(id__in=audience)
     
@@ -305,13 +313,18 @@ class MessageStore:
         message_ids = args.get("message_ids", [])
 
         try:
+            is_scheduled = args.get("is_scheduled", None)
 
             filter_params = get_messages_filter_params(context.get_params())
 
             admin_communities, err = get_admin_communities(context)
             with_ids = Q()
+            scheduled= Q()
             if message_ids:
                 with_ids = Q(id__in=message_ids)
+            if is_scheduled:
+                scheduled = Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=datetime.now())
+
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
                     Q(
@@ -319,6 +332,7 @@ class MessageStore:
                         is_team_admin_message=False,
                     ),
                     with_ids,
+                    scheduled,
                     *filter_params
                 ).distinct()
 
@@ -330,11 +344,12 @@ class MessageStore:
                         community__id__in=[c.id for c in admin_communities],
                     ),
                     with_ids,
+                    scheduled,
                     *filter_params
                 ).distinct()
             else:
-                messages = []
-
+                return []
+    
             return messages, None
         except Exception as e:
             capture_message(str(e), level="error")
@@ -385,7 +400,7 @@ class MessageStore:
             communities = args.get("community_ids", None)
             recipients = get_message_recipients(audience, audience_type, sub_audience_type, communities)
             
-
+            associated_community = None
             if not recipients:
                 return None, InvalidResourceError()
             
@@ -393,6 +408,10 @@ class MessageStore:
             if not user:
                 return None, InvalidResourceError()
             
+            if context.user_is_community_admin:
+                associated_community = Community.objects.filter(id=communities[0]).first()
+
+            logo = get_logo(communities[0], context.user_is_community_admin)
 
             email_list =  list(recipients.values_list("owner_email" if audience_type == "COMMUNITY_CONTACTS" else "email", flat=True))
         
@@ -412,18 +431,19 @@ class MessageStore:
                 if messages.first().scheduled_at != schedule:
                    scheduled_at = schedule
                 
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule)
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list, logo],eta=schedule)
                 schedule_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None,"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
-                messages.update(**{"schedule_info": schedule_info, "body": message, "title": subject, "scheduled_at":scheduled_at })
+                messages.update(**{"schedule_info": schedule_info, "body": message, "title": subject, "scheduled_at":scheduled_at, "community":associated_community })
                 return messages.first(), None
             else:
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule)
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list, logo],eta=schedule)
                 new_message = Message(
                 title=subject,
                 body=message,
                 user=user,
                 scheduled_at= schedule,
-                schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
+                schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}},
+                community=associated_community
                 )
                 new_message.save()
                 return new_message, None

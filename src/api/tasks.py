@@ -230,11 +230,12 @@ def deactivate_user(self,email):
 
 
 @app.task
-def send_scheduled_email(subject, message, recipients):
+def send_scheduled_email(subject, message, recipients, image):
     try:
         data = {
            "body": message,
-           "subject": subject
+           "subject": subject,
+           "image":image
         }
         send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
 

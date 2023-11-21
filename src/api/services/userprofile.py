@@ -272,6 +272,13 @@ class UserService:
       return None, err
     sorted = sort_items(users, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
+  
+  def users_list_no_pagination(self, context,args) -> Tuple[list, MassEnergizeAPIError]:
+    users, err = self.store.list_users_for_community_admin(context,args)
+    if err:
+      return None, err
+    sorted = sort_items(users, context.get_params())
+    return serialize_all(sorted), None
 
 
   def add_action_todo(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:

@@ -36,7 +36,7 @@ class UserHandler(RouteHandler):
         self.add("/users.households.list", self.list_households)
         self.add("/users.events.list", self.list_events)
         self.add("/users.checkImported", self.check_user_imported)
-        self.add("/users.listForPublicView", self.list_publicview) # NOT USED
+        self.add("/users.listForPublicView", self.list_publicview)  # NOT USED
         self.add("/users.validate.username", self.validate_username)
 
         # admin routes
@@ -44,20 +44,23 @@ class UserHandler(RouteHandler):
         self.add("/users.listForSuperAdmin", self.super_admin_list)
         self.add("/users.import", self.import_users)
         self.add("/users.mou.accept", self.accept_mou)
- 
+
         self.add("/users.get.visits", self.fetch_user_visits)
-    
-    @admins_only 
-    def fetch_user_visits(self,request): 
-      context: Context = request.context
-      args: dict = context.args
-      args, err = self.validator.expect("id", str, is_required=True).verify(context.args)
-      if err:
-        return err
-      visits, err = self.service.fetch_user_visits(context, args)
-      if err:
-        return err
-      return MassenergizeResponse(data=visits)
+        self.add("/users.listNoPagination", self.users_list_no_pagination)
+
+    @admins_only
+    def fetch_user_visits(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        args, err = self.validator.expect("id", str, is_required=True).verify(
+            context.args
+        )
+        if err:
+            return err
+        visits, err = self.service.fetch_user_visits(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=visits)
 
     @admins_only
     def accept_mou(self, request):
@@ -66,8 +69,7 @@ class UserHandler(RouteHandler):
         args, err = (
             self.validator.expect("accept", bool, is_required=True)
             # .expect("email", str) # For postman tests
-            .expect("policy_key", str, is_required=True)
-            .verify(context.args)
+            .expect("policy_key", str, is_required=True).verify(context.args)
         )
         if err:
             return err
@@ -121,7 +123,7 @@ class UserHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
         community_id = args.pop("community_id", None)
-        user_info, err = self.service.list_users(context,community_id)
+        user_info, err = self.service.list_users(context, community_id)
         if err:
             return err
         return MassenergizeResponse(data=user_info)
@@ -179,20 +181,19 @@ class UserHandler(RouteHandler):
         args: dict = context.args
 
         args, err = (
-             self.validator.rename("user_id", "id")
-             .expect("id", str, is_required=False)
-             .verify(context.args)
+            self.validator.rename("user_id", "id")
+            .expect("id", str, is_required=False)
+            .verify(context.args)
         )
         if err:
-             return err
+            return err
 
         # user info is now taken from context
         # strip user_id, id out of args if not using
-        # validate that id passed in is 
-        id = args.pop('id', None)
+        # validate that id passed in is
+        id = args.pop("id", None)
         if id and id != context.user_id:
             return None, NotAuthorizedError()
-        
 
         user_info, err = self.service.update_user(context, args)
         if err:
@@ -230,12 +231,33 @@ class UserHandler(RouteHandler):
     def super_admin_list(self, request):
         context: Context = request.context
         args: dict = context.args
-        args, err = self.validator.expect(
-            "user_emails", "str_list", is_required=False
-        ).expect("community_ids", "str_list", is_required=False).expect("user_ids", "str_list", is_required=False).verify(args)
+        args, err = (
+            self.validator.expect("user_emails", "str_list", is_required=False)
+            .expect("community_ids", "str_list", is_required=False)
+            .expect("user_ids", "str_list", is_required=False)
+            .verify(args)
+        )
         if err:
             return err
         users, err = self.service.list_users_for_super_admin(context, args)
+        if err:
+            return err
+
+        return MassenergizeResponse(data=users)
+
+    @admins_only
+    def users_list_no_pagination(self, request):
+        context: Context = request.context
+        args: dict = context.args
+        args, err = (
+            self.validator.expect("user_emails", "str_list", is_required=False)
+            .expect("community_ids", "str_list", is_required=False)
+            .expect("user_ids", "str_list", is_required=False)
+            .verify(args)
+        )
+        if err:
+            return err
+        users, err = self.service.users_list_no_pagination(context, args)
         if err:
             return err
 
@@ -360,7 +382,6 @@ class UserHandler(RouteHandler):
 
     # Community or Super Admins can do this
     def import_from_csv(self, context, args):
-
         args, err = (
             self.validator.expect("community_id", int, is_required=True)
             .expect("csv", "file", is_required=True)
@@ -379,7 +400,6 @@ class UserHandler(RouteHandler):
 
     # Community or Super Admins can do this
     def import_from_list(self, context, args):
-
         args, err = (
             self.validator.expect("community_id", int, is_required=True)
             .expect("names", "str_list")

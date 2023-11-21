@@ -24,6 +24,9 @@ def paginate(queryset, pagination_data):
         
         return to_return
     except EmptyPage:
-        return {}
+        return {
+            'cursor':{},
+            "items": []
+        }
 
 
