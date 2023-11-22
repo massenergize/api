@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from database.models import Message
+from database.models import Community, Message
 from django.test import TestCase, Client
 from unittest.mock import patch
 from api.tasks import send_scheduled_email
@@ -26,6 +26,14 @@ class MessagesTestCase(TestCase):
             body="Hello Testing some messages",
             title="Testing Messaging from Massenergize",
         )
+        COMMUNITY_NAME = "test_scheduled_message"
+        self.COMMUNITY = Community.objects.create(
+            **{
+                "subdomain": COMMUNITY_NAME,
+                "name": COMMUNITY_NAME.capitalize(),
+                "accepted_terms_and_conditions": True,
+            }
+        )
 
     def tearDown(self) -> None:
         return super().tearDown()
@@ -45,7 +53,7 @@ class MessagesTestCase(TestCase):
                 "description": "Send an Instant message by Sadmin",
                 "args": {
                     **args,
-                    "audience": "all",
+                    "audience": f"{self.USER.id},{self.CADMIN.id}",
                     "audience_type": "SUPER_ADMIN",
                 },
                 "signedInAs": self.SADMIN,
@@ -55,7 +63,7 @@ class MessagesTestCase(TestCase):
                 "description": "Send scheduled message by SADMIN",
                 "args": {
                     **args,
-                    "audience": "all",
+                    "audience": f"{self.USER.id},{self.CADMIN.id}",
                     "audience_type": "SUPER_ADMIN",
                     "schedule": schedule,
                 },
@@ -66,7 +74,7 @@ class MessagesTestCase(TestCase):
                 "description": "Send scheduled message by normal Users",
                 "args": {
                     **args,
-                    "audience": "all",
+                    "audience": f"{self.USER.id},{self.CADMIN.id}",
                     "audience_type": "SUPER_ADMIN",
                     "schedule": schedule,
                 },
@@ -80,6 +88,7 @@ class MessagesTestCase(TestCase):
                     "audience": self.CADMIN.id,
                     "audience_type": "COMMUNITY_ADMIN",
                     "schedule": schedule,
+                    "community_ids": self.COMMUNITY.id,
                 },
                 "signedInAs": self.CADMIN,
                 "expected": {"success": True, "error": None},
@@ -91,6 +100,7 @@ class MessagesTestCase(TestCase):
                     "audience": "1,2,3,4",
                     "audience_type": "COMMUNITY_ADMIN",
                     "schedule": schedule,
+                    "community_ids": self.COMMUNITY.id,
                 },
                 "signedInAs": self.CADMIN,
                 "expected": {"success": False, "error": "['“1” is not a valid UUID.']"},
@@ -100,6 +110,7 @@ class MessagesTestCase(TestCase):
                 "args": {
                     **args,
                     "schedule": schedule,
+                    "community_ids":self.COMMUNITY.id,
                 },
                 "signedInAs": self.CADMIN,
                 "expected": {"success": False, "error": "invalid_resource"},
@@ -130,6 +141,15 @@ class MessagesTestCase(TestCase):
                 urlencode(args),
                 content_type="application/x-www-form-urlencoded",
             ).toDict()
+
+            print("+++++++++++++++++++++ res +++++++++++++++++")
+            print(f'======={seed.get("description")}============')
+            print("")
+            print("")
+            print(response)
+            print("")
+            print("")
+            print("+++++++++++++++++++++ res +++++++++++++++++")
 
             self.assertEqual(response["success"], expected["success"])
             self.assertEqual(response["error"], expected["error"])

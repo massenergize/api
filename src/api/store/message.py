@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from _main_.utils.constants import ME_LOGO_PNG
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tasks import send_scheduled_email
@@ -31,51 +32,21 @@ def get_schedule(schedule):
     return  datetime.utcnow() + timedelta(minutes=1)
 
 
-def get_logo(id, is_cadmin):
-    if is_cadmin:
+def get_logo(id):
         com = Community.objects.filter(id=id).first()
         if com:
-            return com.logo.file.url
-    return "https://www.massenergize.org/wp-content/uploads/2023/03/MassEnergize-logo.png"
+            return com.logo.file.url if com.logo else None
         
     
 
 
-def get_message_recipients(audience, audience_type, sub_audience_type, communities):
+def get_message_recipients(audience, audience_type):
     if not is_null(audience):
-        if audience_type == "COMMUNITY_CONTACTS":
-             if audience.lower() == "all":
-                contacts = Community.objects.filter(is_deleted=False).only("owner_email", "id", "name")
-             else:
-                 audience = audience.split(",")
-                 contacts = Community.objects.filter(id__in=audience).only("owner_email", "id", "name")
-             return contacts
-        
-        if audience_type == "COMMUNITY_ADMIN" and sub_audience_type == "FROM_COMMUNITY":
-            if communities and audience.lower() == "all":
-                admins =  CommunityAdminGroup.objects.filter(id__in=communities.split(","), is_deleted=False).values_list("members", flat=True)
-                return UserProfile.objects.filter(id__in=admins)
-            
-        if audience_type == "USERS" and sub_audience_type == "FROM_COMMUNITY":
-            if communities and audience.lower() == "all":
-                members =  CommunityMember.objects.filter(id__in=communities, is_deleted=False).values_list("members", flat=True)
-                return UserProfile.objects.filter(id__in=members)
-            
-        if audience_type == "SUPER_ADMIN" and audience.lower() == "all":
-            return UserProfile.objects.filter(is_super_admin=True)
-            
-
         audience = audience.split(",")
+        if audience_type == "COMMUNITY_CONTACTS":
+            return Community.objects.filter(id__in=audience).only("owner_email", "id", "name")
+        
         return UserProfile.objects.filter(id__in=audience)
-    
-    else:
-        if audience_type == "COMMUNITY_ADMIN" and sub_audience_type == "ALL":
-            admins =  CommunityAdminGroup.objects.filter(is_deleted=False).values_list("members", flat=True)
-            return UserProfile.objects.filter(id__in=admins)
-        elif audience_type == "USERS" and sub_audience_type == "ALL":
-            return UserProfile.objects.filter(is_super_admin=False, is_community_admin=False)
-
-    return None
 
 class MessageStore:
     def __init__(self):
@@ -398,7 +369,11 @@ class MessageStore:
             audience = args.get("audience", None)
             schedule = get_schedule(args.get("schedule", None))
             communities = args.get("community_ids", None)
-            recipients = get_message_recipients(audience, audience_type, sub_audience_type, communities)
+
+            print("=== communities ===", communities)
+            recipients = get_message_recipients(audience, audience_type)
+
+            logo = ME_LOGO_PNG
             
             associated_community = None
             if not recipients:
@@ -408,10 +383,9 @@ class MessageStore:
             if not user:
                 return None, InvalidResourceError()
             
-            if context.user_is_community_admin:
+            if not context.user_is_super_admin:
                 associated_community = Community.objects.filter(id=communities[0]).first()
-
-            logo = get_logo(communities[0], context.user_is_community_admin)
+                logo = get_logo(communities[0])
 
             email_list =  list(recipients.values_list("owner_email" if audience_type == "COMMUNITY_CONTACTS" else "email", flat=True))
         
