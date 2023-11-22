@@ -36,7 +36,6 @@ class CommunityHandler(RouteHandler):
     self.add("/communities.others.listForCommunityAdmin", self.list_other_communities_for_cadmin)
     self.add("/communities.listForSuperAdmin", self.super_admin_list)
     self.add("/communities.adminsOf", self.fetch_admins_of)
-    self.add("/communities.listNoPagination", self.communities_list_no_pagination)
 
   def info(self, request):
     context: Context = request.context
@@ -308,16 +307,4 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=community_completed_actions)
-
-
-  @admins_only
-  def communities_list_no_pagination(self, request):
-    context: Context = request.context
-    args: dict = context.args
-
-
-    communities, err = self.service.communities_list_no_pagination(context, args)
-    if err:
-      return err
-    return MassenergizeResponse(data=communities)
 

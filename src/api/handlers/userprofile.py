@@ -46,7 +46,6 @@ class UserHandler(RouteHandler):
         self.add("/users.mou.accept", self.accept_mou)
 
         self.add("/users.get.visits", self.fetch_user_visits)
-        self.add("/users.listNoPagination", self.users_list_no_pagination)
 
     @admins_only
     def fetch_user_visits(self, request):
@@ -245,23 +244,6 @@ class UserHandler(RouteHandler):
 
         return MassenergizeResponse(data=users)
 
-    @admins_only
-    def users_list_no_pagination(self, request):
-        context: Context = request.context
-        args: dict = context.args
-        args, err = (
-            self.validator.expect("user_emails", "str_list", is_required=False)
-            .expect("community_ids", "str_list", is_required=False)
-            .expect("user_ids", "str_list", is_required=False)
-            .verify(args)
-        )
-        if err:
-            return err
-        users, err = self.service.users_list_no_pagination(context, args)
-        if err:
-            return err
-
-        return MassenergizeResponse(data=users)
 
     @login_required
     def add_action_todo(self, request):

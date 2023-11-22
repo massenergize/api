@@ -9,6 +9,13 @@ def paginate(queryset, pagination_data):
         
         limit = pagination_data.get('limit')
         page = pagination_data.get('next_page')
+        no_pagination = pagination_data.get('no_pagination')
+
+        if no_pagination:
+            return {
+                'cursor':{},
+                "items": serialize_all(queryset)
+            }
         paginator = Paginator(queryset, limit)
         items = []
         next_page = paginator.page(page)
