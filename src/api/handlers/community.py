@@ -308,4 +308,3 @@ class CommunityHandler(RouteHandler):
       return err
     return MassenergizeResponse(data=community_completed_actions)
 
-

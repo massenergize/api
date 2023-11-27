@@ -130,6 +130,14 @@ class MessageService:
       return None, err
     sorted = sort_items(messages, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
+  
+  def list_scheduled_messages(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    args["is_scheduled"] = True
+    messages, err = self.store.list_community_admin_messages(context, args)
+    if err:
+      return None, err
+    sorted = sort_items(messages, context.get_params())
+    return paginate(sorted, context.get_pagination_data()), None
 
 
   def list_team_admin_messages_for_community_admin(self, context: Context,args) -> Tuple[list, MassEnergizeAPIError]:
