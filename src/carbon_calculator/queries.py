@@ -72,8 +72,8 @@ def QuerySingleAction(name,event_tag=""):
     try:
         qs = Action.objects.filter(name=name)
         if qs:
+            category_id = qs.values("category")[0]["category"]
             q = qs[0]
-
             questionInfo = []
             for question in q.questions:
                 if question != '':
@@ -87,7 +87,7 @@ def QuerySingleAction(name,event_tag=""):
                 picture = q.picture.file.url
 
             return VALID_QUERY, {"id": q.pk, "name":q.name, "title":q.title, "description":q.description, \
-                                "category":q.category, "helptext":q.helptext, "questionInfo":questionInfo, \
+                                "category":category_id, "helptext":q.helptext, "questionInfo":questionInfo, \
                                 "average_points":q.average_points, "picture":picture}
         else:
             #print("ERROR: Action "+name+" was not found")

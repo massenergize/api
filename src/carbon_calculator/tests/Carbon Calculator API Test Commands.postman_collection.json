@@ -138,6 +138,64 @@
 			"response": []
 		},
 		{
+			"name": "Import Categories",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Categories=carbon_calculator/content/Categories.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Categories",
+							"value": "carbon_calculator/content/Categories.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import Subcategories",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/cc/import?Confirm=Yes&Subcategories=carbon_calculator/content/Subcategories.csv",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"cc",
+						"import"
+					],
+					"query": [
+						{
+							"key": "Confirm",
+							"value": "Yes"
+						},
+						{
+							"key": "Subcategories",
+							"value": "carbon_calculator/content/Subcategories.csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Import Stations",
 			"request": {
 				"method": "GET",

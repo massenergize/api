@@ -32,6 +32,8 @@ from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
 import hashlib
 from _main_.settings import IS_LOCAL
+#from carbon_calculator.models import Category as CCCategory
+#from carbon_calculator.models import Subcategory as CCSubcategory
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -1963,7 +1965,6 @@ class Action(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     is_published = models.BooleanField(default=False, blank=True)
     is_approved = models.BooleanField(default=False, blank=True)
-    # is_user_submitted = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return f"{str(self.id)} - {self.title}"
@@ -1993,6 +1994,9 @@ class Action(models.Model):
         )
         data["image"] = get_json_if_not_none(self.image)
         data["calculator_action"] = get_summary_info(self.calculator_action)
+        if self.calculator_action:
+            data["category"] = self.calculator_action.category.name
+            data["subcategory"] = self.calculator_action.sub_category.name
         data["tags"] = [t.simple_json() for t in self.tags.all()]
         data["community"] = get_summary_info(self.community)
         data["created_at"] = self.created_at

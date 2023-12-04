@@ -66,7 +66,6 @@ class ActionHandler(RouteHandler):
       .expect("tags", list, is_required=False)
       .expect("vendors", list, is_required=False)
     )
-
     args, err = self.validator.verify(args)
     if err:
       return err

@@ -1,0 +1,28 @@
+﻿Name,category,is_deleted,description,Actions
+Activism,Activism & Education,False,,"energy_fair,activism,campaign,local_decision,get_involved,local_govt"
+Education,Activism & Education,False,,"sustain_school,carbon_footprint"
+Investing,Activism & Education,False,,investing
+Marketing Green Home,Activism & Education,False,,market_green_home
+Renewable grid,Electricity and Solar,False,,"renewable_elec,muni_aggregation,opt_up_RE"
+Solar,Electricity and Solar,False,,"community_solar,install_solarPV,solar_assessment"
+Time of use,Electricity and Solar,False,,"shave_peak,EV_charger"
+Eat local,Food,False,,eat_locally
+Grow local,Food,False,,grow_local
+Low carbon diet,Food,False,,low_carbon_diet
+Appliances,Home Energy,False,,"induction_stove,energystar_fridge,hp_dryer,fridge_pickup,energystar_washer,solar_oven"
+Audits & assessments,Home Energy,False,,"heating_assessment,hw_assessment,energy_audit,coaching"
+Building envelope,Home Energy,False,,"weatherization,efficient_renovations,windows"
+Heating / cooling,Home Energy,False,,"install_solarHW,ground_source_hp,efficient_fossil,air_source_hp,hp_water_heater,prog_thermostats"
+Home energy use,Home Energy,False,,"electricity_monitor,line_dry,coldwater_wash"
+Lights / plug load,Home Energy,False,,"smart_power_strip,led_lighting"
+Community,Land and Water,False,,"plant_trees,open_space"
+Equipment,Land and Water,False,,"rake_elec_blower,electric_mower"
+Light pollution,Land and Water,False,,light_pollution
+Water conservation,Land and Water,False,,"reduce_watering,showerheads,rain_barrel"
+Yard,Land and Water,False,,"reduce_lawn_size,reduce_lawn_care,plant_native"
+Flights,Transportation,False,,"reduce_flights,offset_flights"
+Vehicles,Transportation,False,,"eliminate_car,reduce_car_miles,replace_car"
+Alternative transit,Transportation,False,,"buy_e_bike,people_power,public_transit"
+Donate,Waste,False,,swap_donate
+Reduce purchasing,Waste,False,,"reduce_waste,avoid_purchase,borrow_buy_used"
+Reuse and recycling,Waste,False,,compost
