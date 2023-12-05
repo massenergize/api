@@ -24,6 +24,9 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.communities.add", self.add_campaign_community)
         self.add("/campaigns.communities.remove", self.remove_campaign_community)
 
+        self.add("/campaigns.technologies.add", self.add_campaign_technology)
+        self.add("/campaigns.technologies.remove", self.remove_campaign_technology)
+
         # admin routes
         self.add("/campaigns.listForAdmin", self.list_campaigns_for_admins)
 
@@ -144,10 +147,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
 
-        actions, err = self.service.list_campaigns_for_admins(context, args)
+        res, err = self.service.list_campaigns_for_admins(context, args)
         if err:
           return err
-        return MassenergizeResponse(data=actions)
+        return MassenergizeResponse(data=res)
     
 
     @admins_only
@@ -161,10 +164,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
 
-        actions, err = self.service.add_campaign_manager(context, args)
+        res, err = self.service.add_campaign_manager(context, args)
         if err:
           return err
-        return MassenergizeResponse(data=actions)
+        return MassenergizeResponse(data=res)
     
 
     @admins_only
@@ -177,10 +180,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
 
-        actions, err = self.service.remove_campaign_manager(context, args)
+        res, err = self.service.remove_campaign_manager(context, args)
         if err:
           return err
-        return MassenergizeResponse(data=actions)
+        return MassenergizeResponse(data=res)
 
     @admins_only
     def add_campaign_community(self, request): 
@@ -193,10 +196,10 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
 
-        actions, err = self.service.add_campaign_community(context, args)
+        res, err = self.service.add_campaign_community(context, args)
         if err:
           return err
-        return MassenergizeResponse(data=actions)
+        return MassenergizeResponse(data=res)
     
 
     @admins_only
@@ -204,12 +207,45 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_manager_id", int, is_required=False)
+        self.validator.expect("campaign_community_id", int, is_required=False)
         args, err = self.validator.verify(args)
         if err:
           return err
 
-        actions, err = self.service.remove_campaign_community(context, args)
+        res, err = self.service.remove_campaign_community(context, args)
         if err:
           return err
-        return MassenergizeResponse(data=actions)
+        return MassenergizeResponse(data=res)
+    
+
+    @admins_only
+    def add_campaign_technology(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", int, is_required=False)
+        self.validator.expect("technology_id", list, is_required=False)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.add_campaign_technology(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    @admins_only
+    def remove_campaign_community(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_technology_id", int, is_required=False)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.remove_campaign_technology(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)

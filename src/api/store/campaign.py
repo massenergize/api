@@ -1,7 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignManager
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignManager, CampaignTechnology, Technology
 from database.models import Community, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -288,12 +288,57 @@ class CampaignStore:
       
       campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id).first()
       if not campaign_community:
-        return None, CustomMassenergizeError("campaign with id not found!")
+        return None, CustomMassenergizeError("campaign Community with id not found!")
       
       campaign_community.is_deleted = True
       campaign_community.save()
           
       return campaign_community, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+    
+
+  def add_campaign_technology(self, context: Context, args):
+    try:
+      technology_id = args.pop("technology_id",None)
+      campaign_id = args.pop("campaign_id", None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("campaign with id not found!")
+      
+      if not technology_id:
+          return None, InvalidResourceError()
+      
+      technology = Technology.objects.filter(id = technology_id).first()
+      if not technology:
+        return None, CustomMassenergizeError("technology with id not found!")
+      
+      campaign_technology = CampaignTechnology.objects.create(campaign = campaign, technology = technology)
+      
+      return campaign_technology, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def remove_campaign_technology(self, context: Context, args):
+    try:
+      campaign_technology_id = args.pop("campaign_technology_id",None)
+      if not campaign_technology_id:
+        return None, InvalidResourceError()
+      
+      campaign_technology = CampaignCommunity.objects.filter(id=campaign_technology_id).first()
+      if not campaign_technology:
+        return None, CustomMassenergizeError("Campaign Technology with id not found!")
+      
+      campaign_technology.is_deleted = True
+      campaign_technology.save()
+          
+      return campaign_technology, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

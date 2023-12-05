@@ -84,7 +84,21 @@ class CampaignService:
 
 
   def remove_campaign_community(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-    campaign_manager, err = self.store.remove_campaign_community(context, args)
+    res, err = self.store.remove_campaign_community(context, args)
     if err:
       return None, err
-    return serialize(campaign_manager, full=True), None
+    return serialize(res, full=True), None
+  
+
+  def add_campaign_technology(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.add_campaign_technology(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+
+
+  def remove_campaign_technology(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.remove_campaign_technology(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
