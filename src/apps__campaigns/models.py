@@ -272,7 +272,7 @@ class Vendor(BaseModel):
     phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     is_verified = models.BooleanField(default=False)
-    creator = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
+    creator = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True, related_name="vendor_creator")
     service_area = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
