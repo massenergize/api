@@ -1,8 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignManager
-from database.models import UserProfile, Media
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignManager
+from database.models import Community, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from .utils import get_user_from_context
@@ -168,7 +168,8 @@ class CampaignStore:
 
       if not context.user_email == campaign_to_delete.owner.email and not context.user_is_super_admin:
         return None, NotAuthorizedError()
-      
+      if campaign_to_delete.is_published:
+        return None, CustomMassenergizeError("Cannot delete published campaign")
       campaign_to_delete.is_deleted = True 
       campaign_to_delete.save()
       # ----------------------------------------------------------------
@@ -205,11 +206,94 @@ class CampaignStore:
 
 
   def list_campaigns_for_super_admin(self, context: Context):
-    # ids = context.args.pop("action_ids",[])
     try:
-    #   filter_params = get_actions_filter_params(context.get_params())
       campaigns = Campaign.objects.all().select_related("logo")
       return campaigns.distinct(), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def add_campaign_manager(self, context: Context, args):
+    try:
+      user_ids = args.pop("user_ids",[])
+      campaign_id = args.pop("campaign_id", None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("campaign with id not found!")
+      
+      if user_ids:
+          campaign_manager = lambda user_id: CampaignManager(campaign = campaign, user = UserProfile.objects.filter(id = user_id).first())
+          create_managers = list(map(campaign_manager, user_ids))
+          CampaignManager.objects.bulk_create(create_managers)
+          
+      return campaign, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def remove_campaign_manager(self, context: Context, args):
+    try:
+      campaign_manager_id = args.pop("campaign_manager_id",None)
+      if not campaign_manager_id:
+        return None, InvalidResourceError()
+      campaign_manager = CampaignManager.objects.filter(id=campaign_manager_id).first()
+      if not campaign_manager:
+        return None, CustomMassenergizeError("campaign with id not found!")
+      
+      campaign_manager.is_deleted = True
+      campaign_manager.save()
+          
+      return campaign_manager, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+    
+
+  def add_campaign_community(self, context: Context, args):
+    try:
+      community_id = args.pop("community_id",None)
+      campaign_id = args.pop("campaign_id", None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("campaign with id not found!")
+      
+      if not community_id:
+          return None, InvalidResourceError()
+      
+      community = Community.objects.filter(id = community_id).first()
+      if not community:
+        return None, CustomMassenergizeError("community with id not found!")
+      
+      campaign_community = CampaignCommunity.objects.create(campaign = campaign, community = community)
+      
+      return campaign_community, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def remove_campaign_manager(self, context: Context, args):
+    try:
+      campaign_community_id = args.pop("campaign_community_id",None)
+      if not campaign_community_id:
+        return None, InvalidResourceError()
+      
+      campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id).first()
+      if not campaign_community:
+        return None, CustomMassenergizeError("campaign with id not found!")
+      
+      campaign_community.is_deleted = True
+      campaign_community.save()
+          
+      return campaign_community, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

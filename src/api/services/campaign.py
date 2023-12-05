@@ -59,3 +59,32 @@ class CampaignService:
       return None, err
     sorted = sort_items(campaigns, context.get_params())
     return paginate(sorted, context.get_pagination_data()), None
+  
+
+
+  def add_campaign_manager(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.add_campaign_manager(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+
+
+  def remove_campaign_manager(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    campaign_manager, err = self.store.remove_campaign_manager(context, args)
+    if err:
+      return None, err
+    return serialize(campaign_manager, full=True), None
+
+
+  def add_campaign_community(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.add_campaign_community(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+
+
+  def remove_campaign_community(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    campaign_manager, err = self.store.remove_campaign_community(context, args)
+    if err:
+      return None, err
+    return serialize(campaign_manager, full=True), None
