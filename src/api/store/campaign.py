@@ -1,16 +1,11 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from _main_.utils.utils import Console
-from api.store.common import get_media_info, make_media_info
-from api.tests.common import RESET, makeUserUpload
-from api.utils.api_utils import is_admin_of_community
-from api.utils.filter_functions import get_actions_filter_params
-from apps__campaigns.models import Campaign, CampaignAccountAdmin, CampaignManager
-from database.models import Action, UserProfile, Community, Media
-from carbon_calculator.models import Action as CCAction
+from api.tests.common import RESET
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignManager
+from database.models import UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
-from .utils import get_new_title, get_user_from_context
+from .utils import get_user_from_context
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
@@ -64,7 +59,6 @@ class CampaignStore:
       campaign_account_id = args.pop("campaign_account_id", None)
       logo = args.pop('logo', [])
       title = args.pop('title', None)
-      image_info = make_media_info(args)
 
       contact_full_name = args.pop('full_name', [])
       contact_email = args.pop('email', None)
@@ -79,7 +73,7 @@ class CampaignStore:
 
       
       if campaign_account_id:
-        account = CampaignAccountAdmin.objects.get(id=campaign_account_id)
+        account = CampaignAccount.objects.get(id=campaign_account_id)
         new_campaign.account = account
 
       if logo: #now, images will always come as an array of ids 
