@@ -191,9 +191,6 @@ class CampaignStore:
 
       if context.user_is_super_admin:
         return self.list_campaigns_for_super_admin(context)
-
-
-      
       
       if subdomain: 
         campaigns = Campaign.objects.filter(account__subdomain = subdomain).select_related('logo').filter(is_deleted=False)
