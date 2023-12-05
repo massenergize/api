@@ -65,11 +65,18 @@ class CampaignStore:
       contact_image = args.pop('image', None)
       contact_phone = args.get('phone_number', None)
 
-      campaigns = Campaign.objects.filter(title=title, campaign_account__id=campaign_account_id, is_deleted=False)
+
+      owner =  get_user_from_context(context)
+      if not owner:
+         return None, CustomMassenergizeError("User not found")
+
+      campaigns = Campaign.objects.filter(title=title, owner=owner, is_deleted=False)
       if campaigns:
         return campaigns.first(), None
 
       new_campaign = Campaign.objects.create(**args)
+
+      new_campaign.owner = owner
 
       
       if campaign_account_id:
@@ -81,19 +88,13 @@ class CampaignStore:
         media = Media.objects.create(name=name, file=logo)
         new_campaign.logo = media
 
-
-      owner =  get_user_from_context(context)
-      if not owner:
-         return None, CustomMassenergizeError("User not found")
-        
-      new_campaign.owner = owner
-
       
       if contact_email:
         user = UserProfile.objects.filter(email=contact_email).first()
         key_manager = CampaignManager()
         key_manager.is_key_contact = True
         key_manager.campaign = new_campaign
+        key_manager.contact = contact_phone
         if user:
           key_manager.user = user
         else:
