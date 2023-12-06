@@ -1,8 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignManager, CampaignTechnology, Technology
-from database.models import Community, UserProfile, Media
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignManager, CampaignTechnology, CampaignTechnologyTestimonial, Comment, Technology
+from database.models import Community, Testimonial, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from .utils import get_user_from_context
@@ -280,7 +280,7 @@ class CampaignStore:
       return None, CustomMassenergizeError(e)
     
 
-  def remove_campaign_manager(self, context: Context, args):
+  def remove_campaign_community(self, context: Context, args):
     try:
       campaign_community_id = args.pop("campaign_community_id",None)
       if not campaign_community_id:
@@ -331,7 +331,7 @@ class CampaignStore:
       if not campaign_technology_id:
         return None, InvalidResourceError()
       
-      campaign_technology = CampaignCommunity.objects.filter(id=campaign_technology_id).first()
+      campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
       if not campaign_technology:
         return None, CustomMassenergizeError("Campaign Technology with id not found!")
       
@@ -339,6 +339,110 @@ class CampaignStore:
       campaign_technology.save()
           
       return campaign_technology, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+  def create_campaign_technology_testimonial(self, context: Context, args):
+    try:
+      campaign_technology_id = args.pop("campaign_technology_id",None)
+      community_id = args.pop("community_id", None)
+      image = args.pop("image", None)
+
+      testimonial = CampaignTechnologyTestimonial.objects.create(**args)
+
+      created_by = get_user_from_context(context)
+      if created_by:
+        testimonial.created_by = created_by
+
+
+      if campaign_technology_id:
+         campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+         if  campaign_technology:
+            testimonial.campaign_technology = campaign_technology
+      
+      if image:
+        name = f'ImageFor {testimonial.title} CampaignTech Testimonial'
+        media = Media.objects.create(name=name, file=image)
+        testimonial.image = media
+
+      if community_id:
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          testimonial.community = community
+
+      testimonial.save()
+      
+      return testimonial, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def update_campaign_technology_testimonial(self, context: Context, args):
+    try:
+      campaign_technology_testimonial_id = args.pop("id",None)
+      community_id = args.pop("community_id", None)
+      image = args.pop("image", None)
+
+      if not campaign_technology_testimonial_id:
+        return None, InvalidResourceError()
+      
+      campaign_technology_testimonials = CampaignTechnologyTestimonial.objects.filter(id=campaign_technology_testimonial_id)
+      if not campaign_technology_testimonials:
+        return None, CustomMassenergizeError("Campaign Technology testimonial with id not found!")
+      
+      campaign_technology_testimonials.update(**args)
+
+
+      if image:
+        name = f'ImageFor {campaign_technology_testimonials.first().title} Campaign'
+        media = Media.objects.create(name=name, file=image)
+        campaign_technology_testimonials.first().image = media
+
+      if community_id:
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          campaign_technology_testimonials.first().community = community
+
+      campaign_technology_testimonials.first().save()
+
+      return campaign_technology_testimonials.first(), None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def create_campaign_technology_comment(self, context: Context, args):
+    try:
+      campaign_technology_id = args.pop("campaign_technology_id",None)
+      if campaign_technology_id:
+         campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+         if  campaign_technology:
+            args["campaign_technology"] = campaign_technology
+
+      user = get_user_from_context(context)
+      if user:
+        args["user"] = user
+      
+      comment = Comment.objects.create(**args)
+    
+      return comment, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def update_campaign_technology_comment(self, context: Context, args):
+    try:
+      comment_id = args.pop("id",None)
+      if not comment_id:
+        return None, InvalidResourceError()
+      
+      comment = Comment.objects.filter(id=comment_id)
+      if not comment:
+        return None, CustomMassenergizeError("Comment with id not found!")
+      
+      comment.update(**args)
+      
+      return comment.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

@@ -27,6 +27,29 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.technologies.add", self.add_campaign_technology)
         self.add("/campaigns.technologies.remove", self.remove_campaign_technology)
 
+        self.add("/campaigns.technologies.testimonials.create", self.create_campaign_technology_testimonial)
+        self.add("/campaigns.technologies.testimonials.update", self.update_campaign_technology_testimonial)
+
+        self.add("/campaigns.technologies.comments.create", self.create_campaign_technology_comment)
+        self.add("/campaigns.technologies.comments.update", self.update_campaign_technology_comment)
+
+
+        self.add("/campaigns.partners.add", self.add_campaign_partner)
+        self.add("/campaigns.partners.remove", self.remove_campaign_partner)
+
+
+        self.add("/campaigns.events.add", self.add_campaign_event)
+        self.add("/campaigns.events.remove", self.remove_campaign_event)
+
+
+        self.add("/campaigns.technologies.testimonials.list", self.list_campaign_technology_testimonials)
+        self.add("/campaigns.technologies.comments.list", self.list_campaign_technology_comments)
+        self.add("/campaigns.technologies.list", self.list_campaign_technologies)
+        self.add("/campaigns.managers.list", self.list_campaign_managers)
+        self.add("/campaigns.communities.list", self.list_campaign_communities)
+        self.add("/campaigns.events.list", self.list_campaign_events)
+    
+
         # admin routes
         self.add("/campaigns.listForAdmin", self.list_campaigns_for_admins)
 
@@ -59,7 +82,7 @@ class CampaignHandler(RouteHandler):
             .expect("is_published", bool, is_required=False)
             .expect('is_approved', bool)
             .expect("is_template", bool, is_required=True)
-            )
+      )
 
       args, err = self.validator.verify(args)
       if err:
@@ -77,7 +100,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect('campaign_account_id', int, is_required=False)
+        self.validator.expect('campaign_account_id', str, is_required=False)
         self.validator.expect('subdomain', str, is_required=False)
 
         args, err = self.validator.verify(args)
@@ -141,7 +164,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("community_id", int, is_required=False)
+        self.validator.expect("community_id", str, is_required=False)
         self.validator.expect("action_ids", list, is_required=False)
         args, err = self.validator.verify(args)
         if err:
@@ -158,7 +181,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_id", int, is_required=False)
+        self.validator.expect("campaign_id", str, is_required=False)
         self.validator.expect("user_ids", list, is_required=False)
         args, err = self.validator.verify(args)
         if err:
@@ -175,7 +198,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_manager_id", int, is_required=False)
+        self.validator.expect("campaign_manager_id", str, is_required=False)
         args, err = self.validator.verify(args)
         if err:
           return err
@@ -190,7 +213,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_id", int, is_required=False)
+        self.validator.expect("campaign_id", str, is_required=False)
         self.validator.expect("user_ids", list, is_required=False)
         args, err = self.validator.verify(args)
         if err:
@@ -207,7 +230,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_community_id", int, is_required=False)
+        self.validator.expect("campaign_community_id", str, is_required=False)
         args, err = self.validator.verify(args)
         if err:
           return err
@@ -223,7 +246,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_id", int, is_required=False)
+        self.validator.expect("campaign_id", str, is_required=False)
         self.validator.expect("technology_id", list, is_required=False)
         args, err = self.validator.verify(args)
         if err:
@@ -236,16 +259,98 @@ class CampaignHandler(RouteHandler):
     
 
     @admins_only
-    def remove_campaign_community(self, request): 
+    def remove_campaign_technology(self, request): 
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_technology_id", int, is_required=False)
+        self.validator.expect("campaign_technology_id", str, is_required=False)
         args, err = self.validator.verify(args)
         if err:
           return err
 
         res, err = self.service.remove_campaign_technology(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def create_campaign_technology_testimonial(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+        .expect("campaign_technology_id", str, is_required=True)
+        .expect("body", str, is_required=True)
+        .expect("title", str, is_required=True)
+        .expect("image", str, is_required=False)
+        .expect("community_id", str, is_required=False)
+        )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.create_campaign_technology_testimonial(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def update_campaign_technology_testimonial(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+        .expect("id", str, is_required=True)
+        .expect("body", str, is_required=False)
+        .expect("title", str, is_required=False)
+        .expect("image", str, is_required=False)
+        .expect("community_id", str, is_required=False)
+        .expect("is_approved", bool, is_required=False)
+        .expect("is_published", bool, is_required=False)
+        )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.update_campaign_technology_testimonial(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+
+    def create_campaign_technology_comment(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+        .expect("text", str, is_required=True)
+        .expect("status", str, is_required=False)
+        .expect("campaign_technology_id", str, is_required=False)
+        )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.create_campaign_technology_comment(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def update_campaign_technology_comment(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+        .expect("id", str, is_required=True)
+        .expect("text", str, is_required=True)
+        .expect("status", str, is_required=False)
+        .expect("campaign_technology_id", str, is_required=False)
+        )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.update_campaign_technology_comment(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)

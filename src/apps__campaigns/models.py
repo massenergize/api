@@ -2,9 +2,9 @@ from django.db import models
 from django.forms import model_to_dict
 
 from _main_.utils.base_model import BaseModel
-from database.models import Event, Media, UserProfile, Community
-from database.utils.common import get_summary_info
-from database.utils.constants import SHORT_STR_LEN
+from database.models import Event, Media, Testimonial, UserProfile, Community
+from database.utils.common import get_json_if_not_none, get_summary_info
+from database.utils.constants import LONG_STR_LEN, SHORT_STR_LEN
 
 # Create your models here.
 
@@ -534,6 +534,36 @@ class CampaignLink(BaseModel):
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
+        return res
+    
+    def full_json(self):
+        return self.simple_json()
+    
+
+
+class CampaignTechnologyTestimonial(BaseModel):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, blank=True, null=True)
+    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
+    title = models.CharField(max_length=SHORT_STR_LEN, db_index=True, blank=True, null=True)
+    body = models.TextField(max_length=LONG_STR_LEN, blank=True, null=True)
+    is_approved = models.BooleanField(default=False, blank=True)
+    image = models.ForeignKey(Media, on_delete=models.SET_NULL,null=True, blank=True,related_name="campaign_technology_testimonials")
+    created_by = models.ForeignKey( UserProfile, on_delete=models.CASCADE, db_index=True, null=True)
+    is_published = models.BooleanField(default=False, blank=True)
+    anonymous = models.BooleanField(default=False, blank=True)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True, db_index=True)
+
+    def __str__(self):
+        return f"{self.campaign} - {self.campaign_technology}"
+    
+    def simple_json(self)-> dict:
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["campaign"] = get_summary_info(self.campaign)
+        res["campaign_technology"] = get_summary_info(self.campaign_technology)
+        res["user"] = get_summary_info(self.created_by)
+        res["community"] = get_summary_info(self.community)
+        res["file"] = get_json_if_not_none(self.image)
         return res
     
     def full_json(self):

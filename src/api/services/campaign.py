@@ -102,3 +102,28 @@ class CampaignService:
     if err:
       return None, err
     return serialize(res, full=True), None
+
+  def create_campaign_technology_testimonial(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.create_campaign_technology_testimonial(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+
+  def update_campaign_technology_testimonial(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.update_campaign_technology_testimonial(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+  
+
+  def create_campaign_technology_comment(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.create_campaign_technology_comment(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+
+  def update_campaign_technology_comment(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.update_campaign_technology_comment(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
