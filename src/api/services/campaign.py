@@ -197,3 +197,18 @@ class CampaignService:
       if err:
         return None, err
       return serialize(res, full=True), None
+  
+
+  def generate_campaign_links(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+      res, err = self.store.generate_campaign_links(context, args)
+      if err:
+        return None, err
+      return serialize(res, full=True), None
+  
+
+  def campaign_link_visits_count(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.campaign_link_visits_count(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+  

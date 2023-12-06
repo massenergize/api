@@ -1,7 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignEvent, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyTestimonial, Comment, Technology
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignEvent, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyTestimonial, Comment, Technology
 from database.models import Community, Event, Testimonial, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -640,6 +640,47 @@ class CampaignStore:
       return None, CustomMassenergizeError(e)
     
 
-  
+  def generate_campaign_link(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      utm_source = args.pop("utm_source", None)
+      utm_medium = args.pop("utm_medium", None)
+      utm_campaign = args.pop("utm_campaign", None)
+      utm_content = args.pop("utm_content", None)
+      url = args.pop("url", None)
+      email = args.pop("email", None)
 
+      if not campaign_id:
+        return None, InvalidResourceError()
+      
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("Campaign with id not found!")
+      
+      campaign_link = CampaignLink.objects.create(campaign=campaign, email=email, url=url, utm_source=utm_source, utm_medium=utm_medium, utm_campaign=utm_campaign)
+
+      generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}&utm_campaign={utm_campaign}&utm_content={utm_content}&campaign_like_id={campaign_link.id}"
+      
+      return {"link":generated_link} , None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
+
+
+
+  def campaign_link_visits_count(self, context,args):
+    try:
+      campaign_link_id = args.pop("campaign_link_id",None)
+      if not campaign_link_id:
+        return None, InvalidResourceError()
+      
+      campaign_link = CampaignLink.objects.filter(id=campaign_link_id).first()
+      if campaign_link:
+        campaign_link.increase_count()
+          
+      return campaign_link, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 

@@ -48,6 +48,11 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.managers.list", self.list_campaign_managers)
         self.add("/campaigns.communities.list", self.list_campaign_communities)
         self.add("/campaigns.events.list", self.list_campaign_events)
+
+
+
+        self.add("/campaigns.links.generate", self.generate_campaign_links)
+        self.add("/campaigns.links.visits.count", self.campaign_link_visits_count)
     
 
         # admin routes
@@ -512,4 +517,42 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
+    def generate_campaign_links(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+         .expect("campaign_id", str, is_required=True)
+         .expect("url", str, is_required=True)
+         .expect("utm_source", str, is_required=False)
+          .expect("utm_medium", str, is_required=False)
+          .expect("utm_campaign", str, is_required=False)
+          .expect("utm_content", str, is_required=False)
+         )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.generate_campaign_links(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
     
+
+    def campaign_link_visits_count(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+         .expect("link_id", str, is_required=True)
+         )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.campaign_link_visits_count(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+

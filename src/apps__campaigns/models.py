@@ -520,7 +520,11 @@ class CampaignPartner(BaseModel):
 class CampaignLink(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
     visits = models.PositiveBigIntegerField(default=0)
+    url = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
+    utm_source = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    utm_medium = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    utm_campaign = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
         return f"{self.email} - {self.visits}"
