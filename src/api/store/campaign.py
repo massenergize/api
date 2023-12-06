@@ -14,7 +14,7 @@ class CampaignStore:
   def __init__(self):
     self.name = "Campaign Store/DB"
 
-  def get_Campaign_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def get_campaign_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
       campaign_id = args.get("id", None)
       campaign: Campaign = Campaign.objects.filter(id=campaign_id).first()

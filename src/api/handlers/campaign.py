@@ -29,6 +29,7 @@ class CampaignHandler(RouteHandler):
 
         self.add("/campaigns.technologies.testimonials.create", self.create_campaign_technology_testimonial)
         self.add("/campaigns.technologies.testimonials.update", self.update_campaign_technology_testimonial)
+        self.add("/campaigns.technologies.testimonials.delete", self.delete_campaign_technology_testimonial)
 
         self.add("/campaigns.technologies.comments.create", self.create_campaign_technology_comment)
         self.add("/campaigns.technologies.comments.update", self.update_campaign_technology_comment)
@@ -617,6 +618,22 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.add_campaign_technology_view(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+
+    def delete_campaign_technology_testimonial(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("id", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.delete_campaign_technology_testimonial(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)
