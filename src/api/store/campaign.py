@@ -1,7 +1,7 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignEvent, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyTestimonial, Comment, Technology
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignEvent, CampaignFollow, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Technology
 from database.models import Community, Event, Testimonial, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -684,3 +684,73 @@ class CampaignStore:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
 
+
+  def add_campaign_follower(self,context, args):
+   try:
+      campaign_id = args.pop("campaign_id",None)
+      community_id = args.pop("community_id", None)
+
+      if not campaign_id:
+        return None, InvalidResourceError()
+      
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("Campaign with id not found!")
+
+      if community_id:
+        community = Community.objects.filter(id=community_id).first()
+        args["community"] = community
+      
+      follower = CampaignFollow.objects.create(campaign=campaign, **args)
+
+      return follower, None
+   except Exception as e:
+    capture_message(str(e), level="error")
+    return None, CustomMassenergizeError(e)
+   
+
+  def add_campaign_technology_like(self,context, args):
+   try:
+      campaign_technology_id = args.pop("campaign_technology_id",None)
+      email  = args.pop("email", None)
+      user_id = args.pop("user_id", None)
+      community_id = args.pop("community_id", None)
+
+      if not campaign_technology_id:
+        return None, InvalidResourceError()
+      
+      campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+      if not campaign_technology:
+        return None, CustomMassenergizeError("Campaign technology with id not found!")
+      
+      like = CampaignTechnologyLike.objects.create(campaign_technology=campaign_technology, **args)
+
+      if user_id:
+        user = UserProfile.objects.filter(id=user_id).first()
+        like.user = user
+      elif email:
+        user= UserProfile.objects.create(email=email)
+        like.user = user
+          
+      return like, None
+   except Exception as e:
+    capture_message(str(e), level="error")
+    return None, CustomMassenergizeError(e)
+   
+
+
+  def add_campaign_technology_view(self,context, args):
+   try:
+      campaign_technology_id = args.pop("campaign_technology_id",None)
+      if not campaign_technology_id:
+        return None, InvalidResourceError()
+      
+      campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+      if not campaign_technology:
+        return None, CustomMassenergizeError("Campaign technology with id not found!")
+      
+      view = CampaignTechnologyView.objects.create(campaign_technology=campaign_technology, **args)
+      return view, None
+   except Exception as e:
+    capture_message(str(e), level="error")
+    return None, CustomMassenergizeError(e)

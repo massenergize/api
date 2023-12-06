@@ -381,7 +381,7 @@ class CampaignFollow(BaseModel):
 
 class CampaignTechnologyLike(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE) #user with email and zipcode
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE) 
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):

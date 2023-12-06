@@ -212,3 +212,22 @@ class CampaignService:
       return None, err
     return serialize(res, full=True), None
   
+  def add_campaign_follower(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.add_campaign_follower(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+  
+
+  def add_campaign_technology_view(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.add_campaign_technology_view(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+  
+
+  def add_campaign_technology_like(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.add_campaign_technology_like(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None

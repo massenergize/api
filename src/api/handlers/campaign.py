@@ -53,6 +53,11 @@ class CampaignHandler(RouteHandler):
 
         self.add("/campaigns.links.generate", self.generate_campaign_links)
         self.add("/campaigns.links.visits.count", self.campaign_link_visits_count)
+
+        self.add("/campaigns.follow", self.add_campaign_follower)
+        self.add("/campaigns.technology.like", self.add_campaign_technology_like)
+        # self.add("/campaigns.technology.follow", self.add_campaign_technology_follower)
+        self.add("/campaigns.technology.view", self.add_campaign_technology_view)
     
 
         # admin routes
@@ -554,5 +559,67 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
+    
+
+    def add_campaign_follower(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+         .expect("campaign_id", str, is_required=True)
+         .expect("email", str, is_required=True)
+         .expect("zipcode", str, is_required=True)
+          .expect("community_id", int, is_required=False)
+         )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.add_campaign_follower(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+
+    def add_campaign_technology_like(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+         .expect("campaign_technology_id", str, is_required=True)
+         .expect("user_id", int, is_required=False)
+         .expect("zipcode", str, is_required=False)
+         .expect("email", str, is_required=False)
+          .expect("community_id", int, is_required=False)
+         )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.add_campaign_technology_like(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def add_campaign_technology_view(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+         .expect("campaign_technology_id", str, is_required=True)
+         .expect("ip_address", str, is_required=False)
+         .expect("user_agent", int, is_required=False)
+         )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.add_campaign_technology_view(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+       
     
 
