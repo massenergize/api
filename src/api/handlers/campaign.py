@@ -354,3 +354,162 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
+    
+
+    def list_campaign_technology_testimonials(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_technology_id", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_technology_testimonials(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def list_campaign_technology_comments(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_technology_id", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_technology_comments(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def list_campaign_technologies(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_technologies(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def list_campaign_managers(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_managers(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def list_campaign_communities(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_communities(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def list_campaign_events(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_events(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    @admins_only
+    def add_campaign_partner(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=False)
+        self.validator.expect("partner_id", list, is_required=False)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.add_campaign_partner(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    @admins_only
+    def remove_campaign_partner(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_partner_id", str, is_required=False)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.remove_campaign_partner(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    @admins_only
+    def add_campaign_event(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=False)
+        self.validator.expect("event_id", list, is_required=False)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.add_campaign_event(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    @admins_only
+    def remove_campaign_event(self, request): 
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_event_id", str, is_required=False)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.remove_campaign_event(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    

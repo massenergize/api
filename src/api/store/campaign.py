@@ -1,8 +1,8 @@
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tests.common import RESET
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignManager, CampaignTechnology, CampaignTechnologyTestimonial, Comment, Technology
-from database.models import Community, Testimonial, UserProfile, Media
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignEvent, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyTestimonial, Comment, Technology
+from database.models import Community, Event, Testimonial, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
 from .utils import get_user_from_context
@@ -446,5 +446,200 @@ class CampaignStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+
+  def delete_campaign_technology_comment(self, context: Context, args):
+    try:
+      comment_id = args.pop("id",None)
+      if not comment_id:
+        return None, InvalidResourceError()
+      
+      comment = Comment.objects.filter(id=comment_id).first()
+      if not comment:
+        return None, CustomMassenergizeError("Comment with id not found!")
+      
+      comment.is_deleted = True
+      comment.save()
+      
+      return comment, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def list_campaign_technology_comments(self, context: Context, args):
+    try:
+      campaign_technology_id = args.pop("campaign_technology_id",None)
+      if not campaign_technology_id:
+        return None, InvalidResourceError()
+      comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
+      
+      return comments, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def list_campaign_technology_testimonials(self, context: Context, args):
+    try:
+      campaign_technology_id = args.pop("campaign_technology_id",None)
+      if not campaign_technology_id:
+        return None, InvalidResourceError()
+      testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
+      
+      return testimonials, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def delete_campaign_technology_testimonial(self, context: Context, args):
+    try:
+      campaign_technology_testimonial_id = args.pop("id",None)
+      if not campaign_technology_testimonial_id:
+        return None, InvalidResourceError()
+      
+      campaign_technology_testimonial = CampaignTechnologyTestimonial.objects.filter(id=campaign_technology_testimonial_id).first()
+      if not campaign_technology_testimonial:
+        return None, CustomMassenergizeError("Campaign Technology testimonial with id not found!")
+      
+      campaign_technology_testimonial.is_deleted = True
+      campaign_technology_testimonial.save()
+      
+      return campaign_technology_testimonial, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  
+  def list_campaign_technologies(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      technologies = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
+      
+      return technologies, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  
+  def list_campaign_communities(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
+      
+      return communities, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def list_campaign_managers(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      managers = CampaignManager.objects.filter(campaign__id=campaign_id, is_deleted=False)
+      
+      return managers, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  
+  def create_campaign_partner(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("campaign with id not found!")
+      
+      partner = CampaignPartner.objects.create(campaign = campaign, **args)
+      
+      return partner, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def remove_campaign_partner(self, context: Context, args):
+    try:
+      campaign_partner_id = args.pop("campaign_partner_id",None)
+      if not campaign_partner_id:
+        return None, InvalidResourceError()
+      
+      campaign_partner = CampaignPartner.objects.filter(id=campaign_partner_id).first()
+      if not campaign_partner:
+        return None, CustomMassenergizeError("Campaign Partner with id not found!")
+      
+      campaign_partner.is_deleted = True
+      campaign_partner.save()
+          
+      return campaign_partner, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+
+  def list_campaign_partners(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      partners = CampaignPartner.objects.filter(campaign__id=campaign_id, is_deleted=False)
+      
+      return partners, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def create_campaign_event(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      event_id = args.pop("event_id", None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("campaign with id not found!")
+      
+      event = Event.objects.filter(id=event_id).first()
+      if not event:
+        return None, CustomMassenergizeError("event with id not found!")
+      
+      campaign_event = CampaignEvent.objects.create(campaign = campaign, event = event)
+      
+      return campaign_event, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def remove_campaign_event(self, context: Context, args):
+    try:
+      campaign_event_id = args.pop("campaign_event_id",None)
+      if not campaign_event_id:
+        return None, InvalidResourceError()
+      
+      campaign_event = CampaignEvent.objects.filter(id=campaign_event_id).first()
+      if not campaign_event:
+        return None, CustomMassenergizeError("Campaign Event with id not found!")
+      
+      campaign_event.is_deleted = True
+      campaign_event.save()
+          
+      return campaign_event, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  
 
 
