@@ -1,7 +1,4 @@
-
-
 from typing import Tuple
-
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
