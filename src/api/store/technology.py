@@ -2,8 +2,8 @@ from typing import Tuple
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
-from apps__campaigns.models import Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor, Vendor
-from database.models import Media, UserProfile
+from apps__campaigns.models import Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+from database.models import Media, UserProfile, Vendor
 
 
 class TechnologyStore:
