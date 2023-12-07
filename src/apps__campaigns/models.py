@@ -143,6 +143,15 @@ class CampaignConfiguration(BaseModel):
     campaign : Campaign -> Campaign
     theme : JSONField(optional) -> Theme
     navigation : JSONField(optional) -> Navigation
+
+    navigation{
+    "vendors":True,
+    "events":True,
+    "testimonials":True,
+    "incentives":True,
+    "contact_us":True,
+    "coaches:True
+    }
     
     """
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)

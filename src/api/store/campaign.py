@@ -740,17 +740,18 @@ class CampaignStore:
 
 
   def add_campaign_technology_view(self,context, args):
-   try:
-      campaign_technology_id = args.pop("campaign_technology_id",None)
-      if not campaign_technology_id:
-        return None, InvalidResourceError()
-      
-      campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
-      if not campaign_technology:
-        return None, CustomMassenergizeError("Campaign technology with id not found!")
-      
-      view = CampaignTechnologyView.objects.create(campaign_technology=campaign_technology, **args)
-      return view, None
-   except Exception as e:
-    capture_message(str(e), level="error")
-    return None, CustomMassenergizeError(e)
+      try:
+          campaign_technology_id = args.pop("campaign_technology_id",None)
+          if not campaign_technology_id:
+            return None, InvalidResourceError()
+          
+          campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+          if not campaign_technology:
+            return None, CustomMassenergizeError("Campaign technology with id not found!")
+          
+          view = CampaignTechnologyView.objects.create(campaign_technology=campaign_technology, **args)
+          return view, None
+      except Exception as e:
+        capture_message(str(e), level="error")
+        return None, CustomMassenergizeError(e)
+   

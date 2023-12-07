@@ -239,3 +239,4 @@ class CampaignService:
       return None, err
     
     return serialize(res, full=True), None
+  
