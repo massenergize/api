@@ -118,6 +118,7 @@ class Campaign(BaseModel):
     is_published = models.BooleanField(default=False)
     is_global = models.BooleanField(default=False)
     is_template = models.BooleanField(default=False)
+    tagline = models.CharField(max_length=255, blank=True, null=True)
     owner = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
 
 

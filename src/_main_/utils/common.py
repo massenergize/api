@@ -27,6 +27,8 @@ def get_request_contents(request,**kwargs):
     args = {}
     if request.content_type == 'application/x-www-form-urlencoded':
       args = parser.parse(request.POST.urlencode())
+    elif request.content_type == "application/json":
+        args = json.loads(request.body)
     elif request.content_type == 'multipart/form-data':
       args = request.POST.dict()
       if(request.FILES):

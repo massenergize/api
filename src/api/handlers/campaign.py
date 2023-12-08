@@ -85,6 +85,7 @@ class CampaignHandler(RouteHandler):
       args = context.get_request_body() 
       (self.validator
             .expect("title", str, is_required=True)
+            .expect("tagline", str, is_required=False)
             .expect("start_date", str, is_required=False)
             .expect("primary_logo", "file", is_required=False, options={"is_logo": True})
             .expect("secondary_logo", "file", is_required=False, options={"is_logo": True})
@@ -134,6 +135,7 @@ class CampaignHandler(RouteHandler):
         (self.validator
         .expect("id", str, is_required=True)
         .expect("title", str, is_required=False,)
+        .expect("tagline", str, is_required=False,)
         .expect("start_date", str, is_required=False)
         .expect("primary_logo", "file", is_required=False, options={"is_logo": True})
         .expect("secondary_logo", "file", is_required=False, options={"is_logo": True})

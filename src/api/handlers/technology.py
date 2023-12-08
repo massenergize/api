@@ -31,8 +31,6 @@ class TechnologyHandler(RouteHandler):
         self.add("/technologies.overview.delete", self.delete_overview)
         self.add("/technologies.overview.list", self.list_overviews)
 
-
-
     def info(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -194,7 +192,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    @admins_only
+    # @admins_only
     def add_vendor(self, request):
         context: Context = request.context
         args: dict = context.args
