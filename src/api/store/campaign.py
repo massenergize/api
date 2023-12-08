@@ -63,7 +63,7 @@ class CampaignStore:
 
       contact_full_name = args.pop('full_name', [])
       contact_email = args.pop('email', None)
-      contact_image = args.pop('image', None)
+      contact_image = args.pop('key_contact_image', None)
       contact_phone = args.get('phone_number', None)
       if not args.get("start_date", None):
         args["start_date"] = datetime.today()
@@ -416,7 +416,7 @@ class CampaignStore:
     
   def create_campaign_technology_comment(self, context: Context, args):
     try:
-      campaign_technology_id = args.pop("id",None)
+      campaign_technology_id = args.pop("campaign_technology_id",None)
       if campaign_technology_id:
          campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
          if  campaign_technology:

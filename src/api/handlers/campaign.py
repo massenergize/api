@@ -64,6 +64,9 @@ class CampaignHandler(RouteHandler):
         # admin routes
         self.add("/campaigns.listForAdmin", self.list_campaigns_for_admins)
 
+
+
+
     def info(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -89,7 +92,8 @@ class CampaignHandler(RouteHandler):
             .expect("start_date", str, is_required=False)
             .expect("primary_logo", "file", is_required=False, options={"is_logo": True})
             .expect("secondary_logo", "file", is_required=False, options={"is_logo": True})
-            .expect("image", "file", is_required=False, options={"is_logo": True})
+            .expect("campaign_image", "file", is_required=False, options={"is_logo": True})
+            .expect("key_contact_image", "file", is_required=False, options={"is_logo": True})
             .expect("description", str, is_required=True)
             .expect("campaign_account_id", str, is_required=True)
             .expect("is_global", bool, is_required=False)
@@ -336,6 +340,7 @@ class CampaignHandler(RouteHandler):
         (self.validator
         .expect("text", str, is_required=True)
         .expect("status", str, is_required=False)
+        .expect("community", str, is_required=False)
         .expect("campaign_technology_id", str, is_required=False)
         )
         args, err = self.validator.verify(args)
@@ -356,6 +361,7 @@ class CampaignHandler(RouteHandler):
         .expect("id", str, is_required=True)
         .expect("text", str, is_required=True)
         .expect("status", str, is_required=False)
+        .expect("community", str, is_required=False)
         .expect("campaign_technology_id", str, is_required=False)
         )
         args, err = self.validator.verify(args)
