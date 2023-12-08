@@ -1,6 +1,7 @@
 from _main_.utils.context import Context
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only
 from api.services.technology import TechnologyService
 
 
@@ -16,8 +17,11 @@ class TechnologyHandler(RouteHandler):
         self.add("/technologies.list", self.list)
         self.add("/technologies.update", self.update)
         self.add("/technologies.delete", self.delete)
-        self.add("/technologies.coaches.add", self.add_coach)
+
+        self.add("/technologies.coaches.create", self.create_technology_coach)
+        self.add("/technologies.coaches.update", self.update_technology_coach)
         self.add("/technologies.coaches.remove", self.remove_coach)
+
         self.add("/technologies.listForAdmin", self.list_for_admin)
         self.add("/technologies.vendors.add", self.add_vendor)
         self.add("/technologies.vendors.remove", self.remove_vendor)
@@ -55,14 +59,16 @@ class TechnologyHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-
+    @admins_only
     def create(self, request):
         context: Context = request.context
         args: dict = context.args
 
         self.validator.expect("name", str, is_required=True)
         self.validator.expect("description", str, is_required=True)
-        self.validator.expect("image", str, is_required=True)
+        self.validator.expect("image", "file", is_required=False)
+        self.validator.expect("icon", str, is_required=False)
+
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -74,7 +80,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def update(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -82,7 +88,10 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("id", str, is_required=True)
         self.validator.expect("name", str, is_required=False)
         self.validator.expect("description", str, is_required=False)
-        self.validator.expect("image", str, is_required=False)
+        self.validator.expect("image", "file", is_required=False)
+        self.validator.expect("icon", str, is_required=False)
+        self.validator.expect("summary", str, is_required=False)
+
 
 
         args, err = self.validator.verify(args, strict=True)
@@ -95,7 +104,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def delete(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -113,7 +122,7 @@ class TechnologyHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-
+    @admins_only
     def list_for_admin(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -123,13 +132,17 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
-    def add_coach(self, request):
+    @admins_only
+    def create_technology_coach(self, request):
         context: Context = request.context
         args: dict = context.args
 
         self.validator.expect("technology_id", str, is_required=True)
-        self.validator.expect("user_id", str, is_required=True)
+        self.validator.expect("full_name", str, is_required=True)
+        self.validator.expect("email", str, is_required=True)
+        self.validator.expect("community", str, is_required=False)
+        self.validator.expect("image", "file", is_required=False)
+        self.validator.expect("phone_number", str, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -141,15 +154,14 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def remove_coach(self, request):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("technology_id", str, is_required=True)
-        self.validator.expect("user_id", str, is_required=True)
+        self.validator.expect("id", str, is_required=True)
 
-        args, err = self.validator.verify(args, strict=True)
+        args, err = self.validator.verify(args)
 
         if err:
             return err 
@@ -160,14 +172,37 @@ class TechnologyHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
+    @admins_only
+    def update_technology_coach(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("id", str, is_required=True)
+        self.validator.expect("full_name", str, is_required=False)
+        self.validator.expect("email", str, is_required=False)
+        self.validator.expect("community", str, is_required=False)
+        self.validator.expect("image", "file", is_required=False)
+        self.validator.expect("phone_number", str, is_required=False)
+
+        args, err = self.validator.verify(args, strict=True)
+
+        if err:
+            return err 
+        
+        res, err = self.service.update_technology_coach(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=res)
+    
+    @admins_only
     def add_vendor(self, request):
         context: Context = request.context
         args: dict = context.args
 
         self.validator.expect("technology_id", str, is_required=True)
-        self.validator.expect("vendor_id", str, is_required=True)
+        self.validator.expect("vendor_ids", "str_list", is_required=True)
 
-        args, err = self.validator.verify(args, strict=True)
+        args, err = self.validator.verify(args)
 
         if err:
             return err 
@@ -177,7 +212,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def remove_vendor(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -195,7 +230,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def create_overview(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -203,7 +238,7 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("technology_id", str, is_required=True)
         self.validator.expect("title", str, is_required=True)
         self.validator.expect("description", str, is_required=True)
-        self.validator.expect("image", str, is_required=True)
+        self.validator.expect("image", "file", is_required=True)
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -215,7 +250,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def update_overview(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -223,7 +258,7 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("id", str, is_required=True)
         self.validator.expect("title", str, is_required=False)
         self.validator.expect("description", str, is_required=False)
-        self.validator.expect("image", str, is_required=False)
+        self.validator.expect("image", "file", is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -235,7 +270,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def delete_overview(self, request):
         context: Context = request.context
         args: dict = context.args

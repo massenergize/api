@@ -2,10 +2,10 @@ from typing import Tuple
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
+from api.utils.api_utils import create_media_file
 from apps__campaigns.models import Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
 from database.models import Media, UserProfile, Vendor
-
-
+from uuid import UUID
 class TechnologyStore:
     def __init__(self):
         self.name = "Campaign Store/DB"
@@ -74,7 +74,7 @@ class TechnologyStore:
                 return None, InvalidResourceError()
 
             technology.update(is_deleted=True)
-            return technology, None
+            return technology.first(), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -92,21 +92,18 @@ class TechnologyStore:
     def add_technology_coach(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             technology_id = args.pop('technology_id', None)
-            user_id = args.pop('user_id', None)
-            community = args.pop('community', None)
+            image = args.pop('image', None)
 
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
                 return None, InvalidResourceError()
+            args["technology"] = technology.first()
             
 
-            coach = TechnologyCoach()
-            coach.technology = technology.first()
-            coach.community = community
-            if user_id:
-                user = UserProfile.objects.filter(id=user_id).first()
-                if user:
-                   coach.user = user.first()
+            coach = TechnologyCoach.objects.create(**args)
+            
+            if image:
+                coach.image = create_media_file(image, f"FileUpload for {coach.id} TechnologyCoach")
 
             coach.save()
         
@@ -119,7 +116,7 @@ class TechnologyStore:
 
     def remove_technology_coach(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
-            coach_id = args.pop('technology_coach_id', None)
+            coach_id = args.pop('id', None)
 
             if not coach_id:
                 return None, InvalidResourceError()
@@ -140,22 +137,24 @@ class TechnologyStore:
     def add_technology_vendor(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             technology_id = args.pop('technology_id', None)
-            vendor_id = args.pop('vendor_id', None)
+            vendor_ids = args.pop('vendor_ids', None)
 
-            technology = Technology.objects.filter(id=technology_id)
+            created_list = []
+
+
+            technology = Technology.objects.filter(id=technology_id).first()
             if not technology:
                 return None, InvalidResourceError()
             
-            vendor = Vendor.objects.filter(id=vendor_id)
-            if not vendor:
+            if not vendor_ids:
                 return None, InvalidResourceError()
             
-            tech_vendor = TechnologyVendor()
-            tech_vendor.technology = technology.first()
-            tech_vendor.vendor = vendor.first()
-            tech_vendor.save()
+            for vendor_id in vendor_ids:
+                vendor = Vendor.objects.filter(pk=vendor_id).first()
+                tech_vendor, _ = TechnologyVendor.objects.get_or_create(technology=technology, vendor=vendor)
+                created_list.append(tech_vendor.simple_json())
         
-            return tech_vendor, None
+            return created_list, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -274,7 +273,25 @@ class TechnologyStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
         
+    
+    def update_technology_coach(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            coach_id = args.pop('id', None)
+            image = args.pop('image', None)
 
+            coach = TechnologyCoach.objects.filter(id=coach_id)
+            if not coach:
+                return None, InvalidResourceError()
+            
+            if image:
+                media = Media.objects.create(file=image, name=f"FileUpload for {coach.first().id} TechnologyCoach")
+                coach.first().image = media
+            coach.update(**args)
+        
+            return coach.first(), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
         
 
         

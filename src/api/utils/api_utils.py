@@ -2,7 +2,7 @@
 
 
 from math import atan2, cos, radians, sin, sqrt
-from database.models import Community, CommunityAdminGroup, UserProfile
+from database.models import Community, CommunityAdminGroup, Media, UserProfile
 
 
 def is_admin_of_community(context, community_id):
@@ -86,3 +86,12 @@ def get_sender_email(community_id):
     
     return DEFAULT_SENDER
 
+
+
+
+def create_media_file(file, name):
+    if not file:
+        return None
+    media = Media.objects.create(name=name, file=file)
+    media.save()
+    return media

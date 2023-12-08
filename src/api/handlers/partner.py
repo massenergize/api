@@ -55,7 +55,7 @@ class PartnerHandler(RouteHandler):
         self.validator.expect("phone_number", str, is_required=False)
         self.validator.expect("email", str, is_required=False)
         self.validator.expect("website", str, is_required=False)
-        self.validator.expect("logo", str, is_required=False)
+        self.validator.expect("logo", "file", is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
         if err:
@@ -77,7 +77,7 @@ class PartnerHandler(RouteHandler):
         self.validator.expect("phone_number", str, is_required=False)
         self.validator.expect("email", str, is_required=False)
         self.validator.expect("website", str, is_required=False)
-        self.validator.expect("logo", str, is_required=False)
+        self.validator.expect("logo", "file", is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
         if err:

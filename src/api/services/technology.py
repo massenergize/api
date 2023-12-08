@@ -6,6 +6,7 @@ from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from typing import Tuple
 
 from api.store.technology import TechnologyStore
+from apps__campaigns.helpers import get_technology_details
 
 
 class TechnologyService:
@@ -20,7 +21,10 @@ class TechnologyService:
         res, err = self.store.get_technology_info(context, args)
         if err:
              return None, err
-        return serialize(res, full=True), None
+        ser = serialize(res, full=True)
+        other_details = get_technology_details(res.id, False)
+        result = {**ser, **other_details}
+        return result, None
     
     def list_technologies(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         res, err = self.store.list_technologies(context, args)
@@ -64,6 +68,12 @@ class TechnologyService:
     
     def remove_technology_coach(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         res, err = self.store.remove_technology_coach(context, args)
+        if err:
+            return None, err
+        return serialize(res), None
+    
+    def update_technology_coach(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        res, err = self.store.update_technology_coach(context, args)
         if err:
             return None, err
         return serialize(res), None

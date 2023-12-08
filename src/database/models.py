@@ -2129,6 +2129,7 @@ class Event(models.Model):
     published_at = models.DateTimeField(blank=True, null=True)
     event_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
     external_link_type = models.CharField(max_length=SHORT_STR_LEN, blank=True)
+    technology = models.ForeignKey("apps__campaigns.Technology", on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name
@@ -2157,6 +2158,7 @@ class Event(models.Model):
                 "user",
                 "communities_under_publicity",
                 "shared_to",
+
             ],
         )
         data["tags"] = [t.simple_json() for t in self.tags.all()]
@@ -2183,6 +2185,7 @@ class Event(models.Model):
 
         data["shared_to"] = [c.info() for c in self.shared_to.all()]
         data["is_on_home_page"] = self.is_on_homepage()
+        data["technology"] = get_json_if_not_none(self.technology)
         return data
 
     def full_json(self):

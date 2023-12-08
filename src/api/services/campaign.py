@@ -7,6 +7,8 @@ from api.utils.filter_functions import sort_items
 from sentry_sdk import capture_message
 from typing import Tuple
 
+from apps__campaigns.helpers import get_campaign_details
+
 class CampaignService:
   """
   Service Layer for all the campaigns
@@ -19,7 +21,11 @@ class CampaignService:
     campaign, err = self.store.get_campaign_info(context, args)
     if err:
       return None, err
-    return serialize(campaign, full=True), None
+    ser_cam = serialize(campaign, full=True)
+    other_details = get_campaign_details(campaign.id, True)
+    result = {**ser_cam, **other_details}
+
+    return result, None
 
   def list_campaigns(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     campaigns, err = self.store.list_campaigns(context, args)
@@ -28,9 +34,9 @@ class CampaignService:
     return serialize_all(campaigns), None
 
 
-  def create_campaign(self, context: Context, args, user_submitted=False) -> Tuple[dict, MassEnergizeAPIError]:
+  def create_campaign(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     try:
-      campaign, err = self.store.create_campaign(context, args, user_submitted)
+      campaign, err = self.store.create_campaign(context, args)
       if err:
         return None, err
       return serialize(campaign), None
@@ -66,7 +72,7 @@ class CampaignService:
     res, err = self.store.add_campaign_manager(context, args)
     if err:
       return None, err
-    return serialize(res, full=True), None
+    return res, None
 
 
   def remove_campaign_manager(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -171,11 +177,11 @@ class CampaignService:
       return serialize_all(res), None
   
 
-  def add_campaign_partners(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def add_campaign_partners(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
       res, err = self.store.add_campaign_partners(context, args)
       if err:
         return None, err
-      return serialize(res, full=True), None
+      return res, None
   
 
   def remove_campaign_partners(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -186,7 +192,7 @@ class CampaignService:
   
 
   def add_campaign_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-      res, err = self.store.add_campaign_event(context, args)
+      res, err = self.store.create_campaign_event(context, args)
       if err:
         return None, err
       return serialize(res, full=True), None
@@ -200,7 +206,7 @@ class CampaignService:
   
 
   def generate_campaign_links(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-      res, err = self.store.generate_campaign_links(context, args)
+      res, err = self.store.generate_campaign_link(context, args)
       if err:
         return None, err
       return serialize(res, full=True), None

@@ -5,8 +5,8 @@ from typing import Tuple
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
-from apps__campaigns.models import Partner, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor, Vendor
-from database.models import Media, UserProfile
+from api.utils.api_utils import create_media_file
+from apps__campaigns.models import Partner
 
 
 class PartnerStore:
@@ -37,6 +37,9 @@ class PartnerStore:
     
     def create_partner(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
+            logo = args.pop('logo', None)
+            if logo:
+                args['logo'] = create_media_file(logo, f"partner_logo")
             partner = Partner.objects.create(**args)
             partner.save()
             return partner, None
@@ -48,8 +51,12 @@ class PartnerStore:
     def update_partner(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             partner_id = args.pop('id', None)
+            logo = args.pop('logo', None)
             if partner_id:
                 partner = Partner.objects.filter(id=partner_id)
+
+                if logo:
+                    args['logo'] = create_media_file(logo, f"partner_logo")
                 partner.update(**args)
                 return partner.first(), None
             else:

@@ -2,7 +2,7 @@ from django.db import models
 from django.forms import model_to_dict
 
 from _main_.utils.base_model import BaseModel
-from database.models import Event, Media, Testimonial, UserProfile, Community, Vendor
+from database.models import Event, Media, UserProfile, Community, Vendor
 from database.utils.common import get_json_if_not_none, get_summary_info
 from database.utils.constants import LONG_STR_LEN, SHORT_STR_LEN
 
@@ -111,7 +111,9 @@ class Campaign(BaseModel):
     description = models.TextField(blank=True)
     start_date = models.DateField()
     end_date = models.DateTimeField(null=True, blank=True)
-    logo = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
+    primary_logo = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True, related_name="primary_logo")
+    secondary_logo = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True, related_name="secondary_logo")
+    image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True, related_name="campaign_image")
     is_approved = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False)
     is_global = models.BooleanField(default=False)
@@ -126,6 +128,9 @@ class Campaign(BaseModel):
         res = super().to_json()
         res.update(model_to_dict(self))
         res["account"] = get_summary_info(self.account)
+        res["primary_logo"] = get_json_if_not_none(self.primary_logo)
+        res["secondary_logo"] = get_json_if_not_none(self.secondary_logo)
+        res["image"] = get_json_if_not_none(self.image)
         return res
 
     def full_json(self):
@@ -157,6 +162,7 @@ class CampaignConfiguration(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
     theme = models.JSONField(blank=True, null=True)
     navigation = models.JSONField(blank=True, null=True)
+    advert = models.JSONField(blank=True, null=True)
 
 
     def __str__(self):
@@ -186,7 +192,9 @@ class Technology(BaseModel):
     """
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    summary = models.CharField(max_length = SHORT_STR_LEN, blank=True, null=True)
     image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
+    icon = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -194,7 +202,8 @@ class Technology(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["image"] = self.image.simple_json()
+        res["is_icon"] = False if self.image else True
+        res["image"] = get_json_if_not_none(self.image)
         return res
     
     def full_json(self):
@@ -212,18 +221,21 @@ class TechnologyCoach(BaseModel):
 
     '''
     technology = models.ForeignKey(Technology, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE) # create a an account for coaches that are not on the platform
+    full_name = models.CharField(max_length=255, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
     community = models.CharField(max_length=255, blank=True, null=True)
 
 
     def __str__(self):
-        return f"{self.technology} - {self.user}"
+        return f"{self.technology} - {self.full_name}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["technology"] = get_summary_info(self.technology)
-        res["user"] = get_summary_info(self.user)
+        res["image"] = get_json_if_not_none(self.image)
         return res
     
     def full_json(self):
@@ -239,7 +251,7 @@ class TechnologyOverview(BaseModel):
     description : str -> Description of the technology
     image : Media(optional) -> Image of the technology
     '''
-    technology = models.ForeignKey(Technology, on_delete=models.CASCADE)
+    technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_overview")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
@@ -353,17 +365,16 @@ class CampaignCommunity(BaseModel):
 
 class CampaignLike(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE) #user with email and zipcode
+    email = models.EmailField(blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
-        return f"{self.campaign} - {self.user}"
+        return f"{self.campaign} - {self.email}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
-        res["user"] = get_summary_info(self.user)
         return res
     
     def full_json(self):
@@ -371,17 +382,17 @@ class CampaignLike(BaseModel):
     
 class CampaignFollow(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE) #user with email and zipcode
+    email = models.EmailField(blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    community = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
-        return f"{self.campaign} - {self.user}"
+        return f"{self.campaign} - {self.email}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
-        res["user"] = get_summary_info(self.user)
         return res
     
     def full_json(self):
@@ -390,17 +401,16 @@ class CampaignFollow(BaseModel):
 
 class CampaignTechnologyLike(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE) 
+    email = models.EmailField(blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
-        return f"{self.campaign_technology} - {self.user}"
+        return f"{self.campaign_technology} - {self.email}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
-        res["user"] = get_summary_info(self.user)
         return res
     
     def full_json(self):
@@ -450,7 +460,7 @@ class CampaignManager(BaseModel):
 
 
 class Comment(BaseModel):
-    campaign_technology = models.ForeignKey(Campaign, on_delete=models.CASCADE)
+    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     text = models.TextField(blank=True, null=True)
     status = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
@@ -467,12 +477,11 @@ class Comment(BaseModel):
     
     def full_json(self):
         return self.simple_json()
-
+    
 
 class CampaignEvent(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    is_featured = models.BooleanField(blank=True, default=False)
 
     def __str__(self):
         return f"{self.campaign} - {self.event}"
@@ -481,7 +490,14 @@ class CampaignEvent(BaseModel):
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
-        res["event"] = get_summary_info(self.event)
+        res["event"] = {
+            "id":self.event.id,
+            "name":self.event.name,
+            "start_date":self.event.start_date_and_time,
+            "end_date":self.event.end_date_and_time,
+            "description":self.event.description,
+            "image":get_json_if_not_none(self.event.image),
+        }
         return res
     
     def full_json(self):
@@ -502,6 +518,7 @@ class Partner(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
+        res["logo"] = get_json_if_not_none(self.logo)
         return res
     
     def full_json(self):
@@ -519,7 +536,7 @@ class CampaignPartner(BaseModel):
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
-        res["partner"] = get_summary_info(self.partner)
+        res["partner"] = get_json_if_not_none(self.partner)
         return res
     
     def full_json(self):
@@ -576,7 +593,7 @@ class CampaignTechnologyTestimonial(BaseModel):
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
         res["user"] = get_summary_info(self.created_by)
         res["community"] = get_summary_info(self.community)
-        res["file"] = get_json_if_not_none(self.image)
+        res["image"] = get_json_if_not_none(self.image)
         return res
     
     def full_json(self):
