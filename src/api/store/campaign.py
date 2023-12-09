@@ -880,5 +880,20 @@ class CampaignStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+
+  def get_campaign_technology_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      campaign_technology_id = args.get("campaign_technology_id", None)
+      campaign_technology: CampaignTechnology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+
+      if not campaign_technology:
+        return None, CustomMassenergizeError("Campaign Technology not found")
+      
+      return campaign_technology, None
+    
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
    

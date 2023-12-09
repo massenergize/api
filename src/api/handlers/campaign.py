@@ -29,6 +29,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.technologies.add", self.add_campaign_technology)
         self.add("/campaigns.technologies.remove", self.remove_campaign_technology)
         self.add("/campaigns.technologies.update", self.update_campaign_technology)
+        self.add("/campaigns.technologies.info", self.get_campaign_technology_info)
 
         self.add("/campaigns.technologies.testimonials.create", self.create_campaign_technology_testimonial)
         self.add("/campaigns.technologies.testimonials.update", self.update_campaign_technology_testimonial)
@@ -730,6 +731,22 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.transfer_ownership(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def get_campaign_technology_info(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_technology_id", str, is_required=True)
+        self.validator.expect("email", str, is_required=False)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.get_campaign_technology_info(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)

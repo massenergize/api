@@ -22,8 +22,7 @@ class TechnologyService:
         if err:
              return None, err
         ser = serialize(res, full=True)
-        email = args.get("email", None)
-        other_details = get_technology_details(res.id, False, email)
+        other_details = get_technology_details(res.id)
         result = {**ser, **other_details}
         return result, None
     

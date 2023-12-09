@@ -7,7 +7,7 @@ from api.utils.filter_functions import sort_items
 from sentry_sdk import capture_message
 from typing import Tuple
 
-from apps__campaigns.helpers import get_campaign_details
+from apps__campaigns.helpers import get_campaign_details, get_campaign_technology_details
 
 class CampaignService:
   """
@@ -274,4 +274,16 @@ class CampaignService:
       return None, err
     
     return res, None
+  
+  def get_campaign_technology_info(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
+    email = args.get("email", context.user_email)
+    res, err = self.store.get_campaign_technology_info(context, args)
+    if err:
+      return None, err
+  
+    ser = serialize(res, full=True)
+    other_details = get_campaign_technology_details(res.id, False,email)
+    result = {**ser, **other_details}
+    
+    return result, None
   

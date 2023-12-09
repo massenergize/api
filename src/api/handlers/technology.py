@@ -36,7 +36,6 @@ class TechnologyHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("id", str, is_required=True)
-        self.validator.expect("email", str, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
         if err:
