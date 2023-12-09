@@ -1,6 +1,7 @@
 from datetime import datetime
+from _main_.utils.common import serialize_all
 from api.utils.api_utils import create_media_file
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Partner, Technology
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignEvent, CampaignFollow, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Partner, Technology
 from database.models import Community, Event, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -8,6 +9,7 @@ from .utils import get_user_from_context
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
+from django.db.models import Count
 
 class CampaignStore:
   def __init__(self):
@@ -322,6 +324,28 @@ class CampaignStore:
       tech, _ = CampaignTechnology.objects.get_or_create(campaign = campaign, technology = technology)
 
       return tech, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def update_campaign_technology(self, context: Context, args):
+    try:
+      campaign_technology_id = args.pop("id",None)
+      deal_section_image = args.pop("deal_section_image", None)
+      if not campaign_technology_id:
+        return None, InvalidResourceError()
+      
+      campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id)
+      if not campaign_technology:
+        return None, CustomMassenergizeError("Campaign Technology with id not found!")
+      
+      if deal_section_image:
+        args["deal_section_image"] = create_media_file(deal_section_image, f'ImageFor {campaign_technology.first().id} CampaignTech')
+      
+      campaign_technology.update(**args)
+
+      return campaign_technology.first(), None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -712,7 +736,6 @@ class CampaignStore:
   def add_campaign_follower(self,context, args):
    try:
       campaign_id = args.pop("campaign_id",None)
-      community_id = args.pop("community_id", None)
 
       if not campaign_id:
         return None, InvalidResourceError()
@@ -720,10 +743,6 @@ class CampaignStore:
       campaign = Campaign.objects.filter(id=campaign_id).first()
       if not campaign:
         return None, CustomMassenergizeError("Campaign with id not found!")
-
-      if community_id:
-        community = Community.objects.filter(id=community_id).first()
-        args["community"] = community
       
       follower = CampaignFollow.objects.create(campaign=campaign, **args)
 
@@ -736,10 +755,9 @@ class CampaignStore:
   def add_campaign_technology_like(self,context, args):
    try:
       campaign_technology_id = args.pop("campaign_technology_id",None)
-      community_id = args.pop("community_id", None)
 
       if not campaign_technology_id:
-        return None, InvalidResourceError()
+        return None, CustomMassenergizeError("Campaign technology id not found!")
       
       campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
       if not campaign_technology:
@@ -783,4 +801,55 @@ class CampaignStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+
+  def get_campaign_analytics(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+      if not campaign:
+        return None, CustomMassenergizeError("Campaign with id not found!")
+      # number of shares, number of likes, number of views, number of followers, number of comments, number of testimonials,
+      utm_medium_counts = CampaignLink.objects.filter(is_deleted=False, campaign__id=campaign_id).values('utm_medium').annotate(count=Count('utm_medium')).order_by('utm_medium')
+      likes =CampaignTechnologyLike.objects.filter(is_deleted=False, campaign_technology__campaign__id=campaign_id).values('campaign_technology__technology__name').annotate(count=Count('campaign_technology__technology')).order_by('campaign_technology__technology')
+      views = CampaignTechnologyView.objects.filter(is_deleted=False, campaign_technology__campaign__id=campaign_id).values('campaign_technology__technology__name').annotate(count=Count('campaign_technology__technology')).order_by('campaign_technology__technology')
+      followers = CampaignFollow.objects.filter(is_deleted=False, campaign__id=campaign_id).values('community').annotate(count=Count('community')).order_by('community')
+      comments = Comment.objects.filter(is_deleted=False, campaign_technology__campaign__id=campaign_id).values('campaign_technology__technology__name').annotate(count=Count('campaign_technology__technology')).order_by('campaign_technology__technology')
+      testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False, campaign_technology__campaign__id=campaign_id).values('campaign_technology__technology__name').annotate(count=Count('campaign_technology__technology')).order_by('campaign_technology__technology')
+
+
+      stats = {
+        "shares": list(utm_medium_counts),
+        "likes":[{'technology': entry.get('campaign_technology__technology__name') ,'count': entry.get('count')} for entry in list(likes)] ,
+        "views": [{'technology': entry.get('campaign_technology__technology__name'), 'count': entry.get('count')} for entry in list(views)],
+        "followers": [{'community': entry.get('community'), 'count': entry.get('count')} for entry in list(followers)],
+        "comments": [{'technology': entry.get('campaign_technology__technology__name'), 'count': entry.get('count')} for entry in list(comments)],
+        "testimonials": [{'technology': entry.get('campaign_technology__technology__name'), 'count': entry.get('count')} for entry in list(testimonials)],
+      }      
+      return stats, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+
+  def add_campaign_like(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("Campaign with id not found!")
+      
+      like = CampaignLike.objects.create(campaign=campaign, **args)
+
+      return like, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+
    

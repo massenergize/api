@@ -196,8 +196,6 @@ class Technology(BaseModel):
     summary = models.CharField(max_length = SHORT_STR_LEN, blank=True, null=True)
     image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
     icon = models.CharField(max_length=255, blank=True, null=True)
-    more_details = models.JSONField(blank=True, null=True)
-    deal_section = models.JSONField(blank=True, null=True)
 
 
     def __str__(self):
@@ -335,6 +333,14 @@ class CampaignTechnology(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
     technology = models.ForeignKey(Technology, on_delete=models.CASCADE)
 
+    overview_title  = models.CharField(max_length=255, blank=True, null=True)
+    action_section  = models.JSONField(blank=True, null=True)
+    coaches_section = models.JSONField(blank=True, null=True)
+    deal_section_image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
+    deal_section = models.JSONField(blank=True, null=True)
+    vendors_section = models.JSONField(blank=True, null=True)
+    more_info_section = models.JSONField(blank=True, null=True)
+
     def __str__(self):
         return f"{self.campaign} - {self.technology}"
     
@@ -343,6 +349,7 @@ class CampaignTechnology(BaseModel):
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
         res["technology"] = get_summary_info(self.technology)
+        res["deal_section_image"] = get_json_if_not_none(self.deal_section_image)
         return res
     
     def full_json(self):
@@ -407,6 +414,7 @@ class CampaignTechnologyLike(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
     email = models.EmailField(blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    community = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
         return f"{self.campaign_technology} - {self.email}"
