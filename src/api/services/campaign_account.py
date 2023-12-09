@@ -1,10 +1,6 @@
-from _main_.utils.massenergize_errors import MassEnergizeAPIError, CustomMassenergizeError
+from _main_.utils.massenergize_errors import MassEnergizeAPIError
 from _main_.utils.common import serialize, serialize_all
-from _main_.utils.pagination import paginate
-from _main_.utils.context import Context
-from api.store.campaign import CampaignStore
-from api.utils.filter_functions import sort_items
-from sentry_sdk import capture_message
+from api.store.campaign_account import CampaignAccountStore
 from typing import Tuple
 
 class CampaignAccountService:
@@ -13,7 +9,7 @@ class CampaignAccountService:
   """
 
   def __init__(self):
-    self.store =  CampaignStore()
+    self.store =  CampaignAccountStore()
 
 
   def create_campaign_account(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
@@ -50,6 +46,7 @@ class CampaignAccountService:
         campaign_account, err = self.store.get_campaign_account_info(context, args)
         if err:
             return None, err
+        
         return serialize(campaign_account, full=True), None
   
 

@@ -268,3 +268,10 @@ class CampaignService:
     
     return res, None
   
+  def transfer_ownership(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.transfer_ownership(context, args)
+    if err:
+      return None, err
+    
+    return res, None
+  

@@ -166,6 +166,7 @@ class CampaignStore:
 
       if not context.user_email == campaign_to_delete.owner.email and not context.user_is_super_admin:
         return None, NotAuthorizedError()
+      
       if campaign_to_delete.is_published:
         return None, CustomMassenergizeError("Cannot delete published campaign")
       campaign_to_delete.is_deleted = True 
@@ -848,6 +849,34 @@ class CampaignStore:
       like = CampaignLike.objects.create(campaign=campaign, **args)
 
       return like, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def transfer_ownership(self, context: Context, args):
+    try:
+      campaign_id = args.pop("campaign_id",None)
+      new_owner_id = args.pop("user_id",None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("Campaign with id not found!")
+      
+      new_owner = UserProfile.objects.filter(id=new_owner_id).first()
+      if not new_owner:
+        return None, CustomMassenergizeError("New owner with id not found!")
+      
+      if not context.user_is_super_admin and  not context.user_id == campaign.owner.id:
+        return None, NotAuthorizedError()
+
+      
+      campaign.owner = new_owner
+      campaign.save()
+
+      return campaign, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

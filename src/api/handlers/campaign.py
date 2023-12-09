@@ -61,12 +61,12 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.follow", self.add_campaign_follower)
         self.add("/campaigns.technology.like", self.add_campaign_technology_like)
         self.add("/campaigns.like", self.add_campaign_like)
-        # self.add("/campaigns.technology.follow", self.add_campaign_technology_follower)
+
         self.add("/campaigns.technology.view", self.add_campaign_technology_view)
     
-
         # admin routes
         self.add("/campaigns.listForAdmin", self.list_campaigns_for_admins)
+        self.add("/campaigns.ownership.transfer", self.transfer_ownership)
 
 
 
@@ -712,6 +712,24 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.add_campaign_like(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+    @admins_only
+    def transfer_ownership(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+         .expect("campaign_id", str, is_required=True)
+         .expect("user_id", int, is_required=True)
+         )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.transfer_ownership(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)
