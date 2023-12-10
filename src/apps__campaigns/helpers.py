@@ -7,7 +7,7 @@ from database.utils.common import get_json_if_not_none
 def get_campaign_details(campaign_id, for_campaign=False):
     techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
     ser_techs = serialize_all(techs, full=True)
-    prepared = [{**get_campaign_technology_details(x.get("id"), for_campaign)} for x in ser_techs]
+    prepared = [{"campaign_technology_id":x.get("id"),**get_campaign_technology_details(x.get("id"), for_campaign)} for x in ser_techs]
     managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False)
     partners = CampaignPartner.objects.filter(campaign_id=campaign_id, is_deleted=False)
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
@@ -42,7 +42,6 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
             "events": serialize_all(events[:3], full=True),
             "coaches": tech_data.get("coaches", [])[:3],
             **campaign_tech.technology.simple_json()
-
         }
     views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
     likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
