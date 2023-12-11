@@ -244,7 +244,10 @@ class CampaignService:
     res, err = self.store.add_campaign_technology_like(context, args)
     if err:
       return None, err
-    return serialize(res, full=True), None
+    email = args.get("email", context.user_email)
+    result = get_campaign_technology_details(res.id, False,email)
+    
+    return result, None
   
 
   def delete_campaign_technology_testimonial(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
