@@ -287,3 +287,31 @@ class CampaignService:
     
     return result, None
   
+
+  def get_campaign_technology_testimonial(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.get_campaign_technology_testimonial(context, args)
+    if err:
+      return None, err
+    
+    return serialize(res, full=True), None
+  
+
+  def create_campaign_config(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.create_campaign_config(context, args)
+    if err:
+      return None, err
+    
+    return serialize(res, full=True), None
+  
+  def update_campaign_config(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.update_campaign_config(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+  
+  def get_campaign_config(self, context, args)-> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.get_campaign_config(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+  

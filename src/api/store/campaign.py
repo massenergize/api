@@ -1,7 +1,7 @@
 from datetime import datetime
 from _main_.utils.common import serialize_all
 from api.utils.api_utils import create_media_file
-from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignEvent, CampaignFollow, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Partner, Technology
+from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Partner, Technology
 from database.models import Community, Event, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
 from _main_.utils.context import Context
@@ -66,15 +66,17 @@ class CampaignStore:
       contact_full_name = args.pop('full_name', [])
       contact_email = args.pop('email', None)
       contact_image = args.pop('key_contact_image', None)
-      contact_phone = args.get('phone_number', None)
+      contact_phone = args.pop('phone_number', None)
       if not args.get("start_date", None):
         args["start_date"] = datetime.today()
 
+        print(args)
+
 
       owner =  get_user_from_context(context)
-      if not owner:
+      # if not owner:
+      #    return None, CustomMassenergizeError("User not found")
       
-         return None, CustomMassenergizeError("User not found")
       if campaign_account_id:
         account = CampaignAccount.objects.get(id=campaign_account_id)
         args["account"] = account
@@ -105,7 +107,7 @@ class CampaignStore:
             name = f'ImageFor {contact_email} User'
             media = Media.objects.create(name=name, file=contact_image)
 
-          user = UserProfile.objects.create(email=contact_email, full_name=contact_full_name, profile_image=media)
+          user = UserProfile.objects.create(email=contact_email, full_name=contact_full_name, profile_picture=media)
           key_manager.user = user
 
         key_manager.save()
@@ -895,5 +897,76 @@ class CampaignStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+
+  def get_campaign_technology_testimonial(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      campaign_technology_testimonial_id = args.get("id", None)
+      campaign_technology_testimonial = CampaignTechnologyTestimonial.objects.filter(id=campaign_technology_testimonial_id).first()
+
+      if not campaign_technology_testimonial:
+        return None, CustomMassenergizeError("Campaign Technology Testimonial not found")
+      
+      return campaign_technology_testimonial, None
+    
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def create_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      campaign_id = args.pop("campaign_id", None)
+      if not campaign_id:
+        return None, InvalidResourceError()
+      
+      campaign = Campaign.objects.filter(id=campaign_id).first()
+      if not campaign:
+        return None, CustomMassenergizeError("Campaign not found")
+      
+      config = CampaignConfiguration.objects.create(campaign=campaign, **args)
+      return config, None
+    
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def update_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      campaign_config_id = args.pop("id", None)
+      if not campaign_config_id:
+        return None, InvalidResourceError()
+      
+      campaign_config = CampaignConfiguration.objects.filter(id=campaign_config_id).first()
+      if not campaign_config:
+        return None, CustomMassenergizeError("Campaign Config not found")
+      
+      campaign_config.update(**args)
+      return campaign_config, None
+    
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+  def get_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      campaign_config_id = args.get("id", None)
+      if not campaign_config_id:
+        return None, InvalidResourceError()
+      
+      campaign_config = CampaignConfiguration.objects.filter(id=campaign_config_id).first()
+      if not campaign_config:
+        return None, CustomMassenergizeError("Campaign Config not found")
+      
+      return campaign_config, None
+    
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+
+
 
    

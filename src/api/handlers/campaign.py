@@ -18,6 +18,10 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.update", self.update)
         self.add("/campaigns.delete", self.delete)
 
+        self.add("/campaigns.config.create", self.create_campaign_config)
+        self.add("/campaigns.config.update", self.update_campaign_config)
+        self.add("/campaigns.config.info", self.get_campaign_config)
+
         self.add("/campaigns.analytics.get", self.get_campaign_analytics)
 
         self.add("/campaigns.managers.add", self.add_campaign_manager)
@@ -34,6 +38,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.technologies.testimonials.create", self.create_campaign_technology_testimonial)
         self.add("/campaigns.technologies.testimonials.update", self.update_campaign_technology_testimonial)
         self.add("/campaigns.technologies.testimonials.delete", self.delete_campaign_technology_testimonial)
+        self.add("/campaigns.technologies.testimonials.info", self.get_campaign_technology_testimonial)
 
         self.add("/campaigns.technologies.comments.create", self.create_campaign_technology_comment)
         self.add("/campaigns.technologies.comments.update", self.update_campaign_technology_comment)
@@ -87,7 +92,7 @@ class CampaignHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=campaign_info)
     
-    @admins_only
+    # @admins_only
     def create(self, request): 
       context: Context = request.context
       args = context.get_request_body() 
@@ -107,7 +112,7 @@ class CampaignHandler(RouteHandler):
             .expect("is_template", bool, is_required=True)
       )
 
-      args, err = self.validator.verify(args)
+      args, err = self.validator.verify(args, strict=True)
       if err:
         return err
 
@@ -137,7 +142,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=campaign_info)
 
 
-    @admins_only 
+    # @admins_only 
     def update(self, request): 
         context: Context = request.context
         args = context.get_request_body() 
@@ -169,7 +174,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=campaign_info)
     
 
-    @admins_only
+    # @admins_only
     def delete(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -185,7 +190,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=campaign_info)
     
 
-    @admins_only
+    # @admins_only
     def list_campaigns_for_admins(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -196,7 +201,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def add_campaign_manager(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -213,7 +218,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def remove_campaign_manager(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -228,7 +233,7 @@ class CampaignHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
 
-    @admins_only
+    # @admins_only
     def add_campaign_community(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -245,7 +250,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def remove_campaign_community(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -261,7 +266,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def add_campaign_technology(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -286,7 +291,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def update_campaign_technology(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -312,7 +317,7 @@ class CampaignHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def remove_campaign_technology(self, request): 
         context: Context = request.context
         args: dict = context.args
@@ -747,6 +752,71 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.get_campaign_technology_info(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def get_campaign_config(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.get_campaign_config(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def create_campaign_config(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        self.validator.expect("advert", str, is_required=False)
+        self.validator.expect("theme", str, is_required=False)
+        
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.create_campaign_config(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def update_campaign_config(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        self.validator.expect("advert", str, is_required=False)
+        self.validator.expect("theme", str, is_required=False)
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.update_campaign_config(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def get_campaign_technology_testimonial(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("id", str, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.get_campaign_technology_testimonial(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)
