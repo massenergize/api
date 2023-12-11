@@ -49,7 +49,7 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
 
     return {
-            **get_technology_details(campaign_tech.campaign.id),
+            **get_technology_details(campaign_tech.technology.id),
             "views":views.count(),
             "has_liked":liked,
             "likes":likes.count(),
