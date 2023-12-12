@@ -51,7 +51,7 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
     views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
     likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
     liked = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False, user__email=email).exists()
-    comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
+    comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
 
     return {
             **get_technology_details(campaign_tech.technology.id),
