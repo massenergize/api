@@ -823,7 +823,7 @@ class CampaignStore:
 
       campaign_tech = get_campaign_technology_details(campaign_technology_id,False,email)
       
-      like = CampaignTechnologyLike.objects.filter(campaign_technology=campaign_technology, **args).first()
+      like = CampaignTechnologyLike.objects.filter(campaign_technology=campaign_technology, user__id=user_id).first()
       if not like:
         like = CampaignTechnologyLike.objects.create(campaign_technology=campaign_technology, **args)
         return campaign_tech , None
