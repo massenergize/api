@@ -642,7 +642,6 @@ class CampaignHandler(RouteHandler):
 
         (self.validator
          .expect("campaign_technology_id", str, is_required=True)
-         .expect("zipcode", str, is_required=False)
          .expect("email", str, is_required=False)
           .expect("community", int, is_required=False)
          )

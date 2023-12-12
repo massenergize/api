@@ -37,9 +37,13 @@ class CampaignStore:
       subdomain = args.get('subdomain', None)
 
       if campaign_account_id:
-        campaigns = Campaign.objects.filter(account=campaign_account_id)
+        campaigns = Campaign.objects.filter(account__id=campaign_account_id)
       elif subdomain:
         campaigns = Campaign.objects.filter(account__subdomain=subdomain)
+
+
+      else:
+        campaigns = Campaign.objects.filter(Q(creator__id=context.user_id) | Q(creator__email=context.user_email) | Q(is_global=True))
 
 
       if not context.is_sandbox:
@@ -816,7 +820,10 @@ class CampaignStore:
         if community:
           args["community"] = community
       
-      like = CampaignTechnologyLike.objects.create(campaign_technology=campaign_technology, **args)
+      like, _= CampaignTechnologyLike.objects.get_or_create(campaign_technology=campaign_technology, **args)
+      if _:
+        campaign_technology.is_deleted = False
+        campaign_technology.save()
 
           
       return like, None
