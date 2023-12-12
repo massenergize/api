@@ -22,6 +22,8 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.config.update", self.update_campaign_config)
         self.add("/campaigns.config.info", self.get_campaign_config)
 
+        self.add("/campaigns.navigation.create", self.create_campaign_navigation)
+
         self.add("/campaigns.analytics.get", self.get_campaign_analytics)
 
         self.add("/campaigns.managers.add", self.add_campaign_manager)
@@ -822,6 +824,24 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
+    
+
+
+    def create_campaign_navigation(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.create_campaign_navigation(context, args)
+        if err:
+          return err
+        
+        return MassenergizeResponse(data=res)
+       
     
 
 

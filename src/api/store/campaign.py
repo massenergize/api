@@ -2,6 +2,7 @@ from datetime import datetime
 from _main_.utils.common import serialize_all
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
+from apps__campaigns.helpers import generate_campaign_navigation
 from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Partner, Technology
 from database.models import Community, Event, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
@@ -1014,6 +1015,17 @@ class CampaignStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+
+
+  def create_campaign_navigation(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    campaign_id = args.pop("campaign_id", None)
+
+    if not campaign_id:
+      return None, CustomMassenergizeError("Campaign id not provided")
+    
+    nav =  generate_campaign_navigation(campaign_id)
+    return nav, None
     
 
 

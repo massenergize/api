@@ -318,3 +318,10 @@ class CampaignService:
       return None, err
     return serialize(res, full=True), None
   
+
+  def create_campaign_navigation(self, context, args) ->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.create_campaign_navigation(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+  
