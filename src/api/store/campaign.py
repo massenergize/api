@@ -820,19 +820,18 @@ class CampaignStore:
         community = Community.objects.filter(id=community_id).first()
         if community:
           args["community"] = community
+      
+      like, _= CampaignTechnologyLike.objects.get_or_create(campaign_technology=campaign_technology, **args)
+      if not _:
+        if like.is_deleted:
+          like.is_deleted = False
+        else:
+          like.is_deleted = True
+      like.save()
+
 
       campaign_tech = get_campaign_technology_details(campaign_technology_id,False,email)
-      
-      like = CampaignTechnologyLike.objects.filter(campaign_technology=campaign_technology, user__id=user_id).first()
-      if not like:
-        like = CampaignTechnologyLike.objects.create(campaign_technology=campaign_technology, **args)
-        return campaign_tech , None
-      else:
-        if like.is_deleted:
-            like.is_deleted = False
-        else:
-            like.is_deleted = True
-      like.save()
+
           
       return campaign_tech , None
    except Exception as e:
