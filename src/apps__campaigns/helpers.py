@@ -103,12 +103,12 @@ def generate_campaign_navigation(campaign_id):
         for index, category in enumerate(["coaches", "vendors", "testimonials", "events"]):
             if tech_details.get(category):
                 MENU[index]["children"].append(
-                    {"key": tech.id, "url": f"/campaign/{campaign_id}/technology/{tech.id}", "text": tech.technology.name}
+                    {"key": tech.id, "url": f"/campaign/{campaign_id}/technology/{tech.id}/?section={category}", "text": tech.technology.name}
                 )
         deal_section = tech.deal_section or {}
 
         if deal_section.get("title"):
-            MENU[-1]["children"].append( {"key": tech.id, "url": f"/campaign/{campaign_id}/technology/{tech.id}", "text": tech.technology.name})
+            MENU[-1]["children"].append( {"key": tech.id, "url": f"/campaign/{campaign_id}/technology/{tech.id}/?section=incentives", "text": tech.technology.name})
 
     MENU = [item for item in MENU if item["children"]]  # Remove items without children
     return [*BASE_NAVIGATION, *MENU]
