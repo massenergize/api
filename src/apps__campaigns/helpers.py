@@ -62,6 +62,7 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
             "comments": serialize_all(comments),
             "events": serialize_all(events, full=True),
             "campaign_id": campaign_tech.campaign.id,
+            "campaign_technology_id": campaign_technology_id,
         }
 
 
