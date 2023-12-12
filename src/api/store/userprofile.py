@@ -1071,4 +1071,25 @@ class UserStore:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+  def get_loosed_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      email = args.get('email', None)
+      user_id = args.get('id', None)
+
+      if not email and not user_id:
+        return None, CustomMassenergizeError("Please provide email or user_id")
+      user =None
+
+      if email:
+        user = UserProfile.objects.filter(email=email).first()
+      elif user_id:
+        user = UserProfile.objects.filter(id=user_id).first()
+      
+      
+      return user, None
+    
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
