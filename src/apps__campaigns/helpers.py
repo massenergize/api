@@ -95,6 +95,7 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
             "testimonials":serialize_all(testimonials[:3]),
             "events": serialize_all(events[:3], full=True),
             "coaches": tech_data.get("coaches", [])[:3],
+            "campaign_id": campaign_tech.campaign.id,
             **campaign_tech.technology.simple_json()
         }
     views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
@@ -110,6 +111,7 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
             "testimonials":serialize_all(testimonials),
             "comments": serialize_all(comments),
             "events": serialize_all(events, full=True),
+            "campaign_id": campaign_tech.campaign.id,
         }
 
 
