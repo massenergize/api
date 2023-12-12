@@ -1,5 +1,6 @@
 from datetime import datetime
 from _main_.utils.common import serialize_all
+from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
 from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Partner, Technology
 from database.models import Community, Event, UserProfile, Media
@@ -444,18 +445,30 @@ class CampaignStore:
   def create_campaign_technology_comment(self, context: Context, args):
     try:
       campaign_technology_id = args.pop("campaign_technology_id",None)
+      community_id:str = args.pop("community_id", None)
+      user_id:str = args.pop("user_id", None)
+
+
       if campaign_technology_id:
          campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
          if  campaign_technology:
             args["campaign_technology"] = campaign_technology
 
-      user = get_user_from_context(context)
-      if user:
-        args["user"] = user
+      if user_id:
+        user = UserProfile.objects.filter(id=user_id).first()
+        if user:
+          args["user"] = user
+
+      if community_id:
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          args["community"] = community
       
       comment = Comment.objects.create(**args)
+
+      latest_comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by('-created_at')
     
-      return comment, None
+      return latest_comments[:20], None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
@@ -739,15 +752,39 @@ class CampaignStore:
   def add_campaign_follower(self,context, args):
    try:
       campaign_id = args.pop("campaign_id",None)
+      community_id: str = args.pop("community_id", None)
+      community_name: str = args.pop("community_name", None)
+
+
+      email = args.pop("email", None)
+      is_other = args.pop("is_other", False)
+
 
       if not campaign_id:
-        return None, InvalidResourceError()
+        return None, CustomMassenergizeError("Campaign id not found!")
+      
       
       campaign = Campaign.objects.filter(id=campaign_id).first()
       if not campaign:
         return None, CustomMassenergizeError("Campaign with id not found!")
       
-      follower = CampaignFollow.objects.create(campaign=campaign, **args)
+      if email:
+        user, _ = UserProfile.objects.get_or_create(email=email)
+        if _:
+          user.user_info = {"user_type":LOOSED_USER, "community_name": community_name}
+          user.save()
+        args["user"] = user
+
+      if is_other:
+        other_comm, _ = Community.objects.get_or_create(name="Other")
+        args["community"] = other_comm
+      
+      if community_id:
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          args["community"] = community
+
+      follower, _ = CampaignFollow.objects.get_or_create(campaign=campaign, **args)
 
       return follower, None
    except Exception as e:
@@ -758,6 +795,8 @@ class CampaignStore:
   def add_campaign_technology_like(self,context, args):
    try:
       campaign_technology_id = args.pop("campaign_technology_id",None)
+      community_id: str = args.pop("community_id", None)
+      user_id: str = args.pop("user_id", None)
 
       if not campaign_technology_id:
         return None, CustomMassenergizeError("Campaign technology id not found!")
@@ -765,6 +804,16 @@ class CampaignStore:
       campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
       if not campaign_technology:
         return None, CustomMassenergizeError("Campaign technology with id not found!")
+      
+      if user_id:
+        user = UserProfile.objects.filter(id=user_id).first()
+        if user:
+          args["user"] = user
+      
+      if community_id:
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          args["community"] = community
       
       like = CampaignTechnologyLike.objects.create(campaign_technology=campaign_technology, **args)
 

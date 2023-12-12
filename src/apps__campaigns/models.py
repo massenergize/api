@@ -385,25 +385,27 @@ class CampaignLike(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["campaign"] = get_summary_info(self.campaign)
+        res["campaign"] = get_json_if_not_none(self.campaign)
         return res
     
     def full_json(self):
         return self.simple_json()
     
 class CampaignFollow(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
-    email = models.EmailField(blank=True, null=True)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, )
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    community = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.campaign} - {self.email}"
+        return f"{self.campaign} - {self.user}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
+        res["user"] = get_summary_info(self.user)
+        res["community"] = get_summary_info(self.community)
         return res
     
     def full_json(self):
@@ -412,17 +414,18 @@ class CampaignFollow(BaseModel):
 
 class CampaignTechnologyLike(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    email = models.EmailField(blank=True, null=True)
-    zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    community = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.campaign_technology} - {self.email}"
+        return f"{self.campaign_technology} - {self.user}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
+        res["user"] = get_summary_info(self.user)
+        res["community"] = get_summary_info(self.community)
         return res
     
     def full_json(self):
@@ -473,10 +476,10 @@ class CampaignManager(BaseModel):
 
 class Comment(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE) #change to email, name
     text = models.TextField(blank=True, null=True)
     status = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    community = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user} - {self.status}"
@@ -486,6 +489,7 @@ class Comment(BaseModel):
         res.update(model_to_dict(self))
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
         res["user"] = get_summary_info(self.user)
+        res["community"] = get_summary_info(self.community)
         return res
     
     def full_json(self):

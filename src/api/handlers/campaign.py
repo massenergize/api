@@ -383,8 +383,9 @@ class CampaignHandler(RouteHandler):
         (self.validator
         .expect("text", str, is_required=True)
         .expect("status", str, is_required=False)
-        .expect("community", str, is_required=False)
+        .expect("community_id", int, is_required=False)
         .expect("campaign_technology_id", str, is_required=False)
+        .expect("user_id", str, is_required=False)
         )
         args, err = self.validator.verify(args)
         if err:
@@ -404,7 +405,6 @@ class CampaignHandler(RouteHandler):
         .expect("id", str, is_required=True)
         .expect("text", str, is_required=True)
         .expect("status", str, is_required=False)
-        .expect("community", str, is_required=False)
         .expect("campaign_technology_id", str, is_required=False)
         )
         args, err = self.validator.verify(args)
@@ -619,7 +619,9 @@ class CampaignHandler(RouteHandler):
         (self.validator
          .expect("email", str, is_required=True)
          .expect("zipcode", str, is_required=True)
-          .expect("community", str, is_required=False)
+          .expect("community_id", int, is_required=False)
+          .expect("campaign_id", str, is_required=False)
+          .expect("is_other", bool, is_required=False)
          )
         args, err = self.validator.verify(args)
         if err:
@@ -640,7 +642,7 @@ class CampaignHandler(RouteHandler):
          .expect("campaign_technology_id", str, is_required=True)
          .expect("zipcode", str, is_required=False)
          .expect("email", str, is_required=False)
-          .expect("community", str, is_required=False)
+          .expect("community", int, is_required=False)
          )
         args, err = self.validator.verify(args)
         if err:

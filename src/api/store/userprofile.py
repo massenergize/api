@@ -1,7 +1,7 @@
 from _main_.utils.common import serialize
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.constants import STANDARD_USER,GUEST_USER
+from api.constants import LOOSED_USER, STANDARD_USER,GUEST_USER
 from api.utils.api_utils import get_sender_email, is_admin_of_community
 from api.utils.filter_functions import get_users_filter_params
 from api.store.common import create_pdf_from_rich_text, sign_mou
@@ -1039,6 +1039,35 @@ class UserStore:
         ret['team_id'] = team.id
 
       return ret, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  
+  def update_loosed_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      email = args.get('email', None)
+      user_id = args.get('id', None)
+
+      if not email and not user_id:
+        return None, CustomMassenergizeError("Please provide email or user_id")
+      user =None
+
+      if email:
+        user = UserProfile.objects.filter(email=email).first()
+      elif user_id:
+        user = UserProfile.objects.filter(id=user_id).first()
+      
+      if not user:
+        return None, CustomMassenergizeError("user not found")
+      user_info = user.user_info
+
+      if user_info.get('user_type', None) == LOOSED_USER:
+        user.full_name = args.get('full_name', user.full_name)
+      user.save()
+      
+      return user, None
+    
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

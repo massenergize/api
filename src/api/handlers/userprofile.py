@@ -44,6 +44,7 @@ class UserHandler(RouteHandler):
         self.add("/users.listForSuperAdmin", self.super_admin_list)
         self.add("/users.import", self.import_users)
         self.add("/users.mou.accept", self.accept_mou)
+        self.add("/users.update.loosedUser", self.update_loosed_user)
 
         self.add("/users.get.visits", self.fetch_user_visits)
 
@@ -397,3 +398,19 @@ class UserHandler(RouteHandler):
         if err:
             return err
         return MassenergizeResponse(data=info)
+    
+
+    def update_loosed_user(self, request):
+        context:Context = request.context
+        args:dict = context.args
+
+        args, err = (
+            self.validator.expect("id", str, is_required=True)
+            .expect("email", str, is_required=True)
+            .expect("full_name", str, is_required=True)
+            .verify(args, strict=True)
+        )
+        if err:
+            return err
+        user_info, err = self.service.update_loosed_user(context, args)
+        return MassenergizeResponse(data=user_info)
