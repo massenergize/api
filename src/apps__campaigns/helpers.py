@@ -79,6 +79,43 @@ def get_technology_details(technology_id):
             **serialize(tech)
         }
 
+# def generate_campaign_navigation(campaign_id):
+#     CONSTANT_NAV = [
+#         {"key": "home", "url": f"/{campaign_id}", "text": "Home", "icon": "fa-home"},
+#         {"key": "questions", "url": "#testimonial-section", "text": "Questions", "icon": "fa-question-circle"},
+#         # {"key": "contact-us", "url": "#", "text": "Contact Us", "icon": "fa-phone"},
+#     ]
+
+#     BASE_NAVIGATION = [
+#         {"key": "coaches", "url": "#coaches-section", "text": "Coaches", "icon": "fa-users", "children": []},
+#         {"key": "vendors", "url": "#", "text": "Vendors", "children": [], "icon": "fa-sell"},
+#         {"key": "testimonial", "url": "#", "text": "Testimonial", "children": [], "icon": "fa-comment"},
+#         {"key": "events", "url": "#", "text": "Events", "children": [], "icon": "fa-calendar"},
+#         {"key": "incentives", "url": "#", "text": "Incentives", "children": [], "icon": "fa-money"},
+#     ]
+#     campaign_techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
+
+
+#     for tech in campaign_techs:
+#         tech_details = get_campaign_technology_details(tech.id, True)
+#         if tech_details.get("coaches"):
+
+#             BASE_NAVIGATION[0]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
+#         if tech_details.get("vendors"):
+#             BASE_NAVIGATION[1]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
+#         if tech_details.get("testimonials"):
+#             BASE_NAVIGATION[2]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
+#         if tech_details.get("events"):
+#             BASE_NAVIGATION[3]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
+#         if tech_details.get("overview"):
+#             BASE_NAVIGATION[4]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
+
+
+#     BASE_NAVIGATION = [item for item in BASE_NAVIGATION if item.get("children")]
+
+#     return BASE_NAVIGATION+CONSTANT_NAV
+
+
 def generate_campaign_navigation(campaign_id):
     CONSTANT_NAV = [
         {"key": "home", "url": f"/{campaign_id}", "text": "Home", "icon": "fa-home"},
@@ -93,24 +130,21 @@ def generate_campaign_navigation(campaign_id):
         {"key": "events", "url": "#", "text": "Events", "children": [], "icon": "fa-calendar"},
         {"key": "incentives", "url": "#", "text": "Incentives", "children": [], "icon": "fa-money"},
     ]
+
     campaign_techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
     BASE_NAVIGATION[0]["url"] = f"/{campaign_id}"
 
     for tech in campaign_techs:
-        tech_details = get_technology_details(tech.technology.id)
-        if tech_details.get("coaches"):
+        tech_details = get_campaign_technology_details(tech.id, True)
+        for index, category in enumerate(["coaches", "vendors", "testimonials", "events"]):
+            if tech_details.get(category):
+                BASE_NAVIGATION[index]["children"].append(
+                    {"key": tech.id, "url": f"/campaign/{campaign_id}/technology/{tech.id}", "text": tech.technology.name}
+                )
+        deal_section = tech.deal_section or {}
 
-            BASE_NAVIGATION[0]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
-        if tech_details.get("vendors"):
-            BASE_NAVIGATION[1]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
-        if tech_details.get("testimonials"):
-            BASE_NAVIGATION[2]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
-        if tech_details.get("events"):
-            BASE_NAVIGATION[3]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
-        if tech_details.get("overview"):
-            BASE_NAVIGATION[4]["children"].append({"key":tech.id, "url":f"/campaign/{campaign_id}/technology/{tech.id}", "text":tech.technology.name})
+        if deal_section.get("title"):
+            BASE_NAVIGATION[-1]["children"].append( {"key": tech.id, "url": f"/campaign/{campaign_id}/technology/{tech.id}", "text": tech.technology.name})
 
-
-    BASE_NAVIGATION = [item for item in BASE_NAVIGATION if item.get("children")]
-
-    return BASE_NAVIGATION+CONSTANT_NAV
+    BASE_NAVIGATION = [item for item in BASE_NAVIGATION if item["children"]]  # Remove items without children
+    return BASE_NAVIGATION + CONSTANT_NAV
