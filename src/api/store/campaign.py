@@ -2,7 +2,7 @@ from datetime import datetime
 from _main_.utils.common import serialize_all
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
-from apps__campaigns.helpers import generate_campaign_navigation
+from apps__campaigns.helpers import generate_campaign_navigation, get_campaign_technology_details
 from apps__campaigns.models import Campaign, CampaignAccount, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLike, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Partner, Technology
 from database.models import Community, Event, UserProfile, Media
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, NotAuthorizedError, CustomMassenergizeError
@@ -802,6 +802,7 @@ class CampaignStore:
       campaign_technology_id = args.pop("campaign_technology_id",None)
       community_id: str = args.pop("community_id", None)
       user_id: str = args.pop("user_id", None)
+      email = args.pop("email", context.user_email)
 
       if not campaign_technology_id:
         return None, CustomMassenergizeError("Campaign technology id not found!")
@@ -821,12 +822,18 @@ class CampaignStore:
           args["community"] = community
       
       like, _= CampaignTechnologyLike.objects.get_or_create(campaign_technology=campaign_technology, **args)
-      if _:
-        campaign_technology.is_deleted = False
-        campaign_technology.save()
+      if not _:
+        if like.is_deleted:
+          like.is_deleted = False
+        else:
+          like.is_deleted = True
+      like.save()
+
+
+      campaign_tech = get_campaign_technology_details(campaign_technology_id,False,email)
 
           
-      return like, None
+      return campaign_tech , None
    except Exception as e:
     capture_message(str(e), level="error")
     return None, CustomMassenergizeError(e)

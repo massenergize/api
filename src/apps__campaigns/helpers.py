@@ -97,7 +97,6 @@ def generate_campaign_navigation(campaign_id):
     ]
 
     campaign_techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
-    MENU[0]["url"] = f"/{campaign_id}"
 
     for tech in campaign_techs:
         tech_details = get_campaign_technology_details(tech.id, True)

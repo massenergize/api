@@ -661,8 +661,8 @@ class CampaignHandler(RouteHandler):
 
         (self.validator
          .expect("campaign_technology_id", str, is_required=True)
-         .expect("ip_address", str, is_required=False)
-         .expect("user_agent", int, is_required=False)
+        #  .expect("ip_address", str, is_required=False)
+        #  .expect("user_agent", str, is_required=False)
          )
         args, err = self.validator.verify(args)
         if err:
