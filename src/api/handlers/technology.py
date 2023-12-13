@@ -137,7 +137,7 @@ class TechnologyHandler(RouteHandler):
 
         self.validator.expect("technology_id", str, is_required=True)
         self.validator.expect("full_name", str, is_required=True)
-        self.validator.expect("email", str, is_required=True)
+        self.validator.expect("email", str, is_required=False)
         self.validator.expect("community", str, is_required=False)
         self.validator.expect("image", "file", is_required=False)
         self.validator.expect("phone_number", str, is_required=False)
