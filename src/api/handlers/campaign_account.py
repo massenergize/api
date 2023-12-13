@@ -26,7 +26,7 @@ class CampaignAccountHandler(RouteHandler):
 
 
 
-    @admins_only
+    # @admins_only
     def create_campaign_account(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -46,7 +46,7 @@ class CampaignAccountHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def update_campaign_account(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -66,7 +66,7 @@ class CampaignAccountHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-    @admins_only
+    # @admins_only
     def delete_campaign_account(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -82,7 +82,7 @@ class CampaignAccountHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def list_campaign_accounts_for_admins(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -93,7 +93,7 @@ class CampaignAccountHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    @admins_only
+    # @admins_only
     def info(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -106,7 +106,7 @@ class CampaignAccountHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-    @admins_only
+    # @admins_only
     def add_admin(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -121,7 +121,7 @@ class CampaignAccountHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-    @admins_only
+    # @admins_only
     def remove_admin(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -134,7 +134,7 @@ class CampaignAccountHandler(RouteHandler):
           return err
         return MassenergizeResponse(data=res)
     
-    @admins_only
+    # @admins_only
     def update_admin(self, request):
         context: Context = request.context
         args: dict = context.args

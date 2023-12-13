@@ -383,18 +383,33 @@ class CampaignStore:
       campaign_technology_id = args.pop("campaign_technology_id",None)
       community_id = args.pop("community_id", None)
       image = args.pop("image", None)
+      user_id = args.pop("user_id", context.user_id)
 
-      if campaign_technology_id:
-         campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
-         if  campaign_technology:
-            args["campaign_technology"]= campaign_technology
 
-      testimonial = CampaignTechnologyTestimonial.objects.create(**args)
+      if not  campaign_technology_id:
+         return None, CustomMassenergizeError("Campaign Technology ID is required !")
+      
+      campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+      if not campaign_technology:
+        return None, CustomMassenergizeError("Campaign Technology with id not found!")
 
-      created_by = get_user_from_context(context)
-      if created_by:
-        testimonial.created_by = created_by
+      args["campaign_technology"]= campaign_technology
 
+      if not user_id:
+        return None, CustomMassenergizeError("User ID is required !")
+      
+      user = UserProfile.objects.filter(id=user_id).first()
+      if not user:
+        return None, CustomMassenergizeError("User with id not found!")
+      
+      args["created_by"]= user
+
+      if community_id:
+        community = Community.objects.filter(id=community_id).first()
+        if community:
+          args["community"] = community
+
+      testimonial, _ = CampaignTechnologyTestimonial.objects.get_or_create(**args)
 
       
       if image:
@@ -402,10 +417,6 @@ class CampaignStore:
         media = Media.objects.create(name=name, file=image)
         testimonial.image = media
 
-      if community_id:
-        community = Community.objects.filter(id=community_id).first()
-        if community:
-          testimonial.community = community
 
       testimonial.save()
       

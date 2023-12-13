@@ -345,8 +345,9 @@ class CampaignHandler(RouteHandler):
         .expect("title", str, is_required=True)
         .expect("image", "file", is_required=False)
         .expect("community_id", str, is_required=False)
+        .expect("user_id", bool, is_required=False)
         )
-        args, err = self.validator.verify(args)
+        args, err = self.validator.verify(args, strict=True)
         if err:
           return err
 
