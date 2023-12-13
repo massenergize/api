@@ -584,9 +584,8 @@ class CampaignHandler(RouteHandler):
          .expect("campaign_id", str, is_required=True)
          .expect("url", str, is_required=True)
          .expect("utm_source", str, is_required=False)
-          .expect("utm_medium", str, is_required=False)
-          .expect("utm_campaign", str, is_required=False)
-          .expect("utm_content", str, is_required=False)
+         .expect("utm_medium", str, is_required=False)
+         .expect("utm_campaign", str, is_required=False)
          )
         args, err = self.validator.verify(args)
         if err:

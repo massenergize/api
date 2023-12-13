@@ -726,7 +726,6 @@ class CampaignStore:
       utm_source = args.pop("utm_source", None)
       utm_medium = args.pop("utm_medium", None)
       utm_campaign = args.pop("utm_campaign", None)
-      utm_content = args.pop("utm_content", None)
       url = args.pop("url", None)
       email = args.pop("email", None)
 
@@ -737,9 +736,9 @@ class CampaignStore:
       if not campaign:
         return None, CustomMassenergizeError("Campaign with id not found!")
       
-      campaign_link = CampaignLink.objects.create(campaign=campaign, email=email, url=url, utm_source=utm_source, utm_medium=utm_medium, utm_campaign=utm_campaign)
+      campaign_link, _ = CampaignLink.objects.get_or_create(campaign=campaign, email=email, url=url, utm_source=utm_source, utm_medium=utm_medium, utm_campaign=utm_campaign)
 
-      generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}&utm_campaign={utm_campaign}&utm_content={utm_content}&campaign_like_id={campaign_link.id}"
+      generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}campaign_like_id={campaign_link.id}"
       
       return {"link":generated_link} , None
     except Exception as e:
