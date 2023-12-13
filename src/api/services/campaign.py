@@ -18,11 +18,12 @@ class CampaignService:
     self.store =  CampaignStore()
 
   def get_campaign_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    email = args.get("email",None)
     campaign, err = self.store.get_campaign_info(context, args)
     if err:
       return None, err
     ser_cam = serialize(campaign, full=True)
-    other_details = get_campaign_details(campaign.id, True)
+    other_details = get_campaign_details(campaign.id, True, email)
     result = {**ser_cam, **other_details}
 
     return result, None

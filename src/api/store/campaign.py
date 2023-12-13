@@ -55,7 +55,7 @@ class CampaignStore:
             campaign: Campaign = Campaign.objects.filter(id=campaign_id).first()
 
             if not campaign:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Invalid Campaign ID")
 
             return campaign, None
 
@@ -76,11 +76,7 @@ class CampaignStore:
                 campaigns = Campaign.objects.filter(account__subdomain=subdomain)
 
             else:
-                campaigns = Campaign.objects.filter(
-                    Q(creator__id=context.user_id)
-                    | Q(creator__email=context.user_email)
-                    | Q(is_global=True)
-                )
+                campaigns = Campaign.objects.filter(Q(owner__id=context.user_id)| Q(owner__email=context.user_email) | Q(is_global=True))
 
             if not context.is_sandbox:
                 if context.user_is_logged_in and not context.user_is_admin():

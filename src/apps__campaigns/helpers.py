@@ -7,15 +7,18 @@ from database.utils.common import get_json_if_not_none
 
 
 
-def get_campaign_details(campaign_id, for_campaign=False):
+def get_campaign_details(campaign_id, for_campaign=False, email=None):
     techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
     ser_techs = serialize_all(techs, full=True)
-    prepared = [{"campaign_technology_id":x.get("id"),**get_campaign_technology_details(x.get("id"), for_campaign)} for x in ser_techs]
+    prepared = [{"campaign_technology_id":x.get("id"),**get_campaign_technology_details(x.get("id"), for_campaign,email )} for x in ser_techs]
     managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False)
     partners = CampaignPartner.objects.filter(campaign_id=campaign_id, is_deleted=False)
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
     config = CampaignConfiguration.objects.filter(campaign__id=campaign_id, is_deleted=False).first()
     key_contact = CampaignManager.objects.filter(campaign__id=campaign_id, is_deleted=False, is_key_contact=True).first()
+    
+    if email:
+        my_testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__campaign__id=campaign_id, created_by__email=email).order_by("-created_at")
 
     return {
         "key_contact": {
@@ -24,7 +27,8 @@ def get_campaign_details(campaign_id, for_campaign=False):
             "phone_number": key_contact.contact,
             "image": get_json_if_not_none(key_contact.user.profile_picture),
         } if key_contact else None,
-        
+
+        "my_testimonials": serialize_all(my_testimonials[:5]) if email else [],
         "technologies": prepared,
         "communities": serialize_all(communities),
         "managers": serialize_all(managers),
@@ -37,7 +41,7 @@ def get_campaign_details(campaign_id, for_campaign=False):
 def get_campaign_technology_details(campaign_technology_id, campaign_home, email=None):
     campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
     events = CampaignEvent.objects.filter(event__technology__id=campaign_tech.technology.id, is_deleted=False)
-    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id)
+    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id).order_by("-created_at")
     tech_data = get_technology_details(campaign_tech.technology.id)
 
     if campaign_home:

@@ -83,7 +83,7 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("id", str, is_required=True)
+        self.validator.expect("id", str, is_required=True).expect("email", str, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
         if err:
