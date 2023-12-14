@@ -905,15 +905,12 @@ class CampaignStore:
             if is_other:
                 other_comm, _ = Community.objects.get_or_create(name="Other")
                 args["community"] = other_comm
-
-            if community_id:
+            else:
                 community = Community.objects.filter(id=community_id).first()
                 if community:
                     args["community"] = community
 
-            follower, _ = CampaignFollow.objects.get_or_create(
-                campaign=campaign, **args
-            )
+            follower, _ = CampaignFollow.objects.get_or_create(campaign=campaign, **args)
 
             return follower, None
         except Exception as e:
