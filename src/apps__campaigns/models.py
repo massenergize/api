@@ -106,7 +106,7 @@ class Campaign(BaseModel):
     owner : UserProfile(optional) -> Owner of the campaign
 
     """
-    account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE)
+    account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     start_date = models.DateField()
@@ -265,7 +265,7 @@ class TechnologyOverview(BaseModel):
         res = super().to_json()
         res.update(model_to_dict(self))
         res["technology"] = get_summary_info(self.technology)
-        res["image"] = self.image.simple_json()
+        res["image"] = get_json_if_not_none(self.image)
         return res
     
     def full_json(self) -> dict:
