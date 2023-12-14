@@ -30,3 +30,4 @@ xhtml2pdf==0.2.9
 channels==3.0.5
 attrs==23.1.0
 wordfilter==0.2.7
+pyshorteners==1.0.1

@@ -14,6 +14,8 @@ class CampaignHandler(RouteHandler):
     def registerRoutes(self):
         self.add("/campaigns.info", self.info)
         self.add("/campaigns.create", self.create)
+
+        self.add("/campaigns.createFromTemplate", self.create_campaign_from_template)
         self.add("/campaigns.list", self.list)
         self.add("/campaigns.update", self.update)
         self.add("/campaigns.delete", self.delete)
@@ -123,6 +125,23 @@ class CampaignHandler(RouteHandler):
         return err
       return MassenergizeResponse(data=campaign_info)
     
+    def create_campaign_from_template(self, request):
+       context: Context = request.context
+       args = context.args
+
+       self.validator.expect("campaign_id", str, is_required=True)
+       self.validator.expect("campaign_account_id", str, is_required=True)   
+       self.validator.expect("name", str, is_required=True) 
+       self.validator.expect("community_ids", "str_list", is_required=True) 
+
+       args, err = self.validator.verify(args)
+       if err:
+          return err
+       
+       campaign_info, err = self.service.create_campaign_from_template(context, args)
+       if err:
+          return err
+       return MassenergizeResponse(data=campaign_info)
 
 
 
@@ -345,7 +364,7 @@ class CampaignHandler(RouteHandler):
         .expect("title", str, is_required=True)
         .expect("image", "file", is_required=False)
         .expect("community_id", str, is_required=False)
-        .expect("user_id", bool, is_required=False)
+        .expect("user_id", str, is_required=False)
         )
         args, err = self.validator.verify(args, strict=True)
         if err:

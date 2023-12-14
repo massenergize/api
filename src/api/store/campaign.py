@@ -1,5 +1,5 @@
 from datetime import datetime
-from _main_.utils.common import serialize_all
+from _main_.utils.common import serialize_all, shorten_url
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
 from apps__campaigns.helpers import (
@@ -856,7 +856,7 @@ class CampaignStore:
 
             generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}campaign_like_id={campaign_link.id}"
 
-            return {"link": generated_link}, None
+            return {"link": shorten_url(generated_link)}, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

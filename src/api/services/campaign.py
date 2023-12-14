@@ -45,6 +45,18 @@ class CampaignService:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+
+  def create_campaign_from_template(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      campaign, err = self.store.create_campaign_from_template(context, args)
+      if err:
+        return None, err
+      return serialize(campaign, full=True), None
+
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
 
   def update_campaign(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     campaign, err = self.store.update_campaigns(context, args)
@@ -218,7 +230,7 @@ class CampaignService:
       res, err = self.store.generate_campaign_link(context, args)
       if err:
         return None, err
-      return serialize(res, full=True), None
+      return res, None
   
 
   def campaign_link_visits_count(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
