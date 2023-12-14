@@ -94,11 +94,11 @@ def generate_campaign_navigation(campaign_id):
     ]
 
     MENU = [
-        {"key": "coaches", "url": "?section=coaches", "text": "Coaches", "icon": "fa-users", "children": []},
-        {"key": "vendors", "url": "?section=vendors", "text": "Vendors", "children": [], "icon": "fa-sell"},
-        {"key": "testimonial", "url": "?section=testimonial", "text": "Testimonials", "children": [], "icon": "fa-comment"},
-        {"key": "events", "url": "?section=events", "text": "Events", "children": [], "icon": "fa-calendar"},
-        {"key": "incentives", "url": "?section=incentives", "text": "Incentives", "children": [], "icon": "fa-money"},
+        {"key": "coaches", "url": f"/{campaign_id}/?section=coaches", "text": "Coaches", "icon": "fa-users", "children": []},
+        {"key": "vendors", "url": f"/{campaign_id}/?section=vendors", "text": "Vendors", "children": [], "icon": "fa-sell"},
+        {"key": "testimonial", "url": f"/{campaign_id}/?section=testimonial", "text": "Testimonials", "children": [], "icon": "fa-comment"},
+        {"key": "events", "url": f"/{campaign_id}/?section=events", "text": "Events", "children": [], "icon": "fa-calendar"},
+        {"key": "incentives", "url": f"/{campaign_id}/?section=incentives", "text": "Incentives", "children": [], "icon": "fa-money"},
     ]
 
     campaign_techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
