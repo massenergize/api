@@ -218,7 +218,7 @@ class TechnologyCoach(BaseModel):
     This model represents a technology coach.\n
     ---- FIELDS ----\n
     technology : Technology -> Technology
-    user : UserProfile -> User
+    email : str -> email
     community : str -> Community
 
     '''
@@ -406,6 +406,7 @@ class CampaignFollow(BaseModel):
         res["campaign"] = get_summary_info(self.campaign)
         res["user"] = get_summary_info(self.user)
         res["community"] = get_summary_info(self.community)
+        res["is_other"] = True if self.community.name == "Other" else False
         return res
     
     def full_json(self):
