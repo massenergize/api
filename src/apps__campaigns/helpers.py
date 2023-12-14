@@ -91,13 +91,13 @@ def generate_campaign_navigation(campaign_id):
     home_route = f"/{campaign_id}"
     BASE_NAVIGATION = [
         {"key": "home", "url": home_route, "text": "Home", "icon": "fa-home"},
-        {"key": "Communities", "url": f"{home_route}/?section=communities", "text": "Communities", "icon": "fa-question-circle"},
+        {"key": "Communities", "url": f"{home_route}/?section=communities", "text": "Communities", "icon": "fa-globe"},
         # {"key": "contact-us", "url": "#", "text": "Contact Us", "icon": "fa-phone"},
     ]
 
     MENU = [
         {"key": "coaches", "url": f"{home_route}/?section=coaches", "text": "Coaches", "icon": "fa-users", "children": []},
-        {"key": "vendors", "url": f"{home_route}/?section=vendors", "text": "Vendors", "children": [], "icon": "fa-sell"},
+        {"key": "vendors", "url": f"{home_route}/?section=vendors", "text": "Vendors", "children": [], "icon": "fa-handshake-o"},
         {"key": "testimonial", "url": f"{home_route}/?section=testimonial", "text": "Testimonials", "children": [], "icon": "fa-comment"},
         {"key": "events", "url": f"{home_route}/?section=events", "text": "Events", "children": [], "icon": "fa-calendar"},
         {"key": "incentives", "url": f"{home_route}/?section=incentives", "text": "Incentives", "children": [], "icon": "fa-money"},
