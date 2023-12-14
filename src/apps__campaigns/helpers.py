@@ -77,7 +77,6 @@ def get_technology_details(technology_id):
     incentives = TechnologyOverview.objects.filter(technology_id=technology_id, is_deleted=False)
     vendors = TechnologyVendor.objects.filter(technology_id=technology_id, is_deleted=False)
 
-    print("=== vendors==",vendors)
     
     data = {
               "coaches": serialize_all(coaches),
@@ -105,8 +104,7 @@ def generate_campaign_navigation(campaign_id):
     campaign_techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
 
     for tech in campaign_techs:
-        tech_details = get_campaign_technology_details(tech.id, True)
-        print("=== tech==",tech_details.get("vendors"))
+        tech_details = get_campaign_technology_details(tech.id, False)
         for index, category in enumerate(["coaches", "vendors", "testimonials", "events"]):
             if tech_details.get(category):
                 MENU[index]["children"].append(
