@@ -129,7 +129,7 @@ class CampaignHandler(RouteHandler):
        context: Context = request.context
        args = context.args
 
-       self.validator.expect("campaign_id", str, is_required=True)
+      #  self.validator.expect("template_id", str, is_required=False)
        self.validator.expect("campaign_account_id", str, is_required=True)   
        self.validator.expect("name", str, is_required=True) 
        self.validator.expect("community_ids", "str_list", is_required=True) 

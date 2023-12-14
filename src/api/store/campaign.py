@@ -880,7 +880,6 @@ class CampaignStore:
         try:
             campaign_id = args.pop("campaign_id", None)
             community_id: str = args.pop("community_id", None)
-            community_name: str = args.pop("community_name", None)
 
             email = args.pop("email", None)
             is_other = args.pop("is_other", False)
@@ -895,10 +894,7 @@ class CampaignStore:
             if email:
                 user, _ = UserProfile.objects.get_or_create(email=email)
                 if _:
-                    user.user_info = {
-                        "user_type": LOOSED_USER,
-                        "community_name": community_name,
-                    }
+                    user.user_info = {"user_type": LOOSED_USER }
                     user.save()
                 args["user"] = user
 

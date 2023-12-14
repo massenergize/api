@@ -396,6 +396,7 @@ class CampaignFollow(BaseModel):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
+    community_name = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
         return f"{self.campaign} - {self.user}"
