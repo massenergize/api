@@ -77,13 +77,15 @@ def get_technology_details(technology_id):
     incentives = TechnologyOverview.objects.filter(technology_id=technology_id, is_deleted=False)
     vendors = TechnologyVendor.objects.filter(technology_id=technology_id, is_deleted=False)
 
-    return {
-            "coaches": serialize_all(coaches),
+    print("=== vendors==",vendors)
+    
+    data = {
+              "coaches": serialize_all(coaches),
             "overview": serialize_all(incentives),
             "vendors": serialize_all(vendors),
-            **serialize(tech)
-        }
-
+            **serialize(tech),
+    }
+    return data
 
 def generate_campaign_navigation(campaign_id):
     BASE_NAVIGATION = [
@@ -93,17 +95,18 @@ def generate_campaign_navigation(campaign_id):
     ]
 
     MENU = [
-        {"key": "coaches", "url": "#coaches-section", "text": "Coaches", "icon": "fa-users", "children": []},
-        {"key": "vendors", "url": "#", "text": "Vendors", "children": [], "icon": "fa-sell"},
-        {"key": "testimonial", "url": "#", "text": "Testimonial", "children": [], "icon": "fa-comment"},
-        {"key": "events", "url": "#", "text": "Events", "children": [], "icon": "fa-calendar"},
-        {"key": "incentives", "url": "#", "text": "Incentives", "children": [], "icon": "fa-money"},
+        {"key": "coaches", "url": "?section=coaches", "text": "Coaches", "icon": "fa-users", "children": []},
+        {"key": "vendors", "url": "?section=vendors", "text": "Vendors", "children": [], "icon": "fa-sell"},
+        {"key": "testimonial", "url": "?section=testimonial", "text": "Testimonials", "children": [], "icon": "fa-comment"},
+        {"key": "events", "url": "?section=events", "text": "Events", "children": [], "icon": "fa-calendar"},
+        {"key": "incentives", "url": "?section=incentives", "text": "Incentives", "children": [], "icon": "fa-money"},
     ]
 
     campaign_techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
 
     for tech in campaign_techs:
         tech_details = get_campaign_technology_details(tech.id, True)
+        print("=== tech==",tech_details.get("vendors"))
         for index, category in enumerate(["coaches", "vendors", "testimonials", "events"]):
             if tech_details.get(category):
                 MENU[index]["children"].append(
