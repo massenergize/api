@@ -1,6 +1,6 @@
 import os
 from django.core.files import File
-from apps__campaigns.constants import COACHES_SECTION, DEALS_SECTION, MORE_INFO_SECTION, VENDORS_SECTION
+from apps__campaigns.constants import COACHES_SECTION, COMMUNITIES_SECTION, DEALS_SECTION, MORE_INFO_SECTION, VENDORS_SECTION
 from apps__campaigns.models import Campaign, CampaignEvent, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyTestimonial, CampaignTechnologyView, Partner, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
 from database.models import Community, Event, Media, UserProfile, Vendor
 
@@ -114,9 +114,6 @@ def create_technology_vendors(technology_id):
         tech_vendor.technology = technology
         tech_vendor.vendor = vendor
         tech_vendor.save()
-
-
-
 
 
 def create_technology(name, icon_name=None):
@@ -261,7 +258,7 @@ def create_template_campaign():
     campaign.image = image
     campaign.is_template = True
     campaign.tagline = "This a template campaign tagline"
-    campaign.start_date = "2024-09-01"
+    campaign.communities_section = COMMUNITIES_SECTION
     campaign.save()
 
     print("====== created Template Campaign ======")
@@ -349,8 +346,6 @@ def create_template_campaign_technology(campaign_id):
         create_campaign_event(campaign_technology)
   
 
-
-# main function
 def run():
     print("==== Creating Template Campaign ====")
     does_template_exist = Campaign.objects.filter(is_template=True).first()

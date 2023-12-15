@@ -863,7 +863,7 @@ class CampaignStore:
                 utm_campaign=utm_campaign,
             )
 
-            generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}campaign_like_id={campaign_link.id}"
+            generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}&campaign_like_id={campaign_link.id}"
 
             return {"link": shorten_url(generated_link)}, None
         except Exception as e:
@@ -976,20 +976,22 @@ class CampaignStore:
     def add_campaign_technology_view(self, context, args):
         try:
             campaign_technology_id = args.pop("campaign_technology_id", None)
+            url = args.pop("url", None)
             if not campaign_technology_id:
                 return None, InvalidResourceError()
 
-            campaign_technology = CampaignTechnology.objects.filter(
-                id=campaign_technology_id
-            ).first()
+            campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
             if not campaign_technology:
-                return None, CustomMassenergizeError(
-                    "Campaign technology with id not found!"
-                )
+                return None, CustomMassenergizeError("Campaign technology with id not found!")
+            
+            link_id = url.split("&campaign_like_id=")[1]
+            
+            if link_id:
+                campaign_link = CampaignLink.objects.filter(id=link_id).first()
+                if campaign_link:
+                    campaign_link.increase_count()
 
-            view = CampaignTechnologyView.objects.create(
-                campaign_technology=campaign_technology, **args
-            )
+            view = CampaignTechnologyView.objects.create(campaign_technology=campaign_technology, **args)
             return view, None
         except Exception as e:
             capture_message(str(e), level="error")

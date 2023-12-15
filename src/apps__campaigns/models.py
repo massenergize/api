@@ -272,46 +272,6 @@ class TechnologyOverview(BaseModel):
     def full_json(self) -> dict:
         return self.simple_json()
     
-
-
-# class Vendor(BaseModel):
-#     """
-#     This model represents a vendor.\n
-#     ---- FIELDS ----\n
-#     name : str -> Name of the vendor
-#     description : str -> Description of the vendor
-#     logo : Media(optional) -> Logo of the vendor
-#     email : str(optional) -> Email of the vendor
-#     website : str(optional) -> Website of the vendor
-#     phone_number : str(optional) -> Phone number of the vendor
-#     zipcode : str(optional) -> Zipcode of the vendor
-#     is_verified : bool -> Whether the vendor is verified
-#     creator : UserProfile -> UserProfile of the vendor
-#     """
-#     name = models.CharField(max_length=255)
-#     description = models.TextField(blank=True)
-#     logo = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
-#     email = models.EmailField(blank=True, null=True)
-#     website = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-#     phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-#     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-#     is_verified = models.BooleanField(default=False)
-#     creator = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True, related_name="vendor_creator")
-#     service_area = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-
-#     def __str__(self):
-#         return self.name
-    
-
-#     def simple_json(self)-> dict:
-#         res = super().to_json()
-#         res.update(model_to_dict(self))
-#         res["logo"] = self.logo.simple_json()
-#         return res
-    
-#     def full_json(self):
-#         return self.simple_json()
-    
 class TechnologyVendor(BaseModel):
     technology = models.ForeignKey(Technology, on_delete=models.CASCADE)
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
@@ -419,6 +379,7 @@ class CampaignTechnologyLike(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
+    zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
         return f"{self.campaign_technology} - {self.user}"
@@ -441,6 +402,7 @@ class CampaignTechnologyView(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
     ip_address = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     user_agent = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    email = models.EmailField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.campaign_technology} - {self.ip_address}"
