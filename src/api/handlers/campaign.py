@@ -16,6 +16,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.create", self.create)
 
         self.add("/campaigns.createFromTemplate", self.create_campaign_from_template)
+        
         self.add("/campaigns.list", self.list)
         self.add("/campaigns.update", self.update)
         self.add("/campaigns.delete", self.delete)
@@ -134,7 +135,7 @@ class CampaignHandler(RouteHandler):
       #  self.validator.expect("template_id", str, is_required=False)
        self.validator.expect("campaign_account_id", str, is_required=True)   
        self.validator.expect("title", str, is_required=True) 
-       self.validator.expect("community_ids", "str_list", is_required=True) 
+       self.validator.expect("community_ids", list, is_required=True) 
 
        args, err = self.validator.verify(args)
        if err:

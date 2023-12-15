@@ -141,6 +141,7 @@ def create_technology(name, icon_name=None):
 
 
 def create_campaign_technology_testimonial(campaign_technology_id):
+    print("====== Creating Campaign Technology Testimonials ======")
     campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
 
     user1, user2, user3 = create_test_users()
@@ -176,6 +177,7 @@ def create_campaign_technology_testimonial(campaign_technology_id):
 
 
 def create_campaign_partners(campaign):
+    print("====== Creating Campaign Partners ======")
     arr = [
         {
             "name": "Partner 1",
@@ -217,6 +219,7 @@ def create_campaign_partners(campaign):
 
 
 def create_campaign_Managers(campaign):
+    print("====== Creating Campaign Managers ======")
     user1, user2, user3 = create_test_users()
     users = [
         {
@@ -261,7 +264,7 @@ def create_template_campaign():
     campaign.start_date = "2024-09-01"
     campaign.save()
 
-
+    print("====== created Template Campaign ======")
     # create campaign managers
     create_campaign_Managers(campaign)
     # create campaign partners
@@ -270,6 +273,7 @@ def create_template_campaign():
     return campaign
 
 def create_campaign_event(campaign_tech):
+    print("====== Creating Campaign Events ======")
     com1, com2, com3 = get_3_communities()
     events = [
         {
@@ -315,6 +319,7 @@ def create_campaign_event(campaign_tech):
 
 
 def create_template_campaign_technology(campaign_id):
+    print("====== Creating Template Campaign Technologies ======")
     techs = []
     campaign = Campaign.objects.filter(id=campaign_id).first()
     techs = [
@@ -347,7 +352,13 @@ def create_template_campaign_technology(campaign_id):
 
 # main function
 def run():
+    print("==== Creating Template Campaign ====")
+    does_template_exist = Campaign.objects.filter(is_template=True).first()
+    if does_template_exist:
+        print("Template Campaign Already Exists")
+        return
     campaign = create_template_campaign()
+
     create_template_campaign_technology(campaign.id)
-    print("Template Campaign Created Successfully")
+    print("Template Campaign Created Successfully !!!")
     return

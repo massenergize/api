@@ -52,8 +52,11 @@ class CampaignService:
       campaign, err = self.store.create_campaign_from_template(context, args)
       if err:
         return None, err
-      return serialize(campaign, full=True), None
+      ser_cam = serialize(campaign, full=True)
+      other_details = get_campaign_details(campaign.id, True)
+      result = {**ser_cam, **other_details}
 
+      return result, None
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

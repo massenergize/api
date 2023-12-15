@@ -120,6 +120,7 @@ class Campaign(BaseModel):
     is_template = models.BooleanField(default=False)
     tagline = models.CharField(max_length=255, blank=True, null=True)
     owner = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
+    communities_section = models.JSONField(blank=True, null=True) # {title, description} of communities section
 
 
     def __str__(self):

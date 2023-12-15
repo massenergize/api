@@ -124,10 +124,42 @@ def generate_campaign_navigation(campaign_id):
 
 
 
-def copy_campaign_data(template_id, new_campaign_data):
+def copy_campaign_data(template, new_campaign):
+    # copy events, technologies, managers, partners,technology overview, technology coach, technology vendors to new campaign
+    # copy campaign configuration to new campaign
 
 
-    pass
+    # copy technologies
+    campaign_techs = CampaignTechnology.objects.filter(campaign__id=template.id, is_deleted=False)
+    for tech in campaign_techs:
+        tech.id = None
+        tech.campaign = new_campaign
+        tech.save()
+
+    # copy events
+    campaign_events = CampaignEvent.objects.filter(campaign__id=template.id, is_deleted=False)
+    for event in campaign_events:
+        event.id = None
+        event.campaign = new_campaign
+        event.save()
+    
+    # copy managers
+    campaign_managers = CampaignManager.objects.filter(campaign__id=template.id, is_deleted=False)
+    for manager in campaign_managers:
+        manager.id = None
+        manager.campaign = new_campaign
+        manager.save()
+    
+    # copy partners
+    campaign_partners = CampaignPartner.objects.filter(campaign__id=template.id, is_deleted=False)
+    for partner in campaign_partners:
+        partner.id = None
+        partner.campaign = new_campaign
+        partner.save()
+
+        
+    
+
 
 
 

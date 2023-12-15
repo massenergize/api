@@ -3,6 +3,7 @@ from _main_.utils.common import serialize_all, shorten_url
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
 from apps__campaigns.helpers import (
+    copy_campaign_data,
     generate_campaign_navigation,
     get_campaign_technology_details,
 )
@@ -1272,31 +1273,30 @@ class CampaignStore:
     def create_campaign_from_template(self, context: Context, args: dict):
         try:
             # template_id = args.pop("template_id", None)
-            account_id = args.pop("account_id", None)
+            account_id = args.pop("campaign_account_id", None)
             community_ids = args.pop("community_ids", [])
             title = args.pop("title", None)
 
-            user= get_user_from_context(context)
-            if not user:
-                return None, CustomMassenergizeError("User not found")
+            user = get_user_from_context(context)
+            # if not user:
+            #     return None, CustomMassenergizeError("User not found")
 
             if not account_id:
                 return None, CustomMassenergizeError("Account id not provided")
-            
+
             if not community_ids:
                 return None, CustomMassenergizeError("Community ids not provided")
-            
+
             if not title:
                 return None, CustomMassenergizeError("Title not provided")
 
-
-            template = Campaign.objects.filter(name="Template Campaign").first()
+            template = Campaign.objects.filter(title="Template Campaign").first()
 
             if not template:
                 return None, CustomMassenergizeError("Campaign Template not found")
-            
+
             account = CampaignAccount.objects.filter(id=account_id).first()
-            
+
             new_campaign = Campaign()
             new_campaign.title = title
             new_campaign.account = account
@@ -1310,11 +1310,21 @@ class CampaignStore:
             new_campaign.owner = user
             new_campaign.save()
 
+            for community_id in community_ids:
+                community = Community.objects.filter(id=community_id).first()
+                if community:
+                    CampaignCommunity.objects.create(
+                        campaign=new_campaign, community=community
+                    )
+
+            copy_campaign_data(template, new_campaign)
+
+            return new_campaign, None
 
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
     def track_activity(self, context: Context, args: dict):
         try:
             campaign_id = args.pop("campaign_id", None)
@@ -1324,11 +1334,12 @@ class CampaignStore:
             campaign = Campaign.objects.filter(id=campaign_id).first()
             if not campaign:
                 return None, CustomMassenergizeError("Campaign with  ID not found")
-            
-            activity = CampaignActivityTracking.objects.create(campaign=campaign, **args)
+
+            activity = CampaignActivityTracking.objects.create(
+                campaign=campaign, **args
+            )
 
             return activity, None
-
 
         except Exception as e:
             capture_message(str(e), level="error")
