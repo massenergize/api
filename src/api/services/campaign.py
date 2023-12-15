@@ -336,3 +336,10 @@ class CampaignService:
       return None, err
     return serialize(res, full=True), None
   
+  def track_activity(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.track_activity(context, args)
+    if err:
+      return None, err
+    
+    return serialize(res), None
+  

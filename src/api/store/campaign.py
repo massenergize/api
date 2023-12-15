@@ -9,6 +9,7 @@ from apps__campaigns.helpers import (
 from apps__campaigns.models import (
     Campaign,
     CampaignAccount,
+    CampaignActivityTracking,
     CampaignCommunity,
     CampaignConfiguration,
     CampaignEvent,
@@ -42,10 +43,11 @@ from wordfilter import Wordfilter
 
 
 word_filter = Wordfilter()
+
+
 class CampaignStore:
     def __init__(self):
         self.name = "Campaign Store/DB"
-
 
     def get_campaign_info(
         self, context: Context, args
@@ -76,7 +78,11 @@ class CampaignStore:
                 campaigns = Campaign.objects.filter(account__subdomain=subdomain)
 
             else:
-                campaigns = Campaign.objects.filter(Q(owner__id=context.user_id)| Q(owner__email=context.user_email) | Q(is_global=True))
+                campaigns = Campaign.objects.filter(
+                    Q(owner__id=context.user_id)
+                    | Q(owner__email=context.user_email)
+                    | Q(is_global=True)
+                )
 
             if not context.is_sandbox:
                 if context.user_is_logged_in and not context.user_is_admin():
@@ -552,7 +558,9 @@ class CampaignStore:
             word_filter.addWords(["fuck", "pussio"])
             # check for swear words in comment text
             if word_filter.blacklisted(comment_text):
-                return None, CustomMassenergizeError("Comment contains inappropriate language.")
+                return None, CustomMassenergizeError(
+                    "Comment contains inappropriate language."
+                )
 
             if campaign_technology_id:
                 campaign_technology = CampaignTechnology.objects.filter(
@@ -573,7 +581,7 @@ class CampaignStore:
                 if community:
                     args["community"] = community
 
-            comment,_ = Comment.objects.get_or_create(**args)
+            comment, _ = Comment.objects.get_or_create(**args)
 
             latest_comments = Comment.objects.filter(
                 campaign_technology__id=campaign_technology_id, is_deleted=False
@@ -894,7 +902,7 @@ class CampaignStore:
             if email:
                 user, _ = UserProfile.objects.get_or_create(email=email)
                 if _:
-                    user.user_info = {"user_type": LOOSED_USER }
+                    user.user_info = {"user_type": LOOSED_USER}
                     user.save()
                 args["user"] = user
 
@@ -906,7 +914,9 @@ class CampaignStore:
                 if community:
                     args["community"] = community
 
-            follower, _ = CampaignFollow.objects.get_or_create(campaign=campaign, **args)
+            follower, _ = CampaignFollow.objects.get_or_create(
+                campaign=campaign, **args
+            )
 
             return follower, None
         except Exception as e:
@@ -1258,3 +1268,68 @@ class CampaignStore:
 
         nav = generate_campaign_navigation(campaign_id)
         return nav, None
+
+    def create_campaign_from_template(self, context: Context, args: dict):
+        try:
+            # template_id = args.pop("template_id", None)
+            account_id = args.pop("account_id", None)
+            community_ids = args.pop("community_ids", [])
+            title = args.pop("title", None)
+
+            user= get_user_from_context(context)
+            if not user:
+                return None, CustomMassenergizeError("User not found")
+
+            if not account_id:
+                return None, CustomMassenergizeError("Account id not provided")
+            
+            if not community_ids:
+                return None, CustomMassenergizeError("Community ids not provided")
+            
+            if not title:
+                return None, CustomMassenergizeError("Title not provided")
+
+
+            template = Campaign.objects.filter(name="Template Campaign").first()
+
+            if not template:
+                return None, CustomMassenergizeError("Campaign Template not found")
+            
+            account = CampaignAccount.objects.filter(id=account_id).first()
+            
+            new_campaign = Campaign()
+            new_campaign.title = title
+            new_campaign.account = account
+            new_campaign.is_global = False
+            new_campaign.is_template = False
+            new_campaign.image = template.image
+            new_campaign.primary_logo = template.primary_logo
+            new_campaign.secondary_logo = template.secondary_logo
+            new_campaign.tagline = template.tagline
+            new_campaign.description = template.description
+            new_campaign.owner = user
+            new_campaign.save()
+
+
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+    def track_activity(self, context: Context, args: dict):
+        try:
+            campaign_id = args.pop("campaign_id", None)
+
+            if not campaign_id:
+                return None, CustomMassenergizeError("Campaign ID not provided")
+            campaign = Campaign.objects.filter(id=campaign_id).first()
+            if not campaign:
+                return None, CustomMassenergizeError("Campaign with  ID not found")
+            
+            activity = CampaignActivityTracking.objects.create(campaign=campaign, **args)
+
+            return activity, None
+
+
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)

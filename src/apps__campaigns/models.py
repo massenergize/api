@@ -109,7 +109,7 @@ class Campaign(BaseModel):
     account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    start_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     primary_logo = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True, related_name="primary_logo")
     secondary_logo = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True, related_name="secondary_logo")
@@ -613,6 +613,28 @@ class CampaignTechnologyTestimonial(BaseModel):
         res["user"] = get_summary_info(self.created_by)
         res["community"] = get_summary_info(self.community)
         res["image"] = get_json_if_not_none(self.image)
+        return res
+    
+    def full_json(self):
+        return self.simple_json()
+    
+
+
+class CampaignActivityTracking(BaseModel):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, blank=True, null=True)
+    source = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    button_type = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    target = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+
+
+    def __str__(self):
+        return f"{self.campaign} - {self.email}"
+    
+    def simple_json(self)-> dict:
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["campaign"] = get_json_if_not_none(self.campaign)
         return res
     
     def full_json(self):

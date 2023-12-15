@@ -78,6 +78,8 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.listForAdmin", self.list_campaigns_for_admins)
         self.add("/campaigns.ownership.transfer", self.transfer_ownership)
 
+        self.add("/campaigns.activities.track", self.track_activity)
+
 
 
 
@@ -131,7 +133,7 @@ class CampaignHandler(RouteHandler):
 
       #  self.validator.expect("template_id", str, is_required=False)
        self.validator.expect("campaign_account_id", str, is_required=True)   
-       self.validator.expect("name", str, is_required=True) 
+       self.validator.expect("title", str, is_required=True) 
        self.validator.expect("community_ids", "str_list", is_required=True) 
 
        args, err = self.validator.verify(args)
@@ -859,6 +861,30 @@ class CampaignHandler(RouteHandler):
           return err
         
         return MassenergizeResponse(data=res)
+    
+
+
+    def track_activity(self, request):
+      context: Context = request.context
+      args: dict = context.args
+
+      self.validator.expect("campaign_id", str, is_required=True)
+      self.validator.expect("source", str, is_required=True)
+      self.validator.expect("target", str, is_required=False)
+      self.validator.expect("email", str, is_required=True)
+      self.validator.expect("button_type", str, is_required=False)
+
+      args, err = self.validator.verify(args, strict=True)
+      if err:
+        return err
+      
+      res, err = self.service.track_activity(context, args)
+      if err:
+        return err
+      
+      return MassenergizeResponse(data=res)
+
+       
        
     
 
