@@ -1,7 +1,7 @@
 import os
 from django.core.files import File
 from apps__campaigns.constants import COACHES_SECTION, COMMUNITIES_SECTION, DEALS_SECTION, MORE_INFO_SECTION, VENDORS_SECTION
-from apps__campaigns.models import Campaign, CampaignEvent, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyTestimonial, CampaignTechnologyView, Partner, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+from apps__campaigns.models import Campaign, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyTestimonial, CampaignTechnologyView, Partner, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
 from database.models import Community, Event, Media, UserProfile, Vendor
 
 def create_media(image_path):
@@ -37,9 +37,14 @@ def create_test_users():
     
 def get_3_communities():
     arr = ["Community 1", "Community 2", "Community 3"]
+    imgs = ["media/solar-panel.jpg","media/me-biom.png","media/me-round-logo.png"]
     comm = []
     for item in arr:
+        media = create_media(imgs[arr.index(item)])
         community, _ = Community.objects.get_or_create(name=item, subdomain=item.lower().replace(" ", "-"))
+        if _:
+            community.image = media
+            community.save()
         comm.append(community)
     return comm
 
@@ -116,11 +121,11 @@ def create_technology_vendors(technology_id):
         tech_vendor.save()
 
 
-def create_technology(name, icon_name=None):
+def create_technology(name, image=None):
     technology = Technology()
     technology.name = name
     technology.description = f"This is a template technology description for {name}"
-    technology.icon = icon_name
+    technology.image = image
     technology.save()
 
     # create overview
@@ -242,8 +247,33 @@ def create_campaign_Managers(campaign):
         campaign_manager.is_key_contact = user["is_key_contact"]
         campaign_manager.contact = user["contact"]
         campaign_manager.save()
-         
 
+def create_campaign_configuration(campaign):
+    print("====== Creating Campaign Configuration ======")
+
+    # create campaign configuration
+    campaign_configuration = CampaignConfiguration()
+    campaign_configuration.campaign = campaign
+    campaign_configuration.advert  = {
+        "title": "What is Kicking Gas?",
+        "description": "Kicking Gas helps residents of South Whidbey  migrate from oil, propane, or wood to electric.",
+        "link": "https://www.google.com"
+
+    }
+    campaign_configuration.save()
+
+
+def create_campaign_communities(campaign):
+    print("====== Creating Campaign Communities ======")
+    comm, comm2, comm3 = get_3_communities()
+    link = "https://docs.google.com/spreadsheets/d/1wQ4858rQippxNqZ5c_kD985P_XOza9PW/edit#gid=676780580"
+    # bulk create
+    campaign_communities = CampaignCommunity.objects.bulk_create([
+        CampaignCommunity(campaign=campaign, community=comm, help_link=link),
+        CampaignCommunity(campaign=campaign, community=comm2, help_link=link),
+        CampaignCommunity(campaign=campaign, community=comm3, help_link=link),
+    ])
+    return campaign_communities
 
 def create_template_campaign():
     primary_logo = create_media("media/me-biom.png")
@@ -266,6 +296,12 @@ def create_template_campaign():
     create_campaign_Managers(campaign)
     # create campaign partners
     create_campaign_partners(campaign)
+
+    # create communities
+    create_campaign_communities(campaign)
+
+    # create campaign config
+    create_campaign_configuration(campaign)
 
     return campaign
 
@@ -320,13 +356,13 @@ def create_template_campaign_technology(campaign_id):
     techs = []
     campaign = Campaign.objects.filter(id=campaign_id).first()
     techs = [
-        {"name": "Heat Pump", "icon_name": "heat-pump"},
-        {"name": "Solar Community", "icon_name": "fa-solar-panel"},
-        {"name": "Home Solar", "icon_name": "fa-sun"},
+        {"name": "Heat Pump", "image": create_media("media/pump.jpeg")},
+        {"name": "Solar Community", "image": create_media("media/com-solar.png")},
+        {"name": "Home Solar", "image": create_media("media/solar-panel.jpg")},
     ]
 
     for tech in techs:
-        technology = create_technology(tech["name"], tech["icon_name"])
+        technology = create_technology(tech["name"], tech["image"])
         campaign_technology = CampaignTechnology()
         campaign_technology.campaign = campaign
         campaign_technology.technology = technology

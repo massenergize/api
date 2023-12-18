@@ -195,7 +195,7 @@ class CampaignService:
 
 
   def list_campaign_events(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
-      res, err = self.store.list_campaign_events(context)
+      res, err = self.store.list_campaign_events(context, args)
       if err:
         return None, err
       return serialize_all(res), None
