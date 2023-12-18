@@ -669,6 +669,7 @@ class CampaignHandler(RouteHandler):
          .expect("email", str, is_required=False)
           .expect("community", int, is_required=False)
           .expect("user_id", str, is_required=False)
+          .expect("community_name", str, is_required=False)
          )
         args, err = self.validator.verify(args)
         if err:
@@ -686,7 +687,7 @@ class CampaignHandler(RouteHandler):
 
         (self.validator
          .expect("campaign_technology_id", str, is_required=True)
-         .expect("link", str, is_required=True)
+         .expect("url", str, is_required=True)
           .expect("email", str, is_required=False)
           )
         args, err = self.validator.verify(args)

@@ -1,3 +1,4 @@
+import io
 import json
 from querystring_parser import parser
 from _main_.utils.massenergize_errors import CustomMassenergizeError
@@ -8,6 +9,7 @@ from dateutil import tz
 from sentry_sdk import capture_message
 import base64
 import pyshorteners
+from openpyxl import Workbook
 
 
 def get_date_and_time_in_milliseconds(**kwargs):
@@ -284,3 +286,18 @@ def encode_data_for_URL(data):
 def shorten_url(url):
     s = pyshorteners.Shortener()
     return s.tinyurl.short(url)
+
+
+def generate_workbook_with_sheets(sheet_data):
+    wb = Workbook()
+    for sheet_name, sheet in sheet_data.items():
+        ws = wb.create_sheet(title=sheet_name)
+        for row in sheet["data"]:
+            ws.append(row)
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+
+    bytes_data = buffer.getvalue()
+    return bytes_data
+

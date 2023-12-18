@@ -381,6 +381,7 @@ class CampaignTechnologyLike(BaseModel):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    community_name = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
         return f"{self.campaign_technology} - {self.user}"
@@ -401,12 +402,11 @@ class CampaignTechnologyLike(BaseModel):
 
 class CampaignTechnologyView(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    ip_address = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    user_agent = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     email = models.EmailField(blank=True, null=True)
+    
 
     def __str__(self):
-        return f"{self.campaign_technology} - {self.ip_address}"
+        return f"{self.campaign_technology} - {self.email} - view"
     
     def simple_json(self)-> dict:
         res = super().to_json()
