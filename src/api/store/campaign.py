@@ -4,6 +4,7 @@ from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
 from apps__campaigns.helpers import (
     copy_campaign_data,
+    generate_analytics_data,
     generate_campaign_navigation,
     get_campaign_technology_details,
 )
@@ -72,6 +73,10 @@ class CampaignStore:
         try:
             campaign_account_id = args.get("campaign_account_id", None)
             subdomain = args.get("subdomain", None)
+
+            campaigns = Campaign.objects.filter(is_deleted=False)
+
+            return campaigns, None
 
             if campaign_account_id:
                 campaigns = Campaign.objects.filter(account__id=campaign_account_id)
@@ -936,13 +941,9 @@ class CampaignStore:
                     "Campaign technology id not found!"
                 )
 
-            campaign_technology = CampaignTechnology.objects.filter(
-                id=campaign_technology_id
-            ).first()
+            campaign_technology = CampaignTechnology.objects.filter( id=campaign_technology_id).first()
             if not campaign_technology:
-                return None, CustomMassenergizeError(
-                    "Campaign technology with id not found!"
-                )
+                return None, CustomMassenergizeError("Campaign technology with id not found!")
 
             if user_id:
                 user = UserProfile.objects.filter(id=user_id).first()
@@ -964,9 +965,7 @@ class CampaignStore:
                     like.is_deleted = True
             like.save()
 
-            campaign_tech = get_campaign_technology_details(
-                campaign_technology_id, False, email
-            )
+            campaign_tech = get_campaign_technology_details(campaign_technology_id, False, email)
 
             return campaign_tech, None
         except Exception as e:
@@ -1019,101 +1018,12 @@ class CampaignStore:
             campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
             if not campaign:
                 return None, CustomMassenergizeError("Campaign with id not found!")
-            # number of shares, number of likes, number of views, number of followers, number of comments, number of testimonials,
-            utm_medium_counts = (
-                CampaignLink.objects.filter(is_deleted=False, campaign__id=campaign_id)
-                .values("utm_medium")
-                .annotate(count=Count("utm_medium"))
-                .order_by("utm_medium")
-            )
-            likes = (
-                CampaignTechnologyLike.objects.filter(
-                    is_deleted=False, campaign_technology__campaign__id=campaign_id
-                )
-                .values("campaign_technology__technology__name")
-                .annotate(count=Count("campaign_technology__technology"))
-                .order_by("campaign_technology__technology")
-            )
-            views = (
-                CampaignTechnologyView.objects.filter(
-                    is_deleted=False, campaign_technology__campaign__id=campaign_id
-                )
-                .values("campaign_technology__technology__name")
-                .annotate(count=Count("campaign_technology__technology"))
-                .order_by("campaign_technology__technology")
-            )
-            followers = (
-                CampaignFollow.objects.filter(
-                    is_deleted=False, campaign__id=campaign_id
-                )
-                .values("community")
-                .annotate(count=Count("community"))
-                .order_by("community")
-            )
-            comments = (
-                Comment.objects.filter(
-                    is_deleted=False, campaign_technology__campaign__id=campaign_id
-                )
-                .values("campaign_technology__technology__name")
-                .annotate(count=Count("campaign_technology__technology"))
-                .order_by("campaign_technology__technology")
-            )
-            testimonials = (
-                CampaignTechnologyTestimonial.objects.filter(
-                    is_deleted=False, campaign_technology__campaign__id=campaign_id
-                )
-                .values("campaign_technology__technology__name")
-                .annotate(count=Count("campaign_technology__technology"))
-                .order_by("campaign_technology__technology")
-            )
-
-            stats = {
-                "shares": list(utm_medium_counts),
-                "likes": [
-                    {
-                        "technology": entry.get(
-                            "campaign_technology__technology__name"
-                        ),
-                        "count": entry.get("count"),
-                    }
-                    for entry in list(likes)
-                ],
-                "views": [
-                    {
-                        "technology": entry.get(
-                            "campaign_technology__technology__name"
-                        ),
-                        "count": entry.get("count"),
-                    }
-                    for entry in list(views)
-                ],
-                "followers": [
-                    {"community": entry.get("community"), "count": entry.get("count")}
-                    for entry in list(followers)
-                ],
-                "comments": [
-                    {
-                        "technology": entry.get(
-                            "campaign_technology__technology__name"
-                        ),
-                        "count": entry.get("count"),
-                    }
-                    for entry in list(comments)
-                ],
-                "testimonials": [
-                    {
-                        "technology": entry.get(
-                            "campaign_technology__technology__name"
-                        ),
-                        "count": entry.get("count"),
-                    }
-                    for entry in list(testimonials)
-                ],
-            }
+            stats = generate_analytics_data(campaign_id)
             return stats, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
+        
 
     def add_campaign_like(self, context: Context, args):
         try:
@@ -1280,8 +1190,8 @@ class CampaignStore:
             title = args.pop("title", None)
 
             user = get_user_from_context(context)
-            # if not user:
-            #     return None, CustomMassenergizeError("User not found")
+            if not user:
+                return None, CustomMassenergizeError("User not found")
 
             if not account_id:
                 return None, CustomMassenergizeError("Account id not provided")
@@ -1315,9 +1225,7 @@ class CampaignStore:
             for community_id in community_ids:
                 community = Community.objects.filter(id=community_id).first()
                 if community:
-                    CampaignCommunity.objects.create(
-                        campaign=new_campaign, community=community
-                    )
+                    CampaignCommunity.objects.create(campaign=new_campaign, community=community)
 
             copy_campaign_data(template, new_campaign)
 

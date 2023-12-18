@@ -7,7 +7,7 @@ from api.utils.filter_functions import sort_items
 from sentry_sdk import capture_message
 from typing import Tuple
 
-from apps__campaigns.helpers import get_campaign_details, get_campaign_technology_details
+from apps__campaigns.helpers import generate_analytics_data, get_campaign_details, get_campaign_technology_details
 
 class CampaignService:
   """
@@ -24,7 +24,7 @@ class CampaignService:
       return None, err
     ser_cam = serialize(campaign, full=True)
     other_details = get_campaign_details(campaign.id, True, email)
-    result = {**ser_cam, **other_details}
+    result = {**ser_cam, **other_details, "stats":generate_analytics_data(campaign.id)}
 
     return result, None
 
@@ -54,7 +54,7 @@ class CampaignService:
         return None, err
       ser_cam = serialize(campaign, full=True)
       other_details = get_campaign_details(campaign.id, True)
-      result = {**ser_cam, **other_details}
+      result = {**ser_cam, **other_details, "stats":generate_analytics_data(campaign.id)}
 
       return result, None
     except Exception as e:

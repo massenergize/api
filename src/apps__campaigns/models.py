@@ -320,6 +320,7 @@ class CampaignTechnology(BaseModel):
 class CampaignCommunity(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    help_link = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
 
     def __str__(self):
         return f"{self.campaign} - {self.community}"
