@@ -74,10 +74,6 @@ class CampaignStore:
             campaign_account_id = args.get("campaign_account_id", None)
             subdomain = args.get("subdomain", None)
 
-            campaigns = Campaign.objects.filter(is_deleted=False)
-
-            return campaigns, None
-
             if campaign_account_id:
                 campaigns = Campaign.objects.filter(account__id=campaign_account_id)
             elif subdomain:
