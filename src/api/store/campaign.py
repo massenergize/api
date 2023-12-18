@@ -983,7 +983,8 @@ class CampaignStore:
             if not campaign_technology:
                 return None, CustomMassenergizeError("Campaign technology with id not found!")
             
-            link_id = url.split("&campaign_like_id=")[1]
+            link_id = url.split("&campaign_like_id=")
+            link_id = link_id[1] if len(link_id) > 1 else None
             
             if link_id:
                 campaign_link = CampaignLink.objects.filter(id=link_id).first()
