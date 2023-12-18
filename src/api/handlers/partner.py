@@ -1,6 +1,7 @@
 from _main_.utils.context import Context
 from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.route_handler import RouteHandler
+from api.decorators import admins_only
 from api.services.partner import PartnerService
 from api.services.technology import TechnologyService
 
@@ -46,7 +47,7 @@ class PartnerHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def create(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -67,7 +68,7 @@ class PartnerHandler(RouteHandler):
         
         return MassenergizeResponse(data=res)
     
-
+    @admins_only
     def update(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -89,7 +90,7 @@ class PartnerHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-
+    @admins_only
     def delete(self, request):
         context: Context = request.context
         args: dict = context.args
