@@ -57,7 +57,7 @@ class TechnologyHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    # @admins_only
+    @admins_only
     def create(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -78,7 +78,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def update(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -102,7 +102,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def delete(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -120,7 +120,7 @@ class TechnologyHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    # @admins_only
+    @admins_only
     def list_for_admin(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -130,7 +130,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def create_technology_coach(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -152,7 +152,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def remove_coach(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -170,7 +170,7 @@ class TechnologyHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    # @admins_only
+    @admins_only
     def update_technology_coach(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -192,7 +192,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def add_vendor(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -210,7 +210,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def remove_vendor(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -228,7 +228,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def create_overview(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -248,7 +248,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def update_overview(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -268,7 +268,7 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-    # @admins_only
+    @admins_only
     def delete_overview(self, request):
         context: Context = request.context
         args: dict = context.args
