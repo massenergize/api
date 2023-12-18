@@ -192,8 +192,11 @@ def send_events_nudge(task=None):
             event_list = d.get("events", [])
             if len(admins) > 0 and len(event_list) > 0:
                 email_list = get_email_list(admins)
-                for name, email, user_info in email_list.items():
-                    stat = send_events_report(name, email, event_list, user_info)
+
+                #for name, email, user_info in email_list.items():
+                #    stat = send_events_report(name, email, event_list, user_info)
+                for name, email in email_list.items():
+                    stat = send_events_report(name, email, event_list)
                     if not stat:
                         print("send_events_report error return")
                         return False
@@ -205,9 +208,12 @@ def send_events_nudge(task=None):
         return False
 
 
-def send_events_report(name, email, event_list, user_info):
+#def send_events_report(name, email, event_list, user_info):
+def send_events_report(name, email, event_list):
     try:
-        login_method= (user_info or {}).get("login_method", None)
+        # 14-Dec-23 - fix for user_info not provided
+        user = UserProfile.objects.filter(email=email).first()
+        login_method= (user.user_info or {}).get("login_method", None)
         cred = encode_data_for_URL({"email": email, "login_method":login_method})
         change_preference_link = ADMIN_URL_ROOT+f"/admin/profile/preferences/?cred={cred}"
         data = {}
