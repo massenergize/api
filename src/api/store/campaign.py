@@ -122,8 +122,8 @@ class CampaignStore:
                 print(args)
 
             owner = get_user_from_context(context)
-            # if not owner:
-            #    return None, CustomMassenergizeError("User not found")
+            if not owner:
+               return None, CustomMassenergizeError("User not found")
 
             if campaign_account_id:
                 account = CampaignAccount.objects.get(id=campaign_account_id)
