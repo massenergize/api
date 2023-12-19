@@ -296,10 +296,8 @@ class CampaignStore:
 
     def add_campaign_manager(self, context: Context, args):
         try:
-            user_ids = args.pop("user_ids", [])
+            email = args.pop("email", None)
             campaign_id = args.pop("campaign_id", None)
-
-            created_list = []
 
             if not campaign_id:
                 return None, InvalidResourceError()
@@ -308,17 +306,13 @@ class CampaignStore:
 
             if not campaign:
                 return None, CustomMassenergizeError("campaign with id not found!")
-
-            if user_ids:
-                for user_id in user_ids:
-                    user = UserProfile.objects.filter(id=user_id).first()
-                    if user:
-                        campaign_manager, _ = CampaignManager.objects.get_or_create(
-                            campaign=campaign, user=user
-                        )
-                        created_list.append(campaign_manager.simple_json())
-
-            return created_list, None
+            if not email:
+                return None, CustomMassenergizeError("email is required!")
+            user = UserProfile.objects.filter(email=email).first()
+            if not user:
+                return None, CustomMassenergizeError("user with email not found!")
+            manager,_ = CampaignManager.objects.get_or_create(campaign=campaign, user=user, **args)
+            return manager, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -336,6 +330,23 @@ class CampaignStore:
 
             campaign_manager.is_deleted = True
             campaign_manager.save()
+
+            return campaign_manager, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def update_campaign_manager(self, context: Context, args):
+        try:
+            campaign_manager_id = args.pop("campaign_manager_id", None)
+            if not campaign_manager_id:
+                return None, InvalidResourceError()
+            campaign_manager = CampaignManager.objects.filter(id=campaign_manager_id).first()
+            if not campaign_manager:
+                return None, CustomMassenergizeError("campaign manager with id not found!")
+
+            campaign_manager.update(**args)
 
             return campaign_manager, None
         except Exception as e:
@@ -384,6 +395,22 @@ class CampaignStore:
 
             campaign_community.is_deleted = True
             campaign_community.save()
+
+            return campaign_community, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+    def update_campaign_community(self, context: Context, args):
+        try:
+            campaign_community_id = args.pop("campaign_community_id", None)
+            if not campaign_community_id:
+                return None, InvalidResourceError()
+            campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id).first()
+            if not campaign_community:
+                return None, CustomMassenergizeError("campaign community with id not found!")
+
+            campaign_community.update(**args)
 
             return campaign_community, None
         except Exception as e:

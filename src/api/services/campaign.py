@@ -96,6 +96,12 @@ class CampaignService:
     if err:
       return None, err
     return serialize(campaign_manager, full=True), None
+  
+  def update_campaign_manager(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    campaign_manager, err = self.store.update_campaign_manager(context, args)
+    if err:
+      return None, err
+    return serialize(campaign_manager, full=True), None
 
 
   def add_campaign_community(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -107,6 +113,12 @@ class CampaignService:
 
   def remove_campaign_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     res, err = self.store.remove_campaign_community(context, args)
+    if err:
+      return None, err
+    return serialize(res, full=True), None
+  
+  def update_campaign_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.update_campaign_community(context, args)
     if err:
       return None, err
     return serialize(res, full=True), None

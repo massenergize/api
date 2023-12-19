@@ -31,9 +31,11 @@ class CampaignHandler(RouteHandler):
 
         self.add("/campaigns.managers.add", self.add_campaign_manager)
         self.add("/campaigns.managers.remove", self.remove_campaign_manager)
+        self.add("/campaigns.managers.update", self.update_campaign_manager)
 
         self.add("/campaigns.communities.add", self.add_campaign_community)
         self.add("/campaigns.communities.remove", self.remove_campaign_community)
+        self.add("/campaigns.communities.update", self.update_campaign_community)
 
         self.add("/campaigns.technologies.add", self.add_campaign_technology)
         self.add("/campaigns.technologies.remove", self.remove_campaign_technology)
@@ -235,7 +237,7 @@ class CampaignHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("campaign_id", str, is_required=False)
-        self.validator.expect("user_ids", list, is_required=False)
+        self.validator.expect("email", str, is_required=False)
         args, err = self.validator.verify(args)
         if err:
           return err
@@ -260,6 +262,25 @@ class CampaignHandler(RouteHandler):
         if err:
           return err
         return MassenergizeResponse(data=res)
+    
+    @admins_only
+    def update_campaign_manager(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_manager_id", str, is_required=True)
+        self.validator.expect("is_key_contact", bool, is_required=False)
+        self.validator.expect("contact", str, is_required=False)
+
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+        res, err = self.service.update_campaign_manager(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+
+
 
     @admins_only
     def add_campaign_community(self, request): 
@@ -289,6 +310,23 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.remove_campaign_community(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    @admins_only
+    def update_campaign_community(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_community_id", str, is_required=True)
+        self.validator.expect("help_link", bool, is_required=False)
+
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+        res, err = self.service.update_campaign_community(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)
