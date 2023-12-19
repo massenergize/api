@@ -24,6 +24,7 @@ from apps__campaigns.models import (
     CampaignTechnologyLike,
     CampaignTechnologyTestimonial,
     CampaignTechnologyView,
+    CampaignView,
     Comment,
     Partner,
     Technology,
@@ -42,6 +43,7 @@ from sentry_sdk import capture_message
 from typing import Tuple
 from django.db.models import Count
 from wordfilter import Wordfilter
+from django.db import transaction
 
 
 word_filter = Wordfilter()
@@ -73,6 +75,8 @@ class CampaignStore:
         try:
             campaign_account_id = args.get("campaign_account_id", None)
             subdomain = args.get("subdomain", None)
+            campaigns = Campaign.objects.filter(is_deleted=False)
+            return campaigns, None
 
             if campaign_account_id:
                 campaigns = Campaign.objects.filter(account__id=campaign_account_id)
@@ -928,40 +932,33 @@ class CampaignStore:
     def add_campaign_technology_like(self, context, args):
         try:
             campaign_technology_id = args.pop("campaign_technology_id", None)
-            community_id: str = args.pop("community_id", None)
-            user_id: str = args.pop("user_id", None)
-            email = args.pop("email", context.user_email)
+            # community_id: str = args.pop("community_id", None)
+            # user_id: str = args.pop("user_id", None)
+            # email = args.pop("email", context.user_email)
 
             if not campaign_technology_id:
-                return None, CustomMassenergizeError(
-                    "Campaign technology id not found!"
-                )
+                return None, CustomMassenergizeError("Campaign technology id not found!")
 
             campaign_technology = CampaignTechnology.objects.filter( id=campaign_technology_id).first()
             if not campaign_technology:
                 return None, CustomMassenergizeError("Campaign technology with id not found!")
 
-            if user_id:
-                user = UserProfile.objects.filter(id=user_id).first()
-                if user:
-                    args["user"] = user
+            # if user_id:
+            #     user = UserProfile.objects.filter(id=user_id).first()
+            #     if user:
+            #         args["user"] = user
 
-            if community_id:
-                community = Community.objects.filter(id=community_id).first()
-                if community:
-                    args["community"] = community
+            # if community_id:
+            #     community = Community.objects.filter(id=community_id).first()
+            #     if community:
+            #         args["community"] = community
 
-            like, _ = CampaignTechnologyLike.objects.get_or_create(
-                campaign_technology=campaign_technology, **args
-            )
-            if not _:
-                if like.is_deleted:
-                    like.is_deleted = False
-                else:
-                    like.is_deleted = True
-            like.save()
+            like, _ = CampaignTechnologyLike.objects.get_or_create(campaign_technology=campaign_technology)
+            # lock transaction
+            with transaction.atomic():
+                like.increase_count()
 
-            campaign_tech = get_campaign_technology_details(campaign_technology_id, False, email)
+            campaign_tech = get_campaign_technology_details(campaign_technology_id, False)
 
             return campaign_tech, None
         except Exception as e:
@@ -985,9 +982,13 @@ class CampaignStore:
             if link_id:
                 campaign_link = CampaignLink.objects.filter(id=link_id).first()
                 if campaign_link:
-                    campaign_link.increase_count()
+                    with transaction.atomic():
+                        campaign_link.increase_count()
 
-            view = CampaignTechnologyView.objects.create(campaign_technology=campaign_technology, **args)
+            view, _ = CampaignTechnologyView.objects.get_or_create(campaign_technology=campaign_technology)
+            # lock transaction
+            with transaction.atomic():
+                view.increase_count()
             return view, None
         except Exception as e:
             capture_message(str(e), level="error")
@@ -1248,6 +1249,36 @@ class CampaignStore:
 
             return activity, None
 
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+    
+
+    def add_campaign_view(self, context: Context, args):
+        try:
+            campaign_id = args.pop("campaign_id", None)
+            url = args.pop("url", None)
+            if not campaign_id:
+                return None, InvalidResourceError()
+
+            campaign = Campaign.objects.filter(id=campaign_id).first()
+            if not campaign:
+                return None, CustomMassenergizeError("Campaign with id not found!")
+            
+            link_id = url.split("&campaign_like_id=")
+            link_id = link_id[1] if len(link_id) > 1 else None
+            
+            if link_id:
+                campaign_link = CampaignLink.objects.filter(id=link_id).first()
+                if campaign_link:
+                    with transaction.atomic():
+                        campaign_link.increase_count()
+
+            view, _ = CampaignView.objects.get_or_create(campaign=campaign)
+            # lock transaction
+            with transaction.atomic():
+                view.increase_count()
+            return view, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

@@ -17,6 +17,7 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
     config = CampaignConfiguration.objects.filter(campaign__id=campaign_id, is_deleted=False).first()
     key_contact = CampaignManager.objects.filter(campaign__id=campaign_id, is_deleted=False, is_key_contact=True).first()
+    campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False).first()
     
     if email:
         my_testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__campaign__id=campaign_id, created_by__email=email).order_by("-created_at")
@@ -30,6 +31,7 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
         } if key_contact else None,
 
         "my_testimonials": serialize_all(my_testimonials[:5]) if email else [],
+        "campaign_views":campaign_views.count if campaign_views else 0,
         "technologies": prepared,
         "communities": serialize_all(communities),
         "managers": serialize_all(managers),
@@ -55,15 +57,13 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
             "comments": serialize_all(comments),
             **campaign_tech.technology.simple_json()
         }
-    views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
-    likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
-    liked = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False, user__email=email).exists()
+    campaign_technology_views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).first()
+    likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).first()
 
     return {
             **get_technology_details(campaign_tech.technology.id),
-            "views":views.count(),
-            "has_liked":liked,
-            "likes":likes.count(),
+            "campaign_technology_views":campaign_technology_views.count if campaign_technology_views else 0,
+            "likes":likes.count if likes else 0,
             "testimonials":serialize_all(testimonials),
             "comments": serialize_all(comments),
             "events": serialize_all(events, full=True),
@@ -141,9 +141,7 @@ def generate_analytics_data(campaign_id):
         .order_by("campaign_technology__technology")
     )
     views = (
-        CampaignTechnologyView.objects.filter(
-            is_deleted=False, campaign_technology__campaign__id=campaign_id
-        )
+        CampaignTechnologyView.objects.filter( is_deleted=False, campaign_technology__campaign__id=campaign_id)
         .values("campaign_technology__technology__name")
         .annotate(count=Count("campaign_technology__technology"))
         .order_by("campaign_technology__technology")

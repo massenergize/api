@@ -338,11 +338,19 @@ class CampaignCommunity(BaseModel):
 
 class CampaignLike(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
-    email = models.EmailField(blank=True, null=True)
-    zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    count = models.PositiveBigIntegerField(default=0)
+
 
     def __str__(self):
-        return f"{self.campaign} - {self.email}"
+        return f"{self.campaign} - {str(self.count)} - likes"
+    
+    def increase_count(self):
+        self.count += 1
+        self.save()
+
+    def decrease_count(self):
+        self.count -= 1
+        self.save()
     
     def simple_json(self)-> dict:
         res = super().to_json()
@@ -382,9 +390,19 @@ class CampaignTechnologyLike(BaseModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     community_name = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    count = models.PositiveBigIntegerField(default=0)
+
 
     def __str__(self):
         return f"{self.campaign_technology} - {self.user}"
+    
+    def increase_count(self):
+        self.count += 1
+        self.save()
+    
+    def decrease_count(self):
+        self.count -= 1
+        self.save()
     
     def simple_json(self)-> dict:
         res = super().to_json()
@@ -402,16 +420,43 @@ class CampaignTechnologyLike(BaseModel):
 
 class CampaignTechnologyView(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    email = models.EmailField(blank=True, null=True)
+    count = models.PositiveBigIntegerField(default=0)
     
 
     def __str__(self):
-        return f"{self.campaign_technology} - {self.email} - view"
+        return f"{self.campaign_technology} - {str(self.count)} - views"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
+        return res
+    
+    def increase_count(self):
+        self.count += 1
+        self.save() 
+    
+    def full_json(self):
+        return self.simple_json()
+    
+
+class CampaignView(BaseModel):
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
+    count = models.PositiveBigIntegerField(default=0)
+    
+
+    def __str__(self):
+        return f"{self.campaign} - {str(self.count)} - views"
+    
+
+    def increase_count(self):
+        self.count += 1
+        self.save()
+    
+    def simple_json(self)-> dict:
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["campaign"] = get_summary_info(self.campaign)
         return res
     
     def full_json(self):

@@ -346,3 +346,11 @@ class CampaignService:
     
     return serialize(res), None
   
+
+  def add_campaign_view(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.add_campaign_view(context, args)
+    if err:
+      return None, err
+    
+    return serialize(res), None
+  

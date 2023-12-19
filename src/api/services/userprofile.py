@@ -391,7 +391,7 @@ class UserService:
     if err:
       return None, err
     
-    return serialize(res, full=True), None
+    return res.info(), None
   
 
   def get_loosed_user(self, context, args):

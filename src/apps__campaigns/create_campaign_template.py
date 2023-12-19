@@ -11,8 +11,6 @@ def create_media(image_path):
         media.name = f"Test media for {image_path}"
     return media
 
-
-
 def create_test_users():
     users = []
     arr = [
@@ -43,7 +41,7 @@ def get_3_communities():
         media = create_media(imgs[arr.index(item)])
         community, _ = Community.objects.get_or_create(name=item, subdomain=item.lower().replace(" ", "-"))
         if _:
-            community.image = media
+            community.logo = media
             community.save()
         comm.append(community)
     return comm
@@ -76,8 +74,6 @@ def create_campaign_technology_overview(technology_id):
         campaign_technology_overview.image = item["image"]
         campaign_technology_overview.save()
 
-
-
 def create_technology_coaches(technology_id):
     technology = Technology.objects.filter(id=technology_id, is_deleted=False).first()
     arr = [
@@ -109,7 +105,6 @@ def create_technology_coaches(technology_id):
         coach.image = item["image"]
         coach.save()
 
-
 def create_technology_vendors(technology_id):
     technology = Technology.objects.filter(id=technology_id, is_deleted=False).first()
 
@@ -119,7 +114,6 @@ def create_technology_vendors(technology_id):
         tech_vendor.technology = technology
         tech_vendor.vendor = vendor
         tech_vendor.save()
-
 
 def create_technology(name, image=None):
     technology = Technology()
@@ -140,7 +134,6 @@ def create_technology(name, image=None):
 
 
     return technology
-
 
 def create_campaign_technology_testimonial(campaign_technology_id):
     print("====== Creating Campaign Technology Testimonials ======")
@@ -175,8 +168,6 @@ def create_campaign_technology_testimonial(campaign_technology_id):
         campaign_technology_view.created_by = item["created_by"]
         campaign_technology_view.community = item["community"]
         campaign_technology_view.save()
-
-
 
 def create_campaign_partners(campaign):
     print("====== Creating Campaign Partners ======")
@@ -219,7 +210,6 @@ def create_campaign_partners(campaign):
         campaign_partner.partner = partner
         campaign_partner.save()
 
-
 def create_campaign_Managers(campaign):
     print("====== Creating Campaign Managers ======")
     user1, user2, user3 = create_test_users()
@@ -228,6 +218,7 @@ def create_campaign_Managers(campaign):
             "user": user1,
             "is_key_contact": True,
             "contact": "1234567890",
+            "image": create_media("media/face2.jpeg"),
         },
         {
             "user": user2,
@@ -261,7 +252,6 @@ def create_campaign_configuration(campaign):
 
     }
     campaign_configuration.save()
-
 
 def create_campaign_communities(campaign):
     print("====== Creating Campaign Communities ======")
@@ -348,9 +338,6 @@ def create_campaign_event(campaign_tech):
         campaign_event.event = evn
         campaign_event.save()
 
-
-
-
 def create_template_campaign_technology(campaign_id):
     print("====== Creating Template Campaign Technologies ======")
     techs = []
@@ -381,7 +368,6 @@ def create_template_campaign_technology(campaign_id):
         create_campaign_technology_testimonial(campaign_technology.id)
         create_campaign_event(campaign_technology)
   
-
 def run():
     print("==== Creating Template Campaign ====")
     does_template_exist = Campaign.objects.filter(is_template=True).first()

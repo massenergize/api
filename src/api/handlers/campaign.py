@@ -74,6 +74,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.like", self.add_campaign_like)
 
         self.add("/campaigns.technology.view", self.add_campaign_technology_view)
+        self.add("/campaigns.view", self.add_campaign_view)
     
         # admin routes
         self.add("/campaigns.listForAdmin", self.list_campaigns_for_admins)
@@ -666,10 +667,10 @@ class CampaignHandler(RouteHandler):
 
         (self.validator
          .expect("campaign_technology_id", str, is_required=True)
-         .expect("email", str, is_required=False)
-          .expect("community", int, is_required=False)
-          .expect("user_id", str, is_required=False)
-          .expect("community_name", str, is_required=False)
+        #  .expect("email", str, is_required=False)
+        #   .expect("community", int, is_required=False)
+        #   .expect("user_id", str, is_required=False)
+        #   .expect("community_name", str, is_required=False)
          )
         args, err = self.validator.verify(args)
         if err:
@@ -891,11 +892,20 @@ class CampaignHandler(RouteHandler):
 
        
        
-    
+    def add_campaign_view(self, request):
+        context: Context = request.context
+        args: dict = context.args
 
+        self.validator.expect("campaign_id", str, is_required=True)
 
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
 
-    
+        res, err = self.service.add_campaign_view(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
 
 
 
