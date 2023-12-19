@@ -5,6 +5,7 @@ from api.constants import LOOSED_USER, STANDARD_USER,GUEST_USER
 from api.utils.api_utils import get_sender_email, is_admin_of_community
 from api.utils.filter_functions import get_users_filter_params
 from api.store.common import create_pdf_from_rich_text, sign_mou
+from apps__campaigns.models import CampaignFollow
 from database.models import CommunityAdminGroup, Footage, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
@@ -1048,6 +1049,7 @@ class UserStore:
     try:
       email = args.get('email', None)
       user_id = args.get('id', None)
+      follow_id = args.pop('follow_id', None)
 
       if not email and not user_id:
         return None, CustomMassenergizeError("Please provide email or user_id")
@@ -1065,8 +1067,15 @@ class UserStore:
       if user_info.get('user_type', None) == LOOSED_USER:
         user.full_name = args.get('full_name', user.full_name)
       user.save()
+
+      if not follow_id:
+        return CustomMassenergizeError("Please provide follow_id")
       
-      return user, None
+
+      follow =  CampaignFollow.objects.filter(id=follow_id).first()
+      if not follow:
+        return None, CustomMassenergizeError("follow not found")
+      return follow, None
     
     except Exception as e:
       capture_message(str(e), level="error")

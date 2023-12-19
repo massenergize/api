@@ -409,6 +409,8 @@ class UserHandler(RouteHandler):
             self.validator.expect("id", str, is_required=True)
             .expect("email", str, is_required=False)
             .expect("full_name", str, is_required=False)
+            .expect("preferred_name", str, is_required=False)
+            .expect("follow_id", str, is_required=True)
             .verify(args, strict=True)
         )
         if err:
