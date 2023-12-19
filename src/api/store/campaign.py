@@ -947,9 +947,7 @@ class CampaignStore:
                 if community:
                     args["community"] = community
 
-            follower, _ = CampaignFollow.objects.get_or_create(
-                campaign=campaign, **args
-            )
+            follower, _ = CampaignFollow.objects.get_or_create(campaign=campaign, **args)
 
             return follower, None
         except Exception as e:

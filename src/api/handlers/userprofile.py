@@ -406,7 +406,7 @@ class UserHandler(RouteHandler):
         args:dict = context.args
 
         args, err = (
-            self.validator.expect("id", str, is_required=False)
+            self.validator.expect("id", str, is_required=True)
             .expect("email", str, is_required=False)
             .expect("full_name", str, is_required=False)
             .verify(args, strict=True)
@@ -414,6 +414,8 @@ class UserHandler(RouteHandler):
         if err:
             return err
         user_info, err = self.service.update_loosed_user(context, args)
+        if err:
+            return err
         return MassenergizeResponse(data=user_info)
     
 
@@ -429,4 +431,6 @@ class UserHandler(RouteHandler):
         if err:
             return err
         user_info, err = self.service.get_loosed_user(context, args)
+        if err:
+            return err
         return MassenergizeResponse(data=user_info)
