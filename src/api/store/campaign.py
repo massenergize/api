@@ -928,6 +928,46 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
+        
+
+    def add_campaign_technology_follower(self, context, args):
+        try:
+            campaign_technology_id = args.pop("campaign_technology_id", None)
+            community_id: str = args.pop("community_id", None)
+
+            email = args.pop("email", None)
+            is_other = args.pop("is_other", False)
+
+            if not campaign_technology_id:
+                return None, CustomMassenergizeError("Campaign technology id not found!")
+
+            campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+            if not campaign_technology:
+                return None, CustomMassenergizeError("Campaign technology with id not found!")
+
+            if email:
+                user, _ = UserProfile.objects.get_or_create(email=email)
+                if _:
+                    user.user_info = {"user_type": LOOSED_USER}
+                    user.save()
+                args["user"] = user
+
+            if is_other:
+                other_comm, _ = Community.objects.get_or_create(name="Other")
+                args["community"] = other_comm
+            else:
+                community = Community.objects.filter(id=community_id).first()
+                if community:
+                    args["community"] = community
+
+            follower, _ = CampaignTechnologyLike.objects.get_or_create(campaign_technology=campaign_technology, **args)
+
+            return follower, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
+
 
     def add_campaign_technology_like(self, context, args):
         try:

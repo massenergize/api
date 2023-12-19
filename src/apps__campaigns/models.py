@@ -384,6 +384,29 @@ class CampaignFollow(BaseModel):
         return self.simple_json()
     
 
+class CampaignTechnologyFollow(BaseModel):
+    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
+    zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
+    community_name = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+
+    def __str__(self):
+        return f"{self.campaign_technology} - {self.user}"
+    
+    def simple_json(self)-> dict:
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["campaign_technology"] = get_summary_info(self.campaign_technology)
+        res["user"] = get_summary_info(self.user)
+        res["community"] = get_summary_info(self.community)
+        res["is_other"] = True if self.community.name == "Other" else False
+        return res
+    
+    def full_json(self):
+        return self.simple_json()
+    
+
 class CampaignTechnologyLike(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)

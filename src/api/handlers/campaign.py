@@ -70,6 +70,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.links.visits.count", self.campaign_link_visits_count)
 
         self.add("/campaigns.follow", self.add_campaign_follower)
+        self.add("/campaigns.technology.follow", self.add_campaign_technology_follower)
         self.add("/campaigns.technology.like", self.add_campaign_technology_like)
         self.add("/campaigns.like", self.add_campaign_like)
 
@@ -655,6 +656,27 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.add_campaign_follower(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def add_campaign_technology_follower(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        (self.validator
+         .expect("campaign_technology_id", str, is_required=True)
+         .expect("email", str, is_required=True)
+          .expect("community_id", int, is_required=False)
+          .expect("campaign_id", str, is_required=False)
+          .expect("is_other", bool, is_required=False)
+         )
+        args, err = self.validator.verify(args)
+        if err:
+          return err
+
+        res, err = self.service.add_campaign_technology_follower(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)
