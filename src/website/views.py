@@ -84,6 +84,24 @@ META = {
 }
 
 
+
+
+def campaign(request, campaign_id):
+    meta =  {
+
+            "title": "Nation Campaign " + campaign_id,
+            # "redirect_to": f"{redirect_url}/actions",
+            "stay_put": True
+        }
+    args = { 
+        "meta":meta,
+        "title":"Latest campaign in town", 
+        "id":campaign_id,
+    }
+
+
+    return render(request, "campaign.html", args)
+
 def _restructure_communities(communities):
     _communities = []
     for community in communities:

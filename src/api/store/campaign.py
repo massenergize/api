@@ -1338,7 +1338,7 @@ class CampaignStore:
             comment = Comment.objects.filter(id=comment_id).first()
             if not comment:
                 return None, CustomMassenergizeError("Comment with id not found!")
-            if str(comment.user.id) != user_id:
+            if str(comment.user.id) != user_id :
                 return None, CustomMassenergizeError("You are not authorized to delete this comment!")
             comment.is_deleted = True
             comment.save()
