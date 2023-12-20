@@ -88,7 +88,7 @@ class CampaignService:
     res, err = self.store.add_campaign_manager(context, args)
     if err:
       return None, err
-    return res, None
+    return serialize(res, full=True), None
 
 
   def remove_campaign_manager(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:

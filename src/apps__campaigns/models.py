@@ -1,12 +1,17 @@
+import random
 from django.db import models
 from django.forms import model_to_dict
 
 from _main_.utils.base_model import BaseModel
-from database.models import Event, Media, UserProfile, Community, Vendor
 from database.utils.common import get_json_if_not_none, get_summary_info
 from database.utils.constants import LONG_STR_LEN, SHORT_STR_LEN
+from django.utils.text import slugify
 
-# Create your models here.
+# Create your models here
+def generate_rand_between(start=2, end=10):
+    length = random.randint(start, start)  # Random length between 2 and 10
+    return  random.randint(end**(length-1), end**length - 1)
+
 
 class CampaignAccount(BaseModel):
     '''
@@ -20,8 +25,8 @@ class CampaignAccount(BaseModel):
     '''
     name  = models.CharField(max_length=255)
     subdomain = models.CharField(max_length=SHORT_STR_LEN, unique=True)
-    creator = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True, blank=True)
+    creator = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, null=True, blank=True)
+    community = models.ForeignKey("database.Community", on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self) -> str:
         return f"name:  {self.name}"
@@ -46,13 +51,13 @@ class CampaignAccountAdmin(BaseModel):
     
     '''
     account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE)
     role = models.CharField(blank=True, max_length=255)
 
 
     def __str__(self) -> str:
         return f"{self.user}||{self.role} || {self.account}"
-    
+       
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
@@ -107,24 +112,31 @@ class Campaign(BaseModel):
 
     """
     account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True)
+    slug = models.CharField(max_length=250, unique=True, blank=True, null=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
-    primary_logo = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True, related_name="primary_logo")
-    secondary_logo = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True, related_name="secondary_logo")
-    image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True, related_name="campaign_image")
+    primary_logo = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True, related_name="primary_logo")
+    secondary_logo = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True, related_name="secondary_logo")
+    image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True, related_name="campaign_image")
     is_approved = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False)
     is_global = models.BooleanField(default=False)
     is_template = models.BooleanField(default=False)
     tagline = models.CharField(max_length=255, blank=True, null=True)
-    owner = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, null=True, blank=True)
     communities_section = models.JSONField(blank=True, null=True) # {title, description} of communities section
 
 
     def __str__(self):
         return f"{self.account} - {self.title}"
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title) + "-" + str(generate_rand_between(2, 10))
+        super(Campaign, self).save(*args, **kwargs)
+
     
     def simple_json(self)-> dict:
         res = super().to_json()
@@ -133,6 +145,8 @@ class Campaign(BaseModel):
         res["primary_logo"] = get_json_if_not_none(self.primary_logo)
         res["secondary_logo"] = get_json_if_not_none(self.secondary_logo)
         res["image"] = get_json_if_not_none(self.image)
+        res["campaign_image"] = get_json_if_not_none(self.image)
+        res["owner"] = get_summary_info(self.owner)
         return res
 
     def full_json(self):
@@ -195,7 +209,7 @@ class Technology(BaseModel):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     summary = models.CharField(max_length = SHORT_STR_LEN, blank=True, null=True)
-    image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
+    image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
     icon = models.CharField(max_length=255, blank=True, null=True)
 
 
@@ -223,11 +237,11 @@ class TechnologyCoach(BaseModel):
     community : str -> Community
 
     '''
-    technology = models.ForeignKey(Technology, on_delete=models.CASCADE)
+    technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_coach")
     full_name = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
+    image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
     community = models.CharField(max_length=255, blank=True, null=True)
 
 
@@ -257,7 +271,7 @@ class TechnologyOverview(BaseModel):
     technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_overview")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
+    image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"{self.title} - {self.technology}"
@@ -273,8 +287,8 @@ class TechnologyOverview(BaseModel):
         return self.simple_json()
     
 class TechnologyVendor(BaseModel):
-    technology = models.ForeignKey(Technology, on_delete=models.CASCADE)
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
+    technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_vendor")
+    vendor = models.ForeignKey("database.Vendor", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.technology} - {self.vendor}"
@@ -291,13 +305,13 @@ class TechnologyVendor(BaseModel):
     
 
 class CampaignTechnology(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
-    technology = models.ForeignKey(Technology, on_delete=models.CASCADE)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_technology_campaign")
+    technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="campaign_technology")
 
     overview_title  = models.CharField(max_length=255, blank=True, null=True)
     action_section  = models.JSONField(blank=True, null=True)
     coaches_section = models.JSONField(blank=True, null=True)
-    deal_section_image = models.ForeignKey(Media, on_delete=models.CASCADE, null=True, blank=True)
+    deal_section_image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
     deal_section = models.JSONField(blank=True, null=True)
     vendors_section = models.JSONField(blank=True, null=True)
     more_info_section = models.JSONField(blank=True, null=True)
@@ -318,8 +332,8 @@ class CampaignTechnology(BaseModel):
     
 
 class CampaignCommunity(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_community")
+    community = models.ForeignKey("database.Community", on_delete=models.CASCADE)
     help_link = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
 
     def __str__(self):
@@ -363,9 +377,9 @@ class CampaignLike(BaseModel):
     
 class CampaignFollow(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, )
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
+    community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True)
     community_name = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
@@ -386,9 +400,9 @@ class CampaignFollow(BaseModel):
 
 class CampaignTechnologyFollow(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
+    community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True)
     community_name = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
@@ -409,8 +423,8 @@ class CampaignTechnologyFollow(BaseModel):
 
 class CampaignTechnologyLike(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, blank=True, null=True)
+    community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True)
     zipcode = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     community_name = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     count = models.PositiveBigIntegerField(default=0)
@@ -488,8 +502,8 @@ class CampaignView(BaseModel):
 
 
 class CampaignManager(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_manager")
+    user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE)
     is_key_contact = models.BooleanField(blank=True, default=False)
     contact = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
@@ -500,7 +514,10 @@ class CampaignManager(BaseModel):
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
-        res["user"] = get_summary_info(self.user)
+        res["user"] = {
+            **get_summary_info(self.user),
+            "profile_picture":get_json_if_not_none(self.user.profile_picture)
+        }
         return res
     
     def full_json(self):
@@ -510,10 +527,10 @@ class CampaignManager(BaseModel):
 
 class Comment(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE) #change to email, name
+    user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE) #change to email, name
     text = models.TextField(blank=True, null=True)
     status = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True)
+    community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user} - {self.status}"
@@ -531,8 +548,8 @@ class Comment(BaseModel):
     
 
 class CampaignEvent(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_event")
+    event = models.ForeignKey("database.Event", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.campaign} - {self.event}"
@@ -559,7 +576,7 @@ class CampaignEvent(BaseModel):
 class Partner(BaseModel):
     name = models.CharField(max_length=SHORT_STR_LEN)
     website = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
-    logo = models.ForeignKey(Media, on_delete=models.CASCADE, blank=True, null=True, related_name="partner_logo")
+    logo = models.ForeignKey("database.Media", on_delete=models.CASCADE, blank=True, null=True, related_name="partner_logo")
     phone_number = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
     email = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
@@ -577,7 +594,7 @@ class Partner(BaseModel):
     
 
 class CampaignPartner(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
+    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_partner")
     partner = models.ForeignKey(Partner, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -624,15 +641,15 @@ class CampaignLink(BaseModel):
 
 class CampaignTechnologyTestimonial(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, blank=True, null=True)
-    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE)
+    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_testimonials")
     title = models.CharField(max_length=SHORT_STR_LEN, db_index=True, blank=True, null=True)
     body = models.TextField(max_length=LONG_STR_LEN, blank=True, null=True)
     is_approved = models.BooleanField(default=False, blank=True)
-    image = models.ForeignKey(Media, on_delete=models.SET_NULL,null=True, blank=True,related_name="campaign_technology_testimonials")
-    created_by = models.ForeignKey( UserProfile, on_delete=models.CASCADE, db_index=True, null=True)
+    image = models.ForeignKey("database.Media", on_delete=models.SET_NULL,null=True, blank=True,related_name="campaign_technology_testimonial_image")
+    created_by = models.ForeignKey( "database.UserProfile", on_delete=models.CASCADE, db_index=True, null=True)
     is_published = models.BooleanField(default=False, blank=True)
     anonymous = models.BooleanField(default=False, blank=True)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, blank=True, null=True, db_index=True)
+    community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True, db_index=True)
 
     def __str__(self):
         return f"{self.campaign} - {self.campaign_technology}"

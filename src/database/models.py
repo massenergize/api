@@ -3,6 +3,7 @@ from datetime import timezone, timedelta
 import json
 import uuid
 from _main_.utils.policy.PolicyConstants import PolicyConstants
+from apps__campaigns.helpers import get_user_accounts
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
 from django.db.models.fields import BooleanField
@@ -19,7 +20,6 @@ from django.core.files.storage import default_storage
 from django.db.models.query import QuerySet
 
 from .utils.common import (
-    calculate_hash_for_bucket_item,
     get_images_in_sequence,
     json_loader,
     get_json_if_not_none,
@@ -30,8 +30,6 @@ from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
 from carbon_calculator.models import Action as CCAction
 from carbon_calculator.carbonCalculator import AverageImpact
-import hashlib
-from _main_.settings import IS_LOCAL
 
 CHOICES = json_loader("./database/raw_data/other/databaseFieldChoices.json")
 ZIP_CODE_AND_STATES = json_loader("./database/raw_data/other/states.json")
@@ -1141,6 +1139,8 @@ class UserProfile(models.Model):
             mou_details = user_is_due_for_mou(self)
             data["needs_to_accept_mou"] = mou_details[0]
             data["mou_details"] = mou_details[1]
+        # get campaign accounts created or admin of
+        data["campaign_accounts"] = get_user_accounts(self)
 
         return data
 

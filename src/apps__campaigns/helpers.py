@@ -1,10 +1,28 @@
 
 from _main_.utils.common import serialize, serialize_all
-from apps__campaigns.models import  Campaign, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+from django.db import transaction
+
+from apps__campaigns.models import  Campaign, CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+
+# from database.models import Event
 from database.utils.common import get_json_if_not_none
 from django.db.models import Count
 
 
+
+def get_user_accounts(user):
+    # get all the campaigns the user is a manager of
+    manager_of = CampaignAccountAdmin.objects.filter(user=user, is_deleted=False)
+    created = CampaignAccount.objects.filter(creator=user, is_deleted=False)
+    campaign_accounts = list(set(created) | set([a.account for a in manager_of]))
+    return [ca.simple_json() for ca in campaign_accounts]
+
+
+def create_new_event(ct):
+    from apps__campaigns.create_campaign_template import create_campaign_event
+    evs = create_campaign_event(ct)
+    return evs
+    
 
 
 
@@ -47,7 +65,7 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
     testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id).order_by("-created_at")
     tech_data = get_technology_details(campaign_tech.technology.id)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
-
+    print("=== events ===", events)
     if campaign_home:
         return {
             "testimonials":serialize_all(testimonials[:3]),
@@ -211,39 +229,103 @@ def generate_analytics_data(campaign_id):
 
 
 
+def select_3_random_events_from_communities(community_ids):
+    from database.models import Event
+    from random import sample
+    events = Event.objects.filter(is_deleted=False, community__id__in=community_ids, is_published=True).order_by("-start_date_and_time")
+    count = events.count()
+
+    if count > 3:
+        return sample(list(events), 3)
+    else:
+        return list(events)
+
+
+
 
 def copy_campaign_data(template, new_campaign):
-    # copy events, technologies, managers, partners,technology overview, technology coach, technology vendors to new campaign
-    # copy campaign configuration to new campaign
-
-
-    # copy technologies
     campaign_techs = CampaignTechnology.objects.filter(campaign__id=template.id, is_deleted=False)
-    for tech in campaign_techs:
+    campaign_events = list(template.campaign_event.all())
+    communities= [x.community for x in template.campaign_community.all()]
+
+    for campaign_tech in campaign_techs:
+        tech  = campaign_tech.technology
+
+        overviews = list(tech.technology_overview.all())
+        coaches = list(tech.technology_coach.all())
+        vendors = list(tech.technology_vendor.all())
+        testimonials = list(campaign_tech.campaign_technology_testimonials.all())
+    
+
         tech.id = None
-        tech.campaign = new_campaign
         tech.save()
 
-    # copy events
-    campaign_events = CampaignEvent.objects.filter(campaign__id=template.id, is_deleted=False)
-    for event in campaign_events:
-        event.id = None
-        event.campaign = new_campaign
-        event.save()
+        campaign_tech.id = None
+        campaign_tech.campaign = new_campaign
+        campaign_tech.technology = tech
+        campaign_tech.save()
+
+        for overview in overviews:
+            overview.pk = None
+            overview.technology = tech
+            overview.save()
+
+        for coach in coaches:
+            coach.pk = None
+            coach.technology = tech
+            coach.save()
+
+        for vendor in vendors:
+            vendor.pk = None
+            vendor.technology = tech
+            vendor.save()
+
+
+        # copy testimonials
+        for testimonial in testimonials:
+            testimonial.pk = None
+            testimonial.campaign_technology = campaign_tech
+            testimonial.save()
+
+
     
+    for tech in list(new_campaign.campaign_technology_campaign.all()):
+        try:
+            create_new_event(tech)
+
+        except Exception as e:
+            print("Error creating CampaignEvent:", e)
+
+
+
+
     # copy managers
     campaign_managers = CampaignManager.objects.filter(campaign__id=template.id, is_deleted=False)
     for manager in campaign_managers:
-        manager.id = None
-        manager.campaign = new_campaign
-        manager.save()
-    
+        try:
+            manager.id = None
+            manager.campaign = new_campaign
+            manager.save()
+        except Exception as e:
+            print("Error creating CampaignManager:", e)
+
     # copy partners
     campaign_partners = CampaignPartner.objects.filter(campaign__id=template.id, is_deleted=False)
     for partner in campaign_partners:
-        partner.id = None
-        partner.campaign = new_campaign
-        partner.save()
+        try:
+            partner.id = None
+            partner.campaign = new_campaign
+            partner.save()
+        except Exception as e:
+            print("Error creating CampaignPartner:", e)
+
+
+    # copy config
+    campaign_config = CampaignConfiguration.objects.filter(campaign__id=template.id, is_deleted=False).first()
+    if campaign_config:
+        campaign_config.id = None
+        campaign_config.campaign = new_campaign
+        campaign_config.save()
 
         
     

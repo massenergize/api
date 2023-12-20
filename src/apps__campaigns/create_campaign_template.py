@@ -17,13 +17,17 @@ def create_test_users():
         {
             "full_name": "John Doe",
             "email": "john.doe@me.org",
+            "profile_picture": create_media("media/face2.jpeg"),
         },{
             "full_name": "Jane Doe",
             "email": "jane.doe@me.org",
+             "profile_picture": create_media("media/face1.jpeg"),
+            
         },
         {
             "full_name": "Kane Doe",
             "email": "kane.doe@me.org",
+             "profile_picture": create_media("media/face2.jpeg"),
         }
         ]
     
@@ -218,7 +222,6 @@ def create_campaign_Managers(campaign):
             "user": user1,
             "is_key_contact": True,
             "contact": "1234567890",
-            "image": create_media("media/face2.jpeg"),
         },
         {
             "user": user2,
