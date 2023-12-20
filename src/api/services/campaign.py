@@ -379,5 +379,5 @@ class CampaignService:
     if err:
       return None, err
     
-    return serialize(res), None
+    return serialize_all(res, full=True), None
   

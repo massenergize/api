@@ -638,25 +638,6 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def delete_campaign_technology_comment(self, context: Context, args):
-        try:
-            comment_id = args.pop("id", None)
-            if not comment_id:
-                return None, InvalidResourceError()
-
-            comment = Comment.objects.filter(id=comment_id).first()
-            if not comment:
-                return None, CustomMassenergizeError("Comment with id not found!")
-
-            comment.is_deleted = True
-            comment.save()
-
-
-
-            return comment, None
-        except Exception as e:
-            capture_message(str(e), level="error")
-            return None, CustomMassenergizeError(e)
 
     def list_campaign_technology_comments(self, context: Context, args):
         try:
@@ -1357,7 +1338,7 @@ class CampaignStore:
             comment = Comment.objects.filter(id=comment_id).first()
             if not comment:
                 return None, CustomMassenergizeError("Comment with id not found!")
-            if str(comment.user.id) != user_id or not context.user_is_admin():
+            if str(comment.user.id) != user_id:
                 return None, CustomMassenergizeError("You are not authorized to delete this comment!")
             comment.is_deleted = True
             comment.save()
