@@ -107,7 +107,7 @@ def get_technology_details(technology_id):
     return data
 
 def generate_campaign_navigation(campaign_id):
-    home_route = f"/{campaign_id}"
+    home_route = f"/campaign/{campaign_id}"
     BASE_NAVIGATION = [
         {"key": "home", "url": home_route, "text": "Home", "icon": "fa-home"},
         {"key": "Communities", "url": f"{home_route}/?section=communities", "text": "Communities", "icon": "fa-globe"},

@@ -22,6 +22,7 @@ from database.models import (
     ImpactPageSettings,
     CustomCommunityWebsiteDomain,
 )
+from apps__campaigns.models import Campaign, CampaignTechnology
 from django.db.models import Q
 from django.template.loader import render_to_string
 
@@ -49,13 +50,21 @@ HOME_SUBDOMAIN_SET = set(
 IS_LOCAL = RUN_SERVER_LOCALLY  # API and community portal running locally
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
+    CAMPAIGN_HOST = "http://localhost:3000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
+    CAMPAIGN_HOST = (
+        "http://localhost:3000"  # Change value when we have the appropriate link
+    )
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
+    CAMPAIGN_HOST = (
+        "http://localhost:3000"  # Change value when we have the appropriate link
+    )
 else:
     # we know it is dev
     PORTAL_HOST = "https://community.massenergize.dev"
+    CAMPAIGN_HOST = "https://massenergize-campaigns-user-side.netlify.app"  # Change value when we have the appropriate link
 
 
 if IS_LOCAL:
@@ -82,6 +91,59 @@ META = {
     "tags": ["#ClimateChange"],
     "is_local": IS_LOCAL,
 }
+
+
+def campaign(request, campaign_id):
+    campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+    if not campaign:
+        raise Http404
+    image = campaign.image.file.url
+    meta = {
+        "title": campaign.title,
+        "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign.id}",
+        "image": image,
+        "image_url": image,
+        "summary_large_image": image,
+        "description": campaign.description,
+        "stay_put": True,
+    }
+    args = {
+        "meta": meta,
+        "title": campaign.title,
+        "id": campaign.id,
+        "image": image,
+        "campaign": campaign,
+        "tagline": campaign.tagline,
+    }
+    return render(request, "campaign.html", args)
+
+
+def campaign_technology(request, campaign_id, campaign_technology_id):
+    camp_tech = CampaignTechnology.objects.filter(
+        id=campaign_technology_id, is_deleted=False
+    ).first()
+    if not camp_tech or not campaign_technology_id or not campaign_id:
+        raise Http404
+
+    technology = camp_tech.technology
+
+    image = technology.image.file.url
+    meta = {
+        "title": technology.name,
+        "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}",
+        "image": image,
+        "image_url": image,
+        "summary_large_image": image,
+        "description": technology.description,
+        "stay_put": True,
+    }
+    args = {
+        "meta": meta,
+        "title": technology.name,
+        "id": campaign_technology_id,
+        "image": image,
+    }
+    return render(request, "campaign_technology.html", args)
 
 
 def _restructure_communities(communities):
