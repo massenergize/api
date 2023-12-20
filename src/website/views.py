@@ -22,6 +22,7 @@ from database.models import (
     ImpactPageSettings,
     CustomCommunityWebsiteDomain,
 )
+from apps__campaigns.models import Campaign
 from django.db.models import Q
 from django.template.loader import render_to_string
 
@@ -49,13 +50,17 @@ HOME_SUBDOMAIN_SET = set(
 IS_LOCAL = RUN_SERVER_LOCALLY  # API and community portal running locally
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
+    CAMPAIGN_HOST = "http://localhost:3000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
+    CAMPAIGN_HOST = "http://localhost:3000" # Change value when we have the appropriate link
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
+    CAMPAIGN_HOST = "http://localhost:3000"  # Change value when we have the appropriate link
 else:
     # we know it is dev
     PORTAL_HOST = "https://community.massenergize.dev"
+    CAMPAIGN_HOST = "https://massenergize-campaigns-user-side.netlify.app"  # Change value when we have the appropriate link
 
 
 if IS_LOCAL:
@@ -87,16 +92,25 @@ META = {
 
 
 def campaign(request, campaign_id):
-    meta =  {
+    campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+    if not campaign: 
+        raise Http404
 
-            "title": "Nation Campaign " + campaign_id,
-            # "redirect_to": f"{redirect_url}/actions",
+    image = campaign.image.file.url
+    meta =  {
+            "title":"Akwesi - " + campaign.title,
+            "redirect_to": f"{CAMPAIGN_HOST}/{campaign.id}",
+            "image": image, 
+            "description":campaign.description,
             "stay_put": True
         }
     args = { 
         "meta":meta,
-        "title":"Latest campaign in town", 
-        "id":campaign_id,
+        "title":campaign.title, 
+        "id":campaign.id,
+        "image": image,
+        "campaign":campaign, 
+        "tagline": campaign.tagline
     }
 
 

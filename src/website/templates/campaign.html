@@ -2,9 +2,15 @@
 {% block content %} 
 <div>
   <h3>{{title}}</h3>
-  {% comment %} <a href="/action/{{a.id}}"><h2>{{a.title}}</h2></a>
-  <p>{{a.featured_summary}}</p>
-  {% endcomment %}
-  <p>Supreme Campaign Id {{id}}</p>
+  <p>{{id}}</p>
+  <h6>{{tagline}} </h6>
+  <img src = {{image}} />
+  <a href ={{meta.redirect_to}}>Home </a>
 </div>
+ {% endblock %}
+ {% block javascript %}
+
+ <script>
+   window.location.href = "{{meta.redirect_to}}"
+ </script>
  {% endblock %}
