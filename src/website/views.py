@@ -53,10 +53,14 @@ if IS_LOCAL:
     CAMPAIGN_HOST = "http://localhost:3000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
-    CAMPAIGN_HOST = "http://localhost:3000" # Change value when we have the appropriate link
+    CAMPAIGN_HOST = (
+        "http://localhost:3000"  # Change value when we have the appropriate link
+    )
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
-    CAMPAIGN_HOST = "http://localhost:3000"  # Change value when we have the appropriate link
+    CAMPAIGN_HOST = (
+        "http://localhost:3000"  # Change value when we have the appropriate link
+    )
 else:
     # we know it is dev
     PORTAL_HOST = "https://community.massenergize.dev"
@@ -89,32 +93,28 @@ META = {
 }
 
 
-
-
 def campaign(request, campaign_id):
     campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
-    if not campaign: 
+    if not campaign:
         raise Http404
-
     image = campaign.image.file.url
-    meta =  {
-            "title":"Akwesi - " + campaign.title,
-            "redirect_to": f"{CAMPAIGN_HOST}/{campaign.id}",
-            "image": image, 
-            "description":campaign.description,
-            "stay_put": True
-        }
-    args = { 
-        "meta":meta,
-        "title":campaign.title, 
-        "id":campaign.id,
+    meta = {
+        "title": campaign.title,
+        "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign.id}",
         "image": image,
-        "campaign":campaign, 
-        "tagline": campaign.tagline
+        "description": campaign.description,
+        "stay_put": True,
     }
-
-
+    args = {
+        "meta": meta,
+        "title": campaign.title,
+        "id": campaign.id,
+        "image": image,
+        "campaign": campaign,
+        "tagline": campaign.tagline,
+    }
     return render(request, "campaign.html", args)
+
 
 def _restructure_communities(communities):
     _communities = []
