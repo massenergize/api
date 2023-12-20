@@ -1842,9 +1842,9 @@ class DownloadStore:
                 "data": self._campaign_follows_download(campaign)
             }
 
-            sheet_data["Campaign Likes"] = {
-                "data": self._campaign_likes_download(campaign)
-            }
+            # sheet_data["Campaign Likes"] = {
+            #     "data": self._campaign_likes_download(campaign)
+            # }
 
             sheet_data["Campaign Link Performance"] = {
                 "data": self._campaign_link_performance_download(campaign)

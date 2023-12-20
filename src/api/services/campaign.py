@@ -373,3 +373,11 @@ class CampaignService:
     
     return serialize(res), None
   
+
+  def delete_campaign_technology_comment(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.delete_campaign_technology_comment(context, args)
+    if err:
+      return None, err
+    
+    return serialize(res), None
+  

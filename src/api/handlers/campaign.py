@@ -49,6 +49,7 @@ class CampaignHandler(RouteHandler):
 
         self.add("/campaigns.technologies.comments.create", self.create_campaign_technology_comment)
         self.add("/campaigns.technologies.comments.update", self.update_campaign_technology_comment)
+        self.add("/campaigns.technologies.comments.delete", self.delete_campaign_technology_comment)
 
 
         self.add("/campaigns.partners.add", self.add_campaign_partner)
@@ -133,7 +134,7 @@ class CampaignHandler(RouteHandler):
       return MassenergizeResponse(data=campaign_info)
     
 
-    @admins_only
+    # @admins_only
     def create_campaign_from_template(self, request):
        context: Context = request.context
        args = context.args
@@ -957,12 +958,30 @@ class CampaignHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("campaign_id", str, is_required=True)
+        self.validator.expect("url", str, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
         if err:
           return err
 
         res, err = self.service.add_campaign_view(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def delete_campaign_technology_comment(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("id", str, is_required=True)
+        self.validator.expect("user_id", str, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.delete_campaign_technology_comment(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)

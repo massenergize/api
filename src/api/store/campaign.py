@@ -1329,21 +1329,42 @@ class CampaignStore:
             campaign = Campaign.objects.filter(id=campaign_id).first()
             if not campaign:
                 return None, CustomMassenergizeError("Campaign with id not found!")
-            
-            link_id = url.split("&campaign_like_id=")
-            link_id = link_id[1] if len(link_id) > 1 else None
-            
-            if link_id:
-                campaign_link = CampaignLink.objects.filter(id=link_id).first()
-                if campaign_link:
-                    with transaction.atomic():
-                        campaign_link.increase_count()
+            if url:
+                link_id = url.split("&campaign_like_id=")
+                link_id = link_id[1] if len(link_id) > 1 else None
+                
+                if link_id:
+                    campaign_link = CampaignLink.objects.filter(id=link_id).first()
+                    if campaign_link:
+                        with transaction.atomic():
+                            campaign_link.increase_count()
 
             view, _ = CampaignView.objects.get_or_create(campaign=campaign)
             # lock transaction
             with transaction.atomic():
                 view.increase_count()
             return view, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def delete_campaign_technology_comment(self, context: Context, args):
+        try:
+            comment_id = args.pop("id", None)
+            user_id = args.pop("user_id", context.user_id)
+            if not comment_id:
+                return None, InvalidResourceError()
+
+            comment = Comment.objects.filter(id=comment_id).first()
+            if not comment:
+                return None, CustomMassenergizeError("Comment with id not found!")
+            if comment.user.id != user_id or not context.user_is_admin():
+                return None, CustomMassenergizeError("You are not authorized to delete this comment!")
+            comment.is_deleted = True
+            comment.save()
+
+            return comment, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
