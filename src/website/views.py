@@ -102,6 +102,8 @@ def campaign(request, campaign_id):
         "title": campaign.title,
         "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign.id}",
         "image": image,
+        "image_url": image,
+        "summary_large_image": image,
         "description": campaign.description,
         "stay_put": True,
     }
@@ -130,6 +132,8 @@ def campaign_technology(request, campaign_id, campaign_technology_id):
         "title": technology.name,
         "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}",
         "image": image,
+        "image_url": image,
+        "summary_large_image": image,
         "description": technology.description,
         "stay_put": True,
     }
