@@ -53,12 +53,10 @@ class CampaignStore:
     def __init__(self):
         self.name = "Campaign Store/DB"
 
-    def get_campaign_info(
-        self, context: Context, args
-    ) -> Tuple[dict, MassEnergizeAPIError]:
+    def get_campaign_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             campaign_id = args.get("id", None)
-            campaign: Campaign = Campaign.objects.filter(id=campaign_id).first()
+            campaign: Campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
 
             if not campaign:
                 return None, CustomMassenergizeError("Invalid Campaign ID")
@@ -616,9 +614,7 @@ class CampaignStore:
 
             comment, _ = Comment.objects.get_or_create(**args)
 
-            latest_comments = Comment.objects.filter(
-                campaign_technology__id=campaign_technology_id, is_deleted=False
-            ).order_by("-created_at")
+            latest_comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")
 
             return latest_comments[:20], None
         except Exception as e:
@@ -654,6 +650,8 @@ class CampaignStore:
 
             comment.is_deleted = True
             comment.save()
+
+
 
             return comment, None
         except Exception as e:
@@ -1364,7 +1362,9 @@ class CampaignStore:
             comment.is_deleted = True
             comment.save()
 
-            return comment, None
+            comment = Comment.objects.filter(campaign_technology__id=comment.campaign_technology.id, is_deleted=False).order_by("-created_at")
+
+            return comment[:20], None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
