@@ -22,7 +22,7 @@ from database.models import (
     ImpactPageSettings,
     CustomCommunityWebsiteDomain,
 )
-from apps__campaigns.models import Campaign
+from apps__campaigns.models import Campaign, CampaignTechnology
 from django.db.models import Q
 from django.template.loader import render_to_string
 
@@ -114,6 +114,32 @@ def campaign(request, campaign_id):
         "tagline": campaign.tagline,
     }
     return render(request, "campaign.html", args)
+
+
+def campaign_technology(request, campaign_id, campaign_technology_id):
+    camp_tech = CampaignTechnology.objects.filter(
+        id=campaign_technology_id, is_deleted=False
+    ).first()
+    if not camp_tech or not campaign_technology_id or not campaign_id:
+        raise Http404
+
+    technology = camp_tech.technology
+
+    image = technology.image.file.url
+    meta = {
+        "title": technology.name,
+        "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}",
+        "image": image,
+        "description": technology.description,
+        "stay_put": True,
+    }
+    args = {
+        "meta": meta,
+        "title": technology.name,
+        "id": campaign_technology_id,
+        "image": image,
+    }
+    return render(request, "campaign_technology.html", args)
 
 
 def _restructure_communities(communities):
