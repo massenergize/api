@@ -11,6 +11,6 @@
  {% block javascript %}
 
  <script>
-   window.location.href = "{{meta.redirect_to}}"
+   {% comment %} window.location.href = "{{meta.redirect_to}}" {% endcomment %}
  </script>
  {% endblock %}

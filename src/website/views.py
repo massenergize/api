@@ -98,15 +98,29 @@ def campaign(request, campaign_id):
     if not campaign:
         raise Http404
     image = campaign.image.file.url
+
+
+    redirect_url = f"{CAMPAIGN_HOST}/campaign/{campaign.id}"
     meta = {
-        "title": campaign.title,
-        "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign.id}",
-        "image": image,
-        "image_url": image,
-        "summary_large_image": image,
-        "description": campaign.description,
-        "stay_put": True,
-    }
+            "image_url": _get_file_url(campaign.image),
+            # "subdomain": subdomain,
+            "title": campaign.title,
+            "description": _extract(campaign.description),
+            "url": f"{redirect_url}/actions/{id}",
+            "redirect_to": redirect_url,
+            "created_at": campaign.created_at,
+            "updated_at": campaign.updated_at,
+            "stay_put": request.GET.get("stay_put", None),
+        }
+    # meta = {
+    #     "title": campaign.title,
+    #     "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign.id}",
+    #     "image": image,
+    #     "image_url": image,
+    #     "summary_large_image": image,
+    #     "description": campaign.description,
+    #     # "stay_put": True,
+    # }
     args = {
         "meta": meta,
         "title": campaign.title,
@@ -126,17 +140,31 @@ def campaign_technology(request, campaign_id, campaign_technology_id):
         raise Http404
 
     technology = camp_tech.technology
+    image = _get_file_url(technology.image)
 
-    image = technology.image.file.url
+    redirect_url = f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}"
     meta = {
-        "title": technology.name,
-        "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}",
-        "image": image,
         "image_url": image,
-        "summary_large_image": image,
-        "description": technology.description,
-        "stay_put": True,
+        # "subdomain": subdomain,
+        "title": technology.name,
+        "description": _extract(technology.description),
+        "url": redirect_url,
+        "redirect_to": redirect_url,
+        "created_at": technology.created_at,
+        "updated_at": technology.updated_at,
+        "stay_put": request.GET.get("stay_put", None),
     }
+
+
+    # meta = {
+    #     "title": technology.name,
+    #     "redirect_to":f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}" ,
+    #     "image": image,
+    #     "image_url": image,
+    #     "summary_large_image": image,
+    #     "description": technology.description,
+    #     "stay_put": True,
+    # }
     args = {
         "meta": meta,
         "title": technology.name,
