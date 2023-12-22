@@ -327,8 +327,8 @@ def create_campaign_communities(campaign):
 
 
 def create_template_campaign():
-    primary_logo = create_media("media/me-biom.png")
-    secondary_logo = create_media("media/me-round-logo.png")
+    primary_logo = create_media("media/me-round-logo.png")
+    secondary_logo = create_media("media/me-biom.png" )
     image = create_media("media/campaign_image.jpg")
 
     campaign = Campaign(

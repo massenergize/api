@@ -112,7 +112,7 @@ class Campaign(BaseModel):
 
     """
     account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True)
-    slug = models.SlugField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     start_date = models.DateField(null=True, blank=True)
@@ -548,8 +548,8 @@ class Comment(BaseModel):
     
 
 class CampaignTechnologyEvent(BaseModel):
-    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_event")
-    event = models.ForeignKey("database.Event", on_delete=models.CASCADE)
+    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_event", blank=True, null=True)
+    event = models.ForeignKey("database.Event", on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return f"{self.campaign_technology} - {self.event}"
