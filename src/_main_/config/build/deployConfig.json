@@ -1,6 +1,11 @@
 {
   "IS_PROD": false,
   "IS_CANARY": false,
+<<<<<<< Updated upstream
   "BUILD_VERSION": "4.10.13",
   "BUILD_VERSION_NOTES": "Feb 24: Admin portal pagination:\n- deliver content in small chunks"
+=======
+  "BUILD_VERSION": "4.16.0",
+  "BUILD_VERSION_NOTES": "Nov 11: User events nudge fix - sorting by date and 12 hour time_string"
+>>>>>>> Stashed changes
 }
