@@ -1,10 +1,12 @@
 import os
+from random import random
 from django.core.files import File
 from apps__campaigns.constants import (
     COACHES_SECTION,
     COMMUNITIES_SECTION,
     DEALS_SECTION,
     MORE_INFO_SECTION,
+    NAME_DESCRIPTION,
     VENDORS_SECTION,
 )
 from apps__campaigns.models import (
@@ -69,9 +71,7 @@ def get_3_communities():
     comm = []
     for item in arr:
         media = create_media(imgs[arr.index(item)])
-        community, _ = Community.objects.get_or_create(
-            name=item, subdomain=item.lower().replace(" ", "-")
-        )
+        community, _ = Community.objects.get_or_create(name=item, subdomain=item.lower().replace(" ", "-"))
         if _:
             community.logo = media
             community.save()
@@ -85,17 +85,17 @@ def create_campaign_technology_overview(technology_id):
         {
             "title": "ENVIRONMENTALLY FRIENDLY",
             "image": create_media("media/solar-panel.jpg"),
-            "description": "1500s, when an unknown printer took a galley of type rised in the 1960s with the release of L1500s, when an unknown printer took a galley of type rised in the 1960s with the release of",
+            "description": f"{tech.name} is a renewable energy source that is environmentally friendly and sustainable. It is a clean source of energy that does not emit greenhouse gases when used to generate electricity. It is a renewable source of energy, which means that it will not run out like other sources of energy such as fossil fuels.",
         },
         {
             "title": "ECONOMIC BENEFITS",
             "image": create_media("media/solar-panel.jpg"),
-            "description": "1500s, when an unknown printer took a galley of type rised in the 1960s with the release of L1500s, when an unknown printer took a galley of type rised in the 1960s with the release of",
+            "description": f"{tech.name} is a renewable energy source that has economic benefits. It is a clean source of energy that does not emit greenhouse gases when used to generate electricity. It is a renewable source of energy, which means that it will not run out like other sources of energy such as fossil fuels.",
         },
         {
             "title": "HEALTH & WELLNESS",
             "image": create_media("media/solar-panel.jpg"),
-            "description": "1500s, when an unknown printer took a galley of type rised in the 1960s with the release of L1500s, when an unknown printer took a galley of type rised in the 1960s with the release of",
+            "description": "{tech.name} is a renewable energy source that has health and wellness benefits. It is a clean source of energy that does not emit greenhouse gases when used to generate electricity. It is a renewable source of energy, which means that it will not run out like other sources of energy such as fossil fuels.",
         },
     ]
 
@@ -152,10 +152,10 @@ def create_technology_vendors(technology_id):
         tech_vendor.save()
 
 
-def create_technology(name, image=None):
+def create_technology(name, image=None, description=None):
     technology = Technology()
     technology.name = name
-    technology.description = f"This is a template technology description for {name}"
+    technology.description = description
     technology.image = image
     technology.save()
 
@@ -177,10 +177,16 @@ def create_campaign_technology_testimonial(campaign_technology_id):
 
     user1, user2, user3 = create_test_users()
     comm, comm2, comm3 = get_3_communities()
+    # get random title and description
+
+    title1, description1 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
+    title2, description2 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
+    title3, description3 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
+
     arr = [
         {
-            "title": f"This is a testimonial for {campaign_tech.technology.name} 1",
-            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "title": title1,
+            "description": description1,
             "image": create_media("media/food.jpeg"),
             "created_by": user1,
             "community": comm,
@@ -188,8 +194,8 @@ def create_campaign_technology_testimonial(campaign_technology_id):
             "is_published": True,
         },
         {
-            "title": f"This is a testimonial for {campaign_tech.technology.name}",
-            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "title": title2,
+            "description":description2 ,
             "image": create_media("media/climate2.jpeg"),
             "created_by": user2,
             "community": comm2,
@@ -197,8 +203,8 @@ def create_campaign_technology_testimonial(campaign_technology_id):
             "is_published": True,
         },
         {
-            "title": f"This is a testimonial for {campaign_tech.technology.name}",
-            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "title":title3,
+            "description": description3,
             "image": create_media("media/climate2.jpeg"),
             "created_by": user3,
             "community": comm3,
@@ -308,13 +314,13 @@ def create_campaign_configuration(campaign):
 def create_campaign_communities(campaign):
     print("====== Creating Campaign Communities ======")
     comm, comm2, comm3 = get_3_communities()
-    link = "https://docs.google.com/spreadsheets/d/1wQ4858rQippxNqZ5c_kD985P_XOza9PW/edit#gid=676780580"
+    link = "https://docs.google.com/forms/d/e/1FAIpQLSfrpKrrowpFX-PFKHTXXs4j568IaYHhoMcaZMqxyHGRr4T8wg/viewform?usp=sf_link"
     # bulk create
     campaign_communities = CampaignCommunity.objects.bulk_create(
         [
-            CampaignCommunity(campaign=campaign, community=comm, help_link=link),
-            CampaignCommunity(campaign=campaign, community=comm2, help_link=link),
-            CampaignCommunity(campaign=campaign, community=comm3, help_link=link),
+            CampaignCommunity(campaign=campaign, community=comm, help_link="https://docs.google.com/forms/d/1iEodwBtlDcvtZH-dS0--AkJpJn5aHUzhfrZExxKUzm8/edit"),
+            CampaignCommunity(campaign=campaign, community=comm2, help_link="https://docs.google.com/forms/d/1Kh-jfVIzjErbWyh2QA6n4By14Tuqbk7qkBek8_Al2S4/edit"),
+            CampaignCommunity(campaign=campaign, community=comm3, help_link="https://docs.google.com/forms/d/1uGLuE48R1dq6fAPTluLBdp7tkbOtMl22kxXFyy8ixuM/edit"),
         ]
     )
     return campaign_communities
@@ -342,7 +348,7 @@ def create_template_campaign():
     # create campaign managers
     create_campaign_Managers(campaign)
     # create campaign partners
-    create_campaign_partners(campaign)
+    # create_campaign_partners(campaign)
 
     # create communities
     create_campaign_communities(campaign)
@@ -356,26 +362,32 @@ def create_template_campaign():
 def create_campaign_event(campaign_tech):
     print("====== Creating Campaign Events ======")
     com1, com2, com3 = get_3_communities()
+
+    name1, description1 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
+    name2, description2 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
+    name3, description3 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
+
+
     events = [
         {
-            "name": "New Event 1",
-            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "name": name1,
+            "description": description1,
             "image": create_media("media/climate2.jpeg"),
             "start_date_and_time": "2024-09-01 00:00:00",
             "end_date_and_time": "2024-09-03 00:00:00",
             "community": com1,
         },
         {
-            "name": "New Event 2",
-            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "name": name2,
+            "description": description2,
             "image": create_media("media/climate3.jpeg"),
             "start_date_and_time": "2024-09-01 00:00:00",
             "end_date_and_time": "2024-09-03 00:00:00",
             "community": com2,
         },
         {
-            "name": "New Event 3",
-            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "name": name3,
+            "description": description3,
             "image": create_media("media/ev1.jpeg"),
             "start_date_and_time": "2024-09-01 00:00:00",
             "end_date_and_time": "2024-09-03 00:00:00",
@@ -396,13 +408,13 @@ def create_template_campaign_technology(campaign_id):
     techs = []
     campaign = Campaign.objects.filter(id=campaign_id).first()
     techs = [
-        {"name": "Heat Pump", "image": create_media("media/pump.jpeg")},
-        {"name": "Solar Community", "image": create_media("media/com-solar.png")},
-        {"name": "Home Solar", "image": create_media("media/solar-panel.jpg")},
+        {"name": "Heat Pump", "image": create_media("media/pump.jpeg"), "description": "Heat pumps offer an energy-efficient alternative to furnaces and air conditioners for all climates. Like your refrigerator, heat pumps use electricity to transfer heat from a cool space to a warm space, making the cool space cooler and the warm space warmer. During the heating season, heat pumps move heat from the cool outdoors into your warm house.  During the cooling season, heat pumps move heat from your house into the  outdoors. Because they transfer heat rather than generate heat, heat pumps can efficiently provide comfortable temperatures for your home. "},
+        {"name": "Solar Community", "image": create_media("media/com-solar.png"), "description": "The U.S. Department of Energy defines community solar as any solar project or purchasing program, within a geographic area, in which the benefits flow to multiple customers such as individuals, businesses, nonprofits, and other groups. In most cases, customers benefit from energy generated by solar panels at an off-site array. Community solar customers typically subscribe to—or in some cases own—a portion of the energy generated by a solar array, and receive an electric bill credit for electricity generated by their share of the community solar system. Community solar can be a great option for people who are unable to install solar panels on their roofs because they are renters, can’t afford solar, or because their roofs or electrical systems aren’t suited to solar. "},
+        {"name": "Home Solar", "image": create_media("media/solar-panel.jpg"), "description": "Since 2008, hundreds of thousands of solar panels have popped up across the country as an increasing number of Americans choose to power their daily lives with the sun’s energy. Thanks in part to Solar Energy Technologies Office (SETO) investments, the cost of going solar goes down every year. You may be considering the option of adding a solar energy system to your home’s roof or finding another way to harness the sun’s energy. While there’s no one-size-fits-all solar solution, here are some resources that can help you figure out what’s best for you. Consider these questions before you go solar."},
     ]
 
     for tech in techs:
-        technology = create_technology(tech["name"], tech["image"])
+        technology = create_technology(tech["name"], tech["image"], tech["description"])
         campaign_technology = CampaignTechnology()
         campaign_technology.campaign = campaign
         campaign_technology.technology = technology

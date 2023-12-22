@@ -354,12 +354,12 @@ def copy_campaign_data(template, new_campaign):
         manager.campaign = new_campaign
         manager.save()
     
-    # copy partners
-    campaign_partners = CampaignPartner.objects.filter(campaign__id=template.id, is_deleted=False)
-    for partner in campaign_partners:
-        partner.id = None
-        partner.campaign = new_campaign
-        partner.save()
+    # # copy partners
+    # campaign_partners = CampaignPartner.objects.filter(campaign__id=template.id, is_deleted=False)
+    # for partner in campaign_partners:
+    #     partner.id = None
+    #     partner.campaign = new_campaign
+    #     partner.save()
 
     #     # copy config
     campaign_config = CampaignConfiguration.objects.filter(campaign__id=template.id, is_deleted=False).first()
