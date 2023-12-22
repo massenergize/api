@@ -179,9 +179,9 @@ def create_campaign_technology_testimonial(campaign_technology_id):
     comm, comm2, comm3 = get_3_communities()
     # get random title and description
 
-    title1, description1 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
-    title2, description2 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
-    title3, description3 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
+    title1, description1 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))].values()
+    title2, description2 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))].values()
+    title3, description3 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))].values()
 
     arr = [
         {
@@ -363,9 +363,9 @@ def create_campaign_event(campaign_tech):
     print("====== Creating Campaign Events ======")
     com1, com2, com3 = get_3_communities()
 
-    name1, description1 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
-    name2, description2 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
-    name3, description3 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))]
+    name1, description1 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))].values()
+    name2, description2 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))].values()
+    name3, description3 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))].values()
 
 
     events = [

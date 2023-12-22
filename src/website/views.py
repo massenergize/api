@@ -64,7 +64,7 @@ elif IS_PROD:
 else:
     # we know it is dev
     PORTAL_HOST = "https://community.massenergize.dev"
-    CAMPAIGN_HOST = "https://massenergize-campaigns-user-side.netlify.app"  # Change value when we have the appropriate link
+    CAMPAIGN_HOST = "https://friday-campaign.netlify.app"  # Change value when we have the appropriate link
 
 
 if IS_LOCAL:
