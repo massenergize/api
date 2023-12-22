@@ -33,3 +33,4 @@ wordfilter==0.2.7
 pyshorteners==1.0.1
 openpyxl==3.1.2
 python-slugify==8.0.1
+better-profanity==0.7.

@@ -10,6 +10,7 @@ from sentry_sdk import capture_message
 import base64
 import pyshorteners
 from openpyxl import Workbook
+from better_profanity import profanity
 
 
 def get_date_and_time_in_milliseconds(**kwargs):
@@ -300,4 +301,11 @@ def generate_workbook_with_sheets(sheet_data):
 
     bytes_data = buffer.getvalue()
     return bytes_data
+
+
+
+
+def contains_profane_words(text):
+    profanity.load_censor_words()
+    return profanity.contains_profanity(text)
 

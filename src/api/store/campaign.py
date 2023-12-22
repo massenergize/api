@@ -1,5 +1,5 @@
 from datetime import datetime
-from _main_.utils.common import serialize_all, shorten_url
+from _main_.utils.common import contains_profane_words, serialize_all, shorten_url
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
 from apps__campaigns.helpers import (
@@ -14,7 +14,7 @@ from apps__campaigns.models import (
     CampaignActivityTracking,
     CampaignCommunity,
     CampaignConfiguration,
-    CampaignEvent,
+    CampaignTechnologyEvent,
     CampaignFollow,
     CampaignLike,
     CampaignLink,
@@ -42,11 +42,9 @@ from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
 from django.db.models import Count
-from wordfilter import Wordfilter
 from django.db import transaction
 
 
-word_filter = Wordfilter()
 
 
 class CampaignStore:
@@ -56,7 +54,7 @@ class CampaignStore:
     def get_campaign_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             campaign_id = args.get("id", None)
-            campaign: Campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            campaign: Campaign = Campaign.objects.filter(Q(id=campaign_id)|Q(slug=id), is_deleted=False).first()
 
             if not campaign:
                 return None, CustomMassenergizeError("Invalid Campaign ID")
@@ -586,12 +584,10 @@ class CampaignStore:
             community_id: str = args.pop("community_id", None)
             user_id: str = args.pop("user_id", context.user_id)
             comment_text: str = args.get("text", None)
-            word_filter.addWords(["fuck", "pussio"])
+
             # check for swear words in comment text
-            if word_filter.blacklisted(comment_text):
-                return None, CustomMassenergizeError(
-                    "Comment contains inappropriate language."
-                )
+            if contains_profane_words(comment_text):
+                return None, CustomMassenergizeError("Comment contains inappropriate language.")
 
             if campaign_technology_id:
                 campaign_technology = CampaignTechnology.objects.filter(
@@ -800,18 +796,18 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def create_campaign_event(self, context: Context, args):
+    def add_campaign_technology_event(self, context: Context, args):
         try:
-            campaign_id = args.pop("campaign_id", None)
+            campaign_technology_id = args.pop("campaign_technology_id", None)
             event_ids = args.pop("event_ids", None)
 
             created_list = []
 
-            if not campaign_id:
-                return None, InvalidResourceError()
-            campaign = Campaign.objects.filter(id=campaign_id).first()
-            if not campaign:
-                return None, CustomMassenergizeError("campaign with id not found!")
+            if not campaign_technology_id:
+                return None, CustomMassenergizeError("Campaign technology ID is required !")
+            tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
+            if not tech:
+                return None, CustomMassenergizeError("campaign technology with id not found!")
 
             if not event_ids:
                 return None, CustomMassenergizeError("event ids not found!")
@@ -819,9 +815,7 @@ class CampaignStore:
             for event_id in event_ids:
                 event = Event.objects.filter(id=event_id).first()
                 if event:
-                    campaign_event, _ = CampaignEvent.objects.get_or_create(
-                        campaign=campaign, event=event
-                    )
+                    campaign_event, _ = CampaignTechnologyEvent.objects.get_or_create(campaign_technology=tech, event=event)
                     created_list.append(campaign_event.simple_json())
 
             return created_list, None
@@ -829,17 +823,15 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def remove_campaign_event(self, context: Context, args):
+    def remove_campaign_technology_event(self, context: Context, args):
         try:
-            campaign_event_id = args.pop("campaign_event_id", None)
+            campaign_event_id = args.pop("id", None)
             if not campaign_event_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("ID is required !")
 
-            campaign_event = CampaignEvent.objects.filter(id=campaign_event_id).first()
+            campaign_event = CampaignTechnologyEvent.objects.filter(id=campaign_event_id).first()
             if not campaign_event:
-                return None, CustomMassenergizeError(
-                    "Campaign Event with id not found!"
-                )
+                return None, CustomMassenergizeError("Campaign Event with id not found!")
 
             campaign_event.is_deleted = True
             campaign_event.save()
@@ -1038,14 +1030,12 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_campaign_events(self, context: Context, args):
+    def list_campaign_technology__events(self, context: Context, args):
         try:
-            campaign_id = args.pop("campaign_id", None)
-            if not campaign_id:
+            campaign_technology_id = args.pop("campaign_technology_id", None)
+            if not campaign_technology_id:
                 return None, InvalidResourceError()
-            events = CampaignEvent.objects.filter(
-                campaign__id=campaign_id, is_deleted=False
-            )
+            events = CampaignTechnologyEvent.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False)
 
             return events, None
         except Exception as e:

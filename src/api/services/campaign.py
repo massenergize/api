@@ -206,8 +206,8 @@ class CampaignService:
     return serialize_all(res), None
 
 
-  def list_campaign_events(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
-      res, err = self.store.list_campaign_events(context, args)
+  def list_campaign_technology__events(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+      res, err = self.store.list_campaign_technology__events(context, args)
       if err:
         return None, err
       return serialize_all(res), None
@@ -227,15 +227,15 @@ class CampaignService:
       return serialize(res, full=True), None
   
 
-  def add_campaign_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-      res, err = self.store.create_campaign_event(context, args)
+  def add_campaign_technology_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+      res, err = self.store.add_campaign_technology_event(context, args)
       if err:
         return None, err
       return serialize(res, full=True), None
   
 
-  def remove_campaign_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-      res, err = self.store.remove_campaign_event(context, args)
+  def remove_campaign_technology_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+      res, err = self.store.remove_campaign_technology_event(context, args)
       if err:
         return None, err
       return serialize(res, full=True), None

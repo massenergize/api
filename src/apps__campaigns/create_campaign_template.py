@@ -1,15 +1,38 @@
 import os
 from django.core.files import File
-from apps__campaigns.constants import COACHES_SECTION, COMMUNITIES_SECTION, DEALS_SECTION, MORE_INFO_SECTION, VENDORS_SECTION
-from apps__campaigns.models import Campaign, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyTestimonial, CampaignTechnologyView, Partner, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+from apps__campaigns.constants import (
+    COACHES_SECTION,
+    COMMUNITIES_SECTION,
+    DEALS_SECTION,
+    MORE_INFO_SECTION,
+    VENDORS_SECTION,
+)
+from apps__campaigns.models import (
+    Campaign,
+    CampaignCommunity,
+    CampaignConfiguration,
+    CampaignTechnologyEvent,
+    CampaignManager,
+    CampaignPartner,
+    CampaignTechnology,
+    CampaignTechnologyTestimonial,
+    CampaignTechnologyView,
+    Partner,
+    Technology,
+    TechnologyCoach,
+    TechnologyOverview,
+    TechnologyVendor,
+)
 from database.models import Community, Event, Media, UserProfile, Vendor
+
 
 def create_media(image_path):
     media = Media()
-    with open(os.path.join(os.path.dirname(__file__), image_path), 'rb') as img_file:
+    with open(os.path.join(os.path.dirname(__file__), image_path), "rb") as img_file:
         media.file.save(os.path.basename(image_path), File(img_file), save=True)
         media.name = f"Test media for {image_path}"
     return media
+
 
 def create_test_users():
     users = []
@@ -18,37 +41,43 @@ def create_test_users():
             "full_name": "John Doe",
             "email": "john.doe@me.org",
             "profile_picture": create_media("media/face2.jpeg"),
-        },{
+        },
+        {
             "full_name": "Jane Doe",
             "email": "jane.doe@me.org",
-             "profile_picture": create_media("media/face1.jpeg"),
-            
+            "profile_picture": create_media("media/face1.jpeg"),
         },
         {
             "full_name": "Kane Doe",
             "email": "kane.doe@me.org",
-             "profile_picture": create_media("media/face2.jpeg"),
-        }
-        ]
-    
+            "profile_picture": create_media("media/face2.jpeg"),
+        },
+    ]
+
     for item in arr:
-        user, _ = UserProfile.objects.get_or_create(email=item["email"], full_name=item["full_name"])
+        user, _ = UserProfile.objects.get_or_create(
+            email=item["email"], full_name=item["full_name"]
+        )
         users.append(user)
 
     return users
-    
+
+
 def get_3_communities():
     arr = ["Community 1", "Community 2", "Community 3"]
-    imgs = ["media/solar-panel.jpg","media/me-biom.png","media/me-round-logo.png"]
+    imgs = ["media/solar-panel.jpg", "media/me-biom.png", "media/me-round-logo.png"]
     comm = []
     for item in arr:
         media = create_media(imgs[arr.index(item)])
-        community, _ = Community.objects.get_or_create(name=item, subdomain=item.lower().replace(" ", "-"))
+        community, _ = Community.objects.get_or_create(
+            name=item, subdomain=item.lower().replace(" ", "-")
+        )
         if _:
             community.logo = media
             community.save()
         comm.append(community)
     return comm
+
 
 def create_campaign_technology_overview(technology_id):
     tech = Technology.objects.filter(id=technology_id, is_deleted=False).first()
@@ -78,6 +107,7 @@ def create_campaign_technology_overview(technology_id):
         campaign_technology_overview.image = item["image"]
         campaign_technology_overview.save()
 
+
 def create_technology_coaches(technology_id):
     technology = Technology.objects.filter(id=technology_id, is_deleted=False).first()
     arr = [
@@ -86,7 +116,8 @@ def create_technology_coaches(technology_id):
             "email": "john.doe@me.org",
             "phone_number": "1234567890",
             "image": create_media("media/face2.jpeg"),
-        },{
+        },
+        {
             "full_name": "Jane Doe",
             "email": "jane.doe@me.org",
             "phone_number": "1234567890",
@@ -97,9 +128,9 @@ def create_technology_coaches(technology_id):
             "email": "kane.doe@me.org",
             "phone_number": "1234567890",
             "image": create_media("media/face6.jpeg"),
-        }
-        ]
-    
+        },
+    ]
+
     for item in arr:
         coach = TechnologyCoach()
         coach.technology = technology
@@ -109,15 +140,17 @@ def create_technology_coaches(technology_id):
         coach.image = item["image"]
         coach.save()
 
+
 def create_technology_vendors(technology_id):
     technology = Technology.objects.filter(id=technology_id, is_deleted=False).first()
 
-    vendors = Vendor.objects.filter(is_deleted=False,is_published=True).order_by("-created_at")[:10]
+    vendors = Vendor.objects.filter(is_deleted=False, is_published=True).order_by("-created_at")[:3]
     for vendor in vendors:
         tech_vendor = TechnologyVendor()
         tech_vendor.technology = technology
         tech_vendor.vendor = vendor
         tech_vendor.save()
+
 
 def create_technology(name, image=None):
     technology = Technology()
@@ -132,12 +165,11 @@ def create_technology(name, image=None):
     # create coaches
     create_technology_coaches(technology.id)
 
-
     # create vendors
     create_technology_vendors(technology.id)
 
-
     return technology
+
 
 def create_campaign_technology_testimonial(campaign_technology_id):
     print("====== Creating Campaign Technology Testimonials ======")
@@ -147,20 +179,32 @@ def create_campaign_technology_testimonial(campaign_technology_id):
     comm, comm2, comm3 = get_3_communities()
     arr = [
         {
-            "title": "This is a testimonial title 1",
+            "title": f"This is a testimonial for {campaign_tech.technology.name} 1",
             "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             "image": create_media("media/food.jpeg"),
             "created_by": user1,
-            "community":comm
+            "community": comm,
+            "is_approved": True,
+            "is_published": True,
         },
         {
-            "title": "This is a testimonial title 2",
+            "title": f"This is a testimonial for {campaign_tech.technology.name}",
             "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             "image": create_media("media/climate2.jpeg"),
             "created_by": user2,
-            "community":comm2
-
-        }
+            "community": comm2,
+            "is_approved": True,
+            "is_published": True,
+        },
+        {
+            "title": f"This is a testimonial for {campaign_tech.technology.name}",
+            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "image": create_media("media/climate2.jpeg"),
+            "created_by": user3,
+            "community": comm3,
+            "is_approved": True,
+            "is_published": True,
+        },
     ]
 
     for item in arr:
@@ -171,7 +215,11 @@ def create_campaign_technology_testimonial(campaign_technology_id):
         campaign_technology_view.image = item["image"]
         campaign_technology_view.created_by = item["created_by"]
         campaign_technology_view.community = item["community"]
+        campaign_technology_view.is_approved = item["is_approved"]
+        campaign_technology_view.is_published = item["is_published"]
+
         campaign_technology_view.save()
+
 
 def create_campaign_partners(campaign):
     print("====== Creating Campaign Partners ======")
@@ -206,13 +254,13 @@ def create_campaign_partners(campaign):
         },
     ]
 
-
     for item in arr:
         partner, _ = Partner.objects.get_or_create(**item)
         campaign_partner = CampaignPartner()
         campaign_partner.campaign = campaign
         campaign_partner.partner = partner
         campaign_partner.save()
+
 
 def create_campaign_Managers(campaign):
     print("====== Creating Campaign Managers ======")
@@ -242,46 +290,52 @@ def create_campaign_Managers(campaign):
         campaign_manager.contact = user["contact"]
         campaign_manager.save()
 
+
 def create_campaign_configuration(campaign):
     print("====== Creating Campaign Configuration ======")
 
     # create campaign configuration
     campaign_configuration = CampaignConfiguration()
     campaign_configuration.campaign = campaign
-    campaign_configuration.advert  = {
+    campaign_configuration.advert = {
         "title": "What is Kicking Gas?",
         "description": "Kicking Gas helps residents of South Whidbey  migrate from oil, propane, or wood to electric.",
-        "link": "https://www.google.com"
-
+        "link": "https://www.google.com",
     }
     campaign_configuration.save()
+
 
 def create_campaign_communities(campaign):
     print("====== Creating Campaign Communities ======")
     comm, comm2, comm3 = get_3_communities()
     link = "https://docs.google.com/spreadsheets/d/1wQ4858rQippxNqZ5c_kD985P_XOza9PW/edit#gid=676780580"
     # bulk create
-    campaign_communities = CampaignCommunity.objects.bulk_create([
-        CampaignCommunity(campaign=campaign, community=comm, help_link=link),
-        CampaignCommunity(campaign=campaign, community=comm2, help_link=link),
-        CampaignCommunity(campaign=campaign, community=comm3, help_link=link),
-    ])
+    campaign_communities = CampaignCommunity.objects.bulk_create(
+        [
+            CampaignCommunity(campaign=campaign, community=comm, help_link=link),
+            CampaignCommunity(campaign=campaign, community=comm2, help_link=link),
+            CampaignCommunity(campaign=campaign, community=comm3, help_link=link),
+        ]
+    )
     return campaign_communities
+
 
 def create_template_campaign():
     primary_logo = create_media("media/me-biom.png")
     secondary_logo = create_media("media/me-round-logo.png")
     image = create_media("media/campaign_image.jpg")
 
-    campaign = Campaign()
-    campaign.title = "Template Campaign"
-    campaign.description = "This is a template campaign description"
-    campaign.primary_logo = primary_logo
-    campaign.secondary_logo = secondary_logo
-    campaign.image = image
-    campaign.is_template = True
-    campaign.tagline = "This a template campaign tagline"
-    campaign.communities_section = COMMUNITIES_SECTION
+    campaign = Campaign(
+        title="Template Campaign",
+        description="This is a template campaign description",
+        primary_logo=primary_logo,
+        secondary_logo=secondary_logo,
+        image=image,
+        is_template=True,
+        tagline="This a template campaign tagline",
+        communities_section=COMMUNITIES_SECTION,
+    )
+
     campaign.save()
 
     print("====== created Template Campaign ======")
@@ -298,48 +352,44 @@ def create_template_campaign():
 
     return campaign
 
+
 def create_campaign_event(campaign_tech):
     print("====== Creating Campaign Events ======")
     com1, com2, com3 = get_3_communities()
     events = [
         {
-            "name":"New Event 1",
-            "description":"lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            "image":create_media("media/climate2.jpeg"),
-            "technology":campaign_tech.technology,
-            "start_date_and_time":"2024-09-01 00:00:00",
-            "end_date_and_time":"2024-09-03 00:00:00",
-            "community":com1,            
+            "name": "New Event 1",
+            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "image": create_media("media/climate2.jpeg"),
+            "start_date_and_time": "2024-09-01 00:00:00",
+            "end_date_and_time": "2024-09-03 00:00:00",
+            "community": com1,
         },
         {
-            "name":"New Event 2",
-            "description":"lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            "image":create_media("media/climate3.jpeg"),
-            "technology":campaign_tech.technology,
-            "start_date_and_time":"2024-09-01 00:00:00",
-            "end_date_and_time":"2024-09-03 00:00:00",
-            "community":com2,
-
+            "name": "New Event 2",
+            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "image": create_media("media/climate3.jpeg"),
+            "start_date_and_time": "2024-09-01 00:00:00",
+            "end_date_and_time": "2024-09-03 00:00:00",
+            "community": com2,
         },
         {
-            "name":"New Event 3",
-            "description":"lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            "image":create_media("media/ev1.jpeg"),
-            "technology":campaign_tech.technology,
-            "start_date_and_time":"2024-09-01 00:00:00",
-            "end_date_and_time":"2024-09-03 00:00:00",
-            "community":com3,
-
-        }
+            "name": "New Event 3",
+            "description": "lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            "image": create_media("media/ev1.jpeg"),
+            "start_date_and_time": "2024-09-01 00:00:00",
+            "end_date_and_time": "2024-09-03 00:00:00",
+            "community": com3,
+        },
     ]
-
 
     for event in events:
         evn, _ = Event.objects.get_or_create(**event)
-        campaign_event = CampaignEvent()
-        campaign_event.campaign = campaign_tech.campaign
+        campaign_event = CampaignTechnologyEvent()
+        campaign_event.campaign_technology = campaign_tech
         campaign_event.event = evn
         campaign_event.save()
+
 
 def create_template_campaign_technology(campaign_id):
     print("====== Creating Template Campaign Technologies ======")
@@ -370,7 +420,8 @@ def create_template_campaign_technology(campaign_id):
 
         create_campaign_technology_testimonial(campaign_technology.id)
         create_campaign_event(campaign_technology)
-  
+
+
 def run():
     print("==== Creating Template Campaign ====")
     does_template_exist = Campaign.objects.filter(is_template=True).first()

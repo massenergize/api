@@ -112,7 +112,7 @@ class Campaign(BaseModel):
 
     """
     account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True)
-    slug = models.CharField(max_length=250, unique=True, blank=True, null=True)
+    slug = models.SlugField(max_length=255, unique=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     start_date = models.DateField(null=True, blank=True)
@@ -135,7 +135,7 @@ class Campaign(BaseModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title) + "-" + str(generate_rand_between(2, 10))
-        super(Campaign, self).save(*args, **kwargs)
+        super(Campaign,self).save(*args, **kwargs)
 
     
     def simple_json(self)-> dict:
@@ -547,17 +547,17 @@ class Comment(BaseModel):
         return self.simple_json()
     
 
-class CampaignEvent(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_event")
+class CampaignTechnologyEvent(BaseModel):
+    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_event")
     event = models.ForeignKey("database.Event", on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.campaign} - {self.event}"
+        return f"{self.campaign_technology} - {self.event}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["campaign"] = get_summary_info(self.campaign)
+        res["campaign"] = get_summary_info(self.campaign_technology)
         res["event"] = {
             "id":self.event.id,
             "name":self.event.name,
