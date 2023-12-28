@@ -34,7 +34,7 @@ class CampaignAccountHandler(RouteHandler):
         (self.validator
          .expect("name", str, is_required=True)
          .expect("subdomain", str, is_required=True)
-         .expect("community", str, is_required=True)
+         .expect("community_id", str, is_required=True)
          )
         args, err = self.validator.verify(args)
         if err:

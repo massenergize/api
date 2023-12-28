@@ -34,7 +34,11 @@ class CampaignAccount(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
+        res["community"] = get_summary_info(self.community)
         return res
+    
+    def full_json(self):
+        return self.simple_json()
 
     class Meta:
         ordering = ("-created_at",)

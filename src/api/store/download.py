@@ -10,7 +10,7 @@ from _main_.utils.context import Context
 from collections import Counter
 from api.store.utils import get_human_readable_date
 from api.utils.api_utils import get_user_community_ids, is_admin_of_community
-from apps__campaigns.models import Campaign, CampaignActivityTracking, CampaignFollow, CampaignLink, CampaignTechnologyLike, CampaignTechnologyView
+from apps__campaigns.models import Campaign, CampaignActivityTracking, CampaignFollow, CampaignLink, CampaignTechnology, CampaignTechnologyFollow, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment
 from database.models import (
     UserProfile,
     CommunityMember,
@@ -53,7 +53,7 @@ from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
 from carbon_calculator.carbonCalculator import AverageImpact
-from django.db.models import Count
+from django.db.models import Count, Sum
 
 
 EMPTY_DOWNLOAD = (None, None)
@@ -1826,6 +1826,57 @@ class DownloadStore:
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
         
 
+    
+
+    def _campaign_overview_download(self, campaign):
+        columns = ["Metric", "Value"]
+        data = [columns]
+
+        likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+        follows = CampaignFollow.objects.filter(campaign__id=campaign.id, is_deleted=False).count()
+        views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+        campaign_views = CampaignView.objects.filter(campaign__id=campaign.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+        comments = Comment.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).count()
+        shares = CampaignLink.objects.filter(campaign__id=campaign.id, is_deleted=False).count()
+        testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).count()
+
+        rows = [
+            ["Total Likes", likes],
+            ["Total Follows", follows],
+            ["Total Views", campaign_views],
+            ["Total Technology Views", views],
+            ["Total comments", comments],
+            ["Total Shares", shares],
+            ["Total testimonials", testimonials],
+        ]
+
+        data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+        techs = CampaignTechnology.objects.filter(campaign__id=campaign.id, is_deleted=False)
+        for tech in techs:
+            likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=tech.id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+            follows = CampaignTechnologyFollow.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+            views = CampaignTechnologyView.objects.filter(campaign_technology__id=tech.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+            comments = Comment.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+            testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+
+            rows = [
+                ["Total Likes", likes or 0],
+                ["Total Follows", follows or 0],
+                ["Total Views", views or 0],
+                ["Total comments", comments or 0],
+                ["Total testimonials", testimonials or 0],
+            ]
+
+            data.append([])
+            data.append([])
+            data.append(["Technology", tech.technology.name])
+            data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+        return data
+
+        
+
 
     def campaign_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
         try:
@@ -1838,21 +1889,16 @@ class DownloadStore:
                 return EMPTY_DOWNLOAD, InvalidResourceError()
 
             sheet_data = {}
+            sheet_data["Campaign Overview"] = {
+                "data": self._campaign_overview_download(campaign)
+            }
             sheet_data["Campaign Follows"] = {
                 "data": self._campaign_follows_download(campaign)
             }
 
-            # sheet_data["Campaign Likes"] = {
-            #     "data": self._campaign_likes_download(campaign)
-            # }
-
             sheet_data["Campaign Link Performance"] = {
                 "data": self._campaign_link_performance_download(campaign)
             }
-
-            # sheet_data["Campaign Views Performance"] = {
-            #     "data": self._campaign_views_performance_download(context, campaign_id)
-            # }
             
             sheet_data["Campaign Interaction Performance"] = {
                 "data": self._campaign_interaction_performance_download(campaign)

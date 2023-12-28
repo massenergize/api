@@ -289,9 +289,21 @@ def shorten_url(url):
     return s.tinyurl.short(url)
 
 
+
 def generate_workbook_with_sheets(sheet_data):
     wb = Workbook()
-    for sheet_name, sheet in sheet_data.items():
+
+    # Get the first sheet
+    ws = wb.active
+
+    # Populate the first sheet
+    first_sheet_name, first_sheet = next(iter(sheet_data.items()))
+    ws.title = first_sheet_name
+    for row in first_sheet["data"]:
+        ws.append(row)
+
+    # Create and populate the other sheets
+    for sheet_name, sheet in list(sheet_data.items())[1:]:
         ws = wb.create_sheet(title=sheet_name)
         for row in sheet["data"]:
             ws.append(row)

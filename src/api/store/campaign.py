@@ -1,5 +1,5 @@
 from datetime import datetime
-from _main_.utils.common import contains_profane_words, serialize_all, shorten_url
+from _main_.utils.common import contains_profane_words, shorten_url
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
 from apps__campaigns.helpers import (
@@ -41,7 +41,6 @@ from .utils import get_user_from_context
 from django.db.models import Q
 from sentry_sdk import capture_message
 from typing import Tuple
-from django.db.models import Count
 from django.db import transaction
 
 
@@ -65,14 +64,11 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_campaigns(
-        self, context: Context, args
-    ) -> Tuple[list, MassEnergizeAPIError]:
+    def list_campaigns(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             campaign_account_id = args.get("campaign_account_id", None)
             subdomain = args.get("subdomain", None)
-            campaigns = Campaign.objects.filter(is_deleted=False)
-            return campaigns, None
+            campaigns = Campaign.objects.filter(is_deleted=False, is_template=False)
 
             if campaign_account_id:
                 campaigns = Campaign.objects.filter(account__id=campaign_account_id)
@@ -80,23 +76,9 @@ class CampaignStore:
                 campaigns = Campaign.objects.filter(account__subdomain=subdomain)
 
             else:
-                campaigns = Campaign.objects.filter(
-                    Q(owner__id=context.user_id)
-                    | Q(owner__email=context.user_email)
-                    | Q(is_global=True)
-                )
+                campaigns = Campaign.objects.filter(Q(owner__id=context.user_id)| Q(owner__email=context.user_email)| Q(is_global=True))
 
-            if not context.is_sandbox:
-                if context.user_is_logged_in and not context.user_is_admin():
-                    campaigns = campaigns.filter(
-                        Q(owner__id=context.user_id) | Q(is_published=True)
-                    )
-                else:
-                    campaigns = campaigns.filter(is_published=True)
-
-            campaigns = campaigns.filter(is_deleted=False).distinct()
-
-            return campaigns, None
+            return campaigns.distinct(), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -119,8 +101,6 @@ class CampaignStore:
             if not args.get("start_date", None):
                 args["start_date"] = datetime.today()
 
-                print(args)
-
             owner = get_user_from_context(context)
             if not owner:
                return None, CustomMassenergizeError("User not found")
@@ -138,15 +118,9 @@ class CampaignStore:
             new_campaign = Campaign.objects.create(**args)
             new_campaign.owner = owner
 
-            new_campaign.primary_logo = create_media_file(
-                primary_logo, f"PrimaryLogoFor {title} Campaign"
-            )
-            new_campaign.secondary_logo = create_media_file(
-                secondary_logo, f"SecondaryLogoFor {title} Campaign"
-            )
-            new_campaign.image = create_media_file(
-                campaign_image, f"ImageFor {title} Campaign"
-            )
+            new_campaign.primary_logo = create_media_file(primary_logo, f"PrimaryLogoFor {title} Campaign")
+            new_campaign.secondary_logo = create_media_file(secondary_logo, f"SecondaryLogoFor {title} Campaign")
+            new_campaign.image = create_media_file(campaign_image, f"ImageFor {title} Campaign")
 
             if contact_email:
                 user = UserProfile.objects.filter(email=contact_email).first()
@@ -197,9 +171,7 @@ class CampaignStore:
                 args.pop("is_published", None)
 
             if primary_logo:
-                args["primary_logo"] = create_media_file(
-                    primary_logo, f"PrimaryLogoFor {campaign.title} Campaign"
-                )
+                args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign.title} Campaign")
             if secondary_logo:
                 args["secondary_logo"] = create_media_file(
                     secondary_logo, f"SecondaryLogoFor {campaign.title} Campaign"
@@ -244,9 +216,7 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def list_campaigns_for_admins(
-        self, context: Context, args
-    ) -> Tuple[list, MassEnergizeAPIError]:
+    def list_campaigns_for_admins(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             campaign_account_id = args.pop("campaign_account_id", None)
             subdomain = args.pop("subdomain", None)
@@ -255,26 +225,15 @@ class CampaignStore:
                 return self.list_campaigns_for_super_admin(context)
 
             if subdomain:
-                campaigns = (
-                    Campaign.objects.filter(account__subdomain=subdomain)
-                    .select_related("logo")
-                    .filter(is_deleted=False)
-                )
+                campaigns =Campaign.objects.filter(account__subdomain=subdomain).filter(is_deleted=False)
                 return campaigns.distinct(), None
 
             if campaign_account_id:
-                campaigns = (
-                    Campaign.objects.filter(account__id=campaign_account_id)
-                    .select_related("logo")
-                    .filter(is_deleted=False)
-                )
+                campaigns = Campaign.objects.filter(account__id=campaign_account_id).filter(is_deleted=False)
+            
                 return campaigns.distinct(), None
 
-            campaigns = (
-                Campaign.objects.select_related("logo")
-                .filter(Q(is_global=True), is_deleted=False)
-                .distinct()
-            )
+            campaigns =Campaign.objects.filter(Q(is_global=True), is_deleted=False).distinct()
 
             return campaigns, None
 
@@ -284,7 +243,7 @@ class CampaignStore:
 
     def list_campaigns_for_super_admin(self, context: Context):
         try:
-            campaigns = Campaign.objects.all().select_related("logo")
+            campaigns = Campaign.objects.filter(is_deleted=False)
             return campaigns.distinct(), None
         except Exception as e:
             capture_message(str(e), level="error")
@@ -366,9 +325,7 @@ class CampaignStore:
             if not community:
                 return None, CustomMassenergizeError("community with id not found!")
 
-            campaign_community = CampaignCommunity.objects.create(
-                campaign=campaign, community=community
-            )
+            campaign_community = CampaignCommunity.objects.create(campaign=campaign, community=community)
 
             return campaign_community, None
         except Exception as e:
