@@ -1,11 +1,11 @@
 
 from _main_.utils.common import serialize, serialize_all
 
-from apps__campaigns.models import  CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignTechnologyEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, Comment, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+from apps__campaigns.models import  CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignTechnologyEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
 
 # from database.models import Event
 from database.utils.common import get_json_if_not_none
-from django.db.models import Count
+from django.db.models import Count, Sum
 
 
 
@@ -142,85 +142,21 @@ def generate_campaign_navigation(campaign_id):
 def generate_analytics_data(campaign_id):
     #  number of likes, number of views, number of followers, number of comments, number of testimonials,
     
-    utm_medium_counts = (
-        CampaignLink.objects.filter(is_deleted=False, campaign__id=campaign_id)
-        .values("utm_medium")
-        .annotate(count=Count("utm_medium"))
-        .order_by("utm_medium")
-    )
-    likes = (
-        CampaignTechnologyLike.objects.filter(
-            is_deleted=False, campaign_technology__campaign__id=campaign_id
-        )
-        .values("campaign_technology__technology__name")
-        .annotate(count=Count("campaign_technology__technology"))
-        .order_by("campaign_technology__technology")
-    )
-    views = (
-        CampaignTechnologyView.objects.filter( is_deleted=False, campaign_technology__campaign__id=campaign_id)
-        .values("campaign_technology__technology__name")
-        .annotate(count=Count("campaign_technology__technology"))
-        .order_by("campaign_technology__technology")
-    )
-    followers = (CampaignFollow.objects.filter(is_deleted=False, campaign__id=campaign_id)
-        .values("community")
-        .annotate(count=Count("community"))
-        .order_by("community")
-    )
-    comments = (
-        Comment.objects.filter(is_deleted=False, campaign_technology__campaign__id=campaign_id)
-        .values("campaign_technology__technology__name")
-        .annotate(count=Count("campaign_technology__technology"))
-        .order_by("campaign_technology__technology")
-    )
-    testimonials = ( CampaignTechnologyTestimonial.objects.filter( is_deleted=False, campaign_technology__campaign__id=campaign_id)
-        .values("campaign_technology__technology__name")
-        .annotate(count=Count("campaign_technology__technology"))
-        .order_by("campaign_technology__technology")
-    )
-
+    shares =CampaignLink.objects.filter(is_deleted=False, campaign__id=campaign_id).count()
+    likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+    campaign_technology_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id,is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+    followers = CampaignFollow.objects.filter(is_deleted=False, campaign__id=campaign_id).count()
+    comments =Comment.objects.filter(is_deleted=False, campaign_technology__campaign__id=campaign_id).count()
+    testimonials =CampaignTechnologyTestimonial.objects.filter( is_deleted=False, campaign_technology__campaign__id=campaign_id).count()
+    campaign_views = CampaignView.objects.filter(campaign__id=campaign_id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
     stats = {
-        "shares": list(utm_medium_counts),
-        "likes": [
-            {
-                "technology": entry.get(
-                    "campaign_technology__technology__name"
-                ),
-                "count": entry.get("count"),
-            }
-            for entry in list(likes)
-        ],
-        "views": [
-            {
-                "technology": entry.get(
-                    "campaign_technology__technology__name"
-                ),
-                "count": entry.get("count"),
-            }
-            for entry in list(views)
-        ],
-        "followers": [
-            {"community": entry.get("community"), "count": entry.get("count")}
-            for entry in list(followers)
-        ],
-        "comments": [
-            {
-                "technology": entry.get(
-                    "campaign_technology__technology__name"
-                ),
-                "count": entry.get("count"),
-            }
-            for entry in list(comments)
-        ],
-        "testimonials": [
-            {
-                "technology": entry.get(
-                    "campaign_technology__technology__name"
-                ),
-                "count": entry.get("count"),
-            }
-            for entry in list(testimonials)
-        ],
+        "shares": shares,
+        "likes": likes,
+        "campaign views": campaign_views,
+        "Technology views": campaign_technology_views,
+        "followers": followers,
+        "comments": comments,
+        "testimonials": testimonials,
     }
     return stats
 
