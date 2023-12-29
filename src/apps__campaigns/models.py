@@ -297,11 +297,20 @@ class TechnologyVendor(BaseModel):
     def __str__(self):
         return f"{self.technology} - {self.vendor}"
     
+    def get_website(self):
+        if self.vendor.more_info:
+            return self.vendor.more_info.get("website", None)
+        return None
+    
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["technology"] = get_summary_info(self.technology)
-        res["vendor"] = get_summary_info(self.vendor)
+        res["vendor"] = {
+            **get_summary_info(self.vendor),
+            "website":self.get_website(),
+            "logo":get_json_if_not_none(self.vendor.logo)
+        }
         return res
     
     def full_json(self):
@@ -661,7 +670,7 @@ class CampaignTechnologyTestimonial(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["campaign"] = get_summary_info(self.campaign)
+        res["campaign"] = get_summary_info(self.campaign or self.campaign_technology.campaign)
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
         res["user"] = get_summary_info(self.created_by)
         res["community"] = get_summary_info(self.community)

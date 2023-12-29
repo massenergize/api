@@ -314,7 +314,6 @@ def create_campaign_configuration(campaign):
 def create_campaign_communities(campaign):
     print("====== Creating Campaign Communities ======")
     comm, comm2, comm3 = get_3_communities()
-    link = "https://docs.google.com/forms/d/e/1FAIpQLSfrpKrrowpFX-PFKHTXXs4j568IaYHhoMcaZMqxyHGRr4T8wg/viewform?usp=sf_link"
     # bulk create
     campaign_communities = CampaignCommunity.objects.bulk_create(
         [
@@ -376,6 +375,7 @@ def create_campaign_event(campaign_tech):
             "start_date_and_time": "2024-09-01 00:00:00",
             "end_date_and_time": "2024-09-03 00:00:00",
             "community": com1,
+            "external_link": "https://communities.massenergize.org/",
         },
         {
             "name": name2,
@@ -384,6 +384,7 @@ def create_campaign_event(campaign_tech):
             "start_date_and_time": "2024-09-01 00:00:00",
             "end_date_and_time": "2024-09-03 00:00:00",
             "community": com2,
+            "external_link": "https://community.massenergize.org/Massachusetts",
         },
         {
             "name": name3,
@@ -392,6 +393,7 @@ def create_campaign_event(campaign_tech):
             "start_date_and_time": "2024-09-01 00:00:00",
             "end_date_and_time": "2024-09-03 00:00:00",
             "community": com3,
+            "external_link": "https://community.massenergize.org/EcoNatick",
         },
     ]
 

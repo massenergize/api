@@ -17,13 +17,13 @@ VENDORS_SECTION = {
 }
 
 COACHES_SECTION = {
-    "title": "Here Are a List of Participating Coaches",
-    "description": "This is a list of coaches that are participating in the campaign. They will be available to help you with your campaign.  If you are a coach and would like to participate, please contact us.",
+    "title": "Meet The Coaches",
+    "description": "Embark on a journey of mentorship and empowerment as we invite you to Meet The Coaches who form the bedrock of our transformative experiences. These seasoned professionals bring not just expertise, but a profound commitment to guide, inspire, and elevate. Delve into the rich tapestry of their diverse backgrounds, unwavering dedication, and the profound impact they have on shaping lives. Get ready to be inspired, motivated, and mentored by a team of extraordinary individuals who are dedicated to unlocking your fullest potential and ushering you towards a path of unparalleled success and personal growth. This is your chance to connect with the visionaries who stand ready to accompany you on a transformative journey of self-discovery and achievement.",
 }
 
 MORE_INFO_SECTION = {
-    "title": "Here is Some More Information About the Campaign Technology",
-    "description": "Thi campaign",
+    "title": "More Details",
+    "description": "In the vast expanse of the cosmos, where stars twinkle like ancient storytellers, humanity embarks on a perpetual journey of exploration and discovery. It is a journey fueled by insatiable curiosity, a desire to unravel the mysteries woven into the fabric of the universe. From the towering peaks of scientific inquiry to the tranquil valleys of artistic expression, each step forward is a testament to the indomitable human spirit. As we navigate the intricate dance of celestial bodies, scientists meticulously parse the cosmic code, decoding the language of quasars and galaxies. Simultaneously, artists, inspired by the cosmos' ethereal beauty, capture the essence of interstellar wonders on canvases that become portals to otherworldly realms. This exploration is not confined to the celestial; it extends to the depths of our oceans, where marine biologists unravel the secrets of life teeming in the abyss. It traverses the uncharted territories of the mind, where philosophers contemplate the profound questions that echo across time. It is a journey that transcends the boundaries of disciplines, inviting all to partake in the collective endeavor to understand, appreciate, and cherish the boundless wonders that await us on this cosmic odyssey.",
 }
 
 COMMUNITIES_SECTION = {
