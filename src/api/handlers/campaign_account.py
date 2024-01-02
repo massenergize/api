@@ -12,15 +12,15 @@ class CampaignAccountHandler(RouteHandler):
         self.registerRoutes()
 
     def registerRoutes(self):
-        self.add("/campaign.accounts.create", self.create_campaign_account)
-        self.add("/campaign.accounts.update", self.update_campaign_account)
-        self.add("/campaign.accounts.delete", self.delete_campaign_account)
-        self.add("/campaign.accounts.listForAdmin", self.list_campaign_accounts_for_admins)
-        self.add("/campaign.accounts.info", self.info)
+        self.add("/campaigns.accounts.create", self.create_campaign_account)
+        self.add("/campaigns.accounts.update", self.update_campaign_account)
+        self.add("/campaigns.accounts.delete", self.delete_campaign_account)
+        self.add("/campaigns.accounts.listForAdmin", self.list_campaign_accounts_for_admins)
+        self.add("/campaigns.accounts.info", self.info)
 
-        self.add("/campaign.accounts.admin.add", self.add_admin)
-        self.add("/campaign.accounts.admin.remove", self.remove_admin)
-        self.add("/campaign.accounts.admin.update", self.update_admin)
+        self.add("/campaigns.accounts.admin.add", self.add_admin)
+        self.add("/campaigns.accounts.admin.remove", self.remove_admin)
+        self.add("/campaigns.accounts.admin.update", self.update_admin)
     
 
 

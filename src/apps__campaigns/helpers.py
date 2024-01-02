@@ -1,7 +1,7 @@
 
 from _main_.utils.common import serialize, serialize_all
 
-from apps__campaigns.models import  CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignTechnologyEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+from apps__campaigns.models import  CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
 
 # from database.models import Event
 from database.utils.common import get_json_if_not_none
@@ -60,7 +60,7 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
 
 def get_campaign_technology_details(campaign_technology_id, campaign_home, email=None):
     campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
-    events = CampaignTechnologyEvent.objects.filter(campaign_technology__technology__id=campaign_tech.technology.id, is_deleted=False)
+    events = CampaignEvent.objects.filter(technology_event__technology__id=campaign_tech.technology.id, is_deleted=False)
     testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id, is_approved=True,is_published=True).order_by("-created_at")
     tech_data = get_technology_details(campaign_tech.technology.id)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]

@@ -104,7 +104,7 @@ class CampaignService:
     return serialize(campaign_manager, full=True), None
 
 
-  def add_campaign_community(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+  def add_campaign_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     res, err = self.store.add_campaign_community(context, args)
     if err:
       return None, err
@@ -124,11 +124,11 @@ class CampaignService:
     return serialize(res, full=True), None
   
 
-  def add_campaign_technology(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+  def add_campaign_technology(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
     res, err = self.store.add_campaign_technology(context, args)
     if err:
       return None, err
-    return serialize(res, full=True), None
+    return serialize_all(res, full=True), None
   
 
   def update_campaign_technology(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
@@ -206,11 +206,11 @@ class CampaignService:
     return serialize_all(res), None
 
 
-  def list_campaign_technology__events(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
-      res, err = self.store.list_campaign_technology__events(context, args)
+  def list_campaign_events(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+      res, err = self.store.list_campaign_events(context, args)
       if err:
         return None, err
-      return serialize_all(res), None
+      return serialize_all(res, full=True), None
   
 
   def add_campaign_partners(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
@@ -227,15 +227,15 @@ class CampaignService:
       return serialize(res, full=True), None
   
 
-  def add_campaign_technology_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-      res, err = self.store.add_campaign_technology_event(context, args)
+  def add_campaign_event(self, context, args) -> Tuple[list, MassEnergizeAPIError]:
+      res, err = self.store.add_campaign_event(context, args)
       if err:
         return None, err
-      return serialize(res, full=True), None
+      return res, None
   
 
-  def remove_campaign_technology_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
-      res, err = self.store.remove_campaign_technology_event(context, args)
+  def remove_campaign_event(self, context, args) -> Tuple[dict, MassEnergizeAPIError]:
+      res, err = self.store.remove_campaign_event(context, args)
       if err:
         return None, err
       return serialize(res, full=True), None
