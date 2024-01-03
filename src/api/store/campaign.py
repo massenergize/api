@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 from _main_.utils.common import contains_profane_words, shorten_url
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
@@ -54,10 +55,18 @@ class CampaignStore:
     def get_campaign_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             campaign_id = args.get("id", None)
-            campaign: Campaign = Campaign.objects.filter(Q(id=campaign_id)|Q(slug=id), is_deleted=False).first()
-
+            if not campaign_id:
+                return None, CustomMassenergizeError("id is required")
+            
+            campaign = None
+            try:
+                uuid_id = UUID(campaign_id, version=4)
+                campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+            except ValueError:
+                campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
+            
             if not campaign:
-                return None, CustomMassenergizeError("Invalid Campaign ID")
+                return None, CustomMassenergizeError("Campaign with id does not exist")
 
             return campaign, None
 
@@ -808,7 +817,7 @@ class CampaignStore:
             email = args.pop("email", None)
 
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Campaign id not found!")
 
             campaign = Campaign.objects.filter(id=campaign_id).first()
             if not campaign:
@@ -925,27 +934,12 @@ class CampaignStore:
     def add_campaign_technology_like(self, context, args):
         try:
             campaign_technology_id = args.pop("campaign_technology_id", None)
-            # community_id: str = args.pop("community_id", None)
-            # user_id: str = args.pop("user_id", None)
-            # email = args.pop("email", context.user_email)
-
             if not campaign_technology_id:
                 return None, CustomMassenergizeError("Campaign technology id not found!")
 
             campaign_technology = CampaignTechnology.objects.filter( id=campaign_technology_id).first()
             if not campaign_technology:
                 return None, CustomMassenergizeError("Campaign technology with id not found!")
-
-            # if user_id:
-            #     user = UserProfile.objects.filter(id=user_id).first()
-            #     if user:
-            #         args["user"] = user
-
-            # if community_id:
-            #     community = Community.objects.filter(id=community_id).first()
-            #     if community:
-            #         args["community"] = community
-
             like, _ = CampaignTechnologyLike.objects.get_or_create(campaign_technology=campaign_technology)
             # lock transaction
             with transaction.atomic():

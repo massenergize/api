@@ -28,7 +28,7 @@ from apps__campaigns.models import (
 from database.models import Community, Event, Media, UserProfile, Vendor
 
 
-TEMPLATE_TITLE = "Template Campaign"
+TEMPLATE_TITLE = "Template Campaign 1"
 
 
 def create_media(image_path):

@@ -1644,14 +1644,17 @@ class DownloadStore:
             return "N/A"
         
         def get_zipcode(follow):
-            if follow.zipcode:
-                return follow.zipcode
-            elif not follow.community_name:
-                zipcode = follow.community.locations.first().zipcode if follow.community and follow.community.locations else "N/A"
-                return zipcode
-
-                
-            return "N/A"
+            try:
+                if follow.zipcode:
+                    return follow.zipcode
+                elif not follow.community_name:
+                    location = follow.community.locations.first() if follow.community and follow.community.locations else None
+                    zipcode = location.zipcode if location else "N/A"
+                    return zipcode
+                return "N/A"
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                return "N/A"
         # 
         data = [columns]
         follows = CampaignFollow.objects.filter(campaign=campaign, is_deleted=False)
@@ -1703,7 +1706,6 @@ class DownloadStore:
             elif not like.community_name:
                 zipcode = like.community.locations.first().zipcode if like.community and like.community.locations else "N/A"
                 return zipcode
-
                 
             return "N/A"
         # 
@@ -1744,7 +1746,6 @@ class DownloadStore:
         for click in clicks:
             cell  = self._get_cells_from_dict(columns,{
                 "Date": get_human_readable_date(click.created_at),
-                "Campaign": click.campaign.title,
                 "Email": click.email,
                 "Source": click.utm_source,
                 "Medium": click.utm_medium,
@@ -1803,7 +1804,6 @@ class DownloadStore:
         for interaction in interactions:
             cell  = self._get_cells_from_dict(columns,{
                 "Date": get_human_readable_date(interaction.created_at),
-                "Campaign": interaction.campaign.title,
                 "Action": interaction.source,
                 "Email": interaction.email,
                 "Target": interaction.target,
