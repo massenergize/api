@@ -53,10 +53,10 @@ class TechnologyStore:
             image = args.pop('image', None)
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Technology does not exist")
             technology.update(**args)
             technology = technology.first()
-            if image:
+            if not isinstance(image, str) or not image.startswith("http"):
                 media = Media.objects.create(file=image, name=f"FileUpload for {technology.id} Technology")
                 technology.image = media
             technology.save()
@@ -153,6 +153,9 @@ class TechnologyStore:
                 vendor = Vendor.objects.filter(pk=vendor_id).first()
                 tech_vendor, _ = TechnologyVendor.objects.get_or_create(technology=technology, vendor=vendor)
                 created_list.append(tech_vendor.simple_json())
+
+            # delete all vendors that are not in the list
+            TechnologyVendor.objects.filter(technology=technology).exclude(id__in=[x.get("id") for x in created_list]).delete()
         
             return created_list, None
         except Exception as e:
@@ -299,22 +302,24 @@ class TechnologyStore:
     def add_technology_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             technology_id = args.pop('technology_id', None)
-            event_ids = args.pop('event_ids', None)
+            event_ids = args.pop('event_ids', [])
 
             created_list = []
 
-
             technology = Technology.objects.filter(id=technology_id).first()
             if not technology:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("technology with id does not exist")
             
             if not event_ids:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("event_ids is required")
             
             for event_id in event_ids:
                 event = Event.objects.filter(pk=event_id).first()
                 tech_event, _ = TechnologyEvent.objects.get_or_create(technology=technology, event=event)
                 created_list.append(tech_event.simple_json())
+
+            # delete all events that are not in the list
+            TechnologyEvent.objects.filter(technology=technology).exclude(id__in=[x.get("id") for x in created_list]).delete()
         
             return created_list, None
         except Exception as e:

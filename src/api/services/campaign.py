@@ -381,3 +381,36 @@ class CampaignService:
     
     return serialize_all(res, full=True), None
   
+
+
+  def create_campaign_technology(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.create_campaign_technology(context, args)
+    if err:
+      return None, err
+    
+    return serialize(res, full=True), None
+  
+
+
+  def list_campaign_communities_events(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.list_campaign_communities_events(context, args)
+    if err:
+      return None, err
+    
+    return serialize_all(res), None
+  
+
+  def list_campaign_communities_testimonials(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.list_campaign_communities_testimonials(context, args)
+    if err:
+      return None, err
+    
+    return serialize_all(res), None
+  
+
+  def list_campaign_communities_vendors(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.list_campaign_communities_vendors(context, args)
+    if err:
+      return None, err
+    
+    return serialize_all(res), None

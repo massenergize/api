@@ -38,6 +38,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.communities.update", self.update_campaign_community)
 
         self.add("/campaigns.technologies.add", self.add_campaign_technology)
+        self.add("/campaigns.technologies.create", self.create_campaign_technology)
         self.add("/campaigns.technologies.remove", self.remove_campaign_technology)
         self.add("/campaigns.technologies.update", self.update_campaign_technology)
         self.add("/campaigns.technologies.info", self.get_campaign_technology_info)
@@ -85,6 +86,12 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.ownership.transfer", self.transfer_ownership)
 
         self.add("/campaigns.activities.track", self.track_activity)
+
+
+        # for ease
+        self.add("/campaigns.communities.events.list", self.list_campaign_communities_events)
+        self.add("/campaigns.communities.testimonials.list", self.list_campaign_communities_testimonials)
+        self.add("/campaigns.communities.vendors.list", self.list_campaign_communities_vendors)
 
 
 
@@ -982,6 +989,76 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.delete_campaign_technology_comment(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+
+    def create_campaign_technology(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+        self.validator.expect("name", str, is_required=True)
+        self.validator.expect("description", str, is_required=True)
+        self.validator.expect("image", "file", is_required=False)
+        self.validator.expect("summary", str, is_required=False)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.create_campaign_technology(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+
+
+    def list_campaign_communities_events(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_communities_events(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+    def list_campaign_communities_testimonials(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_communities_testimonials(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def list_campaign_communities_vendors(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_communities_vendors(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)

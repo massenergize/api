@@ -119,6 +119,15 @@ class TestimonialHandler(RouteHandler):
   def list(self, request):
     context = request.context
     args = context.args
+
+    self.validator.expect("community_id", int)
+    self.validator.expect("subdomain", str)
+    self.validator.expect("community_ids", list)
+
+    args, err = self.validator.verify(args)
+    if err:
+      return err
+
     testimonial_info, err = self.service.list_testimonials(context, args)
 
     if err:

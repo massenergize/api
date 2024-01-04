@@ -27,9 +27,11 @@ class TechnologyHandler(RouteHandler):
         self.add("/technologies.events.remove", self.remove_technology_event)
 
         self.add("/technologies.listForAdmin", self.list_for_admin)
+
         self.add("/technologies.vendors.add", self.add_vendor)
         self.add("/technologies.vendors.remove", self.remove_vendor)
         self.add("/technologies.vendors.list", self.list_vendors)
+
         self.add("/technologies.overview.create", self.create_overview)
         self.add("/technologies.overview.update", self.update_overview)
         self.add("/technologies.overview.delete", self.delete_overview)
@@ -93,8 +95,6 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("image", "file", is_required=False)
         self.validator.expect("icon", str, is_required=False)
         self.validator.expect("summary", str, is_required=False)
-
-
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -202,7 +202,7 @@ class TechnologyHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("technology_id", str, is_required=True)
-        self.validator.expect("vendor_ids", "str_list", is_required=True)
+        self.validator.expect("vendor_ids", list, is_required=True)
 
         args, err = self.validator.verify(args)
 
@@ -332,7 +332,7 @@ class TechnologyHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("technology_id", str, is_required=True)
-        self.validator.expect("event_ids", "str_list", is_required=True)
+        self.validator.expect("event_ids", list, is_required=True)
 
         args, err = self.validator.verify(args)
 

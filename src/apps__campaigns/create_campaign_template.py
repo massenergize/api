@@ -101,12 +101,12 @@ def create_campaign_technology_overview(technology_id):
             },
             {
                 "title": "ECONOMIC BENEFITS",
-                "image": create_media("media/solar-panel.jpg"),
+                "image": create_media("media/climate3.jpeg"),
                 "description": f"{tech.name} is a renewable energy source that has economic benefits. It is a clean source of energy that does not emit greenhouse gases when used to generate electricity. It is a renewable source of energy, which means that it will not run out like other sources of energy such as fossil fuels.",
             },
             {
                 "title": "HEALTH & WELLNESS",
-                "image": create_media("media/solar-panel.jpg"),
+                "image": create_media("media/climate2.jpeg"),
                 "description": "{tech.name} is a renewable energy source that has health and wellness benefits. It is a clean source of energy that does not emit greenhouse gases when used to generate electricity. It is a renewable source of energy, which means that it will not run out like other sources of energy such as fossil fuels.",
             },
         ]

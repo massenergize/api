@@ -82,7 +82,7 @@ class TechnologyService:
         res, err = self.store.add_technology_vendor(context, args)
         if err:
             return None, err
-        return serialize(res), None
+        return serialize_all(res, full=True), None
     
     def remove_technology_vendor(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         res, err = self.store.remove_technology_vendor(context, args)
@@ -132,7 +132,7 @@ class TechnologyService:
         res, err = self.store.add_technology_events(context, args)
         if err:
             return None, err
-        return serialize(res), None
+        return serialize_all(res, full=True), None
     
 
     def remove_technology_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:

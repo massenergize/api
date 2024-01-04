@@ -324,7 +324,6 @@ class CampaignTechnology(BaseModel):
     overview_title  = models.CharField(max_length=255, blank=True, null=True)
     action_section  = models.JSONField(blank=True, null=True)
     coaches_section = models.JSONField(blank=True, null=True)
-    deal_section_image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
     deal_section = models.JSONField(blank=True, null=True)
     vendors_section = models.JSONField(blank=True, null=True)
     more_info_section = models.JSONField(blank=True, null=True)
@@ -336,8 +335,8 @@ class CampaignTechnology(BaseModel):
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
-        res["technology"] = get_summary_info(self.technology)
-        res["deal_section_image"] = get_json_if_not_none(self.deal_section_image)
+        res["technology"] = get_json_if_not_none(self.technology)
+        # res["deal_section_image"] = get_json_if_not_none(self.deal_section_image)
         return res
     
     def full_json(self):
