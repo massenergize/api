@@ -222,9 +222,12 @@ class TechnologyStore:
             technology_id = args.pop('technology_id', None)
             image = args.pop('image', None)
 
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
+
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("technology with id does not exist")
             args["technology"] = technology.first()
 
             
@@ -246,11 +249,14 @@ class TechnologyStore:
             tech_overview_id = args.pop('technology_overview_id', None)
             image = args.pop('image', None)
 
+            if not tech_overview_id:
+                return None, CustomMassenergizeError("technology_overview_id is required")
+
             tech_overview = TechnologyOverview.objects.filter(id=tech_overview_id)
             if not tech_overview:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Technology Overview does not exist")
             
-            if image:
+            if not isinstance(image, str) or not image.startswith("http"):
                 media = Media.objects.create(file=image, name=f"FileUpload for {tech_overview.first().id} TechnologyOverview")
                 tech_overview.first().image = media
             tech_overview.update(**args)
@@ -284,14 +290,16 @@ class TechnologyStore:
         try:
             coach_id = args.pop('id', None)
             image = args.pop('image', None)
+            if not coach_id:
+                return None, CustomMassenergizeError("coach_id is required")
 
             coach = TechnologyCoach.objects.filter(id=coach_id)
             if not coach:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Coach with id does not exist")
             
-            if image:
+            if not isinstance(image, str) or not image.startswith("http"):
                 media = Media.objects.create(file=image, name=f"FileUpload for {coach.first().id} TechnologyCoach")
-                coach.first().image = media
+                args["image"] = media
             coach.update(**args)
         
             return coach.first(), None

@@ -1349,7 +1349,7 @@ class CampaignStore:
         try:
             technology_id = args.pop("technology_id", None)
             campaign_id = args.pop("campaign_id", None)
-            testimonial_ids = args.pop("event_ids", [])
+            testimonial_ids = args.pop("testimonial_ids", [])
             if not campaign_id and not technology_id:
                 return None, CustomMassenergizeError("campaign_id and technology_id are required !")
             
@@ -1362,14 +1362,14 @@ class CampaignStore:
             
             testimonials = []
             for testimonial_id in testimonial_ids:
-                testimonial = Testimonial.objects.filter(pk=testimonial_id, is_deleted=True).first()
+                testimonial = Testimonial.objects.filter(pk=testimonial_id, is_deleted=False).first()
                 tech_testimonial, _ = CampaignTechnologyTestimonial.objects.get_or_create(campaign_technology=campaign_technology, testimonial=testimonial, is_deleted=False)
-                testimonials.append(tech_testimonial.simple_json())
+                testimonials.append(tech_testimonial)
 
             # delete all events that are not in the list
-            CampaignTechnologyTestimonial.objects.filter(campaign_technology=campaign_technology).exclude(id__in=[x.get("id") for x in testimonials]).delete()
+            CampaignTechnologyTestimonial.objects.filter(campaign_technology=campaign_technology).exclude(testimonial__in=[x.testimonial.id for x in testimonials]).delete()
 
-            return testimonials, None
+            return [testimonial.simple_json() for testimonial in testimonials], None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
