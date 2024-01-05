@@ -3,6 +3,7 @@ from uuid import UUID
 from _main_.utils.common import contains_profane_words, shorten_url
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
+from apps__campaigns.create_campaign_template import TEMPLATE_TITLE
 from apps__campaigns.helpers import (
     copy_campaign_data,
     generate_analytics_data,
@@ -813,7 +814,7 @@ class CampaignStore:
                 utm_campaign=utm_campaign,
             )
 
-            generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}&campaign_like_id={campaign_link.id}"
+            generated_link = f"{url}?utm_source={utm_source}&utm_medium={utm_medium}&link_id={campaign_link.id}"
 
             return {"link": shorten_url(generated_link)}, None
         except Exception as e:
@@ -944,7 +945,7 @@ class CampaignStore:
             if not campaign_technology:
                 return None, CustomMassenergizeError("Campaign technology with id not found!")
             
-            link_id = url.split("&campaign_like_id=")
+            link_id = url.split("&link_id=")
             link_id = link_id[1] if len(link_id) > 1 else None
             
             if link_id:
@@ -1160,7 +1161,7 @@ class CampaignStore:
             if not title:
                 return None, CustomMassenergizeError("Title not provided")
 
-            template = Campaign.objects.filter(title="Template Campaign").first()
+            template = Campaign.objects.filter(title=TEMPLATE_TITLE, is_template=True).first()
 
             if not template:
                 return None, CustomMassenergizeError("Campaign Template not found")
@@ -1225,7 +1226,7 @@ class CampaignStore:
             if not campaign:
                 return None, CustomMassenergizeError("Campaign with id not found!")
             if url:
-                link_id = url.split("&campaign_like_id=")
+                link_id = url.split("&link_id=")
                 link_id = link_id[1] if len(link_id) > 1 else None
                 
                 if link_id:

@@ -99,8 +99,7 @@ def campaign(request, campaign_id):
         raise Http404
     image = campaign.image.file.url
 
-
-    redirect_url = f"{CAMPAIGN_HOST}/campaign/{campaign.id}"
+    redirect_url = f"{CAMPAIGN_HOST}{request.get_full_path()}"
     meta = {
             "image_url": _get_file_url(campaign.image),
             # "subdomain": subdomain,
@@ -142,7 +141,7 @@ def campaign_technology(request, campaign_id, campaign_technology_id):
     technology = camp_tech.technology
     image = _get_file_url(technology.image)
 
-    redirect_url = f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}"
+    redirect_url = f"{CAMPAIGN_HOST}{request.get_full_path()}"
     meta = {
         "image_url": image,
         # "subdomain": subdomain,
