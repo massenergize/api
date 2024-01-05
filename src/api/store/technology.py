@@ -94,9 +94,12 @@ class TechnologyStore:
             technology_id = args.pop('technology_id', None)
             image = args.pop('image', None)
 
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
+
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("technology with id does not exist")
             args["technology"] = technology.first()
             
 
@@ -119,11 +122,11 @@ class TechnologyStore:
             coach_id = args.pop('id', None)
 
             if not coach_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("coach_id is required")
             
             coach = TechnologyCoach.objects.filter(id=coach_id)
             if not coach:
-                return None, CustomMassenergizeError("Invalid Technology Coach ID")
+                return None, CustomMassenergizeError("Coach with id does not exist")
             
             coach.update(is_deleted=True)
         

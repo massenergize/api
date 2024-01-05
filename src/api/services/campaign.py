@@ -414,3 +414,11 @@ class CampaignService:
       return None, err
     
     return serialize_all(res), None
+  
+
+  def add_campaign_technology_testimonial(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.add_campaign_technology_testimonial(context, args)
+    if err:
+      return None, err
+    
+    return res, None

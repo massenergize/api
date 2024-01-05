@@ -25,7 +25,7 @@ from apps__campaigns.models import (
     TechnologyOverview,
     TechnologyVendor,
 )
-from database.models import Community, Event, Media, UserProfile, Vendor
+from database.models import Community, Event, Media, Testimonial, UserProfile, Vendor
 
 
 TEMPLATE_TITLE = "Template Campaign 1"
@@ -293,15 +293,20 @@ def create_campaign_technology_testimonial(campaign_technology_id):
         ]
 
         for item in arr:
+            testimonial = Testimonial()
+            testimonial.title = item["title"]
+            testimonial.body = item["description"]
+            testimonial.image = item["image"]
+            testimonial.user = item["created_by"]
+            testimonial.community = item["community"]
+            testimonial.is_approved = item["is_approved"]
+            testimonial.is_published = item["is_published"]
+            testimonial.save()
+
+
             campaign_technology_view = CampaignTechnologyTestimonial()
             campaign_technology_view.campaign_technology = campaign_tech
-            campaign_technology_view.title = item["title"]
-            campaign_technology_view.body = item["description"]
-            campaign_technology_view.image = item["image"]
-            campaign_technology_view.created_by = item["created_by"]
-            campaign_technology_view.community = item["community"]
-            campaign_technology_view.is_approved = item["is_approved"]
-            campaign_technology_view.is_published = item["is_published"]
+            campaign_technology_view.testimonial =testimonial
 
             campaign_technology_view.save()
     except Exception as e:

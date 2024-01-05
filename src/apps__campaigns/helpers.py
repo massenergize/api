@@ -1,7 +1,6 @@
 
 from _main_.utils.common import serialize, serialize_all
-
-from apps__campaigns.models import  CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+from apps__campaigns.models import  CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, TechnologyCoach, TechnologyEvent, TechnologyOverview, TechnologyVendor
 
 # from database.models import Event
 from database.utils.common import get_json_if_not_none
@@ -37,7 +36,7 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
     campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False).first()
     
     if email:
-        my_testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__campaign__id=campaign_id, created_by__email=email).order_by("-created_at")
+        my_testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__campaign__id=campaign_id, testimonial__user__email=email).order_by("-created_at")
 #  find a way to add comments here without making it too slow
     return {
         "key_contact": {
@@ -61,7 +60,7 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
 def get_campaign_technology_details(campaign_technology_id, campaign_home, email=None):
     campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
     events = CampaignEvent.objects.filter(technology_event__technology__id=campaign_tech.technology.id, is_deleted=False)
-    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id, is_approved=True,is_published=True).order_by("-created_at")
+    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id, testimonial__is_approved=True,testimonial__is_published=True).order_by("-created_at")
     tech_data = get_technology_details(campaign_tech.technology.id)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
     if campaign_home:
@@ -94,12 +93,16 @@ def get_technology_details(technology_id):
     coaches = TechnologyCoach.objects.filter(technology_id=technology_id, is_deleted=False)
     incentives = TechnologyOverview.objects.filter(technology_id=technology_id, is_deleted=False)
     vendors = TechnologyVendor.objects.filter(technology_id=technology_id, is_deleted=False)
+    event = TechnologyEvent.objects.filter(technology_id=technology_id, is_deleted=False)
+    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False, campaign_technology__technology__id=technology_id, testimonial__is_approved=True,testimonial__is_published=True).order_by("-created_at")
 
     
     data = {
-              "coaches": serialize_all(coaches),
+            "coaches": serialize_all(coaches),
             "overview": serialize_all(incentives),
             "vendors": serialize_all(vendors),
+            "events": serialize_all(event),
+            "testimonials": serialize_all(testimonials),
             **serialize(tech),
     }
     return data

@@ -695,29 +695,54 @@ class CampaignLink(BaseModel):
     
 
 
+# class CampaignTechnologyTestimonial(BaseModel):
+#     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, blank=True, null=True)
+#     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_testimonials")
+#     title = models.CharField(max_length=SHORT_STR_LEN, db_index=True, blank=True, null=True)
+#     body = models.TextField(max_length=LONG_STR_LEN, blank=True, null=True)
+#     is_approved = models.BooleanField(default=False, blank=True)
+#     image = models.ForeignKey("database.Media", on_delete=models.SET_NULL,null=True, blank=True,related_name="campaign_technology_testimonial_image")
+#     created_by = models.ForeignKey( "database.UserProfile", on_delete=models.CASCADE, db_index=True, null=True)
+#     is_published = models.BooleanField(default=False, blank=True)
+#     anonymous = models.BooleanField(default=False, blank=True)
+#     community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True, db_index=True)
+
+#     def __str__(self):
+#         return f"{self.campaign} - {self.campaign_technology}"
+    
+#     def simple_json(self)-> dict:
+#         res = super().to_json()
+#         res.update(model_to_dict(self))
+#         res["campaign"] = get_summary_info(self.campaign or self.campaign_technology.campaign)
+#         res["campaign_technology"] = get_summary_info(self.campaign_technology)
+#         res["user"] = get_summary_info(self.created_by)
+#         res["community"] = get_summary_info(self.community)
+#         res["image"] = get_json_if_not_none(self.image)
+#         return res
+    
+#     def full_json(self):
+#         return self.simple_json()
+    
 class CampaignTechnologyTestimonial(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, blank=True, null=True)
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_testimonials")
-    title = models.CharField(max_length=SHORT_STR_LEN, db_index=True, blank=True, null=True)
-    body = models.TextField(max_length=LONG_STR_LEN, blank=True, null=True)
-    is_approved = models.BooleanField(default=False, blank=True)
-    image = models.ForeignKey("database.Media", on_delete=models.SET_NULL,null=True, blank=True,related_name="campaign_technology_testimonial_image")
-    created_by = models.ForeignKey( "database.UserProfile", on_delete=models.CASCADE, db_index=True, null=True)
-    is_published = models.BooleanField(default=False, blank=True)
-    anonymous = models.BooleanField(default=False, blank=True)
-    community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True, db_index=True)
+    testimonial= models.ForeignKey("database.Testimonial",null=True, blank=True, on_delete=models.CASCADE, related_name="campaign_technology_testimonial")
+    is_featured = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
-        return f"{self.campaign} - {self.campaign_technology}"
+        return f"{self.campaign_technology}- {self.testimonial}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["campaign"] = get_summary_info(self.campaign or self.campaign_technology.campaign)
+        res["campaign"] = self.campaign_technology.campaign.simple_json()
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
-        res["user"] = get_summary_info(self.created_by)
-        res["community"] = get_summary_info(self.community)
-        res["image"] = get_json_if_not_none(self.image)
+        res["user"] = get_summary_info(self.testimonial.user)
+        res["community"] = get_summary_info(self.testimonial.community)
+        res["image"] = get_json_if_not_none(self.testimonial.image)
+        res["body"] = self.testimonial.body
+        res["title"] = self.testimonial.title
+        res["is_approved"] = self.testimonial.is_approved
+        res["is_published"] = self.testimonial.is_published
         return res
     
     def full_json(self):

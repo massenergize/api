@@ -44,6 +44,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.technologies.info", self.get_campaign_technology_info)
 
         self.add("/campaigns.technologies.testimonials.create", self.create_campaign_technology_testimonial)
+        self.add("/campaigns.technologies.testimonials.add", self.add_campaign_technology_testimonial)
         self.add("/campaigns.technologies.testimonials.update", self.update_campaign_technology_testimonial)
         self.add("/campaigns.technologies.testimonials.delete", self.delete_campaign_technology_testimonial)
         self.add("/campaigns.technologies.testimonials.info", self.get_campaign_technology_testimonial)
@@ -1059,6 +1060,24 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.list_campaign_communities_vendors(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def add_campaign_technology_testimonial(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("technology_id", str, is_required=True)
+        self.validator.expect("campaign_id", str, is_required=True)
+        self.validator.expect("testimonial_ids", list, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.add_campaign_technology_testimonial(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)
