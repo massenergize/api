@@ -422,3 +422,12 @@ class CampaignService:
       return None, err
     
     return res, None
+  
+
+
+  def list_campaign_technologies_events(self, context, args)->Tuple[list, MassEnergizeAPIError]:
+    res, err = self.store.list_campaign_technologies_events(context, args)
+    if err:
+      return None, err
+    
+    return serialize_all(res, full=True), None

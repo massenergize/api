@@ -570,7 +570,7 @@ class TechnologyEvent(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["technology"] = get_summary_info(self.technology)
+        res["technology"] = get_json_if_not_none(self.technology)
         res["event"] = {
             "id":self.event.id,
             "name":self.event.name,
@@ -597,6 +597,7 @@ class CampaignEvent(BaseModel):
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
         res["event"] = self.technology_event.simple_json().get("event", None)
+        res["technology_event"] = self.technology_event.simple_json()
         return res
     
     def full_json(self):
@@ -736,13 +737,13 @@ class CampaignTechnologyTestimonial(BaseModel):
         res.update(model_to_dict(self))
         res["campaign"] = self.campaign_technology.campaign.simple_json()
         res["campaign_technology"] = get_summary_info(self.campaign_technology)
-        res["user"] = get_summary_info(self.testimonial.user)
-        res["community"] = get_summary_info(self.testimonial.community)
-        res["image"] = get_json_if_not_none(self.testimonial.image)
-        res["body"] = self.testimonial.body
-        res["title"] = self.testimonial.title
-        res["is_approved"] = self.testimonial.is_approved
-        res["is_published"] = self.testimonial.is_published
+        res["user"] = get_summary_info(self.testimonial.user) if self.testimonial else None
+        res["community"] = get_summary_info(self.testimonial.community) if self.testimonial else None
+        res["image"] = get_json_if_not_none(self.testimonial.image) if self.testimonial else None
+        res["body"] = self.testimonial.body if self.testimonial else None
+        res["title"] = self.testimonial.title if self.testimonial else None
+        res["is_approved"] = self.testimonial.is_approved if self.testimonial else None
+        res["is_published"] = self.testimonial.is_published if self.testimonial else None
         return res
     
     def full_json(self):

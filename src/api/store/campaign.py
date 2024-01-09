@@ -89,7 +89,7 @@ class CampaignStore:
             else:
                 campaigns = Campaign.objects.filter(Q(owner__id=context.user_id)| Q(owner__email=context.user_email)| Q(is_global=True))
 
-            return campaigns.distinct(), None
+            return campaigns.distinct().order_by("-created_at"), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -246,7 +246,7 @@ class CampaignStore:
 
             campaigns =Campaign.objects.filter(Q(is_global=True), is_deleted=False).distinct()
 
-            return campaigns, None
+            return campaigns.order_by("-created_at"), None
 
         except Exception as e:
             capture_message(str(e), level="error")
@@ -488,10 +488,11 @@ class CampaignStore:
 
             testimonial = Testimonial()
             testimonial.title = args.get("title", None)
-            testimonial.body = args.get("text", None)
+            testimonial.body = args.get("body", None)
             testimonial.user = user
             testimonial.image = create_media_file(image, f"ImageFor {testimonial.title} Campaign")
             testimonial.community = community
+            testimonial.is_published = args.get("is_published", False)
             testimonial.save()
 
 
@@ -530,7 +531,7 @@ class CampaignStore:
                     testimonial.community = community
 
             testimonial.title = args.get("title", testimonial.title)
-            testimonial.body = args.get("text", testimonial.body)
+            testimonial.body = args.get("body", testimonial.body)
             testimonial.save()
 
 
@@ -759,15 +760,20 @@ class CampaignStore:
                 return None, CustomMassenergizeError("campaign with id not found!")
 
             if not tech_event_ids:
-                return None, CustomMassenergizeError("Technology Event ids not found!")
+                return None, CustomMassenergizeError("technology_event_ids not found!")
 
             for event_id in tech_event_ids:
                 tech_event = TechnologyEvent.objects.filter(id=event_id).first()
                 if tech_event:
                     campaign_event, _ = CampaignEvent.objects.get_or_create(campaign=campaign, technology_event=tech_event, is_deleted=False)
-                    created_list.append(campaign_event.simple_json())
+                    created_list.append(campaign_event)
 
-            return created_list, None
+            #  remove all events that are not in the tech_event_ids
+            CampaignEvent.objects.filter(campaign__id=campaign_id).exclude(technology_event__id__in=tech_event_ids).delete()
+
+            created_items = [x.to_json() for x in created_list]
+
+            return created_items, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -1371,6 +1377,22 @@ class CampaignStore:
             CampaignTechnologyTestimonial.objects.filter(campaign_technology=campaign_technology).exclude(testimonial__in=[x.testimonial.id for x in testimonials]).delete()
 
             return [testimonial.simple_json() for testimonial in testimonials], None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+
+    def list_campaign_technologies_events(self, context: Context, args):
+        try:
+            campaign_id = args.pop("campaign_id", None)
+            if not campaign_id:
+                return None, CustomMassenergizeError("Campaign ID is required !")
+            technologies = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
+            events = []
+            for technology in technologies:
+                events.extend(TechnologyEvent.objects.filter(technology__id=technology.technology.id, is_deleted=False))
+            return events, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

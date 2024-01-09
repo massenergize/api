@@ -93,6 +93,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.communities.events.list", self.list_campaign_communities_events)
         self.add("/campaigns.communities.testimonials.list", self.list_campaign_communities_testimonials)
         self.add("/campaigns.communities.vendors.list", self.list_campaign_communities_vendors)
+        self.add("/campaigns.technologies.events.list", self.list_campaign_technologies_events)
 
 
 
@@ -110,6 +111,8 @@ class CampaignHandler(RouteHandler):
         campaign_info, err = self.service.get_campaign_info(context, args)
         if err:
             return err
+
+        print("=== data===", campaign_info)
         return MassenergizeResponse(data=campaign_info)
     
     @admins_only
@@ -419,6 +422,8 @@ class CampaignHandler(RouteHandler):
         .expect("image", "file", is_required=False)
         .expect("community_id", str, is_required=False)
         .expect("user_id", str, is_required=False)
+        .expect("user_id", str, is_required=False)
+        .expect("is_published", bool, is_required=False)
         )
         args, err = self.validator.verify(args, strict=True)
         if err:
@@ -1078,6 +1083,22 @@ class CampaignHandler(RouteHandler):
           return err
 
         res, err = self.service.add_campaign_technology_testimonial(context, args)
+        if err:
+          return err
+        return MassenergizeResponse(data=res)
+    
+
+    def list_campaign_technologies_events(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("campaign_id", str, is_required=True)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+          return err
+
+        res, err = self.service.list_campaign_technologies_events(context, args)
         if err:
           return err
         return MassenergizeResponse(data=res)

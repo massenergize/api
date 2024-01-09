@@ -59,15 +59,15 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
 
 def get_campaign_technology_details(campaign_technology_id, campaign_home, email=None):
     campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
-    events = CampaignEvent.objects.filter(technology_event__technology__id=campaign_tech.technology.id, is_deleted=False)
-    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id, testimonial__is_approved=True,testimonial__is_published=True).order_by("-created_at")
-    tech_data = get_technology_details(campaign_tech.technology.id)
+    events = CampaignEvent.objects.filter(campaign=campaign_tech.campaign.id,technology_event__technology__id=campaign_tech.technology.id, is_deleted=False)
+    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id,testimonial__is_published=True).order_by("-created_at")
+    coaches = TechnologyCoach.objects.filter(technology_id=campaign_tech.technology.id, is_deleted=False)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
     if campaign_home:
         return {
             "testimonials":serialize_all(testimonials[:3]),
             "events": serialize_all(events[:3], full=True),
-            "coaches": tech_data.get("coaches", [])[:3],
+            "coaches": serialize_all(coaches[:3]),
             "campaign_id": campaign_tech.campaign.id,
             "comments": serialize_all(comments),
             **campaign_tech.technology.simple_json()
@@ -76,7 +76,7 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
     likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).first()
 
     return {
-            **get_technology_details(campaign_tech.technology.id),
+            **get_technology_details(campaign_tech.technology.id,True),
             "campaign_technology_views":campaign_technology_views.count if campaign_technology_views else 0,
             "likes":likes.count if likes else 0,
             "testimonials":serialize_all(testimonials),
@@ -88,13 +88,13 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
 
 
 
-def get_technology_details(technology_id):
+def get_technology_details(technology_id, for_campaign=False):
     tech = Technology.objects.filter(id=technology_id).first()
     coaches = TechnologyCoach.objects.filter(technology_id=technology_id, is_deleted=False)
     incentives = TechnologyOverview.objects.filter(technology_id=technology_id, is_deleted=False)
     vendors = TechnologyVendor.objects.filter(technology_id=technology_id, is_deleted=False)
     event = TechnologyEvent.objects.filter(technology_id=technology_id, is_deleted=False)
-    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False, campaign_technology__technology__id=technology_id, testimonial__is_approved=True,testimonial__is_published=True).order_by("-created_at")
+    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False, campaign_technology__technology__id=technology_id).order_by("-created_at")
 
     
     data = {
@@ -105,6 +105,9 @@ def get_technology_details(technology_id):
             "testimonials": serialize_all(testimonials),
             **serialize(tech),
     }
+    if for_campaign:
+        data.pop("events")
+        data.pop("testimonials")
     return data
 
 def generate_campaign_navigation(campaign_id):
