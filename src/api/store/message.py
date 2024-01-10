@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from _main_.utils.constants import ME_LOGO_PNG
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
 from api.tasks import send_scheduled_email
@@ -29,45 +30,23 @@ def get_schedule(schedule):
        return formatted_date_string
 
     return  datetime.utcnow() + timedelta(minutes=1)
+
+
+def get_logo(id):
+        com = Community.objects.filter(id=id).first()
+        if com:
+            return com.logo.file.url if com.logo else None
+        
     
 
 
-def get_message_recipients(audience, audience_type, sub_audience_type, communities):
+def get_message_recipients(audience, audience_type):
     if not is_null(audience):
-        if audience_type == "COMMUNITY_CONTACTS":
-             if audience.lower() == "all":
-                contacts = Community.objects.filter(is_deleted=False).only("owner_email", "id", "name")
-             else:
-                 audience = audience.split(",")
-                 contacts = Community.objects.filter(id__in=audience).only("owner_email", "id", "name")
-             return contacts
-        
-        if audience_type == "COMMUNITY_ADMIN" and sub_audience_type == "FROM_COMMUNITY":
-            if communities and audience.lower() == "all":
-                admins =  CommunityAdminGroup.objects.filter(id__in=communities.split(","), is_deleted=False).values_list("members", flat=True)
-                return UserProfile.objects.filter(id__in=admins)
-            
-        if audience_type == "USERS" and sub_audience_type == "FROM_COMMUNITY":
-            if communities and audience.lower() == "all":
-                members =  CommunityMember.objects.filter(id__in=communities, is_deleted=False).values_list("members", flat=True)
-                return UserProfile.objects.filter(id__in=members)
-            
-        if audience_type == "SUPER_ADMIN" and audience.lower() == "all":
-            return UserProfile.objects.filter(is_super_admin=True)
-            
-
-        
         audience = audience.split(",")
+        if audience_type == "COMMUNITY_CONTACTS":
+            return Community.objects.filter(id__in=audience).only("owner_email", "id", "name")
+        
         return UserProfile.objects.filter(id__in=audience)
-    
-    else:
-        if audience_type == "COMMUNITY_ADMIN" and sub_audience_type == "ALL":
-            admins =  CommunityAdminGroup.objects.filter(is_deleted=False).values_list("members", flat=True)
-            return UserProfile.objects.filter(id__in=admins)
-        elif audience_type == "USERS" and sub_audience_type == "ALL":
-            return UserProfile.objects.filter(is_super_admin=False, is_community_admin=False)
-
-    return None
 
 class MessageStore:
     def __init__(self):
@@ -305,13 +284,18 @@ class MessageStore:
         message_ids = args.get("message_ids", [])
 
         try:
+            is_scheduled = args.get("is_scheduled", None)
 
             filter_params = get_messages_filter_params(context.get_params())
 
             admin_communities, err = get_admin_communities(context)
             with_ids = Q()
+            scheduled= Q()
             if message_ids:
                 with_ids = Q(id__in=message_ids)
+            if is_scheduled:
+                scheduled = Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=datetime.now())
+
             if context.user_is_super_admin:
                 messages = Message.objects.filter(
                     Q(
@@ -319,6 +303,7 @@ class MessageStore:
                         is_team_admin_message=False,
                     ),
                     with_ids,
+                    scheduled,
                     *filter_params
                 ).distinct()
 
@@ -330,11 +315,12 @@ class MessageStore:
                         community__id__in=[c.id for c in admin_communities],
                     ),
                     with_ids,
+                    scheduled,
                     *filter_params
                 ).distinct()
             else:
-                messages = []
-
+                return []
+    
             return messages, None
         except Exception as e:
             capture_message(str(e), level="error")
@@ -383,9 +369,13 @@ class MessageStore:
             audience = args.get("audience", None)
             schedule = get_schedule(args.get("schedule", None))
             communities = args.get("community_ids", None)
-            recipients = get_message_recipients(audience, audience_type, sub_audience_type, communities)
-            
 
+            print("=== communities ===", communities)
+            recipients = get_message_recipients(audience, audience_type)
+
+            logo = ME_LOGO_PNG
+            
+            associated_community = None
             if not recipients:
                 return None, InvalidResourceError()
             
@@ -393,6 +383,9 @@ class MessageStore:
             if not user:
                 return None, InvalidResourceError()
             
+            if not context.user_is_super_admin:
+                associated_community = Community.objects.filter(id=communities[0]).first()
+                logo = get_logo(communities[0])
 
             email_list =  list(recipients.values_list("owner_email" if audience_type == "COMMUNITY_CONTACTS" else "email", flat=True))
         
@@ -401,7 +394,8 @@ class MessageStore:
                 if not messages.first():
                     return None, InvalidResourceError()
                 # revoke the previous task
-                task_id = messages.first().schedule_info.get("schedule_id", None)
+                message_schedule_info = messages.first().schedule_info or {}
+                task_id = message_schedule_info.get("schedule_id", None)
                 if task_id:
                     result = AsyncResult(task_id)
                     result.revoke()
@@ -411,18 +405,19 @@ class MessageStore:
                 if messages.first().scheduled_at != schedule:
                    scheduled_at = schedule
                 
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
-                schedule_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id,"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
-                messages.update(**{"schedule_info": schedule_info, "body": message, "title": subject, "scheduled_at":scheduled_at })
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list, logo],eta=schedule)
+                schedule_info ={} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None,"recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
+                messages.update(**{"schedule_info": schedule_info, "body": message, "title": subject, "scheduled_at":scheduled_at, "community":associated_community })
                 return messages.first(), None
             else:
-                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list],eta=schedule).id
+                schedule_id = send_scheduled_email.apply_async(args=[ subject,message,email_list, logo],eta=schedule)
                 new_message = Message(
                 title=subject,
                 body=message,
                 user=user,
                 scheduled_at= schedule,
-                schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}}
+                schedule_info = {} if not args.get("schedule", None) else {"schedule_id": schedule_id.id if schedule_id else None, "recipients":{"audience_type":audience_type, "audience":audience, "sub_audience_type":sub_audience_type, "community_ids":communities}},
+                community=associated_community
                 )
                 new_message.save()
                 return new_message, None

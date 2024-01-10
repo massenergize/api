@@ -379,7 +379,7 @@ def get_sort_params(params):
       sort+= sort_params.get("name")
       if sort_params.get("direction") == "desc":
         sort = "-"+sort
-        return sort.lower()
+      return sort.lower()
     
     return "-id"
 
