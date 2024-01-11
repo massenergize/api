@@ -557,20 +557,30 @@ class Comment(BaseModel):
     
     def full_json(self):
         return self.simple_json()
-    
 
 
-class TechnologyEvent(BaseModel):
-    technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_event")
+class CampaignTechnologyEvent(BaseModel):
+    campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_event", blank=True, null=True)
     event = models.ForeignKey("database.Event", on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.technology} - {self.event}"
+        return f"{self.campaign_technology} - {self.event}"
     
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["technology"] = get_json_if_not_none(self.technology)
+        res["campaign_technology"] = {
+            "id":self.campaign_technology.id,
+            "campaign":{
+                "id":self.campaign_technology.campaign.id,
+                "title":self.campaign_technology.campaign.title,
+                "slug":self.campaign_technology.campaign.slug,
+            },
+            "technology":{
+                "id":self.campaign_technology.technology.id,
+                "name":self.campaign_technology.technology.name,
+            },
+            },
         res["event"] = {
             "id":self.event.id,
             "name":self.event.name,
@@ -583,50 +593,7 @@ class TechnologyEvent(BaseModel):
     
     def full_json(self):
         return self.simple_json()
-    
 
-class CampaignEvent(BaseModel):
-    campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_event")
-    technology_event = models.ForeignKey(TechnologyEvent, on_delete=models.CASCADE, blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.campaign} - {self.technology_event}"
-    
-    def simple_json(self)-> dict:
-        res = super().to_json()
-        res.update(model_to_dict(self))
-        res["campaign"] = get_summary_info(self.campaign)
-        res["event"] = self.technology_event.simple_json().get("event", None)
-        res["technology_event"] = self.technology_event.simple_json()
-        return res
-    
-    def full_json(self):
-        return self.simple_json()
-    
-
-# class CampaignTechnologyEvent(BaseModel):
-#     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_event", blank=True, null=True)
-#     event = models.ForeignKey("database.Event", on_delete=models.CASCADE, blank=True, null=True)
-
-#     def __str__(self):
-#         return f"{self.campaign_technology} - {self.event}"
-    
-#     def simple_json(self)-> dict:
-#         res = super().to_json()
-#         res.update(model_to_dict(self))
-#         res["campaign"] = get_summary_info(self.campaign_technology)
-#         res["event"] = {
-#             "id":self.event.id,
-#             "name":self.event.name,
-#             "start_date":self.event.start_date_and_time,
-#             "end_date":self.event.end_date_and_time,
-#             "description":self.event.description,
-#             "image":get_json_if_not_none(self.event.image),
-#         }
-#         return res
-    
-#     def full_json(self):
-#         return self.simple_json()
     
 
 

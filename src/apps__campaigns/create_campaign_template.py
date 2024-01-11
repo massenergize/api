@@ -1,5 +1,5 @@
 import os
-from random import random
+from random import random, sample
 from django.core.files import File
 from apps__campaigns.constants import (
     COACHES_SECTION,
@@ -13,15 +13,14 @@ from apps__campaigns.models import (
     Campaign,
     CampaignCommunity,
     CampaignConfiguration,
-    CampaignEvent,
     CampaignManager,
     CampaignPartner,
     CampaignTechnology,
+    CampaignTechnologyEvent,
     CampaignTechnologyTestimonial,
     Partner,
     Technology,
     TechnologyCoach,
-    TechnologyEvent,
     TechnologyOverview,
     TechnologyVendor,
 )
@@ -172,10 +171,11 @@ def create_technology_vendors(technology_id):
         print(f"Error creating technology vendors: {str(e)}")
 
 
-def create_technology_events(tech):
+def create_technology_events(campaign):
     try:
         print("====== Creating Technology Events ======")
         com1, com2, com3 = get_3_communities()
+        techs = CampaignTechnology.objects.filter(campaign=campaign, is_deleted=False)
 
         name1, description1 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))].values()
         name2, description2 = NAME_DESCRIPTION[int(random() * len(NAME_DESCRIPTION))].values()
@@ -212,14 +212,17 @@ def create_technology_events(tech):
             },
         ]
 
-        for event in events:
-            evn, _ = Event.objects.get_or_create(**event)
-            campaign_event = TechnologyEvent()
-            campaign_event.technology = tech
-            campaign_event.event = evn
-            campaign_event.save()
+        
+
+        for tech in techs:
+            for event in events:
+                evn, _ = Event.objects.get_or_create(**event)
+                campaign_event = CampaignTechnologyEvent()
+                campaign_event.event = evn
+                campaign_event.campaign_technology = tech
+                campaign_event.save()
     except Exception as e:
-        print(f"Error creating technology events: {str(e)}")
+        print(f"Error creating Campaign events: {str(e)}")
 
 
 
@@ -239,10 +242,6 @@ def create_technology(name, image=None, description=None):
 
         # create vendors
         create_technology_vendors(technology.id)
-
-
-        # add technology events
-        create_technology_events(technology)
 
         return technology
     except Exception as e:
@@ -418,15 +417,19 @@ def create_campaign_communities(campaign):
 def create_campaign_events(campaign):
     try:
         techs = CampaignTechnology.objects.filter(campaign=campaign, is_deleted=False)
+        events = list(Event.objects.filter(is_published=True, is_deleted=False))
+
         for tech in techs:
-            events  = TechnologyEvent.objects.filter(technology=tech.technology, is_deleted=False)[:3]
-            for event in events:
-                campaign_event = CampaignEvent()
-                campaign_event.campaign = campaign
-                campaign_event.technology_event = event
+            # pick three events at random
+            _events = sample(events, min(len(events), 3))
+
+            for event in _events:
+                campaign_event = CampaignTechnologyEvent()
+                campaign_event.event = event
+                campaign_event.campaign_technology = tech
                 campaign_event.save()
     except Exception as e:
-        print(f"An error occurred while creating campaign events: {str(e)}")
+        print(f"An error occurred while creating events: {str(e)}")
 
 
 
@@ -517,8 +520,7 @@ def run():
 
         create_template_campaign_technology(campaign.id)
 
-        # create campaign events
-        create_campaign_events(campaign)
+        create_technology_events(campaign)
         print("Template Campaign Created Successfully !!!")
         return
     except Exception as e:

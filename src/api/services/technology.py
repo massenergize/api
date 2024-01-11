@@ -127,17 +127,5 @@ class TechnologyService:
             return None, err
         return serialize_all(technologies), None
     
-    
-    def add_technology_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        res, err = self.store.add_technology_events(context, args)
-        if err:
-            return None, err
-        return serialize_all(res, full=True), None
-    
 
-    def remove_technology_event(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
-        res, err = self.store.remove_technology_event(context, args)
-        if err:
-            return None, err
-        return serialize(res), None
 

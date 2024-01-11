@@ -22,10 +22,6 @@ class TechnologyHandler(RouteHandler):
         self.add("/technologies.coaches.update", self.update_technology_coach)
         self.add("/technologies.coaches.remove", self.remove_coach)
 
-
-        self.add("/technologies.events.add", self.add_technology_event)
-        self.add("/technologies.events.remove", self.remove_technology_event)
-
         self.add("/technologies.listForAdmin", self.list_for_admin)
 
         self.add("/technologies.vendors.add", self.add_vendor)
@@ -324,40 +320,4 @@ class TechnologyHandler(RouteHandler):
             return err
         return MassenergizeResponse(data=res)
     
-
-
-    @admins_only
-    def add_technology_event(self, request):
-        context: Context = request.context
-        args: dict = context.args
-
-        self.validator.expect("technology_id", str, is_required=True)
-        self.validator.expect("event_ids", list, is_required=True)
-
-        args, err = self.validator.verify(args)
-
-        if err:
-            return err 
-        
-        res, err = self.service.add_technology_events(context, args)
-        if err:
-            return err
-        return MassenergizeResponse(data=res)
-    
-    @admins_only
-    def remove_technology_event(self, request):
-        context: Context = request.context
-        args: dict = context.args
-
-        self.validator.expect("id", str, is_required=True)
-
-        args, err = self.validator.verify(args)
-
-        if err:
-            return err 
-        
-        res, err = self.service.remove_technology_event(context, args)
-        if err:
-            return err
-        return MassenergizeResponse(data=res)
 

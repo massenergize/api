@@ -1,6 +1,6 @@
 
 from _main_.utils.common import serialize, serialize_all
-from apps__campaigns.models import  CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignEvent, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, TechnologyCoach, TechnologyEvent, TechnologyOverview, TechnologyVendor
+from apps__campaigns.models import  CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyEvent, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
 
 # from database.models import Event
 from database.utils.common import get_json_if_not_none
@@ -59,14 +59,14 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
 
 def get_campaign_technology_details(campaign_technology_id, campaign_home, email=None):
     campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
-    events = CampaignEvent.objects.filter(campaign=campaign_tech.campaign.id,technology_event__technology__id=campaign_tech.technology.id, is_deleted=False)
+    events = CampaignTechnologyEvent.objects.filter(campaign_technology=campaign_tech, is_deleted=False)
     testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id,testimonial__is_published=True).order_by("-created_at")
     coaches = TechnologyCoach.objects.filter(technology_id=campaign_tech.technology.id, is_deleted=False)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
     if campaign_home:
         return {
             "testimonials":serialize_all(testimonials[:3]),
-            "events": serialize_all(events[:3], full=True),
+            "events": serialize_all(events, full=True),
             "coaches": serialize_all(coaches[:3]),
             "campaign_id": campaign_tech.campaign.id,
             "comments": serialize_all(comments),
@@ -93,7 +93,6 @@ def get_technology_details(technology_id, for_campaign=False):
     coaches = TechnologyCoach.objects.filter(technology_id=technology_id, is_deleted=False)
     incentives = TechnologyOverview.objects.filter(technology_id=technology_id, is_deleted=False)
     vendors = TechnologyVendor.objects.filter(technology_id=technology_id, is_deleted=False)
-    event = TechnologyEvent.objects.filter(technology_id=technology_id, is_deleted=False)
     testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False, campaign_technology__technology__id=technology_id).order_by("-created_at")
 
     
@@ -101,12 +100,10 @@ def get_technology_details(technology_id, for_campaign=False):
             "coaches": serialize_all(coaches),
             "overview": serialize_all(incentives),
             "vendors": serialize_all(vendors),
-            "events": serialize_all(event),
             "testimonials": serialize_all(testimonials),
             **serialize(tech),
     }
     if for_campaign:
-        data.pop("events")
         data.pop("testimonials")
     return data
 
@@ -275,6 +272,7 @@ def copy_campaign_data(template, new_campaign):
     campaign_techs = CampaignTechnology.objects.filter(campaign__id=template.id, is_deleted=False)
     for tech in campaign_techs:
         testimonials = list(tech.campaign_technology_testimonials.filter(is_deleted=False))
+        events = list(tech.campaign_technology_event.filter(is_deleted=False))
 
         tech.id = None
         tech.campaign = new_campaign
@@ -287,8 +285,12 @@ def copy_campaign_data(template, new_campaign):
             testimonial.campaign_technology = tech
             testimonial.save() 
 
+        # copy events
+        for event in events:
+            event.pk = None
+            event.campaign_technology = tech
+            event.save()
 
-    
     # copy managers
     campaign_managers = CampaignManager.objects.filter(campaign__id=template.id, is_deleted=False)
     for manager in campaign_managers:

@@ -3,9 +3,8 @@ from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
 from api.utils.api_utils import create_media_file
-from apps__campaigns.models import Technology, TechnologyCoach, TechnologyEvent, TechnologyOverview, TechnologyVendor
-from database.models import Event, Media, UserProfile, Vendor
-from uuid import UUID
+from apps__campaigns.models import Technology, TechnologyCoach, TechnologyOverview, TechnologyVendor
+from database.models import Media, Vendor
 class TechnologyStore:
     def __init__(self):
         self.name = "Campaign Store/DB"
@@ -246,11 +245,11 @@ class TechnologyStore:
 
     def update_technology_overview(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
-            tech_overview_id = args.pop('technology_overview_id', None)
+            tech_overview_id = args.pop('id', None)
             image = args.pop('image', None)
 
             if not tech_overview_id:
-                return None, CustomMassenergizeError("technology_overview_id is required")
+                return None, CustomMassenergizeError("id is required")
 
             tech_overview = TechnologyOverview.objects.filter(id=tech_overview_id)
             if not tech_overview:
@@ -269,7 +268,7 @@ class TechnologyStore:
 
     def delete_technology_overview(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
-            tech_overview_id = args.pop('technology_overview_id', None)
+            tech_overview_id = args.pop('id', None)
 
             if not tech_overview_id:
                 return None, InvalidResourceError()
@@ -303,55 +302,6 @@ class TechnologyStore:
             coach.update(**args)
         
             return coach.first(), None
-        except Exception as e:
-            capture_message(str(e), level="error")
-            return None, CustomMassenergizeError(e)
-        
-
-
-
-    def add_technology_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        try:
-            technology_id = args.pop('technology_id', None)
-            event_ids = args.pop('event_ids', [])
-
-            created_list = []
-
-            technology = Technology.objects.filter(id=technology_id).first()
-            if not technology:
-                return None, CustomMassenergizeError("technology with id does not exist")
-            
-            if not event_ids:
-                return None, CustomMassenergizeError("event_ids is required")
-            
-            for event_id in event_ids:
-                event = Event.objects.filter(pk=event_id).first()
-                tech_event, _ = TechnologyEvent.objects.get_or_create(technology=technology, event=event)
-                created_list.append(tech_event.simple_json())
-
-            # delete all events that are not in the list
-            TechnologyEvent.objects.filter(technology=technology).exclude(id__in=[x.get("id") for x in created_list]).delete()
-        
-            return created_list, None
-        except Exception as e:
-            capture_message(str(e), level="error")
-            return None, CustomMassenergizeError(e)
-        
-
-    def remove_technology_events(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
-        try:
-            tech_event_id = args.pop('id', None)
-
-            if not tech_event_id:
-                return None, InvalidResourceError()
-            
-            tech_event = TechnologyEvent.objects.filter(id=tech_event_id).first()
-            if not tech_event:
-                return None, CustomMassenergizeError("Invalid Technology Event ID")
-            
-            tech_event.delete()
-        
-            return tech_event, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
