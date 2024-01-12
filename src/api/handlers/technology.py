@@ -236,7 +236,7 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("technology_id", str, is_required=True)
         self.validator.expect("title", str, is_required=True)
         self.validator.expect("description", str, is_required=True)
-        self.validator.expect("image", "file", is_required=True)
+        self.validator.expect("image", "file", is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -256,9 +256,8 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("id", str, is_required=True)
         self.validator.expect("title", str, is_required=False)
         self.validator.expect("description", str, is_required=False)
-        self.validator.expect("image", "file", is_required=False)
 
-        args, err = self.validator.verify(args, strict=True)
+        args, err = self.validator.verify(args)
 
         if err:
             return err 

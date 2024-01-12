@@ -255,9 +255,14 @@ class TechnologyStore:
             if not tech_overview:
                 return None, CustomMassenergizeError("Technology Overview does not exist")
             
-            if not isinstance(image, str) or not image.startswith("http"):
-                media = Media.objects.create(file=image, name=f"FileUpload for {tech_overview.first().id} TechnologyOverview")
-                tech_overview.first().image = media
+            if image=="reset":
+                args["image"] = None
+            else:
+        
+                if not isinstance(image, str) or not image.startswith("http"):
+                    media = Media.objects.create(file=image, name=f"FileUpload for {tech_overview.first().id} TechnologyOverview")
+                    args["image"] = media
+
             tech_overview.update(**args)
         
             return tech_overview.first(), None

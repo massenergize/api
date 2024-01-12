@@ -254,7 +254,7 @@ class CampaignStore:
     def list_campaigns_for_super_admin(self, context: Context):
         try:
             campaigns = Campaign.objects.filter(is_deleted=False)
-            return campaigns.distinct(), None
+            return campaigns.order_by("-created_at"), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -774,15 +774,10 @@ class CampaignStore:
             for event_id in event_ids:
                 event = Event.objects.filter(id=event_id).first()
                 if event:
-                    campaign_event, _ = CampaignTechnologyEvent.objects.get_or_create(campaign_technology__id=campaign_tech.id, event=event, is_deleted=False)
-                    created_list.append(campaign_event)
+                    campaign_event, _ = CampaignTechnologyEvent.objects.get_or_create(campaign_technology=campaign_tech, event=event, is_deleted=False)
+                    created_list.append(campaign_event.simple_json())
 
-            #  remove all events that are not in the tech_event_ids
-            CampaignTechnologyEvent.objects.filter(campaign_technology__id=campaign_tech).exclude(event__id__in=event_ids).delete()
-
-            created_items = [x.to_json() for x in created_list]
-
-            return created_items, None
+            return created_list, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

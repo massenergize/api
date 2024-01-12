@@ -8,6 +8,7 @@ from django.db.models import Count, Sum
 
 
 
+
 def get_user_accounts(user):
     # get all the campaigns the user is a manager of
     manager_of = CampaignAccountAdmin.objects.filter(user=user, is_deleted=False)
@@ -29,14 +30,15 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
     ser_techs = serialize_all(techs, full=True)
     prepared = [{"campaign_technology_id":x.get("id"),**get_campaign_technology_details(x.get("id"), for_campaign,email )} for x in ser_techs]
     managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False)
-    partners = CampaignPartner.objects.filter(campaign_id=campaign_id, is_deleted=False)
+    # partners = CampaignPartner.objects.filter(campaign_id=campaign_id, is_deleted=False)
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
     config = CampaignConfiguration.objects.filter(campaign__id=campaign_id, is_deleted=False).first()
-    key_contact = CampaignManager.objects.filter(campaign__id=campaign_id, is_deleted=False, is_key_contact=True).first()
+    key_contact = managers.filter(is_key_contact=True).first()
     campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False).first()
     
     if email:
         my_testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__campaign__id=campaign_id, testimonial__user__email=email).order_by("-created_at")
+    
 #  find a way to add comments here without making it too slow
     return {
         "key_contact": {
@@ -51,15 +53,15 @@ def get_campaign_details(campaign_id, for_campaign=False, email=None):
         "technologies": prepared,
         "communities": serialize_all(communities),
         "managers": serialize_all(managers),
-        "partners": serialize_all(partners),
+        # "partners": serialize_all(partners),
         "config": serialize(config),
         "navigation": generate_campaign_navigation(campaign_id),
     }
 
 
 def get_campaign_technology_details(campaign_technology_id, campaign_home, email=None):
-    campaign_tech = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
-    events = CampaignTechnologyEvent.objects.filter(campaign_technology=campaign_tech, is_deleted=False)
+    campaign_tech = CampaignTechnology.objects.get(id=campaign_technology_id)
+    events = CampaignTechnologyEvent.objects.filter(campaign_technology__id=campaign_tech.id, is_deleted=False).select_related("campaign_technology")
     testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id,testimonial__is_published=True).order_by("-created_at")
     coaches = TechnologyCoach.objects.filter(technology_id=campaign_tech.technology.id, is_deleted=False)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
@@ -89,7 +91,7 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
 
 
 def get_technology_details(technology_id, for_campaign=False):
-    tech = Technology.objects.filter(id=technology_id).first()
+    tech = Technology.objects.get(id=technology_id)
     coaches = TechnologyCoach.objects.filter(technology_id=technology_id, is_deleted=False)
     incentives = TechnologyOverview.objects.filter(technology_id=technology_id, is_deleted=False)
     vendors = TechnologyVendor.objects.filter(technology_id=technology_id, is_deleted=False)
@@ -311,6 +313,7 @@ def copy_campaign_data(template, new_campaign):
         campaign_config.id = None
         campaign_config.campaign = new_campaign
         campaign_config.save()
+
 
 
 

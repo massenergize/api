@@ -1874,6 +1874,51 @@ class DownloadStore:
             data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
 
         return data
+    
+
+
+    def _get_performance_data_for_community(self, community, campaign):
+        try:
+           
+            follows = CampaignFollow.objects.filter(campaign__id=campaign.id, community__id=community.id, is_deleted=False)
+            likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+            comments = Comment.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).count()
+            testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign.id, testimonial__community__id=community.id, is_deleted=False).count()
+            rows = [
+                ["Total Follows",follows.count() if follows else 0],
+                ["Total Likes", likes],
+                ["Total comments", comments],
+                ["Total testimonials", testimonials],
+            ]
+
+            columns = ["Metric", "Value"]
+            data = [columns]
+            data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+            # show th list of followers
+
+            if follows:
+                data.append([])
+                data.append([])
+                data.append(["Followers"])
+                columns = ["Date", "Email", "Community", "Zipcode", "From_Other_Community"]
+                data.append(columns)
+
+                for follower in follows:
+                    cell  = self._get_cells_from_dict(columns,{
+                        "Date": get_human_readable_date(follower.created_at),
+                        "Email": follower.user.email,
+                        "Community": follower.community.name,
+                        "Zipcode": follower.zipcode,
+                        "From_Other_Community": "Yes" if follower.community_name else "No",
+                    })
+                    data.append(cell)
+            return data
+
+        
+        except Exception as e:
+            print("error: " + str(e))
+            return []
 
         
 
@@ -1886,7 +1931,7 @@ class DownloadStore:
             
             campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
             if not campaign:
-                return EMPTY_DOWNLOAD, InvalidResourceError()
+                return EMPTY_DOWNLOAD, CustomMassenergizeError("Campaign not found")
 
             sheet_data = {}
             sheet_data["Campaign Overview"] = {
@@ -1903,6 +1948,13 @@ class DownloadStore:
             sheet_data["Campaign Interaction Performance"] = {
                 "data": self._campaign_interaction_performance_download(campaign)
             }
+            # create sheet for ech community in the campaign
+            communities = campaign.campaign_community.filter(is_deleted=False)
+
+            for community in communities:
+                sheet_data[f"{community.community.name}"] = {
+                    "data": self._get_performance_data_for_community(community,campaign)
+                }
 
             wb =generate_workbook_with_sheets(sheet_data)
 
