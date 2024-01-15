@@ -109,3 +109,9 @@ beat-remote:
 migrate:
 	python manage.py makemigrations
 	python manage.py migrate
+
+
+create-default-template:
+	python manage.py create-base-template
+
+.PHONY: create-default-template

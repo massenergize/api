@@ -1,0 +1,137 @@
+from typing import Tuple
+
+from sentry_sdk import capture_message
+from _main_.utils.context import Context
+from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
+from api.store.utils import get_user_from_context
+from apps__campaigns.models import CampaignAccount, CampaignAccountAdmin
+from database.models import Community, UserProfile
+
+
+class CampaignAccountStore:
+    def __init__(self):
+        self.name = "Campaign Store/DB"
+
+
+        
+    def create_campaign_account(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            community_id = args.pop('community_id', None)
+            if community_id:
+                community = Community.objects.filter(id=community_id).first()
+                if not community:
+                     return None, InvalidResourceError()
+                args['community'] = community
+
+            user = get_user_from_context(context)
+            if not user:
+                return None, CustomMassenergizeError("User not found")
+            args['creator'] = user
+            
+            account = CampaignAccount.objects.create(**args)
+            return account, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+    
+    def update_campaign_account(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            account_id = args.pop('id', None)
+            if account_id:
+                account = CampaignAccount.objects.filter(id=account_id)
+                if not account:
+                    return None, InvalidResourceError()
+                account.update(**args)
+                return account.first(), None
+            else:
+                return None, InvalidResourceError()
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def delete_campaign_account(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            account_id = args.get('id', None)
+            account = CampaignAccount.objects.filter(id=account_id)
+            if not account:
+                return None, InvalidResourceError()
+
+            account.update(is_deleted=True)
+            return account.first(), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def list_campaign_accounts_for_admins(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            accounts = CampaignAccount.objects.filter(is_deleted=False)
+            return accounts, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def get_campaign_account_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            account_id = args.get('id', None)
+            account = CampaignAccount.objects.filter(id=account_id)
+            if not account:
+                return None, InvalidResourceError()
+
+            return account.first(), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def add_admin_to_campaign_account(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            account_id = args.get('id', None)
+            user_id = args.get('user_id', None)
+            role = args.get('role', None)
+            account = CampaignAccount.objects.filter(id=account_id)
+            if not account:
+                return None, InvalidResourceError()
+            
+            if not user_id:
+                return None, InvalidResourceError()
+            
+            user = UserProfile.objects.filter(id=user_id).first()
+
+            account_admin = CampaignAccountAdmin.objects.create(account=account.first(), user=user, role=role)
+            return account_admin, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def remove_admin_from_campaign_account(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            admin_id = args.get('admin_id', None)
+            admin = CampaignAccountAdmin.objects.filter(id=admin_id)
+            if not admin:
+                return None, InvalidResourceError()
+
+            admin.update(is_deleted=True)
+            return admin.first(), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def update_admin(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            admin_id = args.get('admin_id', None)
+            admin = CampaignAccountAdmin.objects.filter(id=admin_id)
+            if not admin:
+                return None, InvalidResourceError()
+
+            admin.update(**args)
+            return admin.first(), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+
