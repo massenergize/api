@@ -70,6 +70,13 @@ def parse_list(d):
         capture_message(str(e), level="error")
         return []
 
+def parse_dict(d: object) -> object:
+    try:
+        return json.loads(d)
+    except Exception as e:
+        capture_message(str(e), level="error")
+        return dict()
+
 
 def parse_str_list(d):
     try:

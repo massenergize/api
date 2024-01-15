@@ -187,9 +187,7 @@ class CampaignStore:
                     secondary_logo, f"SecondaryLogoFor {campaign.title} Campaign"
                 )
             if campaign_image:
-                args["image"] = create_media_file(
-                    campaign_image, f"ImageFor {campaign.title} Campaign"
-                )
+                args["image"] = create_media_file(campaign_image, f"ImageFor {campaign.title} Campaign")
 
             campaigns.update(**args)
 
@@ -235,15 +233,18 @@ class CampaignStore:
                 return self.list_campaigns_for_super_admin(context)
 
             if subdomain:
-                campaigns =Campaign.objects.filter(account__subdomain=subdomain).filter(is_deleted=False)
-                return campaigns.distinct(), None
+                campaigns = Campaign.objects.filter(account__subdomain=subdomain,is_deleted=False)
 
-            if campaign_account_id:
-                campaigns = Campaign.objects.filter(account__id=campaign_account_id).filter(is_deleted=False)
+            elif campaign_account_id:
+                campaigns = Campaign.objects.filter(account__id=campaign_account_id, is_deleted=False)
+
+            else:
+                campaigns = Campaign.objects.filter(Q(is_global=True) | Q(owner__id=context.user_id), is_deleted=False).distinct()
+
+            campaign_manager_campaign_ids = CampaignManager.objects.filter(user__id=context.user_id, is_deleted=False).values_list('campaign', flat=True)
+            campaign_manager_campaigns = Campaign.objects.filter(id__in=campaign_manager_campaign_ids)
+            campaigns = campaigns | campaign_manager_campaigns
             
-                return campaigns.distinct(), None
-
-            campaigns =Campaign.objects.filter(Q(is_global=True), is_deleted=False).distinct()
 
             return campaigns.order_by("-created_at"), None
 
@@ -420,11 +421,11 @@ class CampaignStore:
                     "Campaign Technology with id not found!"
                 )
 
-            if deal_section_image:
-                args["deal_section_image"] = create_media_file(
-                    deal_section_image,
-                    f"ImageFor {campaign_technology.first().id} CampaignTech",
-                )
+            # if deal_section_image:
+            #     args["deal_section_image"] = create_media_file(
+            #         deal_section_image,
+            #         f"ImageFor {campaign_technology.first().id} CampaignTech",
+            #     )
 
             campaign_technology.update(**args)
 
@@ -504,7 +505,6 @@ class CampaignStore:
             testimonial.is_published = args.get("is_published", False)
             testimonial.save()
 
-
             campaign_testimonial, _ = CampaignTechnologyTestimonial.objects.get_or_create(campaign_technology=campaign_technology, testimonial=testimonial, is_deleted=False)
 
             return campaign_testimonial, None
@@ -529,9 +529,8 @@ class CampaignStore:
             testimonial = campaign_technology_testimonial.testimonial
 
             if image:
-                name = f"ImageFor {testimonial.title} Campaign"
-                media = Media.objects.create(name=name, file=image)
-                testimonial.image = media
+                img =  create_media_file(image, f"ImageFor {testimonial.title} Campaign")
+                testimonial.image = img
 
 
             if community_id:
@@ -1154,10 +1153,10 @@ class CampaignStore:
             if not title:
                 return None, CustomMassenergizeError("Title not provided")
 
-            template = Campaign.objects.filter(title=TEMPLATE_TITLE, is_template=True).first()
+            # template = Campaign.objects.filter(title=TEMPLATE_TITLE, is_template=True).first()
 
-            if not template:
-                return None, CustomMassenergizeError("Campaign Template not found")
+            # if not template:
+            #     return None, CustomMassenergizeError("Campaign Template not found")
 
             account = CampaignAccount.objects.filter(id=account_id).first()
 
@@ -1166,11 +1165,6 @@ class CampaignStore:
             new_campaign.account = account
             new_campaign.is_global = False
             new_campaign.is_template = False
-            new_campaign.image = template.image
-            new_campaign.primary_logo = template.primary_logo
-            new_campaign.secondary_logo = template.secondary_logo
-            new_campaign.tagline = template.tagline
-            new_campaign.description = template.description
             new_campaign.owner = user
             new_campaign.save()
 
@@ -1179,7 +1173,7 @@ class CampaignStore:
                 if community:
                     CampaignCommunity.objects.create(campaign=new_campaign, community=community)
 
-            copy_campaign_data(template, new_campaign)
+            copy_campaign_data(new_campaign)
 
             return new_campaign, None
 

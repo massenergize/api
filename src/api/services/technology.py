@@ -72,7 +72,7 @@ class TechnologyService:
             return None, err
         return serialize(res), None
     
-    def update_technology_coach(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    def update_technology_coach(self,  context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         res, err = self.store.update_technology_coach(context, args)
         if err:
             return None, err
@@ -126,6 +126,34 @@ class TechnologyService:
         if err:
             return None, err
         return serialize_all(technologies), None
+    
+
+    def create_technology_deal(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        res, err = self.store.create_technology_deal(context, args)
+        if err:
+            return None, err
+        
+        return serialize(res, full=True), None
+    
+
+    def update_technology_deal(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            res, err = self.store.update_technology_deal(context, args)
+            if err:
+                return None, err
+            return serialize(res, full=True), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
+        
+
+    def delete_technology_deal(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            technology_deal, err = self.store.delete_technology_deal(context, args)
+            if err:
+                return None, err
+            return serialize(technology_deal), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
     
 
 

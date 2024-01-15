@@ -93,6 +93,8 @@ def get_sender_email(community_id):
 def create_media_file(file, name):
     if not file:
         return None
+    if file == "reset":
+        return None
     media = Media.objects.create(name=name, file=file)
     media.save()
     return media

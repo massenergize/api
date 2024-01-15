@@ -12,26 +12,6 @@ def generate_rand_between(start=2, end=10):
     length = random.randint(start, start)  # Random length between 2 and 10
     return  random.randint(end**(length-1), end**length - 1)
 
-
-
-class Section(models.Model):
-    id = models.CharField(max_length=SHORT_STR_LEN, primary_key=True)
-    title = models.CharField(max_length=SHORT_STR_LEN)
-    description = models.TextField(blank=True, null=True)
-    more_description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.title
-    
-    def simple_json(self)-> dict:
-        res = model_to_dict(self)
-        return res
-    
-    def full_json(self):
-        return self.simple_json()
-
-
-
 class CampaignAccount(BaseModel):
     '''
     This model represents a campaign account. An account created by a user or a community to
@@ -75,7 +55,7 @@ class CampaignAccountAdmin(BaseModel):
     '''
     account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE)
     user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE)
-    role = models.CharField(blank=True, max_length=255)
+    role = models.CharField(blank=True, max_length=255, null=True)
 
 
     def __str__(self) -> str:
@@ -149,9 +129,8 @@ class Campaign(BaseModel):
     is_template = models.BooleanField(default=False)
     tagline = models.CharField(max_length=255, blank=True, null=True)
     owner = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, null=True, blank=True)
-    communities_section = models.JSONField(blank=True, null=True) # {title, description} of communities section
-    # communities_section= models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="communities_section")
-    # advert_section= models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="advert_section")
+    communities_section = models.JSONField(blank=True, null=True) 
+    advert = models.JSONField(blank=True, null=True)
 
 
     def __str__(self):
@@ -172,8 +151,6 @@ class Campaign(BaseModel):
         res["image"] = get_json_if_not_none(self.image)
         res["campaign_image"] = get_json_if_not_none(self.image)
         res["owner"] = get_summary_info(self.owner)
-        # res["communities_section"] = get_json_if_not_none(self.communities_section)
-        # res["advert_section"] = get_json_if_not_none(self.advert_section)
 
         return res
 
@@ -240,12 +217,11 @@ class Technology(BaseModel):
     image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
     icon = models.CharField(max_length=255, blank=True, null=True)
 
-    # overview_title  = models.CharField(max_length=255, blank=True, null=True)
-    # action_section  = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="action_section")
-    # coaches_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="coaches_section")
-    # deal_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="deal_section")
-    # vendors_section = models.ForeignKey(Section, on_delete=models.CASCADE, null=True, blank=True, related_name="vendors_section")
-
+    overview_title  = models.CharField(max_length=255, blank=True, null=True)
+    coaches_section = models.JSONField(blank=True, null=True)
+    deal_section = models.JSONField(blank=True, null=True)
+    vendors_section = models.JSONField(blank=True, null=True)
+    more_info_section = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -255,12 +231,6 @@ class Technology(BaseModel):
         res.update(model_to_dict(self))
         res["is_icon"] = False if self.image else True
         res["image"] = get_json_if_not_none(self.image)
-
-        # res["action_section"] = get_json_if_not_none(self.action_section)
-        # res["coaches_section"] = get_json_if_not_none(self.coaches_section)
-        # res["deal_section"] = get_json_if_not_none(self.deal_section)
-        # res["vendors_section"] = get_json_if_not_none(self.vendors_section)
-
         return res
     
     def full_json(self):
@@ -327,23 +297,23 @@ class TechnologyOverview(BaseModel):
         return self.simple_json()
     
 
-# class TechnologyDeal(BaseModel):
-#     technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_deal")
-#     title = models.CharField(max_length=255)
-#     description = models.TextField(blank=True, null=True)
-#     link = models.CharField(max_length=255, blank=True, null=True)
+class TechnologyDeal(BaseModel):
+    technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_deal")
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    link = models.CharField(max_length=255, blank=True, null=True)
 
-#     def __str__(self):
-#         return f"{self.title} - {self.technology}"
+    def __str__(self):
+        return f"{self.title} - {self.technology}"
     
-#     def simple_json(self)-> dict:
-#         res = super().to_json()
-#         res.update(model_to_dict(self))
-#         res["technology"] = get_summary_info(self.technology)
-#         return res
+    def simple_json(self)-> dict:
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["technology"] = get_summary_info(self.technology)
+        return res
     
-#     def full_json(self):
-#         return self.simple_json()
+    def full_json(self):
+        return self.simple_json()
     
 class TechnologyVendor(BaseModel):
     technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_vendor")
@@ -376,13 +346,6 @@ class CampaignTechnology(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_technology_campaign")
     technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="campaign_technology")
 
-    overview_title  = models.CharField(max_length=255, blank=True, null=True)
-    action_section  = models.JSONField(blank=True, null=True)
-    coaches_section = models.JSONField(blank=True, null=True)
-    deal_section = models.JSONField(blank=True, null=True)
-    vendors_section = models.JSONField(blank=True, null=True)
-    more_info_section = models.JSONField(blank=True, null=True)
-
     def __str__(self):
         return f"{self.campaign} - {self.technology}"
     
@@ -391,7 +354,6 @@ class CampaignTechnology(BaseModel):
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
         res["technology"] = get_json_if_not_none(self.technology)
-        # res["deal_section_image"] = get_json_if_not_none(self.deal_section_image)
         return res
     
     def full_json(self):
@@ -573,6 +535,7 @@ class CampaignManager(BaseModel):
     user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE)
     is_key_contact = models.BooleanField(blank=True, default=False)
     contact = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
+    role = models.CharField(blank=True, null=True, max_length=SHORT_STR_LEN)
 
     def __str__(self):
         return f"{self.campaign} - {self.user}"
@@ -715,36 +678,6 @@ class CampaignLink(BaseModel):
     
     def full_json(self):
         return self.simple_json()
-    
-
-
-# class CampaignTechnologyTestimonial(BaseModel):
-#     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, blank=True, null=True)
-#     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_testimonials")
-#     title = models.CharField(max_length=SHORT_STR_LEN, db_index=True, blank=True, null=True)
-#     body = models.TextField(max_length=LONG_STR_LEN, blank=True, null=True)
-#     is_approved = models.BooleanField(default=False, blank=True)
-#     image = models.ForeignKey("database.Media", on_delete=models.SET_NULL,null=True, blank=True,related_name="campaign_technology_testimonial_image")
-#     created_by = models.ForeignKey( "database.UserProfile", on_delete=models.CASCADE, db_index=True, null=True)
-#     is_published = models.BooleanField(default=False, blank=True)
-#     anonymous = models.BooleanField(default=False, blank=True)
-#     community = models.ForeignKey("database.Community", on_delete=models.CASCADE, blank=True, null=True, db_index=True)
-
-#     def __str__(self):
-#         return f"{self.campaign} - {self.campaign_technology}"
-    
-#     def simple_json(self)-> dict:
-#         res = super().to_json()
-#         res.update(model_to_dict(self))
-#         res["campaign"] = get_summary_info(self.campaign or self.campaign_technology.campaign)
-#         res["campaign_technology"] = get_summary_info(self.campaign_technology)
-#         res["user"] = get_summary_info(self.created_by)
-#         res["community"] = get_summary_info(self.community)
-#         res["image"] = get_json_if_not_none(self.image)
-#         return res
-    
-#     def full_json(self):
-#         return self.simple_json()
     
 class CampaignTechnologyTestimonial(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_testimonials")
