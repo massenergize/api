@@ -1,10 +1,11 @@
-from typing import Tuple
+from typing import Tuple, Union, Any
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
 from api.utils.api_utils import create_media_file
 from apps__campaigns.models import Technology, TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
 from database.models import Media, Vendor
+from django.db.models import Q
 
 
 class TechnologyStore:
@@ -26,8 +27,9 @@ class TechnologyStore:
 
     def list_technologies(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
-            technologies = Technology.objects.filter(is_deleted=False)
-            return technologies, None
+            campaign_account_id = args.get("campaign_account_id", None)
+            technologies = Technology.objects.filter(Q(campaign_account_id=campaign_account_id)|Q(user__id=context.user_id), is_deleted=False)
+            return technologies.distinct(), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -137,14 +139,15 @@ class TechnologyStore:
             vendor_ids = args.pop('vendor_ids', None)
 
             created_list = []
+            print("=== vendor_ids ===", vendor_ids)
 
 
             technology = Technology.objects.filter(id=technology_id).first()
             if not technology:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("technology with id does not exist")
             
             if not vendor_ids:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("vendor_ids is required")
             
             for vendor_id in vendor_ids:
                 vendor = Vendor.objects.filter(pk=vendor_id).first()
@@ -152,8 +155,7 @@ class TechnologyStore:
                 created_list.append(tech_vendor.simple_json())
 
             # delete all vendors that are not in the list
-            TechnologyVendor.objects.filter(technology=technology).exclude(
-                id__in=[x.get("id") for x in created_list]).delete()
+            TechnologyVendor.objects.filter(technology=technology).exclude(id__in=[x.get("id") for x in created_list]).delete()
 
             return created_list, None
         except Exception as e:
@@ -162,20 +164,24 @@ class TechnologyStore:
         
 
 
-    def remove_technology_vendor(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    def remove_technology_vendor(self, context: Context, args) -> tuple[TechnologyVendor, MassEnergizeAPIError]:
         try:
-            tech_vendor_id = args.pop('technology_vendor_id', None)
+            vendor_id = args.pop('vendor_id', None)
+            technology_id = args.pop('technology_id', None)
 
-            if not tech_vendor_id:
-                return None, InvalidResourceError()
+            if not vendor_id:
+                return None, CustomMassenergizeError("vendor_id is required")
+
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
             
-            tech_vendor = TechnologyVendor.objects.filter(id=tech_vendor_id)
+            tech_vendor = TechnologyVendor.objects.filter(technology__id=technology_id, vendor__id=vendor_id).first()
             if not tech_vendor:
-                return None, CustomMassenergizeError("Invalid Technology Vendor ID")
+                return None, CustomMassenergizeError("Technology Vendor with id does not exist")
             
-            tech_vendor.update(is_deleted=True)
+            tech_vendor.delete()
         
-            return tech_vendor.first(), None
+            return tech_vendor, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

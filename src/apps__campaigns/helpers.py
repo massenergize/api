@@ -37,62 +37,44 @@ def create_new_event(ct):
     from apps__campaigns.create_campaign_template import create_campaign_event
     evs = create_campaign_event(ct)
     return evs
-    
 
 
-
-def get_campaign_details(campaign_id, for_campaign=False, email=None):
+def get_campaign_details(campaign_id, for_campaign=False):
     techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
-    ser_techs = serialize_all(techs, full=True)
-    prepared = [
-        {"campaign_technology_id": x.get("id"), **get_campaign_technology_details(x.get("id"), for_campaign, email)} for
-        x in ser_techs]
+    prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({ "campaign_technology_id": str(x.id), "email": None, "for_admin":True})} for x in techs]
     managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False)
-    # partners = CampaignPartner.objects.filter(campaign_id=campaign_id, is_deleted=False)
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
-    config = CampaignConfiguration.objects.filter(campaign__id=campaign_id, is_deleted=False).first()
-    key_contact = managers.filter(is_key_contact=True).first()
-    campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False).first()
-    
-    if email:
-        my_testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__campaign__id=campaign_id, testimonial__user__email=email).order_by("-created_at")
-    
-#  find a way to add comments here without making it too slow
     return {
-        "key_contact": {
-            "name": key_contact.user.full_name,
-            "email": key_contact.user.email,
-            "phone_number": key_contact.contact,
-            "image": get_json_if_not_none(key_contact.user.profile_picture),
-        } if key_contact else None,
-
-        "my_testimonials": serialize_all(my_testimonials[:5]) if email else [],
-        "campaign_views": campaign_views.count if campaign_views else 0,
         "technologies": prepared,
         "communities": serialize_all(communities),
         "managers": serialize_all(managers),
-        # "partners": serialize_all(partners),
-        "config": serialize(config),
-        "navigation": generate_campaign_navigation(campaign_id),
     }
 
 
-def get_campaign_technology_details(campaign_technology_id, campaign_home, email=None):
+def get_campaign_technology_details(args):
+    email = args.get("email")
+    campaign_technology_id = args.get("campaign_technology_id")
+    campaign_home = args.get("campaign_home")
+    for_admin = args.get("for_admin", False)
+
     campaign_tech = CampaignTechnology.objects.get(id=campaign_technology_id)
-    events = CampaignTechnologyEvent.objects.filter(campaign_technology__id=campaign_tech.id,is_deleted=False).select_related("campaign_technology")
-    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False, campaign_technology__id=campaign_technology_id, testimonial__is_published=True).order_by("-created_at")
+    events = CampaignTechnologyEvent.objects.filter(campaign_technology=campaign_tech, is_deleted=False).select_related("campaign_technology")
+    if for_admin:
+        testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology=campaign_tech).order_by("-created_at")
+    else:
+        testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology=campaign_tech, testimonial__is_published=True).order_by("-created_at")
     coaches = TechnologyCoach.objects.filter(technology_id=campaign_tech.technology.id, is_deleted=False)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
     if campaign_home:
         return {
-            "testimonials": serialize_all(testimonials),
+            "testimonials": serialize_all(testimonials.filter(is_featured=True)),
             "events": serialize_all(events, full=True),
             "coaches": serialize_all(coaches),
             "campaign_id": campaign_tech.campaign.id,
-            "comments": serialize_all(comments),
+            # "comments": serialize_all(comments),
             **campaign_tech.technology.simple_json()
         }
-    campaign_technology_views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).first()
+    campaign_technology_views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id,is_deleted=False).first()
     likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=campaign_technology_id,is_deleted=False).first()
 
     return {
@@ -107,15 +89,12 @@ def get_campaign_technology_details(campaign_technology_id, campaign_home, email
     }
 
 
-
 def get_technology_details(technology_id, for_campaign=False):
     tech = Technology.objects.get(id=technology_id)
     coaches = tech.technology_coach.filter(is_deleted=False)
     incentives = tech.technology_overview.filter(is_deleted=False)
     vendors = tech.technology_vendor.filter(is_deleted=False)
-    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,
-                                                                campaign_technology__technology__id=technology_id).order_by(
-        "-created_at")
+    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__technology__id=technology_id).order_by("-created_at")
     deals = tech.technology_deal.filter(is_deleted=False)
 
     data = {
@@ -130,8 +109,53 @@ def get_technology_details(technology_id, for_campaign=False):
         data.pop("testimonials")
     return data
 
-def generate_campaign_navigation(campaign_id):
-    home_route = f"/campaign/{campaign_id}"
+
+def get_campaign_details_for_user(campaign_id, email):
+    techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
+    prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({"email": email, "campaign_home": True, "campaign_technology_id": str(x.id)})} for x in techs]
+    communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
+    key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False).first()
+    campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id,is_deleted=False).first()
+
+    if email:
+        my_testimonials = CampaignTechnologyTestimonial.objects.filter(
+            campaign_technology__campaign__id=campaign_id, is_deleted=False,
+            testimonial__user__email=email).order_by("-created_at")
+
+    return {
+        "key_contact": {
+            "name": key_contact.user.full_name,
+            "email": key_contact.user.email,
+            "phone_number": key_contact.contact,
+            "image": get_json_if_not_none(key_contact.user.profile_picture),
+        } if key_contact else None,
+        "my_testimonials": serialize_all(my_testimonials[:5]) if email else [],
+        "technologies": prepared,
+        "communities": serialize_all(communities),
+        "campaign_views": campaign_views.count if campaign_views else 0,
+        "navigation": generate_campaign_navigation(techs.first().campaign),
+    }
+
+
+
+
+def category_has_items(category, campaign_technology):
+    if category == "coaches":
+        return campaign_technology.technology.technology_coach.filter(is_deleted=False).exists()
+    elif category == "vendors":
+        return campaign_technology.technology.technology_vendor.filter(is_deleted=False).exists()
+    elif category == "events":
+        return campaign_technology.campaign_technology_event.filter(is_deleted=False).exists()
+    elif category == "testimonials":
+        return campaign_technology.campaign_technology_testimonials.filter(is_deleted=False).exists()
+    elif category == "incentives":
+        return campaign_technology.technology.technology_overview.filter(is_deleted=False).exists()
+    else:
+        return False
+
+
+def generate_campaign_navigation(campaign):
+    home_route = f"/campaign/{campaign.slug}"
     BASE_NAVIGATION = [
         {"key": "home", "url": home_route, "text": "Home", "icon": "fa-home"},
         {"key": "Communities", "url": f"{home_route}/?section=communities", "text": "Communities", "icon": "fa-globe"},
@@ -151,21 +175,20 @@ def generate_campaign_navigation(campaign_id):
          "icon": "fa-money"},
     ]
 
-    campaign_techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
+    campaign_techs = CampaignTechnology.objects.filter(campaign__id=campaign.id, is_deleted=False)
 
     for tech in campaign_techs:
-        tech_details = get_campaign_technology_details(tech.id, False)
         for index, category in enumerate(["coaches", "vendors", "testimonials", "events"]):
-            if tech_details.get(category):
+            if category_has_items(category, tech):
                 MENU[index]["children"].append(
-                    {"key": tech.id, "url": f"/campaign/{campaign_id}/technology/{tech.id}/?section={category}",
+                    {"key": tech.id, "url": f"/campaign/{campaign.slug}/technology/{tech.id}/?section={category}",
                      "text": tech.technology.name}
                 )
         deal_section = tech.technology.deal_section or {}
 
         if deal_section.get("title"):
             MENU[-1]["children"].append(
-                {"key": tech.id, "url": f"/campaign/{campaign_id}/technology/{tech.id}/?section=incentives",
+                {"key": tech.id, "url": f"/campaign/{campaign.slug}/technology/{tech.id}/?section=incentives",
                  "text": tech.technology.name})
 
     MENU = [item for item in MENU if item["children"]]  # Remove items without children
@@ -177,18 +200,20 @@ def generate_analytics_data(campaign_id):
 
     shares = CampaignLink.objects.filter(is_deleted=False, campaign__id=campaign_id).count()
     likes = \
-    CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False).aggregate(
-        total_likes=Sum('count'))['total_likes']
+        CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign_id,
+                                              is_deleted=False).aggregate(
+            total_likes=Sum('count'))['total_likes']
     campaign_technology_views = \
-    CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False).aggregate(
-        total_views=Sum('count'))['total_views']
+        CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id,
+                                              is_deleted=False).aggregate(
+            total_views=Sum('count'))['total_views']
     followers = CampaignFollow.objects.filter(is_deleted=False, campaign__id=campaign_id).count()
     comments = Comment.objects.filter(is_deleted=False, campaign_technology__campaign__id=campaign_id).count()
     testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,
                                                                 campaign_technology__campaign__id=campaign_id).count()
     campaign_views = \
-    CampaignView.objects.filter(campaign__id=campaign_id, is_deleted=False).aggregate(total_views=Sum('count'))[
-        'total_views']
+        CampaignView.objects.filter(campaign__id=campaign_id, is_deleted=False).aggregate(total_views=Sum('count'))[
+            'total_views']
     stats = {
         "shares": shares,
         "likes": likes,
@@ -214,133 +239,6 @@ def select_3_random_events_from_communities(community_ids):
         return list(events)
 
 
-# def copy_campaign_data(template, new_campaign):
-#     campaign_techs = CampaignTechnology.objects.filter(campaign__id=template.id, is_deleted=False)
-#     campaign_events = list(template.campaign_event.all())
-#     communities= [x.community for x in template.campaign_community.all()]
-
-#     for campaign_tech in campaign_techs:
-#         tech  = campaign_tech.technology
-
-#         overviews = list(tech.technology_overview.all())
-#         coaches = list(tech.technology_coach.all())
-#         vendors = list(tech.technology_vendor.all())
-#         testimonials = list(campaign_tech.campaign_technology_testimonials.all())
-
-
-#         tech.id = None
-#         tech.save()
-
-#         campaign_tech.id = None
-#         campaign_tech.campaign = new_campaign
-#         campaign_tech.technology = tech
-#         campaign_tech.save()
-
-#         for overview in overviews:
-#             overview.pk = None
-#             overview.technology = tech
-#             overview.save()
-
-#         for coach in coaches:
-#             coach.pk = None
-#             coach.technology = tech
-#             coach.save()
-
-#         for vendor in vendors:
-#             vendor.pk = None
-#             vendor.technology = tech
-#             vendor.save()
-
-
-#         # copy testimonials
-#         for testimonial in testimonials:
-#             testimonial.pk = None
-#             testimonial.campaign_technology = campaign_tech
-#             testimonial.save()
-
-
-#     for tech in list(new_campaign.campaign_technology_campaign.all()):
-#         try:
-#             create_new_event(tech)
-
-#         except Exception as e:
-#             print("Error creating CampaignEvent:", e)
-
-
-#     # copy managers
-#     campaign_managers = CampaignManager.objects.filter(campaign__id=template.id, is_deleted=False)
-#     for manager in campaign_managers:
-#         try:
-#             manager.id = None
-#             manager.campaign = new_campaign
-#             manager.save()
-#         except Exception as e:
-#             print("Error creating CampaignManager:", e)
-
-#     # copy partners
-#     campaign_partners = CampaignPartner.objects.filter(campaign__id=template.id, is_deleted=False)
-#     for partner in campaign_partners:
-#         try:
-#             partner.id = None
-#             partner.campaign = new_campaign
-#             partner.save()
-#         except Exception as e:
-#             print("Error creating CampaignPartner:", e)
-
-
-#     # copy config
-#     campaign_config = CampaignConfiguration.objects.filter(campaign__id=template.id, is_deleted=False).first()
-#     if campaign_config:
-#         campaign_config.id = None
-#         campaign_config.campaign = new_campaign
-#         campaign_config.save()
-
-
-def _copy_campaign_data(template, new_campaign):
-    # copy technologies
-    campaign_techs = CampaignTechnology.objects.filter(campaign__id=template.id, is_deleted=False)
-    for tech in campaign_techs:
-        testimonials = list(tech.campaign_technology_testimonials.filter(is_deleted=False))
-        events = list(tech.campaign_technology_event.filter(is_deleted=False))
-
-        tech.id = None
-        tech.campaign = new_campaign
-        tech.save()
-
-        # copy testimonials
-        for testimonial in testimonials:
-            testimonial.pk = None
-            testimonial.campaign_technology = tech
-            testimonial.save()
-
-        # copy events
-        for event in events:
-            event.pk = None
-            event.campaign_technology = tech
-            event.save()
-
-    # copy managers
-    campaign_managers = CampaignManager.objects.filter(campaign__id=template.id, is_deleted=False)
-    for manager in campaign_managers:
-        manager.id = None
-        manager.campaign = new_campaign
-        manager.save()
-
-    # # copy partners
-    # campaign_partners = CampaignPartner.objects.filter(campaign__id=template.id, is_deleted=False)
-    # for partner in campaign_partners:
-    #     partner.id = None
-    #     partner.campaign = new_campaign
-    #     partner.save()
-
-    #     # copy config
-    campaign_config = CampaignConfiguration.objects.filter(campaign__id=template.id, is_deleted=False).first()
-    if campaign_config:
-        campaign_config.id = None
-        campaign_config.campaign = new_campaign
-        campaign_config.save()
-
-
 def copy_campaign_data(new_campaign):
     # Load the JSON data from the template file
     with open('apps__campaigns/main_template.json') as f:
@@ -352,7 +250,6 @@ def copy_campaign_data(new_campaign):
         new_campaign.secondary_logo = create_media(_campaign.get("secondary_logo"))
         new_campaign.description = _campaign.get("description")
         new_campaign.tagline = _campaign.get("tagline")
-        new_campaign.advert = _campaign.get("advert")
         new_campaign.communities_section = _campaign.get("communities_section")
         new_campaign.save()
         print("Campaign created")
@@ -372,6 +269,7 @@ def copy_campaign_data(new_campaign):
             tech.coaches_section = _tech.get("coaches_section")
             tech.deal_section = _tech.get("deal_section")
             tech.overview_title = _tech.get("overview_title")
+            tech.campaign_account = new_campaign.account
             tech.save()
 
             _coaches = _tech.get("coaches")

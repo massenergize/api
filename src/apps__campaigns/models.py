@@ -129,8 +129,7 @@ class Campaign(BaseModel):
     is_template = models.BooleanField(default=False)
     tagline = models.CharField(max_length=255, blank=True, null=True)
     owner = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, null=True, blank=True)
-    communities_section = models.JSONField(blank=True, null=True) 
-    advert = models.JSONField(blank=True, null=True)
+    communities_section = models.JSONField(blank=True, null=True)
 
 
     def __str__(self):
@@ -182,8 +181,6 @@ class CampaignConfiguration(BaseModel):
     """
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE)
     theme = models.JSONField(blank=True, null=True)
-    navigation = models.JSONField(blank=True, null=True)
-    advert = models.JSONField(blank=True, null=True)
 
 
     def __str__(self):
@@ -215,9 +212,11 @@ class Technology(BaseModel):
     description = models.TextField(blank=True)
     summary = models.CharField(max_length = SHORT_STR_LEN, blank=True, null=True)
     image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
-    icon = models.CharField(max_length=255, blank=True, null=True)
+    help_link = models.CharField(max_length=255, blank=True, null=True)
+    campaign_account = models.ForeignKey(CampaignAccount, on_delete=models.CASCADE, null=True, blank=True, related_name="campaign_account_technology")
+    user = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, null=True, blank=True, related_name="user_technology")
 
-    overview_title  = models.CharField(max_length=255, blank=True, null=True)
+    overview_title = models.CharField(max_length=255, blank=True, null=True)
     coaches_section = models.JSONField(blank=True, null=True)
     deal_section = models.JSONField(blank=True, null=True)
     vendors_section = models.JSONField(blank=True, null=True)
@@ -231,6 +230,7 @@ class Technology(BaseModel):
         res.update(model_to_dict(self))
         res["is_icon"] = False if self.image else True
         res["image"] = get_json_if_not_none(self.image)
+        res["user"] = get_summary_info(self.user)
         return res
     
     def full_json(self):
@@ -585,27 +585,27 @@ class CampaignTechnologyEvent(BaseModel):
         return f"{self.campaign_technology} - {self.event}"
     
     def simple_json(self)-> dict:
-        res = super().to_json()
-        res.update(model_to_dict(self))
-        res["campaign_technology"] = {
-            "id":self.campaign_technology.id,
-            "campaign":{
-                "id":self.campaign_technology.campaign.id,
-                "title":self.campaign_technology.campaign.title,
-                "slug":self.campaign_technology.campaign.slug,
+        res = {
+            "campaign_technology": {
+            "id": self.campaign_technology.id,
+            "campaign": {
+                "id": self.campaign_technology.campaign.id,
+                "title": self.campaign_technology.campaign.title,
+                "slug": self.campaign_technology.campaign.slug,
             },
-            "technology":{
-                "id":self.campaign_technology.technology.id,
-                "name":self.campaign_technology.technology.name,
+            "technology": {
+                "id": self.campaign_technology.technology.id,
+                "name": self.campaign_technology.technology.name,
             },
             },
-        res["event"] = {
-            "id":self.event.id,
-            "name":self.event.name,
-            "start_date":self.event.start_date_and_time,
-            "end_date":self.event.end_date_and_time,
-            "description":self.event.description,
-            "image":get_json_if_not_none(self.event.image),
+            "event": {
+                "id": self.event.id,
+                "name": self.event.name,
+                "start_date": self.event.start_date_and_time,
+                "end_date": self.event.end_date_and_time,
+                "description": self.event.description,
+                "image": get_json_if_not_none(self.event.image),
+        }
         }
         return res
     
@@ -683,6 +683,7 @@ class CampaignTechnologyTestimonial(BaseModel):
     campaign_technology = models.ForeignKey(CampaignTechnology, on_delete=models.CASCADE, related_name="campaign_technology_testimonials")
     testimonial= models.ForeignKey("database.Testimonial",null=True, blank=True, on_delete=models.CASCADE, related_name="campaign_technology_testimonial")
     is_featured = models.BooleanField(default=False, blank=True)
+    is_imported = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return f"{self.campaign_technology}- {self.testimonial}"
