@@ -540,6 +540,8 @@ class CampaignStore:
 
             testimonial.title = args.get("title", testimonial.title)
             testimonial.body = args.get("body", testimonial.body)
+            testimonial.is_published = args.get("is_published", testimonial.is_published)
+            testimonial.is_approved = args.get("is_published", testimonial.is_published)
             testimonial.save()
 
 
