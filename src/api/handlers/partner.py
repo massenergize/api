@@ -3,7 +3,6 @@ from _main_.utils.massenergize_response import MassenergizeResponse
 from _main_.utils.route_handler import RouteHandler
 from api.decorators import admins_only
 from api.services.partner import PartnerService
-from api.services.technology import TechnologyService
 
 
 class PartnerHandler(RouteHandler):

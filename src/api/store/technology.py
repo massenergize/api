@@ -139,7 +139,7 @@ class TechnologyStore:
             vendor_ids = args.pop('vendor_ids', None)
 
             created_list = []
-            print("=== vendor_ids ===", vendor_ids)
+
 
 
             technology = Technology.objects.filter(id=technology_id).first()
@@ -164,7 +164,7 @@ class TechnologyStore:
         
 
 
-    def remove_technology_vendor(self, context: Context, args) -> tuple[TechnologyVendor, MassEnergizeAPIError]:
+    def remove_technology_vendor(self, context: Context, args) -> Tuple[TechnologyVendor, MassEnergizeAPIError]:
         try:
             vendor_id = args.pop('vendor_id', None)
             technology_id = args.pop('technology_id', None)
