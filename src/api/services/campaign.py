@@ -9,6 +9,9 @@ from typing import Tuple
 
 from apps__campaigns.helpers import generate_analytics_data, get_campaign_details, get_campaign_technology_details
 
+from apps__campaigns.helpers import get_campaign_details_for_user
+
+
 class CampaignService:
   """
   Service Layer for all the campaigns
@@ -18,13 +21,24 @@ class CampaignService:
     self.store =  CampaignStore()
 
   def get_campaign_info(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    campaign, err = self.store.get_campaign_info(context, args)
+    if err:
+      return None, err
+    ser_cam = serialize(campaign, full=True)
+    other_details = get_campaign_details(campaign.id, True)
+    result = {**ser_cam, **other_details, "stats":generate_analytics_data(campaign.id)}
+
+    return result, None
+
+
+  def get_campaign_info_for_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
     email = args.get("email",None)
     campaign, err = self.store.get_campaign_info(context, args)
     if err:
       return None, err
     ser_cam = serialize(campaign, full=True)
-    other_details = get_campaign_details(campaign.id, True, email)
-    result = {**ser_cam, **other_details, "stats":generate_analytics_data(campaign.id)}
+    other_details = get_campaign_details_for_user(campaign.id, email)
+    result = {**ser_cam, **other_details}
 
     return result, None
 
@@ -311,7 +325,8 @@ class CampaignService:
       return None, err
   
     ser = serialize(res, full=True)
-    other_details = get_campaign_technology_details(res.id, False,email)
+
+    other_details = get_campaign_technology_details({"campaign_technology_id": res.id, 'email': email})
     result = {**ser, **other_details}
     
     return result, None

@@ -57,6 +57,12 @@ class TechnologyHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
+        self.validator.expect("campaign_account_id", str, is_required=False)
+        args, err = self.validator.verify(args, strict=True)
+
+        if err:
+            return err
+
         res, err = self.service.list_technologies(context, args)
         if err:
             return err
@@ -71,7 +77,6 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("name", str, is_required=True)
         self.validator.expect("description", str, is_required=True)
         self.validator.expect("image", "file", is_required=False)
-        self.validator.expect("icon", str, is_required=False)
 
 
         args, err = self.validator.verify(args, strict=True)
@@ -99,6 +104,7 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("deal_section", dict, is_required=False)
         self.validator.expect("vendors_section", dict, is_required=False)
         self.validator.expect("more_info_section", dict, is_required=False)
+        self.validator.expect("help_link", str, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -224,7 +230,7 @@ class TechnologyHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("technology_id", str, is_required=True)
-        self.validator.expect("vendor_id", str, is_required=True)
+        self.validator.expect("vendor_id", int, is_required=True)
 
         args, err = self.validator.verify(args, strict=True)
 

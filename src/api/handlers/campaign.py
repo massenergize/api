@@ -13,6 +13,7 @@ class CampaignHandler(RouteHandler):
 
     def registerRoutes(self):
         self.add("/campaigns.info", self.info)
+        self.add("/campaigns.infoForUser", self.get_campaign_info_for_user)
         self.add("/campaigns.create", self.create)
 
         self.add("/campaigns.createFromTemplate", self.create_campaign_from_template)
@@ -27,7 +28,7 @@ class CampaignHandler(RouteHandler):
 
         self.add("/campaigns.navigation.create", self.create_campaign_navigation)
 
-        self.add("/campaigns.analytics.get", self.get_campaign_analytics)
+        self.add("/campaigns.stats.get", self.get_campaign_analytics)
 
         self.add("/campaigns.managers.add", self.add_campaign_manager)
         self.add("/campaigns.managers.remove", self.remove_campaign_manager)
@@ -63,8 +64,8 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.technology.events.list", self.list_campaign_technology_event)
 
 
-        self.add("/campaigns.technologies.testimonials.list", self.list_campaign_technology_testimonials)
-        self.add("/campaigns.technologies.comments.list", self.list_campaign_technology_comments)
+        self.add("/campaigns.testimonials.list", self.list_campaign_technology_testimonials)
+        self.add("/campaigns.comments.list", self.list_campaign_technology_comments)
         self.add("/campaigns.technologies.list", self.list_campaign_technologies)
         self.add("/campaigns.managers.list", self.list_campaign_managers)
         self.add("/campaigns.communities.list", self.list_campaign_communities)
@@ -108,6 +109,24 @@ class CampaignHandler(RouteHandler):
             return err
 
         campaign_info, err = self.service.get_campaign_info(context, args)
+        if err:
+            return err
+
+        return MassenergizeResponse(data=campaign_info)
+
+
+
+    def get_campaign_info_for_user(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("id", str, is_required=False).expect("email", str, is_required=False)
+
+        args, err = self.validator.verify(args, strict=True)
+        if err:
+            return err
+
+        campaign_info, err = self.service.get_campaign_info_for_user(context, args)
         if err:
             return err
 
@@ -446,6 +465,7 @@ class CampaignHandler(RouteHandler):
         .expect("community_id", str, is_required=False)
         .expect("is_approved", bool, is_required=False)
         .expect("is_published", bool, is_required=False)
+         .expect("is_featured", str, is_required=False)
         )
         args, err = self.validator.verify(args)
         if err:
@@ -500,9 +520,8 @@ class CampaignHandler(RouteHandler):
     def list_campaign_technology_testimonials(self, request):
         context: Context = request.context
         args: dict = context.args
-
-        self.validator.expect("campaign_technology_id", str, is_required=True)
-        args, err = self.validator.verify(args)
+        self.validator.expect("campaign_id", str, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
         if err:
           return err
 
@@ -516,8 +535,8 @@ class CampaignHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("campaign_technology_id", str, is_required=True)
-        args, err = self.validator.verify(args)
+        self.validator.expect("campaign_id", str, is_required=True)
+        args, err = self.validator.verify(args, strict=True)
         if err:
           return err
 
@@ -724,12 +743,7 @@ class CampaignHandler(RouteHandler):
         args: dict = context.args
 
         (self.validator
-         .expect("campaign_technology_id", str, is_required=True)
-        #  .expect("email", str, is_required=False)
-        #   .expect("community", int, is_required=False)
-        #   .expect("user_id", str, is_required=False)
-        #   .expect("community_name", str, is_required=False)
-         )
+         .expect("campaign_technology_id", str, is_required=True))
         args, err = self.validator.verify(args)
         if err:
           return err
@@ -781,7 +795,7 @@ class CampaignHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("campaign_id", str, is_required=True)
-        args, err = self.validator.verify(args)
+        args, err = self.validator.verify(args, strict=True)
         if err:
           return err
 
@@ -994,6 +1008,8 @@ class CampaignHandler(RouteHandler):
         self.validator.expect("description", str, is_required=True)
         self.validator.expect("image", "file", is_required=False)
         self.validator.expect("summary", str, is_required=False)
+        self.validator.expect("campaign_account_id", str, is_required=True)
+        self.validator.expect("help_link", str, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
         if err:
