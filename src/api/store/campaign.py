@@ -307,14 +307,14 @@ class CampaignStore:
         try:
             campaign_manager_id = args.pop("campaign_manager_id", None)
             if not campaign_manager_id:
-                return None, InvalidResourceError()
-            campaign_manager = CampaignManager.objects.filter(id=campaign_manager_id).first()
+                return None, CustomMassenergizeError("campaign_manager_id is required!")
+            campaign_manager = CampaignManager.objects.filter(id=campaign_manager_id)
             if not campaign_manager:
                 return None, CustomMassenergizeError("campaign manager with id not found!")
 
             campaign_manager.update(**args)
 
-            return campaign_manager, None
+            return campaign_manager.first(), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -368,13 +368,13 @@ class CampaignStore:
             campaign_community_id = args.pop("campaign_community_id", None)
             if not campaign_community_id:
                 return None, InvalidResourceError()
-            campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id).first()
+            campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id)
             if not campaign_community:
                 return None, CustomMassenergizeError("campaign community with id not found!")
 
             campaign_community.update(**args)
 
-            return campaign_community, None
+            return campaign_community.first(), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -640,13 +640,14 @@ class CampaignStore:
         try:
             campaign_technology_testimonial_id = args.pop("id", None)
             if not campaign_technology_testimonial_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required !")
 
-            campaign_technology_testimonial =CampaignTechnologyTestimonial.objects.filter(id=campaign_technology_testimonial_id).first()
+            campaign_technology_testimonial = CampaignTechnologyTestimonial.objects.filter(id= campaign_technology_testimonial_id).first()
             if not campaign_technology_testimonial:
-                return None, CustomMassenergizeError( "Campaign Technology testimonial with id not found!")
+                return None, CustomMassenergizeError("Campaign Technology testimonial with id not found!")
 
-            campaign_technology_testimonial.delete()
+            campaign_technology_testimonial.is_deleted = True
+            campaign_technology_testimonial.save()
 
             return campaign_technology_testimonial, None
         except Exception as e:
@@ -1343,22 +1344,31 @@ class CampaignStore:
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
-        
+
+    from django.db.models import Q
 
     def list_campaign_communities_testimonials(self, context: Context, args):
         try:
-            campaign_id = args.pop("campaign_id", None)
+            campaign_id = args.get("campaign_id")
+
             if not campaign_id:
-                return None, InvalidResourceError()
-            communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
-            testimonials = []
-            for community in communities:
-                testimonials.extend(Testimonial.objects.filter(community__id=community.community.id,is_published=True, is_deleted=False))
+                raise CustomMassenergizeError("campaign_id is required!")
+
+            campaign_communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
+
+            existing_testimonials = CampaignTechnologyTestimonial.objects.filter(Q(campaign_technology__campaign__id=campaign_id, is_deleted=False)).values_list('testimonial_id', flat=True)
+
+            testimonials = Testimonial.objects.filter(community__in=campaign_communities.values_list('community_id', flat=True),
+                is_published=True,
+                is_deleted=False
+            ).exclude(id__in=existing_testimonials)
+
             return testimonials, None
+
         except Exception as e:
             capture_message(str(e), level="error")
-            return None, CustomMassenergizeError(e)
-        
+            return None, CustomMassenergizeError(str(e))
+
     def list_campaign_communities_vendors(self, context: Context, args):
         try:
             campaign_id = args.pop("campaign_id", None)
@@ -1392,7 +1402,14 @@ class CampaignStore:
             testimonials = []
             for testimonial_id in testimonial_ids:
                 testimonial = Testimonial.objects.filter(pk=testimonial_id, is_deleted=False).first()
-                tech_testimonial, _ = CampaignTechnologyTestimonial.objects.get_or_create(campaign_technology=campaign_technology, testimonial=testimonial,is_featured=True,is_imported=True, is_deleted=False)
+                tech_testimonial, exists = CampaignTechnologyTestimonial.objects.get_or_create(campaign_technology=campaign_technology, testimonial=testimonial, is_deleted=False)
+                if exists:
+                    tech_testimonial.is_featured = True
+                else:
+                    tech_testimonial.is_featured = True
+                    tech_testimonial.is_imported = True
+                tech_testimonial.save()
+
                 testimonials.append(tech_testimonial)
 
             # delete all events that are not in the list
@@ -1407,8 +1424,6 @@ class CampaignStore:
     def remove_campaign_technology_event(self, context:Context, args:dict):
         try:
             tech_event_id = args.pop("id", None)
-
-            print("== tech_event_id", tech_event_id)
             if not tech_event_id:
                 return None, CustomMassenergizeError("id is required !")
             
