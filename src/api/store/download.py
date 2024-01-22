@@ -54,6 +54,7 @@ import datetime
 from django.utils.timezone import utc
 from carbon_calculator.carbonCalculator import AverageImpact
 from django.db.models import Count, Sum
+from uuid import UUID
 
 
 EMPTY_DOWNLOAD = (None, None)
@@ -1928,8 +1929,13 @@ class DownloadStore:
             if not context.user_is_admin():
                 return EMPTY_DOWNLOAD, NotAuthorizedError()
 
-            
-            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            campaign = None
+            try:
+                uuid_id = UUID(campaign_id, version=4)
+                campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+            except ValueError:
+                campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
+
             if not campaign:
                 return EMPTY_DOWNLOAD, CustomMassenergizeError("Campaign not found")
 
