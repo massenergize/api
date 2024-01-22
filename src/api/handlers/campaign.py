@@ -300,8 +300,9 @@ class CampaignHandler(RouteHandler):
         self.validator.expect("campaign_manager_id", str, is_required=True)
         self.validator.expect("is_key_contact", bool, is_required=False)
         self.validator.expect("contact", str, is_required=False)
+        self.validator.expect("role", str, is_required=False)
 
-        args, err = self.validator.verify(args)
+        args, err = self.validator.verify(args, strict=True)
         if err:
           return err
         res, err = self.service.update_campaign_manager(context, args)
@@ -350,7 +351,7 @@ class CampaignHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("campaign_community_id", str, is_required=True)
-        self.validator.expect("help_link", bool, is_required=False)
+        self.validator.expect("help_link", str, is_required=False)
 
         args, err = self.validator.verify(args)
         if err:
@@ -465,7 +466,7 @@ class CampaignHandler(RouteHandler):
         .expect("community_id", str, is_required=False)
         .expect("is_approved", bool, is_required=False)
         .expect("is_published", bool, is_required=False)
-         .expect("is_featured", str, is_required=False)
+         .expect("is_featured", bool, is_required=False)
         )
         args, err = self.validator.verify(args)
         if err:

@@ -692,7 +692,10 @@ class CampaignTechnologyTestimonial(BaseModel):
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = self.campaign_technology.campaign.simple_json()
-        res["campaign_technology"] = get_summary_info(self.campaign_technology)
+        res["campaign_technology"] = {
+            "id":self.campaign_technology.id,
+            "technology":self.campaign_technology.technology.simple_json()
+        }
         res["user"] = get_summary_info(self.testimonial.user) if self.testimonial else None
         res["community"] = get_summary_info(self.testimonial.community) if self.testimonial else None
         res["image"] = get_json_if_not_none(self.testimonial.image) if self.testimonial else None
