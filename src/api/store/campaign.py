@@ -640,13 +640,14 @@ class CampaignStore:
         try:
             campaign_technology_testimonial_id = args.pop("id", None)
             if not campaign_technology_testimonial_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required !")
 
-            campaign_technology_testimonial =CampaignTechnologyTestimonial.objects.filter(id=campaign_technology_testimonial_id).first()
+            campaign_technology_testimonial = CampaignTechnologyTestimonial.objects.filter(id= campaign_technology_testimonial_id).first()
             if not campaign_technology_testimonial:
-                return None, CustomMassenergizeError( "Campaign Technology testimonial with id not found!")
+                return None, CustomMassenergizeError("Campaign Technology testimonial with id not found!")
 
-            campaign_technology_testimonial.delete()
+            campaign_technology_testimonial.is_deleted = True
+            campaign_technology_testimonial.save()
 
             return campaign_technology_testimonial, None
         except Exception as e:
