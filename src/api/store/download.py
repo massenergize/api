@@ -1882,12 +1882,12 @@ class DownloadStore:
         try:
            
             follows = CampaignFollow.objects.filter(campaign__id=campaign.id, community__id=community.id, is_deleted=False)
-            likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+            likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).first()
             comments = Comment.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).count()
             testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign.id, testimonial__community__id=community.id, is_deleted=False).count()
             rows = [
                 ["Total Follows",follows.count() if follows else 0],
-                ["Total Likes", likes],
+                ["Total Likes", likes.count if likes else 0],
                 ["Total comments", comments],
                 ["Total testimonials", testimonials],
             ]
@@ -1959,7 +1959,7 @@ class DownloadStore:
 
             for community in communities:
                 sheet_data[f"{community.community.name}"] = {
-                    "data": self._get_performance_data_for_community(community,campaign)
+                    "data": self._get_performance_data_for_community(community.community,campaign)
                 }
 
             wb =generate_workbook_with_sheets(sheet_data)
