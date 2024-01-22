@@ -603,7 +603,8 @@ class Community(models.Model):
             community__id=self.pk
         ).first()
         if admin_group:
-            admins = [a.simple_json() for a in admin_group.members.all()]
+            #admins = [a.simple_json() for a in admin_group.members.all()]
+            admins = [a.info() for a in admin_group.members.all()]
         else:
             admins = []
 
@@ -970,7 +971,9 @@ class UserProfile(models.Model):
         return self.email
 
     def info(self):
-        return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
+        data = model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
+        data["profile_picture"] = get_json_if_not_none(self.profile_picture)
+        return data
 
     def summary(self):
         summaryData = model_to_dict(self, ["preferred_name", "is_guest", "email"])
@@ -1098,7 +1101,7 @@ class UserProfile(models.Model):
             return None, e
 
     def full_json(self):
-        team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
+        team_members = [t.team.simple_json() for t in TeamMember.objects.filter(user=self)]
         community_members = CommunityMember.objects.filter(user=self)
         communities = [cm.community.info() for cm in community_members]
         data = model_to_dict(
@@ -1579,7 +1582,7 @@ class Team(models.Model):
         data = self.simple_json()
         # Q: should this be in simple_json?
         data["communities"] = [c.simple_json() for c in self.communities.all()]
-        data["members"] = [m.simple_json() for m in self.members.all()]
+        data["members"] = [m.info() for m in self.members.all()]
         data["goal"] = get_json_if_not_none(self.goal)
         data["banner"] = get_json_if_not_none(self.banner)
         return data
@@ -2097,7 +2100,7 @@ class Event(models.Model):
     )
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
-    external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    external_link = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
     rsvp_enabled = models.BooleanField(default=False, blank=True)
     rsvp_email = models.BooleanField(default=False, blank=True)
     rsvp_message = models.TextField(max_length=LONG_STR_LEN, blank=True)
@@ -2548,7 +2551,7 @@ class CommunityAdminGroup(models.Model):
     def simple_json(self):
         res = model_to_dict(self, exclude=["members"])
         res["community"] = get_json_if_not_none(self.community)
-        res["members"] = [m.simple_json() for m in self.members.all()]
+        res["members"] = [m.info() for m in self.members.all()]
         return res
 
     def full_json(self):
@@ -2591,7 +2594,7 @@ class UserGroup(models.Model):
     def full_json(self):
         data = self.simple_json()
         data["community"] = get_json_if_not_none(self.community)
-        data["members"] = [m.simple_json() for m in self.members.all()]
+        data["members"] = [m.info() for m in self.members.all()]
         data["permissions"] = [p.simple_json() for p in self.permissions.all()]
         return data
 
