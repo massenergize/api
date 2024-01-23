@@ -41,7 +41,7 @@ def create_new_event(ct):
 
 def get_campaign_details(campaign_id, for_campaign=False):
     techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
-    prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({ "campaign_technology_id": str(x.id), "email": None, "for_admin":True})} for x in techs]
+    prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({ "campaign_technology_id": str(x.id),"for_admin":True})} for x in techs]
     managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False)
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
     return {
@@ -52,26 +52,27 @@ def get_campaign_details(campaign_id, for_campaign=False):
 
 
 def get_campaign_technology_details(args):
-    email = args.get("email")
     campaign_technology_id = args.get("campaign_technology_id")
     campaign_home = args.get("campaign_home")
     for_admin = args.get("for_admin", False)
 
     campaign_tech = CampaignTechnology.objects.get(id=campaign_technology_id)
     events = CampaignTechnologyEvent.objects.filter(campaign_technology=campaign_tech, is_deleted=False).select_related("campaign_technology")
-    if for_admin:
-        testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology=campaign_tech).order_by("-created_at")
-    else:
-        testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology=campaign_tech, testimonial__is_published=True).order_by("-created_at")
     coaches = TechnologyCoach.objects.filter(technology_id=campaign_tech.technology.id, is_deleted=False)
     comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")[:20]
+    if for_admin:
+        testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id)
+    else:
+        testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__id=campaign_technology_id, testimonial__is_published=True)
+     
+    
+
     if campaign_home:
         return {
             "testimonials": serialize_all(testimonials.filter(is_featured=True)),
             "events": serialize_all(events, full=True),
             "coaches": serialize_all(coaches),
             "campaign_id": campaign_tech.campaign.id,
-            # "comments": serialize_all(comments),
             **campaign_tech.technology.simple_json()
         }
     campaign_technology_views = CampaignTechnologyView.objects.filter(campaign_technology__id=campaign_technology_id,is_deleted=False).first()
