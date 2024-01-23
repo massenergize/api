@@ -585,7 +585,9 @@ class CampaignTechnologyEvent(BaseModel):
         return f"{self.campaign_technology} - {self.event}"
     
     def simple_json(self)-> dict:
+
         res = {
+            "id": self.id,
             "campaign_technology": {
             "id": self.campaign_technology.id,
             "campaign": {
@@ -691,10 +693,17 @@ class CampaignTechnologyTestimonial(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["campaign"] = self.campaign_technology.campaign.simple_json()
+        res["campaign"] = {
+            "id":self.campaign_technology.campaign.id,
+            "title":self.campaign_technology.campaign.title,
+            "slug":self.campaign_technology.campaign.slug
+        }
         res["campaign_technology"] = {
             "id":self.campaign_technology.id,
-            "technology":self.campaign_technology.technology.simple_json()
+            "technology":{
+                "id":self.campaign_technology.technology.id,
+                "name":self.campaign_technology.technology.name
+            }
         }
         res["user"] = get_summary_info(self.testimonial.user) if self.testimonial else None
         res["community"] = get_summary_info(self.testimonial.community) if self.testimonial else None

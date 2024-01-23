@@ -1251,7 +1251,7 @@ class CampaignStore:
                         with transaction.atomic():
                             campaign_link.increase_count()
 
-            view, _ = CampaignView.objects.get_or_create(campaign=campaign)
+            view, _ = CampaignView.objects.get_or_create(campaign=campaign, is_deleted=False)
             # lock transaction
             with transaction.atomic():
                 view.increase_count()
@@ -1409,9 +1409,6 @@ class CampaignStore:
                 tech_testimonial.save()
 
                 testimonials.append(tech_testimonial)
-
-            # delete all events that are not in the list
-            CampaignTechnologyTestimonial.objects.filter(campaign_technology=campaign_technology).exclude(testimonial__in=[x.testimonial.id for x in testimonials]).delete()
 
             return [testimonial.simple_json() for testimonial in testimonials], None
         except Exception as e:
