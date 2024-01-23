@@ -523,6 +523,8 @@ class CampaignStore:
 
             campaign_technology_testimonial = CampaignTechnologyTestimonial.objects.get(id=campaign_technology_testimonial_id)
             
+            is_featured = args.pop("is_featured", campaign_technology_testimonial.is_featured)
+            
             if not campaign_technology_testimonial:
                 return None, CustomMassenergizeError("Campaign Technology testimonial with id not found!")
             
@@ -544,8 +546,7 @@ class CampaignStore:
             testimonial.is_approved = args.get("is_published", testimonial.is_published)
             testimonial.save()
 
-
-            campaign_technology_testimonial.is_featured = args.pop("is_featured", campaign_technology_testimonial.is_featured)
+            campaign_technology_testimonial.is_featured = is_featured if testimonial.is_published else False
             campaign_technology_testimonial.save()
 
             return campaign_technology_testimonial, None
@@ -631,7 +632,7 @@ class CampaignStore:
                 return None, CustomMassenergizeError("campaign_id is required!")
             testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False)
 
-            return testimonials, None
+            return testimonials.order_by("-create_at"), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -1401,13 +1402,10 @@ class CampaignStore:
             
             testimonials = []
             for testimonial_id in testimonial_ids:
-                testimonial = Testimonial.objects.filter(pk=testimonial_id, is_deleted=False).first()
+                testimonial = Testimonial.objects.get(pk=testimonial_id, is_deleted=False)
                 tech_testimonial, exists = CampaignTechnologyTestimonial.objects.get_or_create(campaign_technology=campaign_technology, testimonial=testimonial, is_deleted=False)
-                if exists:
-                    tech_testimonial.is_featured = True
-                else:
-                    tech_testimonial.is_featured = True
-                    tech_testimonial.is_imported = True
+                tech_testimonial.is_featured = True
+                tech_testimonial.is_imported = True
                 tech_testimonial.save()
 
                 testimonials.append(tech_testimonial)

@@ -199,20 +199,17 @@ def generate_analytics_data(campaign_id):
     #  number of likes, number of views, number of followers, number of comments, number of testimonials,
 
     shares = CampaignLink.objects.filter(is_deleted=False, campaign__id=campaign_id).count()
-    likes = \
-        CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign_id,
-                                              is_deleted=False).aggregate(
+    likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign_id,
+            is_deleted=False).aggregate(
             total_likes=Sum('count'))['total_likes']
-    campaign_technology_views = \
-        CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id,
-                                              is_deleted=False).aggregate(
+    campaign_technology_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id,
+            is_deleted=False).aggregate(
             total_views=Sum('count'))['total_views']
     followers = CampaignFollow.objects.filter(is_deleted=False, campaign__id=campaign_id).count()
     comments = Comment.objects.filter(is_deleted=False, campaign_technology__campaign__id=campaign_id).count()
     testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,
                                                                 campaign_technology__campaign__id=campaign_id).count()
-    campaign_views = \
-        CampaignView.objects.filter(campaign__id=campaign_id, is_deleted=False).aggregate(total_views=Sum('count'))[
+    campaign_views = CampaignView.objects.filter(campaign__id=campaign_id, is_deleted=False).aggregate(total_views=Sum('count'))[
             'total_views']
     stats = {
         "shares": shares,
