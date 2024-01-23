@@ -1,0 +1,16 @@
+{% extends "base.html" %} 
+{% block content %} 
+<div>
+  <h3>{{title}}</h3>
+  <p>{{id}}</p>
+  <h6>{{tagline}} </h6>
+  <img src = {{image}} />
+  <a href ={{meta.redirect_to}}>{{title}} </a>
+</div>
+ {% endblock %}
+ {% block javascript %}
+
+ <script>
+   {% comment %} window.location.href = "{{meta.redirect_to}}" {% endcomment %}
+ </script>
+ {% endblock %}

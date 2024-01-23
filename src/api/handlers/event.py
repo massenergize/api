@@ -264,6 +264,7 @@ class EventHandler(RouteHandler):
     self.validator.expect("community_id", is_required=False)
     self.validator.expect("subdomain", is_required=False)
     self.validator.expect("user_id", is_required=False)
+    self.validator.expect("community_ids",list, is_required=False)
     args, err = self.validator.verify(args, strict=True)
     
     if err:

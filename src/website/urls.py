@@ -3,6 +3,8 @@ from website import views
 
 urlpatterns = [
   path('', views.home, name='home'),
+  path('campaign/<slug:campaign_id>', views.campaign, name='campaign'),
+  path('campaign/<slug:campaign_id>/technology/<slug:campaign_technology_id>', views.campaign_technology, name='campaign_technology'),
   path('communities', views.communities, name='communities'),
   path('communities/search/', views.search_communities, name='search_communities'),
   path('community/<slug:subdomain>', views.community, name='community'),
