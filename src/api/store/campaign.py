@@ -1379,6 +1379,9 @@ class CampaignStore:
             vendors = []
             for community in communities:
                 vendors.extend(Vendor.objects.filter(communities__id=community.community.id,is_published=True, is_deleted=False))
+            user = get_user_from_context(context)
+            if user:
+                vendors.extend(Vendor.objects.filter(user=user, is_published=True, is_deleted=False))
             return vendors, None
         except Exception as e:
             capture_message(str(e), level="error")
