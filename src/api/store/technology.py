@@ -58,12 +58,10 @@ class TechnologyStore:
             technology.update(**args)
             technology = technology.first()
 
-            if image and image != "reset":
-                if not (isinstance(image, str)):
-                    media = Media.objects.create(file=image, name=f"FileUpload for {technology.id} Technology")
-                    technology.image = media
-            else:
-                technology.image = None
+            if image and not (isinstance(image, str) and image.startswith("http")):
+                image = create_media_file(image, f"FileUpload for {technology.id} Technology")
+                technology.image = image
+
             technology.save()
             return technology, None
         except Exception as e:
@@ -255,13 +253,9 @@ class TechnologyStore:
             if not tech_overview:
                 return None, CustomMassenergizeError("Technology Overview does not exist")
 
-            if image != "reset":
-                if not isinstance(image, str) or not image.startswith("http"):
-                    media = Media.objects.create(file=image,
-                                                 name=f"FileUpload for {tech_overview.first().id} TechnologyOverview")
-                    args["image"] = media
-            else:
-                args["image"] = None
+            if image and not (isinstance(image, str) and image.startswith("http")):
+                image = create_media_file(image, f"FileUpload for {tech_overview.first().title} Overview")
+                args["image"] = image
 
             tech_overview.update(**args)
 
@@ -299,13 +293,9 @@ class TechnologyStore:
             if not coach:
                 return None, CustomMassenergizeError("Coach with id does not exist")
 
-            if image != "reset":
-                if not isinstance(image, str):
-                    args["image"] = create_media_file(image, f"{coach.first().full_name}")
-            else:
-                args["image"] = None
-
-            print("== args ==", args)
+            if image and not (isinstance(image, str) and image.startswith("http")):
+                image = create_media_file(image, f"FileUpload for {coach.first().full_name} coach")
+                args["image"] = image
 
             coach.update(**args)
 
@@ -389,24 +379,29 @@ class TechnologyStore:
     def update_new_vendor_for_technology(self, context: Context, args) -> Tuple[TechnologyVendor, MassEnergizeAPIError]:
         try:
             tech_vendor_id = args.pop('id', None)
+            technology_id = args.pop('technology_id', None)
+            vendor_id = args.pop('vendor_id', None)
             name = args.pop('name', None)
             website = args.pop('website', None)
             logo = args.pop('logo', None)
 
-            if not tech_vendor_id:
-                return None, CustomMassenergizeError("id is required")
+            if not vendor_id:
+                return None, CustomMassenergizeError("vendor_id is required")
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
 
 
-            technology_vendor = TechnologyVendor.objects.get(id=tech_vendor_id, is_deleted=False)
+            technology_vendor = TechnologyVendor.objects.filter(technology__id=technology_id, vendor__id=vendor_id, is_deleted=False).first()
             if not technology_vendor:
-                return None, CustomMassenergizeError("technology vendor with id does not exist")
+                return None, CustomMassenergizeError("technology vendor not found")
             vendor = technology_vendor.vendor
             if name:
                 vendor.name = name
             if website:
                 vendor.more_info = {**vendor.more_info, "website": website}
-            if logo:
-                vendor.logo = create_media_file(logo, f"FileUpload for {vendor.name} Vendor")
+            if image and not (isinstance(image, str) and image.startswith("http")):
+                image = create_media_file(image, f"FileUpload for {vendor.name} vendor")
+                vendor.logo = image
             vendor.save()
 
             return technology_vendor, None

@@ -106,7 +106,6 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("deal_section", dict, is_required=False)
         self.validator.expect("vendors_section", dict, is_required=False)
         self.validator.expect("more_info_section", dict, is_required=False)
-        self.validator.expect("help_link", str, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -424,7 +423,8 @@ class TechnologyHandler(RouteHandler):
         context: Context = request.context
         args: dict = context.args
 
-        self.validator.expect("id", str, is_required=True)
+        self.validator.expect("technology_id", str, is_required=True)
+        self.validator.expect("vendor_id", int, is_required=True)
         self.validator.expect("name", str, is_required=False)
         self.validator.expect("website", str, is_required=False)
         self.validator.expect("logo", "file", is_required=False)
