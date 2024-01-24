@@ -322,10 +322,11 @@ class TechnologyVendor(BaseModel):
     def __str__(self):
         return f"{self.technology} - {self.vendor}"
     
-    def get_website(self):
+    def get_field_from_more_info(self, key):
         if self.vendor.more_info:
-            return self.vendor.more_info.get("website", None)
+            return self.vendor.more_info.get(key, None)
         return None
+    
     
     def simple_json(self)-> dict:
         res = super().to_json()
@@ -333,8 +334,10 @@ class TechnologyVendor(BaseModel):
         res["technology"] = get_summary_info(self.technology)
         res["vendor"] = {
             **get_summary_info(self.vendor),
-            "website":self.get_website(),
-            "logo":get_json_if_not_none(self.vendor.logo)
+            "user":get_summary_info(self.vendor.user),
+            "website":self.get_field_from_more_info("website"),
+            "logo":get_json_if_not_none(self.vendor.logo),
+            "created_via_campaign":self.get_field_from_more_info("created_via_campaign")
         }
         return res
     
@@ -585,7 +588,9 @@ class CampaignTechnologyEvent(BaseModel):
         return f"{self.campaign_technology} - {self.event}"
     
     def simple_json(self)-> dict:
+
         res = {
+            "id": self.id,
             "campaign_technology": {
             "id": self.campaign_technology.id,
             "campaign": {
@@ -691,10 +696,17 @@ class CampaignTechnologyTestimonial(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["campaign"] = self.campaign_technology.campaign.simple_json()
+        res["campaign"] = {
+            "id":self.campaign_technology.campaign.id,
+            "title":self.campaign_technology.campaign.title,
+            "slug":self.campaign_technology.campaign.slug
+        }
         res["campaign_technology"] = {
             "id":self.campaign_technology.id,
-            "technology":self.campaign_technology.technology.simple_json()
+            "technology":{
+                "id":self.campaign_technology.technology.id,
+                "name":self.campaign_technology.technology.name
+            }
         }
         res["user"] = get_summary_info(self.testimonial.user) if self.testimonial else None
         res["community"] = get_summary_info(self.testimonial.community) if self.testimonial else None

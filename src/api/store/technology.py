@@ -1,7 +1,8 @@
-from typing import Tuple, Union, Any
+from typing import Tuple
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
+from api.store.utils import get_user_from_context
 from api.utils.api_utils import create_media_file
 from apps__campaigns.models import Technology, TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
 from database.models import Media, Vendor
@@ -57,12 +58,10 @@ class TechnologyStore:
             technology.update(**args)
             technology = technology.first()
 
-            if image and image != "reset":
-                if not (isinstance(image, str)):
-                    media = Media.objects.create(file=image, name=f"FileUpload for {technology.id} Technology")
-                    technology.image = media
-            else:
-                technology.image = None
+            if image and not (isinstance(image, str) and image.startswith("http")):
+                image = create_media_file(image, f"FileUpload for {technology.id} Technology")
+                technology.image = image
+
             technology.save()
             return technology, None
         except Exception as e:
@@ -175,11 +174,12 @@ class TechnologyStore:
             if not technology_id:
                 return None, CustomMassenergizeError("technology_id is required")
             
-            tech_vendor = TechnologyVendor.objects.filter(technology__id=technology_id, vendor__id=vendor_id).first()
+            tech_vendor = TechnologyVendor.objects.filter(technology__id=technology_id, vendor__id=vendor_id, is_deleted=False).first()
             if not tech_vendor:
                 return None, CustomMassenergizeError("Technology Vendor with id does not exist")
             
-            tech_vendor.delete()
+            tech_vendor.is_deleted = True
+            tech_vendor.save()
         
             return tech_vendor, None
         except Exception as e:
@@ -253,13 +253,9 @@ class TechnologyStore:
             if not tech_overview:
                 return None, CustomMassenergizeError("Technology Overview does not exist")
 
-            if image != "reset":
-                if not isinstance(image, str) or not image.startswith("http"):
-                    media = Media.objects.create(file=image,
-                                                 name=f"FileUpload for {tech_overview.first().id} TechnologyOverview")
-                    args["image"] = media
-            else:
-                args["image"] = None
+            if image and not (isinstance(image, str) and image.startswith("http")):
+                image = create_media_file(image, f"FileUpload for {tech_overview.first().title} Overview")
+                args["image"] = image
 
             tech_overview.update(**args)
 
@@ -297,13 +293,9 @@ class TechnologyStore:
             if not coach:
                 return None, CustomMassenergizeError("Coach with id does not exist")
 
-            if image != "reset":
-                if not isinstance(image, str):
-                    args["image"] = create_media_file(image, f"{coach.first().full_name}")
-            else:
-                args["image"] = None
-
-            print("== args ==", args)
+            if image and not (isinstance(image, str) and image.startswith("http")):
+                image = create_media_file(image, f"FileUpload for {coach.first().full_name} coach")
+                args["image"] = image
 
             coach.update(**args)
 
@@ -354,6 +346,64 @@ class TechnologyStore:
             technology_deal.delete()
 
             return technology_deal, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def create_new_vendor_for_technology(self, context: Context, args) -> Tuple[TechnologyVendor, MassEnergizeAPIError]:
+        try:
+            technology_id = args.pop('technology_id', None)
+            user = get_user_from_context(context)
+
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
+            technology = Technology.objects.get(id=technology_id)
+            if not technology:
+                return None, CustomMassenergizeError("technology with id does not exist")
+            vendor = Vendor()
+            vendor.name = args.pop('name', None)
+            vendor.more_info = {"website": args.pop('website', None), "created_via_campaign": True}
+            vendor.logo = create_media_file(args.pop('logo', None), f"FileUpload for {vendor.name} Vendor")
+            vendor.user = user
+            vendor.save()
+
+            technology_vendor, exists = TechnologyVendor.objects.get_or_create(technology=technology, vendor=vendor)
+
+            return technology_vendor, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def update_new_vendor_for_technology(self, context: Context, args) -> Tuple[TechnologyVendor, MassEnergizeAPIError]:
+        try:
+            technology_id = args.pop('technology_id', None)
+            vendor_id = args.pop('vendor_id', None)
+            name = args.pop('name', None)
+            website = args.pop('website', None)
+            logo = args.pop('logo', None)
+
+            if not vendor_id:
+                return None, CustomMassenergizeError("vendor_id is required")
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
+
+
+            technology_vendor = TechnologyVendor.objects.filter(technology__id=technology_id, vendor__id=vendor_id, is_deleted=False).first()
+            if not technology_vendor:
+                return None, CustomMassenergizeError("technology vendor not found")
+            vendor = technology_vendor.vendor
+            if name:
+                vendor.name = name
+            if website:
+                vendor.more_info = {**vendor.more_info, "website": website}
+            if logo and not (isinstance(logo, str) and logo.startswith("http")):
+                logo = create_media_file(logo, f"FileUpload for {vendor.name} vendor")
+                vendor.logo = logo
+            vendor.save()
+
+            return technology_vendor, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

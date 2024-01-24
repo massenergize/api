@@ -25,6 +25,8 @@ class TechnologyHandler(RouteHandler):
         self.add("/technologies.listForAdmin", self.list_for_admin)
 
         self.add("/technologies.vendors.add", self.add_vendor)
+        self.add("/technologies.vendors.create", self.create_new_vendor)
+        self.add("/technologies.vendors.update", self.update_new_vendor)
         self.add("/technologies.vendors.remove", self.remove_vendor)
         self.add("/technologies.vendors.list", self.list_vendors)
 
@@ -104,7 +106,6 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("deal_section", dict, is_required=False)
         self.validator.expect("vendors_section", dict, is_required=False)
         self.validator.expect("more_info_section", dict, is_required=False)
-        self.validator.expect("help_link", str, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
 
@@ -390,6 +391,50 @@ class TechnologyHandler(RouteHandler):
             return err 
         
         res, err = self.service.delete_technology_deal(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=res)
+    
+
+    # @admins_only
+    def create_new_vendor(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("name", str, is_required=True)
+        self.validator.expect("website", str, is_required=False)
+        self.validator.expect("logo", "file", is_required=False)
+        self.validator.expect("technology_id", str, is_required=False)
+
+        args, err = self.validator.verify(args, strict=True)
+
+        if err:
+            return err 
+        
+        res, err = self.service.create_new_vendor_for_technology(context, args)
+        if err:
+            return err
+        return MassenergizeResponse(data=res)
+    
+
+
+    # @admins_only
+    def update_new_vendor(self, request):
+        context: Context = request.context
+        args: dict = context.args
+
+        self.validator.expect("technology_id", str, is_required=True)
+        self.validator.expect("vendor_id", int, is_required=True)
+        self.validator.expect("name", str, is_required=False)
+        self.validator.expect("website", str, is_required=False)
+        self.validator.expect("logo", "file", is_required=False)
+
+        args, err = self.validator.verify(args)
+
+        if err:
+            return err 
+        
+        res, err = self.service.update_new_vendor_for_technology(context, args)
         if err:
             return err
         return MassenergizeResponse(data=res)

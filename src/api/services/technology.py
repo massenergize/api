@@ -154,6 +154,28 @@ class TechnologyService:
             return serialize(technology_deal), None
         except Exception as e:
             return None, MassEnergizeAPIError(str(e))
+        
+
+
+    def create_new_vendor_for_technology(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            res, err = self.store.create_new_vendor_for_technology(context, args)
+            if err:
+                return None, err
+            return serialize(res, full=True), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
+        
+
+    
+    def update_new_vendor_for_technology(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            res, err = self.store.update_new_vendor_for_technology(context, args)
+            if err:
+                return None, err
+            return serialize(res, full=True), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
     
 
 
