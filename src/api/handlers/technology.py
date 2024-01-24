@@ -396,7 +396,7 @@ class TechnologyHandler(RouteHandler):
         return MassenergizeResponse(data=res)
     
 
-    # @admins_only
+    @admins_only
     def create_new_vendor(self, request):
         context: Context = request.context
         args: dict = context.args
@@ -418,7 +418,7 @@ class TechnologyHandler(RouteHandler):
     
 
 
-    # @admins_only
+    @admins_only
     def update_new_vendor(self, request):
         context: Context = request.context
         args: dict = context.args
