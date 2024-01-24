@@ -378,7 +378,6 @@ class TechnologyStore:
 
     def update_new_vendor_for_technology(self, context: Context, args) -> Tuple[TechnologyVendor, MassEnergizeAPIError]:
         try:
-            tech_vendor_id = args.pop('id', None)
             technology_id = args.pop('technology_id', None)
             vendor_id = args.pop('vendor_id', None)
             name = args.pop('name', None)
@@ -399,9 +398,9 @@ class TechnologyStore:
                 vendor.name = name
             if website:
                 vendor.more_info = {**vendor.more_info, "website": website}
-            if image and not (isinstance(image, str) and image.startswith("http")):
-                image = create_media_file(image, f"FileUpload for {vendor.name} vendor")
-                vendor.logo = image
+            if logo and not (isinstance(logo, str) and logo.startswith("http")):
+                logo = create_media_file(logo, f"FileUpload for {vendor.name} vendor")
+                vendor.logo = logo
             vendor.save()
 
             return technology_vendor, None
