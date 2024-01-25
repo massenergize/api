@@ -2,7 +2,7 @@ from typing import Tuple
 
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
-from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
+from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from api.store.utils import get_user_from_context
 from apps__campaigns.models import CampaignAccount, CampaignAccountAdmin
 from database.models import Community, UserProfile
@@ -20,7 +20,7 @@ class CampaignAccountStore:
             if community_id:
                 community = Community.objects.filter(id=community_id).first()
                 if not community:
-                     return None, InvalidResourceError()
+                     return None, CustomMassenergizeError("Community not found!!")
                 args['community'] = community
 
             user = get_user_from_context(context)
@@ -41,11 +41,11 @@ class CampaignAccountStore:
             if account_id:
                 account = CampaignAccount.objects.filter(id=account_id)
                 if not account:
-                    return None, InvalidResourceError()
+                    return None, CustomMassenergizeError("Campaign Account not found!!")
                 account.update(**args)
                 return account.first(), None
             else:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id not provided")
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -56,7 +56,7 @@ class CampaignAccountStore:
             account_id = args.get('id', None)
             account = CampaignAccount.objects.filter(id=account_id)
             if not account:
-                return None, InvalidResourceError()
+                return None,CustomMassenergizeError("id is required")
 
             account.update(is_deleted=True)
             return account.first(), None
@@ -79,7 +79,7 @@ class CampaignAccountStore:
             account_id = args.get('id', None)
             account = CampaignAccount.objects.filter(id=account_id)
             if not account:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign account not found")
 
             return account.first(), None
         except Exception as e:
@@ -94,10 +94,10 @@ class CampaignAccountStore:
             role = args.get('role', None)
             account = CampaignAccount.objects.filter(id=account_id)
             if not account:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign account not found")
             
             if not user_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("user_id is required")
             
             user = UserProfile.objects.filter(id=user_id).first()
 
@@ -113,7 +113,7 @@ class CampaignAccountStore:
             admin_id = args.get('admin_id', None)
             admin = CampaignAccountAdmin.objects.filter(id=admin_id)
             if not admin:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign account admin not found")
 
             admin.update(is_deleted=True)
             return admin.first(), None
@@ -127,7 +127,7 @@ class CampaignAccountStore:
             admin_id = args.get('admin_id', None)
             admin = CampaignAccountAdmin.objects.filter(id=admin_id)
             if not admin:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign account admin not found")
 
             admin.update(**args)
             return admin.first(), None

@@ -3,7 +3,6 @@ from uuid import UUID
 from _main_.utils.common import contains_profane_words, shorten_url
 from api.constants import LOOSED_USER
 from api.utils.api_utils import create_media_file
-from apps__campaigns.create_campaign_template import TEMPLATE_TITLE
 from apps__campaigns.helpers import (
     copy_campaign_data,
     generate_analytics_data,
@@ -34,7 +33,6 @@ from apps__campaigns.models import (
 from database.models import Community, Event, Testimonial, UserProfile, Media, Vendor
 from _main_.utils.massenergize_errors import (
     MassEnergizeAPIError,
-    InvalidResourceError,
     NotAuthorizedError,
     CustomMassenergizeError,
 )
@@ -173,7 +171,7 @@ class CampaignStore:
 
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Campaign with id does not exist")
             campaign = campaigns.first()
 
             if not context.user_is_admin():
@@ -202,16 +200,13 @@ class CampaignStore:
         try:
             campaign_id = args.get("id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required")
             # find the action
             campaign_to_delete = Campaign.objects.filter(id=campaign_id).first()
             if not campaign_to_delete:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Campaign with id does not exist")
 
-            if (
-                not context.user_email == campaign_to_delete.owner.email
-                and not context.user_is_super_admin
-            ):
+            if ( not context.user_email == campaign_to_delete.owner.email and not context.user_is_super_admin):
                 return None, NotAuthorizedError()
 
             if campaign_to_delete.is_published:
@@ -290,7 +285,7 @@ class CampaignStore:
         try:
             campaign_manager_id = args.pop("campaign_manager_id", None)
             if not campaign_manager_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_manager_id is required!")
             campaign_manager = CampaignManager.objects.filter(id=campaign_manager_id).first()
             if not campaign_manager:
                 return None, CustomMassenergizeError("manager with id not found!")
@@ -324,13 +319,13 @@ class CampaignStore:
             community_id = args.pop("community_id", None)
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id is required!")
             campaign = Campaign.objects.filter(id=campaign_id).first()
             if not campaign:
                 return None, CustomMassenergizeError("campaign with id not found!")
 
             if not community_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("community_id is required!")
 
             community = Community.objects.filter(id=community_id).first()
             if not community:
@@ -347,15 +342,13 @@ class CampaignStore:
         try:
             campaign_community_id = args.pop("id", None)
             if not campaign_community_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required!")
 
             campaign_community = CampaignCommunity.objects.filter(
                 id=campaign_community_id
             ).first()
             if not campaign_community:
-                return None, CustomMassenergizeError(
-                    "campaign Community with id not found!"
-                )
+                return None, CustomMassenergizeError("campaign Community with id not found!")
 
             campaign_community.delete()
             return campaign_community, None
@@ -367,7 +360,7 @@ class CampaignStore:
         try:
             campaign_community_id = args.pop("campaign_community_id", None)
             if not campaign_community_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_community_id is required!")
             campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id)
             if not campaign_community:
                 return None, CustomMassenergizeError("campaign community with id not found!")
@@ -385,13 +378,13 @@ class CampaignStore:
             campaign_id = args.pop("campaign_id", None)
 
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id is required!")
             campaign = Campaign.objects.filter(id=campaign_id).first()
             if not campaign:
                 return None, CustomMassenergizeError("campaign with id not found!")
 
             if not technology_ids:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("technology_ids is required!")
             
             for technology_id in technology_ids:
                 technology = Technology.objects.filter(id=technology_id).first()
@@ -409,23 +402,12 @@ class CampaignStore:
     def update_campaign_technology(self, context: Context, args):
         try:
             campaign_technology_id = args.pop("id", None)
-            deal_section_image = args.pop("deal_section_image", None)
             if not campaign_technology_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required!")
 
-            campaign_technology = CampaignTechnology.objects.filter(
-                id=campaign_technology_id
-            )
+            campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id)
             if not campaign_technology:
-                return None, CustomMassenergizeError(
-                    "Campaign Technology with id not found!"
-                )
-
-            # if deal_section_image:
-            #     args["deal_section_image"] = create_media_file(
-            #         deal_section_image,
-            #         f"ImageFor {campaign_technology.first().id} CampaignTech",
-            #     )
+                return None, CustomMassenergizeError("Campaign Technology with id not found!")
 
             campaign_technology.update(**args)
 
@@ -438,14 +420,12 @@ class CampaignStore:
         try:
             campaign_technology_id = args.pop("id", None)
             if not campaign_technology_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required!")
 
             campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id
             ).first()
             if not campaign_technology:
-                return None, CustomMassenergizeError(
-                    "Campaign Technology with id not found!"
-                )
+                return None, CustomMassenergizeError("Campaign Technology with id not found!")
 
             campaign_technology.is_deleted = True
             campaign_technology.save()
@@ -597,7 +577,7 @@ class CampaignStore:
         try:
             comment_id = args.pop("id", None)
             if not comment_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required !")
 
             comment = Comment.objects.filter(id=comment_id)
             if not comment:
@@ -616,9 +596,7 @@ class CampaignStore:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
                 return None, CustomMassenergizeError("campaign_id is required!")
-            comments = Comment.objects.filter(
-                campaign_technology__campaign__id=campaign_id, is_deleted=False
-            )
+            comments = Comment.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False)
 
             return comments, None
         except Exception as e:
@@ -632,7 +610,7 @@ class CampaignStore:
                 return None, CustomMassenergizeError("campaign_id is required!")
             testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False)
 
-            return testimonials.order_by("-create_at"), None
+            return testimonials.order_by("-created_at"), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -659,10 +637,8 @@ class CampaignStore:
         try:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
-            technologies = CampaignTechnology.objects.filter(
-                campaign__id=campaign_id, is_deleted=False
-            )
+                return None, CustomMassenergizeError("campaign_id is required!")
+            technologies = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
 
             return technologies, None
         except Exception as e:
@@ -673,7 +649,7 @@ class CampaignStore:
         try:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id is required!")
             communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
             return communities, None
         except Exception as e:
@@ -684,10 +660,8 @@ class CampaignStore:
         try:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
-            managers = CampaignManager.objects.filter(
-                campaign__id=campaign_id, is_deleted=False
-            )
+                return None, CustomMassenergizeError("campaign_id is required!")
+            managers = CampaignManager.objects.filter(campaign__id=campaign_id, is_deleted=False)
 
             return managers, None
         except Exception as e:
@@ -702,14 +676,14 @@ class CampaignStore:
             created_list = []
 
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id is required!")
 
             campaign = Campaign.objects.filter(id=campaign_id).first()
             if not campaign:
                 return None, CustomMassenergizeError("campaign with id not found!")
 
             if not partner_ids:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("partner_ids is required!")
 
             for partner_id in partner_ids:
                 partner = Partner.objects.filter(id=partner_id).first()
@@ -729,15 +703,13 @@ class CampaignStore:
         try:
             campaign_partner_id = args.pop("campaign_partner_id", None)
             if not campaign_partner_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_partner_id is required!")
 
             campaign_partner = CampaignPartner.objects.filter(
                 id=campaign_partner_id
             ).first()
             if not campaign_partner:
-                return None, CustomMassenergizeError(
-                    "Campaign Partner with id not found!"
-                )
+                return None, CustomMassenergizeError("Campaign Partner with id not found!")
 
             campaign_partner.is_deleted = True
             campaign_partner.save()
@@ -751,7 +723,7 @@ class CampaignStore:
         try:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id is required!")
             partners = CampaignPartner.objects.filter(
                 campaign__id=campaign_id, is_deleted=False
             )
@@ -824,7 +796,7 @@ class CampaignStore:
         try:
             campaign_link_id = args.pop("campaign_link_id", None)
             if not campaign_link_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_link_id is required!")
 
             campaign_link = CampaignLink.objects.filter(id=campaign_link_id).first()
             if campaign_link:
@@ -938,7 +910,7 @@ class CampaignStore:
             campaign_technology_id = args.pop("campaign_technology_id", None)
             url = args.pop("url", None)
             if not campaign_technology_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_technology_id not found!")
 
             campaign_technology = CampaignTechnology.objects.filter(id=campaign_technology_id).first()
             if not campaign_technology:
@@ -1086,13 +1058,11 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def create_campaign_config(
-        self, context: Context, args
-    ) -> Tuple[dict, MassEnergizeAPIError]:
+    def create_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id not provided")
 
             campaign = Campaign.objects.filter(id=campaign_id).first()
             if not campaign:
@@ -1105,17 +1075,13 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def update_campaign_config(
-        self, context: Context, args
-    ) -> Tuple[dict, MassEnergizeAPIError]:
+    def update_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             campaign_config_id = args.pop("id", None)
             if not campaign_config_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_config_id not provided")
 
-            campaign_config = CampaignConfiguration.objects.filter(
-                id=campaign_config_id
-            ).first()
+            campaign_config = CampaignConfiguration.objects.filter(id=campaign_config_id).first()
             if not campaign_config:
                 return None, CustomMassenergizeError("Campaign Config not found")
 
@@ -1126,17 +1092,13 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def get_campaign_config(
-        self, context: Context, args
-    ) -> Tuple[dict, MassEnergizeAPIError]:
+    def get_campaign_config(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         try:
             campaign_config_id = args.get("id", None)
             if not campaign_config_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_config_id not provided")
 
-            campaign_config = CampaignConfiguration.objects.filter(
-                id=campaign_config_id
-            ).first()
+            campaign_config = CampaignConfiguration.objects.filter(id=campaign_config_id).first()
             if not campaign_config:
                 return None, CustomMassenergizeError("Campaign Config not found")
 
@@ -1146,9 +1108,7 @@ class CampaignStore:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    def create_campaign_navigation(
-        self, context: Context, args
-    ) -> Tuple[dict, MassEnergizeAPIError]:
+    def create_campaign_navigation(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
         campaign_id = args.pop("campaign_id", None)
 
         if not campaign_id:
@@ -1159,7 +1119,6 @@ class CampaignStore:
 
     def create_campaign_from_template(self, context: Context, args: dict):
         try:
-            # template_id = args.pop("template_id", None)
             account_id = args.pop("campaign_account_id", None)
             community_ids = args.pop("community_ids", [])
             title = args.pop("title", None)
@@ -1177,10 +1136,6 @@ class CampaignStore:
             if not title:
                 return None, CustomMassenergizeError("Title not provided")
 
-            # template = Campaign.objects.filter(title=TEMPLATE_TITLE, is_template=True).first()
-
-            # if not template:
-            #     return None, CustomMassenergizeError("Campaign Template not found")
 
             account = CampaignAccount.objects.filter(id=account_id).first()
 
@@ -1215,9 +1170,7 @@ class CampaignStore:
             if not campaign:
                 return None, CustomMassenergizeError("Campaign with  ID not found")
 
-            activity = CampaignActivityTracking.objects.create(
-                campaign=campaign, **args
-            )
+            activity = CampaignActivityTracking.objects.create(campaign=campaign, **args)
 
             return activity, None
 
@@ -1231,7 +1184,7 @@ class CampaignStore:
             campaign_id = args.pop("campaign_id", None)
             url = args.pop("url", None)
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id not found!")
 
             campaign = None
             try:
@@ -1266,7 +1219,7 @@ class CampaignStore:
             comment_id = args.pop("id", None)
             user_id = args.pop("user_id", context.user_id)
             if not comment_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required !")
 
             comment = Comment.objects.filter(id=comment_id).first()
             if not comment:
@@ -1336,7 +1289,7 @@ class CampaignStore:
         try:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id is required!")
             communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
             events = []
             for community in communities:
@@ -1374,7 +1327,7 @@ class CampaignStore:
         try:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("campaign_id is required!")
             communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
             vendors = []
             for community in communities:
