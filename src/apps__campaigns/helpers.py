@@ -115,7 +115,7 @@ def get_campaign_details_for_user(campaign_id, email):
     techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
     prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({"email": email, "campaign_home": True, "campaign_technology_id": str(x.id)})} for x in techs]
     communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
-    key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False).first()
+    key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False, campaign__id=campaign_id).first()
     campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id,is_deleted=False).first()
 
     if email:
