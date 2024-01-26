@@ -33,6 +33,7 @@ class CampaignHandler(RouteHandler):
         self.add("/campaigns.managers.add", self.add_campaign_manager)
         self.add("/campaigns.managers.remove", self.remove_campaign_manager)
         self.add("/campaigns.managers.update", self.update_campaign_manager)
+        self.add("/campaigns.managers.updateKeyContact", self.update_campaign_key_contact)
 
         self.add("/campaigns.communities.add", self.add_campaign_community)
         self.add("/campaigns.communities.remove", self.remove_campaign_community)
@@ -1100,6 +1101,23 @@ class CampaignHandler(RouteHandler):
         return err
 
       res, err = self.service.remove_campaign_technology_event(context, args)
+      if err:
+        return err
+      return MassenergizeResponse(data=res)
+    
+
+    def update_campaign_key_contact(self, request):
+      context: Context = request.context
+      args: dict = context.args
+
+      self.validator.expect("campaign_id", str, is_required=True)
+      self.validator.expect("manager_id", str, is_required=True)
+
+      args, err = self.validator.verify(args, strict=True)
+      if err:
+        return err
+
+      res, err = self.service.update_campaign_key_contact(context, args)
       if err:
         return err
       return MassenergizeResponse(data=res)

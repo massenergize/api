@@ -289,6 +289,9 @@ class CampaignStore:
             campaign_manager = CampaignManager.objects.filter(id=campaign_manager_id).first()
             if not campaign_manager:
                 return None, CustomMassenergizeError("manager with id not found!")
+            
+            if campaign_manager.is_key_contact:
+                return None, CustomMassenergizeError("Cannot delete key contact!")
 
             campaign_manager.delete()
 
@@ -1385,6 +1388,32 @@ class CampaignStore:
             campaign_technology_event.delete()
 
             return campaign_technology_event, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+    
+    def update_campaign_key_contact(self, context:Context, args:dict):
+        try:
+            manager_id = args.pop("manager_id", None)
+            campaign_id = args.pop("campaign_id", None)
+            if not campaign_id:
+                return None, CustomMassenergizeError("campaign_id is required !")
+            
+            if not manager_id:
+                return None, CustomMassenergizeError("manager_id is required !")
+            # unassign the existing key contact
+            campaign_managers = CampaignManager.objects.filter(campaign__id=campaign_id, is_deleted=False)
+            campaign_managers.update(is_key_contact=False)
+            # assign the new key contact
+            campaign_manager = campaign_managers.get(pk=manager_id, is_deleted=False)
+            if not campaign_manager:
+                return None, CustomMassenergizeError("Campaign Manager not found!")
+            campaign_manager.is_key_contact = True
+            campaign_manager.save()
+        
+
+            return campaign_managers.order_by("-created_at"), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
