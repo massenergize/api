@@ -2,5 +2,5 @@
   "IS_PROD": false,
   "IS_CANARY": true,
   "BUILD_VERSION": "5.1.3",
-  "BUILD_VERSION_NOTES": "Nov 11: User events nudge fix - sorting by date and 12 hour time_string"
+  "BUILD_VERSION_NOTES": "Jan 27: Campaigns Fix - Updating campaign manager info"
 }

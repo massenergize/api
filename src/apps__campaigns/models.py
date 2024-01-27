@@ -546,7 +546,11 @@ class CampaignManager(BaseModel):
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
-        res["campaign"] = get_summary_info(self.campaign)
+        res["campaign"] ={
+            "id":self.campaign.id,
+            "title":self.campaign.title,
+            "slug":self.campaign.slug
+        }
         res["user"] = {
             **get_summary_info(self.user),
             "profile_picture":get_json_if_not_none(self.user.profile_picture)

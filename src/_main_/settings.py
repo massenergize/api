@@ -311,3 +311,5 @@ else:
 # Simplified static file serving.
 STATICFILES_LOCATION = 'static'
 MEDIAFILES_LOCATION = 'media'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

@@ -1,7 +1,7 @@
 from typing import Tuple
 from sentry_sdk import capture_message
 from _main_.utils.context import Context
-from _main_.utils.massenergize_errors import CustomMassenergizeError, InvalidResourceError, MassEnergizeAPIError
+from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from api.store.utils import get_user_from_context
 from api.utils.api_utils import create_media_file
 from apps__campaigns.models import Technology, TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
@@ -18,7 +18,7 @@ class TechnologyStore:
             technology_id = args.get("id", None)
             technology = Technology.objects.filter(id=technology_id).first()
             if not technology:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Technology does not exist")
 
             return technology, None
 
@@ -73,7 +73,7 @@ class TechnologyStore:
             technology_id = args.get('id', None)
             technology = Technology.objects.filter(id=technology_id)
             if not technology:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("Technology does not exist")
 
             technology.update(is_deleted=True)
             return technology.first(), None
@@ -269,7 +269,7 @@ class TechnologyStore:
             tech_overview_id = args.pop('id', None)
 
             if not tech_overview_id:
-                return None, InvalidResourceError()
+                return None, CustomMassenergizeError("id is required")
 
             tech_overview = TechnologyOverview.objects.get(id=tech_overview_id)
             if not tech_overview:
