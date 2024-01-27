@@ -438,3 +438,11 @@ class CampaignService:
       return None, err
     
     return serialize(res, full=True), None
+  
+
+  def update_campaign_key_contact(self, context, args)->Tuple[dict, MassEnergizeAPIError]:
+    res, err = self.store.update_campaign_key_contact(context, args)
+    if err:
+      return None, err
+    
+    return serialize_all(res, full=True), None

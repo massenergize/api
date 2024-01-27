@@ -1,14 +1,13 @@
 import os
 from django.core.files import File
 from _main_.utils.common import serialize, serialize_all
-from apps__campaigns.models import CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignConfiguration, \
-    CampaignFollow, CampaignLink, CampaignManager, CampaignPartner, CampaignTechnology, CampaignTechnologyEvent, \
+from apps__campaigns.models import CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignFollow, CampaignLink, CampaignManager, CampaignTechnology, CampaignTechnologyEvent, \
     CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, \
-    TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
+    TechnologyCoach, TechnologyDeal, TechnologyOverview
 
 # from database.models import Event
 from database.utils.common import get_json_if_not_none
-from django.db.models import Count, Sum
+from django.db.models import Sum
 import json
 
 
@@ -42,7 +41,7 @@ def create_new_event(ct):
 def get_campaign_details(campaign_id, for_campaign=False):
     techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
     prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({ "campaign_technology_id": str(x.id),"for_admin":True})} for x in techs]
-    managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False)
+    managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False).order_by("-created_at")
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
     return {
         "technologies": prepared,
@@ -115,7 +114,7 @@ def get_campaign_details_for_user(campaign_id, email):
     techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
     prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({"email": email, "campaign_home": True, "campaign_technology_id": str(x.id)})} for x in techs]
     communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
-    key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False).first()
+    key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False, campaign__id=campaign_id).first()
     campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id,is_deleted=False).first()
 
     if email:
