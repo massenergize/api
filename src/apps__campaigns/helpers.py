@@ -152,11 +152,12 @@ def category_has_items(category, campaign_technology):
         return False
 
 
-def generate_campaign_navigation(campaign):
+def generate_campaign_navigation(campaign): #TODO: fix preview mode
     home_route = f"/campaign/{campaign.slug}"
     mode = "&preview=true" if not campaign.is_published else ""
+
     BASE_NAVIGATION = [
-        {"key": "home", "url": f'{home_route}{mode}', "text": "Home", "icon": "fa-home"},
+        {"key": "home", "url": f'{home_route}{"?preview=true" if campaign.is_published else ""}', "text": "Home", "icon": "fa-home"},
         {"key": "Communities", "url": f"{home_route}/?section=communities{mode}", "text": "Communities", "icon": "fa-globe"},
         # {"key": "contact-us", "url": "#", "text": "Contact Us", "icon": "fa-phone"},
     ]
