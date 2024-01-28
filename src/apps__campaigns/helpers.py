@@ -94,19 +94,17 @@ def get_technology_details(technology_id, for_campaign=False):
     coaches = tech.technology_coach.filter(is_deleted=False)
     incentives = tech.technology_overview.filter(is_deleted=False)
     vendors = tech.technology_vendor.filter(is_deleted=False)
-    testimonials = CampaignTechnologyTestimonial.objects.filter(is_deleted=False,campaign_technology__technology__id=technology_id).order_by("-created_at")
     deals = tech.technology_deal.filter(is_deleted=False)
+    technology_actions = tech.technology_action.filter(is_deleted=False)
 
     data = {
         "coaches": serialize_all(coaches),
         "overview": serialize_all(incentives),
         "vendors": serialize_all(vendors),
-        "testimonials": serialize_all(testimonials),
         "deals": serialize_all(deals),
+        "technology_actions": serialize_all(technology_actions),
         **serialize(tech),
     }
-    if for_campaign:
-        data.pop("testimonials")
     return data
 
 
@@ -156,22 +154,23 @@ def category_has_items(category, campaign_technology):
 
 def generate_campaign_navigation(campaign):
     home_route = f"/campaign/{campaign.slug}"
+    mode = "&preview=true" if not campaign.is_published else ""
     BASE_NAVIGATION = [
-        {"key": "home", "url": home_route, "text": "Home", "icon": "fa-home"},
-        {"key": "Communities", "url": f"{home_route}/?section=communities", "text": "Communities", "icon": "fa-globe"},
+        {"key": "home", "url": f'{home_route}{mode}', "text": "Home", "icon": "fa-home"},
+        {"key": "Communities", "url": f"{home_route}/?section=communities{mode}", "text": "Communities", "icon": "fa-globe"},
         # {"key": "contact-us", "url": "#", "text": "Contact Us", "icon": "fa-phone"},
     ]
 
     MENU = [
-        {"key": "coaches", "url": f"{home_route}/?section=coaches", "text": "Coaches", "icon": "fa-users",
+        {"key": "coaches", "url": f"{home_route}/?section=coaches{mode}", "text": "Coaches", "icon": "fa-users",
          "children": []},
-        {"key": "vendors", "url": f"{home_route}/?section=vendors", "text": "Vendors", "children": [],
+        {"key": "vendors", "url": f"{home_route}/?section=vendors{mode}", "text": "Vendors", "children": [],
          "icon": "fa-handshake-o"},
-        {"key": "testimonial", "url": f"{home_route}/?section=testimonial", "text": "Testimonials", "children": [],
+        {"key": "testimonial", "url": f"{home_route}/?section=testimonial{mode}", "text": "Testimonials", "children": [],
          "icon": "fa-comment"},
-        {"key": "events", "url": f"{home_route}/?section=events", "text": "Events", "children": [],
+        {"key": "events", "url": f"{home_route}/?section=events{mode}", "text": "Events", "children": [],
          "icon": "fa-calendar"},
-        {"key": "incentives", "url": f"{home_route}/?section=incentives", "text": "Incentives", "children": [],
+        {"key": "incentives", "url": f"{home_route}/?section=incentives{mode}", "text": "Incentives", "children": [],
          "icon": "fa-money"},
     ]
 
@@ -181,14 +180,14 @@ def generate_campaign_navigation(campaign):
         for index, category in enumerate(["coaches", "vendors", "testimonials", "events"]):
             if category_has_items(category, tech):
                 MENU[index]["children"].append(
-                    {"key": tech.id, "url": f"/campaign/{campaign.slug}/technology/{tech.id}/?section={category}",
+                    {"key": tech.id, "url": f"/campaign/{campaign.slug}/technology/{tech.id}/?section={category}{mode}",
                      "text": tech.technology.name}
                 )
         deal_section = tech.technology.deal_section or {}
 
         if deal_section.get("title"):
             MENU[-1]["children"].append(
-                {"key": tech.id, "url": f"/campaign/{campaign.slug}/technology/{tech.id}/?section=incentives",
+                {"key": tech.id, "url": f"/campaign/{campaign.slug}/technology/{tech.id}/?section=incentives{mode}",
                  "text": tech.technology.name})
 
     MENU = [item for item in MENU if item["children"]]  # Remove items without children

@@ -172,24 +172,23 @@ class CampaignStore:
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
                 return None, CustomMassenergizeError("Campaign with id does not exist")
-            campaign = campaigns.first()
 
             if not context.user_is_admin():
                 args.pop("is_approved", None)
                 args.pop("is_published", None)
 
             if primary_logo:
-                args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign.title} Campaign")
+                args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign_id} Campaign")
             if secondary_logo:
                 args["secondary_logo"] = create_media_file(
-                    secondary_logo, f"SecondaryLogoFor {campaign.title} Campaign"
+                    secondary_logo, f"SecondaryLogoFor {campaign_id} Campaign"
                 )
             if campaign_image:
-                args["image"] = create_media_file(campaign_image, f"ImageFor {campaign.title} Campaign")
+                args["image"] = create_media_file(campaign_image, f"ImageFor {campaign_id} Campaign")
 
             campaigns.update(**args)
 
-            return campaign, None
+            return campaigns.first(), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
