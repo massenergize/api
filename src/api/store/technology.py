@@ -4,7 +4,7 @@ from _main_.utils.context import Context
 from _main_.utils.massenergize_errors import CustomMassenergizeError, MassEnergizeAPIError
 from api.store.utils import get_user_from_context
 from api.utils.api_utils import create_media_file
-from apps__campaigns.models import Technology, TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
+from apps__campaigns.models import Technology, TechnologyAction, TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
 from database.models import Media, Vendor
 from django.db.models import Q
 
@@ -404,6 +404,63 @@ class TechnologyStore:
             vendor.save()
 
             return technology_vendor, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+
+    def create_technology_action(self, context: Context, args) -> Tuple[TechnologyAction, MassEnergizeAPIError]:
+        try:
+            technology_id = args.pop('technology_id', None)
+            image = args.pop('image', None)
+            if not technology_id:
+                return None, CustomMassenergizeError("technology_id is required")
+            technology = Technology.objects.get(id=technology_id)
+            if not technology:
+                return None, CustomMassenergizeError("technology with id does not exist")
+            args["technology"] = technology
+
+            image = create_media_file(image, f"FileUpload for {args.get('title')} TechnologyAction")
+            args["image"] = image
+
+            technology_action = TechnologyAction.objects.create(**args)
+
+            return technology_action, None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+    
+    def update_technology_action(self, context: Context, args) -> Tuple[TechnologyAction, MassEnergizeAPIError]:
+        try:
+            technology_action_id = args.pop('id', None)
+            image = args.pop('image', None)
+            if not technology_action_id:
+                return None, CustomMassenergizeError("id is required")
+            technology_action = TechnologyAction.objects.filter(id=technology_action_id)
+            if not technology_action:
+                return None, CustomMassenergizeError("Technology Action does not exist")
+            if image and not (isinstance(image, str) and image.startswith("http")):
+                image = create_media_file(image, f"FileUpload for {technology_action.first().title} TechnologyAction")
+                args["image"] = image
+            technology_action.update(**args)
+
+            return technology_action.first(), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return None, CustomMassenergizeError(e)
+        
+    
+    def delete_technology_action(self, context: Context, args) -> Tuple[TechnologyAction, MassEnergizeAPIError]:
+        try:
+            technology_action_id = args.pop('id', None)
+            if not technology_action_id:
+                return None, CustomMassenergizeError("id is required")
+            technology_action = TechnologyAction.objects.get(id=technology_action_id)
+            if not technology_action:
+                return None, CustomMassenergizeError("Invalid Technology Action ID")
+            technology_action.delete()
+
+            return technology_action, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)

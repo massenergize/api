@@ -176,6 +176,36 @@ class TechnologyService:
             return serialize(res, full=True), None
         except Exception as e:
             return None, MassEnergizeAPIError(str(e))
+        
+
+    def create_technology_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            res, err = self.store.create_technology_action(context, args)
+            if err:
+                return None, err
+            return serialize(res, full=True), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
+        
+
+    def update_technology_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            res, err = self.store.update_technology_action(context, args)
+            if err:
+                return None, err
+            return serialize(res, full=True), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
+        
+
+    def delete_technology_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            technology_action, err = self.store.delete_technology_action(context, args)
+            if err:
+                return None, err
+            return serialize(technology_action), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
     
 
 
