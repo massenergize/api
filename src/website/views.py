@@ -1,3 +1,4 @@
+from uuid import UUID
 import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
@@ -53,18 +54,16 @@ if IS_LOCAL:
     CAMPAIGN_HOST = "http://localhost:3000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
-    CAMPAIGN_HOST = (
-        "http://localhost:3000"  # Change value when we have the appropriate link
-    )
+    CAMPAIGN_HOST = "https://campaigns-canary.massenergize.org"
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
     CAMPAIGN_HOST = (
-        "http://localhost:3000"  # Change value when we have the appropriate link
+        "https://campaigns.massenergize.org"  # Change value when we have the appropriate link
     )
 else:
     # we know it is dev
     PORTAL_HOST = "https://community.massenergize.dev"
-    CAMPAIGN_HOST = "https://friday-campaign.netlify.app"  # Change value when we have the appropriate link
+    CAMPAIGN_HOST = "https://campaigns.massenergize.dev"  # Change value when we have the appropriate link
 
 
 if IS_LOCAL:
@@ -94,7 +93,13 @@ META = {
 
 
 def campaign(request, campaign_id):
-    campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+
+    campaign = None
+    try:
+        uuid_id = UUID(campaign_id, version=4)
+        campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+    except ValueError:
+        campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
     if not campaign:
         raise Http404
     image = campaign.image.file.url
