@@ -323,7 +323,7 @@ class CampaignHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("campaign_id", str, is_required=False)
-        self.validator.expect("community_id", str, is_required=False)
+        self.validator.expect("community_ids", "str_list", is_required=False)
         args, err = self.validator.verify(args)
         if err:
           return err

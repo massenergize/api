@@ -3,7 +3,7 @@ from django.core.files import File
 from _main_.utils.common import serialize, serialize_all
 from apps__campaigns.models import CampaignAccount, CampaignAccountAdmin, CampaignCommunity, CampaignFollow, CampaignLink, CampaignManager, CampaignTechnology, CampaignTechnologyEvent, \
     CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment, Technology, \
-    TechnologyCoach, TechnologyDeal, TechnologyOverview
+    TechnologyCoach, TechnologyDeal, TechnologyOverview, TechnologyVendor
 
 # from database.models import Event
 from database.utils.common import get_json_if_not_none
@@ -93,7 +93,7 @@ def get_technology_details(technology_id, for_campaign=False):
     tech = Technology.objects.get(id=technology_id)
     coaches = tech.technology_coach.filter(is_deleted=False)
     incentives = tech.technology_overview.filter(is_deleted=False)
-    vendors = tech.technology_vendor.filter(is_deleted=False)
+    vendors = TechnologyVendor.objects.filter(technology__id=technology_id, is_deleted=False)
     deals = tech.technology_deal.filter(is_deleted=False)
     technology_actions = tech.technology_action.filter(is_deleted=False)
 

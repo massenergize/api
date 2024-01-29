@@ -138,9 +138,6 @@ class TechnologyStore:
             vendor_ids = args.pop('vendor_ids', None)
 
             created_list = []
-
-
-
             technology = Technology.objects.filter(id=technology_id).first()
             if not technology:
                 return None, CustomMassenergizeError("technology with id does not exist")
@@ -148,13 +145,13 @@ class TechnologyStore:
             if not vendor_ids:
                 return None, CustomMassenergizeError("vendor_ids is required")
             
-            for vendor_id in vendor_ids:
-                vendor = Vendor.objects.filter(pk=vendor_id).first()
-                tech_vendor, _ = TechnologyVendor.objects.get_or_create(technology=technology, vendor=vendor)
-                created_list.append(tech_vendor.simple_json())
+            vendors = Vendor.objects.filter(id__in=vendor_ids)
+            for vendor in vendors:
+                tech_vendor, _ = TechnologyVendor.objects.get_or_create(technology=technology, vendor=vendor, is_deleted=False)
+                created_list.append(tech_vendor.simple_json())  # use append instead of extend
 
             # delete all vendors that are not in the list
-            TechnologyVendor.objects.filter(technology=technology).exclude(id__in=[x.get("id") for x in created_list]).delete()
+            TechnologyVendor.objects.filter(technology=technology).exclude(vendor__id__in=vendor_ids).delete()
 
             return created_list, None
         except Exception as e:

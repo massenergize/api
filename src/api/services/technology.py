@@ -82,7 +82,7 @@ class TechnologyService:
         res, err = self.store.add_technology_vendor(context, args)
         if err:
             return None, err
-        return serialize_all(res, full=True), None
+        return res, None
     
     def remove_technology_vendor(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         res, err = self.store.remove_technology_vendor(context, args)
