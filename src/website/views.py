@@ -1,3 +1,4 @@
+from uuid import UUID
 import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
@@ -94,7 +95,13 @@ META = {
 
 
 def campaign(request, campaign_id):
-    campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+
+    campaign = None
+    try:
+        uuid_id = UUID(campaign_id, version=4)
+        campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+    except ValueError:
+        campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
     if not campaign:
         raise Http404
     image = campaign.image.file.url
