@@ -1,6 +1,6 @@
 {
   "IS_PROD": false,
   "IS_CANARY": true,
-  "BUILD_VERSION": "5.1.5",
+  "BUILD_VERSION": "5.1.6",
   "BUILD_VERSION_NOTES": "Nov 11: User events nudge fix - sorting by date and 12 hour time_string"
 }
