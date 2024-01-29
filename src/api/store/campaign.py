@@ -544,23 +544,22 @@ class CampaignStore:
             community_id: str = args.pop("community_id", None)
             user_id: str = args.pop("user_id", context.user_id)
             comment_text: str = args.get("text", None)
+            is_from_admin_site = args.pop("is_from_admin_site", False)
 
             # check for swear words in comment text
             if contains_profane_words(comment_text):
                 return None, CustomMassenergizeError("Comment contains inappropriate language.")
 
             if campaign_technology_id:
-                campaign_technology = CampaignTechnology.objects.filter(
-                    id=campaign_technology_id
-                ).first()
+                campaign_technology = CampaignTechnology.objects.get(id=campaign_technology_id)
                 if campaign_technology:
                     args["campaign_technology"] = campaign_technology
 
             if not user_id:
-                return None, CustomMassenergizeError("User ID is required !")
+                return None, CustomMassenergizeError("user_id is required !")
             user = UserProfile.objects.filter(id=user_id).first()
             if not user:
-                return None, CustomMassenergizeError("User with id not found!")
+                return None, CustomMassenergizeError("user with id not found!")
             args["user"] = user
 
             if community_id:
@@ -570,8 +569,10 @@ class CampaignStore:
 
             comment, _ = Comment.objects.get_or_create(**args)
 
-            latest_comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")
+            if is_from_admin_site:
+                return comment, None
 
+            latest_comments = Comment.objects.filter(campaign_technology__id=campaign_technology_id, is_deleted=False).order_by("-created_at")
             return latest_comments[:20], None
         except Exception as e:
             capture_message(str(e), level="error")
@@ -1228,7 +1229,7 @@ class CampaignStore:
             comment = Comment.objects.filter(id=comment_id).first()
             if not comment:
                 return None, CustomMassenergizeError("Comment with id not found!")
-            if str(comment.user.id) != user_id :
+            if str(comment.user.id) != user_id and not context.user_is_admin():
                 return None, CustomMassenergizeError("You are not authorized to delete this comment!")
             comment.is_deleted = True
             comment.save()

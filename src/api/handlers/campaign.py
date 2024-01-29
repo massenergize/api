@@ -493,6 +493,7 @@ class CampaignHandler(RouteHandler):
         .expect("community_id", int, is_required=False)
         .expect("campaign_technology_id", str, is_required=False)
         .expect("user_id", str, is_required=False)
+        .expect("is_from_admin_site", bool, is_required=False)
         )
         args, err = self.validator.verify(args)
         if err:

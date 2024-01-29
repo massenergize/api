@@ -173,9 +173,13 @@ class CampaignService:
   
 
   def create_campaign_technology_comment(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
+    is_from_admin_site = args.get("is_from_admin_site", False)
+    
     res, err = self.store.create_campaign_technology_comment(context, args)
     if err:
       return None, err
+    if is_from_admin_site:
+      return serialize(res), None
     return serialize_all(res, full=True), None
 
   def update_campaign_technology_comment(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
