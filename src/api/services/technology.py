@@ -82,7 +82,7 @@ class TechnologyService:
         res, err = self.store.add_technology_vendor(context, args)
         if err:
             return None, err
-        return serialize_all(res, full=True), None
+        return res, None
     
     def remove_technology_vendor(self,  context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         res, err = self.store.remove_technology_vendor(context, args)
@@ -174,6 +174,36 @@ class TechnologyService:
             if err:
                 return None, err
             return serialize(res, full=True), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
+        
+
+    def create_technology_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            res, err = self.store.create_technology_action(context, args)
+            if err:
+                return None, err
+            return serialize(res, full=True), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
+        
+
+    def update_technology_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            res, err = self.store.update_technology_action(context, args)
+            if err:
+                return None, err
+            return serialize(res, full=True), None
+        except Exception as e:
+            return None, MassEnergizeAPIError(str(e))
+        
+
+    def delete_technology_action(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+        try:
+            technology_action, err = self.store.delete_technology_action(context, args)
+            if err:
+                return None, err
+            return serialize(technology_action), None
         except Exception as e:
             return None, MassEnergizeAPIError(str(e))
     

@@ -220,6 +220,10 @@ class CampaignHandler(RouteHandler):
         .expect("is_published", bool, is_required=False)
         .expect("description", str, is_required=False)
         .expect("is_template", bool, is_required=False)
+        .expect("communities_section", dict, is_required=False)
+        .expect("technologies_section", dict, is_required=False)
+        .expect("newsletter_section", dict, is_required=False)
+        .expect("coaches_section", dict, is_required=False)
         )
 
 
@@ -319,7 +323,7 @@ class CampaignHandler(RouteHandler):
         args: dict = context.args
 
         self.validator.expect("campaign_id", str, is_required=False)
-        self.validator.expect("community_id", str, is_required=False)
+        self.validator.expect("community_ids", "str_list", is_required=False)
         args, err = self.validator.verify(args)
         if err:
           return err
@@ -353,6 +357,7 @@ class CampaignHandler(RouteHandler):
 
         self.validator.expect("campaign_community_id", str, is_required=True)
         self.validator.expect("help_link", str, is_required=False)
+        self.validator.expect("alias", str, is_required=False)
 
         args, err = self.validator.verify(args)
         if err:

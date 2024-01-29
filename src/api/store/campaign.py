@@ -172,24 +172,23 @@ class CampaignStore:
             campaigns = Campaign.objects.filter(id=campaign_id)
             if not campaigns:
                 return None, CustomMassenergizeError("Campaign with id does not exist")
-            campaign = campaigns.first()
 
             if not context.user_is_admin():
                 args.pop("is_approved", None)
                 args.pop("is_published", None)
 
             if primary_logo:
-                args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign.title} Campaign")
+                args["primary_logo"] = create_media_file(primary_logo, f"PrimaryLogoFor {campaign_id} Campaign")
             if secondary_logo:
                 args["secondary_logo"] = create_media_file(
-                    secondary_logo, f"SecondaryLogoFor {campaign.title} Campaign"
+                    secondary_logo, f"SecondaryLogoFor {campaign_id} Campaign"
                 )
             if campaign_image:
-                args["image"] = create_media_file(campaign_image, f"ImageFor {campaign.title} Campaign")
+                args["image"] = create_media_file(campaign_image, f"ImageFor {campaign_id} Campaign")
 
             campaigns.update(**args)
 
-            return campaign, None
+            return campaigns.first(), None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -319,7 +318,7 @@ class CampaignStore:
 
     def add_campaign_community(self, context: Context, args):
         try:
-            community_id = args.pop("community_id", None)
+            community_id = args.pop("community_ids", None)
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
                 return None, CustomMassenergizeError("campaign_id is required!")
@@ -328,15 +327,19 @@ class CampaignStore:
                 return None, CustomMassenergizeError("campaign with id not found!")
 
             if not community_id:
-                return None, CustomMassenergizeError("community_id is required!")
+                return None, CustomMassenergizeError("community_ids is required!")
+            
+            campaign_communities = []
+            for community_id in community_id:
+                community = Community.objects.filter(id=community_id).first()
+                if community:
+                    campaign_community, exists = CampaignCommunity.objects.get_or_create(campaign=campaign, community=community, is_deleted=False)
+                    campaign_communities.append(campaign_community.simple_json())
 
-            community = Community.objects.filter(id=community_id).first()
-            if not community:
-                return None, CustomMassenergizeError("community with id not found!")
+            CampaignCommunity.objects.filter(campaign=campaign).exclude(id__in=[c["id"] for c in campaign_communities]).update(is_deleted=True)
 
-            campaign_community = CampaignCommunity.objects.create(campaign=campaign, community=community)
 
-            return campaign_community, None
+            return campaign_communities, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
@@ -347,9 +350,7 @@ class CampaignStore:
             if not campaign_community_id:
                 return None, CustomMassenergizeError("id is required!")
 
-            campaign_community = CampaignCommunity.objects.filter(
-                id=campaign_community_id
-            ).first()
+            campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id).first()
             if not campaign_community:
                 return None, CustomMassenergizeError("campaign Community with id not found!")
 

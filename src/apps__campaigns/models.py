@@ -130,6 +130,10 @@ class Campaign(BaseModel):
     tagline = models.CharField(max_length=255, blank=True, null=True)
     owner = models.ForeignKey("database.UserProfile", on_delete=models.CASCADE, null=True, blank=True)
     communities_section = models.JSONField(blank=True, null=True)
+    technologies_section = models.JSONField(blank=True, null=True)
+    newsletter_section = models.JSONField(blank=True, null=True)
+    coaches_section = models.JSONField(blank=True, null=True)
+
 
 
     def __str__(self):
@@ -150,6 +154,7 @@ class Campaign(BaseModel):
         res["image"] = get_json_if_not_none(self.image)
         res["campaign_image"] = get_json_if_not_none(self.image)
         res["owner"] = get_summary_info(self.owner)
+        res["end_date"] = self.end_date.strftime("%Y-%m-%d") if self.end_date else None
 
         return res
 
@@ -315,6 +320,33 @@ class TechnologyDeal(BaseModel):
     def full_json(self):
         return self.simple_json()
     
+
+class TechnologyAction(BaseModel):
+    technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_action")
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    link = models.CharField(max_length=255, blank=True, null=True)
+    image = models.ForeignKey("database.Media", on_delete=models.CASCADE, null=True, blank=True)
+    link_text = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.technology} - {self.title} Action"
+    
+
+    def simple_json(self)-> dict:
+        res = super().to_json()
+        res.update(model_to_dict(self))
+        res["technology"] = {
+            "id":self.technology.id,
+            "name":self.technology.name
+        }
+        res["image"] = get_json_if_not_none(self.image)
+        return res
+    
+    def full_json(self):
+        return self.simple_json()
+    
+    
 class TechnologyVendor(BaseModel):
     technology = models.ForeignKey(Technology, on_delete=models.CASCADE, related_name="technology_vendor")
     vendor = models.ForeignKey("database.Vendor", on_delete=models.CASCADE)
@@ -366,6 +398,7 @@ class CampaignTechnology(BaseModel):
 class CampaignCommunity(BaseModel):
     campaign = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name="campaign_community")
     community = models.ForeignKey("database.Community", on_delete=models.CASCADE)
+    alias = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
     help_link = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
 
     def __str__(self):

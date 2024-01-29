@@ -122,7 +122,7 @@ class CampaignService:
     res, err = self.store.add_campaign_community(context, args)
     if err:
       return None, err
-    return serialize(res, full=True), None
+    return res, None
 
 
   def remove_campaign_community(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
