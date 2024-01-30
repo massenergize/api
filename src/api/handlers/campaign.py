@@ -358,6 +358,7 @@ class CampaignHandler(RouteHandler):
         self.validator.expect("campaign_community_id", str, is_required=True)
         self.validator.expect("help_link", str, is_required=False)
         self.validator.expect("alias", str, is_required=False)
+        self.validator.expect("extra_links", dict, is_required=False)
 
         args, err = self.validator.verify(args)
         if err:

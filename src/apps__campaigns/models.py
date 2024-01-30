@@ -404,11 +404,17 @@ class CampaignCommunity(BaseModel):
     def __str__(self):
         return f"{self.campaign} - {self.community}"
     
+    def get_json_field_value(self, key):
+        if self.info:
+            return self.info.get(key, None)
+        return None
+    
     def simple_json(self)-> dict:
         res = super().to_json()
         res.update(model_to_dict(self))
         res["campaign"] = get_summary_info(self.campaign)
         res["community"] = get_summary_info(self.community)
+        res["extra_links"] = self.get_json_field_value("extra_links")
         return res
     
     def full_json(self):
