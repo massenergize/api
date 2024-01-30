@@ -338,7 +338,8 @@ class CampaignStore:
 
             CampaignCommunity.objects.filter(campaign=campaign).exclude(id__in=[c["id"] for c in campaign_communities]).update(is_deleted=True)
 
-
+            # sort by alias or community name
+            campaign_communities.sort(key=lambda x: x["alias"] or x["community"]["name"])
             return campaign_communities, None
         except Exception as e:
             capture_message(str(e), level="error")
@@ -362,12 +363,16 @@ class CampaignStore:
         
     def update_campaign_community(self, context: Context, args):
         try:
+            extra_links = args.pop("extra_links", [])
             campaign_community_id = args.pop("campaign_community_id", None)
             if not campaign_community_id:
                 return None, CustomMassenergizeError("campaign_community_id is required!")
             campaign_community = CampaignCommunity.objects.filter(id=campaign_community_id)
             if not campaign_community:
                 return None, CustomMassenergizeError("campaign community with id not found!")
+            if extra_links:
+                info = campaign_community.first().info or {}
+                args["info"] = {**info, "extra_links": extra_links}
 
             campaign_community.update(**args)
 

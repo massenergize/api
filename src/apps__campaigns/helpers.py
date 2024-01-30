@@ -43,6 +43,8 @@ def get_campaign_details(campaign_id, for_campaign=False):
     prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({ "campaign_technology_id": str(x.id),"for_admin":True})} for x in techs]
     managers = CampaignManager.objects.filter(campaign_id=campaign_id, is_deleted=False).order_by("-created_at")
     communities = CampaignCommunity.objects.filter(campaign_id=campaign_id, is_deleted=False)
+    
+    communities = sorted(communities, key=lambda x:  x.alias or x.community.name)
     return {
         "technologies": prepared,
         "communities": serialize_all(communities),
