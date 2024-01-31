@@ -3,6 +3,7 @@ from datetime import timezone, timedelta
 import json
 import uuid
 from _main_.utils.policy.PolicyConstants import PolicyConstants
+from apps__campaigns.helpers import get_user_accounts
 from database.utils.settings.model_constants.events import EventConstants
 from django.db import models
 from django.db.models.fields import BooleanField
@@ -23,6 +24,7 @@ from .utils.common import (
     json_loader,
     get_json_if_not_none,
     get_summary_info,
+    make_hash_from_file,
 )
 from api.constants import STANDARD_USER, GUEST_USER
 from django.forms.models import model_to_dict
@@ -227,6 +229,9 @@ class Tag(models.Model):
 
     def __str__(self):
         return "%s - %s" % (self.name, self.tag_collection)
+    
+    def info(self): 
+        return model_to_dict(self, ["id", "name"])
 
     def simple_json(self):
         res = model_to_dict(self)
@@ -269,9 +274,13 @@ class Media(models.Model):
     is_deleted = models.BooleanField(default=False, blank=True)
     order = models.PositiveIntegerField(default=0, blank=True, null=True)
     tags = models.ManyToManyField(Tag, related_name="media_tags", blank=True)
+    hash = models.TextField(max_length=LONG_STR_LEN, blank=True, db_index=True)
 
     def __str__(self):
         return str(self.id) + "-" + self.name + "(" + self.file.name + ")"
+    
+    def info(self): 
+        return self.simple_json()
 
     def simple_json(self):
         obj = {
@@ -302,6 +311,21 @@ class Media(models.Model):
             default_storage.delete(file_path)
 
         super().delete(*args, **kwargs)
+
+    def calculate_hash(self, uploaded_file):
+        if not self.hash:
+            image_data = uploaded_file.read()
+            calculated_hash =  make_hash_from_file(image_data)
+            return calculated_hash
+        return None
+    
+    def save(self, *args, **kwargs):
+        if self.file and not self.hash:
+            hash = self.calculate_hash(self.file.file)
+            if hash: 
+                self.hash = hash
+        super().save(*args, **kwargs)
+    
 
     class Meta:
         db_table = "media"
@@ -540,7 +564,9 @@ class Community(models.Model):
         return str(self.id) + " - " + self.name
 
     def info(self):
-        return model_to_dict(self, ["id", "name", "subdomain"])
+       res = model_to_dict(self, ["id", "name", "subdomain"])
+       res["logo"] = get_json_if_not_none(self.logo)
+       return res
 
     def simple_json(self):
         res = model_to_dict(
@@ -577,7 +603,8 @@ class Community(models.Model):
             community__id=self.pk
         ).first()
         if admin_group:
-            admins = [a.simple_json() for a in admin_group.members.all()]
+            #admins = [a.simple_json() for a in admin_group.members.all()]
+            admins = [a.info() for a in admin_group.members.all()]
         else:
             admins = []
 
@@ -944,7 +971,9 @@ class UserProfile(models.Model):
         return self.email
 
     def info(self):
-        return model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
+        data = model_to_dict(self, ["id", "email", "full_name", "preferred_name"])
+        data["profile_picture"] = get_json_if_not_none(self.profile_picture)
+        return data
 
     def summary(self):
         summaryData = model_to_dict(self, ["preferred_name", "is_guest", "email"])
@@ -1072,7 +1101,7 @@ class UserProfile(models.Model):
             return None, e
 
     def full_json(self):
-        team_members = [t.team.info() for t in TeamMember.objects.filter(user=self)]
+        team_members = [t.team.simple_json() for t in TeamMember.objects.filter(user=self)]
         community_members = CommunityMember.objects.filter(user=self)
         communities = [cm.community.info() for cm in community_members]
         data = model_to_dict(
@@ -1113,6 +1142,8 @@ class UserProfile(models.Model):
             mou_details = user_is_due_for_mou(self)
             data["needs_to_accept_mou"] = mou_details[0]
             data["mou_details"] = mou_details[1]
+        # get campaign accounts created or admin of
+        data["campaign_accounts"] = get_user_accounts(self)
 
         return data
 
@@ -1551,7 +1582,7 @@ class Team(models.Model):
         data = self.simple_json()
         # Q: should this be in simple_json?
         data["communities"] = [c.simple_json() for c in self.communities.all()]
-        data["members"] = [m.simple_json() for m in self.members.all()]
+        data["members"] = [m.info() for m in self.members.all()]
         data["goal"] = get_json_if_not_none(self.goal)
         data["banner"] = get_json_if_not_none(self.banner)
         return data
@@ -2069,7 +2100,7 @@ class Event(models.Model):
     )
     archive = models.BooleanField(default=False, blank=True)
     is_global = models.BooleanField(default=False, blank=True)
-    external_link = models.CharField(max_length=SHORT_STR_LEN, blank=True, null=True)
+    external_link = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
     rsvp_enabled = models.BooleanField(default=False, blank=True)
     rsvp_email = models.BooleanField(default=False, blank=True)
     rsvp_message = models.TextField(max_length=LONG_STR_LEN, blank=True)
@@ -2131,6 +2162,7 @@ class Event(models.Model):
                 "user",
                 "communities_under_publicity",
                 "shared_to",
+
             ],
         )
         data["tags"] = [t.simple_json() for t in self.tags.all()]
@@ -2519,7 +2551,7 @@ class CommunityAdminGroup(models.Model):
     def simple_json(self):
         res = model_to_dict(self, exclude=["members"])
         res["community"] = get_json_if_not_none(self.community)
-        res["members"] = [m.simple_json() for m in self.members.all()]
+        res["members"] = [m.info() for m in self.members.all()]
         return res
 
     def full_json(self):
@@ -2562,7 +2594,7 @@ class UserGroup(models.Model):
     def full_json(self):
         data = self.simple_json()
         data["community"] = get_json_if_not_none(self.community)
-        data["members"] = [m.simple_json() for m in self.members.all()]
+        data["members"] = [m.info() for m in self.members.all()]
         data["permissions"] = [p.simple_json() for p in self.permissions.all()]
         return data
 
@@ -3223,6 +3255,9 @@ class HomePageSettings(models.Model):
 
     def __str__(self):
         return "HomePageSettings - %s" % (self.community)
+    
+    def info(self): 
+        return model_to_dict(self, ["id", "title", "community"])
 
     def simple_json(self):
         res = model_to_dict(
@@ -3590,6 +3625,8 @@ class Message(models.Model):
     response = models.CharField(max_length=LONG_STR_LEN, blank=True, null=True)
     parent = models.ForeignKey("self", blank=True, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
+    scheduled_at = models.DateTimeField(blank=True, null=True)
+    schedule_info = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.title}"
@@ -3762,7 +3799,13 @@ class FeatureFlag(models.Model):
             return False  # flag not active
         return True
 
-    def enabled_communities(self, communities_in: QuerySet):
+    def enabled_communities(self, communities_in: QuerySet = None):
+        """
+            Returns : List of communities as a QuerySet
+        """
+        if not communities_in: 
+            communities_in = Community.objects.filter(is_deleted=False) 
+
         if self.audience == "EVERYONE":
             return communities_in
         elif self.audience == "SPECIFIC":

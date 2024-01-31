@@ -1068,16 +1068,15 @@ class CommunityStore:
         communities = Community.objects.filter(is_published=True).order_by("name")
         return communities, None
 
-    def list_communities_for_community_admin(
-        self, context: Context
-    ) -> Tuple[list, MassEnergizeAPIError]:
+    def list_communities_for_community_admin(self, context: Context, args) -> Tuple[list, MassEnergizeAPIError]:
         try:
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
             if context.user_is_super_admin:
-                return self.list_communities_for_super_admin(context)
+                return self.list_communities_for_super_admin(context, args)
             elif context.user_is_community_admin:
                 filter_params = get_communities_filter_params(context.get_params())
+
 
                 user = UserProfile.objects.get(pk=context.user_id)
                 admin_groups = user.communityadmingroup_set.all()
@@ -1091,11 +1090,16 @@ class CommunityStore:
             capture_exception(e)
             return None, CustomMassenergizeError(e)
 
-    def list_communities_for_super_admin(self, context):
+    def list_communities_for_super_admin(self, context, args={}):
         try:
+            community_ids = args.get("community_ids", [])
             # if not context.user_is_community_admin and not context.user_is_community_admin:
             #   return None, CustomMassenergizeError("You are not a super admin or community admin")
             filter_params = get_communities_filter_params(context.get_params())
+            if community_ids:
+                communities = list(Community.objects.filter(id__in=community_ids, is_deleted=False, *filter_params).order_by('name'))
+                return communities, None
+
             # the order_by didn't work properly until I added list(), due to "lazy evaluation"
             communities = list(Community.objects.filter(is_deleted=False, *filter_params).order_by('name'))
             return communities, None

@@ -250,8 +250,11 @@ class CommunityHandler(RouteHandler):
   @admins_only
   def community_admin_list(self, request):  
     context: Context  = request.context
-    #args = context.get_request_body()
-    communities, err = self.service.list_communities_for_community_admin(context)
+    args: dict = context.args
+    args, err = self.validator.expect("community_ids", "str_list", is_required=False).verify(args)
+    if err:
+        return err
+    communities, err = self.service.list_communities_for_community_admin(context, args)
     if err:
       return err
     return MassenergizeResponse(data=communities)
@@ -261,6 +264,7 @@ class CommunityHandler(RouteHandler):
   def super_admin_list(self, request):
     context: Context  = request.context
     #args = context.get_request_body()
+    
     communities, err = self.service.list_communities_for_super_admin(context)
     if err:
       return err
@@ -303,5 +307,4 @@ class CommunityHandler(RouteHandler):
     if err:
       return err
     return MassenergizeResponse(data=community_completed_actions)
-
 

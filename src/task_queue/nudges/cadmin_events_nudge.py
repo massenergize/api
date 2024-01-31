@@ -48,7 +48,7 @@ def generate_event_list_for_community(com):
         community__is_published=True,
         is_published=True,
         is_deleted=False
-    ).exclude(community=com).exclude(shared_to__id=com.id).distinct()
+    ).exclude(community=com).exclude(shared_to__id=com.id).distinct().order_by("start_date_and_time")
     
     return {
         "events": prepare_events_email_data(events),

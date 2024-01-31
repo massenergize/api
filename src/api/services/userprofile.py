@@ -383,3 +383,20 @@ class UserService:
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)
+    
+
+
+  def update_loosed_user(self, context, args):
+    res, err = self.store.update_loosed_user(context, args)
+    if err:
+      return None, err
+    
+    return serialize(res, full=True), None
+  
+
+  def get_loosed_user(self, context, args):
+    res, err = self.store.get_loosed_user(context, args)
+    if err:
+      return None, err
+    
+    return res.info(), None

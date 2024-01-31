@@ -1,3 +1,4 @@
+from _main_.utils.common import generate_workbook_with_sheets
 from _main_.utils.massenergize_errors import (
     NotAuthorizedError,
     MassEnergizeAPIError,
@@ -9,6 +10,7 @@ from _main_.utils.context import Context
 from collections import Counter
 from api.store.utils import get_human_readable_date
 from api.utils.api_utils import get_user_community_ids, is_admin_of_community
+from apps__campaigns.models import Campaign, CampaignActivityTracking, CampaignFollow, CampaignLink, CampaignTechnology, CampaignTechnologyFollow, CampaignTechnologyLike, CampaignTechnologyTestimonial, CampaignTechnologyView, CampaignView, Comment
 from database.models import (
     UserProfile,
     CommunityMember,
@@ -51,6 +53,9 @@ from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
 from carbon_calculator.carbonCalculator import AverageImpact
+from django.db.models import Count, Sum
+from uuid import UUID
+
 
 EMPTY_DOWNLOAD = (None, None)
 
@@ -1625,3 +1630,345 @@ class DownloadStore:
             print("community_pagemap_exception: " + str(e))
             capture_message(str(e), level="error")
             return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    
+    def _campaign_follows_download(self, campaign):
+        columns = ["Date", "Email", "Community", "Zipcode", "From_Other_Community"]
+
+        def get_community_name(follow):
+            if follow.community:
+               if follow.community.name != "Other":
+                    return follow.community.name
+               else:
+                return follow.community_name
+            return "N/A"
+        
+        def get_zipcode(follow):
+            try:
+                if follow.zipcode:
+                    return follow.zipcode
+                elif not follow.community_name:
+                    location = follow.community.locations.first() if follow.community and follow.community.locations else None
+                    zipcode = location.zipcode if location else "N/A"
+                    return zipcode
+                return "N/A"
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                return "N/A"
+        # 
+        data = [columns]
+        follows = CampaignFollow.objects.filter(campaign=campaign, is_deleted=False)
+        for follow in follows:
+            cell  = self._get_cells_from_dict(columns,{
+                "Date": get_human_readable_date(follow.created_at),
+                "Email": follow.user.email,
+                "Community": get_community_name(follow),
+                "Zipcode": get_zipcode(follow),
+                "From_Other_Community": "Yes" if follow.community_name else "No",
+            })
+            data.append(cell)
+        return data
+        
+
+
+    def campaign_follows_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (self._campaign_follows_download(campaign), None), None
+            
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+        
+    def _campaign_likes_download(self, campaign):
+        columns = ["Date", "Email", "Community",  "Technology", "Zipcode"]
+
+        def get_community_name(like):
+            if like.community:
+               if like.community.name != "Other":
+                    return like.community.name
+               else:
+                return like.community_name
+            return "N/A"
+        
+        def get_zipcode(like):
+            if like.zipcode:
+                return like.zipcode
+            elif not like.community_name:
+                zipcode = like.community.locations.first().zipcode if like.community and like.community.locations else "N/A"
+                return zipcode
+                
+            return "N/A"
+        # 
+        data = [columns]
+        likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False)
+        for like in likes:
+            cell  = self._get_cells_from_dict(columns,{
+                "Date": get_human_readable_date(like.created_at),
+                "Email": like.user.email if like.user else "N/A",
+                "Community": get_community_name(like),
+                "Technology": like.campaign_technology.technology.name,
+                "Zipcode": get_zipcode(like),
+            })
+            data.append(cell)
+        return data    
+        
+
+    def campaign_likes_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (self._campaign_likes_download(campaign), None), None
+            
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+    
+
+    def _campaign_link_performance_download(self,campaign):
+        columns = ["Date", "Campaign", "Email",  "Source", "Medium", "Click Count"]
+        data = [columns]
+        clicks = CampaignLink.objects.filter(campaign__id=campaign.id, is_deleted=False)
+        for click in clicks:
+            cell  = self._get_cells_from_dict(columns,{
+                "Date": get_human_readable_date(click.created_at),
+                "Email": click.email,
+                "Source": click.utm_source,
+                "Medium": click.utm_medium,
+                "Click Count": click.visits,
+            })
+            data.append(cell)
+        return data
+
+    
+    def campaign_link_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            return (self._campaign_link_performance_download(campaign), None), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    def campaign_views_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            
+            columns = ["Date", "Campaign", "Technology",  "Email"]
+            data = [columns]
+            views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False)
+            for view in views:
+                cell  = self._get_cells_from_dict(columns,{
+                    "Campaign": view.campaign_technology.campaign.title,
+                    "Technology": view.campaign_technology.technology.name,
+                    "Email": view.email,
+                })
+                data.append(cell)
+            return (data, None), None
+            
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+    def _campaign_interaction_performance_download(self, campaign):
+        columns = ["Date", "Campaign", "Email",  "Action", "Target"]
+        data = [columns]
+        interactions = CampaignActivityTracking.objects.filter(campaign__id=campaign.id, is_deleted=False)
+        for interaction in interactions:
+            cell  = self._get_cells_from_dict(columns,{
+                "Date": get_human_readable_date(interaction.created_at),
+                "Action": interaction.source,
+                "Email": interaction.email,
+                "Target": interaction.target,
+            })
+            data.append(cell)
+        return data
+
+    def campaign_interaction_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+            
+            campaign = Campaign.objects.filter(id=campaign_id, is_deleted=False).first()
+            if not campaign:
+                return EMPTY_DOWNLOAD, InvalidResourceError()
+            return (self._campaign_interaction_performance_download(campaign), None), None
+            
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+    
+
+    def _campaign_overview_download(self, campaign):
+        columns = ["Metric", "Value"]
+        data = [columns]
+
+        likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+        follows = CampaignFollow.objects.filter(campaign__id=campaign.id, is_deleted=False).count()
+        views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+        campaign_views = CampaignView.objects.filter(campaign__id=campaign.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+        comments = Comment.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).count()
+        shares = CampaignLink.objects.filter(campaign__id=campaign.id, is_deleted=False).count()
+        testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign.id, is_deleted=False).count()
+
+        rows = [
+            ["Total Likes", likes],
+            ["Total Follows", follows],
+            ["Total Views", campaign_views],
+            ["Total Technology Views", views],
+            ["Total comments", comments],
+            ["Total Shares", shares],
+            ["Total testimonials", testimonials],
+        ]
+
+        data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+        techs = CampaignTechnology.objects.filter(campaign__id=campaign.id, is_deleted=False)
+        for tech in techs:
+            likes = CampaignTechnologyLike.objects.filter(campaign_technology__id=tech.id, is_deleted=False).aggregate(total_likes=Sum('count'))['total_likes']
+            follows = CampaignTechnologyFollow.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+            views = CampaignTechnologyView.objects.filter(campaign_technology__id=tech.id, is_deleted=False).aggregate(total_views=Sum('count'))['total_views']
+            comments = Comment.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+            testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__id=tech.id, is_deleted=False).count()
+
+            rows = [
+                ["Total Likes", likes or 0],
+                ["Total Follows", follows or 0],
+                ["Total Views", views or 0],
+                ["Total comments", comments or 0],
+                ["Total testimonials", testimonials or 0],
+            ]
+
+            data.append([])
+            data.append([])
+            data.append(["Technology", tech.technology.name])
+            data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+        return data
+    
+
+
+    def _get_performance_data_for_community(self, community, campaign):
+        try:
+           
+            follows = CampaignFollow.objects.filter(campaign__id=campaign.id, community__id=community.id, is_deleted=False)
+            likes = CampaignTechnologyLike.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).first()
+            comments = Comment.objects.filter(campaign_technology__campaign__id=campaign.id, community__id=community.id, is_deleted=False).count()
+            testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign.id, testimonial__community__id=community.id, is_deleted=False).count()
+            rows = [
+                ["Total Follows",follows.count() if follows else 0],
+                ["Total Likes", likes.count if likes else 0],
+                ["Total comments", comments],
+                ["Total testimonials", testimonials],
+            ]
+
+            columns = ["Metric", "Value"]
+            data = [columns]
+            data += [self._get_cells_from_dict(columns, {"Metric": row[0], "Value": row[1]}) for row in rows]
+
+            # show th list of followers
+
+            if follows:
+                data.append([])
+                data.append([])
+                data.append(["Followers"])
+                columns = ["Date", "Email", "Community", "Zipcode", "From_Other_Community"]
+                data.append(columns)
+
+                for follower in follows:
+                    cell  = self._get_cells_from_dict(columns,{
+                        "Date": get_human_readable_date(follower.created_at),
+                        "Email": follower.user.email,
+                        "Community": follower.community.name,
+                        "Zipcode": follower.zipcode,
+                        "From_Other_Community": "Yes" if follower.community_name else "No",
+                    })
+                    data.append(cell)
+            return data
+
+        
+        except Exception as e:
+            print("error: " + str(e))
+            return []
+
+        
+
+
+    def campaign_performance_download(self, context: Context, campaign_id) -> Tuple[list, MassEnergizeAPIError]:
+        try:
+            if not context.user_is_admin():
+                return EMPTY_DOWNLOAD, NotAuthorizedError()
+
+            campaign = None
+            try:
+                uuid_id = UUID(campaign_id, version=4)
+                campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+            except ValueError:
+                campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
+
+            if not campaign:
+                return EMPTY_DOWNLOAD, CustomMassenergizeError("Campaign not found")
+
+            sheet_data = {}
+            sheet_data["Campaign Overview"] = {
+                "data": self._campaign_overview_download(campaign)
+            }
+            sheet_data["Campaign Follows"] = {
+                "data": self._campaign_follows_download(campaign)
+            }
+
+            sheet_data["Campaign Link Performance"] = {
+                "data": self._campaign_link_performance_download(campaign)
+            }
+            
+            sheet_data["Campaign Interaction Performance"] = {
+                "data": self._campaign_interaction_performance_download(campaign)
+            }
+            # create sheet for ech community in the campaign
+            communities = campaign.campaign_community.filter(is_deleted=False)
+
+            for community in communities:
+                sheet_data[f"{community.community.name}"] = {
+                    "data": self._get_performance_data_for_community(community.community,campaign)
+                }
+
+            wb =generate_workbook_with_sheets(sheet_data)
+
+            return (wb, campaign.title), None
+        except Exception as e:
+            capture_message(str(e), level="error")
+            return EMPTY_DOWNLOAD, CustomMassenergizeError(e)
+        
+
+
+        

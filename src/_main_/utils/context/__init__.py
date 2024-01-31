@@ -81,7 +81,8 @@ class Context:
     args = self.get_request_body()
     limit = args.get('limit', DEFAULT_PAGINATION_LIMIT)
     next_page = args.get('page', 1)
-    return {"next_page": next_page, "limit": limit}
+    no_pagination = args.get('no_pagination', False)
+    return {"next_page": next_page, "limit": limit, "no_pagination": no_pagination}
 
 
 

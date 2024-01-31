@@ -2,7 +2,7 @@ import csv
 from django.http import HttpResponse
 from _main_.utils.context import Context
 from _main_.utils.emailer.send_email import send_massenergize_email, send_massenergize_email_with_attachments
-from api.constants import ACTIONS, COMMUNITIES, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
+from api.constants import ACTIONS, CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, CAMPAIGN_PERFORMANCE_REPORT, CAMPAIGN_VIEWS_PERFORMANCE_REPORT, COMMUNITIES, FOLLOWED_REPORT, LIKE_REPORT, LINK_PERFORMANCE_REPORT, METRICS, SAMPLE_USER_REPORT, TEAMS, USERS, CADMIN_REPORT, SADMIN_REPORT, COMMUNITY_PAGEMAP
 from api.store.download import DownloadStore
 from api.constants import DOWNLOAD_POLICY
 from api.store.common import create_pdf_from_rich_text, sign_mou
@@ -13,7 +13,7 @@ from task_queue.nudges.cadmin_events_nudge import generate_event_list_for_commun
 from api.store.utils import get_community, get_user
 from celery import shared_task
 from api.store.download import DownloadStore
-from api.utils.constants import CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, SADMIN_EMAIL_TEMPLATE
+from api.utils.constants import BROADCAST_EMAIL_TEMPLATE, CADMIN_EMAIL_TEMPLATE, DATA_DOWNLOAD_TEMPLATE, SADMIN_EMAIL_TEMPLATE
 from database.models import Community, CommunityAdminGroup, CommunityMember, UserActionRel, UserProfile
 from django.utils import timezone
 import datetime
@@ -21,6 +21,8 @@ from django.utils.timezone import utc
 from django.db.models import Count
 
 from task_queue.nudges.user_event_nudge import prepare_user_events_nudge
+
+from _main_.celery.app import app
 
 
 def generate_csv_and_email(data, download_type, community_name=None, email=None,filename=None):
@@ -141,6 +143,67 @@ def download_data(self, args, download_type):
         else:
             generate_csv_and_email(
                 data=files, download_type=COMMUNITY_PAGEMAP, community_name=com.name, email=email)
+            
+    
+    #  --------------- CAMPAIGN REPORTS ----------------
+    elif download_type == FOLLOWED_REPORT:
+        campaign_id = args.get("campaign_id", None)
+        (files, dummy), err = store.campaign_follows_download(context, campaign_id=campaign_id)
+        if err:
+            error_notification(FOLLOWED_REPORT, email)
+        else:
+            generate_csv_and_email(data=files, download_type=FOLLOWED_REPORT, email=email)
+
+
+    elif download_type == LIKE_REPORT:
+        campaign_id = args.get("campaign_id", None)
+        (files, dummy), err = store.campaign_likes_download(context, campaign_id=campaign_id)
+        if err:
+            error_notification(LIKE_REPORT, email)
+        else:
+            generate_csv_and_email(data=files, download_type=LIKE_REPORT, email=email)
+
+    
+    elif download_type == LINK_PERFORMANCE_REPORT:
+        campaign_id = args.get("campaign_id", None)
+        (files, dummy), err = store.campaign_link_performance_download(context, campaign_id=campaign_id)
+        if err:
+            error_notification(LINK_PERFORMANCE_REPORT, email)
+        else:
+            generate_csv_and_email(data=files, download_type=LINK_PERFORMANCE_REPORT, email=email)
+
+    elif download_type == CAMPAIGN_PERFORMANCE_REPORT:
+        campaign_id = args.get("campaign_id", None)
+        user, err = get_user(None, email)
+        (files, campaign_title), err = store.campaign_performance_download(context, campaign_id=campaign_id)
+        if err:
+            error_notification(CAMPAIGN_PERFORMANCE_REPORT, email)
+        else:
+          temp_data = {
+                'data_type': "Campaign Performance Report",
+                "name":user.full_name,
+            }
+          send_massenergize_email_with_attachments(DATA_DOWNLOAD_TEMPLATE,temp_data,[email], files, f"{campaign_title} Report.xlsx", None)
+
+            
+
+    elif download_type == CAMPAIGN_VIEWS_PERFORMANCE_REPORT:
+        campaign_id = args.get("campaign_id", None)
+        (files, dummy), err = store.campaign_views_performance_download(context, campaign_id=campaign_id)
+        if err:
+            error_notification(CAMPAIGN_VIEWS_PERFORMANCE_REPORT, email)
+        else:
+            generate_csv_and_email(data=files, download_type=CAMPAIGN_VIEWS_PERFORMANCE_REPORT, email=email)
+
+    elif download_type == CAMPAIGN_INTERACTION_PERFORMANCE_REPORT: 
+        campaign_id = args.get("campaign_id", None)
+        (files, dummy), err = store.campaign_interaction_performance_download(context, campaign_id=campaign_id)
+        if err:
+            error_notification(CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, email)
+        else:
+            generate_csv_and_email(data=files, download_type=CAMPAIGN_INTERACTION_PERFORMANCE_REPORT, email=email)   
+        
+       
 
 
 
@@ -220,3 +283,22 @@ def deactivate_user(self,email):
     user = UserProfile.objects.filter(email=email).first()
     if user:
         user.delete()
+
+
+
+
+
+
+
+@app.task
+def send_scheduled_email(subject, message, recipients, image):
+    try:
+        data = {
+           "body": message,
+           "subject": subject,
+           "image":image
+        }
+        send_massenergize_email_with_attachments(BROADCAST_EMAIL_TEMPLATE, data, recipients, None, None)
+
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")

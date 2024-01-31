@@ -1,10 +1,11 @@
 from _main_.utils.common import serialize
 from _main_.utils.footage.FootageConstants import FootageConstants
 from _main_.utils.footage.spy import Spy
-from api.constants import STANDARD_USER,GUEST_USER
+from api.constants import LOOSED_USER, STANDARD_USER,GUEST_USER
 from api.utils.api_utils import get_sender_email, is_admin_of_community
 from api.utils.filter_functions import get_users_filter_params
 from api.store.common import create_pdf_from_rich_text, sign_mou
+from apps__campaigns.models import CampaignFollow
 from database.models import CommunityAdminGroup, Footage, Policy, PolicyAcceptanceRecords, UserProfile, CommunityMember, EventAttendee, RealEstateUnit, Location, UserActionRel, \
   Vendor, Action, Data, Community, Media, TeamMember, Team, Testimonial
 from _main_.utils.massenergize_errors import MassEnergizeAPIError, InvalidResourceError, CustomMassenergizeError, NotAuthorizedError
@@ -864,6 +865,7 @@ class UserStore:
     try:
       user_emails = args.get("user_emails")
       community_ids = args.get("community_ids",None)
+      user_ids = args.get("user_ids",None) 
       if not context.user_is_super_admin:
         return None, NotAuthorizedError()
 
@@ -873,6 +875,10 @@ class UserStore:
 
       if user_emails: 
         users = UserProfile.objects.filter(email__in = user_emails, *filter_params)
+        return users.distinct(), None
+      
+      if user_ids:
+        users = UserProfile.objects.filter(id__in = user_ids, *filter_params)
         return users.distinct(), None
       
       if community_ids:
@@ -1034,6 +1040,64 @@ class UserStore:
         ret['team_id'] = team.id
 
       return ret, None
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  
+  def update_loosed_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      email = args.get('email', None)
+      user_id = args.get('id', None)
+      follow_id = args.pop('follow_id', None)
+
+      if not email and not user_id:
+        return None, CustomMassenergizeError("Please provide email or user_id")
+      user =None
+
+      if email:
+        user = UserProfile.objects.filter(email=email).first()
+      elif user_id:
+        user = UserProfile.objects.filter(id=user_id).first()
+      
+      if not user:
+        return None, CustomMassenergizeError("user not found")
+      user_info = user.user_info
+
+      if user_info.get('user_type', None) == LOOSED_USER:
+        user.full_name = args.get('full_name', user.full_name)
+      user.save()
+
+      if not follow_id:
+        return CustomMassenergizeError("Please provide follow_id")
+      
+
+      follow =  CampaignFollow.objects.filter(id=follow_id).first()
+      if not follow:
+        return None, CustomMassenergizeError("follow not found")
+      return follow, None
+    
+    except Exception as e:
+      capture_message(str(e), level="error")
+      return None, CustomMassenergizeError(e)
+    
+  def get_loosed_user(self, context: Context, args) -> Tuple[dict, MassEnergizeAPIError]:
+    try:
+      email = args.get('email', None)
+      user_id = args.get('id', None)
+
+      if not email and not user_id:
+        return None, CustomMassenergizeError("Please provide email or user_id")
+      user =None
+
+      if email:
+        user = UserProfile.objects.filter(email=email).first()
+      elif user_id:
+        user = UserProfile.objects.filter(id=user_id).first()
+      
+      
+      return user, None
+    
     except Exception as e:
       capture_message(str(e), level="error")
       return None, CustomMassenergizeError(e)

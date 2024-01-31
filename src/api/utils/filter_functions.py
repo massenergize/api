@@ -1,3 +1,4 @@
+import datetime
 import json
 import operator
 from functools import reduce
@@ -144,6 +145,7 @@ def get_messages_filter_params(params):
       teams = params.get("team", None)
       status = None
       forwarded =None
+      is_scheduled = params.get("is_scheduled", None)
       
       search_text = params.get("search_text", None)
       if search_text:
@@ -166,6 +168,10 @@ def get_messages_filter_params(params):
         forwarded= True
       if "No" in params.get("forwarded to team admin?", []):
         forwarded= False
+
+
+      if is_scheduled:
+        query.append(Q(scheduled_at__isnull=False) & Q(scheduled_at__gt=datetime.datetime.now()))
 
       if communities:
         query.append(Q(community__name__in=communities))
@@ -300,7 +306,6 @@ def get_users_filter_params(params):
     try:
       query = []
       search_text = params.get("search_text", None)
-
       if search_text:
         users = CommunityMember.objects.filter(community__name__icontains=search_text).values_list('user', flat=True).distinct()
         search= reduce(
@@ -374,7 +379,7 @@ def get_sort_params(params):
       sort+= sort_params.get("name")
       if sort_params.get("direction") == "desc":
         sort = "-"+sort
-        return sort.lower()
+      return sort.lower()
     
     return "-id"
 

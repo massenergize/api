@@ -1,3 +1,4 @@
+from uuid import UUID
 import html2text, traceback
 from django.shortcuts import render, redirect
 from _main_.utils.common import serialize_all
@@ -22,6 +23,7 @@ from database.models import (
     ImpactPageSettings,
     CustomCommunityWebsiteDomain,
 )
+from apps__campaigns.models import Campaign, CampaignTechnology
 from django.db.models import Q
 from django.template.loader import render_to_string
 
@@ -49,13 +51,19 @@ HOME_SUBDOMAIN_SET = set(
 IS_LOCAL = RUN_SERVER_LOCALLY  # API and community portal running locally
 if IS_LOCAL:
     PORTAL_HOST = "http://massenergize.test:3000"
+    CAMPAIGN_HOST = "http://localhost:3000"
 elif IS_CANARY:
     PORTAL_HOST = "https://community-canary.massenergize.org"
+    CAMPAIGN_HOST = "https://campaigns-canary.massenergize.org"
 elif IS_PROD:
     PORTAL_HOST = "https://community.massenergize.org"
+    CAMPAIGN_HOST = (
+        "https://campaigns.massenergize.org"  # Change value when we have the appropriate link
+    )
 else:
     # we know it is dev
     PORTAL_HOST = "https://community.massenergize.dev"
+    CAMPAIGN_HOST = "https://campaigns.massenergize.dev"  # Change value when we have the appropriate link
 
 
 if IS_LOCAL:
@@ -82,6 +90,92 @@ META = {
     "tags": ["#ClimateChange"],
     "is_local": IS_LOCAL,
 }
+
+
+def campaign(request, campaign_id):
+
+    campaign = None
+    try:
+        uuid_id = UUID(campaign_id, version=4)
+        campaign = Campaign.objects.filter(id=uuid_id, is_deleted=False).first()
+    except ValueError:
+        campaign = Campaign.objects.filter(slug=campaign_id, is_deleted=False).first()
+    if not campaign:
+        raise Http404
+    image = campaign.image.file.url
+
+    redirect_url = f"{CAMPAIGN_HOST}{request.get_full_path()}"
+    meta = {
+            "image_url": _get_file_url(campaign.image),
+            # "subdomain": subdomain,
+            "title": campaign.title,
+            "description": _extract(campaign.description),
+            "url": f"{redirect_url}/actions/{id}",
+            "redirect_to": redirect_url,
+            "created_at": campaign.created_at,
+            "updated_at": campaign.updated_at,
+            "stay_put": request.GET.get("stay_put", None),
+        }
+    # meta = {
+    #     "title": campaign.title,
+    #     "redirect_to": f"{CAMPAIGN_HOST}/campaign/{campaign.id}",
+    #     "image": image,
+    #     "image_url": image,
+    #     "summary_large_image": image,
+    #     "description": campaign.description,
+    #     # "stay_put": True,
+    # }
+    args = {
+        "meta": meta,
+        "title": campaign.title,
+        "id": campaign.id,
+        "image": image,
+        "campaign": campaign,
+        "tagline": campaign.tagline,
+    }
+    return render(request, "campaign.html", args)
+
+
+def campaign_technology(request, campaign_id, campaign_technology_id):
+    camp_tech = CampaignTechnology.objects.filter(
+        id=campaign_technology_id, is_deleted=False
+    ).first()
+    if not camp_tech or not campaign_technology_id or not campaign_id:
+        raise Http404
+
+    technology = camp_tech.technology
+    image = _get_file_url(technology.image)
+
+    redirect_url = f"{CAMPAIGN_HOST}{request.get_full_path()}"
+    meta = {
+        "image_url": image,
+        # "subdomain": subdomain,
+        "title": technology.name,
+        "description": _extract(technology.description),
+        "url": redirect_url,
+        "redirect_to": redirect_url,
+        "created_at": technology.created_at,
+        "updated_at": technology.updated_at,
+        "stay_put": request.GET.get("stay_put", None),
+    }
+
+
+    # meta = {
+    #     "title": technology.name,
+    #     "redirect_to":f"{CAMPAIGN_HOST}/campaign/{campaign_id}/technology/{campaign_technology_id}" ,
+    #     "image": image,
+    #     "image_url": image,
+    #     "summary_large_image": image,
+    #     "description": technology.description,
+    #     "stay_put": True,
+    # }
+    args = {
+        "meta": meta,
+        "title": technology.name,
+        "id": campaign_technology_id,
+        "image": image,
+    }
+    return render(request, "campaign_technology.html", args)
 
 
 def _restructure_communities(communities):

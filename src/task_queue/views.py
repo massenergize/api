@@ -9,7 +9,7 @@ from api.utils.constants import (
     YEARLY_MOU_TEMPLATE,
 )
 from api.constants import STANDARD_USER, GUEST_USER
-from database.models import UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
+from database.models import FeatureFlag, UserProfile, UserActionRel, Community, CommunityAdminGroup, CommunityMember, Event, RealEstateUnit, Team, Testimonial, Vendor, PolicyConstants, PolicyAcceptanceRecords, CommunitySnapshot, Goal, Action
 from django.utils import timezone
 import datetime
 from django.utils.timezone import utc
@@ -485,3 +485,5 @@ def send_admin_mou_notification(task=None):
             update_records(notices=[new_notification_time], user=admin)
     
     return "success"
+
+

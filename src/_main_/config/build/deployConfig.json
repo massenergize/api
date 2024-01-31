@@ -1,6 +1,6 @@
 {
   "IS_PROD": true,
   "IS_CANARY": false,
-  "BUILD_VERSION": "4.13.4",
-  "BUILD_VERSION_NOTES": "Nov 2, 2023: Release 4.13.0\n- many changes, described in release notes\nAug 15, 2023: Production release 4.12.5:\n  * Minor bug fixes \n  * Sentry performance monitoring\n"
+  "BUILD_VERSION": "5.1.7",
+  "BUILD_VERSION_NOTES": "Jan 30 2024 - "
 }

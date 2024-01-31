@@ -1,5 +1,1 @@
-Nov 2, 2023: Release 4.13.0
-- many changes, described in release notes
-Aug 15, 2023: Production release 4.12.5:
-  * Minor bug fixes 
-  * Sentry performance monitoring
+Jan 31, 2024: Campaigns initial prod deployment

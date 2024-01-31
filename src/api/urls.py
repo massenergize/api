@@ -1,6 +1,8 @@
 from api.handlers.action import ActionHandler
 from api.handlers.admin import AdminHandler
 from api.handlers.auth import AuthHandler
+from api.handlers.campaign import CampaignHandler
+from api.handlers.campaign_account import CampaignAccountHandler
 # from api.handlers.email_templates import EmailTemplatesHandler
 from api.handlers.media_library import MediaLibraryHandler
 from api.handlers.page_settings__aboutus import AboutUsPageSettingsHandler
@@ -21,6 +23,7 @@ from api.handlers.graph import GraphHandler
 from api.handlers.page_settings__home import HomePageSettingsHandler
 from api.handlers.message import MessageHandler
 from api.handlers.misc import MiscellaneousHandler
+from api.handlers.partner import PartnerHandler
 from api.handlers.policy import PolicyHandler
 from api.handlers.subscriber import SubscriberHandler
 from api.handlers.summary import SummaryHandler
@@ -29,12 +32,14 @@ from api.handlers.tag_collection import TagCollectionHandler
 from api.handlers.task_queue import TaskQueueHandler
 from api.handlers.team import TeamHandler
 from api.handlers.page_settings__teams import TeamsPageSettingsHandler
+from api.handlers.technology import TechnologyHandler
 from api.handlers.testimonial import TestimonialHandler
 from api.handlers.userprofile import UserHandler
 from api.handlers.vendor import VendorHandler
 from api.handlers.page_settings__register import RegisterPageSettingsHandler
 from api.handlers.page_settings__signin import SigninPageSettingsHandler
 from api.handlers.webhook import WebhookHandler
+
 from django.urls import path, include
 
 
@@ -46,6 +51,8 @@ ROUTE_HANDLERS = [
     AdminHandler(),
     AuthHandler(),
     CommunityHandler(),
+    CampaignHandler(),
+    CampaignAccountHandler(),
     ContactUsPageSettingsHandler(),
     DeviceHandler(),
     DonatePageSettingsHandler(),
@@ -59,6 +66,7 @@ ROUTE_HANDLERS = [
     ImpactPageSettingsHandler(),
     MessageHandler(),
     MiscellaneousHandler(),
+    PartnerHandler(),
     PolicyHandler(),
     SubscriberHandler(),
     SummaryHandler(),
@@ -75,6 +83,7 @@ ROUTE_HANDLERS = [
     RegisterPageSettingsHandler(),
     SigninPageSettingsHandler(),
     TaskQueueHandler(),
+    TechnologyHandler(),
     WebhookHandler()
 ]
 
