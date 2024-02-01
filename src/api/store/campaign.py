@@ -606,7 +606,7 @@ class CampaignStore:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
                 return None, CustomMassenergizeError("campaign_id is required!")
-            comments = Comment.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False)
+            comments = Comment.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False, campaign_technology__is_deleted=False).order_by("-created_at")
 
             return comments, None
         except Exception as e:
@@ -618,7 +618,7 @@ class CampaignStore:
             campaign_id = args.pop("campaign_id", None)
             if not campaign_id:
                 return None, CustomMassenergizeError("campaign_id is required!")
-            testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False)
+            testimonials = CampaignTechnologyTestimonial.objects.filter(campaign_technology__campaign__id=campaign_id, is_deleted=False, campaign_technology__is_deleted=False)
 
             return testimonials.order_by("-created_at"), None
         except Exception as e:
@@ -1335,16 +1335,7 @@ class CampaignStore:
 
     def list_campaign_communities_vendors(self, context: Context, args):
         try:
-            campaign_id = args.pop("campaign_id", None)
-            if not campaign_id:
-                return None, CustomMassenergizeError("campaign_id is required!")
-            communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
-            vendors = []
-            for community in communities:
-                vendors.extend(Vendor.objects.filter(communities__id=community.community.id,is_published=True, is_deleted=False))
-            user = get_user_from_context(context)
-            if user:
-                vendors.extend(Vendor.objects.filter(user=user, is_published=True, is_deleted=False))
+            vendors = Vendor.objects.filter(is_deleted=False, is_published=True)
             return vendors, None
         except Exception as e:
             capture_message(str(e), level="error")
