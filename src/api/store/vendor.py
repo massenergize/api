@@ -366,13 +366,13 @@ class VendorStore:
             vendors = c.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
 
         if vendors:
-          vendors = vendors.distinct()
+          vendors = vendors.exclude(more_info__contains={"created_via_campaign":True}).distinct()
         return vendors, None
 
       community = get_community_or_die(context, {'community_id': community_id})
       vendors = community.community_vendors.filter(is_deleted=False,*filter_params).select_related('logo').prefetch_related('communities', 'tags')
       if vendors:
-        vendors = vendors.distinct()
+        vendors = vendors.exclude(more_info__contains={"created_via_campaign":True}).distinct()
       return vendors, None
     except Exception as e:
       capture_message(str(e), level="error")
@@ -383,7 +383,7 @@ class VendorStore:
     try:
 
       filter_params = get_vendor_filter_params(context.get_params())
-      vendors = Vendor.objects.filter(is_deleted=False, *filter_params).select_related('logo').prefetch_related('communities', 'tags')
+      vendors = Vendor.objects.filter(is_deleted=False, *filter_params).exclude(more_info__contains={"created_via_campaign":True}).select_related('logo').prefetch_related('communities', 'tags')
       return vendors.distinct(), None
     except Exception as e:
       capture_message(str(e), level="error")
