@@ -352,6 +352,7 @@ class TechnologyStore:
         try:
             technology_id = args.pop('technology_id', None)
             user = get_user_from_context(context)
+            is_published = args.pop('is_published', True)
 
             if not technology_id:
                 return None, CustomMassenergizeError("technology_id is required")
@@ -363,6 +364,7 @@ class TechnologyStore:
             vendor.more_info = {"website": args.pop('website', None), "created_via_campaign": True}
             vendor.logo = create_media_file(args.pop('logo', None), f"FileUpload for {vendor.name} Vendor")
             vendor.user = user
+            vendor.is_published = is_published
             vendor.save()
 
             technology_vendor, exists = TechnologyVendor.objects.get_or_create(technology=technology, vendor=vendor)
