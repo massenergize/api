@@ -1303,13 +1303,13 @@ class CampaignStore:
             communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
             events = []
             for community in communities:
-                events.extend(Event.objects.filter(community__id=community.community.id, is_deleted=False))
+                events.extend(Event.objects.filter(community__id=community.community.id, is_deleted=False, is_published=True))
             return events, None
         except Exception as e:
             capture_message(str(e), level="error")
             return None, CustomMassenergizeError(e)
 
-    from django.db.models import Q
+
 
     def list_campaign_communities_testimonials(self, context: Context, args):
         try:
