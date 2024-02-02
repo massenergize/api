@@ -409,6 +409,7 @@ class TechnologyHandler(RouteHandler):
         self.validator.expect("website", str, is_required=False)
         self.validator.expect("logo", "file", is_required=False)
         self.validator.expect("technology_id", str, is_required=False)
+        self.validator.expect("is_published", bool, is_required=False)
 
         args, err = self.validator.verify(args, strict=True)
 
