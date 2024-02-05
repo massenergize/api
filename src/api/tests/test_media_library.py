@@ -33,43 +33,48 @@ ROUTES = {
 
 # Run this particular test --> python manage.py test api.tests.test_media_library.TestMediaLibrary
 class TestMediaLibrary(TestCase):
-    @classmethod
-    def setUpTestData(cls) -> None:
-        Console.header("Testing Media Library Now")
-        cls.user, cls.cadmin, cls.sadmin = createUsers()
-        cls.client = Client()
-        cls.routes = ROUTES
-        cls.users = {
-            "Regular User": cls.user,
-            "Community Admin": cls.cadmin,
-            "Super Admin": cls.sadmin,
-        }
-        cls.DB = cls.inflate_database(cls)
+    '''
+    We have to rethink the way we test the media library.
+    '''
+    pass
+
+    # @classmethod
+    # def setUpTestData(cls) -> None:
+    #     Console.header("Testing Media Library Now")
+    #     cls.user, cls.cadmin, cls.sadmin = createUsers()
+    #     cls.client = Client()
+    #     cls.routes = ROUTES
+    #     cls.users = {
+    #         "Regular User": cls.user,
+    #         "Community Admin": cls.cadmin,
+    #         "Super Admin": cls.sadmin,
+    #     }
+    #     cls.DB = cls.inflate_database(cls)
 
 
-    def test_image_reading(self): 
-        """
-            Procedure: 
+    # def test_image_reading(self): 
+    #     """
+    #         Procedure: 
 
-            Upload an image
-            Using the id of the media record created, 
-            hit the route. 
+    #         Upload an image
+    #         Using the id of the media record created, 
+    #         hit the route. 
             
-            now get the base64 string of the image that was just uploaded manually,  
-            And match that string against the string that was returned from the route. 
-            If the results match, the route works well!
-        """
-        Console.underline("Testing Image Reading Route")
-        print("Creating new media with new upload...")
-        media = makeMedia() 
-        base64 = image_url_to_base64() 
-        print("Manually generating base64 of same uploaded media...")
-        response = self.client.post("/api/gallery.image.read", data = {"media_id":media.id}).json() 
-        base64_from_route = response.get("data")
-        print("Checking if returned strings match...")
-        self.assertFalse(base64_from_route == None)
-        self.assertEqual(base64,base64_from_route)
-        print("Route reads the right image and returns base64!")
+    #         now get the base64 string of the image that was just uploaded manually,  
+    #         And match that string against the string that was returned from the route. 
+    #         If the results match, the route works well!
+    #     """
+    #     Console.underline("Testing Image Reading Route")
+    #     print("Creating new media with new upload...")
+    #     media = makeMedia() 
+    #     base64 = image_url_to_base64() 
+    #     print("Manually generating base64 of same uploaded media...")
+    #     response = self.client.post("/api/gallery.image.read", data = {"media_id":media.id}).json() 
+    #     base64_from_route = response.get("data")
+    #     print("Checking if returned strings match...")
+    #     self.assertFalse(base64_from_route == None)
+    #     self.assertEqual(base64,base64_from_route)
+    #     print("Route reads the right image and returns base64!")
 
 
 

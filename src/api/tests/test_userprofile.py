@@ -116,13 +116,17 @@ class UserProfileTestCase(TestCase):
     
         # test creating user with a profile picture
         test_email1 = "brad@massenergize.org"
-        create_response = self.client.post('/api/users.create', urlencode({"accepts_terms_and_conditions": True,
-                                                                          "email": test_email1,
-                                                                          "full_name": "test name",
-                                                                          "preferred_name": "test_name",
-                                                                          "is_vendor": False,
-                                                                          "community_id": self.COMMUNITY.id,
-                                                                          "profile_picture": self.PROFILE_PICTURE}), content_type="application/x-www-form-urlencoded").toDict()
+        data = {
+                "accepts_terms_and_conditions": True,
+                "email": test_email1,
+                "full_name": "test name",
+                "preferred_name": "test_name",
+                "is_vendor": False,
+                "community_id": self.COMMUNITY.id,
+                "profile_picture": self.PROFILE_PICTURE
+                }
+        create_response = self.client.post('/api/users.create', data, format='multipart').json()
+    
         self.assertTrue(create_response["success"])
         pic = create_response["data"].get("profile_picture", None)
         self.assertNotEqual(pic, None)
@@ -210,7 +214,13 @@ class UserProfileTestCase(TestCase):
         self.assertEqual(update_response["data"]["is_super_admin"], False)
 
         # test logged as user, add a profile picture
-        update_response = self.client.post('/api/users.update', urlencode({ "full_name": "updated name1a", "profile_picture":self.PROFILE_PICTURE}), content_type="application/x-www-form-urlencoded").toDict()
+
+        data = {
+                "full_name": "updated name1a",
+                "profile_picture": self.PROFILE_PICTURE
+        }
+        update_response = self.client.post('/api/users.update', data, format='multipart').json()
+        
         self.assertTrue(update_response["success"])
         self.assertNotEqual(update_response["data"].get("profile_picture", None), None)
 
