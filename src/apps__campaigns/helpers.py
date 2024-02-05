@@ -32,11 +32,6 @@ def get_user_accounts(user):
     return [ca.simple_json() for ca in campaign_accounts]
 
 
-def create_new_event(ct):
-    from apps__campaigns.create_campaign_template import create_campaign_event
-    evs = create_campaign_event(ct)
-    return evs
-
 
 def get_campaign_details(campaign_id, for_campaign=False):
     techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
@@ -148,19 +143,20 @@ def category_has_items(category, campaign_technology):
         return campaign_technology.campaign_technology_event.filter(is_deleted=False).exists()
     elif category == "testimonials":
         return campaign_technology.campaign_technology_testimonials.filter(is_deleted=False).exists()
-    elif category == "incentives":
-        return campaign_technology.technology.technology_overview.filter(is_deleted=False).exists()
+    elif category == "deals":
+        return campaign_technology.technology.technology_deal.filter(is_deleted=False).exists()
     else:
         return False
 
 
-def generate_campaign_navigation(campaign): #TODO: fix preview mode
+def generate_campaign_navigation(campaign):
     home_route = f"/campaign/{campaign.slug}"
     mode = "&preview=true" if not campaign.is_published else ""
 
     BASE_NAVIGATION = [
-        {"key": "home", "url": f'{home_route}{"?preview=true" if not campaign.is_published else ""}', "text": "Home", "icon": "fa-home"},
+        {"key": "home", "url": f'{home_route}/?section=home{mode}', "text": "Home", "icon": "fa-home"},
         {"key": "Communities", "url": f"{home_route}/?section=communities{mode}", "text": "Communities", "icon": "fa-globe"},
+        {"key": "technologies", "url": f"{home_route}/?section=technologies{mode}", "text": "Technologies","children": [],"icon": "fa-gears"}, # This index is used to add technologies
         # {"key": "contact-us", "url": "#", "text": "Contact Us", "icon": "fa-phone"},
     ]
 
@@ -173,7 +169,7 @@ def generate_campaign_navigation(campaign): #TODO: fix preview mode
          "icon": "fa-comment"},
         {"key": "events", "url": f"{home_route}/?section=events{mode}", "text": "Events", "children": [],
          "icon": "fa-calendar"},
-        {"key": "incentives", "url": f"{home_route}/?section=incentives{mode}", "text": "Incentives", "children": [],
+        {"key": "deals", "url": f"{home_route}/?section=deals{mode}", "text": "Deals", "children": [],
          "icon": "fa-money"},
     ]
 
@@ -192,6 +188,13 @@ def generate_campaign_navigation(campaign): #TODO: fix preview mode
             MENU[-1]["children"].append(
                 {"key": tech.id, "url": f"/campaign/{campaign.slug}/technology/{tech.id}/?section=incentives{mode}",
                  "text": tech.technology.name})
+
+        BASE_NAVIGATION[2]["children"].append({
+            "key": tech.id,
+            "url": f"/campaign/{campaign.slug}/technology/{tech.id}/?section=home{mode}",
+            "text": tech.technology.name
+    })
+
 
     MENU = [item for item in MENU if item["children"]]  # Remove items without children
     return [*BASE_NAVIGATION, *MENU]
@@ -223,19 +226,6 @@ def generate_analytics_data(campaign_id):
         "testimonials": testimonials,
     }
     return stats
-
-
-def select_3_random_events_from_communities(community_ids):
-    from database.models import Event
-    from random import sample
-    events = Event.objects.filter(is_deleted=False, community__id__in=community_ids, is_published=True).order_by(
-        "-start_date_and_time")
-    count = events.count()
-
-    if count > 3:
-        return sample(list(events), 3)
-    else:
-        return list(events)
 
 
 def copy_campaign_data(new_campaign):
