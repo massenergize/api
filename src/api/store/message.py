@@ -370,7 +370,6 @@ class MessageStore:
             schedule = get_schedule(args.get("schedule", None))
             communities = args.get("community_ids", None)
 
-            print("=== communities ===", communities)
             recipients = get_message_recipients(audience, audience_type)
 
             logo = ME_LOGO_PNG
