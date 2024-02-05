@@ -142,14 +142,5 @@ class MessagesTestCase(TestCase):
                 content_type="application/x-www-form-urlencoded",
             ).toDict()
 
-            print("+++++++++++++++++++++ res +++++++++++++++++")
-            print(f'======={seed.get("description")}============')
-            print("")
-            print("")
-            print(response)
-            print("")
-            print("")
-            print("+++++++++++++++++++++ res +++++++++++++++++")
-
             self.assertEqual(response["success"], expected["success"])
             self.assertEqual(response["error"], expected["error"])
