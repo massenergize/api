@@ -8,7 +8,7 @@ services:
     ports:
       - "80:8000" # for deployed version
       - "8000:8000" # for localhost testing
-    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api
+    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev
     restart: on-failure
 
   celery_worker:
@@ -16,7 +16,7 @@ services:
     depends_on:
       - app
     hostname: celery_worker
-    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api
+    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev
     restart: on-failure
 
   celery_beat:
@@ -24,5 +24,5 @@ services:
     depends_on:
       - app
     hostname: celery_beat
-    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api
+    image: 202758212688.dkr.ecr.us-east-2.amazonaws.com/massenergize/api-dev
     restart: on-failure

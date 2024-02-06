@@ -33,6 +33,16 @@ ADMIN_URL_ROOT = (
     else "https://admin.massenergize.dev"
 )
 
+CAMPAIGN_URL_ROOT = (
+    "https://campaigns.massenergize.org"
+    if IS_PROD
+    else "https://campaigns-canary.massenergize.org"
+    if IS_CANARY
+    else "http://localhost:3000"
+    if IS_LOCAL
+    else "https://campaigns.massenergize.dev"
+)
+
 # TODO: @Add more words to this reserved list
 RESERVED_SUBDOMAIN_LIST = load_json(
     BASE_DIR + "/_main_/utils/json_files/reserved_subdomains.json"
