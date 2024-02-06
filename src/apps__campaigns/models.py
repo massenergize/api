@@ -624,7 +624,7 @@ class Comment(BaseModel):
         res["community"] = {
             **get_summary_info(self.community),
             "alias": get_comm_alias(self.campaign_technology.campaign, self.community.id)
-        }
+        } if self.community else None
         return res
     
     def full_json(self):
