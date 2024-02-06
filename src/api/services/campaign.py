@@ -42,7 +42,7 @@ class CampaignService:
         if err:
             return None, err
         ser_cam = serialize(campaign, full=True)
-        other_details = get_campaign_details_for_user(campaign.id, email)
+        other_details = get_campaign_details_for_user(campaign, email)
         result = {**ser_cam, **other_details}
 
         return result, None

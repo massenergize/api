@@ -105,16 +105,16 @@ def get_technology_details(technology_id, for_campaign=False):
     return data
 
 
-def get_campaign_details_for_user(campaign_id, email):
-    techs = CampaignTechnology.objects.filter(campaign__id=campaign_id, is_deleted=False)
+def get_campaign_details_for_user(campaign, email):
+    techs = CampaignTechnology.objects.filter(campaign__id=campaign.id, is_deleted=False)
     prepared = [{"campaign_technology_id": str(x.id), **get_campaign_technology_details({"email": email, "campaign_home": True, "campaign_technology_id": str(x.id)})} for x in techs]
-    communities = CampaignCommunity.objects.filter(campaign__id=campaign_id, is_deleted=False)
-    key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False, campaign__id=campaign_id).first()
-    campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign_id,is_deleted=False).first()
+    communities = CampaignCommunity.objects.filter(campaign__id=campaign.id, is_deleted=False)
+    key_contact = CampaignManager.objects.filter(is_key_contact=True, is_deleted=False, campaign__id=campaign.id).first()
+    campaign_views = CampaignTechnologyView.objects.filter(campaign_technology__campaign__id=campaign.id,is_deleted=False).first()
 
     if email:
         my_testimonials = CampaignTechnologyTestimonial.objects.filter(
-            campaign_technology__campaign__id=campaign_id, is_deleted=False,
+            campaign_technology__campaign__id=campaign.id, is_deleted=False,
             testimonial__user__email=email).order_by("-created_at")
 
     return {
@@ -128,7 +128,7 @@ def get_campaign_details_for_user(campaign_id, email):
         "technologies": prepared,
         "communities": serialize_all(communities),
         "campaign_views": campaign_views.count if campaign_views else 0,
-        "navigation": generate_campaign_navigation(techs.first().campaign),
+        "navigation": generate_campaign_navigation(campaign),
     }
 
 
@@ -197,6 +197,9 @@ def generate_campaign_navigation(campaign):
 
 
     MENU = [item for item in MENU if item["children"]]  # Remove items without children
+    # remove technologies without children
+    if not BASE_NAVIGATION[2]["children"]:
+        BASE_NAVIGATION.pop(2)
     return [*BASE_NAVIGATION, *MENU]
 
 
