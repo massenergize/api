@@ -43,6 +43,9 @@ IS_PROD = False
 IS_CANARY = False
 IS_LOCAL = False
 
+if DJANGO_ENV == "local":
+    IS_LOCAL = True
+
 try:
     if IS_PROD:
         env_path = Path('.') / 'prod.env'
@@ -84,7 +87,7 @@ ALLOWED_HOSTS = [
 
 if RUN_SERVER_LOCALLY:
     ALLOWED_HOSTS = ['*']
-    
+
 
 INSTALLED_APPS = [
     # 'channels',
@@ -281,9 +284,9 @@ USE_L10N = True
 USE_TZ = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = True 
-EMAIL_HOST = 'smtp.gmail.com' 
-EMAIL_PORT = 587 
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
